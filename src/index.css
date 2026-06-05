@@ -1,1 +1,11 @@
+@import './styles/global.css';
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ajustes adicionais para o Tailwind funcionar com variáveis CSS */
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+}
