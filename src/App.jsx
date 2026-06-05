@@ -1,6 +1,6 @@
 // src/App.jsx
 import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { AppProvider } from './contexts/AppContext'
@@ -40,7 +40,7 @@ const AppRoutes = () => {
 
 function App() {
   return (
-    <BrowserRouter basename="/cfp-money">
+    <HashRouter>
       <ThemeProvider>
         <AuthProvider>
           <AppProvider>
@@ -48,7 +48,7 @@ function App() {
           </AppProvider>
         </AuthProvider>
       </ThemeProvider>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 
