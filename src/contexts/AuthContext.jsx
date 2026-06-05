@@ -1,6 +1,6 @@
 // src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { onAuthChange, signInEmail, registerEmail, resetPassword, logOut } from '../services/firebase'
+import { onAuthChange, signInEmail, registerEmail, resetPassword, logOut, seedDefaultCategories } from '../services/firebase'
 
 const AuthContext = createContext({})
 
@@ -16,8 +16,15 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    const unsubscribe = onAuthChange((u) => {
+    const unsubscribe = onAuthChange(async (u) => {
       setUser(u)
+      if (u) {
+        try {
+          await seedDefaultCategories(u.uid) // apenas para manter compatibilidade, ignora userId
+        } catch (e) {
+          console.warn(e)
+        }
+      }
       setLoading(false)
     })
     return unsubscribe
