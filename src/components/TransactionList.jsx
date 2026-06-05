@@ -419,6 +419,3 @@ export default function TransactionList() {
     </div>
   )
 }
-
-// Missing import
-import { ArrowLeftRight } from 'lucide-react'
