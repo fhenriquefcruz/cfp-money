@@ -6,7 +6,6 @@ import { Card, Button, Input, Modal } from './ui'
 
 const DEFAULT_COLORS = ['#f97316', '#3b82f6', '#8b5cf6', '#10b981', '#06b6d4', '#f59e0b', '#6366f1', '#ec4899', '#6b7280']
 
-// Lista de emojis comuns para categorias
 const EMOJI_LIST = [
   '🍔', '🍕', '🥗', '☕', '🚗', '⛽', '✈️', '🏠', '💡', '📱', '💻', '📚', 
   '🎮', '🎬', '🏋️', '❤️', '💊', '👕', '👟', '🎁', '💰', '💵', '📈', '🏦',
@@ -22,7 +21,6 @@ export default function Categories() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const emojiPickerRef = useRef(null)
 
-  // Fecha o seletor de emojis ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) {
@@ -101,7 +99,7 @@ export default function Categories() {
         <div className="space-y-4">
           <Input label="Nome" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
           
-          {/* Campo de ícone com seletor de emojis */}
+          {/* Ícone com seletor de emojis */}
           <div>
             <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">Ícone (emoji)</label>
             <div className="relative">
@@ -133,7 +131,6 @@ export default function Categories() {
             </div>
           </div>
 
-          {/* Cores */}
           <div>
             <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">Cor</label>
             <div className="flex gap-2 flex-wrap">
@@ -149,7 +146,6 @@ export default function Categories() {
             </div>
           </div>
 
-          {/* Tipo */}
           <div>
             <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">Tipo</label>
             <select 
