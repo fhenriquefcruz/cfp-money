@@ -1,6 +1,7 @@
 // src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { onAuthChange, signInEmail, registerEmail, resetPassword, logOut, seedDefaultCategories } from '../services/firebase'
+import { onAuthChange, signInEmail, registerEmail, resetPassword, logOut } from '../services/firebase'
+import { seedDefaultCategories } from '../services/firebase'
 
 const AuthContext = createContext({})
 
@@ -19,10 +20,11 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthChange(async (u) => {
       setUser(u)
       if (u) {
+        // Seed default categories for new users (apenas uma vez)
         try {
-          await seedDefaultCategories(u.uid) // apenas para manter compatibilidade, ignora userId
+          await seedDefaultCategories()
         } catch (e) {
-          console.warn(e)
+          console.warn('Erro ao semear categorias:', e)
         }
       }
       setLoading(false)
