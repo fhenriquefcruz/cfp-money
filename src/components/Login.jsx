@@ -1,9 +1,9 @@
 // src/components/Login.jsx
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, TrendingUp, Shield, Zap } from 'lucide-react'
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, TrendingUp, Shield, Zap } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { Button, Input, Spinner } from './ui'
+import { Button, Input } from './ui'
 
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24">
@@ -21,8 +21,8 @@ const FEATURES = [
 ]
 
 export default function Login() {
-  const { loginGoogle, loginEmail, register, forgotPassword, error, loading: authLoading, clearError } = useAuth()
-  const [mode, setMode] = useState('login') // 'login' | 'register' | 'forgot' | 'phone'
+  const { loginGoogle, loginEmail, register, forgotPassword, error, clearError } = useAuth()
+  const [mode, setMode] = useState('login')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
@@ -93,32 +93,25 @@ export default function Login() {
     register: { title: 'Criar conta gratuita', sub: 'Comece a controlar suas finanças hoje' },
     forgot: { title: 'Esqueceu a senha?', sub: 'Enviaremos um e-mail para redefinir' },
   }
-
   const t = titles[mode]
 
   return (
     <div className="min-h-screen flex bg-[--bg-app]">
-      {/* Left panel — brand + features */}
       <div className="hidden lg:flex flex-col justify-between w-[45%] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-12 relative overflow-hidden">
-        {/* Background decoration */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/5" />
           <div className="absolute bottom-20 -left-20 w-60 h-60 rounded-full bg-white/5" />
           <div className="absolute top-1/2 right-10 w-40 h-40 rounded-full bg-white/5" />
         </div>
-
-        {/* Logo */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
               <TrendingUp className="text-white" size={22} />
             </div>
-            <span className="text-2xl font-black text-white tracking-tight">FinWise</span>
+            <span className="text-2xl font-black text-white tracking-tight">CFP Money</span>
           </div>
           <p className="text-white/70 text-sm">Controle financeiro pessoal</p>
         </div>
-
-        {/* Features */}
         <div className="relative z-10 space-y-6">
           <h2 className="text-4xl font-black text-white leading-tight">
             Tome controle<br />das suas finanças
@@ -134,8 +127,6 @@ export default function Login() {
             ))}
           </div>
         </div>
-
-        {/* Stats */}
         <div className="relative z-10 grid grid-cols-2 gap-4">
           {[
             { label: 'Usuários ativos', value: '10k+' },
@@ -149,17 +140,14 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right panel — form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md">
-          {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <div className="w-8 h-8 rounded-xl bg-[--brand-600] flex items-center justify-center">
               <TrendingUp className="text-white" size={18} />
             </div>
-            <span className="text-xl font-black text-[--text-primary]">FinWise</span>
+            <span className="text-xl font-black text-[--text-primary]">CFP Money</span>
           </div>
-
           <AnimatePresence mode="wait">
             <motion.div
               key={mode}
@@ -171,7 +159,6 @@ export default function Login() {
               <h1 className="text-3xl font-black text-[--text-primary] mb-1">{t.title}</h1>
               <p className="text-[--text-secondary] text-sm mb-8">{t.sub}</p>
 
-              {/* Success message */}
               {successMsg && (
                 <motion.div
                   initial={{ opacity: 0, y: -8 }}
@@ -182,7 +169,6 @@ export default function Login() {
                 </motion.div>
               )}
 
-              {/* Error message */}
               {error && (
                 <motion.div
                   initial={{ opacity: 0, y: -8 }}
@@ -195,7 +181,6 @@ export default function Login() {
 
               {mode !== 'forgot' && (
                 <>
-                  {/* Google button */}
                   <Button
                     variant="secondary"
                     fullWidth
@@ -206,8 +191,6 @@ export default function Login() {
                     <GoogleIcon />
                     Continuar com Google
                   </Button>
-
-                  {/* Divider */}
                   <div className="flex items-center gap-3 mb-4">
                     <div className="flex-1 h-px bg-[--border-default]" />
                     <span className="text-xs text-[--text-tertiary] font-medium">ou com e-mail</span>
@@ -216,7 +199,6 @@ export default function Login() {
                 </>
               )}
 
-              {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 {mode === 'register' && (
                   <Input
@@ -231,7 +213,6 @@ export default function Login() {
                     autoFocus
                   />
                 )}
-
                 <Input
                   label="E-mail"
                   type="email"
@@ -243,7 +224,6 @@ export default function Login() {
                   required
                   autoFocus={mode !== 'register'}
                 />
-
                 {mode !== 'forgot' && (
                   <Input
                     label="Senha"
@@ -261,7 +241,6 @@ export default function Login() {
                     }
                   />
                 )}
-
                 {mode === 'login' && (
                   <div className="flex justify-end">
                     <button
@@ -273,7 +252,6 @@ export default function Login() {
                     </button>
                   </div>
                 )}
-
                 <Button
                   type="submit"
                   variant="primary"
@@ -286,7 +264,6 @@ export default function Login() {
                 </Button>
               </form>
 
-              {/* Mode switcher */}
               <p className="text-center text-sm text-[--text-secondary] mt-6">
                 {mode === 'login' ? (
                   <>
@@ -304,7 +281,6 @@ export default function Login() {
                   </>
                 )}
               </p>
-
               <p className="text-center text-xs text-[--text-tertiary] mt-4">
                 Ao continuar, você concorda com os{' '}
                 <a href="#" className="hover:underline">Termos de uso</a>
@@ -315,8 +291,6 @@ export default function Login() {
           </AnimatePresence>
         </div>
       </div>
-
-      {/* Recaptcha container for phone auth */}
       <div id="recaptcha-container" />
     </div>
   )
