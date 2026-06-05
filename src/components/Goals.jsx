@@ -75,7 +75,14 @@ export default function Goals() {
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar meta' : 'Nova meta'}>
         <div className="space-y-4">
           <Input label="Nome" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-          <Input label="Valor alvo" type="number" step="0.01" value={form.targetAmount} onChange={e => setForm(f => ({ ...f, targetAmount: e.target.value }))} />
+          <Input 
+            label="Valor alvo" 
+            type="number" 
+            step="0.01" 
+            placeholder="0,00" 
+            value={form.targetAmount} 
+            onChange={e => setForm(f => ({ ...f, targetAmount: e.target.value }))} 
+          />
           <Input label="Prazo (opcional)" type="date" value={form.deadline} onChange={e => setForm(f => ({ ...f, deadline: e.target.value }))} />
           <Button variant="primary" fullWidth onClick={handleSave} loading={loading}>Salvar</Button>
         </div>
