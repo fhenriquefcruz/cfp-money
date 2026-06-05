@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "homepage": "https://SEU_USUARIO.github.io/cfp-money",
+  "homepage": "https://fhenriquefcruz.github.io/cfp-money",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
