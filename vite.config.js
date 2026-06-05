@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/cfp-money/',          // <--- caminho do repositório
+  base: '/cfp-money/',
   build: {
     outDir: 'dist',
     sourcemap: false,
