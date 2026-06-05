@@ -16,6 +16,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Opcional: força Node.js 24
+          env:
+            FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -23,11 +27,12 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install   # <--- ALTERADO: substituído npm ci por npm install
+        run: npm install
 
       - name: Build
         run: npm run build
         env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
