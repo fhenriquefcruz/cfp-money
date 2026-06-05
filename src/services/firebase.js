@@ -14,26 +14,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 
-// ========== AUTH FUNCTIONS ==========
-export const signInEmail = (email, password) =>
-  signInWithEmailAndPassword(auth, email, password)
-
+// ========== AUTH ==========
+export const signInEmail = (email, password) => signInWithEmailAndPassword(auth, email, password)
 export const registerEmail = async (email, password, displayName) => {
   const credential = await createUserWithEmailAndPassword(auth, email, password)
   await updateProfile(credential.user, { displayName })
   await sendEmailVerification(credential.user)
   return credential
 }
-
 export const resetPassword = (email) => sendPasswordResetEmail(auth, email)
-
 export const logOut = () => signOut(auth)
-
 export const onAuthChange = (callback) => onAuthStateChanged(auth, callback)
 
-// ========== INDEXEDDB (armazenamento local) ==========
+// ========== INDEXEDDB ==========
 const DB_NAME = 'CFPMoneyDB'
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -58,7 +53,6 @@ function openDB() {
   })
 }
 
-// Generic CRUD helpers
 async function getAll(storeName) {
   const db = await openDB()
   return new Promise((resolve, reject) => {
@@ -103,13 +97,12 @@ async function remove(storeName, id) {
   })
 }
 
-// ========== TRANSACTIONS (compatível com AppContext) ==========
+// ========== TRANSACTIONS ==========
 export const getTransactions = () => getAll('transactions')
 export const addTransaction = (data) => add('transactions', { ...data, createdAt: new Date().toISOString() })
 export const updateTransaction = (id, data) => update('transactions', id, data)
 export const deleteTransaction = (id) => remove('transactions', id)
 
-// Real-time simulation (polling)
 let transactionInterval = null
 export const onTransactionsChange = (callback) => {
   if (transactionInterval) clearInterval(transactionInterval)
@@ -163,10 +156,14 @@ const DEFAULT_CATEGORIES = [
 ]
 
 export const seedDefaultCategories = async () => {
-  const existing = await getCategories()
-  if (existing.length > 0) return
-  for (const cat of DEFAULT_CATEGORIES) {
-    await addCategory(cat)
+  try {
+    const existing = await getCategories()
+    if (existing.length > 0) return
+    for (const cat of DEFAULT_CATEGORIES) {
+      await addCategory(cat)
+    }
+    console.log('Categorias padrão criadas com sucesso!')
+  } catch (err) {
+    console.error('Erro ao semear categorias:', err)
   }
-  console.log('Categorias padrão criadas com sucesso!')
 }
