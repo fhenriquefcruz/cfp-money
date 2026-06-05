@@ -128,7 +128,7 @@ export const exportToCSV = (transactions, categories) => {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `finwise-transacoes-${format(new Date(), 'yyyy-MM-dd')}.csv`
+  a.download = `cfp-money-transacoes-${format(new Date(), 'yyyy-MM-dd')}.csv`
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -147,7 +147,7 @@ export const exportToPDF = async (transactions, categories, summary) => {
   doc.setTextColor(255, 255, 255)
   doc.setFontSize(22)
   doc.setFont('helvetica', 'bold')
-  doc.text('FinWise', 14, 20)
+  doc.text('CFP Money', 14, 20)
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
   doc.text('Extrato Financeiro', 14, 28)
@@ -212,7 +212,7 @@ export const exportToPDF = async (transactions, categories, summary) => {
     },
   })
 
-  doc.save(`finwise-extrato-${format(new Date(), 'yyyy-MM-dd')}.pdf`)
+  doc.save(`cfp-money-extrato-${format(new Date(), 'yyyy-MM-dd')}.pdf`)
 }
 
 // ── IMPORT CSV ──
