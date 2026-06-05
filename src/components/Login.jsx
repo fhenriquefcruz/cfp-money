@@ -1,1 +1,323 @@
+// src/components/Login.jsx
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Mail, Lock, User, Phone, Eye, EyeOff, ArrowRight, TrendingUp, Shield, Zap } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+import { Button, Input, Spinner } from './ui'
 
+const GoogleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+  </svg>
+)
+
+const FEATURES = [
+  { icon: TrendingUp, text: 'Dashboard inteligente com previsões' },
+  { icon: Shield, text: 'Dados isolados e 100% seguros' },
+  { icon: Zap, text: 'Sincronização em tempo real' },
+]
+
+export default function Login() {
+  const { loginGoogle, loginEmail, register, forgotPassword, error, loading: authLoading, clearError } = useAuth()
+  const [mode, setMode] = useState('login') // 'login' | 'register' | 'forgot' | 'phone'
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [successMsg, setSuccessMsg] = useState('')
+  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' })
+  const [errors, setErrors] = useState({})
+
+  const updateForm = (field) => (e) => {
+    setForm(f => ({ ...f, [field]: e.target.value }))
+    setErrors(e => ({ ...e, [field]: '' }))
+    clearError()
+    setSuccessMsg('')
+  }
+
+  const validate = () => {
+    const errs = {}
+    if (mode === 'register' && !form.name.trim()) errs.name = 'Nome é obrigatório'
+    if (mode !== 'forgot') {
+      if (!form.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errs.email = 'E-mail inválido'
+      if (!form.password || form.password.length < 6) errs.password = 'Mínimo 6 caracteres'
+    } else {
+      if (!form.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errs.email = 'E-mail inválido'
+    }
+    setErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!validate()) return
+    setLoading(true)
+    try {
+      if (mode === 'login') {
+        await loginEmail(form.email, form.password)
+      } else if (mode === 'register') {
+        await register(form.email, form.password, form.name)
+        setSuccessMsg('Conta criada! Verifique seu e-mail para confirmar.')
+        setMode('login')
+      } else if (mode === 'forgot') {
+        await forgotPassword(form.email)
+        setSuccessMsg('E-mail de recuperação enviado!')
+        setMode('login')
+      }
+    } catch (_) {
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogle = async () => {
+    setLoading(true)
+    try {
+      await loginGoogle()
+    } catch (_) {
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const switchMode = (m) => {
+    setMode(m)
+    clearError()
+    setSuccessMsg('')
+    setErrors({})
+  }
+
+  const titles = {
+    login: { title: 'Bem-vindo de volta', sub: 'Entre na sua conta para continuar' },
+    register: { title: 'Criar conta gratuita', sub: 'Comece a controlar suas finanças hoje' },
+    forgot: { title: 'Esqueceu a senha?', sub: 'Enviaremos um e-mail para redefinir' },
+  }
+
+  const t = titles[mode]
+
+  return (
+    <div className="min-h-screen flex bg-[--bg-app]">
+      {/* Left panel — brand + features */}
+      <div className="hidden lg:flex flex-col justify-between w-[45%] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-12 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/5" />
+          <div className="absolute bottom-20 -left-20 w-60 h-60 rounded-full bg-white/5" />
+          <div className="absolute top-1/2 right-10 w-40 h-40 rounded-full bg-white/5" />
+        </div>
+
+        {/* Logo */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <TrendingUp className="text-white" size={22} />
+            </div>
+            <span className="text-2xl font-black text-white tracking-tight">FinWise</span>
+          </div>
+          <p className="text-white/70 text-sm">Controle financeiro pessoal</p>
+        </div>
+
+        {/* Features */}
+        <div className="relative z-10 space-y-6">
+          <h2 className="text-4xl font-black text-white leading-tight">
+            Tome controle<br />das suas finanças
+          </h2>
+          <div className="space-y-4">
+            {FEATURES.map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <Icon size={16} className="text-white" />
+                </div>
+                <span className="text-white/90 text-sm font-medium">{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="relative z-10 grid grid-cols-2 gap-4">
+          {[
+            { label: 'Usuários ativos', value: '10k+' },
+            { label: 'Transações geridas', value: '500k+' },
+          ].map(s => (
+            <div key={s.label} className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+              <p className="text-2xl font-black text-white">{s.value}</p>
+              <p className="text-white/60 text-xs mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center gap-2 mb-8">
+            <div className="w-8 h-8 rounded-xl bg-[--brand-600] flex items-center justify-center">
+              <TrendingUp className="text-white" size={18} />
+            </div>
+            <span className="text-xl font-black text-[--text-primary]">FinWise</span>
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={mode}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <h1 className="text-3xl font-black text-[--text-primary] mb-1">{t.title}</h1>
+              <p className="text-[--text-secondary] text-sm mb-8">{t.sub}</p>
+
+              {/* Success message */}
+              {successMsg && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-3 rounded-xl bg-[--success-bg] border border-[--success-border] text-[--success-text] text-sm"
+                >
+                  ✓ {successMsg}
+                </motion.div>
+              )}
+
+              {/* Error message */}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-3 rounded-xl bg-[--danger-bg] border border-[--danger-border] text-[--danger-text] text-sm"
+                >
+                  {error}
+                </motion.div>
+              )}
+
+              {mode !== 'forgot' && (
+                <>
+                  {/* Google button */}
+                  <Button
+                    variant="secondary"
+                    fullWidth
+                    onClick={handleGoogle}
+                    loading={loading}
+                    className="mb-4 py-3"
+                  >
+                    <GoogleIcon />
+                    Continuar com Google
+                  </Button>
+
+                  {/* Divider */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex-1 h-px bg-[--border-default]" />
+                    <span className="text-xs text-[--text-tertiary] font-medium">ou com e-mail</span>
+                    <div className="flex-1 h-px bg-[--border-default]" />
+                  </div>
+                </>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {mode === 'register' && (
+                  <Input
+                    label="Nome completo"
+                    type="text"
+                    placeholder="João Silva"
+                    value={form.name}
+                    onChange={updateForm('name')}
+                    icon={<User />}
+                    error={errors.name}
+                    required
+                    autoFocus
+                  />
+                )}
+
+                <Input
+                  label="E-mail"
+                  type="email"
+                  placeholder="joao@exemplo.com"
+                  value={form.email}
+                  onChange={updateForm('email')}
+                  icon={<Mail />}
+                  error={errors.email}
+                  required
+                  autoFocus={mode !== 'register'}
+                />
+
+                {mode !== 'forgot' && (
+                  <Input
+                    label="Senha"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={form.password}
+                    onChange={updateForm('password')}
+                    icon={<Lock />}
+                    error={errors.password}
+                    required
+                    iconRight={
+                      <button type="button" onClick={() => setShowPassword(v => !v)} className="text-[--text-tertiary] hover:text-[--text-secondary]">
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    }
+                  />
+                )}
+
+                {mode === 'login' && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      className="text-xs text-[--text-brand] hover:underline"
+                      onClick={() => switchMode('forgot')}
+                    >
+                      Esqueci a senha
+                    </button>
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  fullWidth
+                  loading={loading}
+                  className="py-3 text-base"
+                  iconRight={<ArrowRight />}
+                >
+                  {mode === 'login' ? 'Entrar' : mode === 'register' ? 'Criar conta' : 'Enviar e-mail'}
+                </Button>
+              </form>
+
+              {/* Mode switcher */}
+              <p className="text-center text-sm text-[--text-secondary] mt-6">
+                {mode === 'login' ? (
+                  <>
+                    Não tem conta?{' '}
+                    <button className="text-[--text-brand] font-semibold hover:underline" onClick={() => switchMode('register')}>
+                      Cadastre-se grátis
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Já tem conta?{' '}
+                    <button className="text-[--text-brand] font-semibold hover:underline" onClick={() => switchMode('login')}>
+                      Entrar
+                    </button>
+                  </>
+                )}
+              </p>
+
+              <p className="text-center text-xs text-[--text-tertiary] mt-4">
+                Ao continuar, você concorda com os{' '}
+                <a href="#" className="hover:underline">Termos de uso</a>
+                {' '}e a{' '}
+                <a href="#" className="hover:underline">Política de privacidade</a>
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Recaptcha container for phone auth */}
+      <div id="recaptcha-container" />
+    </div>
+  )
+}
