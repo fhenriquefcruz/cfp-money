@@ -1,16 +1,6 @@
 // src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import {
-  onAuthChange,
-  signInWithGoogle,
-  signInEmail,
-  registerEmail,
-  resetPassword,
-  logOut,
-  sendPhoneCode,
-  setupRecaptcha,
-  seedDefaultCategories,
-} from '../services/firebase'
+import { onAuthChange, signInEmail, registerEmail, resetPassword, logOut } from '../services/firebase'
 
 const AuthContext = createContext({})
 
@@ -26,16 +16,8 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    const unsubscribe = onAuthChange(async (u) => {
+    const unsubscribe = onAuthChange((u) => {
       setUser(u)
-      if (u) {
-        // Seed default categories for new users
-        try {
-          await seedDefaultCategories(u.uid)
-        } catch (e) {
-          // Ignore seeding errors
-        }
-      }
       setLoading(false)
     })
     return unsubscribe
@@ -51,18 +33,10 @@ export const AuthProvider = ({ children }) => {
       'auth/weak-password': 'Senha muito fraca. Use ao menos 6 caracteres.',
       'auth/invalid-email': 'E-mail inválido.',
       'auth/too-many-requests': 'Muitas tentativas. Aguarde e tente novamente.',
-      'auth/popup-closed-by-user': 'Login cancelado.',
       'auth/network-request-failed': 'Sem conexão com a internet.',
     }
     setError(messages[err.code] || err.message || 'Erro desconhecido.')
     throw err
-  }
-
-  const loginGoogle = async () => {
-    clearError()
-    try {
-      return await signInWithGoogle()
-    } catch (e) { handleError(e) }
   }
 
   const loginEmail = async (email, password) => {
@@ -86,14 +60,6 @@ export const AuthProvider = ({ children }) => {
     } catch (e) { handleError(e) }
   }
 
-  const loginPhone = async (phone) => {
-    clearError()
-    try {
-      const recaptcha = setupRecaptcha('recaptcha-container')
-      return await sendPhoneCode(phone, recaptcha)
-    } catch (e) { handleError(e) }
-  }
-
   const logout = async () => {
     await logOut()
     setUser(null)
@@ -105,11 +71,9 @@ export const AuthProvider = ({ children }) => {
       loading,
       error,
       clearError,
-      loginGoogle,
       loginEmail,
       register,
       forgotPassword,
-      loginPhone,
       logout,
     }}>
       {children}
