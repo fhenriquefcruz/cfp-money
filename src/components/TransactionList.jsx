@@ -1,12 +1,12 @@
 // src/components/TransactionList.jsx
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, Search, Filter, Download, Upload, Edit2, Trash2,
-  ArrowUpCircle, ArrowDownCircle, ChevronDown, X, FileText
+  ArrowUpCircle, ArrowDownCircle, X, FileText, ArrowLeftRight
 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
-import { Card, Button, Badge, EmptyState, Modal } from './ui'
+import { Card, Button, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
 import { formatCurrency, formatDate, getPaymentLabel, exportToCSV, exportToPDF, parseCSVImport } from '../utils'
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
@@ -34,7 +34,6 @@ export default function TransactionList() {
   const [page, setPage] = useState(1)
   const PER_PAGE = 20
 
-  // ── FILTER ──
   const filtered = useMemo(() => {
     return transactions.filter(tx => {
       if (typeFilter !== 'all' && tx.type !== typeFilter) return false
@@ -54,7 +53,6 @@ export default function TransactionList() {
     })
   }, [transactions, typeFilter, categoryFilter, dateRange, search])
 
-  // ── SUMMARY ──
   const summary = useMemo(() => {
     const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
     const expenses = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
@@ -89,7 +87,6 @@ export default function TransactionList() {
       showNotification('Nenhuma transação encontrada no arquivo.', 'warning')
       return
     }
-    // Match categories by name
     for (const tx of txs) {
       const cat = categories.find(c => c.name.toLowerCase() === tx.categoryName?.toLowerCase())
       const data = {
@@ -118,7 +115,6 @@ export default function TransactionList() {
 
   return (
     <div className="space-y-4 pb-28 lg:pb-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
         <div>
           <h1 className="text-2xl font-black text-[--text-primary]">Transações</h1>
@@ -132,7 +128,6 @@ export default function TransactionList() {
         </div>
       </div>
 
-      {/* Summary */}
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: 'Receitas', value: summary.income, color: '#10b981' },
@@ -148,7 +143,6 @@ export default function TransactionList() {
         ))}
       </div>
 
-      {/* Search & Filters */}
       <div className="space-y-3">
         <div className="flex gap-2">
           <div className="flex-1 relative">
@@ -176,7 +170,6 @@ export default function TransactionList() {
           </Button>
         </div>
 
-        {/* Date Presets */}
         <div className="flex gap-2 overflow-x-auto pb-1">
           {DATE_PRESETS.map(preset => (
             <button
@@ -198,7 +191,6 @@ export default function TransactionList() {
               className="overflow-hidden"
             >
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-[--bg-subtle] rounded-xl border border-[--border-subtle]">
-                {/* Type */}
                 <div>
                   <label className="text-xs font-medium text-[--text-tertiary] block mb-1.5">Tipo</label>
                   <select
@@ -211,8 +203,6 @@ export default function TransactionList() {
                     <option value="expense">Despesas</option>
                   </select>
                 </div>
-
-                {/* Category */}
                 <div>
                   <label className="text-xs font-medium text-[--text-tertiary] block mb-1.5">Categoria</label>
                   <select
@@ -224,8 +214,6 @@ export default function TransactionList() {
                     {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                   </select>
                 </div>
-
-                {/* Date Range */}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-xs font-medium text-[--text-tertiary] block mb-1.5">De</label>
@@ -246,7 +234,6 @@ export default function TransactionList() {
                     />
                   </div>
                 </div>
-
                 <div className="sm:col-span-3 flex justify-end">
                   <Button variant="ghost" size="sm" onClick={clearFilters}>Limpar filtros</Button>
                 </div>
@@ -256,7 +243,6 @@ export default function TransactionList() {
         </AnimatePresence>
       </div>
 
-      {/* Transaction List */}
       <Card padding={false}>
         {filtered.length === 0 ? (
           <div className="p-6">
@@ -287,15 +273,12 @@ export default function TransactionList() {
                       transition={{ delay: Math.min(i * 0.03, 0.3) }}
                       className="flex items-center gap-3 px-4 py-3.5 hover:bg-[--bg-hover] transition-colors group"
                     >
-                      {/* Category icon */}
                       <div
                         className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
                         style={{ background: (cat?.color || '#6366f1') + '20' }}
                       >
                         {cat?.icon || (isIncome ? '💰' : '💸')}
                       </div>
-
-                      {/* Info */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-[--text-primary] truncate">
                           {tx.description || cat?.name || 'Sem descrição'}
@@ -317,13 +300,10 @@ export default function TransactionList() {
                           )}
                         </div>
                       </div>
-
-                      {/* Amount */}
                       <div className="flex items-center gap-3">
                         <span className={`text-sm font-bold tabular-nums ${isIncome ? 'text-[--success-icon]' : 'text-[--danger-icon]'}`}>
                           {isIncome ? '+' : '−'}{formatCurrency(tx.amount)}
                         </span>
-                        {/* Actions */}
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => handleEdit(tx)}
@@ -344,8 +324,6 @@ export default function TransactionList() {
                 })}
               </AnimatePresence>
             </div>
-
-            {/* Load More */}
             {hasMore && (
               <div className="p-4 text-center border-t border-[--border-subtle]">
                 <Button variant="ghost" size="sm" onClick={() => setPage(p => p + 1)}>
@@ -357,10 +335,8 @@ export default function TransactionList() {
         )}
       </Card>
 
-      {/* Transaction Form Modal */}
       <TransactionForm isOpen={modalOpen} onClose={handleClose} transaction={editingTx} />
 
-      {/* Delete Confirm */}
       <Modal
         isOpen={!!deleteConfirm}
         onClose={() => setDeleteConfirm(null)}
@@ -376,7 +352,6 @@ export default function TransactionList() {
         <p className="text-[--text-secondary]">Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.</p>
       </Modal>
 
-      {/* Import Modal */}
       <Modal
         isOpen={importModal}
         onClose={() => setImportModal(false)}
