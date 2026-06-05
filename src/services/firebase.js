@@ -28,7 +28,7 @@ export const onAuthChange = (callback) => onAuthStateChanged(auth, callback)
 
 // ========== INDEXEDDB ==========
 const DB_NAME = 'CFPMoneyDB'
-const DB_VERSION = 3
+const DB_VERSION = 4  // incrementar versão para forçar upgrade
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -66,10 +66,12 @@ async function getAll(storeName) {
 
 async function add(storeName, item) {
   const db = await openDB()
+  // Remove qualquer campo id que possa existir para evitar conflito com autoIncrement
+  const { id, ...data } = item
   return new Promise((resolve, reject) => {
     const tx = db.transaction(storeName, 'readwrite')
     const store = tx.objectStore(storeName)
-    const request = store.add(item)
+    const request = store.add(data)
     request.onsuccess = () => resolve(request.result)
     request.onerror = () => reject(request.error)
   })
@@ -115,7 +117,7 @@ export const onTransactionsChange = (callback) => {
 
 // ========== CATEGORIES ==========
 export const getCategories = () => getAll('categories')
-export const addCategory = (data) => add('categories', data)
+export const addCategory = (data) => add('categories', data)  // data não deve conter id
 export const updateCategory = (id, data) => update('categories', id, data)
 export const deleteCategory = (id) => remove('categories', id)
 
