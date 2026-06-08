@@ -1,7 +1,13 @@
 // src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { onAuthChange, signInEmail, registerEmail, resetPassword, logOut } from '../services/firebase'
-import { seedDefaultCategories } from '../services/firebase'
+import {
+  onAuthChange,
+  signInEmail,
+  registerEmail,
+  resetPassword,
+  logOut,
+  seedDefaultCategories,
+} from '../services/firebase'
 
 const AuthContext = createContext({})
 
@@ -20,7 +26,6 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthChange(async (u) => {
       setUser(u)
       if (u) {
-        // Seed default categories for new users (apenas uma vez)
         try {
           await seedDefaultCategories()
         } catch (e) {
@@ -38,6 +43,7 @@ export const AuthProvider = ({ children }) => {
     const messages = {
       'auth/user-not-found': 'Usuário não encontrado.',
       'auth/wrong-password': 'Senha incorreta.',
+      'auth/invalid-credential': 'E-mail ou senha incorretos.',
       'auth/email-already-in-use': 'E-mail já cadastrado.',
       'auth/weak-password': 'Senha muito fraca. Use ao menos 6 caracteres.',
       'auth/invalid-email': 'E-mail inválido.',
@@ -52,21 +58,27 @@ export const AuthProvider = ({ children }) => {
     clearError()
     try {
       return await signInEmail(email, password)
-    } catch (e) { handleError(e) }
+    } catch (e) {
+      handleError(e)
+    }
   }
 
   const register = async (email, password, name) => {
     clearError()
     try {
       return await registerEmail(email, password, name)
-    } catch (e) { handleError(e) }
+    } catch (e) {
+      handleError(e)
+    }
   }
 
   const forgotPassword = async (email) => {
     clearError()
     try {
       return await resetPassword(email)
-    } catch (e) { handleError(e) }
+    } catch (e) {
+      handleError(e)
+    }
   }
 
   const logout = async () => {
@@ -75,16 +87,9 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      error,
-      clearError,
-      loginEmail,
-      register,
-      forgotPassword,
-      logout,
-    }}>
+    <AuthContext.Provider
+      value={{ user, loading, error, clearError, loginEmail, register, forgotPassword, logout }}
+    >
       {children}
     </AuthContext.Provider>
   )
