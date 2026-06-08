@@ -1,5 +1,5 @@
 // src/contexts/AppContext.jsx
-import React, { createContext, useContext, useEffect, useReducer, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useReducer, useCallback, useRef } from 'react'
 import { useAuth } from './AuthContext'
 import {
   onTransactionsChange,
@@ -43,11 +43,11 @@ function reducer(state, action) {
     case 'SET_BUDGETS':
       return { ...state, budgets: action.payload, loading: { ...state.loading, budgets: false } }
     case 'ADD_NOTIFICATION':
-      return { ...state, notifications: [...state.notifications, { id: Date.now(), ...action.payload }] }
+      return { ...state, notifications: [...state.notifications, action.payload] }
     case 'REMOVE_NOTIFICATION':
-      return { ...state, notifications: state.notifications.filter(n => n.id !== action.payload) }
+      return { ...state, notifications: state.notifications.filter((n) => n.id !== action.payload) }
     case 'RESET':
-      return initialState
+      return { ...initialState }
     default:
       return state
   }
@@ -56,16 +56,11 @@ function reducer(state, action) {
 export const AppProvider = ({ children }) => {
   const { user } = useAuth()
   const [state, dispatch] = useReducer(reducer, initialState)
+  // Ref para acessar state atual em closures sem re-criar callbacks
+  const stateRef = useRef(state)
+  stateRef.current = state
 
   // ── NOTIFICATIONS ──
-  const notify = useCallback((message, type = 'success') => {
-    dispatch({ type: 'ADD_NOTIFICATION', payload: { message, kind: type } })
-    setTimeout(() => {
-      dispatch({ type: 'REMOVE_NOTIFICATION', payload: Date.now() })
-    }, 4000)
-  }, [])
-
-  // Need to track notification IDs properly
   const showNotification = useCallback((message, type = 'success') => {
     const id = Date.now() + Math.random()
     dispatch({ type: 'ADD_NOTIFICATION', payload: { id, message, kind: type } })
@@ -85,75 +80,84 @@ export const AppProvider = ({ children }) => {
       return
     }
 
-    // Real-time transactions listener
+    // Ouvinte em tempo real para transações
     const unsubTx = onTransactionsChange(user.uid, (txs) => {
       dispatch({ type: 'SET_TRANSACTIONS', payload: txs })
     })
 
-    // Load categories, goals, budgets once
+    // Carrega categorias, metas e orçamentos
     const loadStatic = async () => {
-      const [cats, goals, budgets] = await Promise.all([
-        getCategories(user.uid),
-        getGoals(user.uid),
-        getBudgets(user.uid),
-      ])
-      dispatch({ type: 'SET_CATEGORIES', payload: cats })
-      dispatch({ type: 'SET_GOALS', payload: goals })
-      dispatch({ type: 'SET_BUDGETS', payload: budgets })
+      try {
+        const [cats, goals, budgets] = await Promise.all([
+          getCategories(),
+          getGoals(),
+          getBudgets(),
+        ])
+        dispatch({ type: 'SET_CATEGORIES', payload: cats })
+        dispatch({ type: 'SET_GOALS', payload: goals })
+        dispatch({ type: 'SET_BUDGETS', payload: budgets })
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err)
+      }
     }
+
     loadStatic()
 
-    return () => unsubTx()
+    return () => {
+      if (typeof unsubTx === 'function') unsubTx()
+    }
   }, [user])
 
   // ── TRANSACTION ACTIONS ──
-  const createTransaction = async (data) => {
+  const createTransaction = useCallback(async (data) => {
     try {
-      await addTransaction(user.uid, data)
+      await addTransaction(data)
       showNotification('Transação adicionada!')
-      // Check budget alerts
       checkBudgetAlert(data)
     } catch (e) {
       showNotification('Erro ao adicionar transação.', 'error')
       throw e
     }
-  }
+  }, [showNotification]) // eslint-disable-line
 
-  const editTransaction = async (id, data) => {
+  const editTransaction = useCallback(async (id, data) => {
     try {
-      await updateTransaction(user.uid, id, data)
+      await updateTransaction(id, data)
       showNotification('Transação atualizada!')
     } catch (e) {
       showNotification('Erro ao atualizar.', 'error')
       throw e
     }
-  }
+  }, [showNotification])
 
-  const removeTransaction = async (id) => {
+  const removeTransaction = useCallback(async (id) => {
     try {
-      await deleteTransaction(user.uid, id)
+      await deleteTransaction(id)
       showNotification('Transação removida.', 'info')
     } catch (e) {
       showNotification('Erro ao remover.', 'error')
       throw e
     }
-  }
+  }, [showNotification])
 
   // ── BUDGET ALERT ──
-  const checkBudgetAlert = (newTx) => {
+  const checkBudgetAlert = useCallback((newTx) => {
     if (newTx.type !== 'expense') return
-    const budget = state.budgets.find(b => b.categoryId === newTx.categoryId)
+    const { budgets, transactions } = stateRef.current
+    const budget = budgets.find((b) => b.categoryId === newTx.categoryId)
     if (!budget) return
 
     const now = new Date()
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    const spent = state.transactions
-      .filter(t =>
-        t.type === 'expense' &&
-        t.categoryId === newTx.categoryId &&
-        new Date(t.date) >= monthStart
-      )
-      .reduce((sum, t) => sum + t.amount, 0) + newTx.amount
+    const spent =
+      transactions
+        .filter(
+          (t) =>
+            t.type === 'expense' &&
+            t.categoryId === newTx.categoryId &&
+            new Date(t.date) >= monthStart
+        )
+        .reduce((sum, t) => sum + t.amount, 0) + newTx.amount
 
     const pct = (spent / budget.amount) * 100
     if (pct >= 90) {
@@ -162,85 +166,126 @@ export const AppProvider = ({ children }) => {
         'warning'
       )
     }
-  }
+  }, [showNotification])
 
   // ── CATEGORY ACTIONS ──
-  const createCategory = async (data) => {
-    const doc = await addCategory(user.uid, data)
-    const updated = await getCategories(user.uid)
-    dispatch({ type: 'SET_CATEGORIES', payload: updated })
-    showNotification('Categoria criada!')
-    return doc
-  }
+  const createCategory = useCallback(async (data) => {
+    try {
+      await addCategory(data)
+      const updated = await getCategories()
+      dispatch({ type: 'SET_CATEGORIES', payload: updated })
+      showNotification('Categoria criada!')
+    } catch (e) {
+      showNotification('Erro ao criar categoria.', 'error')
+      throw e
+    }
+  }, [showNotification])
 
-  const editCategory = async (id, data) => {
-    await updateCategory(user.uid, id, data)
-    const updated = await getCategories(user.uid)
-    dispatch({ type: 'SET_CATEGORIES', payload: updated })
-    showNotification('Categoria atualizada!')
-  }
+  const editCategory = useCallback(async (id, data) => {
+    try {
+      await updateCategory(id, data)
+      const updated = await getCategories()
+      dispatch({ type: 'SET_CATEGORIES', payload: updated })
+      showNotification('Categoria atualizada!')
+    } catch (e) {
+      showNotification('Erro ao atualizar categoria.', 'error')
+      throw e
+    }
+  }, [showNotification])
 
-  const removeCategory = async (id) => {
-    await deleteCategory(user.uid, id)
-    const updated = await getCategories(user.uid)
-    dispatch({ type: 'SET_CATEGORIES', payload: updated })
-    showNotification('Categoria removida.', 'info')
-  }
+  const removeCategory = useCallback(async (id) => {
+    try {
+      await deleteCategory(id)
+      const updated = await getCategories()
+      dispatch({ type: 'SET_CATEGORIES', payload: updated })
+      showNotification('Categoria removida.', 'info')
+    } catch (e) {
+      showNotification('Erro ao remover categoria.', 'error')
+      throw e
+    }
+  }, [showNotification])
 
   // ── GOAL ACTIONS ──
-  const createGoal = async (data) => {
-    await addGoal(user.uid, data)
-    const updated = await getGoals(user.uid)
-    dispatch({ type: 'SET_GOALS', payload: updated })
-    showNotification('Meta criada!')
-  }
+  const createGoal = useCallback(async (data) => {
+    try {
+      await addGoal(data)
+      const updated = await getGoals()
+      dispatch({ type: 'SET_GOALS', payload: updated })
+      showNotification('Meta criada!')
+    } catch (e) {
+      showNotification('Erro ao criar meta.', 'error')
+      throw e
+    }
+  }, [showNotification])
 
-  const editGoal = async (id, data) => {
-    await updateGoal(user.uid, id, data)
-    const updated = await getGoals(user.uid)
-    dispatch({ type: 'SET_GOALS', payload: updated })
-    showNotification('Meta atualizada!')
-  }
+  const editGoal = useCallback(async (id, data) => {
+    try {
+      await updateGoal(id, data)
+      const updated = await getGoals()
+      dispatch({ type: 'SET_GOALS', payload: updated })
+      showNotification('Meta atualizada!')
+    } catch (e) {
+      showNotification('Erro ao atualizar meta.', 'error')
+      throw e
+    }
+  }, [showNotification])
 
-  const removeGoal = async (id) => {
-    await deleteGoal(user.uid, id)
-    const updated = await getGoals(user.uid)
-    dispatch({ type: 'SET_GOALS', payload: updated })
-  }
+  const removeGoal = useCallback(async (id) => {
+    try {
+      await deleteGoal(id)
+      const updated = await getGoals()
+      dispatch({ type: 'SET_GOALS', payload: updated })
+      showNotification('Meta removida.', 'info')
+    } catch (e) {
+      showNotification('Erro ao remover meta.', 'error')
+      throw e
+    }
+  }, [showNotification])
 
   // ── BUDGET ACTIONS ──
-  const saveBudget = async (categoryId, amount) => {
-    await setBudget(user.uid, categoryId, amount)
-    const updated = await getBudgets(user.uid)
-    dispatch({ type: 'SET_BUDGETS', payload: updated })
-    showNotification('Orçamento salvo!')
-  }
+  const saveBudget = useCallback(async (categoryId, amount) => {
+    try {
+      await setBudget(categoryId, amount)
+      const updated = await getBudgets()
+      dispatch({ type: 'SET_BUDGETS', payload: updated })
+      showNotification('Orçamento salvo!')
+    } catch (e) {
+      showNotification('Erro ao salvar orçamento.', 'error')
+      throw e
+    }
+  }, [showNotification])
 
-  const removeBudget = async (categoryId) => {
-    await deleteBudget(user.uid, categoryId)
-    const updated = await getBudgets(user.uid)
-    dispatch({ type: 'SET_BUDGETS', payload: updated })
-  }
+  const removeBudget = useCallback(async (categoryId) => {
+    try {
+      await deleteBudget(categoryId)
+      const updated = await getBudgets()
+      dispatch({ type: 'SET_BUDGETS', payload: updated })
+      showNotification('Orçamento removido.', 'info')
+    } catch (e) {
+      showNotification('Erro ao remover orçamento.', 'error')
+      throw e
+    }
+  }, [showNotification])
 
   // ── DERIVED DATA ──
-  const getMonthTransactions = (year, month) => {
-    return state.transactions.filter(t => {
-      const d = new Date(t.date)
+  const getMonthTransactions = useCallback((year, month) => {
+    return stateRef.current.transactions.filter((t) => {
+      const d = new Date(t.date + 'T00:00:00')
       return d.getFullYear() === year && d.getMonth() === month
     })
-  }
+  }, [])
 
-  const getSummary = (year, month) => {
+  const getSummary = useCallback((year, month) => {
     const txs = getMonthTransactions(year, month)
-    const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-    const expenses = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+    const income = txs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+    const expenses = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
     return { income, expenses, balance: income - expenses }
-  }
+  }, [getMonthTransactions])
 
-  const getCategoryTotals = (year, month) => {
-    const txs = getMonthTransactions(year, month).filter(t => t.type === 'expense')
+  const getCategoryTotals = useCallback((year, month) => {
+    const txs = getMonthTransactions(year, month).filter((t) => t.type === 'expense')
     const totals = {}
-    txs.forEach(t => {
+    txs.forEach((t) => {
       if (!totals[t.categoryId]) {
         totals[t.categoryId] = {
           categoryId: t.categoryId,
@@ -255,45 +300,43 @@ export const AppProvider = ({ children }) => {
       totals[t.categoryId].count++
     })
     return Object.values(totals).sort((a, b) => b.total - a.total)
-  }
+  }, [getMonthTransactions])
 
-  // Spending forecast based on last 3 months average
-  const getSpendingForecast = () => {
+  const getSpendingForecast = useCallback(() => {
     const now = new Date()
     const months = []
     for (let i = 1; i <= 3; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const { expenses } = getSummary(d.getFullYear(), d.getMonth())
-      months.push(expenses)
+      if (expenses > 0) months.push(expenses)
     }
-    const avg = months.reduce((s, v) => s + v, 0) / months.filter(v => v > 0).length
-    return avg || 0
-  }
+    if (!months.length) return 0
+    return months.reduce((s, v) => s + v, 0) / months.length
+  }, [getSummary])
 
   return (
-    <AppContext.Provider value={{
-      ...state,
-      // Actions
-      createTransaction,
-      editTransaction,
-      removeTransaction,
-      createCategory,
-      editCategory,
-      removeCategory,
-      createGoal,
-      editGoal,
-      removeGoal,
-      saveBudget,
-      removeBudget,
-      // Notifications
-      showNotification,
-      dismissNotification,
-      // Derived
-      getMonthTransactions,
-      getSummary,
-      getCategoryTotals,
-      getSpendingForecast,
-    }}>
+    <AppContext.Provider
+      value={{
+        ...state,
+        createTransaction,
+        editTransaction,
+        removeTransaction,
+        createCategory,
+        editCategory,
+        removeCategory,
+        createGoal,
+        editGoal,
+        removeGoal,
+        saveBudget,
+        removeBudget,
+        showNotification,
+        dismissNotification,
+        getMonthTransactions,
+        getSummary,
+        getCategoryTotals,
+        getSpendingForecast,
+      }}
+    >
       {children}
     </AppContext.Provider>
   )
