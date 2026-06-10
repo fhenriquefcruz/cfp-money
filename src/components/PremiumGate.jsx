@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Button } from './ui'
 import { clsx } from 'clsx'
 
-const ADMIN_EMAIL = 'admin@cfpmoney.com'
+const ADMIN_EMAIL = 'fhenriquefcruz@gmail.com'
 
 const NAV_ITEMS = [
   { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
