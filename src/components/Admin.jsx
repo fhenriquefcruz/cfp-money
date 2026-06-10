@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Card, Button, Badge, Input } from './ui'
 
 // E-mail do administrador — altere para o seu
-const ADMIN_EMAIL = 'admin@cfpmoney.com'
+const ADMIN_EMAIL = 'fhenriquefcruz@gmail.com'
 
 // Gerencia planos de todos os usuários via localStorage
 // (Em produção, substituir por Firestore/backend)
