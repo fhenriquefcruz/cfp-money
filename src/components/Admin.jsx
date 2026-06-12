@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react'
 import {
   Shield, Users, Lock, Unlock, CheckCircle, Clock,
-  AlertTriangle, RefreshCw, ChevronDown, ChevronUp, Mail, User, Calendar
+  AlertTriangle, RefreshCw, ChevronDown, ChevronUp, Mail, User, Calendar, X
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { Card, Button, Badge, Input } from './ui'
-import { getAllPlansFromStorage, activatePremiumForEmail, blockEmailInStorage } from '../contexts/PlanContext'
+import { getAllPlansFromStorage, activatePremiumForEmail, blockEmailInStorage, removePremiumForEmail } from '../contexts/PlanContext'
 
-const ADMIN_EMAIL = 'fhenriquefcruz@gmail.com' // troque pelo seu
+const ADMIN_EMAIL = 'fabiohenriquefcruz@gmail.com' // troque pelo seu
 
 function getPlanStatus(plan) {
   if (plan.blocked) return { label: 'Bloqueado', variant: 'danger' }
@@ -26,7 +26,7 @@ function getPlanStatus(plan) {
   return { label: 'Free', variant: 'secondary' }
 }
 
-function UserRow({ plan, onActivate, onBlock, onUnblock }) {
+function UserRow({ plan, onActivate, onBlock, onUnblock, onRemovePremium }) {
   const [expanded, setExpanded] = useState(false)
   const [months, setMonths] = useState(1)
   const status = getPlanStatus(plan)
@@ -70,6 +70,12 @@ function UserRow({ plan, onActivate, onBlock, onUnblock }) {
             onClick={() => onActivate(plan.email, months)}>
             Ativar
           </Button>
+          {plan.type === 'premium' && plan.premiumUntil && new Date(plan.premiumUntil) > new Date() && (
+            <Button size="xs" variant="warning" icon={<X size={12} />}
+              onClick={() => onRemovePremium(plan.email)}>
+              Remover
+            </Button>
+          )}
           {plan.blocked
             ? <Button size="xs" variant="secondary" icon={<Unlock size={12} />}
                 onClick={() => onUnblock(plan.email)}>Liberar</Button>
@@ -160,6 +166,12 @@ export default function Admin() {
   const handleUnblock = (email) => {
     blockEmailInStorage(email, false)
     toast(`Usuário ${email} desbloqueado.`)
+    refresh()
+  }
+
+  const handleRemovePremium = (email) => {
+    removePremiumForEmail(email)
+    toast(`Premium removido de ${email}`)
     refresh()
   }
 
@@ -261,6 +273,7 @@ export default function Admin() {
               onActivate={handleActivate}
               onBlock={handleBlock}
               onUnblock={handleUnblock}
+              onRemovePremium={handleRemovePremium}
             />
           ))
         )}
