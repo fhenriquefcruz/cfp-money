@@ -1,262 +1,341 @@
-// src/components/Login.jsx
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, TrendingUp, Check, Star } from 'lucide-react'
+// src/components/Profile.jsx
+import React, { useState, useRef } from 'react'
+import {
+  User, Mail, LogOut, Moon, Sun, Camera, Key, Save,
+  Shield, Star, CheckCircle, QrCode, ChevronDown, ChevronUp, Copy
+} from 'lucide-react'
+import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth'
 import { useAuth } from '../contexts/AuthContext'
-import { Button, Input } from './ui'
+import { useTheme } from '../contexts/ThemeContext'
+import { usePlan } from '../contexts/PlanContext'
+import { Card, Button, Input, Modal, Badge } from './ui'
+import { auth } from '../services/firebase'
 
-const FREE_FEATURES = [
-  'Controle de receitas e despesas',
-  'Categorias personalizadas',
-  'Metas financeiras',
-  '7 dias de experiência Premium grátis',
-]
+const PIX_KEY    = 'seuemail@exemplo.com' // troque pela sua chave Pix
+const PIX_AMOUNT = 'R$ 19,90'
+
 const PREMIUM_FEATURES = [
   'Dashboard avançado com previsões',
-  'Relatórios completos + exportação PDF',
-  'Histórico ilimitado',
+  'Relatórios completos + exportação CSV',
+  'Histórico ilimitado de transações',
   'Alertas inteligentes de orçamento',
-  'Suporte prioritário',
 ]
 
-export default function Login() {
-  const { loginEmail, register, forgotPassword, error, clearError } = useAuth()
-  const [mode, setMode] = useState('login')
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [successMsg, setSuccessMsg] = useState('')
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
-  const [errors, setErrors] = useState({})
+export default function Profile() {
+  const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
+  const { status } = usePlan()
+  const fileInputRef = useRef(null)
 
-  const updateForm = (field) => (e) => {
-    setForm(f => ({ ...f, [field]: e.target.value }))
-    setErrors(e => ({ ...e, [field]: '' }))
-    clearError(); setSuccessMsg('')
-  }
+  const [displayName, setDisplayName]       = useState(user?.displayName || '')
+  const [photoPreview, setPhotoPreview]     = useState(null)
+  const [photoBase64, setPhotoBase64]       = useState(null)
+  const [saving, setSaving]                 = useState(false)
+  const [successMsg, setSuccessMsg]         = useState('')
+  const [errorMsg, setErrorMsg]             = useState('')
+  const [showPixModal, setShowPixModal]     = useState(false)
+  const [showPassModal, setShowPassModal]   = useState(false)
+  const [showPlanDetail, setShowPlanDetail] = useState(false)
+  const [copied, setCopied]                 = useState(false)
+  const [passForm, setPassForm]             = useState({ current: '', new: '', confirm: '' })
+  const [passError, setPassError]           = useState('')
 
-  const validate = () => {
-    const errs = {}
-    if (mode === 'register' && !form.name.trim()) errs.name = 'Nome é obrigatório'
-    if (mode !== 'forgot') {
-      if (!form.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errs.email = 'E-mail inválido'
-      if (!form.password || form.password.length < 6) errs.password = 'Mínimo 6 caracteres'
-    } else {
-      if (!form.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errs.email = 'E-mail inválido'
+  const toast    = (msg) => { setSuccessMsg(msg); setErrorMsg('');   setTimeout(() => setSuccessMsg(''), 3500) }
+  const toastErr = (msg) => { setErrorMsg(msg);   setSuccessMsg(''); setTimeout(() => setErrorMsg(''), 4000)  }
+
+  // ── Foto ──
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { toastErr('Imagem deve ter no máximo 2MB'); return }
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      setPhotoPreview(ev.target.result)
+      setPhotoBase64(ev.target.result)
     }
-    setErrors(errs)
-    return Object.keys(errs).length === 0
+    reader.readAsDataURL(file)
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!validate()) return
-    setIsLoading(true)
+  // ── Salvar nome + foto ──
+  // Usa auth.currentUser diretamente — nunca causa logout
+  const handleSaveProfile = async () => {
+    if (!displayName.trim()) { toastErr('O nome não pode ficar em branco.'); return }
+    setSaving(true)
     try {
-      if (mode === 'login') await loginEmail(form.email, form.password)
-      else if (mode === 'register') {
-        await register(form.email, form.password, form.name)
-        setSuccessMsg('Conta criada! Seus 7 dias Premium começam agora. Bem-vindo!')
-        setMode('login')
-      } else {
-        await forgotPassword(form.email)
-        setSuccessMsg('E-mail de recuperação enviado!')
-        setMode('login')
+      const currentUser = auth.currentUser
+      if (!currentUser) throw new Error('Sessão expirada. Faça login novamente.')
+
+      const updates = { displayName: displayName.trim() }
+
+      if (photoBase64) {
+        // Salva foto como base64 no localStorage (sem Firebase Storage)
+        localStorage.setItem(`cfp_photo_${currentUser.uid}`, photoBase64)
+        updates.photoURL = photoBase64
       }
-    } catch (_) {}
-    finally { setIsLoading(false) }
+
+      await updateProfile(currentUser, updates)
+      toast('✓ Perfil atualizado com sucesso!')
+    } catch (err) {
+      toastErr('Erro ao salvar: ' + (err.message || 'Tente novamente.'))
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const switchMode = (m) => { setMode(m); clearError(); setSuccessMsg(''); setErrors({}) }
-
-  const titles = {
-    login:    { title: 'Bem-vindo de volta',   sub: 'Entre na sua conta para continuar' },
-    register: { title: 'Comece gratuitamente', sub: '7 dias com experiência Premium completa' },
-    forgot:   { title: 'Recuperar acesso',     sub: 'Enviaremos um link para redefinir sua senha' },
+  // ── Alterar senha ──
+  const handleChangePassword = async () => {
+    setPassError('')
+    if (!passForm.current) { setPassError('Informe a senha atual.'); return }
+    if (passForm.new.length < 6) { setPassError('Nova senha: mínimo 6 caracteres.'); return }
+    if (passForm.new !== passForm.confirm) { setPassError('As senhas não coincidem.'); return }
+    setSaving(true)
+    try {
+      const currentUser = auth.currentUser
+      const cred = EmailAuthProvider.credential(currentUser.email, passForm.current)
+      await reauthenticateWithCredential(currentUser, cred)
+      await updatePassword(currentUser, passForm.new)
+      toast('✓ Senha alterada com sucesso!')
+      setShowPassModal(false)
+      setPassForm({ current: '', new: '', confirm: '' })
+    } catch (err) {
+      const msgs = {
+        'auth/wrong-password':     'Senha atual incorreta.',
+        'auth/invalid-credential': 'Senha atual incorreta.',
+        'auth/too-many-requests':  'Muitas tentativas. Aguarde.',
+      }
+      setPassError(msgs[err.code] || err.message)
+    } finally {
+      setSaving(false) }
   }
-  const t = titles[mode]
+
+  const copyPixKey = () => {
+    navigator.clipboard.writeText(PIX_KEY).catch(() => {})
+    setCopied(true); setTimeout(() => setCopied(false), 2000)
+  }
+
+  // Foto: preview novo → localStorage → photoURL do Firebase → inicial
+  const avatarSrc = photoPreview
+    || localStorage.getItem(`cfp_photo_${user?.uid}`)
+    || user?.photoURL
+    || null
+  const initials = (user?.displayName || user?.email || 'U')[0].toUpperCase()
+
+  const planLabel   = status.isPremium ? (status.isTrial ? 'Trial Premium' : 'Premium Ativo') : status.isExpired ? 'Expirado' : 'Gratuito'
+  const planVariant = status.isPremium ? 'success' : status.isExpired ? 'danger' : 'warning'
 
   return (
-    <div className="min-h-screen flex bg-[--bg-app]">
+    <div className="space-y-5 pb-24 lg:pb-6 max-w-lg">
+      <h1 className="text-2xl font-black text-[--text-primary]">Perfil</h1>
 
-      {/* ── Painel esquerdo ── */}
-      <div className="hidden lg:flex flex-col justify-between w-[48%] bg-gradient-to-br from-[--brand-800] via-[--brand-700] to-[--brand-500] p-12 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5" />
-          <div className="absolute bottom-16 -left-16 w-72 h-72 rounded-full bg-white/5" />
-          <div className="absolute inset-0 opacity-[0.07]"
-            style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+      {successMsg && (
+        <div className="p-3 rounded-xl bg-[--success-bg] border border-[--success-border] text-[--success-text] text-sm font-medium">
+          {successMsg}
         </div>
+      )}
+      {errorMsg && (
+        <div className="p-3 rounded-xl bg-[--danger-bg] border border-[--danger-border] text-[--danger-text] text-sm font-medium">
+          {errorMsg}
+        </div>
+      )}
 
-        {/* Logo */}
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <TrendingUp className="text-white" size={22} />
+      {/* ── Meu Plano ── */}
+      <Card>
+        <button className="w-full flex items-center justify-between" onClick={() => setShowPlanDetail(v => !v)}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[--brand-100] flex items-center justify-center">
+              <Shield size={16} className="text-[--brand-600]" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-bold text-[--text-primary]">Meu Plano</p>
+              <p className="text-xs text-[--text-tertiary]">
+                {status.isPremium
+                  ? `${status.daysLeft} dia${status.daysLeft !== 1 ? 's' : ''} restante${status.daysLeft !== 1 ? 's' : ''}`
+                  : status.isExpired ? 'Assinatura encerrada' : 'Sem assinatura ativa'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={planVariant}>{planLabel}</Badge>
+            {showPlanDetail ? <ChevronUp size={14} className="text-[--text-tertiary]" /> : <ChevronDown size={14} className="text-[--text-tertiary]" />}
+          </div>
+        </button>
+
+        {showPlanDetail && (
+          <div className="mt-4 pt-4 border-t border-[--border-subtle] space-y-4">
+            {status.isPremium && !status.isTrial && (
+              <div className="p-3 rounded-xl bg-[--success-bg] border border-[--success-border]">
+                <p className="text-xs font-bold text-[--success-text]">✓ Plano Premium ativo</p>
+                <p className="text-xs text-[--success-text] mt-0.5">Vence em {status.daysLeft} dias.</p>
+              </div>
+            )}
+            {status.isTrial && status.isPremium && (
+              <div className="p-3 rounded-xl bg-[--brand-50] border border-[--brand-200]">
+                <p className="text-xs font-bold text-[--brand-700]">🎁 Período de avaliação</p>
+                <p className="text-xs text-[--brand-600] mt-0.5">
+                  {status.daysLeft} dia{status.daysLeft !== 1 ? 's' : ''} restante{status.daysLeft !== 1 ? 's' : ''} de experiência Premium gratuita.
+                </p>
+              </div>
+            )}
+            {!status.isPremium && (
+              <div className="p-3 rounded-xl bg-[--warning-bg] border border-[--warning-border]">
+                <p className="text-xs font-bold text-[--warning-text]">
+                  {status.isExpired ? '⚠️ Seu período expirou' : '🔒 Plano Gratuito'}
+                </p>
+                <p className="text-xs text-[--warning-text] mt-0.5">
+                  Assine o Premium por {PIX_AMOUNT}/mês e libere todos os recursos.
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              {PREMIUM_FEATURES.map(f => (
+                <div key={f} className="flex items-center gap-2">
+                  <CheckCircle size={13} className={status.isPremium ? 'text-[--success-icon]' : 'text-[--text-tertiary]'} />
+                  <span className="text-xs text-[--text-secondary]">{f}</span>
+                </div>
+              ))}
+            </div>
+
+            {(!status.isPremium || status.daysLeft <= 7) && (
+              <Button variant="primary" fullWidth icon={<Star size={14} />} onClick={() => setShowPixModal(true)}>
+                {status.isPremium ? 'Renovar assinatura' : `Assinar Premium — ${PIX_AMOUNT}/mês`}
+              </Button>
+            )}
+          </div>
+        )}
+      </Card>
+
+      {/* ── Informações pessoais ── */}
+      <Card>
+        <h2 className="text-sm font-bold text-[--text-primary] mb-5">Informações pessoais</h2>
+
+        {/* Avatar */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="relative flex-shrink-0">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[--brand-400] to-[--brand-600] flex items-center justify-center text-2xl font-black text-white overflow-hidden">
+              {avatarSrc
+                ? <img src={avatarSrc} className="w-full h-full object-cover" alt="Foto de perfil" />
+                : initials}
+            </div>
+            <button type="button" onClick={() => fileInputRef.current?.click()}
+              className="absolute -bottom-1 -right-1 w-7 h-7 bg-[--brand-600] rounded-full flex items-center justify-center text-white shadow-md hover:bg-[--brand-700] transition-colors"
+              title="Alterar foto">
+              <Camera size={13} />
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
           </div>
           <div>
-            <span className="text-2xl font-black text-white tracking-tight">CFP Money</span>
-            <p className="text-white/55 text-xs mt-0.5">Controle financeiro pessoal</p>
+            <p className="font-bold text-[--text-primary]">{user?.displayName || 'Usuário'}</p>
+            <p className="text-sm text-[--text-tertiary]">{user?.email}</p>
+            <p className="text-xs text-[--text-tertiary] mt-0.5">Foto: máx. 2MB</p>
           </div>
         </div>
 
-        {/* Hero */}
-        <div className="relative z-10 space-y-8">
+        <div className="space-y-4">
+          <Input label="Nome completo" value={displayName} icon={<User size={15} />}
+            onChange={e => setDisplayName(e.target.value)} placeholder="Seu nome completo" />
+
+          {/* E-mail: somente leitura */}
           <div>
-            <h2 className="text-4xl font-black text-white leading-tight mb-3">
-              Tome controle<br />das suas finanças
-            </h2>
-            <p className="text-white/60 text-sm leading-relaxed max-w-sm">
-              Organize receitas, despesas e metas em um só lugar.
-              Simples, seguro e feito para o seu dia a dia.
+            <Input label="E-mail (login)" value={user?.email || ''} icon={<Mail size={15} />}
+              disabled className="opacity-60 cursor-not-allowed select-none" />
+            <p className="text-xs text-[--text-tertiary] mt-1 ml-1">
+              O e-mail é seu identificador de acesso e não pode ser alterado.
             </p>
           </div>
 
-          {/* Cards Free / Premium */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15">
-              <p className="text-white/50 text-[10px] font-semibold uppercase tracking-widest mb-1">Gratuito</p>
-              <p className="text-white text-2xl font-black mb-3">R$ 0</p>
-              <div className="space-y-2">
-                {FREE_FEATURES.map(f => (
-                  <div key={f} className="flex items-start gap-2">
-                    <Check size={11} className="text-white/50 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/65 text-xs leading-snug">{f}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 border border-white/30 relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[9px] font-black px-2 py-0.5 rounded-bl-xl tracking-wide">
-                POPULAR
-              </div>
-              <div className="flex items-center gap-1 mb-1">
-                <Star size={10} className="text-yellow-400 fill-yellow-400" />
-                <p className="text-yellow-300 text-[10px] font-semibold uppercase tracking-widest">Premium</p>
-              </div>
-              <p className="text-white text-2xl font-black">R$ 19,90
-                <span className="text-white/45 text-xs font-normal">/mês</span>
-              </p>
-              <p className="text-white/40 text-[10px] mb-3">via Pix · renova em 30 dias</p>
-              <div className="space-y-2">
-                {PREMIUM_FEATURES.map(f => (
-                  <div key={f} className="flex items-start gap-2">
-                    <Check size={11} className="text-yellow-400 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80 text-xs leading-snug">{f}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <Button variant="primary" onClick={handleSaveProfile} loading={saving} icon={<Save size={15} />}>
+            Salvar alterações
+          </Button>
         </div>
 
-        <p className="relative z-10 text-white/30 text-xs">
-          Seus dados são armazenados de forma segura e isolada por conta.
-        </p>
-      </div>
+        <div className="pt-5 mt-5 border-t border-[--border-subtle] space-y-2">
+          <Button variant="secondary" fullWidth onClick={() => setShowPassModal(true)} icon={<Key size={15} />}>
+            Alterar senha
+          </Button>
+          <Button variant="ghost" fullWidth onClick={toggleTheme}
+            icon={theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}>
+            {theme === 'dark' ? 'Tema claro' : 'Tema escuro'}
+          </Button>
+          <Button variant="danger" fullWidth onClick={logout} icon={<LogOut size={15} />}>
+            Sair da conta
+          </Button>
+        </div>
+      </Card>
 
-      {/* ── Painel direito ── */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 overflow-y-auto">
-        <div className="w-full max-w-md">
+      {/* ── Modal: Alterar senha ── */}
+      <Modal isOpen={showPassModal}
+        onClose={() => { setShowPassModal(false); setPassError(''); setPassForm({ current: '', new: '', confirm: '' }) }}
+        title="Alterar senha">
+        <div className="space-y-4">
+          <Input type="password" label="Senha atual" placeholder="••••••••"
+            value={passForm.current} onChange={e => setPassForm(f => ({ ...f, current: e.target.value }))} />
+          <Input type="password" label="Nova senha" placeholder="Mínimo 6 caracteres"
+            value={passForm.new} onChange={e => setPassForm(f => ({ ...f, new: e.target.value }))} />
+          <Input type="password" label="Confirmar nova senha" placeholder="Repita a nova senha"
+            value={passForm.confirm} onChange={e => setPassForm(f => ({ ...f, confirm: e.target.value }))} />
+          {passError && (
+            <p className="text-sm text-[--danger-text] bg-[--danger-bg] border border-[--danger-border] p-2.5 rounded-xl">
+              {passError}
+            </p>
+          )}
+          <Button variant="primary" fullWidth onClick={handleChangePassword} loading={saving}>
+            Confirmar alteração
+          </Button>
+        </div>
+      </Modal>
 
-          {/* Logo mobile */}
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-9 h-9 rounded-xl bg-[--brand-600] flex items-center justify-center">
-              <TrendingUp className="text-white" size={18} />
+      {/* ── Modal: Pix ── */}
+      <Modal isOpen={showPixModal} onClose={() => setShowPixModal(false)} title="Assinar Premium via Pix">
+        <div className="space-y-4">
+          <div className="text-center p-5 rounded-2xl bg-gradient-to-br from-[--brand-700] to-[--brand-500]">
+            <p className="text-white/70 text-xs mb-1">Plano Premium · 30 dias</p>
+            <p className="text-4xl font-black text-white">{PIX_AMOUNT}</p>
+            <p className="text-white/55 text-xs mt-1">Renovação manual a cada mês</p>
+          </div>
+
+          <div className="space-y-2">
+            {PREMIUM_FEATURES.map(f => (
+              <div key={f} className="flex items-center gap-2">
+                <CheckCircle size={13} className="text-[--success-icon]" />
+                <span className="text-xs text-[--text-secondary]">{f}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-4 rounded-xl bg-[--bg-subtle] border border-[--border-default] space-y-3">
+            <div className="flex items-center gap-2">
+              <QrCode size={16} className="text-[--brand-500]" />
+              <p className="text-sm font-bold text-[--text-primary]">Como pagar</p>
             </div>
-            <div>
-              <span className="text-xl font-black text-[--text-primary]">CFP Money</span>
-              <p className="text-[--text-tertiary] text-xs">Controle financeiro pessoal</p>
+            <div className="space-y-1.5 text-sm text-[--text-secondary]">
+              <p>1. Abra o app do seu banco e acesse o Pix.</p>
+              <p>2. Transfira <strong className="text-[--text-primary]">{PIX_AMOUNT}</strong> para a chave:</p>
+            </div>
+
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[--bg-elevated] border border-[--border-default]">
+              <code className="flex-1 text-sm font-mono text-[--brand-600] truncate">{PIX_KEY}</code>
+              <button onClick={copyPixKey}
+                className="flex items-center gap-1 text-xs font-semibold text-[--brand-600] hover:text-[--brand-700] flex-shrink-0 transition-colors">
+                <Copy size={12} />{copied ? 'Copiado!' : 'Copiar'}
+              </button>
+            </div>
+
+            <div className="space-y-1 text-xs text-[--text-secondary]">
+              <p>3. No campo de mensagem/descrição do Pix, escreva seu e-mail:</p>
+              <code className="block bg-[--bg-elevated] border border-[--border-default] px-3 py-2 rounded-xl text-[--text-primary] font-mono text-xs">
+                {user?.email}
+              </code>
+              <p className="pt-1">4. Após o pagamento, o acesso será liberado em até 24h.</p>
             </div>
           </div>
 
-          <AnimatePresence mode="wait">
-            <motion.div key={mode}
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-
-              <h1 className="text-3xl font-black text-[--text-primary] mb-1">{t.title}</h1>
-              <p className="text-[--text-secondary] text-sm mb-8">{t.sub}</p>
-
-              {mode === 'register' && (
-                <div className="mb-5 p-3 rounded-xl bg-[--brand-50] border border-[--brand-200] flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[--brand-600] flex items-center justify-center flex-shrink-0">
-                    <Star size={14} className="text-white" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-[--brand-700]">7 dias Premium grátis</p>
-                    <p className="text-xs text-[--brand-600]">Sem cartão. Sem compromisso.</p>
-                  </div>
-                </div>
-              )}
-
-              {successMsg && (
-                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                  className="mb-4 p-3 rounded-xl bg-[--success-bg] border border-[--success-border] text-[--success-text] text-sm">
-                  ✓ {successMsg}
-                </motion.div>
-              )}
-              {error && (
-                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                  className="mb-4 p-3 rounded-xl bg-[--danger-bg] border border-[--danger-border] text-[--danger-text] text-sm">
-                  {error}
-                </motion.div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {mode === 'register' && (
-                  <Input label="Nome completo" type="text" placeholder="João Silva"
-                    value={form.name} onChange={updateForm('name')}
-                    icon={<User />} error={errors.name} required autoFocus />
-                )}
-                <Input label="E-mail" type="email" placeholder="joao@exemplo.com"
-                  value={form.email} onChange={updateForm('email')}
-                  icon={<Mail />} error={errors.email} required autoFocus={mode !== 'register'} />
-                {mode !== 'forgot' && (
-                  <Input label="Senha" type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••" value={form.password} onChange={updateForm('password')}
-                    icon={<Lock />} error={errors.password} required
-                    iconRight={
-                      <button type="button" onClick={() => setShowPassword(v => !v)}
-                        className="text-[--text-tertiary] hover:text-[--text-secondary]">
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    } />
-                )}
-                {mode === 'login' && (
-                  <div className="flex justify-end -mt-2">
-                    <button type="button" className="text-xs text-[--text-brand] hover:underline"
-                      onClick={() => switchMode('forgot')}>
-                      Esqueci a senha
-                    </button>
-                  </div>
-                )}
-                <Button type="submit" variant="primary" fullWidth loading={isLoading}
-                  className="py-3 text-base" iconRight={<ArrowRight />}>
-                  {mode === 'login' ? 'Entrar' : mode === 'register' ? 'Criar conta grátis' : 'Enviar e-mail'}
-                </Button>
-              </form>
-
-              <p className="text-center text-sm text-[--text-secondary] mt-6">
-                {mode === 'login' ? (
-                  <>Não tem conta?{' '}
-                    <button className="text-[--text-brand] font-semibold hover:underline"
-                      onClick={() => switchMode('register')}>Cadastre-se grátis</button></>
-                ) : (
-                  <>Já tem conta?{' '}
-                    <button className="text-[--text-brand] font-semibold hover:underline"
-                      onClick={() => switchMode('login')}>Entrar</button></>
-                )}
-              </p>
-
-              <p className="text-center text-xs text-[--text-tertiary] mt-4">
-                Ao continuar, você concorda com os{' '}
-                <a href="#" className="hover:underline">Termos de uso</a> e a{' '}
-                <a href="#" className="hover:underline">Política de privacidade</a>
-              </p>
-            </motion.div>
-          </AnimatePresence>
+          <p className="text-xs text-[--text-tertiary] text-center leading-relaxed">
+            O plano vigora por 30 dias a partir da confirmação.<br />
+            Dúvidas? Entre em contato pelo mesmo e-mail do Pix.
+          </p>
         </div>
-      </div>
+      </Modal>
     </div>
   )
 }
