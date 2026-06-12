@@ -129,3 +129,15 @@ export function blockEmailInStorage(email, blocked) {
   const existing = (() => { try { return JSON.parse(localStorage.getItem(key)) || {} } catch { return {} } })()
   localStorage.setItem(key, JSON.stringify({ ...existing, email, blocked }))
 }
+
+// Remove premium — reverte para free
+export function removePremiumForEmail(email) {
+  const key = `cfp_plan_${email.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
+  const existing = (() => { try { return JSON.parse(localStorage.getItem(key)) || {} } catch { return {} } })()
+  localStorage.setItem(key, JSON.stringify({
+    ...existing, email,
+    type: 'free',
+    premiumUntil: null,
+    blocked: false,
+  }))
+}
