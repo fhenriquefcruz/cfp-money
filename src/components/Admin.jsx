@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Card, Button, Badge, Input } from './ui'
 import { getAllPlansFromStorage, activatePremiumForEmail, blockEmailInStorage } from '../contexts/PlanContext'
 
-const ADMIN_EMAIL = 'fabiohenriquefcruz@gmail.com' // troque pelo seu
+const ADMIN_EMAIL = 'fhenriquefcruz@gmail.com' // troque pelo seu
 
 function getPlanStatus(plan) {
   if (plan.blocked) return { label: 'Bloqueado', variant: 'danger' }
