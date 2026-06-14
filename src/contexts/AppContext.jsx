@@ -1,4 +1,4 @@
-// src/contexts/AppContext.jsx — Firestore + addTransactionBatch
+// src/contexts/AppContext.jsx — Firestore + addTransactionBatchx
 import React, { createContext, useContext, useEffect, useReducer, useCallback, useRef } from 'react'
 import { useAuth } from './AuthContext'
 import {
