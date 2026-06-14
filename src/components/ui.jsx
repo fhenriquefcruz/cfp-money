@@ -1,4 +1,4 @@
-// src/components/ui.jsxx
+// src/components/ui.jsx
 import React from 'react'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
