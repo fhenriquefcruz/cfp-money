@@ -1,4 +1,4 @@
-// src/components/Reports.jsx — Premium only
+// src/components/Reports.jsx — Premium onlys
 import React, { useState, useMemo } from 'react'
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { Download, TrendingUp, TrendingDown, Calendar, Filter, BarChart2 } from 'lucide-react'
