@@ -1,4 +1,4 @@
-// src/components/Goals.jsx
+// src/components/Goals.jsx x
 import React, { useState } from 'react'
 import { Plus, Edit2, Trash2, Target } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
