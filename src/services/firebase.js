@@ -1,26 +1,15 @@
-// src/services/firebase.js
+// src/services/firebase.js — Firestore centralizado
 import { initializeApp } from 'firebase/app'
 import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  sendPasswordResetEmail,
-  signOut,
-  onAuthStateChanged,
-  updateProfile,
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  sendEmailVerification, sendPasswordResetEmail, signOut,
+  onAuthStateChanged, updateProfile,
 } from 'firebase/auth'
-
-// ── Valida configuração antes de inicializar ──
-const requiredEnvVars = [
-  'VITE_FIREBASE_API_KEY',
-  'VITE_FIREBASE_AUTH_DOMAIN',
-  'VITE_FIREBASE_PROJECT_ID',
-]
-const missing = requiredEnvVars.filter(k => !import.meta.env[k] || import.meta.env[k].includes('seu-projeto'))
-if (missing.length > 0) {
-  console.error('[CFP] Firebase não configurado. Verifique o arquivo .env:', missing)
-}
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+  getDocs, getDoc, setDoc, query, where, orderBy,
+  onSnapshot, serverTimestamp, writeBatch,
+} from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
@@ -33,175 +22,185 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
+export const db   = getFirestore(app)
 
 // ── AUTH ──
-export const signInEmail = (email, password) =>
-  signInWithEmailAndPassword(auth, email, password)
-
+export const signInEmail  = (e, p) => signInWithEmailAndPassword(auth, e, p)
 export const registerEmail = async (email, password, displayName) => {
-  const credential = await createUserWithEmailAndPassword(auth, email, password)
-  await updateProfile(credential.user, { displayName })
-  try { await sendEmailVerification(credential.user) } catch (_) {}
-  return credential
+  const cred = await createUserWithEmailAndPassword(auth, email, password)
+  await updateProfile(cred.user, { displayName })
+  try { await sendEmailVerification(cred.user) } catch (_) {}
+  // Cria documento do usuário no Firestore
+  await setDoc(doc(db, 'users', cred.user.uid), {
+    email, displayName,
+    plan: 'trial',
+    trialStart: serverTimestamp(),
+    premiumUntil: null,
+    blocked: false,
+    createdAt: serverTimestamp(),
+  })
+  return cred
 }
-
-export const resetPassword = (email) => sendPasswordResetEmail(auth, email)
+export const resetPassword = (e) => sendPasswordResetEmail(auth, e)
 export const logOut        = () => signOut(auth)
-export const onAuthChange  = (callback) => onAuthStateChanged(auth, callback)
+export const onAuthChange  = (cb) => onAuthStateChanged(auth, cb)
 
 // ══════════════════════════════════════════════════════════════
-// INDEXEDDB — DADOS ISOLADOS POR USUÁRIO
-// • Banco do usuário: CFPMoneyDB_<uid>  → transactions, goals, budgets
-// • Banco compartilhado: CFPMoneyCats   → categories (padrão + customizadas)
+// ESTRUTURA FIRESTORE:
+//  users/{uid}                    → perfil + plano
+//  users/{uid}/transactions/{id}  → transações do usuário
+//  users/{uid}/goals/{id}         → metas
+//  users/{uid}/budgets/{id}       → orçamentos
+//  categories/{id}                → categorias (isDefault=true global, ownerUid=uid custom)
 // ══════════════════════════════════════════════════════════════
 
-function openUserDB(uid) {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(`CFPMoneyDB_${uid}`, 3)
-    req.onupgradeneeded = (e) => {
-      const db = e.target.result
-      ;['transactions', 'goals', 'budgets'].forEach(name => {
-        if (!db.objectStoreNames.contains(name))
-          db.createObjectStore(name, { autoIncrement: true })
-      })
-    }
-    req.onsuccess = () => resolve(req.result)
-    req.onerror   = () => reject(req.error)
-  })
-}
-
-function openCatsDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open('CFPMoneyCats', 2)
-    req.onupgradeneeded = (e) => {
-      const db = e.target.result
-      if (!db.objectStoreNames.contains('categories'))
-        db.createObjectStore('categories', { autoIncrement: true })
-    }
-    req.onsuccess = () => resolve(req.result)
-    req.onerror   = () => reject(req.error)
-  })
-}
-
-// ── CRUD genérico ──
-function dbGetAll(db, storeName) {
-  return new Promise((resolve, reject) => {
-    const tx      = db.transaction(storeName, 'readonly')
-    const results = []
-    const cursor  = tx.objectStore(storeName).openCursor()
-    cursor.onsuccess = (e) => {
-      const c = e.target.result
-      if (c) { results.push({ ...c.value, id: c.key }); c.continue() }
-      else resolve(results)
-    }
-    cursor.onerror = () => reject(cursor.error)
-  })
-}
-
-function dbAdd(db, storeName, item) {
-  // eslint-disable-next-line no-unused-vars
-  const { id: _id, ...data } = item
-  return new Promise((resolve, reject) => {
-    const req = db.transaction(storeName, 'readwrite').objectStore(storeName).add(data)
-    req.onsuccess = () => resolve(req.result)
-    req.onerror   = () => reject(req.error)
-  })
-}
-
-function dbUpdate(db, storeName, id, data) {
-  // eslint-disable-next-line no-unused-vars
-  const { id: _id, ...rest } = data
-  return new Promise((resolve, reject) => {
-    const req = db.transaction(storeName, 'readwrite').objectStore(storeName).put(rest, id)
-    req.onsuccess = () => resolve(req.result)
-    req.onerror   = () => reject(req.error)
-  })
-}
-
-function dbRemove(db, storeName, id) {
-  return new Promise((resolve, reject) => {
-    const req = db.transaction(storeName, 'readwrite').objectStore(storeName).delete(id)
-    req.onsuccess = () => resolve()
-    req.onerror   = () => reject(req.error)
-  })
-}
+const userCol  = (uid, sub) => collection(db, 'users', uid, sub)
+const userDoc  = (uid, sub, id) => doc(db, 'users', uid, sub, id)
 
 // ── TRANSACTIONS ──
-export const getTransactions = async (uid) =>
-  dbGetAll(await openUserDB(uid), 'transactions')
+export const getTransactions = async (uid) => {
+  const snap = await getDocs(query(userCol(uid, 'transactions'), orderBy('date', 'desc')))
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
 
-export const addTransaction = async (uid, data) =>
-  dbAdd(await openUserDB(uid), 'transactions', { ...data, createdAt: new Date().toISOString() })
-
-export const updateTransaction = async (uid, id, data) =>
-  dbUpdate(await openUserDB(uid), 'transactions', id, data)
-
-export const deleteTransaction = async (uid, id) =>
-  dbRemove(await openUserDB(uid), 'transactions', id)
-
-let _txInterval = null
 export const onTransactionsChange = (uid, callback) => {
-  const run = async () => {
-    try { callback(await getTransactions(uid)) }
-    catch (err) { console.error('[CFP] onTransactionsChange:', err) }
-  }
-  run()
-  if (_txInterval) clearInterval(_txInterval)
-  _txInterval = setInterval(run, 2000)
-  return () => { clearInterval(_txInterval); _txInterval = null }
+  const q = query(userCol(uid, 'transactions'), orderBy('date', 'desc'))
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+  })
 }
 
-// ── CATEGORIES (compartilhadas — padrão para todos + customizadas por uid) ──
+export const addTransaction = async (uid, data) => {
+  const ref = await addDoc(userCol(uid, 'transactions'), {
+    ...data, createdAt: serverTimestamp(),
+  })
+  return ref.id
+}
+
+export const updateTransaction = async (uid, id, data) => {
+  await updateDoc(userDoc(uid, 'transactions', id), { ...data, updatedAt: serverTimestamp() })
+}
+
+export const deleteTransaction = async (uid, id) => {
+  await deleteDoc(userDoc(uid, 'transactions', id))
+}
+
+// Gera parcelas ou recorrências em lote
+export const addTransactionBatch = async (uid, items) => {
+  const batch = writeBatch(db)
+  items.forEach(item => {
+    const ref = doc(userCol(uid, 'transactions'))
+    batch.set(ref, { ...item, createdAt: serverTimestamp() })
+  })
+  await batch.commit()
+}
+
+// ── CATEGORIES ──
 export const getCategories = async (uid) => {
-  const db  = await openCatsDB()
-  const all = await dbGetAll(db, 'categories')
-  return all.filter(c => c.isDefault || c.ownerUid === uid)
+  const [defaultSnap, customSnap] = await Promise.all([
+    getDocs(query(collection(db, 'categories'), where('isDefault', '==', true))),
+    getDocs(query(collection(db, 'categories'), where('ownerUid', '==', uid))),
+  ])
+  return [
+    ...defaultSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+    ...customSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+  ]
 }
 
-export const addCategory = async (uid, data) =>
-  dbAdd(await openCatsDB(), 'categories', { ...data, ownerUid: data.isDefault ? null : uid })
+export const addCategory = async (uid, data) => {
+  const ref = await addDoc(collection(db, 'categories'), {
+    ...data, ownerUid: data.isDefault ? null : uid,
+  })
+  return ref.id
+}
 
-export const updateCategory = async (uid, id, data) =>
-  dbUpdate(await openCatsDB(), 'categories', id, { ...data, ownerUid: data.isDefault ? null : uid })
+export const updateCategory = async (_uid, id, data) => {
+  await updateDoc(doc(db, 'categories', id), data)
+}
 
-export const deleteCategory = async (_uid, id) =>
-  dbRemove(await openCatsDB(), 'categories', id)
+export const deleteCategory = async (_uid, id) => {
+  await deleteDoc(doc(db, 'categories', id))
+}
 
 // ── GOALS ──
-export const getGoals = async (uid) =>
-  dbGetAll(await openUserDB(uid), 'goals')
+export const getGoals = async (uid) => {
+  const snap = await getDocs(userCol(uid, 'goals'))
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
 
-export const addGoal = async (uid, data) =>
-  dbAdd(await openUserDB(uid), 'goals', {
-    ...data, currentAmount: data.currentAmount ?? 0, createdAt: new Date().toISOString(),
+export const addGoal = async (uid, data) => {
+  const ref = await addDoc(userCol(uid, 'goals'), {
+    ...data, currentAmount: data.currentAmount ?? 0, createdAt: serverTimestamp(),
   })
+  return ref.id
+}
 
-export const updateGoal = async (uid, id, data) =>
-  dbUpdate(await openUserDB(uid), 'goals', id, data)
+export const updateGoal = async (uid, id, data) => {
+  await updateDoc(userDoc(uid, 'goals', id), data)
+}
 
-export const deleteGoal = async (uid, id) =>
-  dbRemove(await openUserDB(uid), 'goals', id)
+export const deleteGoal = async (uid, id) => {
+  await deleteDoc(userDoc(uid, 'goals', id))
+}
 
 // ── BUDGETS ──
-export const getBudgets = async (uid) =>
-  dbGetAll(await openUserDB(uid), 'budgets')
+export const getBudgets = async (uid) => {
+  const snap = await getDocs(userCol(uid, 'budgets'))
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
 
 export const setBudget = async (uid, categoryId, amount) => {
-  const db       = await openUserDB(uid)
-  const budgets  = await dbGetAll(db, 'budgets')
-  const existing = budgets.find(b => b.categoryId === categoryId)
-  if (existing) await dbUpdate(db, 'budgets', existing.id, { categoryId, amount })
-  else          await dbAdd(db, 'budgets', { categoryId, amount })
+  const snap = await getDocs(
+    query(userCol(uid, 'budgets'), where('categoryId', '==', categoryId))
+  )
+  if (!snap.empty) {
+    await updateDoc(snap.docs[0].ref, { categoryId, amount })
+  } else {
+    await addDoc(userCol(uid, 'budgets'), { categoryId, amount })
+  }
 }
 
 export const deleteBudget = async (uid, categoryId) => {
-  const db       = await openUserDB(uid)
-  const budgets  = await dbGetAll(db, 'budgets')
-  const existing = budgets.find(b => b.categoryId === categoryId)
-  if (existing) await dbRemove(db, 'budgets', existing.id)
+  const snap = await getDocs(
+    query(userCol(uid, 'budgets'), where('categoryId', '==', categoryId))
+  )
+  if (!snap.empty) await deleteDoc(snap.docs[0].ref)
 }
 
-// ── SEED categorias padrão (roda uma vez globalmente) ──
+// ── ADMIN: lê todos os usuários ──
+export const getAllUsers = async () => {
+  const snap = await getDocs(collection(db, 'users'))
+  return snap.docs.map(d => ({ uid: d.id, ...d.data() }))
+}
+
+export const onAllUsersChange = (callback) => {
+  return onSnapshot(collection(db, 'users'), snap => {
+    callback(snap.docs.map(d => ({ uid: d.id, ...d.data() })))
+  })
+}
+
+// ── ADMIN: gerencia plano ──
+export const activatePremiumForUser = async (uid, months = 1) => {
+  const until = new Date()
+  until.setDate(until.getDate() + months * 30)
+  await updateDoc(doc(db, 'users', uid), {
+    plan: 'premium',
+    premiumUntil: until.toISOString(),
+    blocked: false,
+  })
+}
+
+export const removePremiumForUser = async (uid) => {
+  await updateDoc(doc(db, 'users', uid), {
+    plan: 'free', premiumUntil: null,
+  })
+}
+
+export const blockUser = async (uid, blocked) => {
+  await updateDoc(doc(db, 'users', uid), { blocked })
+}
+
+// ── SEED categorias padrão ──
 const DEFAULT_CATEGORIES = [
   { name: 'Alimentação',      icon: '🍔', color: '#f97316', type: 'expense', isDefault: true },
   { name: 'Transporte',       icon: '🚗', color: '#3b82f6', type: 'expense', isDefault: true },
@@ -222,12 +221,17 @@ let _seeded = false
 export const seedDefaultCategories = async () => {
   if (_seeded) return
   try {
-    const db       = await openCatsDB()
-    const existing = await dbGetAll(db, 'categories')
-    if (existing.some(c => c.isDefault)) { _seeded = true; return }
-    for (const cat of DEFAULT_CATEGORIES) await dbAdd(db, 'categories', cat)
+    const snap = await getDocs(
+      query(collection(db, 'categories'), where('isDefault', '==', true))
+    )
+    if (!snap.empty) { _seeded = true; return }
+    const batch = writeBatch(db)
+    DEFAULT_CATEGORIES.forEach(cat => {
+      batch.set(doc(collection(db, 'categories')), cat)
+    })
+    await batch.commit()
     _seeded = true
-    console.log('[CFP] Categorias padrão criadas.')
+    console.log('[CFP] Categorias padrão criadas no Firestore.')
   } catch (err) {
     console.error('[CFP] Erro ao semear categorias:', err)
   }
