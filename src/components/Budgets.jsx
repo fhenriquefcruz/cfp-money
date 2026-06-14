@@ -1,4 +1,4 @@
-// src/components/Budgets.jsx
+// src/components/Budgets.jsx x
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PieChart, Plus, Trash2, AlertTriangle, TrendingUp, CheckCircle, Flame } from 'lucide-react'
