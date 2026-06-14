@@ -1,4 +1,4 @@
-// src/components/Onboarding.jsx — Tour guiado, só no primeiro acesso
+// src/components/Onboarding.jsx — Tour guiado, só no primeiro acessos
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react'
