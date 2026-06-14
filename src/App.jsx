@@ -16,9 +16,11 @@ import Reports from './components/Reports'
 import Profile from './components/Profile'
 import Admin from './components/Admin'
 import PlanAlert from './components/PlanAlert'
-import PremiumGate from './components/PremiumGate'
+import Onboarding from './components/Onboarding'
 
-// Tela de loading inicial
+// Notificações globais
+import NotificationStack from './components/NotificationStack'
+
 const LoadingScreen = () => (
   <div className="flex items-center justify-center h-screen bg-[--bg-app]">
     <div className="flex flex-col items-center gap-3">
@@ -31,7 +33,7 @@ const LoadingScreen = () => (
 const AppRoutes = () => {
   const { user, loading } = useAuth()
   if (loading) return <LoadingScreen />
-  if (!user) return <Login />
+  if (!user)   return <Login />
 
   return (
     <div className="flex min-h-screen bg-[--bg-app]">
@@ -50,11 +52,13 @@ const AppRoutes = () => {
         </Routes>
       </main>
       <PlanAlert />
+      <Onboarding />
+      <NotificationStack />
     </div>
   )
 }
 
-function App() {
+export default function App() {
   return (
     <HashRouter>
       <ThemeProvider>
@@ -69,5 +73,3 @@ function App() {
     </HashRouter>
   )
 }
-
-export default App
