@@ -1,4 +1,4 @@
-// src/components/Login.jsx
+// src/components/Login.jsxx
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, TrendingUp, Check, Star } from 'lucide-react'
