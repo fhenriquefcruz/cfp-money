@@ -1,4 +1,4 @@
-// src/components/Profile.jsx
+// src/components/Profile.jsxx
 import React, { useState, useRef } from 'react'
 import {
   User, Mail, LogOut, Moon, Sun, Camera, Key, Save,
