@@ -59,7 +59,7 @@ export const AppProvider = ({ children }) => {
     if (!user?.uid) { dispatch({ type: 'RESET' }); return }
     const uid = user.uid
 
-    seedDefaultCategories()
+    //seedDefaultCategories()
 
     // Listener em tempo real (Firestore onSnapshot)
     const unsubTx = onTransactionsChange(uid, (txs) => {
