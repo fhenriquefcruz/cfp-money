@@ -104,10 +104,37 @@ export const Card = ({ children, padding = true }) => (
   </div>
 )
 
-export const StatCard = ({ label, value, icon, color, loading, trend }) => (
+// Tooltip inline leve (sem dependência circular com Onboarding)
+const TipIcon = ({ text }) => {
+  const [show, setShow] = React.useState(false)
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        onClick={() => setShow(v => !v)}
+        className="w-3.5 h-3.5 rounded-full bg-[--bg-hover] text-[--text-tertiary] hover:bg-[--brand-100] hover:text-[--brand-600] flex items-center justify-center text-[9px] font-bold transition-colors leading-none"
+        aria-label="Informação">
+        ?
+      </button>
+      {show && (
+        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 z-50 w-48 bg-gray-900 text-white text-xs rounded-xl px-2.5 py-1.5 shadow-xl pointer-events-none text-center leading-snug whitespace-normal">
+          {text}
+          <span className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
+        </span>
+      )}
+    </span>
+  )
+}
+
+export const StatCard = ({ label, value, icon, color, loading, trend, tooltip }) => (
   <div className="bg-[--bg-surface] border border-[--border-default] rounded-xl p-4">
     <div className="flex items-center justify-between mb-2">
-      <span className="text-xs text-[--text-tertiary]">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs text-[--text-tertiary]">{label}</span>
+        {tooltip && <TipIcon text={tooltip} />}
+      </div>
       <span className="text-lg" style={{ color }}>{icon}</span>
     </div>
     {loading ? (
