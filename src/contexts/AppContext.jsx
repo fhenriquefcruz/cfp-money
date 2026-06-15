@@ -1,4 +1,4 @@
-// src/contexts/AppContext.jsx — Firestore + addTransactionBatchx
+// src/contexts/AppContext.jsx — Firestore + addTransactionBatch
 import React, { createContext, useContext, useEffect, useReducer, useCallback, useRef } from 'react'
 import { useAuth } from './AuthContext'
 import {
@@ -9,7 +9,7 @@ import {
   addCategory, updateCategory, deleteCategory,
   addGoal, updateGoal, deleteGoal,
   setBudget, deleteBudget,
-  seedDefaultCategories,
+  // seedDefaultCategories,  // <-- NÃO use mais aqui
 } from '../services/firebase'
 
 const AppContext = createContext({})
@@ -59,7 +59,7 @@ export const AppProvider = ({ children }) => {
     if (!user?.uid) { dispatch({ type: 'RESET' }); return }
     const uid = user.uid
 
-    //seedDefaultCategories()
+    // ⚠️ REMOVIDO: seedDefaultCategories() NÃO é mais chamado aqui
 
     // Listener em tempo real (Firestore onSnapshot)
     const unsubTx = onTransactionsChange(uid, (txs) => {
@@ -78,6 +78,10 @@ export const AppProvider = ({ children }) => {
         dispatch({ type: 'SET_BUDGETS',    payload: budgets })
       } catch (err) {
         console.error('[CFP] Erro ao carregar dados:', err)
+        // Não mostrar erro de permissão para o usuário, apenas log
+        if (err.code === 'permission-denied') {
+          console.warn('Permissão negada ao carregar dados. Verifique as regras do Firestore.')
+        }
       }
     }
 
@@ -112,7 +116,6 @@ export const AppProvider = ({ children }) => {
     } catch (e) { showNotification('Erro ao adicionar.', 'error'); throw e }
   }, [user?.uid, showNotification, checkBudgetAlert])
 
-  // Lote — parcelas e recorrentes
   const addTransactionBatch = useCallback(async (items) => {
     if (!user?.uid) return
     try {
@@ -206,7 +209,7 @@ export const AppProvider = ({ children }) => {
     catch (e) { showNotification('Erro ao remover orçamento.', 'error'); throw e }
   }, [user?.uid, showNotification, refreshBudgets])
 
-  // ── Cálculos derivados ──
+  // ── Cálculos derivados (mantidos iguais) ──
   const getMonthTransactions = useCallback((year, month) => {
     return stateRef.current.transactions.filter(t => {
       const d = new Date(t.date + 'T00:00:00')
@@ -253,7 +256,6 @@ export const AppProvider = ({ children }) => {
     )
   }, [])
 
-  // Filtro combinado de transações
   const filterTransactions = useCallback(({ year, month, categoryId, paymentMethod, type } = {}) => {
     return stateRef.current.transactions.filter(t => {
       const d = new Date(t.date + 'T00:00:00')
