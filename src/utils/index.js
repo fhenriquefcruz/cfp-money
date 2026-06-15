@@ -1,4 +1,4 @@
-// src/utils/index.js 
+// src/utils/index.js
 
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -95,12 +95,12 @@ export const getMonthlyData = (transactions, months = 6) => {
 
 // ── PAYMENT METHOD LABELS ──
 export const PAYMENT_METHODS = [
-  { id: 'money', label: 'Dinheiro', icon: '💵' },
-  { id: 'credit_card', label: 'Cartão de Crédito', icon: '💳' },
-  { id: 'debit_card', label: 'Cartão de Débito', icon: '💳' },
-  { id: 'pix', label: 'Pix', icon: '⚡' },
-  { id: 'transfer', label: 'Transferência', icon: '🏦' },
-  { id: 'boleto', label: 'Boleto', icon: '📄' },
+  { id: 'pix',         label: 'Pix',                icon: '💸' },
+  { id: 'credit_card', label: 'Cartão de Crédito',  icon: '💳' },
+  { id: 'debit_card',  label: 'Cartão de Débito',   icon: '🏧' },
+  { id: 'cash',        label: 'Dinheiro',            icon: '💵' },
+  { id: 'transfer',    label: 'Transferência',       icon: '🏦' },
+  { id: 'boleto',      label: 'Boleto',              icon: '📄' },
 ]
 
 export const getPaymentLabel = (id) =>
