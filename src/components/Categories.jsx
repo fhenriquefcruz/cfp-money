@@ -1,4 +1,4 @@
-// src/components/Categories.jsx
+// src/components/Categories.jsxx
 import React, { useState, useEffect, useRef } from 'react'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
