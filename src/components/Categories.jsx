@@ -115,7 +115,14 @@ export default function Categories() {
             {cat.icon}
           </div>
           <div className="min-w-0">
-            <p className="font-semibold text-[--text-primary] truncate">{cat.name}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="font-semibold text-[--text-primary] truncate">{cat.name}</p>
+              {cat.isDefault && (
+                <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[--bg-hover] text-[--text-tertiary] flex-shrink-0">
+                  Padrão
+                </span>
+              )}
+            </div>
             <p className="text-xs text-[--text-tertiary]">
               {cat.type === 'expense' ? 'Despesa' : 'Receita'}
             </p>
@@ -125,15 +132,19 @@ export default function Categories() {
           <button
             onClick={() => handleOpen(cat)}
             className="p-2 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] hover:text-[--text-primary] transition-colors"
+            title={cat.isDefault ? 'Ver detalhes' : 'Editar'}
           >
             <Edit2 size={14} />
           </button>
-          <button
-            onClick={() => handleDelete(cat.id)}
-            className="p-2 rounded-lg hover:bg-[--danger-bg] text-[--text-tertiary] hover:text-[--danger-text] transition-colors"
-          >
-            <Trash2 size={14} />
-          </button>
+          {!cat.isDefault && (
+            <button
+              onClick={() => handleDelete(cat.id)}
+              className="p-2 rounded-lg hover:bg-[--danger-bg] text-[--text-tertiary] hover:text-[--danger-text] transition-colors"
+              title="Excluir"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
         </div>
       </div>
     </Card>
