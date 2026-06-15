@@ -1,4 +1,4 @@
-// src/components/Goals.jsx
+// src/components/Goals.jsxc
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Edit2, Trash2, Target, TrendingUp, Calendar, PlusCircle } from 'lucide-react'
