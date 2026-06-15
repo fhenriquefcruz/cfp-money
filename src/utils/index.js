@@ -1,4 +1,4 @@
-// src/utils/index.js
+// src/utils/index.jsx
 
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
