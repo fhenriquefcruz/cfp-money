@@ -1,4 +1,4 @@
-// src/components/TransactionList.jsxx
+// src/components/TransactionList.jsx
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -24,6 +24,7 @@ export default function TransactionList() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [paymentFilter, setPaymentFilter] = useState('all')
   const [dateRange, setDateRange] = useState({ from: format(startOfMonth(new Date()), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') })
   const [showFilters, setShowFilters] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -38,6 +39,7 @@ export default function TransactionList() {
     return transactions.filter(tx => {
       if (typeFilter !== 'all' && tx.type !== typeFilter) return false
       if (categoryFilter !== 'all' && tx.categoryId !== categoryFilter) return false
+      if (paymentFilter !== 'all' && tx.paymentMethod !== paymentFilter) return false
       if (dateRange.from && tx.date < dateRange.from) return false
       if (dateRange.to && tx.date > dateRange.to) return false
       if (search) {
@@ -51,7 +53,7 @@ export default function TransactionList() {
       }
       return true
     })
-  }, [transactions, typeFilter, categoryFilter, dateRange, search])
+  }, [transactions, typeFilter, categoryFilter, paymentFilter, dateRange, search])
 
   const summary = useMemo(() => {
     const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
@@ -106,12 +108,13 @@ export default function TransactionList() {
   const clearFilters = () => {
     setTypeFilter('all')
     setCategoryFilter('all')
+    setPaymentFilter('all')
     setDateRange({ from: '', to: '' })
     setSearch('')
     setPage(1)
   }
 
-  const activeFilters = [typeFilter !== 'all', categoryFilter !== 'all', !!dateRange.from, !!search].filter(Boolean).length
+  const activeFilters = [typeFilter !== 'all', categoryFilter !== 'all', paymentFilter !== 'all', !!dateRange.from, !!search].filter(Boolean).length
 
   return (
     <div className="space-y-4 pb-28 lg:pb-6">
@@ -212,6 +215,22 @@ export default function TransactionList() {
                   >
                     <option value="all">Todas categorias</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-[--text-tertiary] block mb-1.5">Método de pagamento</label>
+                  <select
+                    value={paymentFilter}
+                    onChange={e => { setPaymentFilter(e.target.value); setPage(1) }}
+                    className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-3 py-2 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+                  >
+                    <option value="all">Todos os métodos</option>
+                    <option value="pix">💸 Pix</option>
+                    <option value="credit_card">💳 Cartão de crédito</option>
+                    <option value="debit_card">🏧 Cartão de débito</option>
+                    <option value="cash">💵 Dinheiro</option>
+                    <option value="transfer">🏦 Transferência</option>
+                    <option value="boleto">📄 Boleto</option>
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
