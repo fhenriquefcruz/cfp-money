@@ -1,4 +1,4 @@
-// src/contexts/PlanContext.jsx — Firestore-basedxx
+// src/contexts/PlanContext.jsx — Firestore-based
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db, activatePremiumForUser, removePremiumForUser, blockUser } from '../services/firebase'
