@@ -59,9 +59,6 @@ export const AppProvider = ({ children }) => {
 
     // Seed das categorias padrão — roda uma vez por sessão, sem bloquear
     // A regra permite create com isDefault==true, então qualquer usuário pode criar
-    seedDefaultCategories().catch(err =>
-      console.warn('[CFP] seedDefaultCategories falhou:', err.code)
-    )
 
     // Listener em tempo real para transações
     const unsubTx = onTransactionsChange(uid, txs =>
