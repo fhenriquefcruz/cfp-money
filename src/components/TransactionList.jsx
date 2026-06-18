@@ -9,11 +9,16 @@ import { useApp } from '../contexts/AppContext'
 import { Card, Button, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
 import { formatCurrency, formatDate, getPaymentLabel, exportToCSV, exportToPDF, parseCSVImport } from '../utils'
-import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
+import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns'
 
 const DATE_PRESETS = [
   { label: 'Este mês', getRange: () => ({ from: format(startOfMonth(new Date()), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
   { label: 'Mês passado', getRange: () => ({ from: format(startOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd'), to: format(endOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd') }) },
+  { label: 'Próximo mês', getRange: () => {
+      const next = addMonths(new Date(), 1)
+      return { from: format(startOfMonth(next), 'yyyy-MM-dd'), to: format(endOfMonth(next), 'yyyy-MM-dd') }
+    }
+  },
   { label: 'Últimos 3 meses', getRange: () => ({ from: format(subMonths(new Date(), 3), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
   { label: 'Este ano', getRange: () => ({ from: `${new Date().getFullYear()}-01-01`, to: format(new Date(), 'yyyy-MM-dd') }) },
   { label: 'Todos', getRange: () => ({ from: '', to: '' }) },
