@@ -1,7 +1,12 @@
 // src/utils/index.jsx
-
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+
+// ── CAPITALIZE (primeira letra maiúscula) ──
+export const capitalize = (str) => {
+  if (!str) return ''
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
 
 // ── CURRENCY FORMATTING ──
 export const formatCurrency = (value, options = {}) => {
@@ -30,7 +35,8 @@ export const formatDate = (date, fmt = 'dd/MM/yyyy') => {
 
 export const formatMonth = (date) => {
   const d = typeof date === 'string' ? parseISO(date) : date
-  return format(d, "MMMM 'de' yyyy", { locale: ptBR })
+  const month = format(d, "MMMM 'de' yyyy", { locale: ptBR })
+  return capitalize(month)
 }
 
 export const formatRelativeDate = (date) => {
@@ -70,10 +76,11 @@ export const groupByMonth = (transactions) => {
   return groups
 }
 
-export const getMonthlyData = (transactions, months = 6) => {
+// ── getMonthlyData com data base opcional ──
+export const getMonthlyData = (transactions, months = 6, baseDate = new Date()) => {
   const result = []
   for (let i = months - 1; i >= 0; i--) {
-    const date = subMonths(new Date(), i)
+    const date = subMonths(baseDate, i)
     const year = date.getFullYear()
     const month = date.getMonth()
     const monthTxs = transactions.filter(t => {
@@ -83,8 +90,8 @@ export const getMonthlyData = (transactions, months = 6) => {
     const income = monthTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
     const expenses = monthTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
     result.push({
-      month: format(date, 'MMM', { locale: ptBR }),
-      fullMonth: format(date, 'MMMM/yyyy', { locale: ptBR }),
+      month: capitalize(format(date, 'MMM', { locale: ptBR })),
+      fullMonth: format(date, "MMMM 'de' yyyy", { locale: ptBR }),
       income,
       expenses,
       balance: income - expenses,
