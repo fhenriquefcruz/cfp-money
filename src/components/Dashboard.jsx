@@ -15,7 +15,8 @@ import { useApp } from '../contexts/AppContext'
 import { Card, StatCard, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import { formatCurrency, formatRelativeDate, getMonthlyData, capitalize } from '../utils'
-import { format, subMonths, startOfMonth, endOfMonth, isSameMonth } from 'date-fns'
+// ⚠️ IMPORTANTE: adicione addMonths e subMonths aqui
+import { format, subMonths, addMonths, startOfMonth, endOfMonth, isSameMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 const PIE_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316']
