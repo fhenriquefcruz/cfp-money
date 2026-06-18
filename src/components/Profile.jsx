@@ -1,4 +1,4 @@
-// src/components/Profile.jsxx
+// src/components/Profile.jsx
 import React, { useState, useRef } from 'react'
 import {
   User, Mail, LogOut, Moon, Sun, Camera, Key, Save,
@@ -11,7 +11,7 @@ import { usePlan } from '../contexts/PlanContext'
 import { Card, Button, Input, Modal, Badge } from './ui'
 import { auth } from '../services/firebase'
 
-const PIX_KEY    = 'seuemail@exemplo.com' // troque pela sua chave Pix
+const PIX_KEY    = 'fhenriquefcruz@gmail.com' // sua chave Pix
 const PIX_AMOUNT = 'R$ 19,90'
 
 const PREMIUM_FEATURES = [
