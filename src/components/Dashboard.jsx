@@ -1,5 +1,5 @@
 // src/components/Dashboard.jsx
-import React, { useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
@@ -8,14 +8,14 @@ import {
 } from 'recharts'
 import {
   TrendingUp, TrendingDown, Wallet, Plus, ArrowRight,
-  Target, AlertTriangle, Zap, Heart,
+  Target, AlertTriangle, Zap, Heart, ChevronLeft, ChevronRight, Calendar
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useApp } from '../contexts/AppContext'
 import { Card, StatCard, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
-import { formatCurrency, formatRelativeDate, getMonthlyData } from '../utils'
-import { format, subMonths } from 'date-fns'
+import { formatCurrency, formatRelativeDate, getMonthlyData, capitalize } from '../utils'
+import { format, subMonths, startOfMonth, endOfMonth, isSameMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 const PIE_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316']
@@ -60,7 +60,7 @@ const TxItem = ({ tx, categories }) => {
   )
 }
 
-// Índice de saúde financeira (0–100)
+// Índice de saúde financeira (0–100) – baseado no mês selecionado
 function calcHealthScore({ balance, income, expenses, budgetsOk, goalsActive, savingRate }) {
   let score = 0
   if (balance >= 0)    score += 30
@@ -113,37 +113,51 @@ export default function Dashboard() {
   const { user } = useAuth()
   const { transactions, categories, goals, budgets, loading, getSummary, getCategoryTotals, getSpendingForecast } = useApp()
 
-  const now          = new Date()
-  const currentYear  = now.getFullYear()
-  const currentMonth = now.getMonth()
-  const prevMonth    = subMonths(now, 1)
+  // ── Estado do mês selecionado ──
+  const [selectedDate, setSelectedDate] = useState(new Date())
+  const year = selectedDate.getFullYear()
+  const month = selectedDate.getMonth()
 
-  const currentSummary = useMemo(() => getSummary(currentYear, currentMonth), [transactions])
-  const prevSummary    = useMemo(() => getSummary(prevMonth.getFullYear(), prevMonth.getMonth()), [transactions])
-  const categoryTotals = useMemo(() => getCategoryTotals(currentYear, currentMonth), [transactions])
-  const monthlyData    = useMemo(() => getMonthlyData(transactions, 6), [transactions])
-  const forecast       = useMemo(() => getSpendingForecast(), [transactions])
+  const goPrevMonth = () => setSelectedDate(d => subMonths(d, 1))
+  const goNextMonth = () => setSelectedDate(d => addMonths(d, 1))
+  const goToCurrentMonth = () => setSelectedDate(new Date())
+
+  // Título do mês com primeira letra maiúscula
+  const monthTitle = format(selectedDate, "MMMM 'de' yyyy", { locale: ptBR })
+  const capitalizedMonth = capitalize(monthTitle)
+
+  // ── Cálculos baseados no mês selecionado ──
+  const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
+  const prevMonthDate = subMonths(selectedDate, 1)
+  const prevSummary = useMemo(() => getSummary(prevMonthDate.getFullYear(), prevMonthDate.getMonth()), [prevMonthDate, transactions])
+  const categoryTotals = useMemo(() => getCategoryTotals(year, month), [year, month, transactions])
+  const monthlyData = useMemo(() => getMonthlyData(transactions, 6, selectedDate), [transactions, selectedDate])
+  const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
   const totalBalance = useMemo(() =>
     transactions.reduce((s, t) => t.type === 'income' ? s + t.amount : s - t.amount, 0),
     [transactions]
   )
 
+  // Alertas de orçamento – baseado no mês selecionado
   const budgetAlerts = useMemo(() => {
+    const start = startOfMonth(selectedDate)
+    const end = endOfMonth(selectedDate)
     return budgets.map(budget => {
-      const cat   = categories.find(c => c.id === budget.categoryId)
+      const cat = categories.find(c => c.id === budget.categoryId)
       const spent = transactions
         .filter(t => t.type === 'expense' && t.categoryId === budget.categoryId &&
-          new Date(t.date) >= new Date(currentYear, currentMonth, 1))
+          new Date(t.date) >= start && new Date(t.date) <= end)
         .reduce((s, t) => s + t.amount, 0)
-      return { budget, cat, spent, pct: (spent / budget.amount) * 100 }
+      return { budget, cat, spent, pct: budget.amount > 0 ? (spent / budget.amount) * 100 : 0 }
     }).filter(b => b.pct >= 70).sort((a, b) => b.pct - a.pct).slice(0, 3)
-  }, [budgets, transactions, categories])
+  }, [budgets, transactions, categories, selectedDate])
 
+  // Saúde financeira – baseada no mês selecionado
   const healthScore = useMemo(() => {
     const savingRate = currentSummary.income > 0
       ? ((currentSummary.income - currentSummary.expenses) / currentSummary.income) * 100 : 0
-    const budgetsOk  = budgets.length > 0 && budgetAlerts.filter(b => b.pct > 100).length === 0
+    const budgetsOk = budgets.length > 0 && budgetAlerts.filter(b => b.pct > 100).length === 0
     const goalsActive = goals.length > 0
     return calcHealthScore({
       balance:     currentSummary.balance,
@@ -157,32 +171,46 @@ export default function Dashboard() {
     ? ((currentSummary.expenses - prevSummary.expenses) / prevSummary.expenses) * 100 : 0
 
   const greeting = () => {
-    const h = now.getHours()
+    const h = new Date().getHours()
     return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'
   }
 
   const isLoading = loading.transactions
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
+  const hasData = currentSummary.income > 0 || currentSummary.expenses > 0
 
   return (
     <div className="space-y-5 pb-24 lg:pb-6">
 
-      {/* Header */}
-      <motion.div className="flex items-start justify-between" {...fade}>
+      {/* Header com navegação do mês */}
+      <motion.div className="flex flex-wrap items-start justify-between gap-3" {...fade}>
         <div>
           <p className="text-sm text-[--text-tertiary] font-medium">
             {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'} 👋
           </p>
           <h1 className="text-2xl font-black text-[--text-primary] mt-0.5">
-            {format(now, "MMMM 'de' yyyy", { locale: ptBR })}
+            {capitalizedMonth}
           </h1>
         </div>
-        <Link to="/transactions">
-          <Button variant="primary" icon={<Plus />} size="sm">Nova transação</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-[--bg-surface] border border-[--border-default] rounded-xl p-1">
+            <button onClick={goPrevMonth} className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary]">
+              <ChevronLeft size={16} />
+            </button>
+            <button onClick={goToCurrentMonth} className="px-2 py-1 text-xs font-medium text-[--text-brand] hover:bg-[--bg-hover] rounded-lg transition-colors flex items-center gap-1">
+              <Calendar size={12} /> Hoje
+            </button>
+            <button onClick={goNextMonth} className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary]">
+              <ChevronRight size={16} />
+            </button>
+          </div>
+          <Link to="/transactions">
+            <Button variant="primary" icon={<Plus />} size="sm">Nova transação</Button>
+          </Link>
+        </div>
       </motion.div>
 
-      {/* Hero saldo */}
+      {/* Hero saldo total */}
       <motion.div
         className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] text-white"
         initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.05 }}>
@@ -221,29 +249,29 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Stats */}
+      {/* Stats do mês selecionado */}
       <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-3"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
         <StatCard label="Receitas" value={formatCurrency(currentSummary.income, { compact: true })}
           icon={<TrendingUp />} color="#10b981" loading={isLoading}
-          tooltip="Total de entradas registradas no mês atual." />
+          tooltip="Total de entradas no mês selecionado." />
         <StatCard label="Despesas" value={formatCurrency(currentSummary.expenses, { compact: true })}
           icon={<TrendingDown />} color="#ef4444" loading={isLoading}
-          tooltip="Total de saídas registradas no mês atual."
+          tooltip="Total de saídas no mês selecionado."
           trend={prevSummary.expenses > 0 ? {
             positive: expenseChange <= 0,
             label: `${Math.abs(expenseChange).toFixed(0)}% vs mês anterior`,
           } : undefined} />
         <StatCard label="Saldo do mês" value={formatCurrency(currentSummary.balance, { compact: true })}
           icon={<Wallet />} color={currentSummary.balance >= 0 ? '#6366f1' : '#ef4444'} loading={isLoading}
-          tooltip="Receitas menos despesas do mês atual." />
+          tooltip="Receitas menos despesas do mês selecionado." />
         <StatCard label="Previsão de gastos" value={formatCurrency(forecast, { compact: true })}
           icon={<Zap />} color="#f59e0b" loading={isLoading}
-          tooltip="Média das despesas dos últimos 3 meses. Útil para planejar o mês corrente."
+          tooltip="Média das despesas dos últimos 3 meses. Útil para planejamento."
           trend={forecast > 0 ? { positive: false, label: 'Média 3 meses' } : undefined} />
       </motion.div>
 
-      {/* Índice de saúde + gráficos */}
+      {/* Conteúdo principal: gráficos e saúde */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Area Chart */}
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.15 }}>
@@ -251,31 +279,37 @@ export default function Dashboard() {
             <div className="flex items-center gap-2 mb-4">
               <div>
                 <h3 className="text-sm font-bold text-[--text-primary]">Evolução financeira</h3>
-                <p className="text-xs text-[--text-tertiary]">Últimos 6 meses</p>
+                <p className="text-xs text-[--text-tertiary]">Últimos 6 meses a partir de {capitalizedMonth}</p>
               </div>
               <InfoTooltip text="Comparativo mensal entre receitas (verde) e despesas (vermelho). Área verde acima = mês positivo." />
             </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={monthlyData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="incG" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#10b981" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="expG" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false}
-                  tickFormatter={v => formatCurrency(v, { compact: true })} />
-                <Tooltip content={<ChartTooltip />} />
-                <Area type="monotone" dataKey="income"   name="Receitas" stroke="#10b981" strokeWidth={2} fill="url(#incG)" dot={false} activeDot={{ r: 4 }} />
-                <Area type="monotone" dataKey="expenses" name="Despesas" stroke="#ef4444" strokeWidth={2} fill="url(#expG)" dot={false} activeDot={{ r: 4 }} />
-              </AreaChart>
-            </ResponsiveContainer>
+            {monthlyData.length === 0 || monthlyData.every(d => d.income === 0 && d.expenses === 0) ? (
+              <div className="text-center py-10 text-[--text-tertiary] text-sm">
+                Nenhum dado para exibir no período.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={monthlyData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="incG" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor="#10b981" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="expG" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }} axisLine={false} tickLine={false}
+                    tickFormatter={v => formatCurrency(v, { compact: true })} />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Area type="monotone" dataKey="income"   name="Receitas" stroke="#10b981" strokeWidth={2} fill="url(#incG)" dot={false} activeDot={{ r: 4 }} />
+                  <Area type="monotone" dataKey="expenses" name="Despesas" stroke="#ef4444" strokeWidth={2} fill="url(#expG)" dot={false} activeDot={{ r: 4 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </Card>
         </motion.div>
 
@@ -284,10 +318,12 @@ export default function Dashboard() {
           <Card>
             <div className="flex items-center gap-2 mb-3">
               <h3 className="text-sm font-bold text-[--text-primary]">Por categoria</h3>
-              <InfoTooltip text="Distribuição das despesas do mês atual por categoria." />
+              <InfoTooltip text="Distribuição das despesas do mês selecionado por categoria." />
             </div>
             {categoryTotals.length === 0 ? (
-              <p className="text-xs text-[--text-tertiary] text-center py-6">Nenhuma despesa no mês</p>
+              <p className="text-xs text-[--text-tertiary] text-center py-6">
+                {hasData ? 'Nenhuma despesa neste mês' : 'Nenhuma transação registrada'}
+              </p>
             ) : (
               <>
                 <ResponsiveContainer width="100%" height={130}>
@@ -313,18 +349,18 @@ export default function Dashboard() {
             )}
           </Card>
 
-          {/* Índice de saúde financeira */}
           <Card>
             <div className="flex items-center gap-2 mb-3">
               <Heart size={14} className="text-[--danger-icon]" />
               <h3 className="text-sm font-bold text-[--text-primary]">Saúde financeira</h3>
+              <InfoTooltip text="Calculado com base no mês selecionado." />
             </div>
             <HealthScore score={healthScore} />
           </Card>
         </motion.div>
       </div>
 
-      {/* Linha inferior */}
+      {/* Linha inferior: transações recentes + alertas + metas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.25 }}>
           <Card>
