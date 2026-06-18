@@ -1,8 +1,9 @@
-// src/components/Categories.jsxx
+// src/components/Categories.jsx
 import React, { useState, useEffect, useRef } from 'react'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { Card, Button, Input, Modal } from './ui'
+import InfoTooltip from './InfoTooltip'
 
 const DEFAULT_COLORS = [
   '#f97316', '#3b82f6', '#8b5cf6', '#10b981',
@@ -155,7 +156,10 @@ export default function Categories() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-black text-[--text-primary]">Categorias</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-[--text-primary]">Categorias</h1>
+            <InfoTooltip text="Categorias padrão são globais e não podem ser excluídas. Você pode criar categorias personalizadas a qualquer momento." />
+          </div>
           <p className="text-sm text-[--text-tertiary] mt-0.5">{categories.length} categorias</p>
         </div>
         <Button variant="primary" size="sm" icon={<Plus />} onClick={() => handleOpen()}>
