@@ -1,5 +1,5 @@
-// src/contexts/PlanContext.jsx — Firestore-based
-import React, { createContext, useContext, useEffect, useState } from 'react'
+// src/contexts/PlanContext.jsx
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db, activatePremiumForUser, removePremiumForUser, blockUser } from '../services/firebase'
 import { useAuth } from './AuthContext'
@@ -8,6 +8,7 @@ const PlanContext = createContext({})
 export const usePlan = () => useContext(PlanContext)
 
 const TRIAL_DAYS = 7
+const ADMIN_EMAIL = 'fhenriquefcruz@gmail.com'
 
 export const PlanProvider = ({ children }) => {
   const { user } = useAuth()
@@ -15,27 +16,25 @@ export const PlanProvider = ({ children }) => {
 
   useEffect(() => {
     if (!user?.uid) { setPlanData(null); return }
-    // Listener em tempo real no documento do usuário
     const unsub = onSnapshot(doc(db, 'users', user.uid), (snap) => {
       if (snap.exists()) setPlanData(snap.data())
     })
     return unsub
   }, [user?.uid])
 
-  const getStatus = () => {
-    if (!planData) return { isPremium: false, isTrial: false, isExpired: false, daysLeft: 0 }
-    if (planData.blocked) return { isPremium: false, isTrial: false, isExpired: true, daysLeft: 0, blocked: true }
+  const getStatus = (data) => {
+    if (data.blocked) return { isPremium: false, isTrial: false, isExpired: true, daysLeft: 0, blocked: true }
 
     const now = new Date()
 
-    if (planData.plan === 'premium' && planData.premiumUntil) {
-      const daysLeft = Math.ceil((new Date(planData.premiumUntil) - now) / 86400000)
+    if (data.plan === 'premium' && data.premiumUntil) {
+      const daysLeft = Math.ceil((new Date(data.premiumUntil) - now) / 86400000)
       if (daysLeft > 0) return { isPremium: true, isTrial: false, isExpired: false, daysLeft }
       return { isPremium: false, isTrial: false, isExpired: true, daysLeft: 0 }
     }
 
-    if (planData.plan === 'trial' || !planData.plan) {
-      const trialStart = planData.trialStart?.toDate?.() || new Date(planData.trialStart)
+    if (data.plan === 'trial' || !data.plan) {
+      const trialStart = data.trialStart?.toDate?.() || new Date(data.trialStart)
       const daysLeft = TRIAL_DAYS - Math.floor((now - trialStart) / 86400000)
       if (daysLeft > 0) return { isPremium: true, isTrial: true, isExpired: false, daysLeft }
       return { isPremium: false, isTrial: true, isExpired: true, daysLeft: 0 }
@@ -44,7 +43,13 @@ export const PlanProvider = ({ children }) => {
     return { isPremium: false, isTrial: false, isExpired: true, daysLeft: 0 }
   }
 
-  const status = planData ? getStatus() : { isPremium: false, isTrial: false, isExpired: false, daysLeft: 0 }
+  // Sobrescreve status para admin: sempre premium, com muitos dias restantes
+  const status = useMemo(() => {
+    if (user?.email === ADMIN_EMAIL) {
+      return { isPremium: true, isTrial: false, isExpired: false, daysLeft: 999 }
+    }
+    return planData ? getStatus(planData) : { isPremium: false, isTrial: false, isExpired: false, daysLeft: 0 }
+  }, [planData, user])
 
   return (
     <PlanContext.Provider value={{
