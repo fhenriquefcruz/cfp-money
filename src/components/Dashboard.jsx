@@ -15,8 +15,7 @@ import { useApp } from '../contexts/AppContext'
 import { Card, StatCard, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import { formatCurrency, formatRelativeDate, getMonthlyData, capitalize } from '../utils'
-// ⚠️ IMPORTANTE: adicione addMonths e subMonths aqui
-import { format, subMonths, addMonths, startOfMonth, endOfMonth, isSameMonth } from 'date-fns'
+import { format, subMonths, addMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 const PIE_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316']
@@ -61,7 +60,6 @@ const TxItem = ({ tx, categories }) => {
   )
 }
 
-// Índice de saúde financeira (0–100) – baseado no mês selecionado
 function calcHealthScore({ balance, income, expenses, budgetsOk, goalsActive, savingRate }) {
   let score = 0
   if (balance >= 0)    score += 30
@@ -114,7 +112,6 @@ export default function Dashboard() {
   const { user } = useAuth()
   const { transactions, categories, goals, budgets, loading, getSummary, getCategoryTotals, getSpendingForecast } = useApp()
 
-  // ── Estado do mês selecionado ──
   const [selectedDate, setSelectedDate] = useState(new Date())
   const year = selectedDate.getFullYear()
   const month = selectedDate.getMonth()
@@ -123,11 +120,9 @@ export default function Dashboard() {
   const goNextMonth = () => setSelectedDate(d => addMonths(d, 1))
   const goToCurrentMonth = () => setSelectedDate(new Date())
 
-  // Título do mês com primeira letra maiúscula
   const monthTitle = format(selectedDate, "MMMM 'de' yyyy", { locale: ptBR })
   const capitalizedMonth = capitalize(monthTitle)
 
-  // ── Cálculos baseados no mês selecionado ──
   const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
   const prevMonthDate = subMonths(selectedDate, 1)
   const prevSummary = useMemo(() => getSummary(prevMonthDate.getFullYear(), prevMonthDate.getMonth()), [prevMonthDate, transactions])
@@ -135,12 +130,12 @@ export default function Dashboard() {
   const monthlyData = useMemo(() => getMonthlyData(transactions, 6, selectedDate), [transactions, selectedDate])
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
+  // Saldo acumulado total (todos os meses)
   const totalBalance = useMemo(() =>
     transactions.reduce((s, t) => t.type === 'income' ? s + t.amount : s - t.amount, 0),
     [transactions]
   )
 
-  // Alertas de orçamento – baseado no mês selecionado
   const budgetAlerts = useMemo(() => {
     const start = startOfMonth(selectedDate)
     const end = endOfMonth(selectedDate)
@@ -154,7 +149,6 @@ export default function Dashboard() {
     }).filter(b => b.pct >= 70).sort((a, b) => b.pct - a.pct).slice(0, 3)
   }, [budgets, transactions, categories, selectedDate])
 
-  // Saúde financeira – baseada no mês selecionado
   const healthScore = useMemo(() => {
     const savingRate = currentSummary.income > 0
       ? ((currentSummary.income - currentSummary.expenses) / currentSummary.income) * 100 : 0
@@ -211,46 +205,52 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Hero saldo total */}
+      {/* ── HERO: SALDO DO MÊS (destaque principal) ── */}
       <motion.div
         className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] text-white"
-        initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.05 }}>
+        initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.05 }}
+      >
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-8 -right-8 w-48 h-48 rounded-full bg-white/5" />
           <div className="absolute -bottom-12 -left-8 w-40 h-40 rounded-full bg-white/5" />
         </div>
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
-            <p className="text-white/70 text-sm font-medium">Saldo total acumulado</p>
+            <p className="text-white/70 text-sm font-medium">Saldo do mês</p>
             <InfoTooltip
-              text="Soma de todas as receitas menos todas as despesas desde o início. Não se limita ao mês atual."
-              className="text-white/60 hover:text-white" />
+              text="Receitas menos despesas do mês selecionado. Não inclui meses anteriores ou futuros."
+              className="text-white/60 hover:text-white"
+            />
           </div>
           {isLoading
             ? <div className="h-10 w-48 rounded-xl bg-white/20 animate-pulse mb-4" />
-            : <p className="text-4xl font-black mb-4 tabular-nums">{formatCurrency(totalBalance)}</p>
+            : (
+                <p className={`text-4xl font-black mb-4 tabular-nums ${currentSummary.balance >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                  {formatCurrency(currentSummary.balance)}
+                </p>
+              )
           }
           <div className="flex flex-wrap gap-x-6 gap-y-2">
-            {[
-              { label: 'Receitas do mês',  value: currentSummary.income },
-              { label: 'Despesas do mês',  value: currentSummary.expenses },
-              { label: 'Saldo do mês',     value: currentSummary.balance, colored: true },
-            ].map((item, i) => (
-              <React.Fragment key={i}>
-                {i > 0 && <div className="w-px bg-white/20 hidden sm:block" />}
-                <div>
-                  <p className="text-white/60 text-xs mb-0.5">{item.label}</p>
-                  <p className={`text-lg font-bold ${item.colored ? (item.value >= 0 ? 'text-green-300' : 'text-red-300') : ''}`}>
-                    {formatCurrency(item.value)}
-                  </p>
-                </div>
-              </React.Fragment>
-            ))}
+            <div>
+              <p className="text-white/60 text-xs mb-0.5">Receitas do mês</p>
+              <p className="text-lg font-bold text-green-300">{formatCurrency(currentSummary.income)}</p>
+            </div>
+            <div className="w-px bg-white/20 hidden sm:block" />
+            <div>
+              <p className="text-white/60 text-xs mb-0.5">Despesas do mês</p>
+              <p className="text-lg font-bold text-red-300">{formatCurrency(currentSummary.expenses)}</p>
+            </div>
+            <div className="w-px bg-white/20 hidden sm:block" />
+            <div>
+              <p className="text-white/60 text-xs mb-0.5">Saldo acumulado</p>
+              <p className="text-lg font-bold text-white/90">{formatCurrency(totalBalance)}</p>
+              <p className="text-[10px] text-white/40">desde o início</p>
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Stats do mês selecionado */}
+      {/* Stats (receitas/despesas/saldo do mês + previsão) – já existem, mantemos */}
       <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-3"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
         <StatCard label="Receitas" value={formatCurrency(currentSummary.income, { compact: true })}
@@ -268,13 +268,12 @@ export default function Dashboard() {
           tooltip="Receitas menos despesas do mês selecionado." />
         <StatCard label="Previsão de gastos" value={formatCurrency(forecast, { compact: true })}
           icon={<Zap />} color="#f59e0b" loading={isLoading}
-          tooltip="Média das despesas dos últimos 3 meses. Útil para planejamento."
+          tooltip="Média das despesas dos últimos 3 meses."
           trend={forecast > 0 ? { positive: false, label: 'Média 3 meses' } : undefined} />
       </motion.div>
 
-      {/* Conteúdo principal: gráficos e saúde */}
+      {/* Gráficos e saúde – mantidos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Area Chart */}
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.15 }}>
           <Card>
             <div className="flex items-center gap-2 mb-4">
@@ -282,7 +281,7 @@ export default function Dashboard() {
                 <h3 className="text-sm font-bold text-[--text-primary]">Evolução financeira</h3>
                 <p className="text-xs text-[--text-tertiary]">Últimos 6 meses a partir de {capitalizedMonth}</p>
               </div>
-              <InfoTooltip text="Comparativo mensal entre receitas (verde) e despesas (vermelho). Área verde acima = mês positivo." />
+              <InfoTooltip text="Comparativo mensal entre receitas (verde) e despesas (vermelho)." />
             </div>
             {monthlyData.length === 0 || monthlyData.every(d => d.income === 0 && d.expenses === 0) ? (
               <div className="text-center py-10 text-[--text-tertiary] text-sm">
@@ -314,7 +313,6 @@ export default function Dashboard() {
           </Card>
         </motion.div>
 
-        {/* Pie + Health */}
         <motion.div className="space-y-4" {...fade} transition={{ delay: 0.2 }}>
           <Card>
             <div className="flex items-center gap-2 mb-3">
@@ -361,14 +359,14 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Linha inferior: transações recentes + alertas + metas */}
+      {/* Transações recentes + alertas + metas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.25 }}>
           <Card>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-[--text-primary]">Transações recentes</h3>
-                <InfoTooltip text="Últimas 6 movimentações registradas, independente do mês." />
+                <InfoTooltip text="Últimas 6 movimentações registradas." />
               </div>
               <Link to="/transactions" className="text-xs text-[--text-brand] hover:underline flex items-center gap-1">
                 Ver todas <ArrowRight size={12} />
@@ -425,7 +423,7 @@ export default function Dashboard() {
                 <div className="flex items-center gap-2">
                   <Target size={14} className="text-[--brand-500]" />
                   <h3 className="text-sm font-bold text-[--text-primary]">Metas</h3>
-                  <InfoTooltip text="Seus objetivos financeiros e o progresso atual. Use 'Aportar' nas metas para atualizar." />
+                  <InfoTooltip text="Seus objetivos financeiros e o progresso atual." />
                 </div>
                 <Link to="/goals" className="text-xs text-[--text-brand] hover:underline">Ver todas</Link>
               </div>
