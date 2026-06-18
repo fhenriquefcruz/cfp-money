@@ -130,11 +130,13 @@ export default function Dashboard() {
   const monthlyData = useMemo(() => getMonthlyData(transactions, 6, selectedDate), [transactions, selectedDate])
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
-  // Saldo acumulado total (todos os meses)
-  const totalBalance = useMemo(() =>
-    transactions.reduce((s, t) => t.type === 'income' ? s + t.amount : s - t.amount, 0),
-    [transactions]
-  )
+  // ── SALDO ACUMULADO ATÉ O MÊS ANTERIOR ──
+  const accumulatedBalance = useMemo(() => {
+    const start = startOfMonth(selectedDate)
+    return transactions
+      .filter(t => new Date(t.date) < start)
+      .reduce((s, t) => t.type === 'income' ? s + t.amount : s - t.amount, 0)
+  }, [transactions, selectedDate])
 
   const budgetAlerts = useMemo(() => {
     const start = startOfMonth(selectedDate)
@@ -243,14 +245,14 @@ export default function Dashboard() {
             <div className="w-px bg-white/20 hidden sm:block" />
             <div>
               <p className="text-white/60 text-xs mb-0.5">Saldo acumulado</p>
-              <p className="text-lg font-bold text-white/90">{formatCurrency(totalBalance)}</p>
-              <p className="text-[10px] text-white/40">desde o início</p>
+              <p className="text-lg font-bold text-white/90">{formatCurrency(accumulatedBalance)}</p>
+              <p className="text-[10px] text-white/40">até o mês anterior</p>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Stats (receitas/despesas/saldo do mês + previsão) – já existem, mantemos */}
+      {/* Stats (receitas/despesas/saldo do mês + previsão) – mantidos */}
       <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-3"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
         <StatCard label="Receitas" value={formatCurrency(currentSummary.income, { compact: true })}
@@ -272,7 +274,7 @@ export default function Dashboard() {
           trend={forecast > 0 ? { positive: false, label: 'Média 3 meses' } : undefined} />
       </motion.div>
 
-      {/* Gráficos e saúde – mantidos */}
+      {/* Gráficos e saúde */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.15 }}>
           <Card>
