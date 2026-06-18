@@ -1,9 +1,10 @@
-// src/components/Budgets.jsx x
+// src/components/Budgets.jsx
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PieChart, Plus, Trash2, AlertTriangle, TrendingUp, CheckCircle, Flame } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, EmptyState, ProgressBar } from './ui'
+import InfoTooltip from './InfoTooltip'
 import { formatCurrency } from '../utils'
 
 // ── Status do orçamento com cores e mensagens ──
@@ -236,7 +237,10 @@ export default function Budgets() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black text-[--text-primary]">Orçamentos mensais</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-[--text-primary]">Orçamentos mensais</h1>
+            <InfoTooltip text="Defina um limite de gasto por categoria. Você será alertado ao atingir 70%, 90% e 100% do limite." />
+          </div>
           <p className="text-sm text-[--text-tertiary]">
             {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
           </p>
