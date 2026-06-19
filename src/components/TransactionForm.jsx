@@ -1,5 +1,4 @@
 // src/components/TransactionForm.jsx
-// Inclui: máscara monetária, cartão de crédito+parcelas, receita recorrente, filtros
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -11,7 +10,7 @@ import { Modal, Button, Input, Select } from './ui'
 import { PAYMENT_METHODS } from '../utils'
 import { format, addMonths } from 'date-fns'
 
-// ── Máscara monetária BR ──
+// Máscara monetária BR
 function maskCurrency(raw) {
   const digits = raw.replace(/\D/g, '')
   if (!digits) return ''
@@ -47,11 +46,9 @@ function CurrencyInput({ label, value, onChange, error, placeholder = '0,00', re
           value={value}
           onChange={handleChange}
           onKeyDown={(e) => {
-            // Permite: backspace, delete, tab, setas, ctrl+a/c/v/x
             const allowed = ['Backspace','Delete','Tab','ArrowLeft','ArrowRight','ArrowUp','ArrowDown']
             if (allowed.includes(e.key)) return
             if (e.ctrlKey || e.metaKey) return
-            // Bloqueia qualquer tecla não numérica
             if (!/^\d$/.test(e.key)) e.preventDefault()
           }}
           className={`w-full bg-[--bg-surface] border rounded-xl pl-10 pr-4 py-3 text-xl font-black text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] transition-all ${
@@ -72,12 +69,10 @@ const EMPTY_FORM = {
   date: format(new Date(), 'yyyy-MM-dd'),
   paymentMethod: 'pix',
   notes: '',
-  // Cartão
   isCredit: false,
   closingDay: '',
   isInstallment: false,
   installments: '2',
-  // Recorrente
   isRecurring: false,
   recurringMonths: '12',
 }
@@ -132,13 +127,11 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
     return Object.keys(errs).length === 0
   }
 
-  // Calcula data efetiva considerando fechamento da fatura
   const getEffectiveDate = (baseDate, closingDay) => {
     if (!closingDay) return baseDate
     const d = new Date(baseDate + 'T00:00:00')
     const closing = parseInt(closingDay)
     if (d.getDate() > closing) {
-      // Compra depois do fechamento → vai para o próximo mês
       return format(addMonths(d, 1), 'yyyy-MM-dd')
     }
     return baseDate
@@ -171,7 +164,6 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           date: form.date,
         })
       } else if (form.isInstallment && form.isCredit) {
-        // Parcelas: gera N transações em meses consecutivos
         const n       = parseInt(form.installments)
         const parcela = parseFloat((baseAmount / n).toFixed(2))
         const items   = []
@@ -190,7 +182,6 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         }
         await addTransactionBatch(items)
       } else if (form.isRecurring && form.type === 'income') {
-        // Receita recorrente: replica N meses
         const months = parseInt(form.recurringMonths) || 12
         const items  = []
         for (let i = 0; i < months; i++) {
@@ -229,7 +220,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
         {/* Tipo */}
         <div className="grid grid-cols-2 gap-2 p-1 bg-[--bg-hover] rounded-xl">
           {['expense', 'income'].map(type => (
@@ -248,7 +239,6 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           ))}
         </div>
 
-        {/* Valor com máscara */}
         <CurrencyInput
           label="Valor" required
           value={form.amount}
@@ -256,11 +246,9 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           error={errors.amount}
         />
 
-        {/* Descrição */}
         <Input label="Descrição" placeholder="Ex: Almoço no restaurante"
           value={form.description} onChange={update('description')} icon={<FileText />} />
 
-        {/* Categorias */}
         <div>
           <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">
             Categoria <span className="text-red-500">*</span>
@@ -282,7 +270,6 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           </div>
         </div>
 
-        {/* Data + Pagamento */}
         <div className="grid grid-cols-2 gap-3">
           <Input label="Data" type="date" value={form.date}
             onChange={update('date')} icon={<Calendar />} error={errors.date} required />
@@ -295,7 +282,6 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           </div>
         </div>
 
-        {/* ── Campos de Cartão de Crédito ── */}
         <AnimatePresence>
           {showCreditFields && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
@@ -306,7 +292,6 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
                   <span className="text-xs font-bold text-[--brand-700]">Cartão de Crédito</span>
                 </div>
 
-                {/* Dia de fechamento */}
                 <Input label="Dia de fechamento da fatura" type="number" min="1" max="31"
                   placeholder="Ex: 5"
                   value={form.closingDay} onChange={update('closingDay')}
@@ -317,7 +302,6 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
                   </p>
                 )}
 
-                {/* Parcelado */}
                 <label className="flex items-center gap-2 mt-3 cursor-pointer">
                   <input type="checkbox" checked={form.isInstallment}
                     onChange={e => update('isInstallment')(e.target.checked)}
@@ -347,7 +331,6 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           )}
         </AnimatePresence>
 
-        {/* ── Receita Recorrente ── */}
         <AnimatePresence>
           {showRecurringFields && !isEditing && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
@@ -378,7 +361,6 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           )}
         </AnimatePresence>
 
-        {/* Notas */}
         <div>
           <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">Observações</label>
           <textarea placeholder="Notas adicionais (opcional)..." value={form.notes}
