@@ -82,17 +82,17 @@ export const Modal = ({ isOpen, onClose, title, children, footer, size = 'md' })
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className={clsx('w-full mx-4 bg-[--bg-surface] rounded-2xl shadow-xl', sizes[size])}
+        className={clsx('w-full mx-4 bg-[--bg-surface] rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto', sizes[size])}
         onClick={e => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between p-4 border-b border-[--border-subtle]">
+          <div className="flex items-center justify-between p-4 border-b border-[--border-subtle] sticky top-0 bg-[--bg-surface] z-10">
             <h3 className="text-lg font-bold text-[--text-primary]">{title}</h3>
             <button onClick={onClose} className="text-[--text-tertiary] hover:text-[--text-primary]">&times;</button>
           </div>
         )}
         <div className="p-4">{children}</div>
-        {footer && <div className="p-4 border-t border-[--border-subtle]">{footer}</div>}
+        {footer && <div className="p-4 border-t border-[--border-subtle] sticky bottom-0 bg-[--bg-surface]">{footer}</div>}
       </motion.div>
     </div>
   )
@@ -104,7 +104,7 @@ export const Card = ({ children, padding = true }) => (
   </div>
 )
 
-// Tooltip inline leve (sem dependência circular com Onboarding)
+// Tooltip inline leve
 const TipIcon = ({ text }) => {
   const [show, setShow] = React.useState(false)
   return (
