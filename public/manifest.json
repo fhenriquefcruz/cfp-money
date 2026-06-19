@@ -1,6 +1,6 @@
 {
-  "name": "CFP Money",
-  "short_name": "CFP Money",
+  "name": "Meu Real",
+  "short_name": "Meu Real",
   "description": "Controle financeiro pessoal inteligente",
   "start_url": "/cfp-money/",
   "display": "standalone",
