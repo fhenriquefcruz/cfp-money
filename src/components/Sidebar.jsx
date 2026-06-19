@@ -81,7 +81,7 @@ export default function Sidebar() {
                 initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }}
                 exit={{ opacity: 0, width: 0 }} transition={{ duration: 0.2 }}
                 className="text-base font-black text-[--text-primary] whitespace-nowrap overflow-hidden">
-                CFP Money
+                Meu Real
               </motion.span>
             )}
           </AnimatePresence>
@@ -92,7 +92,6 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* User pill */}
       <AnimatePresence>
         {!collapsed && (
           <motion.div
@@ -130,7 +129,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop sidebar */}
       <motion.aside
         animate={{ width: collapsed ? 68 : 220 }}
         transition={{ duration: 0.2 }}
@@ -138,7 +136,6 @@ export default function Sidebar() {
         {sidebarContent}
       </motion.aside>
 
-      {/* Mobile bottom bar */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[--bg-surface]/95 backdrop-blur-md border-t border-[--border-subtle] flex items-center justify-around px-2"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
         {allItems.slice(0, 5).map(({ to, icon: Icon, label }) => (
@@ -164,7 +161,6 @@ export default function Sidebar() {
         </button>
       </nav>
 
-      {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -179,7 +175,7 @@ export default function Sidebar() {
                   <div className="w-8 h-8 rounded-xl bg-[--brand-600] flex items-center justify-center">
                     <TrendingUp size={16} className="text-white" />
                   </div>
-                  <span className="text-lg font-black text-[--text-primary]">CFP Money</span>
+                  <span className="text-lg font-black text-[--text-primary]">Meu Real</span>
                 </div>
                 <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary]">
                   <X size={18} />
