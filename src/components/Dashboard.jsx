@@ -61,6 +61,9 @@ const TxItem = ({ tx, categories }) => {
 }
 
 function calcHealthScore({ balance, income, expenses, budgetsOk, goalsActive, savingRate }) {
+  // Se não houver transações no mês, retorna 0
+  if (income === 0 && expenses === 0) return 0
+
   let score = 0
   if (balance >= 0)    score += 30
   if (savingRate >= 20) score += 25
@@ -73,6 +76,15 @@ function calcHealthScore({ balance, income, expenses, budgetsOk, goalsActive, sa
 }
 
 function HealthScore({ score }) {
+  if (score === 0) {
+    return (
+      <div className="text-center py-2">
+        <p className="text-sm text-[--text-tertiary]">Sem dados no mês selecionado</p>
+        <p className="text-xs text-[--text-tertiary] mt-1">Adicione transações para calcular sua saúde financeira.</p>
+      </div>
+    )
+  }
+
   const color  = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444'
   const label  = score >= 75 ? 'Ótima' : score >= 50 ? 'Regular' : 'Atenção'
   const emoji  = score >= 75 ? '💚' : score >= 50 ? '💛' : '❤️'
@@ -130,7 +142,7 @@ export default function Dashboard() {
   const monthlyData = useMemo(() => getMonthlyData(transactions, 6, selectedDate), [transactions, selectedDate])
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
-  // ── SALDO ACUMULADO ATÉ O MÊS ANTERIOR ──
+  // Saldo acumulado ATÉ O MÊS ANTERIOR (não inclui o mês atual)
   const accumulatedBalance = useMemo(() => {
     const start = startOfMonth(selectedDate)
     return transactions
@@ -179,7 +191,6 @@ export default function Dashboard() {
   return (
     <div className="space-y-5 pb-24 lg:pb-6">
 
-      {/* Header com navegação do mês */}
       <motion.div className="flex flex-wrap items-start justify-between gap-3" {...fade}>
         <div>
           <p className="text-sm text-[--text-tertiary] font-medium">
@@ -207,7 +218,7 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* ── HERO: SALDO DO MÊS (destaque principal) ── */}
+      {/* HERO: Saldo do mês */}
       <motion.div
         className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] text-white"
         initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.05 }}
@@ -252,7 +263,7 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Stats (receitas/despesas/saldo do mês + previsão) – mantidos */}
+      {/* Stats */}
       <motion.div className="grid grid-cols-2 lg:grid-cols-4 gap-3"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
         <StatCard label="Receitas" value={formatCurrency(currentSummary.income, { compact: true })}
@@ -361,7 +372,7 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Transações recentes + alertas + metas */}
+      {/* Transações recentes, alertas e metas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.25 }}>
           <Card>
