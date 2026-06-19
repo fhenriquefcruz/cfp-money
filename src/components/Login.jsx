@@ -1,4 +1,4 @@
-// src/components/Login.jsxx
+// src/components/Login.jsx
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, TrendingUp, Check, Star } from 'lucide-react'
@@ -78,7 +78,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex bg-[--bg-app]">
 
-      {/* ── Painel esquerdo ── */}
+      {/* Painel esquerdo */}
       <div className="hidden lg:flex flex-col justify-between w-[48%] bg-gradient-to-br from-[--brand-800] via-[--brand-700] to-[--brand-500] p-12 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5" />
@@ -87,18 +87,16 @@ export default function Login() {
             style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
         </div>
 
-        {/* Logo */}
         <div className="relative z-10 flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
             <TrendingUp className="text-white" size={22} />
           </div>
           <div>
-            <span className="text-2xl font-black text-white tracking-tight">CFP Money</span>
+            <span className="text-2xl font-black text-white tracking-tight">Meu Real</span>
             <p className="text-white/55 text-xs mt-0.5">Controle financeiro pessoal</p>
           </div>
         </div>
 
-        {/* Hero */}
         <div className="relative z-10 space-y-8">
           <div>
             <h2 className="text-4xl font-black text-white leading-tight mb-3">
@@ -110,7 +108,6 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Cards Free / Premium */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15">
               <p className="text-white/50 text-[10px] font-semibold uppercase tracking-widest mb-1">Gratuito</p>
@@ -154,17 +151,16 @@ export default function Login() {
         </p>
       </div>
 
-      {/* ── Painel direito ── */}
+      {/* Painel direito */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10 overflow-y-auto">
         <div className="w-full max-w-md">
 
-          {/* Logo mobile */}
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <div className="w-9 h-9 rounded-xl bg-[--brand-600] flex items-center justify-center">
               <TrendingUp className="text-white" size={18} />
             </div>
             <div>
-              <span className="text-xl font-black text-[--text-primary]">CFP Money</span>
+              <span className="text-xl font-black text-[--text-primary]">Meu Real</span>
               <p className="text-[--text-tertiary] text-xs">Controle financeiro pessoal</p>
             </div>
           </div>
