@@ -43,7 +43,7 @@ export const PlanProvider = ({ children }) => {
     return { isPremium: false, isTrial: false, isExpired: true, daysLeft: 0 }
   }
 
-  // Sobrescreve status para admin: sempre premium, com muitos dias restantes
+  // Admin sempre premium
   const status = useMemo(() => {
     if (user?.email === ADMIN_EMAIL) {
       return { isPremium: true, isTrial: false, isExpired: false, daysLeft: 999 }
