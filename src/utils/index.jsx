@@ -2,13 +2,13 @@
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
-// ── CAPITALIZE (primeira letra maiúscula) ──
+// ── CAPITALIZE ──
 export const capitalize = (str) => {
   if (!str) return ''
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-// ── CURRENCY FORMATTING ──
+// ── CURRENCY ──
 export const formatCurrency = (value, options = {}) => {
   const { currency = 'BRL', compact = false } = options
   if (compact && Math.abs(value) >= 1000) {
@@ -26,7 +26,7 @@ export const formatCurrency = (value, options = {}) => {
   }).format(value)
 }
 
-// ── DATE FORMATTING ──
+// ── DATE ──
 export const formatDate = (date, fmt = 'dd/MM/yyyy') => {
   if (!date) return ''
   const d = typeof date === 'string' ? parseISO(date) : date
@@ -35,8 +35,7 @@ export const formatDate = (date, fmt = 'dd/MM/yyyy') => {
 
 export const formatMonth = (date) => {
   const d = typeof date === 'string' ? parseISO(date) : date
-  const month = format(d, "MMMM 'de' yyyy", { locale: ptBR })
-  return capitalize(month)
+  return capitalize(format(d, "MMMM 'de' yyyy", { locale: ptBR }))
 }
 
 export const formatRelativeDate = (date) => {
@@ -49,13 +48,13 @@ export const formatRelativeDate = (date) => {
   return formatDate(d)
 }
 
-// ── NUMBER FORMATTING ──
+// ── NUMBER ──
 export const formatPercent = (value, total) => {
   if (!total) return '0%'
   return `${((value / total) * 100).toFixed(1)}%`
 }
 
-// ── COLOR UTILITIES ──
+// ── COLOR ──
 export const hexToRgba = (hex, alpha = 1) => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   if (!result) return `rgba(99,102,241,${alpha})`
@@ -76,7 +75,6 @@ export const groupByMonth = (transactions) => {
   return groups
 }
 
-// ── getMonthlyData com data base opcional ──
 export const getMonthlyData = (transactions, months = 6, baseDate = new Date()) => {
   const result = []
   for (let i = months - 1; i >= 0; i--) {
@@ -100,7 +98,7 @@ export const getMonthlyData = (transactions, months = 6, baseDate = new Date()) 
   return result
 }
 
-// ── PAYMENT METHOD LABELS ──
+// ── PAYMENT METHODS ──
 export const PAYMENT_METHODS = [
   { id: 'pix',         label: 'Pix',                icon: '💸' },
   { id: 'credit_card', label: 'Cartão de Crédito',  icon: '💳' },
@@ -135,7 +133,7 @@ export const exportToCSV = (transactions, categories) => {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `cfp-money-transacoes-${format(new Date(), 'yyyy-MM-dd')}.csv`
+  a.download = `meu-real-transacoes-${format(new Date(), 'yyyy-MM-dd')}.csv`
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -148,19 +146,17 @@ export const exportToPDF = async (transactions, categories, summary) => {
   const doc = new jsPDF()
   const today = format(new Date(), "dd/MM/yyyy 'às' HH:mm")
 
-  // Header
   doc.setFillColor(79, 70, 229)
   doc.rect(0, 0, 220, 35, 'F')
   doc.setTextColor(255, 255, 255)
   doc.setFontSize(22)
   doc.setFont('helvetica', 'bold')
-  doc.text('CFP Money', 14, 20)
+  doc.text('Meu Real', 14, 20)
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
   doc.text('Extrato Financeiro', 14, 28)
   doc.text(today, 196, 28, { align: 'right' })
 
-  // Summary Cards
   doc.setTextColor(0, 0, 0)
   doc.setFontSize(11)
   doc.text('Resumo do Período', 14, 50)
@@ -184,7 +180,6 @@ export const exportToPDF = async (transactions, categories, summary) => {
     doc.setFont('helvetica', 'normal')
   })
 
-  // Transactions Table
   const rows = transactions.slice(0, 200).map(t => [
     formatDate(t.date),
     t.type === 'income' ? 'Receita' : 'Despesa',
@@ -219,7 +214,7 @@ export const exportToPDF = async (transactions, categories, summary) => {
     },
   })
 
-  doc.save(`cfp-money-extrato-${format(new Date(), 'yyyy-MM-dd')}.pdf`)
+  doc.save(`meu-real-extrato-${format(new Date(), 'yyyy-MM-dd')}.pdf`)
 }
 
 // ── IMPORT CSV ──
@@ -244,10 +239,8 @@ export const parseCSVImport = (csvText) => {
   return transactions
 }
 
-// ── CLAMP ──
+// ── CLAMP & DEBOUNCE ──
 export const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
-
-// ── DEBOUNCE ──
 export const debounce = (fn, delay) => {
   let timer
   return (...args) => {
