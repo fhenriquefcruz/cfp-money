@@ -98,12 +98,18 @@ export default function Admin() {
   const [users, setUsers]       = useState([])
   const [search, setSearch]     = useState('')
   const [successMsg, setMsg]    = useState('')
+  const [error, setError]       = useState('')
 
   const isAdmin = user?.email === ADMIN_EMAIL
 
   useEffect(() => {
     if (!isAdmin) return
-    return onAllUsersChange(setUsers)
+    // Listener para todos os usuários
+    const unsubscribe = onAllUsersChange(
+      (data) => setUsers(data),
+      (err) => setError('Erro ao carregar usuários: ' + err.message)
+    )
+    return () => { if (unsubscribe) unsubscribe() }
   }, [isAdmin])
 
   const toast = (msg) => { setMsg(msg); setTimeout(() => setMsg(''), 3000) }
@@ -120,6 +126,19 @@ export default function Admin() {
       <p className="text-sm text-[--text-tertiary]">Esta área é exclusiva para administradores.</p>
     </div>
   )
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-3">
+        <AlertTriangle size={40} className="text-[--danger-icon]" />
+        <p className="text-lg font-bold text-[--text-primary]">Erro ao carregar dados</p>
+        <p className="text-sm text-[--text-tertiary]">{error}</p>
+        <p className="text-xs text-[--text-tertiary] mt-2">
+          Verifique se o documento do admin possui o campo <code className="bg-[--bg-hover] px-1 rounded">role: "admin"</code> no Firestore.
+        </p>
+      </div>
+    )
+  }
 
   const filtered = users.filter(u =>
     u.email?.toLowerCase().includes(search.toLowerCase()) ||
