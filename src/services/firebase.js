@@ -148,10 +148,21 @@ export const deleteBudget = async (uid, categoryId) => {
 }
 
 // ── ADMIN ──
-export const onAllUsersChange = (callback) =>
-  onSnapshot(collection(db, 'users'), snap =>
-    callback(snap.docs.map(d => ({ uid: d.id, ...d.data() })))
+// Listener em tempo real para todos os usuários (apenas admin)
+export const onAllUsersChange = (callback, onError) => {
+  const q = query(collection(db, 'users'), orderBy('email'))
+  const unsubscribe = onSnapshot(q, 
+    (snapshot) => {
+      const users = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }))
+      callback(users)
+    },
+    (error) => {
+      console.error('[Meu Real] Erro no listener de usuários:', error)
+      if (onError) onError(error)
+    }
   )
+  return unsubscribe
+}
 
 export const activatePremiumForUser = async (uid, months = 1) => {
   const until = new Date()
@@ -171,8 +182,6 @@ export const blockUser = async (uid, blocked) =>
 
 // ══════════════════════════════════════════════════════════════
 // SEED CATEGORIAS PADRÃO
-// Chamado uma única vez no primeiro login de qualquer usuário.
-// Usa isDefault:true e ownerUid:null — compatível com as regras.
 // ══════════════════════════════════════════════════════════════
 const DEFAULT_CATEGORIES = [
   { name: 'Alimentação',      icon: '🍔', color: '#f97316', type: 'expense', isDefault: true, ownerUid: null },
@@ -199,15 +208,14 @@ export const seedDefaultCategories = async () => {
     )
     if (!snap.empty) { _seeded = true; return }
 
-    // Cria em lote — uma operação atômica
     const batch = writeBatch(db)
     DEFAULT_CATEGORIES.forEach(cat => {
       batch.set(doc(collection(db, 'categories')), cat)
     })
     await batch.commit()
     _seeded = true
-    console.log('[CFP] ✅ Categorias padrão criadas no Firestore.')
+    console.log('[Meu Real] ✅ Categorias padrão criadas no Firestore.')
   } catch (err) {
-    console.error('[CFP] Erro ao semear categorias:', err.code, err.message)
+    console.error('[Meu Real] Erro ao semear categorias:', err.code, err.message)
   }
 }
