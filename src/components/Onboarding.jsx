@@ -1,4 +1,4 @@
-// src/components/Onboarding.jsx
+// src/components/Onboarding.jsx — Tour guiado, só no primeiro acesso
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react'
@@ -82,83 +82,70 @@ export default function Onboarding() {
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      >
-        {/* Backdrop mais escuro e com blur mais forte */}
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={finish} />
+        className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        {/* Backdrop escuro com blur */}
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={finish} />
 
-        {/* Card do tour - melhor contraste e tamanho */}
+        {/* Card do tour - fundo sólido e legível */}
         <motion.div
           key={step}
           initial={{ opacity: 0, y: 20, scale: 0.96 }}
           animate={{ opacity: 1, y: 0,  scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.96 }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="relative z-10 w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700"
-        >
+          className="relative z-10 w-full max-w-sm mx-4 mb-6 sm:mb-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-2xl overflow-hidden">
+
           {/* Barra de progresso */}
           <div className="h-1 bg-gray-200 dark:bg-gray-700">
-            <motion.div
-              className="h-full bg-[--brand-600] rounded-full"
+            <motion.div className="h-full bg-[--brand-600] rounded-full"
               animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
-              transition={{ duration: 0.3 }}
-            />
+              transition={{ duration: 0.3 }} />
           </div>
 
           <div className="p-6">
             {/* Fechar */}
-            <button
-              onClick={finish}
-              className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
-            >
-              <X size={18} />
+            <button onClick={finish}
+              className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+              <X size={16} />
             </button>
 
             {/* Ícone */}
             <div className="w-12 h-12 rounded-2xl bg-[--brand-100] dark:bg-[--brand-900] flex items-center justify-center mb-4">
-              <Sparkles size={22} className="text-[--brand-600] dark:text-[--brand-300]" />
+              <Sparkles size={20} className="text-[--brand-600] dark:text-[--brand-300]" />
             </div>
 
-            {/* Conteúdo - texto maior e mais legível */}
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{current.title}</h3>
-            <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed mb-6">{current.description}</p>
+            {/* Conteúdo - texto com contraste garantido */}
+            <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">{current.title}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6">{current.description}</p>
 
-            {/* Indicadores de passo */}
-            <div className="flex items-center justify-center gap-2 mb-5">
+            {/* Passos indicadores */}
+            <div className="flex items-center justify-center gap-1.5 mb-5">
               {STEPS.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    i === step ? 'w-8 bg-[--brand-600]' : i < step ? 'w-3 bg-[--brand-400]' : 'w-3 bg-gray-300 dark:bg-gray-600'
-                  }`}
-                />
+                <div key={i}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === step ? 'w-6 bg-[--brand-600]' : i < step ? 'w-3 bg-[--brand-400]' : 'w-3 bg-gray-300 dark:bg-gray-600'
+                  }`} />
               ))}
             </div>
 
             {/* Botões */}
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               {!isFirst && (
-                <button
-                  onClick={prev}
-                  className="flex items-center gap-1 px-5 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <ChevronLeft size={16} /> Anterior
+                <button onClick={prev}
+                  className="flex items-center gap-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                  <ChevronLeft size={15} /> Anterior
                 </button>
               )}
-              <button
-                onClick={next}
-                className="flex-1 flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[--brand-600] text-white text-sm font-bold hover:bg-[--brand-700] transition-colors"
-              >
-                {isLast ? '🎉 Começar!' : (<>Próximo <ChevronRight size={16} /></>)}
+              <button onClick={next}
+                className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[--brand-600] text-white text-sm font-bold hover:bg-[--brand-700] transition-colors">
+                {isLast ? '🎉 Começar!' : (<>Próximo <ChevronRight size={15} /></>)}
               </button>
             </div>
 
             {!isFirst && (
-              <button
-                onClick={finish}
-                className="w-full text-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mt-3 transition-colors"
-              >
+              <button onClick={finish}
+                className="w-full text-center text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mt-3 transition-colors">
                 Pular tour
               </button>
             )}
