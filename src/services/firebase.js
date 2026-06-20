@@ -83,7 +83,6 @@ export const addTransactionBatch = async (uid, items) => {
 }
 
 // ── CATEGORIES ──
-// Busca: padrão globais + customizadas do usuário
 export const getCategories = async (uid) => {
   const [defSnap, cusSnap] = await Promise.all([
     getDocs(query(collection(db, 'categories'), where('isDefault', '==', true))),
@@ -147,8 +146,7 @@ export const deleteBudget = async (uid, categoryId) => {
   if (!snap.empty) await deleteDoc(snap.docs[0].ref)
 }
 
-// ── ADMIN ──
-// Listener em tempo real para todos os usuários (apenas admin)
+// ── ADMIN: TODOS OS USUÁRIOS ──
 export const onAllUsersChange = (callback, onError) => {
   const q = query(collection(db, 'users'), orderBy('email'))
   const unsubscribe = onSnapshot(q, 
@@ -181,7 +179,7 @@ export const blockUser = async (uid, blocked) =>
   updateDoc(doc(db, 'users', uid), { blocked })
 
 // ══════════════════════════════════════════════════════════════
-// SEED CATEGORIAS PADRÃO
+// SEED CATEGORIAS PADRÃO (desativado, pois já criamos manualmente)
 // ══════════════════════════════════════════════════════════════
 const DEFAULT_CATEGORIES = [
   { name: 'Alimentação',      icon: '🍔', color: '#f97316', type: 'expense', isDefault: true, ownerUid: null },
@@ -207,14 +205,13 @@ export const seedDefaultCategories = async () => {
       query(collection(db, 'categories'), where('isDefault', '==', true))
     )
     if (!snap.empty) { _seeded = true; return }
-
     const batch = writeBatch(db)
     DEFAULT_CATEGORIES.forEach(cat => {
       batch.set(doc(collection(db, 'categories')), cat)
     })
     await batch.commit()
     _seeded = true
-    console.log('[Meu Real] ✅ Categorias padrão criadas no Firestore.')
+    console.log('[Meu Real] ✅ Categorias padrão criadas.')
   } catch (err) {
     console.error('[Meu Real] Erro ao semear categorias:', err.code, err.message)
   }
