@@ -3,263 +3,357 @@ import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, Search, Filter, Download, Upload, Edit2, Trash2,
-  ArrowUpCircle, ArrowDownCircle, X, FileText, ArrowLeftRight
+  X, FileText, ArrowLeftRight, PiggyBank, ChevronDown,
+  TrendingUp, TrendingDown, ArrowUpDown
 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
-import { Card, Button, EmptyState, Modal } from './ui'
+import { Card, Button, EmptyState, Modal, Badge } from './ui'
 import TransactionForm from './TransactionForm'
-import { formatCurrency, formatDate, getPaymentLabel, exportToCSV, exportToPDF, parseCSVImport } from '../utils'
+import {
+  formatCurrency, formatDate, getPaymentLabel,
+  exportToCSV, exportToPDF, parseCSVImport, PAYMENT_METHODS
+} from '../utils'
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
 const DATE_PRESETS = [
-  { label: 'Este mês', getRange: () => ({ from: format(startOfMonth(new Date()), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
-  { label: 'Mês passado', getRange: () => ({ from: format(startOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd'), to: format(endOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd') }) },
-  { label: 'Próximo mês', getRange: () => {
-      const next = addMonths(new Date(), 1)
-      return { from: format(startOfMonth(next), 'yyyy-MM-dd'), to: format(endOfMonth(next), 'yyyy-MM-dd') }
-    }
-  },
+  { label: 'Este mês',      getRange: () => ({ from: format(startOfMonth(new Date()), 'yyyy-MM-dd'), to: format(endOfMonth(new Date()), 'yyyy-MM-dd') }) },
+  { label: 'Mês passado',   getRange: () => ({ from: format(startOfMonth(subMonths(new Date(),1)), 'yyyy-MM-dd'), to: format(endOfMonth(subMonths(new Date(),1)), 'yyyy-MM-dd') }) },
   { label: 'Últimos 3 meses', getRange: () => ({ from: format(subMonths(new Date(), 3), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') }) },
-  { label: 'Este ano', getRange: () => ({ from: `${new Date().getFullYear()}-01-01`, to: format(new Date(), 'yyyy-MM-dd') }) },
-  { label: 'Todos', getRange: () => ({ from: '', to: '' }) },
+  { label: 'Este ano',      getRange: () => ({ from: `${new Date().getFullYear()}-01-01`, to: format(new Date(), 'yyyy-MM-dd') }) },
+  { label: 'Todos',         getRange: () => ({ from: '', to: '' }) },
 ]
+
+// Agrupa transações por data
+function groupByDate(txs) {
+  const groups = {}
+  txs.forEach(tx => {
+    if (!groups[tx.date]) groups[tx.date] = []
+    groups[tx.date].push(tx)
+  })
+  return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
+}
+
+function TxRow({ tx, cat, onEdit, onDelete }) {
+  const isIncome  = tx.type === 'income' && !tx.isSavings
+  const isSavings = tx.isSavings
+  const isExpense = tx.type === 'expense'
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -16 }}
+      className="flex items-center gap-3 px-4 py-3.5 hover:bg-[--bg-hover] transition-colors group cursor-default"
+    >
+      {/* Ícone */}
+      <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg flex-shrink-0"
+        style={{ background: isSavings ? '#6366f115' : (cat?.color || '#6366f1') + '18' }}>
+        {isSavings ? '🐷' : cat?.icon || (isIncome ? '💰' : '💸')}
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <p className="text-sm font-semibold text-[--text-primary] truncate max-w-[200px]">
+            {tx.description || (isSavings ? 'Poupança' : cat?.name) || 'Sem descrição'}
+          </p>
+          {tx.isInstallment && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[--brand-100] text-[--brand-700] flex-shrink-0">
+              {tx.installmentNum}/{tx.installmentOf}x
+            </span>
+          )}
+          {tx.isRecurring && !tx.isInstallment && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[--bg-hover] text-[--text-tertiary] flex-shrink-0">
+              Fixo
+            </span>
+          )}
+          {isSavings && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[--brand-100] text-[--brand-700] flex-shrink-0">
+              Poupança
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+          {cat && !isSavings && (
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0"
+              style={{ background: (cat.color || '#6366f1') + '15', color: cat.color || '#6366f1' }}>
+              {cat.icon} {cat.name}
+            </span>
+          )}
+          {tx.paymentMethod && !isSavings && (
+            <span className="text-[10px] text-[--text-tertiary] hidden sm:inline">
+              {PAYMENT_METHODS.find(m => m.id === tx.paymentMethod)?.icon} {getPaymentLabel(tx.paymentMethod)}
+            </span>
+          )}
+          {tx.notes && (
+            <span className="text-[10px] text-[--text-tertiary] truncate max-w-[120px]" title={tx.notes}>
+              💬 {tx.notes}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Valor + ações */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <span className={`text-sm font-bold tabular-nums ${
+          isSavings ? 'text-[--brand-500]'
+          : isIncome ? 'text-[--success-icon]'
+          : 'text-[--danger-icon]'
+        }`}>
+          {isSavings ? '' : isIncome ? '+' : '−'}{formatCurrency(tx.amount)}
+        </span>
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity">
+          <button onClick={() => onEdit(tx)}
+            className="p-1.5 rounded-lg hover:bg-[--bg-elevated] text-[--text-tertiary] hover:text-[--text-brand] transition-colors">
+            <Edit2 size={13} />
+          </button>
+          <button onClick={() => onDelete(tx.id)}
+            className="p-1.5 rounded-lg hover:bg-[--danger-bg] text-[--text-tertiary] hover:text-[--danger-text] transition-colors">
+            <Trash2 size={13} />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
 
 export default function TransactionList() {
   const { transactions, categories, removeTransaction, createTransaction, showNotification } = useApp()
-  const [search, setSearch] = useState('')
-  const [typeFilter, setTypeFilter] = useState('all')
-  const [categoryFilter, setCategoryFilter] = useState('all')
-  const [paymentFilter, setPaymentFilter] = useState('all')
-  const [dateRange, setDateRange] = useState({ from: format(startOfMonth(new Date()), 'yyyy-MM-dd'), to: format(new Date(), 'yyyy-MM-dd') })
+
+  const [search, setSearch]           = useState('')
+  const [typeFilter, setTypeFilter]   = useState('all')
+  const [catFilter, setCatFilter]     = useState('all')
+  const [payFilter, setPayFilter]     = useState('all')
+  const [dateRange, setDateRange]     = useState({
+    from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
+    to:   format(endOfMonth(new Date()), 'yyyy-MM-dd'),
+  })
   const [showFilters, setShowFilters] = useState(false)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editingTx, setEditingTx] = useState(null)
-  const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [modalOpen, setModalOpen]     = useState(false)
+  const [editingTx, setEditingTx]     = useState(null)
+  const [deleteId, setDeleteId]       = useState(null)
   const [importModal, setImportModal] = useState(false)
-  const [importText, setImportText] = useState('')
-  const [page, setPage] = useState(1)
-  const PER_PAGE = 20
+  const [importText, setImportText]   = useState('')
+  const [page, setPage]               = useState(1)
+  const [sortAsc, setSortAsc]         = useState(false)
+  const PER_PAGE = 30
 
   const filtered = useMemo(() => {
-    return transactions.filter(tx => {
-      if (typeFilter !== 'all' && tx.type !== typeFilter) return false
-      if (categoryFilter !== 'all' && tx.categoryId !== categoryFilter) return false
-      if (paymentFilter !== 'all' && tx.paymentMethod !== paymentFilter) return false
+    let txs = transactions.filter(tx => {
+      if (typeFilter === 'savings' && !tx.isSavings) return false
+      if (typeFilter === 'income'  && (tx.type !== 'income'  || tx.isSavings)) return false
+      if (typeFilter === 'expense' && tx.type !== 'expense') return false
+      if (catFilter !== 'all' && tx.categoryId !== catFilter) return false
+      if (payFilter !== 'all' && tx.paymentMethod !== payFilter) return false
       if (dateRange.from && tx.date < dateRange.from) return false
-      if (dateRange.to && tx.date > dateRange.to) return false
+      if (dateRange.to   && tx.date > dateRange.to)   return false
       if (search) {
         const q = search.toLowerCase()
-        const matches =
-          tx.description?.toLowerCase().includes(q) ||
-          tx.categoryName?.toLowerCase().includes(q) ||
-          tx.notes?.toLowerCase().includes(q) ||
-          tx.amount.toString().includes(q)
-        if (!matches) return false
+        if (
+          !tx.description?.toLowerCase().includes(q) &&
+          !tx.categoryName?.toLowerCase().includes(q) &&
+          !tx.notes?.toLowerCase().includes(q)
+        ) return false
       }
       return true
     })
-  }, [transactions, typeFilter, categoryFilter, paymentFilter, dateRange, search])
+    txs.sort((a, b) => sortAsc ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date))
+    return txs
+  }, [transactions, typeFilter, catFilter, payFilter, dateRange, search, sortAsc])
 
   const summary = useMemo(() => {
-    const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+    const income   = filtered.filter(t => t.type === 'income'  && !t.isSavings).reduce((s, t) => s + t.amount, 0)
     const expenses = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-    return { income, expenses, balance: income - expenses }
+    const savings  = filtered.filter(t => t.isSavings).reduce((s, t) => s + t.amount, 0)
+    return { income, expenses, savings, balance: income - expenses }
   }, [filtered])
 
-  const paginated = filtered.slice(0, page * PER_PAGE)
-  const hasMore = filtered.length > paginated.length
+  const grouped   = useMemo(() => groupByDate(filtered.slice(0, page * PER_PAGE)), [filtered, page])
+  const hasMore   = filtered.length > page * PER_PAGE
+  const activeFilters = [typeFilter !== 'all', catFilter !== 'all', payFilter !== 'all', !!dateRange.from, !!search].filter(Boolean).length
 
-  const handleEdit = (tx) => { setEditingTx(tx); setModalOpen(true) }
-  const handleNew = () => { setEditingTx(null); setModalOpen(true) }
-  const handleClose = () => { setModalOpen(false); setEditingTx(null) }
+  const handleEdit  = (tx)  => { setEditingTx(tx); setModalOpen(true) }
+  const handleNew   = ()     => { setEditingTx(null); setModalOpen(true) }
+  const handleClose = ()     => { setModalOpen(false); setEditingTx(null) }
   const handleDelete = async () => {
-    if (!deleteConfirm) return
-    await removeTransaction(deleteConfirm)
-    setDeleteConfirm(null)
+    if (!deleteId) return
+    await removeTransaction(deleteId)
+    setDeleteId(null)
   }
-
-  const applyPreset = (preset) => {
-    setDateRange(preset.getRange())
-    setPage(1)
-  }
-
-  const handleExportCSV = () => exportToCSV(filtered, categories)
-  const handleExportPDF = async () => {
-    await exportToPDF(filtered, categories, summary)
+  const clearFilters = () => {
+    setTypeFilter('all'); setCatFilter('all'); setPayFilter('all')
+    setDateRange({ from: '', to: '' }); setSearch(''); setPage(1)
   }
 
   const handleImport = async () => {
     const txs = parseCSVImport(importText)
-    if (!txs.length) {
-      showNotification('Nenhuma transação encontrada no arquivo.', 'warning')
-      return
-    }
+    if (!txs.length) { showNotification('Nenhuma transação no CSV.', 'warning'); return }
     for (const tx of txs) {
       const cat = categories.find(c => c.name.toLowerCase() === tx.categoryName?.toLowerCase())
-      const data = {
-        ...tx,
-        categoryId: cat?.id || '',
-        categoryName: cat?.name || tx.categoryName || '',
-        categoryColor: cat?.color || '',
-        categoryIcon: cat?.icon || '',
-      }
-      await createTransaction(data)
+      await createTransaction({ ...tx, categoryId: cat?.id || '', categoryName: cat?.name || tx.categoryName || '', categoryColor: cat?.color || '', categoryIcon: cat?.icon || '' })
     }
-    setImportModal(false)
-    setImportText('')
+    setImportModal(false); setImportText('')
     showNotification(`${txs.length} transações importadas!`)
   }
 
-  const clearFilters = () => {
-    setTypeFilter('all')
-    setCategoryFilter('all')
-    setPaymentFilter('all')
-    setDateRange({ from: '', to: '' })
-    setSearch('')
-    setPage(1)
+  const dateLabel = (dateStr) => {
+    const d = new Date(dateStr + 'T00:00:00')
+    const today = new Date(); today.setHours(0,0,0,0)
+    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1)
+    if (d.toDateString() === today.toDateString()) return 'Hoje'
+    if (d.toDateString() === yesterday.toDateString()) return 'Ontem'
+    return format(d, "d 'de' MMMM", { locale: ptBR })
   }
-
-  const activeFilters = [typeFilter !== 'all', categoryFilter !== 'all', paymentFilter !== 'all', !!dateRange.from, !!search].filter(Boolean).length
 
   return (
     <div className="space-y-4 pb-28 lg:pb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black text-[--text-primary]">Transações</h1>
-          <p className="text-sm text-[--text-tertiary]">{filtered.length} transações encontradas</p>
+          <p className="text-xs text-[--text-tertiary] mt-0.5">{filtered.length} encontradas</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" size="sm" icon={<Upload />} onClick={() => setImportModal(true)}>Importar</Button>
-          <Button variant="secondary" size="sm" icon={<Download />} onClick={handleExportCSV}>CSV</Button>
-          <Button variant="secondary" size="sm" icon={<FileText />} onClick={handleExportPDF}>PDF</Button>
+        {/* Ações — mobile: só botão Nova */}
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex gap-2">
+            <Button variant="ghost" size="sm" icon={<Upload size={14} />} onClick={() => setImportModal(true)}>Importar</Button>
+            <Button variant="ghost" size="sm" icon={<Download size={14} />} onClick={() => exportToCSV(filtered, categories)}>CSV</Button>
+            <Button variant="ghost" size="sm" icon={<FileText size={14} />} onClick={() => exportToPDF(filtered, categories, summary)}>PDF</Button>
+          </div>
           <Button variant="primary" size="sm" icon={<Plus />} onClick={handleNew}>Nova</Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      {/* Cards de resumo */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {[
-          { label: 'Receitas', value: summary.income, color: '#10b981' },
-          { label: 'Despesas', value: summary.expenses, color: '#ef4444' },
-          { label: 'Saldo', value: summary.balance, color: summary.balance >= 0 ? '#6366f1' : '#ef4444' },
+          { label: 'Receitas',  value: summary.income,   color: '#10b981', icon: <TrendingUp size={13} /> },
+          { label: 'Despesas',  value: summary.expenses, color: '#ef4444', icon: <TrendingDown size={13} /> },
+          { label: 'Saldo',     value: summary.balance,  color: summary.balance >= 0 ? '#6366f1' : '#ef4444', icon: <ArrowLeftRight size={13} /> },
+          { label: 'Poupança',  value: summary.savings,  color: '#6366f1', icon: <PiggyBank size={13} /> },
         ].map(s => (
-          <div key={s.label} className="bg-[--bg-surface] border border-[--border-default] rounded-xl p-3">
-            <p className="text-xs text-[--text-tertiary] mb-1">{s.label}</p>
-            <p className="text-sm font-bold tabular-nums" style={{ color: s.color }}>
-              {formatCurrency(s.value, { compact: true })}
-            </p>
+          <div key={s.label} className="bg-[--bg-surface] border border-[--border-default] rounded-2xl p-3 flex items-center gap-2">
+            <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: s.color + '18', color: s.color }}>
+              {s.icon}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-[--text-tertiary] leading-none mb-0.5">{s.label}</p>
+              <p className="text-sm font-black tabular-nums truncate" style={{ color: s.color }}>
+                {formatCurrency(s.value, { compact: true })}
+              </p>
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="space-y-3">
+      {/* Busca + filtros */}
+      <div className="space-y-2">
         <div className="flex gap-2">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[--text-tertiary]" size={16} />
-            <input
-              type="text"
-              placeholder="Buscar por descrição, categoria..."
-              value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1) }}
-              className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] transition-all hover:border-[--border-strong]"
-            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[--text-tertiary]" size={15} />
+            <input type="text" placeholder="Buscar transação..."
+              value={search} onChange={e => { setSearch(e.target.value); setPage(1) }}
+              className="w-full bg-[--bg-surface] border border-[--border-default] rounded-2xl pl-9 pr-9 py-2.5 text-sm
+                text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2
+                focus:ring-[--brand-500] transition-all" />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[--text-tertiary] hover:text-[--text-secondary]">
+              <button onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[--text-tertiary] hover:text-[--text-secondary]">
                 <X size={14} />
               </button>
             )}
           </div>
-          <Button
-            variant={showFilters ? 'primary' : 'secondary'}
-            size="sm"
-            icon={<Filter />}
+          <button
+            onClick={() => setSortAsc(v => !v)}
+            className="p-2.5 rounded-2xl border border-[--border-default] bg-[--bg-surface] text-[--text-tertiary] hover:text-[--text-primary] hover:border-[--brand-500] transition-all"
+            title={sortAsc ? 'Mais antigos primeiro' : 'Mais recentes primeiro'}>
+            <ArrowUpDown size={15} />
+          </button>
+          <button
             onClick={() => setShowFilters(v => !v)}
-          >
-            Filtros{activeFilters > 0 ? ` (${activeFilters})` : ''}
-          </Button>
+            className={`flex items-center gap-1.5 px-3 py-2.5 rounded-2xl border text-sm font-medium transition-all
+              ${showFilters || activeFilters > 0
+                ? 'bg-[--brand-600] text-white border-[--brand-600]'
+                : 'bg-[--bg-surface] border-[--border-default] text-[--text-secondary] hover:border-[--brand-500]'}`}>
+            <Filter size={14} />
+            <span className="hidden sm:inline">Filtros</span>
+            {activeFilters > 0 && (
+              <span className="w-4 h-4 rounded-full bg-white/30 text-white text-[10px] font-black flex items-center justify-center">
+                {activeFilters}
+              </span>
+            )}
+          </button>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {DATE_PRESETS.map(preset => (
-            <button
-              key={preset.label}
-              onClick={() => applyPreset(preset)}
-              className="text-xs font-medium px-3 py-1.5 rounded-full border whitespace-nowrap transition-all duration-150 bg-[--bg-surface] border-[--border-default] text-[--text-secondary] hover:border-[--brand-500] hover:text-[--text-brand]"
-            >
-              {preset.label}
+        {/* Presets de data */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {DATE_PRESETS.map(p => (
+            <button key={p.label} onClick={() => { const r = p.getRange(); setDateRange(r); setPage(1) }}
+              className="text-xs font-medium px-3 py-1.5 rounded-full border whitespace-nowrap transition-all
+                bg-[--bg-surface] border-[--border-default] text-[--text-secondary] hover:border-[--brand-500] hover:text-[--text-brand]">
+              {p.label}
             </button>
           ))}
         </div>
 
+        {/* Filtros expandíveis */}
         <AnimatePresence>
           {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-[--bg-subtle] rounded-xl border border-[--border-subtle]">
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-[--bg-subtle] rounded-2xl border border-[--border-subtle]">
+                {/* Tipo */}
                 <div>
-                  <label className="text-xs font-medium text-[--text-tertiary] block mb-1.5">Tipo</label>
-                  <select
-                    value={typeFilter}
-                    onChange={e => { setTypeFilter(e.target.value); setPage(1) }}
-                    className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-3 py-2 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-                  >
+                  <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1">Tipo</label>
+                  <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1) }}
+                    className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-2.5 py-2 text-xs text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]">
                     <option value="all">Todos</option>
                     <option value="income">Receitas</option>
                     <option value="expense">Despesas</option>
+                    <option value="savings">Poupança</option>
                   </select>
                 </div>
+                {/* Categoria */}
                 <div>
-                  <label className="text-xs font-medium text-[--text-tertiary] block mb-1.5">Categoria</label>
-                  <select
-                    value={categoryFilter}
-                    onChange={e => { setCategoryFilter(e.target.value); setPage(1) }}
-                    className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-3 py-2 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-                  >
-                    <option value="all">Todas categorias</option>
+                  <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1">Categoria</label>
+                  <select value={catFilter} onChange={e => { setCatFilter(e.target.value); setPage(1) }}
+                    className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-2.5 py-2 text-xs text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]">
+                    <option value="all">Todas</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                   </select>
                 </div>
+                {/* Pagamento */}
                 <div>
-                  <label className="text-xs font-medium text-[--text-tertiary] block mb-1.5">Método de pagamento</label>
-                  <select
-                    value={paymentFilter}
-                    onChange={e => { setPaymentFilter(e.target.value); setPage(1) }}
-                    className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-3 py-2 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-                  >
-                    <option value="all">Todos os métodos</option>
-                    <option value="pix">💸 Pix</option>
-                    <option value="credit_card">💳 Cartão de crédito</option>
-                    <option value="debit_card">🏧 Cartão de débito</option>
-                    <option value="cash">💵 Dinheiro</option>
-                    <option value="transfer">🏦 Transferência</option>
-                    <option value="boleto">📄 Boleto</option>
+                  <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1">Pagamento</label>
+                  <select value={payFilter} onChange={e => { setPayFilter(e.target.value); setPage(1) }}
+                    className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-2.5 py-2 text-xs text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]">
+                    <option value="all">Todos</option>
+                    {PAYMENT_METHODS.map(m => <option key={m.id} value={m.id}>{m.icon} {m.label}</option>)}
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                {/* Datas */}
+                <div className="col-span-2 grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-xs font-medium text-[--text-tertiary] block mb-1.5">De</label>
-                    <input
-                      type="date"
-                      value={dateRange.from}
+                    <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1">De</label>
+                    <input type="date" value={dateRange.from}
                       onChange={e => { setDateRange(r => ({ ...r, from: e.target.value })); setPage(1) }}
-                      className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-3 py-2 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-                    />
+                      className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-2.5 py-2 text-xs text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]" />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-[--text-tertiary] block mb-1.5">Até</label>
-                    <input
-                      type="date"
-                      value={dateRange.to}
+                    <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1">Até</label>
+                    <input type="date" value={dateRange.to}
                       onChange={e => { setDateRange(r => ({ ...r, to: e.target.value })); setPage(1) }}
-                      className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-3 py-2 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-                    />
+                      className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-2.5 py-2 text-xs text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]" />
                   </div>
                 </div>
-                <div className="sm:col-span-3 flex justify-end">
-                  <Button variant="ghost" size="sm" onClick={clearFilters}>Limpar filtros</Button>
+                <div className="flex items-end justify-end sm:col-span-1">
+                  <button onClick={clearFilters}
+                    className="text-xs text-[--text-tertiary] hover:text-[--danger-text] transition-colors">
+                    Limpar tudo
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -267,152 +361,106 @@ export default function TransactionList() {
         </AnimatePresence>
       </div>
 
-      <Card padding={false}>
+      {/* Lista agrupada por data */}
+      <div className="bg-[--bg-surface] border border-[--border-default] rounded-2xl overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="p-6">
-            <EmptyState
-              icon={<ArrowLeftRight />}
-              title="Nenhuma transação"
-              description={search || activeFilters > 0 ? 'Tente ajustar os filtros.' : 'Adicione sua primeira transação.'}
-              action={
-                <Button variant="primary" icon={<Plus />} size="sm" onClick={handleNew}>
-                  Adicionar transação
-                </Button>
-              }
-            />
+          <div className="p-8">
+            <EmptyState icon={<ArrowLeftRight />} title="Nenhuma transação"
+              description={activeFilters > 0 ? 'Tente ajustar os filtros.' : 'Adicione sua primeira transação.'}
+              action={<Button variant="primary" icon={<Plus />} size="sm" onClick={handleNew}>Adicionar</Button>} />
           </div>
         ) : (
           <>
-            <div className="divide-y divide-[--border-subtle]">
-              <AnimatePresence>
-                {paginated.map((tx, i) => {
-                  const cat = categories.find(c => c.id === tx.categoryId)
-                  const isIncome = tx.type === 'income'
-                  return (
-                    <motion.div
-                      key={tx.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ delay: Math.min(i * 0.03, 0.3) }}
-                      className="flex items-center gap-3 px-4 py-3.5 hover:bg-[--bg-hover] transition-colors group"
-                    >
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
-                        style={{ background: (cat?.color || '#6366f1') + '20' }}
-                      >
-                        {cat?.icon || (isIncome ? '💰' : '💸')}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-[--text-primary] truncate">
-                          {tx.description || cat?.name || 'Sem descrição'}
-                        </p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs text-[--text-tertiary]">{formatDate(tx.date)}</span>
-                          {cat && (
-                            <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{
-                              background: (cat.color || '#6366f1') + '15',
-                              color: cat.color || '#6366f1',
-                            }}>
-                              {cat.icon} {cat.name}
-                            </span>
-                          )}
-                          {tx.paymentMethod && (
-                            <span className="text-xs text-[--text-tertiary] hidden sm:inline">
-                              · {getPaymentLabel(tx.paymentMethod)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`text-sm font-bold tabular-nums ${isIncome ? 'text-[--success-icon]' : 'text-[--danger-icon]'}`}>
-                          {isIncome ? '+' : '−'}{formatCurrency(tx.amount)}
+            <AnimatePresence>
+              {grouped.map(([date, txs]) => (
+                <div key={date}>
+                  {/* Cabeçalho do grupo */}
+                  <div className="flex items-center justify-between px-4 py-2 bg-[--bg-subtle] border-b border-[--border-subtle]">
+                    <p className="text-xs font-bold text-[--text-secondary]">{dateLabel(date)}</p>
+                    <div className="flex items-center gap-3 text-xs tabular-nums">
+                      {txs.some(t => t.type === 'income' && !t.isSavings) && (
+                        <span className="text-[--success-icon] font-semibold">
+                          +{formatCurrency(txs.filter(t => t.type === 'income' && !t.isSavings).reduce((s,t) => s + t.amount, 0), { compact: true })}
                         </span>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => handleEdit(tx)}
-                            className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] hover:text-[--text-brand] transition-colors"
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(tx.id)}
-                            className="p-1.5 rounded-lg hover:bg-[--danger-bg] text-[--text-tertiary] hover:text-[--danger-text] transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )
-                })}
-              </AnimatePresence>
-            </div>
+                      )}
+                      {txs.some(t => t.type === 'expense') && (
+                        <span className="text-[--danger-icon] font-semibold">
+                          −{formatCurrency(txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0), { compact: true })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {/* Transações do dia */}
+                  <div className="divide-y divide-[--border-subtle]">
+                    {txs.map(tx => (
+                      <TxRow key={tx.id}
+                        tx={tx}
+                        cat={categories.find(c => c.id === tx.categoryId)}
+                        onEdit={handleEdit}
+                        onDelete={setDeleteId} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </AnimatePresence>
+
             {hasMore && (
               <div className="p-4 text-center border-t border-[--border-subtle]">
-                <Button variant="ghost" size="sm" onClick={() => setPage(p => p + 1)}>
-                  Carregar mais ({filtered.length - paginated.length} restantes)
-                </Button>
+                <button onClick={() => setPage(p => p + 1)}
+                  className="flex items-center gap-1.5 mx-auto text-sm text-[--text-brand] hover:underline font-medium">
+                  <ChevronDown size={14} />
+                  Carregar mais ({filtered.length - page * PER_PAGE} restantes)
+                </button>
               </div>
             )}
           </>
         )}
-      </Card>
+      </div>
+
+      {/* FAB mobile */}
+      <button onClick={handleNew}
+        className="lg:hidden fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-[--brand-600]
+          text-white shadow-lg flex items-center justify-center hover:bg-[--brand-700]
+          active:scale-95 transition-all">
+        <Plus size={24} />
+      </button>
 
       <TransactionForm isOpen={modalOpen} onClose={handleClose} transaction={editingTx} />
 
-      <Modal
-        isOpen={!!deleteConfirm}
-        onClose={() => setDeleteConfirm(null)}
-        title="Excluir transação"
-        size="sm"
+      {/* Modal confirmar exclusão */}
+      <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Excluir transação" size="sm"
         footer={
           <div className="flex gap-3">
-            <Button variant="secondary" fullWidth onClick={() => setDeleteConfirm(null)}>Cancelar</Button>
+            <Button variant="secondary" fullWidth onClick={() => setDeleteId(null)}>Cancelar</Button>
             <Button variant="danger" fullWidth onClick={handleDelete}>Excluir</Button>
           </div>
-        }
-      >
-        <p className="text-[--text-secondary]">Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.</p>
+        }>
+        <p className="text-[--text-secondary] text-sm">Tem certeza? Esta ação não pode ser desfeita.</p>
       </Modal>
 
-      <Modal
-        isOpen={importModal}
-        onClose={() => setImportModal(false)}
-        title="Importar transações"
-        size="md"
+      {/* Modal importar */}
+      <Modal isOpen={importModal} onClose={() => setImportModal(false)} title="Importar CSV" size="md"
         footer={
           <div className="flex gap-3">
             <Button variant="secondary" fullWidth onClick={() => setImportModal(false)}>Cancelar</Button>
             <Button variant="primary" fullWidth onClick={handleImport}>Importar</Button>
           </div>
-        }
-      >
-        <div className="space-y-4">
+        }>
+        <div className="space-y-3">
           <p className="text-sm text-[--text-secondary]">
-            Cole o conteúdo do CSV abaixo. O formato deve ser: <br />
-            <code className="text-xs bg-[--bg-hover] px-2 py-0.5 rounded font-mono">Data;Tipo;Descrição;Categoria;Valor;Pagamento</code>
+            Formato: <code className="text-xs bg-[--bg-hover] px-2 py-0.5 rounded font-mono">Data;Tipo;Descrição;Categoria;Valor;Pagamento</code>
           </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              const csv = 'Data;Tipo;Descrição;Categoria;Valor;Pagamento\n01/01/2025;Despesa;Almoço;Alimentação;25,90;Pix\n05/01/2025;Receita;Salário;Salário;5000,00;Transferência'
-              const blob = new Blob([csv], { type: 'text/csv' })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a'); a.href = url; a.download = 'template.csv'; a.click()
-              URL.revokeObjectURL(url)
-            }}
-          >
-            Baixar template
-          </Button>
-          <textarea
-            value={importText}
-            onChange={e => setImportText(e.target.value)}
-            rows={8}
+          <Button variant="secondary" size="sm" onClick={() => {
+            const csv = 'Data;Tipo;Descrição;Categoria;Valor;Pagamento\n01/01/2025;Despesa;Almoço;Alimentação;25,90;pix\n05/01/2025;Receita;Salário;Salário;5000,00;transfer'
+            const a = document.createElement('a')
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+            a.download = 'template.csv'; a.click()
+          }}>Baixar template</Button>
+          <textarea value={importText} onChange={e => setImportText(e.target.value)} rows={8}
             placeholder="Cole o conteúdo do CSV aqui..."
-            className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl p-3 text-sm font-mono text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] resize-none"
-          />
+            className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl p-3 text-sm
+              font-mono text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none
+              focus:ring-2 focus:ring-[--brand-500] resize-none" />
         </div>
       </Modal>
     </div>
