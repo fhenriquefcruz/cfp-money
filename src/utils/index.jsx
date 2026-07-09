@@ -10,19 +10,15 @@ export const capitalize = (str) => {
 
 // ── CURRENCY ──
 export const formatCurrency = (value, options = {}) => {
-  const { currency = 'BRL', compact = false } = options
+  const { compact = false } = options
   if (compact && Math.abs(value) >= 1000) {
     const sign = value < 0 ? '-' : ''
-    if (Math.abs(value) >= 1000000) {
-      return `${sign}R$ ${(Math.abs(value) / 1000000).toFixed(1)}M`
-    }
-    return `${sign}R$ ${(Math.abs(value) / 1000).toFixed(1)}k`
+    if (Math.abs(value) >= 1000000) return `${sign}R$ ${(Math.abs(value)/1000000).toFixed(1)}M`
+    return `${sign}R$ ${(Math.abs(value)/1000).toFixed(1)}k`
   }
   return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    style: 'currency', currency: 'BRL',
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
   }).format(value)
 }
 
@@ -39,36 +35,32 @@ export const formatMonth = (date) => {
 }
 
 export const formatRelativeDate = (date) => {
-  const d = typeof date === 'string' ? parseISO(date) : date
-  const now = new Date()
-  const diff = Math.floor((now - d) / (1000 * 60 * 60 * 24))
+  if (!date) return ''
+  const d = typeof date === 'string' ? new Date(date + 'T00:00:00') : date
+  const now = new Date(); now.setHours(0,0,0,0)
+  const diff = Math.floor((now - d) / 86400000)
   if (diff === 0) return 'Hoje'
   if (diff === 1) return 'Ontem'
-  if (diff < 7) return `${diff} dias atrás`
+  if (diff < 7)   return `${diff} dias atrás`
   return formatDate(d)
 }
 
-// ── NUMBER ──
 export const formatPercent = (value, total) => {
   if (!total) return '0%'
   return `${((value / total) * 100).toFixed(1)}%`
 }
 
-// ── COLOR ──
 export const hexToRgba = (hex, alpha = 1) => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  if (!result) return `rgba(99,102,241,${alpha})`
-  const r = parseInt(result[1], 16)
-  const g = parseInt(result[2], 16)
-  const b = parseInt(result[3], 16)
-  return `rgba(${r},${g},${b},${alpha})`
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  if (!r) return `rgba(99,102,241,${alpha})`
+  return `rgba(${parseInt(r[1],16)},${parseInt(r[2],16)},${parseInt(r[3],16)},${alpha})`
 }
 
 // ── TRANSACTION HELPERS ──
 export const groupByMonth = (transactions) => {
   const groups = {}
   transactions.forEach(tx => {
-    const key = format(new Date(tx.date), 'yyyy-MM')
+    const key = format(new Date(tx.date + 'T00:00:00'), 'yyyy-MM')
     if (!groups[key]) groups[key] = []
     groups[key].push(tx)
   })
@@ -78,21 +70,20 @@ export const groupByMonth = (transactions) => {
 export const getMonthlyData = (transactions, months = 6, baseDate = new Date()) => {
   const result = []
   for (let i = months - 1; i >= 0; i--) {
-    const date = subMonths(baseDate, i)
-    const year = date.getFullYear()
+    const date  = subMonths(baseDate, i)
+    const year  = date.getFullYear()
     const month = date.getMonth()
-    const monthTxs = transactions.filter(t => {
-      const d = new Date(t.date)
+    const txs   = transactions.filter(t => {
+      const d = new Date(t.date + 'T00:00:00')
       return d.getFullYear() === year && d.getMonth() === month
     })
-    const income = monthTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-    const expenses = monthTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+    const income   = txs.filter(t => t.type === 'income' && !t.isSavings).reduce((s,t) => s + t.amount, 0)
+    const expenses = txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0)
+    const savings  = txs.filter(t => t.isSavings).reduce((s,t) => s + t.amount, 0)
     result.push({
-      month: capitalize(format(date, 'MMM', { locale: ptBR })),
+      month:     capitalize(format(date, 'MMM', { locale: ptBR })),
       fullMonth: format(date, "MMMM 'de' yyyy", { locale: ptBR }),
-      income,
-      expenses,
-      balance: income - expenses,
+      income, expenses, savings, balance: income - expenses,
     })
   }
   return result
@@ -100,12 +91,12 @@ export const getMonthlyData = (transactions, months = 6, baseDate = new Date()) 
 
 // ── PAYMENT METHODS ──
 export const PAYMENT_METHODS = [
-  { id: 'pix',         label: 'Pix',                icon: '💸' },
-  { id: 'credit_card', label: 'Cartão de Crédito',  icon: '💳' },
-  { id: 'debit_card',  label: 'Cartão de Débito',   icon: '🏧' },
-  { id: 'cash',        label: 'Dinheiro',            icon: '💵' },
-  { id: 'transfer',    label: 'Transferência',       icon: '🏦' },
-  { id: 'boleto',      label: 'Boleto',              icon: '📄' },
+  { id: 'pix',         label: 'Pix',               icon: '💸' },
+  { id: 'credit_card', label: 'Cartão de Crédito', icon: '💳' },
+  { id: 'debit_card',  label: 'Cartão de Débito',  icon: '🏧' },
+  { id: 'cash',        label: 'Dinheiro',           icon: '💵' },
+  { id: 'transfer',    label: 'Transferência',      icon: '🏦' },
+  { id: 'boleto',      label: 'Boleto',             icon: '📄' },
 ]
 
 export const getPaymentLabel = (id) =>
@@ -113,106 +104,188 @@ export const getPaymentLabel = (id) =>
 
 // ── CSV EXPORT ──
 export const exportToCSV = (transactions, categories) => {
-  const getCatName = (id) => categories.find(c => c.id === id)?.name || 'Desconhecido'
-
-  const headers = ['Data', 'Tipo', 'Descrição', 'Categoria', 'Valor', 'Pagamento']
+  const headers = ['Data','Tipo','Descrição','Categoria','Valor','Pagamento','Poupança']
   const rows = transactions.map(t => [
     formatDate(t.date),
-    t.type === 'income' ? 'Receita' : 'Despesa',
+    t.isSavings ? 'Poupança' : t.type === 'income' ? 'Receita' : 'Despesa',
     t.description || '',
-    t.categoryName || getCatName(t.categoryId),
+    t.categoryName || '',
     t.amount.toFixed(2).replace('.', ','),
     getPaymentLabel(t.paymentMethod),
+    t.isSavings ? 'Sim' : 'Não',
   ])
-
   const csv = [headers, ...rows]
-    .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
+    .map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';'))
     .join('\n')
-
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  a.href = url
-  a.download = `meu-real-transacoes-${format(new Date(), 'yyyy-MM-dd')}.csv`
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }))
+  a.download = `meu-real-${format(new Date(), 'yyyy-MM-dd')}.csv`
   a.click()
-  URL.revokeObjectURL(url)
 }
 
 // ── PDF EXPORT ──
-export const exportToPDF = async (transactions, categories, summary) => {
+export const exportToPDF = async (transactions, categories, summary = {}) => {
   const { jsPDF } = await import('jspdf')
   const { default: autoTable } = await import('jspdf-autotable')
 
-  const doc = new jsPDF()
+  const doc   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const today = format(new Date(), "dd/MM/yyyy 'às' HH:mm")
+  const W     = 210 // largura A4
 
-  doc.setFillColor(79, 70, 229)
-  doc.rect(0, 0, 220, 35, 'F')
+  // ── Cabeçalho ──
+  // Fundo gradiente simulado
+  doc.setFillColor(67, 56, 202) // indigo-700
+  doc.rect(0, 0, W, 40, 'F')
+  doc.setFillColor(99, 102, 241) // indigo-500
+  doc.rect(100, 0, W, 40, 'F')
+
+  // Logo / nome
   doc.setTextColor(255, 255, 255)
-  doc.setFontSize(22)
+  doc.setFontSize(24)
   doc.setFont('helvetica', 'bold')
-  doc.text('Meu Real', 14, 20)
-  doc.setFontSize(10)
+  doc.text('Meu Real', 14, 18)
+
+  doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
-  doc.text('Extrato Financeiro', 14, 28)
-  doc.text(today, 196, 28, { align: 'right' })
+  doc.setTextColor(200, 200, 255)
+  doc.text('Controle Financeiro Pessoal', 14, 25)
+  doc.text(`Gerado em ${today}`, 14, 31)
 
-  doc.setTextColor(0, 0, 0)
-  doc.setFontSize(11)
-  doc.text('Resumo do Período', 14, 50)
+  // Período no canto direito
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(9)
+  doc.text('EXTRATO FINANCEIRO', W - 14, 18, { align: 'right' })
 
+  // ── Cards de resumo ──
   const cards = [
-    { label: 'Receitas', value: summary.income, color: [16, 185, 129] },
-    { label: 'Despesas', value: summary.expenses, color: [239, 68, 68] },
-    { label: 'Saldo', value: summary.balance, color: summary.balance >= 0 ? [79, 70, 229] : [239, 68, 68] },
+    { label: 'Receitas',  value: summary.income   || 0, r:16,  g:185, b:129 }, // green
+    { label: 'Despesas',  value: summary.expenses || 0, r:239, g:68,  b:68  }, // red
+    { label: 'Saldo',     value: summary.balance  || 0,
+      r: (summary.balance || 0) >= 0 ? 79  : 239,
+      g: (summary.balance || 0) >= 0 ? 70  : 68,
+      b: (summary.balance || 0) >= 0 ? 229 : 68 },
+    { label: 'Poupança',  value: summary.savings  || 0, r:79,  g:70,  b:229 }, // indigo
   ]
 
+  const cw = (W - 28 - 9) / 4 // largura de cada card
   cards.forEach((card, i) => {
-    const x = 14 + i * 62
-    doc.setFillColor(...card.color)
-    doc.roundedRect(x, 55, 58, 22, 3, 3, 'F')
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(8)
-    doc.text(card.label, x + 4, 63)
+    const x = 14 + i * (cw + 3)
+    // Sombra leve
+    doc.setFillColor(230, 230, 240)
+    doc.roundedRect(x + 0.5, 45.5, cw, 22, 3, 3, 'F')
+    // Card
+    doc.setFillColor(255, 255, 255)
+    doc.roundedRect(x, 45, cw, 22, 3, 3, 'F')
+    // Barra colorida no topo do card
+    doc.setFillColor(card.r, card.g, card.b)
+    doc.roundedRect(x, 45, cw, 4, 1.5, 1.5, 'F')
+    doc.rect(x, 47, cw, 2, 'F') // corrige canto inferior da barra
+    // Texto
+    doc.setTextColor(120, 120, 140)
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'normal')
+    doc.text(card.label.toUpperCase(), x + 3, 54)
+    doc.setTextColor(card.r, card.g, card.b)
     doc.setFontSize(10)
     doc.setFont('helvetica', 'bold')
-    doc.text(formatCurrency(card.value), x + 4, 72)
-    doc.setFont('helvetica', 'normal')
+    doc.text(formatCurrency(card.value), x + 3, 62)
   })
 
-  const rows = transactions.slice(0, 200).map(t => [
+  // ── Taxa de poupança ──
+  const savingRate = (summary.income || 0) > 0
+    ? (((summary.income || 0) - (summary.expenses || 0)) / (summary.income || 0)) * 100 : 0
+  const rateColor = savingRate >= 20 ? [16,185,129] : savingRate >= 10 ? [245,158,11] : [239,68,68]
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(80, 80, 100)
+  doc.text(`Taxa de poupança: `, 14, 76)
+  doc.setTextColor(...rateColor)
+  doc.setFont('helvetica', 'bold')
+  doc.text(`${savingRate.toFixed(1)}% ${savingRate >= 20 ? '✓ Ótimo' : savingRate >= 10 ? '! Razoável' : '⚠ Atenção'}`, 50, 76)
+
+  // ── Tabela de transações ──
+  const rows = transactions.slice(0, 300).map(t => [
     formatDate(t.date),
-    t.type === 'income' ? 'Receita' : 'Despesa',
-    t.description || '-',
+    t.isSavings ? 'Poupança' : t.type === 'income' ? 'Receita' : 'Despesa',
+    t.description || (t.isSavings ? 'Depósito em Poupança' : '-'),
     t.categoryName || '-',
     formatCurrency(t.amount),
+    getPaymentLabel(t.paymentMethod) || '-',
   ])
 
   autoTable(doc, {
-    startY: 85,
-    head: [['Data', 'Tipo', 'Descrição', 'Categoria', 'Valor']],
+    startY: 82,
+    head: [['Data', 'Tipo', 'Descrição', 'Categoria', 'Valor', 'Pagamento']],
     body: rows,
-    headStyles: { fillColor: [79, 70, 229], fontSize: 9, halign: 'center' },
-    bodyStyles: { fontSize: 8 },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    columnStyles: {
-      0: { cellWidth: 22 },
-      1: { cellWidth: 20, halign: 'center' },
-      2: { cellWidth: 65 },
-      3: { cellWidth: 40 },
-      4: { cellWidth: 28, halign: 'right' },
+    theme: 'grid',
+    headStyles: {
+      fillColor: [67, 56, 202],
+      textColor: [255, 255, 255],
+      fontSize: 8,
+      fontStyle: 'bold',
+      halign: 'center',
+      cellPadding: 3,
     },
-    didDrawCell: (data) => {
+    bodyStyles: {
+      fontSize: 8,
+      cellPadding: 2.5,
+      textColor: [40, 40, 60],
+    },
+    alternateRowStyles: { fillColor: [247, 248, 255] },
+    columnStyles: {
+      0: { cellWidth: 22, halign: 'center' },
+      1: { cellWidth: 22, halign: 'center' },
+      2: { cellWidth: 62 },
+      3: { cellWidth: 38 },
+      4: { cellWidth: 28, halign: 'right', fontStyle: 'bold' },
+      5: { cellWidth: 26, halign: 'center' },
+    },
+    didParseCell: (data) => {
       if (data.section === 'body' && data.column.index === 1) {
-        const val = data.cell.raw
-        if (val === 'Receita') {
-          doc.setTextColor(16, 185, 129)
-        } else {
-          doc.setTextColor(239, 68, 68)
+        const v = data.cell.raw
+        data.cell.styles.textColor =
+          v === 'Receita'  ? [16, 185, 129] :
+          v === 'Poupança' ? [79, 70, 229]  : [239, 68, 68]
+        data.cell.styles.fontStyle = 'bold'
+      }
+      if (data.section === 'body' && data.column.index === 4) {
+        const tx = transactions[data.row.index]
+        if (tx) {
+          data.cell.styles.textColor =
+            tx.isSavings     ? [79, 70, 229]   :
+            tx.type === 'income' ? [16, 185, 129] : [239, 68, 68]
         }
       }
     },
+    // Rodapé com totais
+    foot: [[
+      '', '', '', 'TOTAIS',
+      formatCurrency((summary.income || 0) - (summary.expenses || 0)),
+      '',
+    ]],
+    footStyles: {
+      fillColor: [240, 240, 255],
+      textColor: [67, 56, 202],
+      fontStyle: 'bold',
+      fontSize: 8,
+    },
+    margin: { left: 14, right: 14 },
   })
+
+  // ── Rodapé de página ──
+  const pageCount = doc.internal.getNumberOfPages()
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i)
+    doc.setFontSize(7)
+    doc.setTextColor(160, 160, 180)
+    doc.setFont('helvetica', 'normal')
+    doc.text('Meu Real — Controle Financeiro Pessoal', 14, 292)
+    doc.text(`Página ${i} de ${pageCount}`, W - 14, 292, { align: 'right' })
+    // Linha separadora
+    doc.setDrawColor(220, 220, 235)
+    doc.setLineWidth(0.3)
+    doc.line(14, 288, W - 14, 288)
+  }
 
   doc.save(`meu-real-extrato-${format(new Date(), 'yyyy-MM-dd')}.pdf`)
 }
@@ -220,31 +293,28 @@ export const exportToPDF = async (transactions, categories, summary) => {
 // ── IMPORT CSV ──
 export const parseCSVImport = (csvText) => {
   const lines = csvText.trim().split('\n')
-  const transactions = []
-
+  const txs   = []
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g, '').trim())
     if (cols.length < 5) continue
     const [date, type, description, category, value] = cols
     const amount = parseFloat(value.replace(',', '.'))
     if (isNaN(amount)) continue
-    transactions.push({
-      date: date.split('/').reverse().join('-'),
-      type: type === 'Receita' ? 'income' : 'expense',
+    txs.push({
+      date:         date.split('/').reverse().join('-'),
+      type:         type === 'Receita' ? 'income' : 'expense',
+      isSavings:    type === 'Poupança',
       description,
       categoryName: category,
       amount,
     })
   }
-  return transactions
+  return txs
 }
 
 // ── CLAMP & DEBOUNCE ──
 export const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
 export const debounce = (fn, delay) => {
   let timer
-  return (...args) => {
-    clearTimeout(timer)
-    timer = setTimeout(() => fn(...args), delay)
-  }
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay) }
 }
