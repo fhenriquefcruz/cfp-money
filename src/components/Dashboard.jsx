@@ -198,8 +198,7 @@ export default function Dashboard() {
               {format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })}
             </h1>
             <button onClick={() => setViewDate(d => addMonths(d, 1))}
-              disabled={isCurrentMonth}
-              className="p-1 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors disabled:opacity-30">
+              className="p-1 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors">
               <ChevronRight size={18} />
             </button>
             {!isCurrentMonth && (
