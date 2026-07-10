@@ -146,13 +146,6 @@ export default function Dashboard() {
   )
 
   // Saldo corrente (exclui poupança)
-  const currentBalance = useMemo(() =>
-    transactions
-      .filter(tx => !tx.isSavings)
-      .reduce((s, tx) => tx.type === 'income' ? s + tx.amount : s - tx.amount, 0),
-    [transactions]
-  )
-
   const budgetAlerts = useMemo(() => {
     return budgets.map(budget => {
       const cat   = categories.find(c => c.id === budget.categoryId)
@@ -222,58 +215,43 @@ export default function Dashboard() {
         </Link>
       </motion.div>
 
-      {/* Hero — saldo corrente + poupança */}
+      {/* Hero — saldo do mês */}
       <motion.div
-        className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] text-white"
+        className="relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] text-white"
         initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.05 }}>
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-8 -right-8 w-48 h-48 rounded-full bg-white/5" />
           <div className="absolute -bottom-12 -left-8 w-40 h-40 rounded-full bg-white/5" />
         </div>
         <div className="relative z-10">
-          <div className="flex flex-wrap gap-x-8 gap-y-4">
-            {/* Saldo corrente */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-white/70 text-sm font-medium">Saldo disponível</p>
-                <InfoTooltip
-                  text="Total de receitas menos despesas de todos os tempos, excluindo valores depositados na poupança."
-                  className="text-white/60 hover:text-white" />
-              </div>
-              {isLoading
-                ? <div className="h-10 w-40 rounded-xl bg-white/20 animate-pulse" />
-                : <p className="text-4xl font-black tabular-nums">{formatCurrency(currentBalance)}</p>
-              }
+          {/* Saldo principal = saldo do mês */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-white/70 text-sm font-medium">Saldo do mês</p>
+              <InfoTooltip
+                text="Receitas menos despesas do mês visualizado. Não inclui meses anteriores nem poupança."
+                className="text-white/60 hover:text-white" />
             </div>
-
-            {/* Poupança */}
-            <div className="flex-shrink-0">
-              <div className="flex items-center gap-2 mb-1">
-                <PiggyBank size={14} className="text-white/70" />
-                <p className="text-white/70 text-sm font-medium">Poupança</p>
-                <InfoTooltip
-                  text="Soma de todos os depósitos marcados como poupança. Adicione via 'Nova transação' → Poupança."
-                  className="text-white/60 hover:text-white" />
-              </div>
-              {isLoading
-                ? <div className="h-10 w-32 rounded-xl bg-white/20 animate-pulse" />
-                : <p className="text-4xl font-black tabular-nums text-yellow-300">{formatCurrency(savingsBalance)}</p>
-              }
-            </div>
+            {isLoading
+              ? <div className="h-10 w-40 rounded-xl bg-white/20 animate-pulse" />
+              : <p className={`text-4xl sm:text-5xl font-black tabular-nums ${currentSummary.balance >= 0 ? 'text-white' : 'text-red-300'}`}>
+                  {formatCurrency(currentSummary.balance)}
+                </p>
+            }
           </div>
 
-          {/* Mini resumo do mês */}
-          <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 pt-4 border-t border-white/15">
+          {/* Detalhes + poupança */}
+          <div className="flex flex-wrap gap-x-5 gap-y-3 pt-4 border-t border-white/15">
             {[
-              { label: 'Receitas',     value: currentSummary.income },
-              { label: 'Despesas',     value: currentSummary.expenses },
-              { label: 'Saldo do mês', value: currentSummary.balance, colored: true },
+              { label: 'Receitas',  value: currentSummary.income   },
+              { label: 'Despesas',  value: currentSummary.expenses  },
+              { label: '🐷 Poupança', value: savingsBalance, yellow: true },
             ].map((item, i) => (
               <React.Fragment key={i}>
                 {i > 0 && <div className="w-px bg-white/20 hidden sm:block" />}
                 <div>
                   <p className="text-white/60 text-xs mb-0.5">{item.label}</p>
-                  <p className={`text-base font-bold ${item.colored ? (item.value >= 0 ? 'text-green-300' : 'text-red-300') : ''}`}>
+                  <p className={`text-sm font-bold ${item.yellow ? 'text-yellow-300' : 'text-white'}`}>
                     {formatCurrency(item.value)}
                   </p>
                 </div>
