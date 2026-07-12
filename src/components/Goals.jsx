@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Target, Plus, Edit2, Trash2, TrendingUp, Calendar,
-  ChevronRight, AlertCircle, CheckCircle, Clock, Zap
+  AlertCircle, CheckCircle, MoreVertical
 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
@@ -13,6 +13,43 @@ import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
 
 const EMOJI_LIST = ['🏠', '🚗', '✈️', '🎓', '💼', '🏦', '🎯', '💎', '🌈', '🔥', '⚡', '🌟', '🎉', '💰', '📈']
+
+function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
+  const [open, setOpen] = React.useState(false)
+  React.useEffect(() => {
+    if (!open) return
+    const close = () => setOpen(false)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [open])
+  return (
+    <div className="relative flex-shrink-0">
+      <button
+        onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
+        className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
+        title="Ações">
+        <MoreVertical size={16} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-50 min-w-[140px] bg-[--bg-elevated] border border-[--border-default] rounded-xl shadow-xl overflow-hidden"
+          onClick={e => e.stopPropagation()}>
+          <button onClick={() => { onContribute(goal); setOpen(false) }}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--text-primary] hover:bg-[--bg-hover] transition-colors">
+            <TrendingUp size={14} className="text-[--brand-500]" /> Aportar
+          </button>
+          <button onClick={() => { onEdit(goal); setOpen(false) }}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--text-primary] hover:bg-[--bg-hover] transition-colors">
+            <Edit2 size={14} className="text-[--text-secondary]" /> Editar
+          </button>
+          <button onClick={() => { onDelete(goal.id); setOpen(false) }}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--danger-text] hover:bg-[--danger-bg] transition-colors border-t border-[--border-subtle]">
+            <Trash2 size={14} /> Excluir
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function GoalCard({ goal, onEdit, onDelete, onContribute }) {
   const progress = goal.targetAmount > 0 
@@ -59,29 +96,7 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }) {
               </div>
             </div>
           </div>
-          <div className="flex gap-1 flex-shrink-0">
-            <button
-              onClick={() => onContribute(goal)}
-              className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] hover:text-[--text-brand] transition-colors"
-              title="Aportar"
-            >
-              <TrendingUp size={14} />
-            </button>
-            <button
-              onClick={() => onEdit(goal)}
-              className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] hover:text-[--text-brand] transition-colors"
-              title="Editar"
-            >
-              <Edit2 size={14} />
-            </button>
-            <button
-              onClick={() => onDelete(goal.id)}
-              className="p-1.5 rounded-lg hover:bg-[--danger-bg] text-[--text-tertiary] hover:text-[--danger-text] transition-colors"
-              title="Excluir"
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
+          <GoalMenu goal={goal} onContribute={onContribute} onEdit={onEdit} onDelete={onDelete} />
         </div>
 
         <div className="mt-3">
@@ -91,8 +106,8 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }) {
           </div>
           <ProgressBar value={goal.currentAmount || 0} max={goal.targetAmount} animated />
           <div className="flex justify-between text-xs mt-1 text-[--text-tertiary]">
-            <span>{formatCurrency(goal.currentAmount || 0, { compact: true })}</span>
-            <span>{formatCurrency(goal.targetAmount, { compact: true })}</span>
+            <span>{formatCurrency(goal.currentAmount || 0)}</span>
+            <span>{formatCurrency(goal.targetAmount)}</span>
           </div>
         </div>
 
