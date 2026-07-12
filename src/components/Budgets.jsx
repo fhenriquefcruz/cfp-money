@@ -163,11 +163,18 @@ function BudgetCard({ cat, budget, spent, onEdit, onRemove }) {
             </button>
           </>
         ) : (
-          <Button variant="secondary" size="sm" fullWidth
-            icon={<Plus size={14} />}
-            onClick={() => onEdit({ categoryId: cat.id, amount: '' })}>
-            Definir orçamento
-          </Button>
+          <div className="space-y-2">
+            <div className="flex justify-between items-baseline">
+              <span className="text-lg font-black text-[--text-tertiary] tabular-nums">R$ 0,00</span>
+              <span className="text-xs text-[--text-tertiary]">sem limite</span>
+            </div>
+            <div className="h-2 bg-[--bg-hover] rounded-full" />
+            <button
+              onClick={() => onEdit({ categoryId: cat.id, amount: '' })}
+              className="flex items-center gap-1.5 text-xs text-[--text-tertiary] hover:text-[--brand-500] transition-colors mt-1">
+              <Plus size={12} /> Definir limite
+            </button>
+          </div>
         )}
       </Card>
     </motion.div>
@@ -254,9 +261,9 @@ export default function Budgets() {
       {budgets.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: 'Total orçado',  value: formatCurrency(summary.totalBudgeted, { compact: true }), color: 'text-[--brand-500]' },
-            { label: 'Total gasto',   value: formatCurrency(summary.totalSpent,    { compact: true }), color: summary.totalSpent > summary.totalBudgeted ? 'text-[--danger-icon]' : 'text-[--text-primary]' },
-            { label: 'Disponível',    value: formatCurrency(Math.max(0, summary.totalBudgeted - summary.totalSpent), { compact: true }), color: 'text-[--success-icon]' },
+            { label: 'Total orçado',  value: formatCurrency(summary.totalBudgeted), color: 'text-[--brand-500]' },
+            { label: 'Total gasto',   value: formatCurrency(summary.totalSpent), color: summary.totalSpent > summary.totalBudgeted ? 'text-[--danger-icon]' : 'text-[--text-primary]' },
+            { label: 'Disponível',    value: formatCurrency(Math.max(0, summary.totalBudgeted - summary.totalSpent)), color: 'text-[--success-icon]' },
             { label: 'Excedidos',     value: `${summary.overCount} categoria${summary.overCount !== 1 ? 's' : ''}`, color: summary.overCount > 0 ? 'text-[--danger-icon]' : 'text-[--success-icon]' },
           ].map(s => (
             <Card key={s.label} className="text-center py-3">
