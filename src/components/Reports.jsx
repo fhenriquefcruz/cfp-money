@@ -183,14 +183,14 @@ function ReportsContent() {
         <>
           {/* KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <KPI label="Receitas"     value={formatCurrency(periodTotals.income,   { compact: true })} color="#10b981" icon={<TrendingUp size={16} />}   tooltip="Total de entradas no período." />
-            <KPI label="Despesas"     value={formatCurrency(periodTotals.expenses, { compact: true })} color="#ef4444" icon={<TrendingDown size={16} />}  tooltip="Total de saídas no período." />
-            <KPI label="Saldo"        value={formatCurrency(periodTotals.balance,  { compact: true })} color={periodTotals.balance >= 0 ? '#6366f1' : '#ef4444'} icon={<ArrowLeftRight size={16} />} tooltip="Receitas menos despesas." />
-            <KPI label="Poupança"     value={formatCurrency(periodTotals.savings,  { compact: true })} color="#6366f1" icon={<PiggyBank size={16} />}     tooltip="Total depositado em poupança no período." />
+            <KPI label="Receitas"     value={formatCurrency(periodTotals.income)} color="#10b981" icon={<TrendingUp size={16} />}   tooltip="Total de entradas no período." />
+            <KPI label="Despesas"     value={formatCurrency(periodTotals.expenses)} color="#ef4444" icon={<TrendingDown size={16} />}  tooltip="Total de saídas no período." />
+            <KPI label="Saldo"        value={formatCurrency(periodTotals.balance)} color={periodTotals.balance >= 0 ? '#6366f1' : '#ef4444'} icon={<ArrowLeftRight size={16} />} tooltip="Receitas menos despesas." />
+            <KPI label="Poupança"     value={formatCurrency(periodTotals.savings)} color="#6366f1" icon={<PiggyBank size={16} />}     tooltip="Total depositado em poupança no período." />
           </div>
 
           {/* Taxa de poupança */}
-          <SavingRateBadge rate={periodTotals.savingRate} />
+          {periodTotals.income > 0 && <SavingRateBadge rate={periodTotals.savingRate} />}
 
           {/* Tabs */}
           <div className="flex gap-1 p-1 bg-[--bg-hover] rounded-2xl">
