@@ -238,7 +238,7 @@ export default function Profile() {
           {/* E-mail: somente leitura */}
           <div>
             <Input label="E-mail (login)" value={user?.email || ''} icon={<Mail size={15} />}
-              disabled className="opacity-60 cursor-not-allowed select-none" />
+              disabled className="opacity-50 cursor-not-allowed select-none bg-[--bg-subtle]" />
             <p className="text-xs text-[--text-tertiary] mt-1 ml-1">
               O e-mail é seu identificador de acesso e não pode ser alterado.
             </p>
@@ -253,10 +253,24 @@ export default function Profile() {
           <Button variant="secondary" fullWidth onClick={() => setShowPassModal(true)} icon={<Key size={15} />}>
             Alterar senha
           </Button>
-          <Button variant="ghost" fullWidth onClick={toggleTheme}
-            icon={theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}>
-            {theme === 'dark' ? 'Tema claro' : 'Tema escuro'}
-          </Button>
+
+          {/* Toggle de tema */}
+          <div className="flex items-center justify-between px-1 py-2 border-t border-[--border-subtle]">
+            <div className="flex items-center gap-2 text-sm text-[--text-primary]">
+              {theme === 'dark' ? <Moon size={15} className="text-[--text-secondary]" /> : <Sun size={15} className="text-[--text-secondary]" />}
+              <span className="font-medium">{theme === 'dark' ? 'Tema escuro' : 'Tema claro'}</span>
+            </div>
+            <button
+              onClick={toggleTheme}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
+                theme === 'dark' ? 'bg-[--brand-600]' : 'bg-[--bg-hover] border border-[--border-default]'
+              }`}>
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+              }`} />
+            </button>
+          </div>
+
           <Button variant="danger" fullWidth onClick={logout} icon={<LogOut size={15} />}>
             Sair da conta
           </Button>
