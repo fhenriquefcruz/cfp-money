@@ -75,7 +75,7 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
           )}
         </div>
         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-          {cat && !isSavings && (
+          {cat && !isSavings && tx.description !== cat.name && (
             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0"
               style={{ background: (cat.color || '#6366f1') + '15', color: cat.color || '#6366f1' }}>
               {cat.icon} {cat.name}
@@ -242,7 +242,7 @@ export default function TransactionList() {
             <div className="min-w-0">
               <p className="text-[10px] text-[--text-tertiary] leading-none mb-0.5">{s.label}</p>
               <p className="text-sm font-black tabular-nums truncate" style={{ color: s.color }}>
-                {formatCurrency(s.value, { compact: true })}
+                {formatCurrency(s.value)}
               </p>
             </div>
           </div>
@@ -380,12 +380,12 @@ export default function TransactionList() {
                     <div className="flex items-center gap-3 text-xs tabular-nums">
                       {txs.some(t => t.type === 'income' && !t.isSavings) && (
                         <span className="text-[--success-icon] font-semibold">
-                          +{formatCurrency(txs.filter(t => t.type === 'income' && !t.isSavings).reduce((s,t) => s + t.amount, 0), { compact: true })}
+                          +{formatCurrency(txs.filter(t => t.type === 'income' && !t.isSavings).reduce((s,t) => s + t.amount, 0))}
                         </span>
                       )}
                       {txs.some(t => t.type === 'expense') && (
                         <span className="text-[--danger-icon] font-semibold">
-                          −{formatCurrency(txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0), { compact: true })}
+                          −{formatCurrency(txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0))}
                         </span>
                       )}
                     </div>
