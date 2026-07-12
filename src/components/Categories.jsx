@@ -117,16 +117,12 @@ export default function Categories() {
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <p className="font-semibold text-[--text-primary] truncate">{cat.name}</p>
+              <p className="font-semibold text-[--text-primary] break-words leading-snug">{cat.name}</p>
               {cat.isDefault && (
-                <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[--bg-hover] text-[--text-tertiary] flex-shrink-0">
-                  Padrão
-                </span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[--bg-subtle] text-[--text-tertiary] border border-[--border-subtle] flex-shrink-0">padrão</span>
               )}
             </div>
-            <p className="text-xs text-[--text-tertiary]">
-              {cat.type === 'expense' ? 'Despesa' : 'Receita'}
-            </p>
+
           </div>
         </div>
         <div className="flex gap-1 flex-shrink-0">
