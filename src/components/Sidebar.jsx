@@ -3,43 +3,58 @@ import React, { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  LayoutDashboard, ArrowLeftRight, Tags, Target, PieChart,
-  BarChart3, User, TrendingUp, LogOut, Menu, X, ChevronRight, Shield
+  LayoutDashboard,
+  ArrowLeftRight,
+  Tags,
+  Target,
+  PieChart,
+  BarChart3,
+  User,
+  TrendingUp,
+  LogOut,
+  Menu,
+  X,
+  ChevronRight,
+  Shield,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { Button } from './ui'
 import { clsx } from 'clsx'
 
-const ADMIN_EMAIL = 'fhenriquefcruz@gmail.com'
-
 const NAV_ITEMS = [
-  { to: '/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/transactions', icon: ArrowLeftRight,  label: 'Transações' },
-  { to: '/categories',   icon: Tags,            label: 'Categorias' },
-  { to: '/goals',        icon: Target,          label: 'Metas' },
-  { to: '/budgets',      icon: PieChart,        label: 'Orçamentos' },
-  { to: '/reports',      icon: BarChart3,       label: 'Relatórios' },
-  { to: '/profile',      icon: User,            label: 'Perfil' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/transactions', icon: ArrowLeftRight, label: 'Transações' },
+  { to: '/categories', icon: Tags, label: 'Categorias' },
+  { to: '/goals', icon: Target, label: 'Metas' },
+  { to: '/budgets', icon: PieChart, label: 'Orçamentos' },
+  { to: '/reports', icon: BarChart3, label: 'Relatórios' },
+  { to: '/profile', icon: User, label: 'Perfil' },
 ]
 
 const NavItem = ({ to, icon: Icon, label, collapsed, onClick }) => {
   const location = useLocation()
   const isActive = location.pathname === to
   return (
-    <NavLink to={to} onClick={onClick}
+    <NavLink
+      to={to}
+      onClick={onClick}
       className={clsx(
         'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group relative no-underline',
         isActive
           ? 'bg-[--brand-600] text-white shadow-sm'
-          : 'text-[--text-secondary] hover:bg-[--bg-hover] hover:text-[--text-primary]'
-      )}>
+          : 'text-[--text-secondary] hover:bg-[--bg-hover] hover:text-[--text-primary]',
+      )}
+    >
       <Icon size={18} className="flex-shrink-0" />
       <AnimatePresence>
         {!collapsed && (
           <motion.span
-            initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }}
-            exit={{ opacity: 0, width: 0 }} transition={{ duration: 0.2 }}
-            className="text-sm font-medium whitespace-nowrap overflow-hidden">
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: 'auto' }}
+            exit={{ opacity: 0, width: 0 }}
+            transition={{ duration: 0.2 }}
+            className="text-sm font-medium whitespace-nowrap overflow-hidden"
+          >
             {label}
           </motion.span>
         )}
@@ -59,18 +74,21 @@ const NavItem = ({ to, icon: Icon, label, collapsed, onClick }) => {
 }
 
 export default function Sidebar() {
-  const { user, logout } = useAuth()
+  const { user, logout, isAdmin } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const isAdmin = user?.email === ADMIN_EMAIL
-
   const allItems = isAdmin
     ? [...NAV_ITEMS, { to: '/admin', icon: Shield, label: 'Admin' }]
     : NAV_ITEMS
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className={clsx('flex items-center gap-3 p-4 mb-2', collapsed ? 'justify-center' : 'justify-between')}>
+      <div
+        className={clsx(
+          'flex items-center gap-3 p-4 mb-2',
+          collapsed ? 'justify-center' : 'justify-between',
+        )}
+      >
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-[--brand-600] flex items-center justify-center flex-shrink-0">
             <TrendingUp size={16} className="text-white" />
@@ -78,16 +96,21 @@ export default function Sidebar() {
           <AnimatePresence>
             {!collapsed && (
               <motion.span
-                initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }} transition={{ duration: 0.2 }}
-                className="text-base font-black text-[--text-primary] whitespace-nowrap overflow-hidden">
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.2 }}
+                className="text-base font-black text-[--text-primary] whitespace-nowrap overflow-hidden"
+              >
                 Meu Real
               </motion.span>
             )}
           </AnimatePresence>
         </div>
-        <button onClick={() => setCollapsed(v => !v)}
-          className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] flex-shrink-0">
+        <button
+          onClick={() => setCollapsed((v) => !v)}
+          className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] flex-shrink-0"
+        >
           <Menu size={16} />
         </button>
       </div>
@@ -95,8 +118,11 @@ export default function Sidebar() {
       <AnimatePresence>
         {!collapsed && (
           <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="mx-3 mb-3 p-2.5 rounded-xl bg-[--bg-hover] flex items-center gap-2.5">
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="mx-3 mb-3 p-2.5 rounded-xl bg-[--bg-hover] flex items-center gap-2.5"
+          >
             <div className="w-7 h-7 rounded-lg bg-[--brand-600] flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">
               {(user?.displayName || user?.email || 'U')[0].toUpperCase()}
             </div>
@@ -111,15 +137,26 @@ export default function Sidebar() {
       </AnimatePresence>
 
       <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-        {allItems.map(item => (
+        {allItems.map((item) => (
           <NavItem key={item.to} {...item} collapsed={collapsed} />
         ))}
       </nav>
 
-      <div className={clsx('p-3 border-t border-[--border-subtle]', collapsed ? 'flex justify-center' : '')}>
-        <Button variant="ghost" fullWidth={!collapsed}
-          className={clsx('text-[--danger-text] hover:bg-[--danger-bg]', collapsed ? 'w-10 h-10 p-0 justify-center' : 'justify-start gap-3')}
-          onClick={logout}>
+      <div
+        className={clsx(
+          'p-3 border-t border-[--border-subtle]',
+          collapsed ? 'flex justify-center' : '',
+        )}
+      >
+        <Button
+          variant="ghost"
+          fullWidth={!collapsed}
+          className={clsx(
+            'text-[--danger-text] hover:bg-[--danger-bg]',
+            collapsed ? 'w-10 h-10 p-0 justify-center' : 'justify-start gap-3',
+          )}
+          onClick={logout}
+        >
           <LogOut size={16} />
           {!collapsed && 'Sair'}
         </Button>
@@ -132,21 +169,34 @@ export default function Sidebar() {
       <motion.aside
         animate={{ width: collapsed ? 68 : 220 }}
         transition={{ duration: 0.2 }}
-        className="hidden lg:flex flex-col h-screen sticky top-0 bg-[--bg-sidebar] border-r border-[--border-subtle] overflow-hidden flex-shrink-0">
+        className="hidden lg:flex flex-col h-screen sticky top-0 bg-[--bg-sidebar] border-r border-[--border-subtle] overflow-hidden flex-shrink-0"
+      >
         {sidebarContent}
       </motion.aside>
 
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[--bg-surface]/95 backdrop-blur-md border-t border-[--border-subtle] flex items-center justify-around px-2"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[--bg-surface]/95 backdrop-blur-md border-t border-[--border-subtle] flex items-center justify-around px-2"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
+      >
         {allItems.slice(0, 5).map(({ to, icon: Icon, label }) => (
-          <NavLink key={to} to={to}
-            className={({ isActive }) => clsx(
-              'flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all duration-150 min-w-0',
-              isActive ? 'text-[--brand-600]' : 'text-[--text-tertiary]'
-            )}>
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              clsx(
+                'flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all duration-150 min-w-0',
+                isActive ? 'text-[--brand-600]' : 'text-[--text-tertiary]',
+              )
+            }
+          >
             {({ isActive }) => (
               <>
-                <div className={clsx('w-8 h-8 rounded-xl flex items-center justify-center transition-all', isActive && 'bg-[--brand-100]')}>
+                <div
+                  className={clsx(
+                    'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
+                    isActive && 'bg-[--brand-100]',
+                  )}
+                >
                   <Icon size={18} />
                 </div>
                 <span className="text-[10px] font-medium truncate max-w-[52px]">{label}</span>
@@ -154,9 +204,13 @@ export default function Sidebar() {
             )}
           </NavLink>
         ))}
-        <button className="flex flex-col items-center gap-1 py-2 px-3 text-[--text-tertiary]"
-          onClick={() => setMobileOpen(true)}>
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center"><Menu size={18} /></div>
+        <button
+          className="flex flex-col items-center gap-1 py-2 px-3 text-[--text-tertiary]"
+          onClick={() => setMobileOpen(true)}
+        >
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center">
+            <Menu size={18} />
+          </div>
           <span className="text-[10px] font-medium">Mais</span>
         </button>
       </nav>
@@ -164,12 +218,20 @@ export default function Sidebar() {
       <AnimatePresence>
         {mobileOpen && (
           <>
-            <motion.div className="lg:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setMobileOpen(false)} />
-            <motion.div className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-72 bg-[--bg-sidebar] flex flex-col"
-              initial={{ x: -288 }} animate={{ x: 0 }} exit={{ x: -288 }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}>
+            <motion.div
+              className="lg:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.div
+              className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-72 bg-[--bg-sidebar] flex flex-col"
+              initial={{ x: -288 }}
+              animate={{ x: 0 }}
+              exit={{ x: -288 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            >
               <div className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-xl bg-[--brand-600] flex items-center justify-center">
@@ -177,18 +239,32 @@ export default function Sidebar() {
                   </div>
                   <span className="text-lg font-black text-[--text-primary]">Meu Real</span>
                 </div>
-                <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary]">
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary]"
+                >
                   <X size={18} />
                 </button>
               </div>
               <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-                {allItems.map(item => (
-                  <NavItem key={item.to} {...item} collapsed={false} onClick={() => setMobileOpen(false)} />
+                {allItems.map((item) => (
+                  <NavItem
+                    key={item.to}
+                    {...item}
+                    collapsed={false}
+                    onClick={() => setMobileOpen(false)}
+                  />
                 ))}
               </nav>
               <div className="p-4 border-t border-[--border-subtle]">
-                <Button variant="ghost" fullWidth className="justify-start gap-3 text-[--danger-text]" onClick={logout}>
-                  <LogOut size={16} />Sair da conta
+                <Button
+                  variant="ghost"
+                  fullWidth
+                  className="justify-start gap-3 text-[--danger-text]"
+                  onClick={logout}
+                >
+                  <LogOut size={16} />
+                  Sair da conta
                 </Button>
               </div>
             </motion.div>
