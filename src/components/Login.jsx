@@ -29,9 +29,10 @@ export default function Login() {
   const [errors, setErrors] = useState({})
 
   const updateForm = (field) => (e) => {
-    setForm(f => ({ ...f, [field]: e.target.value }))
-    setErrors(e => ({ ...e, [field]: '' }))
-    clearError(); setSuccessMsg('')
+    setForm((f) => ({ ...f, [field]: e.target.value }))
+    setErrors((e) => ({ ...e, [field]: '' }))
+    clearError()
+    setSuccessMsg('')
   }
 
   const validate = () => {
@@ -62,29 +63,40 @@ export default function Login() {
         setSuccessMsg('E-mail de recuperação enviado!')
         setMode('login')
       }
-    } catch (_) {}
-    finally { setIsLoading(false) }
+    } catch (_) {
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const switchMode = (m) => { setMode(m); clearError(); setSuccessMsg(''); setErrors({}) }
+  const switchMode = (m) => {
+    setMode(m)
+    clearError()
+    setSuccessMsg('')
+    setErrors({})
+  }
 
   const titles = {
-    login:    { title: 'Bem-vindo de volta',   sub: 'Entre na sua conta para continuar' },
+    login: { title: 'Bem-vindo de volta', sub: 'Entre na sua conta para continuar' },
     register: { title: 'Comece gratuitamente', sub: '7 dias com experiência Premium completa' },
-    forgot:   { title: 'Recuperar acesso',     sub: 'Enviaremos um link para redefinir sua senha' },
+    forgot: { title: 'Recuperar acesso', sub: 'Enviaremos um link para redefinir sua senha' },
   }
   const t = titles[mode]
 
   return (
     <div className="min-h-screen flex bg-[--bg-app]">
-
       {/* Painel esquerdo */}
       <div className="hidden lg:flex flex-col justify-between w-[48%] bg-gradient-to-br from-[--brand-800] via-[--brand-700] to-[--brand-500] p-12 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5" />
           <div className="absolute bottom-16 -left-16 w-72 h-72 rounded-full bg-white/5" />
-          <div className="absolute inset-0 opacity-[0.07]"
-            style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+          <div
+            className="absolute inset-0 opacity-[0.07]"
+            style={{
+              backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+              backgroundSize: '32px 32px',
+            }}
+          />
         </div>
 
         <div className="relative z-10 flex items-center gap-3">
@@ -100,20 +112,24 @@ export default function Login() {
         <div className="relative z-10 space-y-8">
           <div>
             <h2 className="text-4xl font-black text-white leading-tight mb-3">
-              Tome controle<br />das suas finanças
+              Tome controle
+              <br />
+              das suas finanças
             </h2>
             <p className="text-white/60 text-sm leading-relaxed max-w-sm">
-              Organize receitas, despesas e metas em um só lugar.
-              Simples, seguro e feito para o seu dia a dia.
+              Organize receitas, despesas e metas em um só lugar. Simples, seguro e feito para o seu
+              dia a dia.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/15">
-              <p className="text-white/50 text-[10px] font-semibold uppercase tracking-widest mb-1">Gratuito</p>
+              <p className="text-white/50 text-[10px] font-semibold uppercase tracking-widest mb-1">
+                Gratuito
+              </p>
               <p className="text-white text-2xl font-black mb-3">R$ 0</p>
               <div className="space-y-2">
-                {FREE_FEATURES.map(f => (
+                {FREE_FEATURES.map((f) => (
                   <div key={f} className="flex items-start gap-2">
                     <Check size={11} className="text-white/50 mt-0.5 flex-shrink-0" />
                     <span className="text-white/65 text-xs leading-snug">{f}</span>
@@ -128,14 +144,17 @@ export default function Login() {
               </div>
               <div className="flex items-center gap-1 mb-1">
                 <Star size={10} className="text-yellow-400 fill-yellow-400" />
-                <p className="text-yellow-300 text-[10px] font-semibold uppercase tracking-widest">Premium</p>
+                <p className="text-yellow-300 text-[10px] font-semibold uppercase tracking-widest">
+                  Premium
+                </p>
               </div>
-              <p className="text-white text-2xl font-black">R$ 19,90
+              <p className="text-white text-2xl font-black">
+                R$ 19,90
                 <span className="text-white/45 text-xs font-normal">/mês</span>
               </p>
               <p className="text-white/40 text-[10px] mb-3">via Pix · renova em 30 dias</p>
               <div className="space-y-2">
-                {PREMIUM_FEATURES.map(f => (
+                {PREMIUM_FEATURES.map((f) => (
                   <div key={f} className="flex items-start gap-2">
                     <Check size={11} className="text-yellow-400 mt-0.5 flex-shrink-0" />
                     <span className="text-white/80 text-xs leading-snug">{f}</span>
@@ -154,7 +173,6 @@ export default function Login() {
       {/* Painel direito */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10 overflow-y-auto">
         <div className="w-full max-w-md">
-
           <div className="lg:hidden flex items-center gap-2 mb-8">
             <div className="w-9 h-9 rounded-xl bg-[--brand-600] flex items-center justify-center">
               <TrendingUp className="text-white" size={18} />
@@ -166,10 +184,13 @@ export default function Login() {
           </div>
 
           <AnimatePresence mode="wait">
-            <motion.div key={mode}
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-
+            <motion.div
+              key={mode}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
               <h1 className="text-3xl font-black text-[--text-primary] mb-1">{t.title}</h1>
               <p className="text-[--text-secondary] text-sm mb-8">{t.sub}</p>
 
@@ -186,68 +207,130 @@ export default function Login() {
               )}
 
               {successMsg && (
-                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                  className="mb-4 p-3 rounded-xl bg-[--success-bg] border border-[--success-border] text-[--success-text] text-sm">
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-3 rounded-xl bg-[--success-bg] border border-[--success-border] text-[--success-text] text-sm"
+                >
                   ✓ {successMsg}
                 </motion.div>
               )}
               {error && (
-                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                  className="mb-4 p-3 rounded-xl bg-[--danger-bg] border border-[--danger-border] text-[--danger-text] text-sm">
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-3 rounded-xl bg-[--danger-bg] border border-[--danger-border] text-[--danger-text] text-sm"
+                >
                   {error}
                 </motion.div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {mode === 'register' && (
-                  <Input label="Nome completo" type="text" placeholder="João Silva"
-                    value={form.name} onChange={updateForm('name')}
-                    icon={<User />} error={errors.name} required autoFocus />
+                  <Input
+                    label="Nome completo"
+                    type="text"
+                    placeholder="João Silva"
+                    value={form.name}
+                    onChange={updateForm('name')}
+                    icon={<User />}
+                    error={errors.name}
+                    required
+                    autoFocus
+                  />
                 )}
-                <Input label="E-mail" type="email" placeholder="joao@exemplo.com"
-                  value={form.email} onChange={updateForm('email')}
-                  icon={<Mail />} error={errors.email} required autoFocus={mode !== 'register'} />
+                <Input
+                  label="E-mail"
+                  type="email"
+                  placeholder="joao@exemplo.com"
+                  value={form.email}
+                  onChange={updateForm('email')}
+                  icon={<Mail />}
+                  error={errors.email}
+                  required
+                  autoFocus={mode !== 'register'}
+                />
                 {mode !== 'forgot' && (
-                  <Input label="Senha" type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••" value={form.password} onChange={updateForm('password')}
-                    icon={<Lock />} error={errors.password} required
+                  <Input
+                    label="Senha"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={form.password}
+                    onChange={updateForm('password')}
+                    icon={<Lock />}
+                    error={errors.password}
+                    required
                     iconRight={
-                      <button type="button" onClick={() => setShowPassword(v => !v)}
-                        className="text-[--text-tertiary] hover:text-[--text-secondary]">
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="text-[--text-tertiary] hover:text-[--text-secondary]"
+                      >
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
-                    } />
+                    }
+                  />
                 )}
                 {mode === 'login' && (
                   <div className="flex justify-end -mt-2">
-                    <button type="button" className="text-xs text-[--text-brand] hover:underline"
-                      onClick={() => switchMode('forgot')}>
+                    <button
+                      type="button"
+                      className="text-xs text-[--text-brand] hover:underline"
+                      onClick={() => switchMode('forgot')}
+                    >
                       Esqueci a senha
                     </button>
                   </div>
                 )}
-                <Button type="submit" variant="primary" fullWidth loading={isLoading}
-                  className="py-3 text-base" iconRight={<ArrowRight />}>
-                  {mode === 'login' ? 'Entrar' : mode === 'register' ? 'Criar conta grátis' : 'Enviar e-mail'}
+                <Button
+                  type="submit"
+                  variant="primary"
+                  fullWidth
+                  loading={isLoading}
+                  className="py-3 text-base"
+                  iconRight={<ArrowRight />}
+                >
+                  {mode === 'login'
+                    ? 'Entrar'
+                    : mode === 'register'
+                      ? 'Criar conta grátis'
+                      : 'Enviar e-mail'}
                 </Button>
               </form>
 
               <p className="text-center text-sm text-[--text-secondary] mt-6">
                 {mode === 'login' ? (
-                  <>Não tem conta?{' '}
-                    <button className="text-[--text-brand] font-semibold hover:underline"
-                      onClick={() => switchMode('register')}>Cadastre-se grátis</button></>
+                  <>
+                    Não tem conta?{' '}
+                    <button
+                      className="text-[--text-brand] font-semibold hover:underline"
+                      onClick={() => switchMode('register')}
+                    >
+                      Cadastre-se grátis
+                    </button>
+                  </>
                 ) : (
-                  <>Já tem conta?{' '}
-                    <button className="text-[--text-brand] font-semibold hover:underline"
-                      onClick={() => switchMode('login')}>Entrar</button></>
+                  <>
+                    Já tem conta?{' '}
+                    <button
+                      className="text-[--text-brand] font-semibold hover:underline"
+                      onClick={() => switchMode('login')}
+                    >
+                      Entrar
+                    </button>
+                  </>
                 )}
               </p>
 
               <p className="text-center text-xs text-[--text-tertiary] mt-4">
                 Ao continuar, você concorda com os{' '}
-                <a href="#" className="hover:underline">Termos de uso</a> e a{' '}
-                <a href="#" className="hover:underline">Política de privacidade</a>
+                <a href="#" className="hover:underline">
+                  Termos de uso
+                </a>{' '}
+                e a{' '}
+                <a href="#" className="hover:underline">
+                  Política de privacidade
+                </a>
               </p>
             </motion.div>
           </AnimatePresence>
