@@ -1,1 +1,12 @@
-
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.local
+coverage/
+.vite/
+.DS_Store
+Thumbs.db
+serviceAccountKey.json
+npm-debug.log*
