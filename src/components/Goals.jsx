@@ -2,8 +2,15 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Target, Plus, Edit2, Trash2, TrendingUp, Calendar,
-  AlertCircle, CheckCircle, MoreVertical
+  Target,
+  Plus,
+  Edit2,
+  Trash2,
+  TrendingUp,
+  Calendar,
+  AlertCircle,
+  CheckCircle,
+  MoreVertical,
 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
@@ -12,7 +19,23 @@ import { usePlan } from '../contexts/PlanContext'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
 
-const EMOJI_LIST = ['🏠', '🚗', '✈️', '🎓', '💼', '🏦', '🎯', '💎', '🌈', '🔥', '⚡', '🌟', '🎉', '💰', '📈']
+const EMOJI_LIST = [
+  '🏠',
+  '🚗',
+  '✈️',
+  '🎓',
+  '💼',
+  '🏦',
+  '🎯',
+  '💎',
+  '🌈',
+  '🔥',
+  '⚡',
+  '🌟',
+  '🎉',
+  '💰',
+  '📈',
+]
 
 function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
   const [open, setOpen] = React.useState(false)
@@ -25,24 +48,45 @@ function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
   return (
     <div className="relative flex-shrink-0">
       <button
-        onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen((v) => !v)
+        }}
         className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
-        title="Ações">
+        title="Ações"
+      >
         <MoreVertical size={16} />
       </button>
       {open && (
-        <div className="absolute right-0 top-8 z-50 min-w-[140px] bg-[--bg-elevated] border border-[--border-default] rounded-xl shadow-xl overflow-hidden"
-          onClick={e => e.stopPropagation()}>
-          <button onClick={() => { onContribute(goal); setOpen(false) }}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--text-primary] hover:bg-[--bg-hover] transition-colors">
+        <div
+          className="absolute right-0 top-8 z-50 min-w-[140px] bg-[--bg-elevated] border border-[--border-default] rounded-xl shadow-xl overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => {
+              onContribute(goal)
+              setOpen(false)
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--text-primary] hover:bg-[--bg-hover] transition-colors"
+          >
             <TrendingUp size={14} className="text-[--brand-500]" /> Aportar
           </button>
-          <button onClick={() => { onEdit(goal); setOpen(false) }}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--text-primary] hover:bg-[--bg-hover] transition-colors">
+          <button
+            onClick={() => {
+              onEdit(goal)
+              setOpen(false)
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--text-primary] hover:bg-[--bg-hover] transition-colors"
+          >
             <Edit2 size={14} className="text-[--text-secondary]" /> Editar
           </button>
-          <button onClick={() => { onDelete(goal.id); setOpen(false) }}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--danger-text] hover:bg-[--danger-bg] transition-colors border-t border-[--border-subtle]">
+          <button
+            onClick={() => {
+              onDelete(goal.id)
+              setOpen(false)
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--danger-text] hover:bg-[--danger-bg] transition-colors border-t border-[--border-subtle]"
+          >
             <Trash2 size={14} /> Excluir
           </button>
         </div>
@@ -52,12 +96,11 @@ function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
 }
 
 function GoalCard({ goal, onEdit, onDelete, onContribute }) {
-  const progress = goal.targetAmount > 0 
-    ? Math.min(100, ((goal.currentAmount || 0) / goal.targetAmount) * 100)
-    : 0
+  const progress =
+    goal.targetAmount > 0 ? Math.min(100, ((goal.currentAmount || 0) / goal.targetAmount) * 100) : 0
 
   const isCompleted = progress >= 100
-  const daysLeft = goal.deadline 
+  const daysLeft = goal.deadline
     ? Math.ceil((new Date(goal.deadline) - new Date()) / (1000 * 60 * 60 * 24))
     : null
   const isUrgent = daysLeft !== null && daysLeft <= 30 && !isCompleted
@@ -243,12 +286,16 @@ function GoalsContent() {
           icon={<Target />}
           title="Nenhuma meta definida"
           description="Crie uma meta financeira, como uma viagem, um carro ou a reserva de emergência."
-          action={<Button variant="primary" icon={<Plus />} onClick={() => handleOpen()}>Criar primeira meta</Button>}
+          action={
+            <Button variant="primary" icon={<Plus />} onClick={() => handleOpen()}>
+              Criar primeira meta
+            </Button>
+          }
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <AnimatePresence>
-            {sortedGoals.map(goal => (
+            {sortedGoals.map((goal) => (
               <GoalCard
                 key={goal.id}
                 goal={goal}
@@ -261,17 +308,13 @@ function GoalsContent() {
         </div>
       )}
 
-      <Modal
-        isOpen={modalOpen}
-        onClose={handleClose}
-        title={editing ? 'Editar meta' : 'Nova meta'}
-      >
+      <Modal isOpen={modalOpen} onClose={handleClose} title={editing ? 'Editar meta' : 'Nova meta'}>
         <div className="space-y-4">
           <Input
             label="Nome da meta"
             placeholder="Ex: Viagem para Europa"
             value={form.name}
-            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           />
 
           <div className="grid grid-cols-2 gap-3">
@@ -282,7 +325,7 @@ function GoalsContent() {
               min="0"
               placeholder="Ex: 10000"
               value={form.targetAmount}
-              onChange={e => setForm(f => ({ ...f, targetAmount: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, targetAmount: e.target.value }))}
             />
             <Input
               label="Valor atual (R$)"
@@ -291,18 +334,20 @@ function GoalsContent() {
               min="0"
               placeholder="Ex: 2000"
               value={form.currentAmount}
-              onChange={e => setForm(f => ({ ...f, currentAmount: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, currentAmount: e.target.value }))}
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">Ícone</label>
+            <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">
+              Ícone
+            </label>
             <div className="flex gap-2 flex-wrap">
-              {EMOJI_LIST.map(emoji => (
+              {EMOJI_LIST.map((emoji) => (
                 <button
                   key={emoji}
                   type="button"
-                  onClick={() => setForm(f => ({ ...f, emoji }))}
+                  onClick={() => setForm((f) => ({ ...f, emoji }))}
                   className={`w-10 h-10 text-xl rounded-xl border transition-all ${
                     form.emoji === emoji
                       ? 'border-[--brand-500] bg-[--brand-50]'
@@ -319,12 +364,17 @@ function GoalsContent() {
             label="Prazo (opcional)"
             type="date"
             value={form.deadline}
-            onChange={e => setForm(f => ({ ...f, deadline: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, deadline: e.target.value }))}
           />
 
           {form.deadline && (
             <div className="p-3 rounded-xl bg-[--brand-50] border border-[--brand-200] text-xs text-[--brand-700]">
-              ⏳ Prazo: {formatDate(form.deadline)} — restam {Math.max(0, Math.ceil((new Date(form.deadline) - new Date()) / (1000 * 60 * 60 * 24)))} dias.
+              ⏳ Prazo: {formatDate(form.deadline)} — restam{' '}
+              {Math.max(
+                0,
+                Math.ceil((new Date(form.deadline) - new Date()) / (1000 * 60 * 60 * 24)),
+              )}{' '}
+              dias.
             </div>
           )}
 
