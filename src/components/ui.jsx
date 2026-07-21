@@ -4,13 +4,26 @@ import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
 import { Loader2 } from 'lucide-react'
 
-export const Button = ({ children, variant = 'primary', size = 'md', fullWidth = false, loading = false, icon, iconRight, className, ...props }) => {
-  const base = 'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--brand-500] disabled:opacity-50 disabled:cursor-not-allowed'
+export const Button = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  fullWidth = false,
+  loading = false,
+  icon,
+  iconRight,
+  className,
+  ...props
+}) => {
+  const base =
+    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--brand-500] disabled:opacity-50 disabled:cursor-not-allowed'
   const variants = {
     primary: 'bg-[--brand-600] text-white hover:bg-[--brand-700] shadow-sm',
-    secondary: 'bg-[--bg-surface] border border-[--border-default] text-[--text-primary] hover:bg-[--bg-hover]',
+    secondary:
+      'bg-[--bg-surface] border border-[--border-default] text-[--text-primary] hover:bg-[--bg-hover]',
     ghost: 'text-[--text-secondary] hover:bg-[--bg-hover] hover:text-[--text-primary]',
-    danger: 'bg-[--danger-bg] text-[--danger-text] border border-[--danger-border] hover:bg-[--danger-bg] hover:opacity-80',
+    danger:
+      'bg-[--danger-bg] text-[--danger-text] border border-[--danger-border] hover:bg-[--danger-bg] hover:opacity-80',
   }
   const sizes = {
     sm: 'px-3 py-1.5 text-xs',
@@ -34,16 +47,22 @@ export const Button = ({ children, variant = 'primary', size = 'md', fullWidth =
 export const Input = ({ label, error, icon, iconRight, className, ...props }) => {
   return (
     <div className="space-y-1.5">
-      {label && <label className="text-sm font-medium text-[--text-secondary] block">{label}</label>}
+      {label && (
+        <label className="text-sm font-medium text-[--text-secondary] block">{label}</label>
+      )}
       <div className="relative">
-        {icon && <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[--text-tertiary]">{icon}</div>}
+        {icon && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[--text-tertiary]">
+            {icon}
+          </div>
+        )}
         <input
           className={clsx(
             'w-full bg-[--bg-surface] border rounded-xl px-4 py-2.5 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] transition-all',
             icon ? 'pl-10' : '',
             iconRight ? 'pr-10' : '',
             error ? 'border-[--danger-border]' : 'border-[--border-default]',
-            className
+            className,
           )}
           {...props}
         />
@@ -62,7 +81,7 @@ export const Select = ({ label, error, children, className, ...props }) => {
         className={clsx(
           'w-full bg-[--bg-surface] border rounded-xl px-4 py-2.5 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] transition-all',
           error ? 'border-[--danger-border]' : 'border-[--border-default]',
-          className
+          className,
         )}
         {...props}
       >
@@ -77,29 +96,49 @@ export const Modal = ({ isOpen, onClose, title, children, footer, size = 'md' })
   if (!isOpen) return null
   const sizes = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl' }
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className={clsx('w-full mx-4 bg-[--bg-surface] rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto', sizes[size])}
-        onClick={e => e.stopPropagation()}
+        className={clsx(
+          'w-full mx-4 bg-[--bg-surface] rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto',
+          sizes[size],
+        )}
+        onClick={(e) => e.stopPropagation()}
       >
         {title && (
           <div className="flex items-center justify-between p-4 border-b border-[--border-subtle] sticky top-0 bg-[--bg-surface] z-10">
             <h3 className="text-lg font-bold text-[--text-primary]">{title}</h3>
-            <button onClick={onClose} className="text-[--text-tertiary] hover:text-[--text-primary]">&times;</button>
+            <button
+              onClick={onClose}
+              className="text-[--text-tertiary] hover:text-[--text-primary]"
+            >
+              &times;
+            </button>
           </div>
         )}
         <div className="p-4">{children}</div>
-        {footer && <div className="p-4 border-t border-[--border-subtle] sticky bottom-0 bg-[--bg-surface]">{footer}</div>}
+        {footer && (
+          <div className="p-4 border-t border-[--border-subtle] sticky bottom-0 bg-[--bg-surface]">
+            {footer}
+          </div>
+        )}
       </motion.div>
     </div>
   )
 }
 
 export const Card = ({ children, padding = true }) => (
-  <div className={clsx('bg-[--bg-surface] border border-[--border-default] rounded-2xl', padding && 'p-4')}>
+  <div
+    className={clsx(
+      'bg-[--bg-surface] border border-[--border-default] rounded-2xl',
+      padding && 'p-4',
+    )}
+  >
     {children}
   </div>
 )
@@ -113,9 +152,10 @@ const TipIcon = ({ text }) => {
         type="button"
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
-        onClick={() => setShow(v => !v)}
+        onClick={() => setShow((v) => !v)}
         className="w-3.5 h-3.5 rounded-full bg-[--bg-hover] text-[--text-tertiary] hover:bg-[--brand-100] hover:text-[--brand-600] flex items-center justify-center text-[9px] font-bold transition-colors leading-none"
-        aria-label="Informação">
+        aria-label="Informação"
+      >
         ?
       </button>
       {show && (
@@ -135,7 +175,9 @@ export const StatCard = ({ label, value, icon, color, loading, trend, tooltip })
         <span className="text-xs text-[--text-tertiary]">{label}</span>
         {tooltip && <TipIcon text={tooltip} />}
       </div>
-      <span className="text-lg" style={{ color }}>{icon}</span>
+      <span className="text-lg" style={{ color }}>
+        {icon}
+      </span>
     </div>
     {loading ? (
       <div className="h-7 w-24 bg-[--bg-hover] rounded animate-pulse" />
