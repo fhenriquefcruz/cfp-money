@@ -6,23 +6,109 @@ import { Card, Button, Input, Modal } from './ui'
 import InfoTooltip from './InfoTooltip'
 
 const DEFAULT_COLORS = [
-  '#f97316', '#3b82f6', '#8b5cf6', '#10b981',
-  '#06b6d4', '#f59e0b', '#6366f1', '#ec4899',
-  '#6b7280', '#22c55e', '#ef4444', '#0ea5e9',
+  '#f97316',
+  '#3b82f6',
+  '#8b5cf6',
+  '#10b981',
+  '#06b6d4',
+  '#f59e0b',
+  '#6366f1',
+  '#ec4899',
+  '#6b7280',
+  '#22c55e',
+  '#ef4444',
+  '#0ea5e9',
 ]
 
 const EMOJI_LIST = [
-  '🍔', '🍕', '🥗', '☕', '🍜', '🥤', '🍰', '🛒',
-  '🚗', '⛽', '✈️', '🚌', '🚕', '🛵', '🚂', '⚓',
-  '🏠', '💡', '🔧', '🛋️', '🏗️', '🪑', '🛏️', '🚿',
-  '📱', '💻', '🖥️', '⌨️', '🖱️', '📷', '🎧', '📺',
-  '📚', '🎓', '✏️', '📝', '🔬', '🏫', '📐', '🗂️',
-  '🎮', '🎬', '🎵', '🎸', '⚽', '🏋️', '🎯', '🎲',
-  '❤️', '💊', '🏥', '🦷', '👓', '🩺', '💉', '🌡️',
-  '👕', '👟', '👔', '👗', '👜', '🧢', '🧣', '🕶️',
-  '🎁', '🎉', '🎊', '🛍️', '💐', '🕯️', '🪴', '🧸',
-  '💰', '💵', '📈', '🏦', '💳', '🪙', '💹', '📊',
-  '✅', '📦', '🔑', '⭐', '🔥', '💎', '🌈', '🐶',
+  '🍔',
+  '🍕',
+  '🥗',
+  '☕',
+  '🍜',
+  '🥤',
+  '🍰',
+  '🛒',
+  '🚗',
+  '⛽',
+  '✈️',
+  '🚌',
+  '🚕',
+  '🛵',
+  '🚂',
+  '⚓',
+  '🏠',
+  '💡',
+  '🔧',
+  '🛋️',
+  '🏗️',
+  '🪑',
+  '🛏️',
+  '🚿',
+  '📱',
+  '💻',
+  '🖥️',
+  '⌨️',
+  '🖱️',
+  '📷',
+  '🎧',
+  '📺',
+  '📚',
+  '🎓',
+  '✏️',
+  '📝',
+  '🔬',
+  '🏫',
+  '📐',
+  '🗂️',
+  '🎮',
+  '🎬',
+  '🎵',
+  '🎸',
+  '⚽',
+  '🏋️',
+  '🎯',
+  '🎲',
+  '❤️',
+  '💊',
+  '🏥',
+  '🦷',
+  '👓',
+  '🩺',
+  '💉',
+  '🌡️',
+  '👕',
+  '👟',
+  '👔',
+  '👗',
+  '👜',
+  '🧢',
+  '🧣',
+  '🕶️',
+  '🎁',
+  '🎉',
+  '🎊',
+  '🛍️',
+  '💐',
+  '🕯️',
+  '🪴',
+  '🧸',
+  '💰',
+  '💵',
+  '📈',
+  '🏦',
+  '💳',
+  '🪙',
+  '💹',
+  '📊',
+  '✅',
+  '📦',
+  '🔑',
+  '⭐',
+  '🔥',
+  '💎',
+  '🌈',
+  '🐶',
 ]
 
 export default function Categories() {
@@ -117,12 +203,15 @@ export default function Categories() {
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <p className="font-semibold text-[--text-primary] break-words leading-snug">{cat.name}</p>
+              <p className="font-semibold text-[--text-primary] break-words leading-snug">
+                {cat.name}
+              </p>
               {cat.isDefault && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[--bg-subtle] text-[--text-tertiary] border border-[--border-subtle] flex-shrink-0">padrão</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[--bg-subtle] text-[--text-tertiary] border border-[--border-subtle] flex-shrink-0">
+                  padrão
+                </span>
               )}
             </div>
-
           </div>
         </div>
         <div className="flex gap-1 flex-shrink-0">
@@ -196,7 +285,9 @@ export default function Categories() {
         <div className="text-center py-16">
           <p className="text-4xl mb-3">🗂️</p>
           <p className="font-semibold text-[--text-primary]">Nenhuma categoria</p>
-          <p className="text-sm text-[--text-tertiary] mt-1 mb-4">Crie categorias para organizar suas finanças.</p>
+          <p className="text-sm text-[--text-tertiary] mt-1 mb-4">
+            Crie categorias para organizar suas finanças.
+          </p>
           <Button variant="primary" icon={<Plus />} onClick={() => handleOpen()}>
             Criar primeira categoria
           </Button>
@@ -286,7 +377,9 @@ export default function Categories() {
               {form.icon}
             </div>
             <div>
-              <p className="font-semibold text-[--text-primary]">{form.name || 'Nome da categoria'}</p>
+              <p className="font-semibold text-[--text-primary]">
+                {form.name || 'Nome da categoria'}
+              </p>
               <p className="text-xs text-[--text-tertiary]">
                 {form.type === 'expense' ? 'Despesa' : 'Receita'}
               </p>
