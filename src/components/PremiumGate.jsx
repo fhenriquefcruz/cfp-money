@@ -20,11 +20,11 @@ export default function PremiumGate({ children, feature = 'este recurso' }) {
         <Lock size={24} className="text-white" />
       </div>
 
-      <Badge variant="warning" className="mb-3">Recurso Premium</Badge>
+      <Badge variant="warning" className="mb-3">
+        Recurso Premium
+      </Badge>
 
-      <h2 className="text-2xl font-black text-[--text-primary] mb-2">
-        Acesse {feature}
-      </h2>
+      <h2 className="text-2xl font-black text-[--text-primary] mb-2">Acesse {feature}</h2>
       <p className="text-sm text-[--text-secondary] mb-6 leading-relaxed">
         {status.isExpired && status.isTrial
           ? 'Seu período de 7 dias grátis encerrou. Assine o Premium para continuar.'
@@ -35,7 +35,10 @@ export default function PremiumGate({ children, feature = 'este recurso' }) {
         <div className="flex items-center gap-2 mb-3">
           <Star size={14} className="text-yellow-500 fill-yellow-500" />
           <span className="text-sm font-bold text-[--text-primary]">Plano Premium</span>
-          <span className="ml-auto text-lg font-black text-[--text-primary]">{PIX_AMOUNT}<span className="text-xs font-normal text-[--text-tertiary]">/mês</span></span>
+          <span className="ml-auto text-lg font-black text-[--text-primary]">
+            {PIX_AMOUNT}
+            <span className="text-xs font-normal text-[--text-tertiary]">/mês</span>
+          </span>
         </div>
         <div className="space-y-2">
           {[
@@ -43,7 +46,7 @@ export default function PremiumGate({ children, feature = 'este recurso' }) {
             'Relatórios completos + exportação PDF',
             'Histórico ilimitado de transações',
             'Alertas inteligentes de orçamento',
-          ].map(f => (
+          ].map((f) => (
             <div key={f} className="flex items-center gap-2">
               <CheckCircle size={13} className="text-[--success-icon] flex-shrink-0" />
               <span className="text-xs text-[--text-secondary]">{f}</span>
@@ -59,13 +62,18 @@ export default function PremiumGate({ children, feature = 'este recurso' }) {
           <div>
             <p className="text-sm font-bold text-[--brand-700] mb-1">Como assinar via Pix</p>
             <p className="text-xs text-[--brand-600] leading-relaxed">
-              1. Faça um Pix de <strong>{PIX_AMOUNT}</strong> para a chave:<br />
-              <code className="font-mono bg-[--brand-100] px-1 rounded text-[--brand-700]">{PIX_KEY}</code>
+              1. Faça um Pix de <strong>{PIX_AMOUNT}</strong> para a chave:
+              <br />
+              <code className="font-mono bg-[--brand-100] px-1 rounded text-[--brand-700]">
+                {PIX_KEY}
+              </code>
             </p>
             <p className="text-xs text-[--brand-600] mt-1">
               2. Envie o comprovante para ativar seu acesso.
             </p>
-            <p className="text-xs text-[--brand-500] mt-1">O plano vigora por 30 dias após confirmação.</p>
+            <p className="text-xs text-[--brand-500] mt-1">
+              O plano vigora por 30 dias após confirmação.
+            </p>
           </div>
         </div>
       </Card>
