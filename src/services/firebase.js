@@ -1,38 +1,57 @@
 // src/services/firebase.js
 import { initializeApp } from 'firebase/app'
 import {
-  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  sendEmailVerification, sendPasswordResetEmail, signOut,
-  onAuthStateChanged, updateProfile,
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
 } from 'firebase/auth'
 import {
-  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
-  getDocs, setDoc, query, where, orderBy,
-  onSnapshot, serverTimestamp, writeBatch,
+  getFirestore,
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  getDocs,
+  setDoc,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  serverTimestamp,
+  writeBatch,
 } from 'firebase/firestore'
 
 const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
-export const db   = getFirestore(app)
+export const db = getFirestore(app)
 
 // ── AUTH ──
-export const signInEmail  = (e, p) => signInWithEmailAndPassword(auth, e, p)
+export const signInEmail = (e, p) => signInWithEmailAndPassword(auth, e, p)
 
 export const registerEmail = async (email, password, displayName) => {
   const cred = await createUserWithEmailAndPassword(auth, email, password)
   await updateProfile(cred.user, { displayName })
-  try { await sendEmailVerification(cred.user) } catch (_) {}
+  try {
+    await sendEmailVerification(cred.user)
+  } catch (_) {}
   await setDoc(doc(db, 'users', cred.user.uid), {
-    email, displayName,
+    email,
+    displayName,
     plan: 'trial',
     trialStart: serverTimestamp(),
     premiumUntil: null,
@@ -43,8 +62,8 @@ export const registerEmail = async (email, password, displayName) => {
 }
 
 export const resetPassword = (e) => sendPasswordResetEmail(auth, e)
-export const logOut        = () => signOut(auth)
-export const onAuthChange  = (cb) => onAuthStateChanged(auth, cb)
+export const logOut = () => signOut(auth)
+export const onAuthChange = (cb) => onAuthStateChanged(auth, cb)
 
 // ══════════════════════════════════════════════════════════════
 // HELPERS
@@ -55,12 +74,12 @@ const userDoc = (uid, sub, id) => doc(db, 'users', uid, sub, id)
 // ── TRANSACTIONS ──
 export const getTransactions = async (uid) => {
   const snap = await getDocs(query(userCol(uid, 'transactions'), orderBy('date', 'desc')))
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
 }
 
 export const onTransactionsChange = (uid, callback) => {
   const q = query(userCol(uid, 'transactions'), orderBy('date', 'desc'))
-  return onSnapshot(q, snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+  return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
 }
 
 export const addTransaction = async (uid, data) => {
@@ -71,12 +90,11 @@ export const addTransaction = async (uid, data) => {
 export const updateTransaction = async (uid, id, data) =>
   updateDoc(userDoc(uid, 'transactions', id), { ...data, updatedAt: serverTimestamp() })
 
-export const deleteTransaction = async (uid, id) =>
-  deleteDoc(userDoc(uid, 'transactions', id))
+export const deleteTransaction = async (uid, id) => deleteDoc(userDoc(uid, 'transactions', id))
 
 export const addTransactionBatch = async (uid, items) => {
   const batch = writeBatch(db)
-  items.forEach(item => {
+  items.forEach((item) => {
     batch.set(doc(userCol(uid, 'transactions')), { ...item, createdAt: serverTimestamp() })
   })
   await batch.commit()
@@ -89,28 +107,26 @@ export const getCategories = async (uid) => {
     getDocs(query(collection(db, 'categories'), where('ownerUid', '==', uid))),
   ])
   return [
-    ...defSnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    ...cusSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+    ...defSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    ...cusSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
   ]
 }
 
 export const addCategory = async (uid, data) =>
   addDoc(collection(db, 'categories'), {
     ...data,
-    ownerUid:  data.isDefault ? null : uid,
+    ownerUid: data.isDefault ? null : uid,
     isDefault: data.isDefault ?? false,
   })
 
-export const updateCategory = async (_uid, id, data) =>
-  updateDoc(doc(db, 'categories', id), data)
+export const updateCategory = async (_uid, id, data) => updateDoc(doc(db, 'categories', id), data)
 
-export const deleteCategory = async (_uid, id) =>
-  deleteDoc(doc(db, 'categories', id))
+export const deleteCategory = async (_uid, id) => deleteDoc(doc(db, 'categories', id))
 
 // ── GOALS ──
 export const getGoals = async (uid) => {
   const snap = await getDocs(userCol(uid, 'goals'))
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
 }
 
 export const addGoal = async (uid, data) =>
@@ -120,16 +136,14 @@ export const addGoal = async (uid, data) =>
     createdAt: serverTimestamp(),
   })
 
-export const updateGoal = async (uid, id, data) =>
-  updateDoc(userDoc(uid, 'goals', id), data)
+export const updateGoal = async (uid, id, data) => updateDoc(userDoc(uid, 'goals', id), data)
 
-export const deleteGoal = async (uid, id) =>
-  deleteDoc(userDoc(uid, 'goals', id))
+export const deleteGoal = async (uid, id) => deleteDoc(userDoc(uid, 'goals', id))
 
 // ── BUDGETS ──
 export const getBudgets = async (uid) => {
   const snap = await getDocs(userCol(uid, 'budgets'))
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
 }
 
 export const setBudget = async (uid, categoryId, amount) => {
@@ -150,15 +164,16 @@ export const deleteBudget = async (uid, categoryId) => {
 // Listener em tempo real para todos os usuários (apenas admin)
 export const onAllUsersChange = (callback, onError) => {
   const q = query(collection(db, 'users'), orderBy('email'))
-  const unsubscribe = onSnapshot(q, 
+  const unsubscribe = onSnapshot(
+    q,
     (snapshot) => {
-      const users = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }))
+      const users = snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }))
       callback(users)
     },
     (error) => {
       console.error('[Meu Real] Erro no listener de usuários:', error)
       if (onError) onError(error)
-    }
+    },
   )
   return unsubscribe
 }
@@ -176,39 +191,116 @@ export const activatePremiumForUser = async (uid, months = 1) => {
 export const removePremiumForUser = async (uid) =>
   updateDoc(doc(db, 'users', uid), { plan: 'free', premiumUntil: null })
 
-export const blockUser = async (uid, blocked) =>
-  updateDoc(doc(db, 'users', uid), { blocked })
+export const blockUser = async (uid, blocked) => updateDoc(doc(db, 'users', uid), { blocked })
 
 // ══════════════════════════════════════════════════════════════
 // SEED CATEGORIAS PADRÃO
 // ══════════════════════════════════════════════════════════════
 const DEFAULT_CATEGORIES = [
-  { name: 'Alimentação',      icon: '🍔', color: '#f97316', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Transporte',       icon: '🚗', color: '#3b82f6', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Moradia',          icon: '🏠', color: '#f59e0b', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Saúde',            icon: '❤️', color: '#10b981', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Educação',         icon: '📚', color: '#06b6d4', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Lazer',            icon: '🎮', color: '#8b5cf6', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Roupas',           icon: '👕', color: '#ec4899', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Tecnologia',       icon: '💻', color: '#6366f1', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Outros',           icon: '📦', color: '#6b7280', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Salário',          icon: '💰', color: '#22c55e', type: 'income',  isDefault: true, ownerUid: null },
-  { name: 'Freelance',        icon: '🖥️', color: '#0ea5e9', type: 'income',  isDefault: true, ownerUid: null },
-  { name: 'Investimentos',    icon: '📈', color: '#a855f7', type: 'income',  isDefault: true, ownerUid: null },
-  { name: 'Outros (receita)', icon: '✅', color: '#14b8a6', type: 'income',  isDefault: true, ownerUid: null },
+  {
+    name: 'Alimentação',
+    icon: '🍔',
+    color: '#f97316',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Transporte',
+    icon: '🚗',
+    color: '#3b82f6',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Moradia',
+    icon: '🏠',
+    color: '#f59e0b',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  { name: 'Saúde', icon: '❤️', color: '#10b981', type: 'expense', isDefault: true, ownerUid: null },
+  {
+    name: 'Educação',
+    icon: '📚',
+    color: '#06b6d4',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  { name: 'Lazer', icon: '🎮', color: '#8b5cf6', type: 'expense', isDefault: true, ownerUid: null },
+  {
+    name: 'Roupas',
+    icon: '👕',
+    color: '#ec4899',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Tecnologia',
+    icon: '💻',
+    color: '#6366f1',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Outros',
+    icon: '📦',
+    color: '#6b7280',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Salário',
+    icon: '💰',
+    color: '#22c55e',
+    type: 'income',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Freelance',
+    icon: '🖥️',
+    color: '#0ea5e9',
+    type: 'income',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Investimentos',
+    icon: '📈',
+    color: '#a855f7',
+    type: 'income',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Outros (receita)',
+    icon: '✅',
+    color: '#14b8a6',
+    type: 'income',
+    isDefault: true,
+    ownerUid: null,
+  },
 ]
 
 let _seeded = false
 export const seedDefaultCategories = async () => {
   if (_seeded) return
   try {
-    const snap = await getDocs(
-      query(collection(db, 'categories'), where('isDefault', '==', true))
-    )
-    if (!snap.empty) { _seeded = true; return }
+    const snap = await getDocs(query(collection(db, 'categories'), where('isDefault', '==', true)))
+    if (!snap.empty) {
+      _seeded = true
+      return
+    }
 
     const batch = writeBatch(db)
-    DEFAULT_CATEGORIES.forEach(cat => {
+    DEFAULT_CATEGORIES.forEach((cat) => {
       batch.set(doc(collection(db, 'categories')), cat)
     })
     await batch.commit()
