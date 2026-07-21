@@ -1,9 +1,10 @@
 {
   "name": "Meu Real",
   "short_name": "Meu Real",
-  "description": "Controle financeiro pessoal inteligente",
+  "description": "Controle financeiro pessoal simples, seguro e responsivo",
   "start_url": "/cfp-money/",
   "display": "standalone",
+  "scope": "/cfp-money/",
   "background_color": "#0f172a",
   "theme_color": "#6366f1",
   "orientation": "portrait-primary",
