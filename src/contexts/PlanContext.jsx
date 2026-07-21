@@ -8,14 +8,16 @@ const PlanContext = createContext({})
 export const usePlan = () => useContext(PlanContext)
 
 const TRIAL_DAYS = 7
-const ADMIN_EMAIL = 'fhenriquefcruz@gmail.com'
 
 export const PlanProvider = ({ children }) => {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const [planData, setPlanData] = useState(null)
 
   useEffect(() => {
-    if (!user?.uid) { setPlanData(null); return }
+    if (!user?.uid) {
+      setPlanData(null)
+      return
+    }
     const unsub = onSnapshot(doc(db, 'users', user.uid), (snap) => {
       if (snap.exists()) setPlanData(snap.data())
     })
@@ -23,7 +25,8 @@ export const PlanProvider = ({ children }) => {
   }, [user?.uid])
 
   const getStatus = (data) => {
-    if (data.blocked) return { isPremium: false, isTrial: false, isExpired: true, daysLeft: 0, blocked: true }
+    if (data.blocked)
+      return { isPremium: false, isTrial: false, isExpired: true, daysLeft: 0, blocked: true }
 
     const now = new Date()
 
@@ -45,19 +48,24 @@ export const PlanProvider = ({ children }) => {
 
   // Admin sempre premium
   const status = useMemo(() => {
-    if (user?.email === ADMIN_EMAIL) {
+    if (isAdmin) {
       return { isPremium: true, isTrial: false, isExpired: false, daysLeft: 999 }
     }
-    return planData ? getStatus(planData) : { isPremium: false, isTrial: false, isExpired: false, daysLeft: 0 }
-  }, [planData, user])
+    return planData
+      ? getStatus(planData)
+      : { isPremium: false, isTrial: false, isExpired: false, daysLeft: 0 }
+  }, [isAdmin, planData])
 
   return (
-    <PlanContext.Provider value={{
-      planData, status,
-      activatePremium: (months) => activatePremiumForUser(user?.uid, months),
-      removePremium:   ()       => removePremiumForUser(user?.uid),
-      blockCurrentUser:(blocked) => blockUser(user?.uid, blocked),
-    }}>
+    <PlanContext.Provider
+      value={{
+        planData,
+        status,
+        activatePremium: (months) => activatePremiumForUser(user?.uid, months),
+        removePremium: () => removePremiumForUser(user?.uid),
+        blockCurrentUser: (blocked) => blockUser(user?.uid, blocked),
+      }}
+    >
       {children}
     </PlanContext.Provider>
   )
