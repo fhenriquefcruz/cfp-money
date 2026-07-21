@@ -1,4 +1,4 @@
-/* CFP Money Global Styles — Design System */
+/* Meu Real Global Styles — Design System */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* ═══════════════════════════════════════
@@ -36,21 +36,21 @@
   --duration-slow: 400ms;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.06);
-  --shadow-lg: 0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
-  --shadow-xl: 0 24px 60px rgba(0,0,0,0.16), 0 8px 24px rgba(0,0,0,0.10);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.16), 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 /* ═══════════════════════════════════════
    LIGHT MODE TOKENS
 ═══════════════════════════════════════ */
-:root[data-theme="light"] {
+:root[data-theme='light'] {
   /* Backgrounds */
   --bg-app: #f8fafc;
   --bg-surface: #ffffff;
   --bg-elevated: #ffffff;
-  --bg-overlay: rgba(255,255,255,0.9);
+  --bg-overlay: rgba(255, 255, 255, 0.9);
   --bg-sidebar: #ffffff;
   --bg-hover: #f1f5f9;
   --bg-active: #e8f0fe;
@@ -127,11 +127,11 @@
 /* ═══════════════════════════════════════
    DARK MODE TOKENS
 ═══════════════════════════════════════ */
-:root[data-theme="dark"] {
+:root[data-theme='dark'] {
   --bg-app: #0a0f1e;
   --bg-surface: #111827;
   --bg-elevated: #1a2236;
-  --bg-overlay: rgba(17,24,39,0.95);
+  --bg-overlay: rgba(17, 24, 39, 0.95);
   --bg-sidebar: #0d1424;
   --bg-hover: #1e2a3f;
   --bg-active: #1e2a4a;
@@ -178,9 +178,9 @@
   --info-border: #1e40af;
   --info-icon: #60a5fa;
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3);
-  --shadow-lg: 0 16px 40px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4);
 
   --sidebar-width: 260px;
   --topbar-height: 64px;
@@ -189,7 +189,9 @@
 /* ═══════════════════════════════════════
    RESET & BASE
 ═══════════════════════════════════════ */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -199,6 +201,7 @@ html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -209,8 +212,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
-  transition: background-color var(--duration-normal) var(--ease-in-out),
-              color var(--duration-normal) var(--ease-in-out);
+  min-width: 320px;
+  overflow-x: hidden;
+  transition:
+    background-color var(--duration-normal) var(--ease-in-out),
+    color var(--duration-normal) var(--ease-in-out);
 }
 
 #root {
@@ -235,7 +241,36 @@ button {
   background: none;
 }
 
-input, textarea, select {
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+@media (pointer: coarse) {
+  button,
+  [role='button'],
+  a {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+input,
+textarea,
+select {
   font-family: var(--font-sans);
 }
 
@@ -275,7 +310,7 @@ img {
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0,0,0,0);
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
 }
@@ -290,8 +325,12 @@ img {
    LOADING SKELETON
 ═══════════════════════════════════════ */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .skeleton {
@@ -310,13 +349,23 @@ img {
    TOAST ANIMATIONS
 ═══════════════════════════════════════ */
 @keyframes slideInRight {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 /* ═══════════════════════════════════════
@@ -331,6 +380,11 @@ img {
    PRINT
 ═══════════════════════════════════════ */
 @media print {
-  .no-print { display: none !important; }
-  body { background: white; color: black; }
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+    color: black;
+  }
 }
