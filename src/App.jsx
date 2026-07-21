@@ -1,5 +1,5 @@
 // src/App.jsx
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { AppProvider } from './contexts/AppContext'
@@ -7,19 +7,22 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { PlanProvider } from './contexts/PlanContext'
 import Sidebar from './components/Sidebar'
 import Login from './components/Login'
-import Dashboard from './components/Dashboard'
-import TransactionList from './components/TransactionList'
-import Categories from './components/Categories'
-import Goals from './components/Goals'
-import Budgets from './components/Budgets'
-import Reports from './components/Reports'
-import Profile from './components/Profile'
-import Admin from './components/Admin'
 import PlanAlert from './components/PlanAlert'
 import Onboarding from './components/Onboarding'
 
 // Notificações globais
 import NotificationStack from './components/NotificationStack'
+import ErrorBoundary from './components/ErrorBoundary'
+import NotFound from './components/NotFound'
+
+const Dashboard = lazy(() => import('./components/Dashboard'))
+const TransactionList = lazy(() => import('./components/TransactionList'))
+const Categories = lazy(() => import('./components/Categories'))
+const Goals = lazy(() => import('./components/Goals'))
+const Budgets = lazy(() => import('./components/Budgets'))
+const Reports = lazy(() => import('./components/Reports'))
+const Profile = lazy(() => import('./components/Profile'))
+const Admin = lazy(() => import('./components/Admin'))
 
 const LoadingScreen = () => (
   <div className="flex items-center justify-center h-screen bg-[--bg-app]">
@@ -31,25 +34,29 @@ const LoadingScreen = () => (
 )
 
 const AppRoutes = () => {
-  const { user, loading } = useAuth()
+  const { user, loading, isAdmin } = useAuth()
   if (loading) return <LoadingScreen />
-  if (!user)   return <Login />
+  if (!user) return <Login />
 
   return (
     <div className="flex min-h-screen bg-[--bg-app]">
       <Sidebar />
       <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto min-w-0">
-        <Routes>
-          <Route path="/"             element={<Navigate to="/dashboard" />} />
-          <Route path="/dashboard"    element={<Dashboard />} />
-          <Route path="/transactions" element={<TransactionList />} />
-          <Route path="/categories"   element={<Categories />} />
-          <Route path="/goals"        element={<Goals />} />
-          <Route path="/budgets"      element={<Budgets />} />
-          <Route path="/reports"      element={<Reports />} />
-          <Route path="/profile"      element={<Profile />} />
-          <Route path="/admin"        element={<Admin />} />
-        </Routes>
+        <Suspense fallback={<LoadingScreen />}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/transactions" element={<TransactionList />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/goals" element={<Goals />} />
+            <Route path="/budgets" element={<Budgets />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/404" replace />} />
+            <Route path="/404" element={<NotFound />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </main>
       <PlanAlert />
       <Onboarding />
@@ -60,16 +67,18 @@ const AppRoutes = () => {
 
 export default function App() {
   return (
-    <HashRouter>
-      <ThemeProvider>
-        <AuthProvider>
-          <AppProvider>
-            <PlanProvider>
-              <AppRoutes />
-            </PlanProvider>
-          </AppProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </HashRouter>
+    <ErrorBoundary>
+      <HashRouter>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppProvider>
+              <PlanProvider>
+                <AppRoutes />
+              </PlanProvider>
+            </AppProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </HashRouter>
+    </ErrorBoundary>
   )
 }
