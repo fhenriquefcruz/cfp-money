@@ -12,25 +12,102 @@ import { readFileSync } from 'fs'
 const serviceAccount = JSON.parse(readFileSync('./serviceAccountKey.json', 'utf8'))
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
 })
 
 const db = admin.firestore()
 
 const DEFAULT_CATEGORIES = [
-  { name: 'Alimentação',      icon: '🍔', color: '#f97316', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Transporte',       icon: '🚗', color: '#3b82f6', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Moradia',          icon: '🏠', color: '#f59e0b', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Saúde',            icon: '❤️', color: '#10b981', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Educação',         icon: '📚', color: '#06b6d4', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Lazer',            icon: '🎮', color: '#8b5cf6', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Roupas',           icon: '👕', color: '#ec4899', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Tecnologia',       icon: '💻', color: '#6366f1', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Outros',           icon: '📦', color: '#6b7280', type: 'expense', isDefault: true, ownerUid: null },
-  { name: 'Salário',          icon: '💰', color: '#22c55e', type: 'income',  isDefault: true, ownerUid: null },
-  { name: 'Freelance',        icon: '🖥️', color: '#0ea5e9', type: 'income',  isDefault: true, ownerUid: null },
-  { name: 'Investimentos',    icon: '📈', color: '#a855f7', type: 'income',  isDefault: true, ownerUid: null },
-  { name: 'Outros (receita)', icon: '✅', color: '#14b8a6', type: 'income',  isDefault: true, ownerUid: null },
+  {
+    name: 'Alimentação',
+    icon: '🍔',
+    color: '#f97316',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Transporte',
+    icon: '🚗',
+    color: '#3b82f6',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Moradia',
+    icon: '🏠',
+    color: '#f59e0b',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  { name: 'Saúde', icon: '❤️', color: '#10b981', type: 'expense', isDefault: true, ownerUid: null },
+  {
+    name: 'Educação',
+    icon: '📚',
+    color: '#06b6d4',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  { name: 'Lazer', icon: '🎮', color: '#8b5cf6', type: 'expense', isDefault: true, ownerUid: null },
+  {
+    name: 'Roupas',
+    icon: '👕',
+    color: '#ec4899',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Tecnologia',
+    icon: '💻',
+    color: '#6366f1',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Outros',
+    icon: '📦',
+    color: '#6b7280',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Salário',
+    icon: '💰',
+    color: '#22c55e',
+    type: 'income',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Freelance',
+    icon: '🖥️',
+    color: '#0ea5e9',
+    type: 'income',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Investimentos',
+    icon: '📈',
+    color: '#a855f7',
+    type: 'income',
+    isDefault: true,
+    ownerUid: null,
+  },
+  {
+    name: 'Outros (receita)',
+    icon: '✅',
+    color: '#14b8a6',
+    type: 'income',
+    isDefault: true,
+    ownerUid: null,
+  },
 ]
 
 async function seed() {
@@ -41,7 +118,7 @@ async function seed() {
   }
 
   const batch = db.batch()
-  DEFAULT_CATEGORIES.forEach(cat => {
+  DEFAULT_CATEGORIES.forEach((cat) => {
     const ref = db.collection('categories').doc()
     batch.set(ref, cat)
   })
