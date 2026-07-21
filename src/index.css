@@ -74,7 +74,7 @@ body {
 /* Botões mais fáceis de tocar no mobile */
 @media (max-width: 640px) {
   button,
-  [role="button"] {
+  [role='button'] {
     min-height: 40px;
   }
 
@@ -87,7 +87,9 @@ body {
 
 /* Card com feedback de toque */
 .card-touchable {
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
 }
 
 .card-touchable:active {
