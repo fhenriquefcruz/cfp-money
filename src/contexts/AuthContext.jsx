@@ -17,13 +17,15 @@ export const useAuth = () => {
 }
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]       = useState(null)
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
+  const [claims, setClaims] = useState({})
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    const unsubscribe = onAuthChange((u) => {
+    const unsubscribe = onAuthChange(async (u) => {
       setUser(u)
+      setClaims(u ? (await u.getIdTokenResult()).claims : {})
       setLoading(false)
     })
     return unsubscribe
@@ -33,13 +35,13 @@ export const AuthProvider = ({ children }) => {
 
   const handleError = (err) => {
     const messages = {
-      'auth/user-not-found':       'Usuário não encontrado.',
-      'auth/wrong-password':       'Senha incorreta.',
-      'auth/invalid-credential':   'E-mail ou senha incorretos.',
+      'auth/user-not-found': 'Usuário não encontrado.',
+      'auth/wrong-password': 'Senha incorreta.',
+      'auth/invalid-credential': 'E-mail ou senha incorretos.',
       'auth/email-already-in-use': 'E-mail já cadastrado.',
-      'auth/weak-password':        'Senha muito fraca. Use ao menos 6 caracteres.',
-      'auth/invalid-email':        'E-mail inválido.',
-      'auth/too-many-requests':    'Muitas tentativas. Aguarde e tente novamente.',
+      'auth/weak-password': 'Senha muito fraca. Use ao menos 6 caracteres.',
+      'auth/invalid-email': 'E-mail inválido.',
+      'auth/too-many-requests': 'Muitas tentativas. Aguarde e tente novamente.',
       'auth/network-request-failed': 'Sem conexão com a internet.',
       'auth/configuration-not-found': 'Configuração do Firebase inválida. Verifique o .env.',
     }
@@ -49,20 +51,29 @@ export const AuthProvider = ({ children }) => {
 
   const loginEmail = async (email, password) => {
     clearError()
-    try { return await signInEmail(email, password) }
-    catch (e) { handleError(e) }
+    try {
+      return await signInEmail(email, password)
+    } catch (e) {
+      handleError(e)
+    }
   }
 
   const register = async (email, password, name) => {
     clearError()
-    try { return await registerEmail(email, password, name) }
-    catch (e) { handleError(e) }
+    try {
+      return await registerEmail(email, password, name)
+    } catch (e) {
+      handleError(e)
+    }
   }
 
   const forgotPassword = async (email) => {
     clearError()
-    try { return await resetPassword(email) }
-    catch (e) { handleError(e) }
+    try {
+      return await resetPassword(email)
+    } catch (e) {
+      handleError(e)
+    }
   }
 
   const logout = async () => {
@@ -71,7 +82,20 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, clearError, loginEmail, register, forgotPassword, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        claims,
+        isAdmin: claims.admin === true,
+        loading,
+        error,
+        clearError,
+        loginEmail,
+        register,
+        forgotPassword,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
