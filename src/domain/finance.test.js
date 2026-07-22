@@ -1,4 +1,9 @@
-import { calculateBudgetUsage, summarizeTransactions, transactionsForMonth } from './finance'
+import {
+  calculateBudgetUsage,
+  defaultDateRangeEnd,
+  summarizeTransactions,
+  transactionsForMonth,
+} from './finance'
 
 const transactions = [
   { type: 'income', amount: 1000, date: '2026-07-01', categoryId: 'salary' },
@@ -22,4 +27,10 @@ test('calcula uso do orçamento mensal', () => {
   expect(
     calculateBudgetUsage(transactions, { categoryId: 'food', amount: 500 }, new Date(2026, 6, 15)),
   ).toEqual({ spent: 250, percent: 50 })
+})
+
+test('sugere o fim do período 30 dias após a data inicial', () => {
+  expect(defaultDateRangeEnd('2026-07-22')).toBe('2026-08-21')
+  expect(defaultDateRangeEnd('2026-01-31')).toBe('2026-03-02')
+  expect(defaultDateRangeEnd('')).toBe('')
 })
