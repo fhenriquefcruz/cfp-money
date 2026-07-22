@@ -1,12 +1,23 @@
 node_modules/
 dist/
+
 .env
 .env.*
 !.env.example
 *.local
+
 coverage/
 .vite/
+
 .DS_Store
 Thumbs.db
+
+# Credenciais Firebase — nunca versionar
 serviceAccountKey.json
+*service-account*.json
+firebase-adminsdk-*.json
+
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
