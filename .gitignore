@@ -21,3 +21,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Credenciais Firebase
+serviceAccountKey.json
+*service-account*.json
+firebase-adminsdk-*.json
