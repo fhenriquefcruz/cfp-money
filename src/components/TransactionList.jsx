@@ -19,19 +19,19 @@ import {
   ArrowUpDown,
 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
-import { Card, Button, EmptyState, Modal, Badge } from './ui'
+import { Button, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
 import {
   formatCurrency,
-  formatDate,
   getPaymentLabel,
   exportToCSV,
   exportToPDF,
   parseCSVImport,
   PAYMENT_METHODS,
 } from '../utils'
-import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns'
+import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { defaultDateRangeEnd } from '../domain/finance'
 
 const DATE_PRESETS = [
   {
@@ -47,6 +47,16 @@ const DATE_PRESETS = [
       from: format(startOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd'),
       to: format(endOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd'),
     }),
+  },
+  {
+    label: 'Próximo mês',
+    getRange: () => {
+      const nextMonth = addMonths(new Date(), 1)
+      return {
+        from: format(startOfMonth(nextMonth), 'yyyy-MM-dd'),
+        to: format(endOfMonth(nextMonth), 'yyyy-MM-dd'),
+      }
+    },
   },
   {
     label: 'Últimos 3 meses',
@@ -78,7 +88,11 @@ function groupByDate(txs) {
 function TxRow({ tx, cat, onEdit, onDelete }) {
   const isIncome = tx.type === 'income' && !tx.isSavings
   const isSavings = tx.isSavings
-  const isExpense = tx.type === 'expense'
+  const createdAt = tx.createdAt?.toDate?.() || (tx.createdAt ? new Date(tx.createdAt) : null)
+  const createdAtLabel =
+    createdAt && !Number.isNaN(createdAt.getTime())
+      ? format(createdAt, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+      : null
 
   return (
     <motion.div
@@ -90,7 +104,9 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
       {/* Ícone */}
       <div
         className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg flex-shrink-0"
-        style={{ background: isSavings ? '#6366f115' : (cat?.color || '#6366f1') + '18' }}
+        style={{
+          background: isSavings ? '#6366f115' : (cat?.color || '#6366f1') + '18',
+        }}
       >
         {isSavings ? '🐷' : cat?.icon || (isIncome ? '💰' : '💸')}
       </div>
@@ -121,7 +137,10 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
           {cat && !isSavings && tx.description !== cat.name && (
             <span
               className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0"
-              style={{ background: (cat.color || '#6366f1') + '15', color: cat.color || '#6366f1' }}
+              style={{
+                background: (cat.color || '#6366f1') + '15',
+                color: cat.color || '#6366f1',
+              }}
             >
               {cat.icon} {cat.name}
             </span>
@@ -140,6 +159,14 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
               💬 {tx.notes}
             </span>
           )}
+          <span
+            className="text-[10px] text-[--text-tertiary]"
+            title={
+              createdAtLabel ? 'Cadastrada em ' + createdAtLabel : 'Data de cadastro indisponível'
+            }
+          >
+            Cadastro: {createdAtLabel || 'indisponível'}
+          </span>
         </div>
       </div>
 
@@ -536,26 +563,28 @@ export default function TransactionList() {
                 {/* Datas */}
                 <div className="col-span-2 grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1">
+                    <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider blockmb-1">
                       De
                     </label>
                     <input
                       type="date"
                       value={dateRange.from}
                       onChange={(e) => {
-                        setDateRange((r) => ({ ...r, from: e.target.value }))
+                        const from = e.target.value
+                        setDateRange({ from, to: defaultDateRangeEnd(from) })
                         setPage(1)
                       }}
                       className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-2.5 py-2 text-xs text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1">
+                    <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider blockmb-1">
                       Até
                     </label>
                     <input
                       type="date"
                       value={dateRange.to}
+                      min={dateRange.from || undefined}
                       onChange={(e) => {
                         setDateRange((r) => ({ ...r, to: e.target.value }))
                         setPage(1)
