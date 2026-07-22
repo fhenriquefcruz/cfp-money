@@ -3,8 +3,6 @@ import React, { useState, useMemo } from 'react'
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -30,7 +28,7 @@ import { Card, Button } from './ui'
 import { formatCurrency, getMonthlyData, exportToCSV, exportToPDF } from '../utils'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
-import { subMonths, format } from 'date-fns'
+import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 const COLORS = [
@@ -111,38 +109,51 @@ function SavingRateBadge({ rate }) {
 function ReportsContent() {
   const { transactions, categories, getSummary } = useApp()
   const [period, setPeriod] = useState(6)
+  const [referenceMonth, setReferenceMonth] = useState(format(new Date(), 'yyyy-MM'))
   const [exporting, setExporting] = useState(false)
   const [tab, setTab] = useState('overview') // 'overview' | 'categories' | 'savings'
 
-  const now = new Date()
+  const referenceDate = useMemo(() => new Date(referenceMonth + '-01T00:00:00'), [referenceMonth])
+  const periodStart = format(startOfMonth(subMonths(referenceDate, period - 1)), 'yyyy-MM-dd')
+  const periodEnd = format(endOfMonth(referenceDate), 'yyyy-MM-dd')
+  const reportTransactions = useMemo(
+    () =>
+      transactions.filter(
+        (transaction) => transaction.date >= periodStart && transaction.date <= periodEnd,
+      ),
+    [transactions, periodStart, periodEnd],
+  )
 
   const periodTotals = useMemo(() => {
-    let income = 0,
-      expenses = 0,
-      savings = 0
-    for (let i = 0; i < period; i++) {
-      const d = subMonths(now, i)
-      const s = getSummary(d.getFullYear(), d.getMonth())
-      income += s.income
-      expenses += s.expenses
+    let income = 0
+    let expenses = 0
+
+    for (let index = 0; index < period; index += 1) {
+      const date = subMonths(referenceDate, index)
+      const summary = getSummary(date.getFullYear(), date.getMonth())
+      income += summary.income
+      expenses += summary.expenses
     }
+
+    const savings = reportTransactions
+      .filter((transaction) => transaction.isSavings)
+      .reduce((total, transaction) => total + transaction.amount, 0)
     const balance = income - expenses
     const avg = expenses / (period || 1)
     const savingRate = income > 0 ? ((income - expenses) / income) * 100 : 0
-    // Poupança no período
-    const cutoff = subMonths(now, period)
-    savings = transactions
-      .filter((t) => t.isSavings && new Date(t.date) >= cutoff)
-      .reduce((s, t) => s + t.amount, 0)
-    return { income, expenses, balance, avg, savingRate, savings }
-  }, [transactions, period, getSummary])
 
-  const monthlyData = useMemo(() => getMonthlyData(transactions, period), [transactions, period])
+    return { income, expenses, balance, avg, savingRate, savings }
+  }, [reportTransactions, period, getSummary, referenceDate])
+
+  const monthlyData = useMemo(
+    () => getMonthlyData(transactions, period, referenceDate),
+    [transactions, period, referenceDate],
+  )
 
   // Dados de poupança mês a mês
   const savingsMonthly = useMemo(() => {
     return Array.from({ length: period }, (_, i) => {
-      const d = subMonths(now, period - 1 - i)
+      const d = subMonths(referenceDate, period - 1 - i)
       const label = format(d, 'MMM', { locale: ptBR })
       const from = format(d, 'yyyy-MM-01')
       const to = format(new Date(d.getFullYear(), d.getMonth() + 1, 0), 'yyyy-MM-dd')
@@ -151,33 +162,35 @@ function ReportsContent() {
         .reduce((s, t) => s + t.amount, 0)
       return { month: label, value }
     })
-  }, [transactions, period])
+  }, [transactions, period, referenceDate])
 
   const categoryData = useMemo(() => {
     const totals = {}
-    const cutoff = subMonths(now, period).toISOString().slice(0, 10)
-    transactions
-      .filter((t) => t.type === 'expense' && !t.isSavings && t.date >= cutoff)
-      .forEach((t) => {
-        if (!totals[t.categoryId])
-          totals[t.categoryId] = {
-            name: t.categoryName || 'Sem categoria',
+
+    reportTransactions
+      .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
+      .forEach((transaction) => {
+        const categoryKey = transaction.categoryId || 'without-category'
+        if (!totals[categoryKey])
+          totals[categoryKey] = {
+            name: transaction.categoryName || 'Sem categoria',
             value: 0,
             count: 0,
-            color: t.categoryColor || '#6366f1',
+            color: transaction.categoryColor || '#6366f1',
           }
-        totals[t.categoryId].value += t.amount
-        totals[t.categoryId].count++
+        totals[categoryKey].value += transaction.amount
+        totals[categoryKey].count += 1
       })
-    return Object.values(totals).sort((a, b) => b.value - a.value)
-  }, [transactions, period])
 
-  const hasTx = transactions.length > 0
+    return Object.values(totals).sort((first, second) => second.value - first.value)
+  }, [reportTransactions])
+
+  const hasTx = reportTransactions.length > 0
 
   const handleExportPDF = async () => {
     setExporting(true)
     try {
-      await exportToPDF(transactions, categories, periodTotals)
+      await exportToPDF(reportTransactions, categories, periodTotals)
     } catch (e) {
       console.error(e)
     } finally {
@@ -200,6 +213,17 @@ function ReportsContent() {
           <p className="text-xs text-[--text-tertiary] mt-0.5">Análise do seu período financeiro</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 text-xs text-[--text-tertiary]">
+            Mês final
+            <input
+              type="month"
+              value={referenceMonth}
+              onChange={(event) => setReferenceMonth(event.target.value)}
+              aria-label="Mês final do relatório"
+              className="text-sm border border-[--border-default] rounded-xl px-3 py-2 bg-[--bg-elevated]
+                text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+            />
+          </label>
           <select
             value={period}
             onChange={(e) => setPeriod(Number(e.target.value))}
@@ -214,7 +238,7 @@ function ReportsContent() {
             variant="secondary"
             size="sm"
             icon={<Download size={14} />}
-            onClick={() => exportToCSV(transactions, categories)}
+            onClick={() => exportToCSV(reportTransactions, categories)}
             disabled={!hasTx}
           >
             CSV
@@ -237,10 +261,10 @@ function ReportsContent() {
           <div className="text-center py-16">
             <p className="text-5xl mb-3">📊</p>
             <p className="text-base font-bold text-[--text-primary] mb-1">
-              Nenhuma transação ainda
+              Nenhuma transação no período
             </p>
             <p className="text-sm text-[--text-tertiary]">
-              Adicione transações para ver os relatórios.
+              Selecione outro mês final ou registre transações para esse período.
             </p>
           </div>
         </Card>
@@ -459,7 +483,9 @@ function ReportsContent() {
                                 <div className="flex items-center gap-1.5">
                                   <div
                                     className="w-2 h-2 rounded-full"
-                                    style={{ background: COLORS[i % COLORS.length] }}
+                                    style={{
+                                      background: COLORS[i % COLORS.length],
+                                    }}
                                   />
                                   <span className="font-medium text-[--text-primary] truncate max-w-[130px]">
                                     {cat.name}
