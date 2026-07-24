@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { Card, Button } from './ui'
+import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
 import {
   onAllUsersChange,
   activatePremiumForUser,
@@ -57,25 +58,8 @@ const STATUS_STYLES = {
   },
 }
 
-function getPlanInfo(u) {
-  if (u.blocked) return { key: 'blocked', label: 'Bloqueado', sub: '' }
-  const now = new Date()
-  if (u.plan === 'premium' && u.premiumUntil) {
-    const days = Math.ceil((new Date(u.premiumUntil) - now) / 86400000)
-    if (days > 0) return { key: 'premium', label: 'Premium', sub: `${days}d restantes` }
-    return { key: 'premium_expired', label: 'Premium', sub: 'Expirado' }
-  }
-  if (u.plan === 'trial' || !u.plan) {
-    const start = u.trialStart?.toDate?.() || (u.trialStart ? new Date(u.trialStart) : new Date())
-    const left = 7 - Math.floor((now - start) / 86400000)
-    if (left > 0) return { key: 'trial_active', label: 'Trial', sub: `${left}d restantes` }
-    return { key: 'trial_expired', label: 'Trial', sub: 'Expirado' }
-  }
-  return { key: 'free', label: 'Free', sub: '' }
-}
-
 function StatusBadge({ u }) {
-  const info = getPlanInfo(u)
+  const info = getPlanPresentation(u)
   const style = STATUS_STYLES[info.key]
   return (
     <span
@@ -91,8 +75,8 @@ function StatusBadge({ u }) {
 function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
   const [expanded, setExpanded] = useState(false)
   const [months, setMonths] = useState(1)
-  const isPremiumActive =
-    u.plan === 'premium' && u.premiumUntil && new Date(u.premiumUntil) > new Date()
+  const planInfo = getPlanPresentation(u)
+  const isPremiumActive = planInfo.key === 'premium'
 
   return (
     <>
@@ -198,7 +182,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
               },
               {
                 label: 'Premium até',
-                value: u.premiumUntil ? new Date(u.premiumUntil).toLocaleDateString('pt-BR') : '—',
+                value: formatPlanExpiration(u),
               },
               { label: 'Status', value: u.blocked ? '🔴 Bloqueado' : '🟢 Ativo' },
             ].map((r) => (
