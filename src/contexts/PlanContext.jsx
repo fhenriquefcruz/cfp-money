@@ -1,74 +1,68 @@
 // src/contexts/PlanContext.jsx
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db, activatePremiumForUser, removePremiumForUser, blockUser } from '../services/firebase'
+import { calculatePlanStatus } from '../domain/plan'
 import { useAuth } from './AuthContext'
 
 const PlanContext = createContext({})
 export const usePlan = () => useContext(PlanContext)
 
-const TRIAL_DAYS = 7
-
 export const PlanProvider = ({ children }) => {
   const { user, isAdmin } = useAuth()
   const [planData, setPlanData] = useState(null)
+  const [planDocumentUid, setPlanDocumentUid] = useState(null)
+  const [isLoading, setIsLoading] = useState(Boolean(user?.uid))
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     if (!user?.uid) {
       setPlanData(null)
-      return
+      setPlanDocumentUid(null)
+      setIsLoading(false)
+      setError(null)
+      return undefined
     }
-    const unsub = onSnapshot(doc(db, 'users', user.uid), (snap) => {
-      if (snap.exists()) setPlanData(snap.data())
-    })
-    return unsub
+
+    setIsLoading(true)
+    setError(null)
+    setPlanData(null)
+    setPlanDocumentUid(null)
+
+    return onSnapshot(
+      doc(db, 'users', user.uid),
+      (snapshot) => {
+        setPlanDocumentUid(snapshot.id)
+        setPlanData(snapshot.exists() ? snapshot.data() : null)
+        setIsLoading(false)
+      },
+      (snapshotError) => {
+        console.error('[Meu Real] Erro ao carregar plano do usuário:', snapshotError)
+        setError(snapshotError)
+        setPlanData(null)
+        setPlanDocumentUid(null)
+        setIsLoading(false)
+      },
+    )
   }, [user?.uid])
 
-  const getStatus = (data) => {
-    if (data.blocked)
-      return { isPremium: false, isTrial: false, isExpired: true, daysLeft: 0, blocked: true }
+  const status = useMemo(
+    () => calculatePlanStatus(planData, { isAdmin }),
+    [isAdmin, planData],
+  )
 
-    const now = new Date()
-
-    if (data.plan === 'premium' && data.premiumUntil) {
-      const daysLeft = Math.ceil((new Date(data.premiumUntil) - now) / 86400000)
-      if (daysLeft > 0) return { isPremium: true, isTrial: false, isExpired: false, daysLeft }
-      return { isPremium: false, isTrial: false, isExpired: true, daysLeft: 0 }
-    }
-
-    if (data.plan === 'trial' || !data.plan) {
-      const trialStart = data.trialStart?.toDate?.() || new Date(data.trialStart)
-      const daysLeft = TRIAL_DAYS - Math.floor((now - trialStart) / 86400000)
-      if (daysLeft > 0) return { isPremium: true, isTrial: true, isExpired: false, daysLeft }
-      return { isPremium: false, isTrial: true, isExpired: true, daysLeft: 0 }
-    }
-
-    return { isPremium: false, isTrial: false, isExpired: true, daysLeft: 0 }
-  }
-
-  // Administradores mantêm acesso aos recursos, mas sem inventar uma data de vencimento.
-  const status = useMemo(() => {
-    const resolvedStatus = planData
-      ? getStatus(planData)
-      : { isPremium: false, isTrial: false, isExpired: false, daysLeft: 0 }
-
-    if (isAdmin) {
-      return {
-        ...resolvedStatus,
-        isPremium: true,
-        isTrial: false,
-        isExpired: false,
-        blocked: false,
-        isAdminBypass: true,
-      }
-    }
-    return { ...resolvedStatus, isAdminBypass: false }
-  }, [isAdmin, planData])
+  const isCurrentUserDocument = Boolean(
+    user?.uid && planDocumentUid && user.uid === planDocumentUid,
+  )
 
   return (
     <PlanContext.Provider
       value={{
         planData,
+        planDocumentUid,
+        isCurrentUserDocument,
+        isLoading,
+        error,
         status,
         activatePremium: (months) => activatePremiumForUser(user?.uid, months),
         removePremium: () => removePremiumForUser(user?.uid),
