@@ -75,6 +75,13 @@ const DATE_PRESETS = [
   { label: 'Todos', getRange: () => ({ from: '', to: '' }) },
 ]
 
+function getCurrentMonthRange() {
+  return {
+    from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
+    to: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
+  }
+}
+
 // Agrupa transações por data
 function groupByDate(txs) {
   const groups = {}
@@ -184,16 +191,18 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
           {isSavings ? '' : isIncome ? '+' : '−'}
           {formatCurrency(tx.amount)}
         </span>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity">
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 sm:opacity-100 transition-opacity">
           <button
             onClick={() => onEdit(tx)}
-            className="p-1.5 rounded-lg hover:bg-[--bg-elevated] text-[--text-tertiary] hover:text-[--text-brand] transition-colors"
+            className="w-11 h-11 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-elevated] text-[--text-tertiary] hover:text-[--text-brand] transition-colors"
+            aria-label={`Editar transação ${tx.description || cat?.name || ''}`.trim()}
           >
             <Edit2 size={13} />
           </button>
           <button
             onClick={() => onDelete(tx.id)}
-            className="p-1.5 rounded-lg hover:bg-[--danger-bg] text-[--text-tertiary] hover:text-[--danger-text] transition-colors"
+            className="w-11 h-11 inline-flex items-center justify-center rounded-xl hover:bg-[--danger-bg] text-[--text-tertiary] hover:text-[--danger-text] transition-colors"
+            aria-label={`Excluir transação ${tx.description || cat?.name || ''}`.trim()}
           >
             <Trash2 size={13} />
           </button>
@@ -211,10 +220,7 @@ export default function TransactionList() {
   const [typeFilter, setTypeFilter] = useState('all')
   const [catFilter, setCatFilter] = useState('all')
   const [payFilter, setPayFilter] = useState('all')
-  const [dateRange, setDateRange] = useState({
-    from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
-    to: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
-  })
+  const [dateRange, setDateRange] = useState(getCurrentMonthRange)
   const [showFilters, setShowFilters] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTx, setEditingTx] = useState(null)
@@ -260,11 +266,14 @@ export default function TransactionList() {
 
   const grouped = useMemo(() => groupByDate(filtered.slice(0, page * PER_PAGE)), [filtered, page])
   const hasMore = filtered.length > page * PER_PAGE
+  const currentMonthRange = getCurrentMonthRange()
+  const hasCustomDateRange =
+    dateRange.from !== currentMonthRange.from || dateRange.to !== currentMonthRange.to
   const activeFilters = [
     typeFilter !== 'all',
     catFilter !== 'all',
     payFilter !== 'all',
-    !!dateRange.from,
+    hasCustomDateRange,
     !!search,
   ].filter(Boolean).length
 
@@ -440,6 +449,7 @@ export default function TransactionList() {
               <button
                 onClick={() => setSearch('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[--text-tertiary] hover:text-[--text-secondary]"
+                aria-label="Limpar busca"
               >
                 <X size={14} />
               </button>
@@ -449,6 +459,7 @@ export default function TransactionList() {
             onClick={() => setSortAsc((v) => !v)}
             className="p-2.5 rounded-2xl border border-[--border-default] bg-[--bg-surface] text-[--text-tertiary] hover:text-[--text-primary] hover:border-[--brand-500] transition-all"
             title={sortAsc ? 'Mais antigos primeiro' : 'Mais recentes primeiro'}
+            aria-label={sortAsc ? 'Ordenar por mais recentes' : 'Ordenar por mais antigos'}
           >
             <ArrowUpDown size={15} />
           </button>
@@ -460,6 +471,9 @@ export default function TransactionList() {
                   ? 'bg-[--brand-600] text-white border-[--brand-600]'
                   : 'bg-[--bg-surface] border-[--border-default] text-[--text-secondary] hover:border-[--brand-500]'
               }`}
+            aria-expanded={showFilters}
+            aria-controls="transaction-filters"
+            aria-label={`Filtros${activeFilters ? `, ${activeFilters} ativos` : ''}`}
           >
             <Filter size={14} />
             <span className="hidden sm:inline">Filtros</span>
@@ -473,20 +487,31 @@ export default function TransactionList() {
 
         {/* Presets de data */}
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {DATE_PRESETS.map((p) => (
-            <button
-              key={p.label}
-              onClick={() => {
-                const r = p.getRange()
-                setDateRange(r)
-                setPage(1)
-              }}
-              className="text-xs font-medium px-3 py-1.5 rounded-full border whitespace-nowrap transition-all
-                bg-[--bg-surface] border-[--border-default] text-[--text-secondary] hover:border-[--brand-500] hover:text-[--text-brand]"
-            >
-              {p.label}
-            </button>
-          ))}
+          {DATE_PRESETS.map((p) =>
+            (() => {
+              const presetRange = p.getRange()
+              const isSelected =
+                dateRange.from === presetRange.from && dateRange.to === presetRange.to
+              return (
+                <button
+                  key={p.label}
+                  onClick={() => {
+                    const r = p.getRange()
+                    setDateRange(r)
+                    setPage(1)
+                  }}
+                  aria-pressed={isSelected}
+                  className={`min-h-11 text-xs font-medium px-3 py-1.5 rounded-full border whitespace-nowrap transition-all ${
+                    isSelected
+                      ? 'bg-[--brand-600] border-[--brand-600] text-white'
+                      : 'bg-[--bg-surface] border-[--border-default] text-[--text-secondary] hover:border-[--brand-500] hover:text-[--text-brand]'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              )
+            })(),
+          )}
         </div>
 
         {/* Filtros expandíveis */}
@@ -498,13 +523,20 @@ export default function TransactionList() {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-[--bg-subtle] rounded-2xl border border-[--border-subtle]">
+              <div
+                id="transaction-filters"
+                className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-[--bg-subtle] rounded-2xl border border-[--border-subtle]"
+              >
                 {/* Tipo */}
                 <div>
-                  <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1">
+                  <label
+                    htmlFor="transaction-type-filter"
+                    className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
+                  >
                     Tipo
                   </label>
                   <select
+                    id="transaction-type-filter"
                     value={typeFilter}
                     onChange={(e) => {
                       setTypeFilter(e.target.value)
@@ -520,10 +552,14 @@ export default function TransactionList() {
                 </div>
                 {/* Categoria */}
                 <div>
-                  <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1">
+                  <label
+                    htmlFor="transaction-category-filter"
+                    className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
+                  >
                     Categoria
                   </label>
                   <select
+                    id="transaction-category-filter"
                     value={catFilter}
                     onChange={(e) => {
                       setCatFilter(e.target.value)
@@ -541,10 +577,14 @@ export default function TransactionList() {
                 </div>
                 {/* Pagamento */}
                 <div>
-                  <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1">
+                  <label
+                    htmlFor="transaction-payment-filter"
+                    className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
+                  >
                     Pagamento
                   </label>
                   <select
+                    id="transaction-payment-filter"
                     value={payFilter}
                     onChange={(e) => {
                       setPayFilter(e.target.value)
@@ -563,10 +603,14 @@ export default function TransactionList() {
                 {/* Datas */}
                 <div className="col-span-2 grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider blockmb-1">
+                    <label
+                      htmlFor="transaction-date-from"
+                      className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
+                    >
                       De
                     </label>
                     <input
+                      id="transaction-date-from"
                       type="date"
                       value={dateRange.from}
                       onChange={(e) => {
@@ -578,10 +622,14 @@ export default function TransactionList() {
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider blockmb-1">
+                    <label
+                      htmlFor="transaction-date-to"
+                      className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
+                    >
                       Até
                     </label>
                     <input
+                      id="transaction-date-to"
                       type="date"
                       value={dateRange.to}
                       min={dateRange.from || undefined}
@@ -596,7 +644,7 @@ export default function TransactionList() {
                 <div className="flex items-end justify-end sm:col-span-1">
                   <button
                     onClick={clearFilters}
-                    className="text-xs text-[--text-tertiary] hover:text-[--danger-text] transition-colors"
+                    className="min-h-11 px-2 text-xs text-[--text-tertiary] hover:text-[--danger-text] transition-colors"
                   >
                     Limpar tudo
                   </button>
@@ -692,6 +740,7 @@ export default function TransactionList() {
         className="lg:hidden fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-[--brand-600]
           text-white shadow-lg flex items-center justify-center hover:bg-[--brand-700]
           active:scale-95 transition-all"
+        aria-label="Adicionar nova transação"
       >
         <Plus size={24} />
       </button>
