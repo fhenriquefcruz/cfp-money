@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { HelpCircle } from 'lucide-react'
 
 export default function InfoTooltip({ text, size = 14, className = '' }) {
+  const tooltipId = React.useId()
   const [visible, setVisible] = useState(false)
   const [pos, setPos] = useState({ top: 0, left: 0 })
   const btnRef = useRef(null)
@@ -44,11 +45,13 @@ export default function InfoTooltip({ text, size = 14, className = '' }) {
           e.stopPropagation()
           visible ? hide() : show()
         }}
-        className={`inline-flex items-center justify-center rounded-full
+        className={`inline-flex items-center justify-center rounded-full -m-[13px]
           text-[--text-tertiary] hover:text-[--brand-500]
           transition-colors flex-shrink-0 ${className}`}
         aria-label="Mais informações"
-        style={{ width: size + 4, height: size + 4 }}
+        aria-expanded={visible}
+        aria-describedby={visible ? tooltipId : undefined}
+        style={{ width: 44, height: 44 }}
       >
         <HelpCircle size={size} />
       </button>
@@ -56,6 +59,8 @@ export default function InfoTooltip({ text, size = 14, className = '' }) {
       {visible &&
         createPortal(
           <div
+            id={tooltipId}
+            role="tooltip"
             style={{
               position: 'absolute',
               top: pos.top,
