@@ -5,11 +5,11 @@ import { AlertTriangle, X, Star } from 'lucide-react'
 import { usePlan } from '../contexts/PlanContext'
 
 export default function PlanAlert() {
-  const { status } = usePlan()
+  const { status, isLoading } = usePlan()
   const [dismissed, setDismissed] = useState(false)
 
   // Mostra apenas se: expirou OU faltam ≤5 dias
-  if (dismissed) return null
+  if (dismissed || isLoading || status.isAdminBypass) return null
   if (!status.isExpired && !(status.isPremium && status.daysLeft <= 5)) return null
   if (!status.isPremium && !status.isExpired) return null
 
