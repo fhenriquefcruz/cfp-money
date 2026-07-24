@@ -220,14 +220,15 @@ function ReportsContent() {
               value={referenceMonth}
               onChange={(event) => setReferenceMonth(event.target.value)}
               aria-label="Mês final do relatório"
-              className="text-sm border border-[--border-default] rounded-xl px-3 py-2 bg-[--bg-elevated]
+              className="min-h-11 text-sm border border-[--border-default] rounded-xl px-3 py-2 bg-[--bg-elevated]
                 text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
             />
           </label>
           <select
             value={period}
             onChange={(e) => setPeriod(Number(e.target.value))}
-            className="text-sm border border-[--border-default] rounded-xl px-3 py-2 bg-[--bg-elevated]
+            aria-label="Período do relatório"
+            className="min-h-11 text-sm border border-[--border-default] rounded-xl px-3 py-2 bg-[--bg-elevated]
               text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
           >
             <option value={3}>3 meses</option>
