@@ -7,7 +7,6 @@ import {
   Edit2,
   Trash2,
   TrendingUp,
-  Calendar,
   AlertCircle,
   CheckCircle,
   MoreVertical,
@@ -15,8 +14,6 @@ import {
 import { useApp } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
 import { formatCurrency, formatDate } from '../utils'
-import { usePlan } from '../contexts/PlanContext'
-import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
 
 const EMOJI_LIST = [
@@ -388,7 +385,6 @@ function GoalsContent() {
 }
 
 export default function Goals() {
-  const { status } = usePlan()
   // Metas é um recurso free, mas se quiser restringir, descomente:
   // return <PremiumGate feature="Metas">{/* <GoalsContent /> */}</PremiumGate>
   // Por enquanto, liberado para todos

@@ -3,7 +3,7 @@
 import React from 'react'
 import { Star, Lock, CheckCircle, QrCode } from 'lucide-react'
 import { usePlan } from '../contexts/PlanContext'
-import { Card, Button, Badge } from './ui'
+import { Card, Badge } from './ui'
 
 // Chave Pix — troque pela sua antes de publicar
 const PIX_KEY = 'fhenriquefcruz@gmail.com'

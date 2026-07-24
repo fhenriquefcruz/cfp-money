@@ -63,7 +63,7 @@ export default function Login() {
         setSuccessMsg('E-mail de recuperação enviado!')
         setMode('login')
       }
-    } catch (_) {
+    } catch {
     } finally {
       setIsLoading(false)
     }

@@ -15,7 +15,7 @@ import {
   Search,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { Card, Button } from './ui'
+import { Card } from './ui'
 import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
 import {
   onAllUsersChange,
@@ -264,8 +264,8 @@ export default function Admin() {
 
   const stats = {
     total: users.length,
-    premium: users.filter((u) => getPlanInfo(u).key === 'premium').length,
-    trial: users.filter((u) => getPlanInfo(u).key === 'trial_active').length,
+    premium: users.filter((u) => getPlanPresentation(u).key === 'premium').length,
+    trial: users.filter((u) => getPlanPresentation(u).key === 'trial_active').length,
     blocked: users.filter((u) => u.blocked).length,
   }
 

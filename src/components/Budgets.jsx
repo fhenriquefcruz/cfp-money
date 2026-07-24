@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PieChart, Plus, Trash2, AlertTriangle, TrendingUp, CheckCircle, Flame } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
-import { Card, Button, Input, Modal, EmptyState, ProgressBar } from './ui'
+import { Card, Button, Input, Modal, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import { formatCurrency } from '../utils'
 

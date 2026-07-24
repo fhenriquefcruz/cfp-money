@@ -15,8 +15,6 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import {
-  TrendingUp,
-  TrendingDown,
   Wallet,
   Plus,
   ArrowRight,
@@ -241,11 +239,6 @@ export default function Dashboard() {
       savingRate,
     })
   }, [currentSummary, budgets, budgetAlerts, goals])
-
-  const expenseChange =
-    prevSummary.expenses > 0
-      ? ((currentSummary.expenses - prevSummary.expenses) / prevSummary.expenses) * 100
-      : 0
 
   const greeting = () => {
     const h = new Date().getHours()
