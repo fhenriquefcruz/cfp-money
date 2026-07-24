@@ -42,7 +42,7 @@ const PREMIUM_FEATURES = [
 export default function Profile() {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
-  const { status } = usePlan()
+  const { status, isLoading, isCurrentUserDocument } = usePlan()
   const fileInputRef = useRef(null)
 
   const [displayName, setDisplayName] = useState(user?.displayName || '')
@@ -165,7 +165,9 @@ export default function Profile() {
     null
   const initials = (user?.displayName || user?.email || 'U')[0].toUpperCase()
 
-  const planLabel = status.isAdminBypass
+  const planLabel = isLoading
+    ? 'Carregando'
+    : status.isAdminBypass
     ? 'Administrador'
     : status.isPremium
       ? status.isTrial
@@ -174,7 +176,13 @@ export default function Profile() {
       : status.isExpired
         ? 'Expirado'
         : 'Gratuito'
-  const planVariant = status.isPremium ? 'success' : status.isExpired ? 'danger' : 'warning'
+  const planVariant = isLoading
+    ? 'warning'
+    : status.isPremium
+      ? 'success'
+      : status.isExpired
+        ? 'danger'
+        : 'warning'
 
   return (
     <div className="space-y-5 pb-24 lg:pb-6 max-w-lg">
@@ -204,13 +212,17 @@ export default function Profile() {
             <div className="text-left">
               <p className="text-sm font-bold text-[--text-primary]">Meu Plano</p>
               <p className="text-xs text-[--text-tertiary]">
-                {status.isAdminBypass
-                  ? 'Acesso administrativo'
-                  : status.isPremium
-                    ? `${status.daysLeft} dia${status.daysLeft !== 1 ? 's' : ''} restante${status.daysLeft !== 1 ? 's' : ''}`
-                    : status.isExpired
-                      ? 'Assinatura encerrada'
-                      : 'Sem assinatura ativa'}
+                {isLoading
+                  ? 'Carregando informações do plano...'
+                  : !isCurrentUserDocument
+                    ? 'Documento do usuário não encontrado'
+                    : status.isAdminBypass
+                      ? 'Acesso administrativo'
+                      : status.isPremium
+                        ? `${status.daysLeft} dia${status.daysLeft !== 1 ? 's' : ''} restante${status.daysLeft !== 1 ? 's' : ''}`
+                        : status.isExpired
+                          ? 'Assinatura encerrada'
+                          : 'Sem assinatura ativa'}
               </p>
             </div>
           </div>
@@ -224,7 +236,7 @@ export default function Profile() {
           </div>
         </button>
 
-        {showPlanDetail && (
+        {showPlanDetail && !isLoading && (
           <div className="mt-4 pt-4 border-t border-[--border-subtle] space-y-4">
             {status.isAdminBypass && (
               <div className="p-3 rounded-xl bg-[--brand-50] border border-[--brand-200]">
