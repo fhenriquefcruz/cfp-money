@@ -165,13 +165,15 @@ export default function Profile() {
     null
   const initials = (user?.displayName || user?.email || 'U')[0].toUpperCase()
 
-  const planLabel = status.isPremium
-    ? status.isTrial
-      ? 'Trial Premium'
-      : 'Premium Ativo'
-    : status.isExpired
-      ? 'Expirado'
-      : 'Gratuito'
+  const planLabel = status.isAdminBypass
+    ? 'Administrador'
+    : status.isPremium
+      ? status.isTrial
+        ? 'Trial Premium'
+        : 'Premium Ativo'
+      : status.isExpired
+        ? 'Expirado'
+        : 'Gratuito'
   const planVariant = status.isPremium ? 'success' : status.isExpired ? 'danger' : 'warning'
 
   return (
@@ -202,11 +204,13 @@ export default function Profile() {
             <div className="text-left">
               <p className="text-sm font-bold text-[--text-primary]">Meu Plano</p>
               <p className="text-xs text-[--text-tertiary]">
-                {status.isPremium
-                  ? `${status.daysLeft} dia${status.daysLeft !== 1 ? 's' : ''} restante${status.daysLeft !== 1 ? 's' : ''}`
-                  : status.isExpired
-                    ? 'Assinatura encerrada'
-                    : 'Sem assinatura ativa'}
+                {status.isAdminBypass
+                  ? 'Acesso administrativo'
+                  : status.isPremium
+                    ? `${status.daysLeft} dia${status.daysLeft !== 1 ? 's' : ''} restante${status.daysLeft !== 1 ? 's' : ''}`
+                    : status.isExpired
+                      ? 'Assinatura encerrada'
+                      : 'Sem assinatura ativa'}
               </p>
             </div>
           </div>
@@ -222,7 +226,15 @@ export default function Profile() {
 
         {showPlanDetail && (
           <div className="mt-4 pt-4 border-t border-[--border-subtle] space-y-4">
-            {status.isPremium && !status.isTrial && (
+            {status.isAdminBypass && (
+              <div className="p-3 rounded-xl bg-[--brand-50] border border-[--brand-200]">
+                <p className="text-xs font-bold text-[--brand-700]">Acesso administrativo</p>
+                <p className="text-xs text-[--brand-600] mt-0.5">
+                  O acesso aos recursos não depende da validade de uma assinatura.
+                </p>
+              </div>
+            )}
+            {status.isPremium && !status.isTrial && !status.isAdminBypass && (
               <div className="p-3 rounded-xl bg-[--success-bg] border border-[--success-border]">
                 <p className="text-xs font-bold text-[--success-text]">✓ Plano Premium ativo</p>
                 <p className="text-xs text-[--success-text] mt-0.5">
@@ -264,7 +276,7 @@ export default function Profile() {
               ))}
             </div>
 
-            {(!status.isPremium || status.daysLeft <= 7) && (
+            {!status.isAdminBypass && (!status.isPremium || status.daysLeft <= 7) && (
               <Button
                 variant="primary"
                 fullWidth
@@ -370,17 +382,25 @@ export default function Profile() {
             </div>
             <button
               onClick={toggleTheme}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
-                theme === 'dark'
-                  ? 'bg-[--brand-600]'
-                  : 'bg-[--bg-hover] border border-[--border-default]'
-              }`}
+              role="switch"
+              aria-checked={theme === 'dark'}
+              aria-label={theme === 'dark' ? 'Desativar tema escuro' : 'Ativar tema escuro'}
+              className="relative inline-flex h-11 w-14 items-center justify-center rounded-xl focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-                  theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                aria-hidden="true"
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                  theme === 'dark'
+                    ? 'bg-[--brand-600]'
+                    : 'bg-[--bg-hover] border border-[--border-default]'
                 }`}
-              />
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                    theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </span>
             </button>
           </div>
 
