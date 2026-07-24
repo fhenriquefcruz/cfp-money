@@ -26,9 +26,9 @@ export const Button = ({
       'bg-[--danger-bg] text-[--danger-text] border border-[--danger-border] hover:bg-[--danger-bg] hover:opacity-80',
   }
   const sizes = {
-    sm: 'px-3 py-1.5 text-xs',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base',
+    sm: 'min-h-11 px-3 py-1.5 text-xs',
+    md: 'min-h-11 px-4 py-2 text-sm',
+    lg: 'min-h-12 px-6 py-3 text-base',
   }
   return (
     <button
@@ -45,10 +45,16 @@ export const Button = ({
 }
 
 export const Input = ({ label, error, icon, iconRight, className, ...props }) => {
+  const generatedId = React.useId()
+  const inputId = props.id || generatedId
+  const errorId = `${inputId}-error`
+
   return (
     <div className="space-y-1.5">
       {label && (
-        <label className="text-sm font-medium text-[--text-secondary] block">{label}</label>
+        <label htmlFor={inputId} className="text-sm font-medium text-[--text-secondary] block">
+          {label}
+        </label>
       )}
       <div className="relative">
         {icon && (
@@ -57,6 +63,9 @@ export const Input = ({ label, error, icon, iconRight, className, ...props }) =>
           </div>
         )}
         <input
+          id={inputId}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={error ? errorId : props['aria-describedby']}
           className={clsx(
             'w-full bg-[--bg-surface] border rounded-xl px-4 py-2.5 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] transition-all',
             icon ? 'pl-10' : '',
@@ -68,16 +77,31 @@ export const Input = ({ label, error, icon, iconRight, className, ...props }) =>
         />
         {iconRight && <div className="absolute right-3 top-1/2 -translate-y-1/2">{iconRight}</div>}
       </div>
-      {error && <p className="text-xs text-[--danger-text]">{error}</p>}
+      {error && (
+        <p id={errorId} className="text-xs text-[--danger-text]">
+          {error}
+        </p>
+      )}
     </div>
   )
 }
 
 export const Select = ({ label, error, children, className, ...props }) => {
+  const generatedId = React.useId()
+  const selectId = props.id || generatedId
+  const errorId = `${selectId}-error`
+
   return (
     <div className="space-y-1.5">
-      {label && <label className="text-sm font-medium text-[--text-secondary]">{label}</label>}
+      {label && (
+        <label htmlFor={selectId} className="text-sm font-medium text-[--text-secondary]">
+          {label}
+        </label>
+      )}
       <select
+        id={selectId}
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={error ? errorId : props['aria-describedby']}
         className={clsx(
           'w-full bg-[--bg-surface] border rounded-xl px-4 py-2.5 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] transition-all',
           error ? 'border-[--danger-border]' : 'border-[--border-default]',
@@ -87,35 +111,93 @@ export const Select = ({ label, error, children, className, ...props }) => {
       >
         {children}
       </select>
-      {error && <p className="text-xs text-[--danger-text]">{error}</p>}
+      {error && (
+        <p id={errorId} className="text-xs text-[--danger-text]">
+          {error}
+        </p>
+      )}
     </div>
   )
 }
 
-export const Modal = ({ isOpen, onClose, title, children, footer, size = 'md' }) => {
+export const Modal = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  footer,
+  size = 'md',
+  closeOnBackdrop = true,
+  closeOnEscape = true,
+}) => {
+  const titleId = React.useId()
+  const dialogRef = React.useRef(null)
+  const onCloseRef = React.useRef(onClose)
+
+  React.useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
+
+  React.useEffect(() => {
+    if (!isOpen) return undefined
+
+    const previouslyFocused = document.activeElement
+    const previousOverflow = document.body.style.overflow
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && closeOnEscape) onCloseRef.current()
+    }
+
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', handleKeyDown)
+    const focusTimer = window.setTimeout(() => {
+      const focusable = dialogRef.current?.querySelector(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      )
+      ;(focusable || dialogRef.current)?.focus()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+      previouslyFocused?.focus?.()
+    }
+  }, [closeOnEscape, isOpen])
+
   if (!isOpen) return null
   const sizes = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl' }
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4"
+      onClick={(event) => {
+        if (closeOnBackdrop && event.target === event.currentTarget) onClose()
+      }}
     >
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        aria-label={title ? undefined : 'Janela de diálogo'}
+        tabIndex={-1}
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         className={clsx(
-          'w-full mx-4 bg-[--bg-surface] rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto',
+          'w-full bg-[--bg-surface] rounded-2xl shadow-xl max-h-[calc(100dvh-1rem)] sm:max-h-[90vh] overflow-y-auto',
           sizes[size],
         )}
-        onClick={(e) => e.stopPropagation()}
       >
         {title && (
           <div className="flex items-center justify-between p-4 border-b border-[--border-subtle] sticky top-0 bg-[--bg-surface] z-10">
-            <h3 className="text-lg font-bold text-[--text-primary]">{title}</h3>
+            <h3 id={titleId} className="text-lg font-bold text-[--text-primary]">
+              {title}
+            </h3>
             <button
+              type="button"
               onClick={onClose}
-              className="text-[--text-tertiary] hover:text-[--text-primary]"
+              className="w-11 h-11 -mr-2 inline-flex items-center justify-center rounded-xl text-[--text-tertiary] hover:bg-[--bg-hover] hover:text-[--text-primary]"
+              aria-label={`Fechar ${title}`}
             >
               &times;
             </button>
