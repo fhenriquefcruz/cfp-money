@@ -46,14 +46,23 @@ export const PlanProvider = ({ children }) => {
     return { isPremium: false, isTrial: false, isExpired: true, daysLeft: 0 }
   }
 
-  // Admin sempre premium
+  // Administradores mantêm acesso aos recursos, mas sem inventar uma data de vencimento.
   const status = useMemo(() => {
-    if (isAdmin) {
-      return { isPremium: true, isTrial: false, isExpired: false, daysLeft: 999 }
-    }
-    return planData
+    const resolvedStatus = planData
       ? getStatus(planData)
       : { isPremium: false, isTrial: false, isExpired: false, daysLeft: 0 }
+
+    if (isAdmin) {
+      return {
+        ...resolvedStatus,
+        isPremium: true,
+        isTrial: false,
+        isExpired: false,
+        blocked: false,
+        isAdminBypass: true,
+      }
+    }
+    return { ...resolvedStatus, isAdminBypass: false }
   }, [isAdmin, planData])
 
   return (
