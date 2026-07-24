@@ -10,8 +10,9 @@ const PIX_KEY = 'fhenriquefcruz@gmail.com'
 const PIX_AMOUNT = 'R$ 19,90'
 
 export default function PremiumGate({ children, feature = 'este recurso' }) {
-  const { status } = usePlan()
+  const { status, isLoading } = usePlan()
 
+  if (isLoading) return null
   if (status.isPremium) return children
 
   return (
