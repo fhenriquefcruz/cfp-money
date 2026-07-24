@@ -1,5 +1,12 @@
 // src/utils/index.jsx
-import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns'
+import {
+  differenceInCalendarDays,
+  format,
+  startOfMonth,
+  endOfMonth,
+  subMonths,
+  parseISO,
+} from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 // ── CAPITALIZE ──
@@ -41,10 +48,12 @@ export const formatRelativeDate = (date) => {
   const d = typeof date === 'string' ? new Date(date + 'T00:00:00') : date
   const now = new Date()
   now.setHours(0, 0, 0, 0)
-  const diff = Math.floor((now - d) / 86400000)
+  const diff = differenceInCalendarDays(now, d)
+  if (diff === -1) return 'Amanhã'
+  if (diff < -1 && diff > -7) return `Daqui a ${Math.abs(diff)} dias`
   if (diff === 0) return 'Hoje'
   if (diff === 1) return 'Ontem'
-  if (diff < 7) return `${diff} dias atrás`
+  if (diff > 1 && diff < 7) return `${diff} dias atrás`
   return formatDate(d)
 }
 
