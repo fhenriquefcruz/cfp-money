@@ -32,10 +32,16 @@ function parseCurrency(masked) {
 }
 
 function CurrencyInput({ label, value, onChange, error, placeholder = '0,00', required }) {
+  const inputId = React.useId()
+  const errorId = `${inputId}-error`
+
   return (
     <div>
       {label && (
-        <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">
+        <label
+          htmlFor={inputId}
+          className="text-sm font-medium text-[--text-secondary] block mb-1.5"
+        >
           {label}
           {required && <span className="text-[--danger-text] ml-0.5">*</span>}
         </label>
@@ -45,8 +51,12 @@ function CurrencyInput({ label, value, onChange, error, placeholder = '0,00', re
           R$
         </span>
         <input
+          id={inputId}
           type="text"
           inputMode="numeric"
+          required={required}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={error ? errorId : undefined}
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(maskCurrency(e.target.value))}
@@ -69,7 +79,11 @@ function CurrencyInput({ label, value, onChange, error, placeholder = '0,00', re
             ${error ? 'border-[--danger-border]' : 'border-[--border-default]'}`}
         />
       </div>
-      {error && <p className="text-xs text-[--danger-text] mt-1">{error}</p>}
+      {error && (
+        <p id={errorId} className="text-xs text-[--danger-text] mt-1">
+          {error}
+        </p>
+      )}
     </div>
   )
 }
@@ -260,6 +274,8 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
       onClose={onClose}
       title={isEditing ? 'Editar transação' : 'Nova transação'}
       size="sm"
+      closeOnBackdrop={false}
+      closeOnEscape={false}
       footer={
         <div className="flex gap-3">
           <Button variant="secondary" fullWidth onClick={onClose}>
@@ -279,6 +295,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
               key={id}
               type="button"
               onClick={() => update('txType')(id)}
+              aria-pressed={form.txType === id}
               className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg text-xs font-semibold transition-all duration-150
                 ${
                   form.txType === id
@@ -330,12 +347,14 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
 
         {/* Categorias (não poupança) */}
         {!isSavings && (
-          <div>
-            <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">
+          <fieldset>
+            <legend className="text-sm font-medium text-[--text-secondary] block mb-1.5">
               Categoria <span className="text-[--danger-text]">*</span>
-            </label>
+            </legend>
             {errors.categoryId && (
-              <p className="text-xs text-[--danger-text] mb-1">{errors.categoryId}</p>
+              <p id="transaction-category-error" className="text-xs text-[--danger-text] mb-1">
+                {errors.categoryId}
+              </p>
             )}
             <div
               className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto pr-1
@@ -346,6 +365,8 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
                   key={cat.id}
                   type="button"
                   onClick={() => update('categoryId')(cat.id)}
+                  aria-pressed={form.categoryId === cat.id}
+                  aria-describedby={errors.categoryId ? 'transaction-category-error' : undefined}
                   className={`flex flex-col items-center gap-1 p-2 rounded-xl border text-center transition-all duration-150
                     ${
                       form.categoryId === cat.id
@@ -360,7 +381,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
         )}
 
         {/* Data + Pagamento */}
@@ -376,10 +397,14 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           />
           {!isSavings && (
             <div>
-              <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">
+              <label
+                htmlFor="transaction-payment-method"
+                className="text-sm font-medium text-[--text-secondary] block mb-1.5"
+              >
                 Pagamento
               </label>
               <select
+                id="transaction-payment-method"
                 value={form.paymentMethod}
                 onChange={update('paymentMethod')}
                 className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-3 py-3
@@ -545,10 +570,14 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
 
         {/* Notas */}
         <div>
-          <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">
+          <label
+            htmlFor="transaction-notes"
+            className="text-sm font-medium text-[--text-secondary] block mb-1.5"
+          >
             Observações
           </label>
           <textarea
+            id="transaction-notes"
             placeholder="Notas adicionais (opcional)..."
             value={form.notes}
             onChange={update('notes')}
