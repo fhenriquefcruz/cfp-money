@@ -118,7 +118,7 @@ function HealthScore({ score }) {
   const r = 28,
     circ = 2 * Math.PI * r
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex min-w-0 items-center gap-3">
       <div className="relative w-16 h-16 flex-shrink-0">
         <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
           <circle cx="32" cy="32" r={r} fill="none" stroke="var(--bg-hover)" strokeWidth="6" />
@@ -140,7 +140,7 @@ function HealthScore({ score }) {
           </span>
         </div>
       </div>
-      <div>
+      <div className="min-w-0">
         <div className="flex items-center gap-1">
           <p className="text-sm font-bold text-[--text-primary]">
             Saúde {label} {emoji}
@@ -257,29 +257,31 @@ export default function Dashboard() {
   return (
     <div className="space-y-5 pb-24 lg:pb-6">
       {/* Header — mês com destaque, saudação secundária */}
-      <motion.div className="flex items-start justify-between" {...fade}>
-        <div>
+      <motion.div className="flex flex-wrap items-start justify-between gap-3" {...fade}>
+        <div className="min-w-0 flex-1">
           {/* Mês é o destaque principal */}
           <div className="flex items-center gap-1.5 mb-0.5">
             <button
               onClick={() => setViewDate((d) => subMonths(d, 1))}
-              className="p-1 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
+              className="w-11 h-11 -ml-3 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
+              aria-label="Visualizar mês anterior"
             >
               <ChevronLeft size={16} />
             </button>
-            <h1 className="text-2xl font-black text-[--text-primary] capitalize">
+            <h1 className="min-w-0 text-xl sm:text-2xl font-black text-[--text-primary] capitalize">
               {format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })}
             </h1>
             <button
               onClick={() => setViewDate((d) => addMonths(d, 1))}
-              className="p-1 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
+              className="w-11 h-11 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
+              aria-label="Visualizar próximo mês"
             >
               <ChevronRight size={16} />
             </button>
             {!isCurrentMonth && (
               <button
                 onClick={() => setViewDate(new Date())}
-                className="text-xs text-[--text-brand] hover:underline"
+                className="min-h-11 px-2 text-xs text-[--text-brand] hover:underline"
               >
                 Hoje
               </button>
@@ -351,7 +353,7 @@ export default function Dashboard() {
 
       {/* Cards — apenas Previsão e Saúde (receitas/despesas já estão no hero) */}
       <motion.div
-        className="grid grid-cols-2 gap-3"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
