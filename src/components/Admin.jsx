@@ -97,11 +97,12 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
   return (
     <>
       {/* Linha principal — grid fixo */}
-      <div className="grid grid-cols-[1fr_auto_auto] sm:grid-cols-[2fr_1fr_auto] items-center gap-2 px-4 py-3 border-b border-[--border-subtle] last:border-0 hover:bg-[--bg-hover] transition-colors">
+      <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr_auto] items-stretch sm:items-center gap-3 px-4 py-3 border-b border-[--border-subtle] last:border-0 hover:bg-[--bg-hover] transition-colors">
         {/* Coluna 1: usuário */}
         <button
-          className="flex items-center gap-2.5 min-w-0 text-left"
+          className="flex min-h-11 w-full items-center gap-2.5 min-w-0 text-left"
           onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
         >
           <div className="w-7 h-7 rounded-lg bg-[--brand-100] flex items-center justify-center flex-shrink-0 text-xs font-bold text-[--brand-600]">
             {(u.displayName || u.email || 'U')[0].toUpperCase()}
@@ -125,13 +126,14 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
         </div>
 
         {/* Coluna 3: ações agrupadas */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex w-full sm:w-auto items-center gap-2 flex-shrink-0">
           {/* Select + Ativar colados */}
-          <div className="flex items-center rounded-xl border border-[--border-default] overflow-hidden">
+          <div className="flex min-w-0 flex-1 sm:flex-none items-center rounded-xl border border-[--border-default] overflow-hidden">
             <select
               value={months}
               onChange={(e) => setMonths(Number(e.target.value))}
-              className="text-xs px-1.5 py-1.5 bg-[--bg-elevated] text-[--text-primary] border-0 focus:outline-none"
+              className="min-h-11 text-xs px-2 bg-[--bg-elevated] text-[--text-primary] border-0 focus:outline-none"
+              aria-label={`Meses de acesso para ${u.displayName || u.email}`}
             >
               {[1, 2, 3, 6].map((m) => (
                 <option key={m} value={m}>
@@ -141,7 +143,8 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
             </select>
             <button
               onClick={() => onActivate(u.uid, months)}
-              className="px-2.5 py-1.5 bg-[--brand-600] text-white text-xs font-semibold hover:bg-[--brand-700] transition-colors flex items-center gap-1"
+              className="min-h-11 flex-1 sm:flex-none px-3 bg-[--brand-600] text-white text-xs font-semibold hover:bg-[--brand-700] transition-colors inline-flex items-center justify-center gap-1"
+              aria-label={`Ativar ${months} ${months === 1 ? 'mês' : 'meses'} para ${u.displayName || u.email}`}
             >
               <CheckCircle size={11} /> Ativar
             </button>
@@ -150,8 +153,9 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
           {isPremiumActive && (
             <button
               onClick={() => onRemovePremium(u.uid)}
-              className="p-1.5 rounded-lg border border-[--border-default] text-[--text-tertiary] hover:text-orange-600 hover:border-orange-300 hover:bg-orange-50 transition-colors"
+              className="w-11 h-11 inline-flex items-center justify-center rounded-xl border border-[--border-default] text-[--text-tertiary] hover:text-orange-600 hover:border-orange-300 hover:bg-orange-50 transition-colors"
               title="Remover Premium"
+              aria-label={`Remover Premium de ${u.displayName || u.email}`}
             >
               <X size={13} />
             </button>
@@ -160,16 +164,18 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
           {u.blocked ? (
             <button
               onClick={() => onUnblock(u.uid)}
-              className="p-1.5 rounded-lg border border-[--border-default] text-[--text-tertiary] hover:text-[--success-icon] hover:border-[--success-border] transition-colors"
+              className="w-11 h-11 inline-flex items-center justify-center rounded-xl border border-[--border-default] text-[--text-tertiary] hover:text-[--success-icon] hover:border-[--success-border] transition-colors"
               title="Desbloquear"
+              aria-label={`Desbloquear ${u.displayName || u.email}`}
             >
               <Unlock size={13} />
             </button>
           ) : (
             <button
               onClick={() => onBlock(u.uid)}
-              className="p-1.5 rounded-lg border border-[--border-default] text-[--text-tertiary] hover:text-[--danger-text] hover:border-[--danger-border] hover:bg-[--danger-bg] transition-colors"
+              className="w-11 h-11 inline-flex items-center justify-center rounded-xl border border-[--border-default] text-[--text-tertiary] hover:text-[--danger-text] hover:border-[--danger-border] hover:bg-[--danger-bg] transition-colors"
               title="Bloquear"
+              aria-label={`Bloquear ${u.displayName || u.email}`}
             >
               <Lock size={13} />
             </button>
@@ -183,7 +189,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
           <div className="flex items-center gap-2 mb-2 pt-2 sm:hidden">
             <StatusBadge u={u} />
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs">
             {[
               { label: 'Plano', value: u.plan || 'trial' },
               {

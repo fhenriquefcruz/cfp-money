@@ -1,5 +1,5 @@
 // src/components/Sidebar.jsx
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -75,11 +75,16 @@ const NavItem = ({ to, icon: Icon, label, collapsed, onClick }) => {
 
 export default function Sidebar() {
   const { user, logout, isAdmin } = useAuth()
+  const location = useLocation()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const allItems = isAdmin
     ? [...NAV_ITEMS, { to: '/admin', icon: Shield, label: 'Admin' }]
     : NAV_ITEMS
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -110,6 +115,7 @@ export default function Sidebar() {
         <button
           onClick={() => setCollapsed((v) => !v)}
           className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] flex-shrink-0"
+          aria-label={collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
         >
           <Menu size={16} />
         </button>
@@ -175,7 +181,7 @@ export default function Sidebar() {
       </motion.aside>
 
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[--bg-surface]/95 backdrop-blur-md border-t border-[--border-subtle] flex items-center justify-around px-2"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[--bg-surface]/95 backdrop-blur-md border-t border-[--border-subtle] flex items-center justify-around px-1 sm:px-2"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
       >
         {allItems.slice(0, 5).map(({ to, icon: Icon, label }) => (
@@ -184,7 +190,7 @@ export default function Sidebar() {
             to={to}
             className={({ isActive }) =>
               clsx(
-                'flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all duration-150 min-w-0',
+                'flex min-h-14 flex-col items-center gap-1 py-2 px-1 sm:px-3 rounded-xl transition-all duration-150 min-w-0',
                 isActive ? 'text-[--brand-600]' : 'text-[--text-tertiary]',
               )
             }
@@ -205,8 +211,10 @@ export default function Sidebar() {
           </NavLink>
         ))}
         <button
-          className="flex flex-col items-center gap-1 py-2 px-3 text-[--text-tertiary]"
+          className="flex min-h-14 flex-col items-center gap-1 py-2 px-1 sm:px-3 text-[--text-tertiary]"
           onClick={() => setMobileOpen(true)}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-more-menu"
         >
           <div className="w-8 h-8 rounded-xl flex items-center justify-center">
             <Menu size={18} />
@@ -226,6 +234,10 @@ export default function Sidebar() {
               onClick={() => setMobileOpen(false)}
             />
             <motion.div
+              id="mobile-more-menu"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mais opções de navegação"
               className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-72 bg-[--bg-sidebar] flex flex-col"
               initial={{ x: -288 }}
               animate={{ x: 0 }}
@@ -242,6 +254,7 @@ export default function Sidebar() {
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary]"
+                  aria-label="Fechar menu"
                 >
                   <X size={18} />
                 </button>
