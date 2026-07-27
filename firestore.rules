@@ -66,6 +66,21 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /privacyConsents/{consentId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /accountDeletionRequests/{uid} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /privacyAudit/{auditId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

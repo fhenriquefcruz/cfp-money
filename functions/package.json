@@ -7,7 +7,7 @@
     "node": "20"
   },
   "scripts": {
-    "lint": "node --check index.js && node --check lib/access.js",
+    "lint": "node --check index.js && node --check telegram.js && node --check privacy.js && node --check lib/access.js && node --check lib/telegramDomain.js && node --check lib/privacyDomain.js && node --check scripts/set-telegram-webhook.js",
     "test": "node --test test/*.test.js",
     "validate": "npm run lint && npm run test",
     "telegram:webhook": "node scripts/set-telegram-webhook.js"

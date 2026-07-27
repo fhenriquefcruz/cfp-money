@@ -308,3 +308,25 @@ exports.telegramWebhook =
   telegramFunctions.telegramWebhook
 exports.telegramDailyDigest =
   telegramFunctions.telegramDailyDigest
+
+const {
+  createPrivacyFunctions,
+} = require('./privacy')
+
+const privacyFunctions = createPrivacyFunctions({
+  db,
+  callableOptions,
+})
+
+exports.getPrivacyStatus =
+  privacyFunctions.getPrivacyStatus
+exports.recordLegalAcceptance =
+  privacyFunctions.recordLegalAcceptance
+exports.exportMyData =
+  privacyFunctions.exportMyData
+exports.requestAccountDeletion =
+  privacyFunctions.requestAccountDeletion
+exports.cancelAccountDeletion =
+  privacyFunctions.cancelAccountDeletion
+exports.processAccountDeletions =
+  privacyFunctions.processAccountDeletions

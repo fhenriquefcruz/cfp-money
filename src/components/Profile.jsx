@@ -25,6 +25,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { usePlan } from '../contexts/PlanContext'
 import { Card, Button, Input, Modal, Badge } from './ui'
 import { auth } from '../services/firebase'
+import PrivacyDataCard from './PrivacyDataCard'
 
 const PIX_KEY = 'fhenriquefcruz@gmail.com' // sua chave Pix
 const PIX_AMOUNT = 'R$ 19,90'
@@ -383,6 +384,8 @@ export default function Profile() {
           </Button>
         </div>
       </Card>
+
+      <PrivacyDataCard />
 
       {/* ── Modal: Alterar senha ── */}
       <Modal

@@ -10,6 +10,7 @@ import Sidebar from './components/Sidebar'
 import Login from './components/Login'
 import PlanAlert from './components/PlanAlert'
 import Onboarding from './components/Onboarding'
+import LegalGate from './components/LegalGate'
 
 // Notificações globais
 import NotificationStack from './components/NotificationStack'
@@ -65,6 +66,7 @@ const AppRoutes = () => {
       </main>
       <PlanAlert />
       <Onboarding />
+      <LegalGate />
       <NotificationStack />
     </div>
   )

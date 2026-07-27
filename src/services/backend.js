@@ -71,3 +71,34 @@ export async function unlinkTelegramIntegration() {
 
   return result.data
 }
+
+export async function getPrivacyStatus() {
+  const result = await callable('getPrivacyStatus')()
+  return result.data
+}
+
+export async function recordLegalAcceptance(data) {
+  const result = await callable(
+    'recordLegalAcceptance',
+  )(data)
+  return result.data
+}
+
+export async function exportMyData() {
+  const result = await callable('exportMyData')()
+  return result.data
+}
+
+export async function requestAccountDeletion(data) {
+  const result = await callable(
+    'requestAccountDeletion',
+  )(data)
+  return result.data
+}
+
+export async function cancelAccountDeletion() {
+  const result = await callable(
+    'cancelAccountDeletion',
+  )()
+  return result.data
+}
