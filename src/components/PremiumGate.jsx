@@ -10,9 +10,9 @@ const PIX_KEY = 'fhenriquefcruz@gmail.com'
 const PIX_AMOUNT = 'R$ 19,90'
 
 const DEFAULT_BENEFITS = [
+  'Money, seu assistente financeiro pessoal',
   'Dashboard avançado com previsões',
   'Relatórios completos e exportação em PDF',
-  'Histórico ilimitado de transações',
   'Alertas inteligentes de orçamento',
 ]
 

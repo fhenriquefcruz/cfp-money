@@ -17,14 +17,17 @@ import {
   ChevronRight,
   Shield,
   Bot,
+  Crown,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { usePlan } from '../contexts/PlanContext'
 import { Button } from './ui'
+import ThemeToggle from './ThemeToggle'
 import { clsx } from 'clsx'
 
 const NAV_ITEMS = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/money', icon: Bot, label: 'Money' },
+  { to: '/money', icon: Bot, label: 'Money', premium: true },
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transações' },
   { to: '/categories', icon: Tags, label: 'Categorias' },
   { to: '/goals', icon: Target, label: 'Metas' },
@@ -33,21 +36,34 @@ const NAV_ITEMS = [
   { to: '/profile', icon: User, label: 'Perfil' },
 ]
 
-const NavItem = ({ to, icon: Icon, label, collapsed, onClick }) => {
+const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
   const location = useLocation()
   const isActive = location.pathname === to
+
   return (
     <NavLink
       to={to}
       onClick={onClick}
       className={clsx(
-        'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group relative no-underline',
+        'group relative flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-150',
         isActive
           ? 'bg-[--brand-600] text-white shadow-sm'
           : 'text-[--text-secondary] hover:bg-[--bg-hover] hover:text-[--text-primary]',
       )}
     >
-      <Icon size={18} className="flex-shrink-0" />
+      <span className="relative flex-shrink-0">
+        <Icon size={18} />
+        {premium && collapsed && (
+          <Crown
+            size={9}
+            className={clsx(
+              'absolute -right-1.5 -top-1.5',
+              isActive ? 'text-yellow-300' : 'text-yellow-500',
+            )}
+          />
+        )}
+      </span>
+
       <AnimatePresence>
         {!collapsed && (
           <motion.span
@@ -55,20 +71,35 @@ const NavItem = ({ to, icon: Icon, label, collapsed, onClick }) => {
             animate={{ opacity: 1, width: 'auto' }}
             exit={{ opacity: 0, width: 0 }}
             transition={{ duration: 0.2 }}
-            className="text-sm font-medium whitespace-nowrap overflow-hidden"
+            className="min-w-0 flex-1 overflow-hidden whitespace-nowrap text-sm font-medium"
           >
             {label}
           </motion.span>
         )}
       </AnimatePresence>
-      {isActive && !collapsed && (
-        <motion.div layoutId="nav-indicator" className="absolute right-2">
+
+      {premium && !collapsed && (
+        <span
+          className={clsx(
+            'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide',
+            isActive ? 'bg-white/15 text-yellow-200' : 'bg-yellow-100 text-yellow-800',
+          )}
+        >
+          <Crown size={9} />
+          Pro
+        </span>
+      )}
+
+      {isActive && !collapsed && !premium && (
+        <motion.div layoutId="nav-indicator">
           <ChevronRight size={14} className="text-white/60" />
         </motion.div>
       )}
+
       {collapsed && (
-        <div className="absolute left-full ml-2 px-2 py-1 bg-[--text-primary] text-[--bg-surface] text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+        <div className="pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-lg bg-[--text-primary] px-2 py-1 text-xs font-medium text-[--bg-surface] opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
           {label}
+          {premium ? ' · Premium' : ''}
         </div>
       )}
     </NavLink>
@@ -77,6 +108,7 @@ const NavItem = ({ to, icon: Icon, label, collapsed, onClick }) => {
 
 export default function Sidebar() {
   const { user, logout, isAdmin } = useAuth()
+  const { status } = usePlan()
   const location = useLocation()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -89,39 +121,56 @@ export default function Sidebar() {
   }, [location.pathname])
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       <div
         className={clsx(
-          'flex items-center gap-3 p-4 mb-2',
+          'mb-2 flex items-center gap-3 p-4',
           collapsed ? 'justify-center' : 'justify-between',
         )}
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-[--brand-600] flex items-center justify-center flex-shrink-0">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-600]">
             <TrendingUp size={16} className="text-white" />
           </div>
           <AnimatePresence>
             {!collapsed && (
-              <motion.span
+              <motion.div
                 initial={{ opacity: 0, width: 0 }}
                 animate={{ opacity: 1, width: 'auto' }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.2 }}
-                className="text-base font-black text-[--text-primary] whitespace-nowrap overflow-hidden"
+                className="overflow-hidden whitespace-nowrap"
               >
-                Meu Real
-              </motion.span>
+                <p className="text-base font-black text-[--text-primary]">Meu Real</p>
+                <p className="text-[9px] text-[--text-tertiary]">
+                  {status.isPremium ? 'Experiência Premium' : 'Plano básico'}
+                </p>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>
+        {!collapsed && (
+          <button
+            type="button"
+            onClick={() => setCollapsed(true)}
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover]"
+            aria-label="Recolher menu lateral"
+          >
+            <Menu size={16} />
+          </button>
+        )}
+      </div>
+
+      {collapsed && (
         <button
-          onClick={() => setCollapsed((v) => !v)}
-          className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] flex-shrink-0"
-          aria-label={collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+          type="button"
+          onClick={() => setCollapsed(false)}
+          className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover]"
+          aria-label="Expandir menu lateral"
         >
           <Menu size={16} />
         </button>
-      </div>
+      )}
 
       <AnimatePresence>
         {!collapsed && (
@@ -129,22 +178,22 @@ export default function Sidebar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="mx-3 mb-3 p-2.5 rounded-xl bg-[--bg-hover] flex items-center gap-2.5"
+            className="mx-3 mb-3 flex items-center gap-2.5 rounded-xl bg-[--bg-hover] p-2.5"
           >
-            <div className="w-7 h-7 rounded-lg bg-[--brand-600] flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">
+            <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-[--brand-600] text-xs font-bold text-white">
               {(user?.displayName || user?.email || 'U')[0].toUpperCase()}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-[--text-primary] truncate">
+              <p className="truncate text-xs font-semibold text-[--text-primary]">
                 {user?.displayName || 'Usuário'}
               </p>
-              <p className="text-[10px] text-[--text-tertiary] truncate">{user?.email}</p>
+              <p className="truncate text-[10px] text-[--text-tertiary]">{user?.email}</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3">
         {allItems.map((item) => (
           <NavItem key={item.to} {...item} collapsed={collapsed} />
         ))}
@@ -152,18 +201,21 @@ export default function Sidebar() {
 
       <div
         className={clsx(
-          'p-3 border-t border-[--border-subtle]',
-          collapsed ? 'flex justify-center' : '',
+          'space-y-2 border-t border-[--border-subtle] p-3',
+          collapsed && 'flex flex-col items-center',
         )}
       >
+        <ThemeToggle compact={collapsed} fullWidth={!collapsed} />
+
         <Button
           variant="ghost"
           fullWidth={!collapsed}
           className={clsx(
             'text-[--danger-text] hover:bg-[--danger-bg]',
-            collapsed ? 'w-10 h-10 p-0 justify-center' : 'justify-start gap-3',
+            collapsed ? 'h-11 w-11 justify-center p-0' : 'justify-start gap-3',
           )}
           onClick={logout}
+          aria-label={collapsed ? 'Sair da conta' : undefined}
         >
           <LogOut size={16} />
           {!collapsed && 'Sair'}
@@ -175,24 +227,24 @@ export default function Sidebar() {
   return (
     <>
       <motion.aside
-        animate={{ width: collapsed ? 68 : 220 }}
+        animate={{ width: collapsed ? 68 : 232 }}
         transition={{ duration: 0.2 }}
-        className="hidden lg:flex flex-col h-screen sticky top-0 bg-[--bg-sidebar] border-r border-[--border-subtle] overflow-hidden flex-shrink-0"
+        className="sticky top-0 hidden h-screen flex-shrink-0 flex-col overflow-hidden border-r border-[--border-subtle] bg-[--bg-sidebar] lg:flex"
       >
         {sidebarContent}
       </motion.aside>
 
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[--bg-surface]/95 backdrop-blur-md border-t border-[--border-subtle] flex items-center justify-around px-1 sm:px-2"
+        className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
       >
-        {allItems.slice(0, 5).map(({ to, icon: Icon, label }) => (
+        {allItems.slice(0, 5).map(({ to, icon: Icon, label, premium }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
               clsx(
-                'flex min-h-14 flex-col items-center gap-1 py-2 px-1 sm:px-3 rounded-xl transition-all duration-150 min-w-0',
+                'flex min-h-14 min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 transition-all duration-150 sm:px-3',
                 isActive ? 'text-[--brand-600]' : 'text-[--text-tertiary]',
               )
             }
@@ -201,24 +253,29 @@ export default function Sidebar() {
               <>
                 <div
                   className={clsx(
-                    'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
+                    'relative flex h-8 w-8 items-center justify-center rounded-xl transition-all',
                     isActive && 'bg-[--brand-100]',
                   )}
                 >
                   <Icon size={18} />
+                  {premium && (
+                    <Crown size={9} className="absolute -right-0.5 -top-0.5 text-yellow-500" />
+                  )}
                 </div>
-                <span className="text-[10px] font-medium truncate max-w-[52px]">{label}</span>
+                <span className="max-w-[52px] truncate text-[10px] font-medium">{label}</span>
               </>
             )}
           </NavLink>
         ))}
+
         <button
-          className="flex min-h-14 flex-col items-center gap-1 py-2 px-1 sm:px-3 text-[--text-tertiary]"
+          type="button"
+          className="flex min-h-14 flex-col items-center gap-1 px-1 py-2 text-[--text-tertiary] sm:px-3"
           onClick={() => setMobileOpen(true)}
           aria-expanded={mobileOpen}
           aria-controls="mobile-more-menu"
         >
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl">
             <Menu size={18} />
           </div>
           <span className="text-[10px] font-medium">Mais</span>
@@ -229,7 +286,7 @@ export default function Sidebar() {
         {mobileOpen && (
           <>
             <motion.div
-              className="lg:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -240,7 +297,7 @@ export default function Sidebar() {
               role="dialog"
               aria-modal="true"
               aria-label="Mais opções de navegação"
-              className="lg:hidden fixed left-0 top-0 bottom-0 z-50 w-72 bg-[--bg-sidebar] flex flex-col"
+              className="fixed bottom-0 left-0 top-0 z-50 flex w-72 flex-col bg-[--bg-sidebar] lg:hidden"
               initial={{ x: -288 }}
               animate={{ x: 0 }}
               exit={{ x: -288 }}
@@ -248,20 +305,27 @@ export default function Sidebar() {
             >
               <div className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-[--brand-600] flex items-center justify-center">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[--brand-600]">
                     <TrendingUp size={16} className="text-white" />
                   </div>
-                  <span className="text-lg font-black text-[--text-primary]">Meu Real</span>
+                  <div>
+                    <p className="text-lg font-black text-[--text-primary]">Meu Real</p>
+                    <p className="text-[10px] text-[--text-tertiary]">
+                      {status.isPremium ? 'Experiência Premium' : 'Plano básico'}
+                    </p>
+                  </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setMobileOpen(false)}
-                  className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary]"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl text-[--text-tertiary] hover:bg-[--bg-hover]"
                   aria-label="Fechar menu"
                 >
                   <X size={18} />
                 </button>
               </div>
-              <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+
+              <nav className="flex-1 space-y-1 overflow-y-auto px-3">
                 {allItems.map((item) => (
                   <NavItem
                     key={item.to}
@@ -271,7 +335,9 @@ export default function Sidebar() {
                   />
                 ))}
               </nav>
-              <div className="p-4 border-t border-[--border-subtle]">
+
+              <div className="space-y-2 border-t border-[--border-subtle] p-4">
+                <ThemeToggle fullWidth />
                 <Button
                   variant="ghost"
                   fullWidth

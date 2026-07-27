@@ -10,7 +10,7 @@ test('Card aceita classes de layout sem perder a estrutura padrão', () => {
     </Card>,
   )
 
-  const card = screen.getByText('Conteúdo').parentElement
+  const card = screen.getByText('Conteúdo')
   expect(card).toHaveClass('h-full')
   expect(card).toHaveClass('overflow-hidden')
   expect(card).not.toHaveClass('p-4')

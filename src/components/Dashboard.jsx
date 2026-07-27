@@ -345,41 +345,58 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Cards — apenas Previsão e Saúde (receitas/despesas já estão no hero) */}
+      {/* Resumo executivo: indicadores essenciais e análise do Money */}
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+        className="grid grid-cols-1 gap-4 xl:grid-cols-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <div className="bg-[--bg-surface] border border-[--border-default] rounded-2xl p-4">
-          <div className="flex items-center gap-1.5 mb-1">
-            <Zap size={14} className="text-[#f59e0b]" />
-            <p className="text-xs text-[--text-tertiary]">Previsão de gastos</p>
-            <InfoTooltip text="Média das despesas dos últimos 3 meses." />
-          </div>
-          {isLoading ? (
-            <div className="h-6 w-24 bg-[--bg-hover] rounded animate-pulse" />
-          ) : (
-            <p className="text-xl font-black text-[--text-primary] tabular-nums">
-              {formatCurrency(forecast)}
-            </p>
-          )}
-          {forecast > 0 && (
-            <p className="text-[10px] text-[--text-tertiary] mt-0.5">média 3 meses</p>
-          )}
-        </div>
-        <div className="bg-[--bg-surface] border border-[--border-default] rounded-2xl p-4">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Heart size={14} className="text-[--danger-icon]" />
-            <p className="text-xs text-[--text-tertiary]">Saúde financeira</p>
-          </div>
-          <HealthScore score={healthScore} />
-        </div>
-      </motion.div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:col-span-5 xl:grid-cols-1 xl:grid-rows-2">
+          <Card className="h-full shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="mb-1 flex items-center gap-1.5">
+                  <Zap size={14} className="text-[#f59e0b]" />
+                  <p className="text-xs font-semibold text-[--text-tertiary]">
+                    Previsão de gastos
+                  </p>
+                  <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
+                </div>
+                {isLoading ? (
+                  <div className="h-7 w-28 animate-pulse rounded bg-[--bg-hover]" />
+                ) : (
+                  <p className="text-2xl font-black tabular-nums text-[--text-primary]">
+                    {formatCurrency(forecast)}
+                  </p>
+                )}
+                <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
+                  Referência média para apoiar o planejamento do mês.
+                </p>
+              </div>
+              <div className="rounded-xl bg-amber-100 p-2 text-amber-700">
+                <Zap size={16} />
+              </div>
+            </div>
+          </Card>
 
-      <motion.div {...fade} transition={{ delay: 0.12 }}>
-        <MoneyInsightCard referenceDate={viewDate} />
+          <Card className="h-full shadow-sm">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5">
+                <Heart size={14} className="text-[--danger-icon]" />
+                <p className="text-xs font-semibold text-[--text-tertiary]">
+                  Saúde financeira
+                </p>
+                <InfoTooltip text="Indicador sintético baseado no equilíbrio entre receitas, despesas, orçamento e poupança registrados." />
+              </div>
+            </div>
+            <HealthScore score={healthScore} />
+          </Card>
+        </div>
+
+        <div className="min-w-0 xl:col-span-7">
+          <MoneyInsightCard referenceDate={viewDate} />
+        </div>
       </motion.div>
 
       {/* Gráficos — altura maior */}

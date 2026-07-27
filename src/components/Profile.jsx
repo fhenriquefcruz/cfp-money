@@ -4,8 +4,6 @@ import {
   User,
   Mail,
   LogOut,
-  Moon,
-  Sun,
   Camera,
   Key,
   Save,
@@ -24,25 +22,24 @@ import {
   EmailAuthProvider,
 } from 'firebase/auth'
 import { useAuth } from '../contexts/AuthContext'
-import { useTheme } from '../contexts/ThemeContext'
 import { usePlan } from '../contexts/PlanContext'
 import { Card, Button, Input, Modal, Badge } from './ui'
 import { auth } from '../services/firebase'
 import MoneySettingsCard from './MoneySettingsCard'
+import ThemeToggle from './ThemeToggle'
 
 const PIX_KEY = 'fhenriquefcruz@gmail.com' // sua chave Pix
 const PIX_AMOUNT = 'R$ 19,90'
 
 const PREMIUM_FEATURES = [
+  'Money, seu assistente financeiro pessoal',
   'Dashboard avançado com previsões',
-  'Relatórios completos + exportação CSV',
-  'Histórico ilimitado de transações',
+  'Relatórios completos + exportação PDF e CSV',
   'Alertas inteligentes de orçamento',
 ]
 
 export default function Profile() {
   const { user, logout } = useAuth()
-  const { theme, toggleTheme } = useTheme()
   const { status, isLoading, isCurrentUserDocument } = usePlan()
   const fileInputRef = useRef(null)
 
@@ -385,38 +382,8 @@ export default function Profile() {
             Alterar senha
           </Button>
 
-          {/* Toggle de tema */}
-          <div className="flex items-center justify-between px-1 py-2 border-t border-[--border-subtle]">
-            <div className="flex items-center gap-2 text-sm text-[--text-primary]">
-              {theme === 'dark' ? (
-                <Moon size={15} className="text-[--text-secondary]" />
-              ) : (
-                <Sun size={15} className="text-[--text-secondary]" />
-              )}
-              <span className="font-medium">{theme === 'dark' ? 'Tema escuro' : 'Tema claro'}</span>
-            </div>
-            <button
-              onClick={toggleTheme}
-              role="switch"
-              aria-checked={theme === 'dark'}
-              aria-label={theme === 'dark' ? 'Desativar tema escuro' : 'Ativar tema escuro'}
-              className="relative inline-flex h-11 w-14 items-center justify-center rounded-xl focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-            >
-              <span
-                aria-hidden="true"
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                  theme === 'dark'
-                    ? 'bg-[--brand-600]'
-                    : 'bg-[--bg-hover] border border-[--border-default]'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-                    theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </span>
-            </button>
+          <div className="border-t border-[--border-subtle] pt-3">
+            <ThemeToggle fullWidth />
           </div>
 
           <Button variant="danger" fullWidth onClick={logout} icon={<LogOut size={15} />}>
