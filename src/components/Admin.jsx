@@ -17,12 +17,8 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { Card } from './ui'
 import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
-import {
-  onAllUsersChange,
-  activatePremiumForUser,
-  removePremiumForUser,
-  blockUser,
-} from '../services/firebase'
+import { onAllUsersChange } from '../services/firebase'
+import { adminSetUserAccess } from '../services/backend'
 
 // Badges coloridos por status
 const STATUS_STYLES = {
@@ -221,22 +217,55 @@ export default function Admin() {
     setTimeout(() => setToast(''), 3000)
   }
 
-  const handleActivate = async (uid, m) => {
-    await activatePremiumForUser(uid, m)
-    showToast(`✓ Premium ativado por ${m} mês(es)`)
+  const runAccessAction = async (command, successMessage) => {
+    setError('')
+    try {
+      await adminSetUserAccess(command)
+      showToast(successMessage)
+    } catch (actionError) {
+      setError(
+        actionError?.message ||
+          'Não foi possível concluir a ação administrativa.',
+      )
+    }
   }
-  const handleRemovePremium = async (uid) => {
-    await removePremiumForUser(uid)
-    showToast('Premium removido.')
-  }
-  const handleBlock = async (uid) => {
-    await blockUser(uid, true)
-    showToast('Usuário bloqueado.')
-  }
-  const handleUnblock = async (uid) => {
-    await blockUser(uid, false)
-    showToast('Usuário desbloqueado.')
-  }
+
+  const handleActivate = (uid, m) =>
+    runAccessAction(
+      {
+        targetUid: uid,
+        action: 'activate',
+        months: m,
+      },
+      `✓ Premium ativado por ${m} mês(es)`,
+    )
+
+  const handleRemovePremium = (uid) =>
+    runAccessAction(
+      {
+        targetUid: uid,
+        action: 'remove',
+      },
+      'Premium removido.',
+    )
+
+  const handleBlock = (uid) =>
+    runAccessAction(
+      {
+        targetUid: uid,
+        action: 'block',
+      },
+      'Usuário bloqueado.',
+    )
+
+  const handleUnblock = (uid) =>
+    runAccessAction(
+      {
+        targetUid: uid,
+        action: 'unblock',
+      },
+      'Usuário desbloqueado.',
+    )
 
   if (!isAdmin)
     return (

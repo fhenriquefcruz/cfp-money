@@ -13,6 +13,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate": "npm run lint && npm run test && npm run build",
+    "functions:install": "npm install --prefix functions",
+    "functions:test": "npm run test --prefix functions",
+    "functions:validate": "npm run validate --prefix functions",
+    "validate:all": "npm run validate && npm run functions:validate",
+    "emulators": "firebase emulators:start",
+    "deploy:backend": "firebase deploy --only functions",
+    "deploy:firebase": "firebase deploy --only firestore:rules,functions",
     "preview": "vite preview",
     "deploy": "npm run build && gh-pages -d dist"
   },

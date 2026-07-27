@@ -1,7 +1,7 @@
 // src/contexts/PlanContext.jsx
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
-import { db, activatePremiumForUser, removePremiumForUser, blockUser } from '../services/firebase'
+import { db } from '../services/firebase'
 import { calculatePlanStatus } from '../domain/plan'
 import { useAuth } from './AuthContext'
 
@@ -64,9 +64,6 @@ export const PlanProvider = ({ children }) => {
         isLoading,
         error,
         status,
-        activatePremium: (months) => activatePremiumForUser(user?.uid, months),
-        removePremium: () => removePremiumForUser(user?.uid),
-        blockCurrentUser: (blocked) => blockUser(user?.uid, blocked),
       }}
     >
       {children}

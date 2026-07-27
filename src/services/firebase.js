@@ -1,6 +1,10 @@
 // src/services/firebase.js
 import { initializeApp } from 'firebase/app'
 import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+} from 'firebase/app-check' 
+import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -34,7 +38,22 @@ import { resolveFirebaseConfig } from '../config/firebaseConfig'
 
 const firebaseConfig = resolveFirebaseConfig(import.meta.env)
 
-const app = initializeApp(firebaseConfig)
+export const app = initializeApp(firebaseConfig)
+
+const appCheckSiteKey = String(
+  import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY || '',
+).trim()
+
+export const appCheck =
+  appCheckSiteKey && typeof window !== 'undefined'
+    ? initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(
+          appCheckSiteKey,
+        ),
+        isTokenAutoRefreshEnabled: true,
+      })
+    : null
+
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 
@@ -345,21 +364,6 @@ export const onAllUsersChange = (callback, onError) => {
   )
   return unsubscribe
 }
-
-export const activatePremiumForUser = async (uid, months = 1) => {
-  const until = new Date()
-  until.setDate(until.getDate() + months * 30)
-  await updateDoc(doc(db, 'users', uid), {
-    plan: 'premium',
-    premiumUntil: until.toISOString(),
-    blocked: false,
-  })
-}
-
-export const removePremiumForUser = async (uid) =>
-  updateDoc(doc(db, 'users', uid), { plan: 'free', premiumUntil: null })
-
-export const blockUser = async (uid, blocked) => updateDoc(doc(db, 'users', uid), { blocked })
 
 // ══════════════════════════════════════════════════════════════
 // SEED CATEGORIAS PADRÃO

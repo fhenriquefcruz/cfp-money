@@ -1,16 +1,36 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    function owner(uid) { return signedIn() && request.auth.uid == uid; }
-    function admin() { return signedIn() && request.auth.token.admin == true; }
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function admin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function validInitialUser() {
+      return request.resource.data.plan == 'trial'
+        && request.resource.data.blocked == false
+        && request.resource.data.premiumUntil == null;
+    }
 
     match /users/{uid} {
       allow read: if owner(uid) || admin();
-      allow create: if owner(uid);
-      allow update: if admin() || (owner(uid)
+      allow create: if owner(uid) && validInitialUser();
+      allow update: if owner(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['displayName', 'email', 'updatedAt', 'moneySettings', 'moneySettingsUpdatedAt']));
+          .hasOnly([
+            'displayName',
+            'email',
+            'updatedAt',
+            'moneySettings',
+            'moneySettingsUpdatedAt'
+          ]);
       allow delete: if false;
 
       match /{collection}/{document=**} {
@@ -19,12 +39,35 @@ service cloud.firestore {
     }
 
     match /categories/{categoryId} {
-      allow read: if signedIn() && (resource.data.isDefault == true || resource.data.ownerUid == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.isDefault == false && request.resource.data.ownerUid == request.auth.uid;
-      allow update, delete: if signedIn() && resource.data.isDefault == false && resource.data.ownerUid == request.auth.uid;
+      allow read: if signedIn()
+        && (
+          resource.data.isDefault == true
+          || resource.data.ownerUid == request.auth.uid
+        );
+      allow create: if signedIn()
+        && request.resource.data.isDefault == false
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if signedIn()
+        && resource.data.isDefault == false
+        && resource.data.ownerUid == request.auth.uid;
       allow write: if admin();
     }
 
-    match /{document=**} { allow read, write: if false; }
+    match /adminAudit/{auditId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /integrationLinkCodes/{codeId} {
+      allow read, write: if false;
+    }
+
+    match /integrationLinks/{linkId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
