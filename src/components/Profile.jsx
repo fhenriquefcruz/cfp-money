@@ -26,6 +26,7 @@ import { usePlan } from '../contexts/PlanContext'
 import { Card, Button, Input, Modal, Badge } from './ui'
 import { auth } from '../services/firebase'
 import MoneySettingsCard from './MoneySettingsCard'
+import CreditCardsSettingsCard from './CreditCardsSettingsCard'
 import ThemeToggle from './ThemeToggle'
 
 const PIX_KEY = 'fhenriquefcruz@gmail.com' // sua chave Pix
@@ -301,6 +302,8 @@ export default function Profile() {
       </Card>
 
       <MoneySettingsCard />
+
+      <CreditCardsSettingsCard />
 
       {/* ── Informações pessoais ── */}
       <Card>

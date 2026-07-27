@@ -15,6 +15,11 @@ import { useApp } from '../contexts/AppContext'
 import { Modal, Button, Input } from './ui'
 import { PAYMENT_METHODS } from '../utils'
 import { format, addMonths } from 'date-fns'
+import {
+  buildCreditTransaction,
+  buildInstallmentTransactions,
+  calculateInvoiceSchedule,
+} from '../domain/creditCards'
 
 // ── Máscara monetária ──
 function maskCurrency(raw) {
@@ -105,6 +110,7 @@ const EMPTY_FORM = {
   notes: '',
   // Cartão
   isCredit: false,
+  cardId: '',
   closingDay: '',
   isInstallment: false,
   installments: '2',
@@ -123,7 +129,13 @@ function getEffectiveDate(baseDate, closingDay) {
 }
 
 export default function TransactionForm({ isOpen, onClose, transaction }) {
-  const { categories, createTransaction, editTransaction, addTransactionBatch } = useApp()
+  const {
+    categories,
+    creditCards,
+    createTransaction,
+    editTransaction,
+    addTransactionBatch,
+  } = useApp()
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
@@ -141,6 +153,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         categoryId: transaction.categoryId || '',
         date: transaction.date,
         paymentMethod: transaction.paymentMethod || 'pix',
+        cardId: transaction.cardId || '',
         notes: transaction.notes || '',
         isRecurring: transaction.isRecurring || false,
       })
@@ -164,6 +177,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         if (field === 'paymentMethod') {
           next.isCredit = value === 'credit_card'
           next.isInstallment = false
+          if (value !== 'credit_card') next.cardId = ''
         }
         return next
       })
@@ -217,23 +231,36 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
       if (isEditing) {
         await editTransaction(transaction.id, { ...baseData, amount: baseAmount, date: form.date })
       } else if (form.isInstallment && isExpense) {
-        // Parcelamento no cartão
         const n = parseInt(form.installments)
-        const parcela = parseFloat((baseAmount / n).toFixed(2))
         const groupId = `${Date.now()}_${Math.random().toString(36).slice(2)}`
-        const items = Array.from({ length: n }, (_, i) => {
-          const d = format(addMonths(new Date(form.date + 'T00:00:00'), i), 'yyyy-MM-dd')
-          return {
-            ...baseData,
-            amount: parcela,
-            date: getEffectiveDate(d, form.closingDay),
-            isInstallment: true,
-            installmentNum: i + 1,
-            installmentOf: n,
-            installmentGroupId: groupId,
-          }
-        })
-        await addTransactionBatch(items)
+
+        if (selectedCreditCard) {
+          const items = buildInstallmentTransactions({
+            baseData,
+            totalAmount: baseAmount,
+            installments: n,
+            purchaseDate: form.date,
+            card: selectedCreditCard,
+            groupId,
+          })
+          await addTransactionBatch(items)
+        } else {
+          // Compatibilidade com o fluxo manual anterior.
+          const parcela = parseFloat((baseAmount / n).toFixed(2))
+          const items = Array.from({ length: n }, (_, i) => {
+            const d = format(addMonths(new Date(form.date + 'T00:00:00'), i), 'yyyy-MM-dd')
+            return {
+              ...baseData,
+              amount: parcela,
+              date: getEffectiveDate(d, form.closingDay),
+              isInstallment: true,
+              installmentNum: i + 1,
+              installmentOf: n,
+              installmentGroupId: groupId,
+            }
+          })
+          await addTransactionBatch(items)
+        }
       } else if (form.isRecurring) {
         // Recorrente (receita OU despesa)
         const months = parseInt(form.recurringMonths) || 12
@@ -246,9 +273,20 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         }))
         await addTransactionBatch(items)
       } else {
-        const effDate =
-          isExpense && form.isCredit ? getEffectiveDate(form.date, form.closingDay) : form.date
-        await createTransaction({ ...baseData, amount: baseAmount, date: effDate })
+        if (isExpense && form.isCredit && selectedCreditCard) {
+          await createTransaction(
+            buildCreditTransaction({
+              baseData,
+              totalAmount: baseAmount,
+              purchaseDate: form.date,
+              card: selectedCreditCard,
+            }),
+          )
+        } else {
+          const effDate =
+            isExpense && form.isCredit ? getEffectiveDate(form.date, form.closingDay) : form.date
+          await createTransaction({ ...baseData, amount: baseAmount, date: effDate })
+        }
       }
       onClose()
     } catch (_) {
@@ -258,6 +296,12 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
   }
 
   const showCreditFields = isExpense && form.paymentMethod === 'credit_card'
+  const activeCreditCards = creditCards.filter((card) => card.active !== false)
+  const selectedCreditCard = activeCreditCards.find((card) => card.id === form.cardId)
+  const invoicePreview =
+    showCreditFields && selectedCreditCard && form.date
+      ? calculateInvoiceSchedule(form.date, selectedCreditCard)
+      : null
   const showRecurringField = (isIncome || isExpense) && !isEditing
 
   const btnLabel = () => {
@@ -434,20 +478,63 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
                   <CreditCard size={13} className="text-[--brand-600]" />
                   <span className="text-xs font-bold text-[--brand-700]">Cartão de Crédito</span>
                 </div>
-                <Input
-                  label="Dia de fechamento da fatura"
-                  type="number"
-                  min="1"
-                  max="31"
-                  placeholder="Ex: 5"
-                  value={form.closingDay}
-                  onChange={update('closingDay')}
-                  error={errors.closingDay}
-                />
-                {form.closingDay && (
-                  <p className="text-xs text-[--brand-600]">
-                    💡 Compras após dia {form.closingDay} serão lançadas no mês seguinte.
-                  </p>
+                {activeCreditCards.length > 0 && (
+                  <div>
+                    <label
+                      htmlFor="transaction-credit-card"
+                      className="mb-1.5 block text-sm font-medium text-[--text-secondary]"
+                    >
+                      Cartão cadastrado
+                    </label>
+                    <select
+                      id="transaction-credit-card"
+                      value={form.cardId}
+                      onChange={update('cardId')}
+                      className="w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 py-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+                    >
+                      <option value="">Usar fechamento manual</option>
+                      {activeCreditCards.map((card) => (
+                        <option key={card.id} value={card.id}>
+                          {card.name}
+                          {card.last4 ? ` •••• ${card.last4}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {selectedCreditCard ? (
+                  <div className="rounded-xl border border-[--brand-200] bg-white/50 p-3">
+                    <p className="text-xs font-bold text-[--brand-700]">
+                      {selectedCreditCard.name} · fecha dia {selectedCreditCard.closingDay} · vence
+                      dia {selectedCreditCard.dueDay}
+                    </p>
+                    {invoicePreview && (
+                      <p className="mt-1 text-xs leading-relaxed text-[--brand-600]">
+                        Compra em {form.date.split('-').reverse().join('/')} → primeira fatura com
+                        vencimento em {invoicePreview.dueDate.split('-').reverse().join('/')}.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <Input
+                      label="Dia de fechamento da fatura"
+                      type="number"
+                      min="1"
+                      max="31"
+                      placeholder="Ex: 5"
+                      value={form.closingDay}
+                      onChange={update('closingDay')}
+                      error={errors.closingDay}
+                    />
+                    {form.closingDay && (
+                      <p className="text-xs text-[--brand-600]">
+                        💡 Fluxo manual: compras após dia {form.closingDay} serão lançadas no mês
+                        seguinte.
+                      </p>
+                    )}
+                  </>
                 )}
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input

@@ -10,6 +10,10 @@ import {
   updateTransaction,
   deleteTransaction,
   addTransactionBatch as fbAddBatch,
+  getCreditCards,
+  addCreditCard,
+  updateCreditCard,
+  deleteCreditCard,
   addCategory,
   updateCategory,
   deleteCategory,
@@ -29,7 +33,14 @@ const initialState = {
   categories: [],
   goals: [],
   budgets: [],
-  loading: { transactions: true, categories: true, goals: true, budgets: true },
+  creditCards: [],
+  loading: {
+    transactions: true,
+    categories: true,
+    goals: true,
+    budgets: true,
+    creditCards: true,
+  },
   notifications: [],
 }
 
@@ -51,6 +62,12 @@ function reducer(state, action) {
       return { ...state, goals: action.payload, loading: { ...state.loading, goals: false } }
     case 'SET_BUDGETS':
       return { ...state, budgets: action.payload, loading: { ...state.loading, budgets: false } }
+    case 'SET_CREDIT_CARDS':
+      return {
+        ...state,
+        creditCards: action.payload,
+        loading: { ...state.loading, creditCards: false },
+      }
     case 'ADD_NOTIFICATION':
       return { ...state, notifications: [...state.notifications, action.payload] }
     case 'REMOVE_NOTIFICATION':
@@ -98,14 +115,16 @@ export const AppProvider = ({ children }) => {
     // Carrega o resto em paralelo
     const load = async () => {
       try {
-        const [cats, goals, budgets] = await Promise.all([
+        const [cats, goals, budgets, creditCards] = await Promise.all([
           getCategories(uid),
           getGoals(uid),
           getBudgets(uid),
+          getCreditCards(uid),
         ])
         dispatch({ type: 'SET_CATEGORIES', payload: cats })
         dispatch({ type: 'SET_GOALS', payload: goals })
         dispatch({ type: 'SET_BUDGETS', payload: budgets })
+        dispatch({ type: 'SET_CREDIT_CARDS', payload: creditCards })
       } catch (err) {
         console.error('[Meu Real] Erro ao carregar dados:', err.code, err.message)
       }
@@ -216,6 +235,63 @@ export const AppProvider = ({ children }) => {
       }
     },
     [user?.uid, showNotification],
+  )
+
+  // ── CREDIT CARDS ──
+  const refreshCreditCards = useCallback(async () => {
+    if (!user?.uid) return
+    try {
+      const cards = await getCreditCards(user.uid)
+      dispatch({ type: 'SET_CREDIT_CARDS', payload: cards })
+    } catch (e) {
+      console.error('[Meu Real] refreshCreditCards:', e.code)
+    }
+  }, [user?.uid])
+
+  const createCreditCard = useCallback(
+    async (data) => {
+      if (!user?.uid) return
+      try {
+        const id = await addCreditCard(user.uid, data)
+        await refreshCreditCards()
+        showNotification('Cartão cadastrado!')
+        return id
+      } catch (e) {
+        showNotification('Erro ao cadastrar cartão.', 'error')
+        throw e
+      }
+    },
+    [user?.uid, refreshCreditCards, showNotification],
+  )
+
+  const editCreditCard = useCallback(
+    async (id, data) => {
+      if (!user?.uid) return
+      try {
+        await updateCreditCard(user.uid, id, data)
+        await refreshCreditCards()
+        showNotification('Cartão atualizado!')
+      } catch (e) {
+        showNotification('Erro ao atualizar cartão.', 'error')
+        throw e
+      }
+    },
+    [user?.uid, refreshCreditCards, showNotification],
+  )
+
+  const removeCreditCard = useCallback(
+    async (id) => {
+      if (!user?.uid) return
+      try {
+        await deleteCreditCard(user.uid, id)
+        await refreshCreditCards()
+        showNotification('Cartão removido.', 'info')
+      } catch (e) {
+        showNotification('Erro ao remover cartão.', 'error')
+        throw e
+      }
+    },
+    [user?.uid, refreshCreditCards, showNotification],
   )
 
   // ── CATEGORIES ──
@@ -447,6 +523,9 @@ export const AppProvider = ({ children }) => {
         editTransaction,
         removeTransaction,
         addTransactionBatch,
+        createCreditCard,
+        editCreditCard,
+        removeCreditCard,
         createCategory,
         editCategory,
         removeCategory,

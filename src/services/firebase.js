@@ -112,6 +112,29 @@ export const updateTransaction = async (uid, id, data) =>
 
 export const deleteTransaction = async (uid, id) => deleteDoc(userDoc(uid, 'transactions', id))
 
+// ── CREDIT CARDS ──
+export const getCreditCards = async (uid) => {
+  const snap = await getDocs(userCol(uid, 'creditCards'))
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }))
+}
+
+export const addCreditCard = async (uid, data) => {
+  const ref = await addDoc(userCol(uid, 'creditCards'), {
+    ...data,
+    createdAt: serverTimestamp(),
+  })
+  return ref.id
+}
+
+export const updateCreditCard = async (uid, id, data) =>
+  updateDoc(userDoc(uid, 'creditCards', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  })
+
+export const deleteCreditCard = async (uid, id) =>
+  deleteDoc(userDoc(uid, 'creditCards', id))
+
 export const addTransactionBatch = async (uid, items) => {
   const batch = writeBatch(db)
   items.forEach((item) => {

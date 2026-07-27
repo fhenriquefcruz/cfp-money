@@ -10,7 +10,7 @@ service cloud.firestore {
       allow create: if owner(uid);
       allow update: if admin() || (owner(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['displayName', 'email', 'updatedAt']));
+          .hasOnly(['displayName', 'email', 'updatedAt', 'moneySettings', 'moneySettingsUpdatedAt']));
       allow delete: if false;
 
       match /{collection}/{document=**} {
