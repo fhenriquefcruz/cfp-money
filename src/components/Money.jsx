@@ -12,6 +12,7 @@ import {
   Tags,
   BarChart3,
   Crown,
+  CreditCard,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
@@ -19,10 +20,16 @@ import { useMoney } from '../contexts/MoneyContext'
 import { analyzeMoney } from '../domain/money'
 import { buildMoneyAssistantResponse } from '../domain/moneyAssistant'
 import { buildMoneyTransactionDraft } from '../domain/moneyTransactionDraft'
+import { buildMoneyCreditDraft } from '../domain/moneyCreditDraft'
+import {
+  buildCreditTransaction,
+  buildInstallmentTransactions,
+} from '../domain/creditCards'
 import { formatCurrency } from '../utils'
 import { Card, Button } from './ui'
 import PremiumGate from './PremiumGate'
 import MoneyTransactionAction from './MoneyTransactionAction'
+import MoneyCreditTransactionAction from './MoneyCreditTransactionAction'
 
 const INITIAL_MESSAGE = {
   id: 'welcome',
@@ -31,10 +38,10 @@ const INITIAL_MESSAGE = {
     type: 'help',
     title: 'Olá, eu sou o Money',
     text:
-      'Posso consultar seus dados e também preparar receitas ou despesas simples. Todo lançamento é apresentado como rascunho editável e só é salvo após sua confirmação.',
+      'Posso consultar seus dados e preparar receitas, despesas e compras no cartão. Todo lançamento aparece como rascunho editável e só é salvo após sua confirmação.',
     suggestions: [
+      'Comprei 600 no Nubank em 3 vezes no mercado',
       'Paguei 180 no dentista por Pix ontem',
-      'Recebi 5000 de salário hoje',
       'Como estão minhas finanças?',
       'Quero o relatório do mês atual',
     ],
@@ -42,6 +49,11 @@ const INITIAL_MESSAGE = {
 }
 
 const MONEY_CAPABILITIES = [
+  {
+    icon: CreditCard,
+    title: 'Cartões e parcelas',
+    description: 'Calcula a primeira fatura e distribui parcelas pelos vencimentos.',
+  },
   {
     icon: ShieldCheck,
     title: 'Registro com confirmação',
@@ -81,11 +93,29 @@ function AssistantResponse({
   response,
   onSuggestion,
   categories,
+  creditCards,
   onConfirm,
   onCancel,
   onUndo,
+  onConfirmCredit,
+  onCancelCredit,
+  onUndoCredit,
   busy,
 }) {
+  if (response.type?.startsWith('credit_')) {
+    return (
+      <MoneyCreditTransactionAction
+        response={response}
+        categories={categories}
+        creditCards={creditCards}
+        onConfirm={onConfirmCredit}
+        onCancel={onCancelCredit}
+        onUndo={onUndoCredit}
+        busy={busy}
+      />
+    )
+  }
+
   if (response.type?.startsWith('transaction_')) {
     return (
       <MoneyTransactionAction
@@ -152,14 +182,27 @@ function AssistantResponse({
 }
 
 function MoneyContent() {
-  const { transactions, categories, loading, createTransaction, removeTransaction } = useApp()
+  const {
+    transactions,
+    categories,
+    creditCards,
+    loading,
+    createTransaction,
+    addTransactionBatch,
+    removeTransaction,
+    removeTransactionBatch,
+  } = useApp()
   const { settings, isLoading: settingsLoading } = useMoney()
   const [messages, setMessages] = useState([INITIAL_MESSAGE])
   const [input, setInput] = useState('')
   const [isMutating, setIsMutating] = useState(false)
   const inputRef = useRef(null)
 
-  const isLoading = loading.transactions || loading.categories || settingsLoading
+  const isLoading =
+    loading.transactions ||
+    loading.categories ||
+    loading.creditCards ||
+    settingsLoading
   const canSend = input.trim().length > 0 && !isLoading
 
   const safeDataStatus = useMemo(
@@ -204,6 +247,91 @@ function MoneyContent() {
     updateAssistantMessage(messageId, { type: 'transaction_cancelled' })
   }
 
+  const confirmCreditDraft = async (messageId, draft) => {
+    const selectedCard = creditCards.find(
+      (card) => card.id === draft.cardId,
+    )
+    const selectedCategory = categories.find(
+      (category) => category.id === draft.categoryId,
+    )
+
+    if (!selectedCard || !selectedCategory) return
+
+    const baseData = {
+      type: 'expense',
+      isSavings: false,
+      description: draft.description,
+      categoryId: selectedCategory.id,
+      categoryName: selectedCategory.name,
+      categoryColor: selectedCategory.color || '',
+      categoryIcon: selectedCategory.icon || '',
+      paymentMethod: 'credit_card',
+      notes: '',
+      isRecurring: false,
+      source: 'money_assistant',
+    }
+
+    setIsMutating(true)
+    try {
+      let transactionIds
+      let createdTransactions
+
+      if (Number(draft.installments) > 1) {
+        createdTransactions = buildInstallmentTransactions({
+          baseData,
+          totalAmount: draft.amount,
+          installments: draft.installments,
+          purchaseDate: draft.purchaseDate,
+          card: selectedCard,
+        })
+        transactionIds = await addTransactionBatch(createdTransactions)
+      } else {
+        const transaction = buildCreditTransaction({
+          baseData,
+          totalAmount: draft.amount,
+          purchaseDate: draft.purchaseDate,
+          card: selectedCard,
+        })
+        const transactionId = await createTransaction(transaction)
+        transactionIds = [transactionId]
+        createdTransactions = [transaction]
+      }
+
+      updateAssistantMessage(messageId, {
+        type: 'credit_transaction_created',
+        transactionIds,
+        transactions: createdTransactions,
+        originalAmount: Number(draft.amount),
+      })
+    } catch {
+      updateAssistantMessage(messageId, {
+        type: 'credit_transaction_error',
+        draft,
+      })
+    } finally {
+      setIsMutating(false)
+    }
+  }
+
+  const cancelCreditDraft = (messageId) => {
+    updateAssistantMessage(messageId, {
+      type: 'credit_transaction_cancelled',
+    })
+  }
+
+  const undoCreditPurchase = async (messageId, transactionIds) => {
+    if (!transactionIds?.length) return
+    setIsMutating(true)
+    try {
+      await removeTransactionBatch(transactionIds)
+      updateAssistantMessage(messageId, {
+        type: 'credit_transaction_undone',
+      })
+    } finally {
+      setIsMutating(false)
+    }
+  }
+
   const undoTransaction = async (messageId, transactionId) => {
     if (!transactionId) return
     setIsMutating(true)
@@ -219,12 +347,22 @@ function MoneyContent() {
     const normalized = text.trim()
     if (!normalized || isLoading || isMutating) return
 
-    const transactionResponse = buildMoneyTransactionDraft({
+    const creditResponse = buildMoneyCreditDraft({
       message: normalized,
       transactions,
       categories,
+      creditCards,
       now: new Date(),
     })
+
+    const transactionResponse =
+      creditResponse ||
+      buildMoneyTransactionDraft({
+        message: normalized,
+        transactions,
+        categories,
+        now: new Date(),
+      })
 
     const response =
       transactionResponse ||
@@ -386,11 +524,21 @@ function MoneyContent() {
                       response={message.response}
                       onSuggestion={sendMessage}
                       categories={categories}
+                      creditCards={creditCards}
                       busy={isMutating}
                       onConfirm={(draft) => confirmDraft(message.id, draft)}
                       onCancel={() => cancelDraft(message.id)}
                       onUndo={(transactionId) =>
                         undoTransaction(message.id, transactionId)
+                      }
+                      onConfirmCredit={(draft) =>
+                        confirmCreditDraft(message.id, draft)
+                      }
+                      onCancelCredit={() =>
+                        cancelCreditDraft(message.id)
+                      }
+                      onUndoCredit={(transactionIds) =>
+                        undoCreditPurchase(message.id, transactionIds)
                       }
                     />
                   )}
@@ -426,7 +574,7 @@ function MoneyContent() {
                     if (canSend) sendMessage(input)
                   }
                 }}
-                placeholder="Ex.: Money, quero o relatório de abril"
+                placeholder="Ex.: Comprei R$ 600 no Nubank em 3 vezes"
                 className="min-h-12 max-h-32 flex-1 resize-y rounded-2xl border border-[--border-default] bg-[--bg-elevated] px-4 py-3 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] disabled:opacity-60"
               />
               <Button
@@ -440,8 +588,8 @@ function MoneyContent() {
               </Button>
             </div>
             <p className="mt-2 text-[10px] leading-relaxed text-[--text-tertiary]">
-              Pressione Enter para enviar ou Shift + Enter para quebrar a linha. Lançamentos
-              simples passam por revisão e confirmação antes de serem salvos.
+              Pressione Enter para enviar ou Shift + Enter para quebrar a linha. Receitas,
+              despesas, cartões e parcelas passam por revisão antes de serem salvos.
             </p>
           </form>
         </Card>
@@ -456,10 +604,10 @@ export default function Money() {
       feature="Money — seu assistente financeiro"
       description="Converse com seus dados financeiros, consulte relatórios e receba análises personalizadas sem sair do Meu Real."
       benefits={[
-        'Registro simples com confirmação',
+        'Compras no cartão e parcelamentos',
+        'Registro com confirmação',
         'Assistente financeiro conversacional',
         'Consultas por mês e categoria',
-        'Comparações adaptadas ao ciclo',
       ]}
     >
       <MoneyContent />

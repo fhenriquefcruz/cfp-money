@@ -137,8 +137,26 @@ export const deleteCreditCard = async (uid, id) =>
 
 export const addTransactionBatch = async (uid, items) => {
   const batch = writeBatch(db)
-  items.forEach((item) => {
-    batch.set(doc(userCol(uid, 'transactions')), { ...item, createdAt: serverTimestamp() })
+  const refs = items.map(() => doc(userCol(uid, 'transactions')))
+
+  refs.forEach((ref, index) => {
+    batch.set(ref, {
+      ...items[index],
+      createdAt: serverTimestamp(),
+    })
+  })
+
+  await batch.commit()
+  return refs.map((ref) => ref.id)
+}
+
+export const deleteTransactionBatch = async (uid, ids) => {
+  const uniqueIds = [...new Set(ids.filter(Boolean))]
+  if (!uniqueIds.length) return
+
+  const batch = writeBatch(db)
+  uniqueIds.forEach((id) => {
+    batch.delete(userDoc(uid, 'transactions', id))
   })
   await batch.commit()
 }

@@ -7,6 +7,7 @@ export {
   updateTransaction,
   deleteTransaction,
   addTransactionBatch,
+  deleteTransactionBatch,
   getCreditCards,
   addCreditCard,
   updateCreditCard,

@@ -10,6 +10,7 @@ import {
   updateTransaction,
   deleteTransaction,
   addTransactionBatch as fbAddBatch,
+  deleteTransactionBatch as fbDeleteBatch,
   getCreditCards,
   addCreditCard,
   updateCreditCard,
@@ -144,6 +145,14 @@ export const AppProvider = ({ children }) => {
       const budget = budgets.find((b) => b.categoryId === newTx.categoryId)
       if (!budget) return
       const now = new Date()
+      const transactionDate = new Date(newTx.date + 'T00:00:00')
+      if (
+        transactionDate.getFullYear() !== now.getFullYear() ||
+        transactionDate.getMonth() !== now.getMonth()
+      ) {
+        return
+      }
+
       const start = new Date(now.getFullYear(), now.getMonth(), 1)
       const spent =
         transactions
@@ -195,18 +204,20 @@ export const AppProvider = ({ children }) => {
     async (items) => {
       if (!user?.uid) return
       try {
-        await fbAddBatch(user.uid, items)
+        const transactionIds = await fbAddBatch(user.uid, items)
+        items.forEach(checkBudgetAlert)
         showNotification(
           items[0]?.isInstallment
             ? `${items.length} parcelas criadas!`
             : `${items.length} entradas recorrentes criadas!`,
         )
+        return transactionIds
       } catch (e) {
         showNotification('Erro ao criar transações.', 'error')
         throw e
       }
     },
-    [user?.uid, showNotification],
+    [user?.uid, showNotification, checkBudgetAlert],
   )
 
   const editTransaction = useCallback(
@@ -231,6 +242,25 @@ export const AppProvider = ({ children }) => {
         showNotification('Transação removida.', 'info')
       } catch (e) {
         showNotification('Erro ao remover transação.', 'error')
+        throw e
+      }
+    },
+    [user?.uid, showNotification],
+  )
+
+  const removeTransactionBatch = useCallback(
+    async (ids) => {
+      if (!user?.uid) return
+      try {
+        await fbDeleteBatch(user.uid, ids)
+        showNotification(
+          ids.length > 1
+            ? 'Compra parcelada removida.'
+            : 'Compra removida.',
+          'info',
+        )
+      } catch (e) {
+        showNotification('Erro ao desfazer compra.', 'error')
         throw e
       }
     },
@@ -522,6 +552,7 @@ export const AppProvider = ({ children }) => {
         createTransaction,
         editTransaction,
         removeTransaction,
+        removeTransactionBatch,
         addTransactionBatch,
         createCreditCard,
         editCreditCard,

@@ -275,6 +275,7 @@ export function buildMoneyTransactionDraft({
   categories = [],
   transactions = [],
   now = new Date(),
+  allowAdvanced = false,
 }) {
   const normalizedMessage = normalizeMoneyCommand(message)
 
@@ -283,7 +284,7 @@ export function buildMoneyTransactionDraft({
   const type = detectType(normalizedMessage)
   if (!type) return null
 
-  if (hasAdvancedCardFlow(normalizedMessage)) {
+  if (!allowAdvanced && hasAdvancedCardFlow(normalizedMessage)) {
     return {
       type: 'transaction_advanced_required',
       title: 'Esta compra precisa do fluxo de cartão',
