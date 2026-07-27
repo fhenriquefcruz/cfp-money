@@ -32,7 +32,11 @@ test('apresenta uma entrada clara e orientada ao produto', () => {
   expect(
     screen.getByRole('heading', { name: 'Continue com clareza.' }),
   ).toBeInTheDocument()
-  expect(screen.getByText(/Seu dinheiro,/i)).toBeInTheDocument()
+  expect(
+    screen.getByRole('heading', {
+      name: 'Seu dinheiro, mais legível. Suas decisões, mais inteligentes.',
+    }),
+  ).toBeInTheDocument()
   expect(
     screen.getByRole('button', { name: 'Entrar no Meu Real' }),
   ).toBeInTheDocument()
