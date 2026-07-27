@@ -1,0 +1,10 @@
+import{R as h,r as n,j as o}from"./motion-BePOjrkR.js";import{r as b}from"./charts-BlxBy7Wi.js";import{c as y}from"./index-BxKimlvt.js";/**
+ * @license lucide-react v0.330.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const v=y("HelpCircle",[["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}],["path",{d:"M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3",key:"1u773s"}],["path",{d:"M12 17h.01",key:"p32p05"}]]);function j({text:p,size:u=14,className:x=""}){const a=h.useId(),[t,i]=n.useState(!1),[l,f]=n.useState({top:0,left:0}),r=n.useRef(null),c=()=>{if(!r.current)return;const e=r.current.getBoundingClientRect();f({top:e.top+window.scrollY-8,left:e.left+window.scrollX+e.width/2}),i(!0)},s=()=>i(!1);return n.useEffect(()=>{if(!t)return;const e=m=>{var d;(d=r.current)!=null&&d.contains(m.target)||s()};return document.addEventListener("mousedown",e),document.addEventListener("touchstart",e),()=>{document.removeEventListener("mousedown",e),document.removeEventListener("touchstart",e)}},[t]),o.jsxs(o.Fragment,{children:[o.jsx("button",{ref:r,type:"button",onMouseEnter:c,onMouseLeave:s,onClick:e=>{e.stopPropagation(),t?s():c()},className:`inline-flex items-center justify-center rounded-full -m-[13px]
+          text-[--text-tertiary] hover:text-[--brand-500]
+          transition-colors flex-shrink-0 ${x}`,"aria-label":"Mais informações","aria-expanded":t,"aria-describedby":t?a:void 0,style:{width:44,height:44},children:o.jsx(v,{size:u})}),t&&b.createPortal(o.jsxs("div",{id:a,role:"tooltip",style:{position:"absolute",top:l.top,left:l.left,transform:"translate(-50%, -100%)",zIndex:9999,maxWidth:220,pointerEvents:"none"},className:`bg-gray-900 text-white text-xs rounded-xl px-3 py-2
+                     shadow-xl border border-gray-700 leading-relaxed
+                     text-center whitespace-normal animate-fade-in`,children:[p,o.jsx("div",{style:{position:"absolute",left:"50%",top:"100%",transform:"translateX(-50%)",borderLeft:"5px solid transparent",borderRight:"5px solid transparent",borderTop:"5px solid #111827"}})]}),document.body)]})}export{j as I};
