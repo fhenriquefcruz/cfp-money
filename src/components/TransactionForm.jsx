@@ -19,6 +19,7 @@ import {
   buildCreditTransaction,
   buildInstallmentTransactions,
   calculateInvoiceSchedule,
+  splitInstallmentAmounts,
 } from '../domain/creditCards'
 
 // ── Máscara monetária ──
@@ -34,6 +35,35 @@ function maskCurrency(raw) {
 function parseCurrency(masked) {
   if (!masked) return 0
   return parseFloat(String(masked).replace(/\./g, '').replace(',', '.')) || 0
+}
+
+function formatInstallmentDistribution(maskedAmount, rawInstallments) {
+  try {
+    const amounts = splitInstallmentAmounts(
+      parseCurrency(maskedAmount),
+      parseInt(rawInstallments || 1),
+    )
+    const groups = []
+
+    amounts.forEach((amount) => {
+      const cents = Math.round(amount * 100)
+      const previous = groups[groups.length - 1]
+      if (previous?.cents === cents) {
+        previous.count += 1
+      } else {
+        groups.push({ cents, count: 1 })
+      }
+    })
+
+    return groups
+      .map(
+        (group) =>
+          `${group.count}× R$ ${maskCurrency(String(group.cents))}`,
+      )
+      .join(' + ')
+  } catch {
+    return ''
+  }
 }
 
 function CurrencyInput({ label, value, onChange, error, placeholder = '0,00', required }) {
@@ -245,18 +275,19 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           })
           await addTransactionBatch(items)
         } else {
-          // Compatibilidade com o fluxo manual anterior.
-          const parcela = parseFloat((baseAmount / n).toFixed(2))
-          const items = Array.from({ length: n }, (_, i) => {
+          // Compatibilidade com o fluxo manual anterior, agora sem perda de centavos.
+          const amounts = splitInstallmentAmounts(baseAmount, n)
+          const items = amounts.map((amount, i) => {
             const d = format(addMonths(new Date(form.date + 'T00:00:00'), i), 'yyyy-MM-dd')
             return {
               ...baseData,
-              amount: parcela,
+              amount,
               date: getEffectiveDate(d, form.closingDay),
               isInstallment: true,
               installmentNum: i + 1,
               installmentOf: n,
               installmentGroupId: groupId,
+              originalAmount: baseAmount,
             }
           })
           await addTransactionBatch(items)
@@ -566,19 +597,16 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
                       />
                       {form.amount && form.installments && (
                         <div className="p-2 rounded-lg bg-white/60 text-xs text-[--brand-700]">
-                          Parcela:{' '}
+                          Distribuição:{' '}
                           <strong>
-                            R${' '}
-                            {maskCurrency(
-                              String(
-                                Math.round(
-                                  (parseCurrency(form.amount) / parseInt(form.installments || 1)) *
-                                    100,
-                                ),
-                              ),
+                            {formatInstallmentDistribution(
+                              form.amount,
+                              form.installments,
                             )}
-                          </strong>{' '}
-                          × {form.installments}x
+                          </strong>
+                          <p className="mt-1 text-[10px] leading-relaxed text-[--brand-600]">
+                            Os centavos são ajustados entre as primeiras parcelas para preservar o valor total.
+                          </p>
                         </div>
                       )}
                     </motion.div>

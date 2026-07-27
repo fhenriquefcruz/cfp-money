@@ -24,7 +24,11 @@ import {
   setBudget,
   deleteBudget,
 } from '../repositories/appRepository'
-import { summarizeTransactions, transactionsForMonth } from '../domain/finance'
+import {
+  calculateCurrentBalance,
+  summarizeTransactions,
+  transactionsForMonth,
+} from '../domain/finance'
 
 const AppContext = createContext({})
 export const useApp = () => useContext(AppContext)
@@ -105,8 +109,7 @@ export const AppProvider = ({ children }) => {
     }
     const uid = user.uid
 
-    // Seed das categorias padrão — roda uma vez por sessão, sem bloquear
-    // A regra permite create com isDefault==true, então qualquer usuário pode criar
+    // Categorias padrão são lidas da coleção global; sua criação é administrativa.
 
     // Listener em tempo real para transações
     const unsubTx = onTransactionsChange(uid, (txs) =>
@@ -160,7 +163,7 @@ export const AppProvider = ({ children }) => {
             (t) =>
               t.type === 'expense' &&
               t.categoryId === newTx.categoryId &&
-              new Date(t.date) >= start,
+              new Date(t.date + 'T00:00:00') >= start,
           )
           .reduce((s, t) => s + t.amount, 0) + newTx.amount
       const pct = (spent / budget.amount) * 100
@@ -523,11 +526,7 @@ export const AppProvider = ({ children }) => {
   }, [getSummary])
 
   const getTotalBalance = useCallback(
-    () =>
-      stateRef.current.transactions.reduce(
-        (s, t) => (t.type === 'income' ? s + t.amount : s - t.amount),
-        0,
-      ),
+    () => calculateCurrentBalance(stateRef.current.transactions),
     [],
   )
 

@@ -32,6 +32,7 @@ import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
 import { formatCurrency, formatRelativeDate, getMonthlyData } from '../utils'
+import { getTransactionDateContext } from '../domain/transactionDates'
 import { format, subMonths, addMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -65,6 +66,7 @@ const ChartTooltip = ({ active, payload, label }) => {
 const TxItem = ({ tx, categories }) => {
   const cat = categories.find((c) => c.id === tx.categoryId)
   const isIncome = tx.type === 'income' && !tx.isSavings
+  const dateContext = getTransactionDateContext(tx)
   return (
     <div className="flex items-center gap-3 py-3 border-b border-[--border-subtle] last:border-0">
       <div
@@ -78,7 +80,10 @@ const TxItem = ({ tx, categories }) => {
           {tx.description || (tx.isSavings ? 'Poupança' : cat?.name) || 'Sem descrição'}
         </p>
         <p className="text-xs text-[--text-tertiary]">
-          {formatRelativeDate(tx.date)}
+          {formatRelativeDate(dateContext.activityDate)}
+          {dateContext.hasSeparateAccountingDate
+            ? ` · fatura ${dateContext.accountingLabel}`
+            : ''}
           {cat && !tx.isSavings ? ` · ${cat.name}` : ''}
         </p>
       </div>
@@ -230,7 +235,7 @@ export default function Dashboard() {
   const healthScore = useMemo(() => {
     const savingRate =
       currentSummary.income > 0
-        ? ((currentSummary.income - currentSummary.expenses) / currentSummary.income) * 100
+        ? (currentSummary.savings / currentSummary.income) * 100
         : 0
     return calcHealthScore({
       balance: currentSummary.balance,

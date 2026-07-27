@@ -146,7 +146,7 @@ function ReportsContent() {
       .reduce((total, transaction) => total + transaction.amount, 0)
     const balance = income - expenses
     const avg = expenses / (period || 1)
-    const savingRate = income > 0 ? ((income - expenses) / income) * 100 : 0
+    const savingRate = income > 0 ? (savings / income) * 100 : 0
 
     return { income, expenses, balance, avg, savingRate, savings }
   }, [reportTransactions, period, getSummary, referenceDate])

@@ -32,6 +32,10 @@ import {
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { defaultDateRangeEnd } from '../domain/finance'
+import {
+  getTransactionDateContext,
+  isProtectedTransactionGroup,
+} from '../domain/transactionDates'
 
 const DATE_PRESETS = [
   {
@@ -95,6 +99,8 @@ function groupByDate(txs) {
 function TxRow({ tx, cat, onEdit, onDelete }) {
   const isIncome = tx.type === 'income' && !tx.isSavings
   const isSavings = tx.isSavings
+  const dateContext = getTransactionDateContext(tx)
+  const protectedGroup = isProtectedTransactionGroup(tx)
   const createdAt = tx.createdAt?.toDate?.() || (tx.createdAt ? new Date(tx.createdAt) : null)
   const createdAtLabel =
     createdAt && !Number.isNaN(createdAt.getTime())
@@ -158,6 +164,19 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
               {getPaymentLabel(tx.paymentMethod)}
             </span>
           )}
+          {dateContext.hasSeparateAccountingDate && (
+            <span
+              className="text-[10px] font-medium text-[--brand-600]"
+              title="A lista é agrupada pela competência da fatura"
+            >
+              Compra: {dateContext.purchaseLabel} · fatura: {dateContext.accountingLabel}
+            </span>
+          )}
+          {protectedGroup && (
+            <span className="text-[10px] text-[--warning-text]">
+              Série protegida
+            </span>
+          )}
           {tx.notes && (
             <span
               className="text-[10px] text-[--text-tertiary] truncate max-w-[120px]"
@@ -200,7 +219,7 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
             <Edit2 size={13} />
           </button>
           <button
-            onClick={() => onDelete(tx.id)}
+            onClick={() => onDelete(tx)}
             className="w-11 h-11 inline-flex items-center justify-center rounded-xl hover:bg-[--danger-bg] text-[--text-tertiary] hover:text-[--danger-text] transition-colors"
             aria-label={`Excluir transação ${tx.description || cat?.name || ''}`.trim()}
           >
@@ -278,9 +297,30 @@ export default function TransactionList() {
   ].filter(Boolean).length
 
   const handleEdit = (tx) => {
+    if (isProtectedTransactionGroup(tx)) {
+      showNotification(
+        'Parcelamentos devem ser editados em grupo. A gestão completa será liberada na próxima etapa.',
+        'info',
+      )
+      return
+    }
+
     setEditingTx(tx)
     setModalOpen(true)
   }
+
+  const handleDeleteRequest = (tx) => {
+    if (isProtectedTransactionGroup(tx)) {
+      showNotification(
+        'Para preservar o valor total, uma parcela não pode ser excluída isoladamente.',
+        'warning',
+      )
+      return
+    }
+
+    setDeleteId(tx.id)
+  }
+
   const handleNew = () => {
     setEditingTx(null)
     setModalOpen(true)
@@ -711,7 +751,7 @@ export default function TransactionList() {
                         tx={tx}
                         cat={categories.find((c) => c.id === tx.categoryId)}
                         onEdit={handleEdit}
-                        onDelete={setDeleteId}
+                        onDelete={handleDeleteRequest}
                       />
                     ))}
                   </div>
