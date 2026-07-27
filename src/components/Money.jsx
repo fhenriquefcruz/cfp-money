@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Bot,
   Send,
@@ -197,6 +197,7 @@ function MoneyContent() {
   const [input, setInput] = useState('')
   const [isMutating, setIsMutating] = useState(false)
   const inputRef = useRef(null)
+  const messagesEndRef = useRef(null)
 
   const isLoading =
     loading.transactions ||
@@ -212,6 +213,12 @@ function MoneyContent() {
         : `${transactions.length} lançamento${transactions.length === 1 ? '' : 's'} disponível${transactions.length === 1 ? '' : 'is'} para consulta`,
     [isLoading, transactions.length],
   )
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      block: 'end',
+    })
+  }, [messages])
 
   const updateAssistantMessage = (messageId, response) => {
     setMessages((current) =>
@@ -391,8 +398,8 @@ function MoneyContent() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 pb-24 lg:pb-6">
-      <header className="overflow-hidden rounded-3xl border border-[--brand-200] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-5 text-white shadow-lg sm:p-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 pb-24 lg:pb-6">
+      <header className="overflow-hidden rounded-3xl border border-[--brand-200] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-4 text-white shadow-lg sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="flex min-w-0 items-start gap-3">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 shadow-inner backdrop-blur">
@@ -420,8 +427,8 @@ function MoneyContent() {
         </div>
       </header>
 
-      <div className="grid items-stretch gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="grid gap-4 lg:grid-rows-[auto_1fr]">
+      <div className="grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="order-2 grid gap-4 lg:order-1 lg:max-h-[620px] lg:overflow-y-auto lg:pr-1">
           <Card className="overflow-hidden shadow-sm" padding={false}>
             <div className="border-b border-[--border-subtle] bg-[--brand-50] p-4">
               <div className="flex items-center gap-2">
@@ -483,7 +490,7 @@ function MoneyContent() {
           </Card>
         </aside>
 
-        <Card className="flex min-h-[650px] flex-col overflow-hidden shadow-sm" padding={false}>
+        <Card className="order-1 flex h-[min(620px,calc(100dvh-190px))] min-h-[480px] flex-col overflow-hidden shadow-sm lg:order-2" padding={false}>
           <div className="border-b border-[--border-subtle] bg-gradient-to-r from-[--brand-50] to-[--bg-surface] px-4 py-3.5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -496,7 +503,7 @@ function MoneyContent() {
             </div>
           </div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 sm:p-5">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -551,11 +558,12 @@ function MoneyContent() {
                 )}
               </div>
             ))}
+            <div ref={messagesEndRef} aria-hidden="true" />
           </div>
 
           <form
             onSubmit={handleSubmit}
-            className="border-t border-[--border-subtle] bg-[--bg-surface] p-3 sm:p-4"
+            className="shrink-0 border-t border-[--border-subtle] bg-[--bg-surface] p-3 sm:p-4"
           >
             <div className="flex items-end gap-2">
               <label htmlFor="money-message" className="sr-only">

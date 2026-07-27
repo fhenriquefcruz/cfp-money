@@ -9,6 +9,9 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
+  linkWithCredential,
 } from 'firebase/auth'
 import {
   getFirestore,
@@ -41,8 +44,55 @@ const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 
+const googleProvider = new GoogleAuthProvider()
+googleProvider.setCustomParameters({ prompt: 'select_account' })
+
+let pendingGoogleCredential = null
+
+const ensureUserDocument = async (user) => {
+  const ref = doc(db, 'users', user.uid)
+  const snapshot = await getDoc(ref)
+
+  if (snapshot.exists()) return
+
+  await setDoc(ref, {
+    email: user.email || '',
+    displayName: user.displayName || '',
+    plan: 'trial',
+    trialStart: serverTimestamp(),
+    premiumUntil: null,
+    blocked: false,
+    createdAt: serverTimestamp(),
+  })
+}
+
 // ── AUTH ──
-export const signInEmail = (e, p) => signInWithEmailAndPassword(auth, e, p)
+export const signInEmail = async (email, password) => {
+  const result = await signInWithEmailAndPassword(auth, email, password)
+
+  if (pendingGoogleCredential) {
+    const credential = pendingGoogleCredential
+    pendingGoogleCredential = null
+    await linkWithCredential(result.user, credential)
+  }
+
+  return result
+}
+
+export const signInGoogle = async () => {
+  pendingGoogleCredential = null
+
+  try {
+    const result = await signInWithPopup(auth, googleProvider)
+    await ensureUserDocument(result.user)
+    return result
+  } catch (error) {
+    if (error.code === 'auth/account-exists-with-different-credential') {
+      pendingGoogleCredential = GoogleAuthProvider.credentialFromError(error)
+    }
+    throw error
+  }
+}
 
 export const registerEmail = async (email, password, displayName) => {
   const cred = await createUserWithEmailAndPassword(auth, email, password)

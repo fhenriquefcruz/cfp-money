@@ -1,4 +1,5 @@
 @import './styles/global.css';
+@import './styles/login-future.css';
 
 @tailwind base;
 @tailwind components;
