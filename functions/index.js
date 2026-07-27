@@ -286,3 +286,25 @@ exports.createIntegrationLinkCode = onCall(
     }
   },
 )
+
+const {
+  createTelegramFunctions,
+} = require('./telegram')
+
+const telegramFunctions = createTelegramFunctions({
+  db,
+  callableOptions,
+  integrationLinkSecret: INTEGRATION_LINK_SECRET,
+  calculateEntitlement,
+})
+
+exports.getTelegramIntegrationStatus =
+  telegramFunctions.getTelegramIntegrationStatus
+exports.updateTelegramPreferences =
+  telegramFunctions.updateTelegramPreferences
+exports.unlinkTelegramIntegration =
+  telegramFunctions.unlinkTelegramIntegration
+exports.telegramWebhook =
+  telegramFunctions.telegramWebhook
+exports.telegramDailyDigest =
+  telegramFunctions.telegramDailyDigest

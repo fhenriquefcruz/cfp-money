@@ -9,7 +9,8 @@
   "scripts": {
     "lint": "node --check index.js && node --check lib/access.js",
     "test": "node --test test/*.test.js",
-    "validate": "npm run lint && npm run test"
+    "validate": "npm run lint && npm run test",
+    "telegram:webhook": "node scripts/set-telegram-webhook.js"
   },
   "dependencies": {
     "firebase-admin": "^14.2.0",

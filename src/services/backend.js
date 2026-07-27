@@ -45,3 +45,29 @@ export async function createTelegramLinkCode() {
 
   return result.data
 }
+
+export async function getTelegramIntegrationStatus() {
+  const result = await callable(
+    'getTelegramIntegrationStatus',
+  )()
+
+  return result.data
+}
+
+export async function updateTelegramPreferences(
+  preferences,
+) {
+  const result = await callable(
+    'updateTelegramPreferences',
+  )(preferences)
+
+  return result.data
+}
+
+export async function unlinkTelegramIntegration() {
+  const result = await callable(
+    'unlinkTelegramIntegration',
+  )()
+
+  return result.data
+}

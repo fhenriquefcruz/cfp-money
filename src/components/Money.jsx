@@ -29,6 +29,7 @@ import {
 import { formatCurrency } from '../utils'
 import { Card, Button, Modal } from './ui'
 import MoneySettingsCard from './MoneySettingsCard'
+import TelegramIntegrationCard from './TelegramIntegrationCard'
 import PremiumGate from './PremiumGate'
 import MoneyTransactionAction from './MoneyTransactionAction'
 import MoneyCreditTransactionAction from './MoneyCreditTransactionAction'
@@ -624,7 +625,10 @@ function MoneyContent() {
         size="lg"
         closeOnBackdrop={false}
       >
-        <MoneySettingsCard />
+        <div className="space-y-4">
+          <MoneySettingsCard />
+          <TelegramIntegrationCard />
+        </div>
       </Modal>
     </div>
   )
