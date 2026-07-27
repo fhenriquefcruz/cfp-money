@@ -18,6 +18,7 @@ import {
   Shield,
   Bot,
   Crown,
+  CreditCard,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePlan } from '../contexts/PlanContext'
@@ -28,6 +29,7 @@ import { clsx } from 'clsx'
 const NAV_ITEMS = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/money', icon: Bot, label: 'Money', premium: true },
+  { to: '/cards', icon: CreditCard, label: 'Cartões', premium: true },
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transações' },
   { to: '/categories', icon: Tags, label: 'Categorias' },
   { to: '/goals', icon: Target, label: 'Metas' },
