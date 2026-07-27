@@ -160,9 +160,10 @@ export const AppProvider = ({ children }) => {
     async (data) => {
       if (!user?.uid) return
       try {
-        await addTransaction(user.uid, data)
+        const transactionId = await addTransaction(user.uid, data)
         showNotification('Transação adicionada!')
         checkBudgetAlert(data)
+        return transactionId
       } catch (e) {
         showNotification('Erro ao adicionar transação.', 'error')
         throw e

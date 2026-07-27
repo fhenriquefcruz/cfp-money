@@ -18,9 +18,11 @@ import { useApp } from '../contexts/AppContext'
 import { useMoney } from '../contexts/MoneyContext'
 import { analyzeMoney } from '../domain/money'
 import { buildMoneyAssistantResponse } from '../domain/moneyAssistant'
+import { buildMoneyTransactionDraft } from '../domain/moneyTransactionDraft'
 import { formatCurrency } from '../utils'
 import { Card, Button } from './ui'
 import PremiumGate from './PremiumGate'
+import MoneyTransactionAction from './MoneyTransactionAction'
 
 const INITIAL_MESSAGE = {
   id: 'welcome',
@@ -29,17 +31,22 @@ const INITIAL_MESSAGE = {
     type: 'help',
     title: 'Olá, eu sou o Money',
     text:
-      'Posso analisar seu período financeiro, consultar gastos por categoria e preparar relatórios mensais. Nesta fase, apenas leio seus dados: nenhum lançamento será alterado.',
+      'Posso consultar seus dados e também preparar receitas ou despesas simples. Todo lançamento é apresentado como rascunho editável e só é salvo após sua confirmação.',
     suggestions: [
+      'Paguei 180 no dentista por Pix ontem',
+      'Recebi 5000 de salário hoje',
       'Como estão minhas finanças?',
       'Quero o relatório do mês atual',
-      'Quero o relatório do mês passado',
-      'Quanto gastei com alimentação este mês?',
     ],
   },
 }
 
 const MONEY_CAPABILITIES = [
+  {
+    icon: ShieldCheck,
+    title: 'Registro com confirmação',
+    description: 'Prepara um rascunho editável e só salva depois da sua autorização.',
+  },
   {
     icon: BarChart3,
     title: 'Análise financeira',
@@ -54,11 +61,6 @@ const MONEY_CAPABILITIES = [
     icon: Tags,
     title: 'Consulta por categoria',
     description: 'Responde quanto foi gasto em alimentação, transporte e outras categorias.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Modo seguro',
-    description: 'Nesta fase, o Money apenas consulta. Nenhum registro é alterado.',
   },
 ]
 
@@ -75,7 +77,27 @@ function Metric({ metric }) {
   )
 }
 
-function AssistantResponse({ response, onSuggestion }) {
+function AssistantResponse({
+  response,
+  onSuggestion,
+  categories,
+  onConfirm,
+  onCancel,
+  onUndo,
+  busy,
+}) {
+  if (response.type?.startsWith('transaction_')) {
+    return (
+      <MoneyTransactionAction
+        response={response}
+        categories={categories}
+        onConfirm={onConfirm}
+        onCancel={onCancel}
+        onUndo={onUndo}
+        busy={busy}
+      />
+    )
+  }
   return (
     <div className="space-y-3">
       <div>
@@ -130,10 +152,11 @@ function AssistantResponse({ response, onSuggestion }) {
 }
 
 function MoneyContent() {
-  const { transactions, categories, loading } = useApp()
+  const { transactions, categories, loading, createTransaction, removeTransaction } = useApp()
   const { settings, isLoading: settingsLoading } = useMoney()
   const [messages, setMessages] = useState([INITIAL_MESSAGE])
   const [input, setInput] = useState('')
+  const [isMutating, setIsMutating] = useState(false)
   const inputRef = useRef(null)
 
   const isLoading = loading.transactions || loading.categories || settingsLoading
@@ -147,18 +170,72 @@ function MoneyContent() {
     [isLoading, transactions.length],
   )
 
+  const updateAssistantMessage = (messageId, response) => {
+    setMessages((current) =>
+      current.map((message) =>
+        message.id === messageId ? { ...message, response } : message,
+      ),
+    )
+  }
+
+  const confirmDraft = async (messageId, draft) => {
+    setIsMutating(true)
+    try {
+      const transactionId = await createTransaction(draft)
+      updateAssistantMessage(messageId, {
+        type: 'transaction_created',
+        transactionId,
+        transaction: draft,
+      })
+    } catch {
+      updateAssistantMessage(messageId, {
+        type: 'transaction_error',
+        title: 'Não foi possível salvar',
+        text:
+          'O lançamento não foi criado. Seus dados anteriores permanecem intactos; tente novamente.',
+        draft,
+      })
+    } finally {
+      setIsMutating(false)
+    }
+  }
+
+  const cancelDraft = (messageId) => {
+    updateAssistantMessage(messageId, { type: 'transaction_cancelled' })
+  }
+
+  const undoTransaction = async (messageId, transactionId) => {
+    if (!transactionId) return
+    setIsMutating(true)
+    try {
+      await removeTransaction(transactionId)
+      updateAssistantMessage(messageId, { type: 'transaction_undone' })
+    } finally {
+      setIsMutating(false)
+    }
+  }
+
   const sendMessage = (text) => {
     const normalized = text.trim()
-    if (!normalized || isLoading) return
+    if (!normalized || isLoading || isMutating) return
 
-    const response = buildMoneyAssistantResponse({
+    const transactionResponse = buildMoneyTransactionDraft({
       message: normalized,
       transactions,
       categories,
-      settings,
       now: new Date(),
-      analyze: analyzeMoney,
     })
+
+    const response =
+      transactionResponse ||
+      buildMoneyAssistantResponse({
+        message: normalized,
+        transactions,
+        categories,
+        settings,
+        now: new Date(),
+        analyze: analyzeMoney,
+      })
 
     const timestamp = Date.now()
     setMessages((current) => [
@@ -200,7 +277,7 @@ function MoneyContent() {
 
           <div className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-semibold text-white/90 backdrop-blur">
             <ShieldCheck size={14} />
-            Modo seguro: somente consulta
+            Modo seguro: confirmação antes de salvar
           </div>
         </div>
       </header>
@@ -218,16 +295,16 @@ function MoneyContent() {
             </div>
             <div className="space-y-3 p-4">
               <p className="text-xs leading-relaxed text-[--text-secondary]">
-                Escreva como falaria normalmente. O Money identifica o período e consulta os dados
-                já registrados no Meu Real.
+                Escreva como falaria normalmente. O Money pode consultar seus dados ou preparar
+                um lançamento simples. Antes de salvar, ele apresenta todos os campos para revisão.
               </p>
               <div className="rounded-2xl border border-[--brand-200] bg-[--brand-50] p-3">
                 <p className="text-[11px] font-bold text-[--brand-700]">
                   Seus dados permanecem intactos
                 </p>
                 <p className="mt-1 text-[10px] leading-relaxed text-[--brand-600]">
-                  Perguntas, comparações e relatórios não mudam valores, datas, categorias ou
-                  saldos.
+                  Consultas não alteram registros. Novas receitas e despesas só são gravadas após
+                  a confirmação; depois, ainda é possível desfazer o lançamento.
                 </p>
               </div>
               <Link
@@ -305,7 +382,17 @@ function MoneyContent() {
                   {message.role === 'user' ? (
                     <p className="text-sm leading-relaxed">{message.text}</p>
                   ) : (
-                    <AssistantResponse response={message.response} onSuggestion={sendMessage} />
+                    <AssistantResponse
+                      response={message.response}
+                      onSuggestion={sendMessage}
+                      categories={categories}
+                      busy={isMutating}
+                      onConfirm={(draft) => confirmDraft(message.id, draft)}
+                      onCancel={() => cancelDraft(message.id)}
+                      onUndo={(transactionId) =>
+                        undoTransaction(message.id, transactionId)
+                      }
+                    />
                   )}
                 </div>
 
@@ -331,7 +418,7 @@ function MoneyContent() {
                 id="money-message"
                 rows="1"
                 value={input}
-                disabled={isLoading}
+                disabled={isLoading || isMutating}
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.shiftKey) {
@@ -353,8 +440,8 @@ function MoneyContent() {
               </Button>
             </div>
             <p className="mt-2 text-[10px] leading-relaxed text-[--text-tertiary]">
-              Pressione Enter para enviar ou Shift + Enter para quebrar a linha. O Money consulta
-              apenas os dados já registrados.
+              Pressione Enter para enviar ou Shift + Enter para quebrar a linha. Lançamentos
+              simples passam por revisão e confirmação antes de serem salvos.
             </p>
           </form>
         </Card>
@@ -369,10 +456,10 @@ export default function Money() {
       feature="Money — seu assistente financeiro"
       description="Converse com seus dados financeiros, consulte relatórios e receba análises personalizadas sem sair do Meu Real."
       benefits={[
+        'Registro simples com confirmação',
         'Assistente financeiro conversacional',
         'Consultas por mês e categoria',
         'Comparações adaptadas ao ciclo',
-        'Relatórios abertos pelo comando',
       ]}
     >
       <MoneyContent />
