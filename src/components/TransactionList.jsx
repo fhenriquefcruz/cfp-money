@@ -21,6 +21,7 @@ import {
 import { useApp } from '../contexts/AppContext'
 import { Button, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
+import TransactionSeriesModal from './TransactionSeriesModal'
 import {
   formatCurrency,
   getPaymentLabel,
@@ -32,10 +33,8 @@ import {
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { defaultDateRangeEnd } from '../domain/finance'
-import {
-  getTransactionDateContext,
-  isProtectedTransactionGroup,
-} from '../domain/transactionDates'
+import { getTransactionDateContext } from '../domain/transactionDates'
+import { isTransactionSeries } from '../domain/transactionSeries'
 
 const DATE_PRESETS = [
   {
@@ -100,7 +99,7 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
   const isIncome = tx.type === 'income' && !tx.isSavings
   const isSavings = tx.isSavings
   const dateContext = getTransactionDateContext(tx)
-  const protectedGroup = isProtectedTransactionGroup(tx)
+  const protectedGroup = isTransactionSeries(tx)
   const createdAt = tx.createdAt?.toDate?.() || (tx.createdAt ? new Date(tx.createdAt) : null)
   const createdAtLabel =
     createdAt && !Number.isNaN(createdAt.getTime())
@@ -174,7 +173,7 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
           )}
           {protectedGroup && (
             <span className="text-[10px] text-[--warning-text]">
-              Série protegida
+              Série gerenciável
             </span>
           )}
           {tx.notes && (
@@ -232,8 +231,14 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
 }
 
 export default function TransactionList() {
-  const { transactions, categories, removeTransaction, createTransaction, showNotification } =
-    useApp()
+  const {
+    transactions,
+    categories,
+    removeTransaction,
+    createTransaction,
+    showNotification,
+    applyTransactionSeriesOperation,
+  } = useApp()
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
@@ -244,6 +249,7 @@ export default function TransactionList() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTx, setEditingTx] = useState(null)
   const [deleteId, setDeleteId] = useState(null)
+  const [seriesAction, setSeriesAction] = useState(null)
   const [importModal, setImportModal] = useState(false)
   const [importText, setImportText] = useState('')
   const [page, setPage] = useState(1)
@@ -297,11 +303,11 @@ export default function TransactionList() {
   ].filter(Boolean).length
 
   const handleEdit = (tx) => {
-    if (isProtectedTransactionGroup(tx)) {
-      showNotification(
-        'Parcelamentos devem ser editados em grupo. A gestão completa será liberada na próxima etapa.',
-        'info',
-      )
+    if (isTransactionSeries(tx)) {
+      setSeriesAction({
+        mode: 'edit',
+        transaction: tx,
+      })
       return
     }
 
@@ -310,11 +316,11 @@ export default function TransactionList() {
   }
 
   const handleDeleteRequest = (tx) => {
-    if (isProtectedTransactionGroup(tx)) {
-      showNotification(
-        'Para preservar o valor total, uma parcela não pode ser excluída isoladamente.',
-        'warning',
-      )
+    if (isTransactionSeries(tx)) {
+      setSeriesAction({
+        mode: 'delete',
+        transaction: tx,
+      })
       return
     }
 
@@ -786,6 +792,16 @@ export default function TransactionList() {
       </button>
 
       <TransactionForm isOpen={modalOpen} onClose={handleClose} transaction={editingTx} />
+
+      <TransactionSeriesModal
+        isOpen={Boolean(seriesAction)}
+        mode={seriesAction?.mode}
+        transaction={seriesAction?.transaction}
+        transactions={transactions}
+        categories={categories}
+        onApply={applyTransactionSeriesOperation}
+        onClose={() => setSeriesAction(null)}
+      />
 
       {/* Modal confirmar exclusão */}
       <Modal

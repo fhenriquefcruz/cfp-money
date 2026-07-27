@@ -62,6 +62,7 @@ export function getTransactionDateContext(transaction = {}) {
 
 export function isProtectedTransactionGroup(transaction = {}) {
   return Boolean(
-    transaction.isInstallment && transaction.installmentGroupId,
+    (transaction.isInstallment && transaction.installmentGroupId) ||
+      (transaction.isRecurring && transaction.recurringGroupId),
   )
 }

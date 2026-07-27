@@ -11,6 +11,7 @@ import {
   deleteTransaction,
   addTransactionBatch as fbAddBatch,
   deleteTransactionBatch as fbDeleteBatch,
+  commitTransactionSeriesOperation as fbCommitSeries,
   getCreditCards,
   addCreditCard,
   updateCreditCard,
@@ -265,6 +266,37 @@ export const AppProvider = ({ children }) => {
       } catch (e) {
         showNotification('Erro ao desfazer compra.', 'error')
         throw e
+      }
+    },
+    [user?.uid, showNotification],
+  )
+
+  const applyTransactionSeriesOperation = useCallback(
+    async (operation) => {
+      if (!user?.uid) {
+        throw new Error('Usuário não autenticado.')
+      }
+
+      try {
+        await fbCommitSeries(user.uid, operation)
+
+        const affected = operation?.summary?.affectedCount || 0
+        const message =
+          operation?.action === 'delete'
+            ? `${affected} registro${affected === 1 ? '' : 's'} removido${affected === 1 ? '' : 's'} da série.`
+            : `${affected} registro${affected === 1 ? '' : 's'} atualizado${affected === 1 ? '' : 's'} na série.`
+
+        showNotification(
+          message,
+          operation?.action === 'delete' ? 'info' : 'success',
+        )
+        return operation?.summary
+      } catch (error) {
+        showNotification(
+          'Não foi possível atualizar a série. Nenhum registro foi alterado parcialmente.',
+          'error',
+        )
+        throw error
       }
     },
     [user?.uid, showNotification],
@@ -553,6 +585,7 @@ export const AppProvider = ({ children }) => {
         removeTransaction,
         removeTransactionBatch,
         addTransactionBatch,
+        applyTransactionSeriesOperation,
         createCreditCard,
         editCreditCard,
         removeCreditCard,

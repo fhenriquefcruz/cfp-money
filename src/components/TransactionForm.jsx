@@ -301,6 +301,8 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           amount: baseAmount,
           date: format(addMonths(new Date(form.date + 'T00:00:00'), i), 'yyyy-MM-dd'),
           recurringGroupId: groupId,
+          recurringNum: i + 1,
+          recurringOf: months,
         }))
         await addTransactionBatch(items)
       } else {

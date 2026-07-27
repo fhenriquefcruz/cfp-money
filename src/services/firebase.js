@@ -205,6 +205,43 @@ export const deleteTransactionBatch = async (uid, ids) => {
   await batch.commit()
 }
 
+export const commitTransactionSeriesOperation = async (
+  uid,
+  { updates = [], deletes = [] } = {},
+) => {
+  const deleteIds = new Set(deletes.filter(Boolean))
+  const updateMap = new Map()
+
+  updates.forEach((item) => {
+    if (!item?.id || deleteIds.has(item.id)) return
+    updateMap.set(item.id, {
+      ...(updateMap.get(item.id) || {}),
+      ...(item.data || {}),
+    })
+  })
+
+  const writeCount = updateMap.size + deleteIds.size
+  if (!writeCount) return
+  if (writeCount > 450) {
+    throw new Error('A série excede o limite seguro de alterações.')
+  }
+
+  const batch = writeBatch(db)
+
+  updateMap.forEach((data, id) => {
+    batch.update(userDoc(uid, 'transactions', id), {
+      ...data,
+      updatedAt: serverTimestamp(),
+    })
+  })
+
+  deleteIds.forEach((id) => {
+    batch.delete(userDoc(uid, 'transactions', id))
+  })
+
+  await batch.commit()
+}
+
 // ── CATEGORIES ──
 export const getCategories = async (uid) => {
   const [defSnap, cusSnap] = await Promise.all([

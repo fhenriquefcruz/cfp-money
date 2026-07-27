@@ -8,6 +8,7 @@ export {
   deleteTransaction,
   addTransactionBatch,
   deleteTransactionBatch,
+  commitTransactionSeriesOperation,
   getCreditCards,
   addCreditCard,
   updateCreditCard,
