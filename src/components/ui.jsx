@@ -214,11 +214,12 @@ export const Modal = ({
   )
 }
 
-export const Card = ({ children, padding = true }) => (
+export const Card = ({ children, padding = true, className }) => (
   <div
     className={clsx(
       'bg-[--bg-surface] border border-[--border-default] rounded-2xl',
       padding && 'p-4',
+      className,
     )}
   >
     {children}
