@@ -102,3 +102,10 @@ export async function cancelAccountDeletion() {
   )()
   return result.data
 }
+
+export async function getCommercialMetrics() {
+  const result = await callable(
+    'getCommercialMetrics',
+  )()
+  return result.data
+}

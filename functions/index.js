@@ -330,3 +330,17 @@ exports.cancelAccountDeletion =
   privacyFunctions.cancelAccountDeletion
 exports.processAccountDeletions =
   privacyFunctions.processAccountDeletions
+
+const {
+  createCommercialFunctions,
+} = require('./commercial')
+
+const commercialFunctions = createCommercialFunctions({
+  db,
+  callableOptions,
+  appCheckEnforced: () =>
+    ENFORCE_APP_CHECK.value(),
+})
+
+exports.getCommercialMetrics =
+  commercialFunctions.getCommercialMetrics

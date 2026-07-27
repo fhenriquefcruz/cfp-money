@@ -1,7 +1,13 @@
-import React, { useEffect, useState } from 'react'
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 import {
+  AlertTriangle,
   FileCheck2,
   Loader2,
+  RefreshCw,
   ShieldCheck,
 } from 'lucide-react'
 import {
@@ -12,6 +18,9 @@ import { LEGAL_VERSIONS } from '../content/legal'
 import LegalDocument from './LegalDocument'
 import { Button, Modal } from './ui'
 
+const ENFORCE_LEGAL_GATE =
+  import.meta.env.VITE_ENFORCE_LEGAL_GATE === 'true'
+
 export default function LegalGate() {
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -20,27 +29,29 @@ export default function LegalGate() {
   const [tab, setTab] = useState('terms')
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    let active = true
+  const loadStatus = useCallback(async () => {
+    setLoading(true)
+    setError('')
 
-    getPrivacyStatus()
-      .then((result) => {
-        if (active) setStatus(result)
-      })
-      .catch((statusError) => {
-        console.error(
-          '[Meu Real] Consentimento jurídico:',
-          statusError,
-        )
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
-
-    return () => {
-      active = false
+    try {
+      setStatus(await getPrivacyStatus())
+    } catch (statusError) {
+      console.error(
+        '[Meu Real] Consentimento jurídico:',
+        statusError,
+      )
+      setError(
+        statusError?.message ||
+          'Não foi possível validar os documentos jurídicos.',
+      )
+    } finally {
+      setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    loadStatus()
+  }, [loadStatus])
 
   const confirm = async () => {
     setSaving(true)
@@ -74,6 +85,47 @@ export default function LegalGate() {
           className="animate-spin text-[--brand-600]"
         />
       </div>
+    )
+  }
+
+  if (error && ENFORCE_LEGAL_GATE) {
+    return (
+      <Modal
+        isOpen
+        onClose={() => {}}
+        closeOnBackdrop={false}
+        closeOnEscape={false}
+        size="md"
+        footer={
+          <Button
+            variant="primary"
+            fullWidth
+            icon={<RefreshCw size={15} />}
+            onClick={loadStatus}
+          >
+            Tentar novamente
+          </Button>
+        }
+      >
+        <div className="space-y-4 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[--warning-bg] text-[--warning-text]">
+            <AlertTriangle size={21} />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-[--text-primary]">
+              Verificação indisponível
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-[--text-secondary]">
+              Não foi possível confirmar a versão dos Termos e
+              da Política de Privacidade. O acesso permanece
+              protegido até a conexão ser restabelecida.
+            </p>
+          </div>
+          <p className="rounded-xl border border-[--border-default] bg-[--bg-subtle] p-3 text-xs text-[--text-tertiary]">
+            {error}
+          </p>
+        </div>
+      </Modal>
     )
   }
 

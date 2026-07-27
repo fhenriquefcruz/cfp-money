@@ -51,5 +51,8 @@ jobs:
       - name: Backend validation
         run: npm run functions:validate
 
+      - name: Firestore indexes
+        run: npm run validate:indexes
+
       - name: Production build
         run: npm run build

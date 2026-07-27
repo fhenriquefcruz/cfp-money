@@ -19,6 +19,7 @@ import { Card } from './ui'
 import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
 import { onAllUsersChange } from '../services/firebase'
 import { adminSetUserAccess } from '../services/backend'
+import CommercialOverviewCard from './CommercialOverviewCard'
 
 // Badges coloridos por status
 const STATUS_STYLES = {
@@ -350,6 +351,8 @@ export default function Admin() {
           </Card>
         ))}
       </div>
+
+      <CommercialOverviewCard />
 
       {/* Instrução Pix */}
       <Card>
