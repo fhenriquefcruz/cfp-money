@@ -28,6 +28,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { usePlan } from '../contexts/PlanContext'
 import { Card, Button, Input, Modal, Badge } from './ui'
 import { auth } from '../services/firebase'
+import MoneySettingsCard from './MoneySettingsCard'
 
 const PIX_KEY = 'fhenriquefcruz@gmail.com' // sua chave Pix
 const PIX_AMOUNT = 'R$ 19,90'
@@ -301,6 +302,8 @@ export default function Profile() {
           </div>
         )}
       </Card>
+
+      <MoneySettingsCard />
 
       {/* ── Informações pessoais ── */}
       <Card>

@@ -30,6 +30,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useApp } from '../contexts/AppContext'
 import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
+import MoneyInsightCard from './MoneyInsightCard'
 import { formatCurrency, formatRelativeDate, getMonthlyData } from '../utils'
 import { format, subMonths, addMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -375,6 +376,10 @@ export default function Dashboard() {
           </div>
           <HealthScore score={healthScore} />
         </div>
+      </motion.div>
+
+      <motion.div {...fade} transition={{ delay: 0.12 }}>
+        <MoneyInsightCard referenceDate={viewDate} />
       </motion.div>
 
       {/* Gráficos — altura maior */}

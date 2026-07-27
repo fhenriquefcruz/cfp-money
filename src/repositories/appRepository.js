@@ -15,4 +15,7 @@ export {
   deleteGoal,
   setBudget,
   deleteBudget,
+  getMoneySettings,
+  onMoneySettingsChange,
+  updateMoneySettings,
 } from '../services/firebase'

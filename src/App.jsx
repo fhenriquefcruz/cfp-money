@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { AppProvider } from './contexts/AppContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { PlanProvider } from './contexts/PlanContext'
+import { MoneyProvider } from './contexts/MoneyContext'
 import Sidebar from './components/Sidebar'
 import Login from './components/Login'
 import PlanAlert from './components/PlanAlert'
@@ -73,7 +74,9 @@ export default function App() {
           <AuthProvider>
             <AppProvider>
               <PlanProvider>
-                <AppRoutes />
+                <MoneyProvider>
+                  <AppRoutes />
+                </MoneyProvider>
               </PlanProvider>
             </AppProvider>
           </AuthProvider>

@@ -18,6 +18,7 @@ import {
   updateDoc,
   deleteDoc,
   getDocs,
+  getDoc,
   setDoc,
   query,
   where,
@@ -64,6 +65,25 @@ export const registerEmail = async (email, password, displayName) => {
 export const resetPassword = (e) => sendPasswordResetEmail(auth, e)
 export const logOut = () => signOut(auth)
 export const onAuthChange = (cb) => onAuthStateChanged(auth, cb)
+
+export const getMoneySettings = async (uid) => {
+  const snapshot = await getDoc(doc(db, 'users', uid))
+  return snapshot.exists() ? snapshot.data().moneySettings || {} : {}
+}
+
+export const onMoneySettingsChange = (uid, callback, onError) =>
+  onSnapshot(
+    doc(db, 'users', uid),
+    (snapshot) => callback(snapshot.exists() ? snapshot.data().moneySettings || {} : {}),
+    onError,
+  )
+
+export const updateMoneySettings = async (uid, settings) =>
+  setDoc(
+    doc(db, 'users', uid),
+    { moneySettings: settings, moneySettingsUpdatedAt: serverTimestamp() },
+    { merge: true },
+  )
 
 // ══════════════════════════════════════════════════════════════
 // HELPERS
