@@ -9,6 +9,8 @@ import {
   addTransaction,
   updateTransaction,
   deleteTransaction,
+  onInvoiceEventsChange,
+  addInvoiceEvent,
   addTransactionBatch as fbAddBatch,
   deleteTransactionBatch as fbDeleteBatch,
   commitTransactionSeriesOperation as fbCommitSeries,
@@ -40,12 +42,14 @@ const initialState = {
   goals: [],
   budgets: [],
   creditCards: [],
+  invoiceEvents: [],
   loading: {
     transactions: true,
     categories: true,
     goals: true,
     budgets: true,
     creditCards: true,
+    invoiceEvents: true,
   },
   notifications: [],
 }
@@ -73,6 +77,12 @@ function reducer(state, action) {
         ...state,
         creditCards: action.payload,
         loading: { ...state.loading, creditCards: false },
+      }
+    case 'SET_INVOICE_EVENTS':
+      return {
+        ...state,
+        invoiceEvents: action.payload,
+        loading: { ...state.loading, invoiceEvents: false },
       }
     case 'ADD_NOTIFICATION':
       return { ...state, notifications: [...state.notifications, action.payload] }
@@ -116,6 +126,14 @@ export const AppProvider = ({ children }) => {
     const unsubTx = onTransactionsChange(uid, (txs) =>
       dispatch({ type: 'SET_TRANSACTIONS', payload: txs }),
     )
+    const unsubInvoiceEvents = onInvoiceEventsChange(
+      uid,
+      (events) =>
+        dispatch({
+          type: 'SET_INVOICE_EVENTS',
+          payload: events,
+        }),
+    )
 
     // Carrega o resto em paralelo
     const load = async () => {
@@ -138,6 +156,9 @@ export const AppProvider = ({ children }) => {
     load()
     return () => {
       if (typeof unsubTx === 'function') unsubTx()
+      if (typeof unsubInvoiceEvents === 'function') {
+        unsubInvoiceEvents()
+      }
     }
   }, [user?.uid])
 
@@ -266,6 +287,35 @@ export const AppProvider = ({ children }) => {
       } catch (e) {
         showNotification('Erro ao desfazer compra.', 'error')
         throw e
+      }
+    },
+    [user?.uid, showNotification],
+  )
+
+  const createInvoiceEvent = useCallback(
+    async (data) => {
+      if (!user?.uid) {
+        throw new Error('Usuário não autenticado.')
+      }
+
+      try {
+        const id = await addInvoiceEvent(user.uid, data)
+        showNotification(
+          data.type === 'payment'
+            ? 'Pagamento registrado na fatura.'
+            : data.type === 'reversal'
+              ? 'Estorno registrado na fatura.'
+              : data.type === 'adjustment'
+                ? 'Ajuste registrado na fatura.'
+                : 'Fatura marcada como fechada.',
+        )
+        return id
+      } catch (error) {
+        showNotification(
+          'Não foi possível registrar o evento da fatura.',
+          'error',
+        )
+        throw error
       }
     },
     [user?.uid, showNotification],
@@ -585,6 +635,7 @@ export const AppProvider = ({ children }) => {
         removeTransaction,
         removeTransactionBatch,
         addTransactionBatch,
+        createInvoiceEvent,
         applyTransactionSeriesOperation,
         createCreditCard,
         editCreditCard,

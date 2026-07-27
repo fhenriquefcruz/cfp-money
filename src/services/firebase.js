@@ -156,6 +156,32 @@ export const updateTransaction = async (uid, id, data) =>
 
 export const deleteTransaction = async (uid, id) => deleteDoc(userDoc(uid, 'transactions', id))
 
+// ── INVOICE EVENTS ──
+export const onInvoiceEventsChange = (uid, callback) => {
+  const q = query(
+    userCol(uid, 'invoiceEvents'),
+    orderBy('eventDate', 'desc'),
+  )
+
+  return onSnapshot(q, (snapshot) =>
+    callback(
+      snapshot.docs.map((item) => ({
+        id: item.id,
+        ...item.data(),
+      })),
+    ),
+  )
+}
+
+export const addInvoiceEvent = async (uid, data) => {
+  const ref = await addDoc(userCol(uid, 'invoiceEvents'), {
+    ...data,
+    createdAt: serverTimestamp(),
+  })
+
+  return ref.id
+}
+
 // ── CREDIT CARDS ──
 export const getCreditCards = async (uid) => {
   const snap = await getDocs(userCol(uid, 'creditCards'))

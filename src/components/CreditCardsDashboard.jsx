@@ -22,12 +22,18 @@ import {
 } from '../domain/creditCardCenter'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
+import InvoiceLifecycleModal from './InvoiceLifecycleModal'
 import PremiumGate from './PremiumGate'
 
 const STATUS = {
   forming: ['Em formação', 'bg-[--brand-100] text-[--brand-700]'],
   closed: ['Fechada', 'bg-[--warning-bg] text-[--warning-text]'],
   due_today: ['Vence hoje', 'bg-[--danger-bg] text-[--danger-text]'],
+  partially_paid: ['Parcial', 'bg-[--brand-100] text-[--brand-700]'],
+  paid: ['Paga', 'bg-[--success-bg] text-[--success-text]'],
+  overdue: ['Vencida', 'bg-[--danger-bg] text-[--danger-text]'],
+  overdue_partial: ['Vencida parcial', 'bg-[--danger-bg] text-[--danger-text]'],
+  overpaid: ['Crédito', 'bg-[--success-bg] text-[--success-text]'],
   past_due: ['Vencimento passado', 'bg-[--bg-hover] text-[--text-secondary]'],
   future: ['Futura', 'bg-[--bg-hover] text-[--text-tertiary]'],
   empty: ['Sem lançamentos', 'bg-[--bg-hover] text-[--text-tertiary]'],
@@ -58,7 +64,7 @@ function SummaryCard({ icon: Icon, label, value, helper }) {
 
 function InvoiceCard({ invoice, selected, onSelect }) {
   const [statusLabel, statusClass] = STATUS[invoice.status] || STATUS.empty
-  const { card, dates } = invoice
+  const { card, dates, lifecycle } = invoice
 
   return (
     <button
@@ -94,20 +100,28 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             {formatDate(dates.dueDate)}
           </p>
 
-          <div className="mt-3 flex items-end justify-between gap-3">
+          <div className="mt-3 grid grid-cols-2 gap-2">
             <div>
               <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-                Total da fatura
+                Total
               </p>
               <p className="mt-0.5 text-lg font-black text-[--text-primary]">
                 {formatCurrency(invoice.total)}
               </p>
             </div>
-            <p className="text-[10px] text-[--text-tertiary]">
-              {invoice.itemCount} lançamento
-              {invoice.itemCount === 1 ? '' : 's'}
-            </p>
+            <div className="text-right">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                Pendente
+              </p>
+              <p className="mt-0.5 text-sm font-black text-[--text-primary]">
+                {formatCurrency(lifecycle.remainingAmount)}
+              </p>
+            </div>
           </div>
+          <p className="mt-2 text-[10px] text-[--text-tertiary]">
+            Pago: {formatCurrency(lifecycle.paidAmount)} · {invoice.itemCount} lançamento
+            {invoice.itemCount === 1 ? '' : 's'}
+          </p>
 
           {card.historicalOnly && (
             <p className="mt-2 text-[9px] leading-relaxed text-[--warning-text]">
@@ -157,19 +171,27 @@ function TransactionRow({ transaction }) {
 }
 
 function CreditCardsCenterContent() {
-  const { transactions, creditCards, loading } = useApp()
+  const {
+    transactions,
+    creditCards,
+    invoiceEvents,
+    loading,
+    createInvoiceEvent,
+  } = useApp()
   const [selectedMonth, setSelectedMonth] = useState(monthKeyFromDate())
   const [selectedCardId, setSelectedCardId] = useState('all')
+  const [managingCardId, setManagingCardId] = useState(null)
 
   const center = useMemo(
     () =>
       buildCreditCardCenter({
         transactions,
         creditCards,
+        invoiceEvents,
         selectedMonth,
         now: new Date(),
       }),
-    [transactions, creditCards, selectedMonth],
+    [transactions, creditCards, invoiceEvents, selectedMonth],
   )
 
   const visibleInvoices =
@@ -186,7 +208,20 @@ function CreditCardsCenterContent() {
           (transaction) => transaction.cardId === selectedCardId,
         )
 
-  const loadingData = loading.transactions || loading.creditCards
+  const selectedInvoice =
+    selectedCardId === 'all'
+      ? null
+      : center.invoices.find(
+          (invoice) => invoice.card.id === selectedCardId,
+        )
+  const managedInvoice = center.invoices.find(
+    (invoice) => invoice.card.id === managingCardId,
+  )
+
+  const loadingData =
+    loading.transactions ||
+    loading.creditCards ||
+    loading.invoiceEvents
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-5 pb-24 lg:pb-6">
@@ -318,11 +353,15 @@ function CreditCardsCenterContent() {
             />
             <SummaryCard
               icon={CreditCard}
-              label="Cartões utilizados"
-              value={`${center.cardsWithTransactions}`}
-              helper={`${center.cards.length} cartão${
-                center.cards.length === 1 ? '' : 'ões'
-              } no histórico`}
+              label="Total pago"
+              value={formatCurrency(center.selectedPaidTotal)}
+              helper="Pagamentos líquidos, já descontados os estornos"
+            />
+            <SummaryCard
+              icon={ReceiptText}
+              label="Saldo pendente"
+              value={formatCurrency(center.selectedRemainingTotal)}
+              helper="Valor ainda necessário para liquidar as faturas"
             />
             <SummaryCard
               icon={Layers3}
@@ -331,14 +370,6 @@ function CreditCardsCenterContent() {
               helper={`${center.futureInstallmentCount} parcela${
                 center.futureInstallmentCount === 1 ? '' : 's'
               } após este mês`}
-            />
-            <SummaryCard
-              icon={ReceiptText}
-              label="Compras antigas"
-              value={formatCurrency(center.legacyTotal)}
-              helper={`${center.legacyCount} registro${
-                center.legacyCount === 1 ? '' : 's'
-              } sem cartão estruturado`}
             />
           </div>
 
@@ -465,14 +496,25 @@ function CreditCardsCenterContent() {
                     </p>
                   </div>
 
-                  {selectedCardId !== 'all' && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCardId('all')}
-                      className="min-h-10 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-[10px] font-bold text-[--text-secondary]"
-                    >
-                      Mostrar todos
-                    </button>
+                  {selectedInvoice && (
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setManagingCardId(selectedInvoice.card.id)
+                        }
+                        className="min-h-10 rounded-xl bg-[--brand-600] px-3 text-[10px] font-black text-white"
+                      >
+                        Gerenciar fatura
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCardId('all')}
+                        className="min-h-10 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-[10px] font-bold text-[--text-secondary]"
+                      >
+                        Mostrar todos
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -508,6 +550,14 @@ function CreditCardsCenterContent() {
           </div>
         </>
       )}
+
+      <InvoiceLifecycleModal
+        isOpen={Boolean(managingCardId)}
+        invoice={managedInvoice}
+        invoiceMonth={selectedMonth}
+        onCreateEvent={createInvoiceEvent}
+        onClose={() => setManagingCardId(null)}
+      />
     </div>
   )
 }

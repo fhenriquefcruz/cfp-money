@@ -6,6 +6,8 @@ export {
   addTransaction,
   updateTransaction,
   deleteTransaction,
+  onInvoiceEventsChange,
+  addInvoiceEvent,
   addTransactionBatch,
   deleteTransactionBatch,
   commitTransactionSeriesOperation,

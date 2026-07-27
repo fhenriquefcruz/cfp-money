@@ -1,3 +1,8 @@
+import {
+  buildInvoiceLifecycle,
+  getInvoiceEvents,
+} from './invoiceLifecycle'
+
 function pad(value) {
   return String(value).padStart(2, '0')
 }
@@ -30,7 +35,9 @@ export function monthKeyFromDate(value = new Date()) {
 
 export function shiftMonthKey(monthKey, amount) {
   const [year, month] = monthKey.split('-').map(Number)
-  return monthKeyFromDate(new Date(year, month - 1 + amount, 1))
+  return monthKeyFromDate(
+    new Date(year, month - 1 + amount, 1),
+  )
 }
 
 export function labelForMonth(monthKey) {
@@ -49,7 +56,11 @@ export function invoiceDatesForMonth(monthKey, rawCard = {}) {
   const dueDay = Number(rawCard.dueDay) || 1
   const closingDay = Number(rawCard.closingDay) || 1
   const closingMonthOffset = dueDay > closingDay ? 0 : -1
-  const closingReference = new Date(year, dueMonthIndex + closingMonthOffset, 1)
+  const closingReference = new Date(
+    year,
+    dueMonthIndex + closingMonthOffset,
+    1,
+  )
 
   return {
     closingDate: isoDate(
@@ -77,7 +88,9 @@ export function invoiceStatus(monthKey, card, now = new Date()) {
   return 'forming'
 }
 
-export function isStructuredCreditTransaction(transaction = {}) {
+export function isStructuredCreditTransaction(
+  transaction = {},
+) {
   return Boolean(
     transaction.type === 'expense' &&
       transaction.paymentMethod === 'credit_card' &&
@@ -107,18 +120,27 @@ function cardSnapshotFromTransaction(transaction) {
   }
 }
 
-function sum(items) {
-  return items.reduce((total, item) => total + Number(item.amount || 0), 0)
+function sum(items, selector = (item) => item.amount) {
+  const cents = items.reduce(
+    (total, item) =>
+      total + Math.round(Number(selector(item) || 0) * 100),
+    0,
+  )
+
+  return cents / 100
 }
 
 export function buildCreditCardCenter({
   transactions = [],
   creditCards = [],
+  invoiceEvents = [],
   selectedMonth = monthKeyFromDate(),
   now = new Date(),
   forecastMonths = 6,
 }) {
-  const structured = transactions.filter(isStructuredCreditTransaction)
+  const structured = transactions.filter(
+    isStructuredCreditTransaction,
+  )
   const legacy = transactions.filter(
     (transaction) =>
       transaction.type === 'expense' &&
@@ -129,20 +151,48 @@ export function buildCreditCardCenter({
   const cardMap = new Map(
     creditCards.map((card) => [
       card.id,
-      { ...card, historicalOnly: false },
+      {
+        ...card,
+        historicalOnly: false,
+      },
     ]),
   )
 
   structured.forEach((transaction) => {
     if (!cardMap.has(transaction.cardId)) {
-      cardMap.set(transaction.cardId, cardSnapshotFromTransaction(transaction))
+      cardMap.set(
+        transaction.cardId,
+        cardSnapshotFromTransaction(transaction),
+      )
     }
   })
 
-  const cards = [...cardMap.values()].sort((a, b) => {
-    if (a.active !== false && b.active === false) return -1
-    if (a.active === false && b.active !== false) return 1
-    return String(a.name).localeCompare(String(b.name), 'pt-BR')
+  invoiceEvents.forEach((event) => {
+    if (!event.cardId || cardMap.has(event.cardId)) return
+
+    cardMap.set(event.cardId, {
+      id: event.cardId,
+      name: event.cardName || 'Cartão removido',
+      last4: event.cardLast4 || '',
+      closingDay: 1,
+      dueDay: 1,
+      active: false,
+      historicalOnly: true,
+    })
+  })
+
+  const cards = [...cardMap.values()].sort((first, second) => {
+    if (first.active !== false && second.active === false) {
+      return -1
+    }
+    if (first.active === false && second.active !== false) {
+      return 1
+    }
+
+    return String(first.name).localeCompare(
+      String(second.name),
+      'pt-BR',
+    )
   })
 
   const selectedTransactions = structured
@@ -150,10 +200,19 @@ export function buildCreditCardCenter({
       (transaction) =>
         transactionInvoiceMonth(transaction) === selectedMonth,
     )
-    .sort((a, b) => {
-      const firstDate = a.purchaseDate || a.originalPurchaseDate || a.date
-      const secondDate = b.purchaseDate || b.originalPurchaseDate || b.date
-      return String(secondDate).localeCompare(String(firstDate))
+    .sort((first, second) => {
+      const firstDate =
+        first.purchaseDate ||
+        first.originalPurchaseDate ||
+        first.date
+      const secondDate =
+        second.purchaseDate ||
+        second.originalPurchaseDate ||
+        second.date
+
+      return String(secondDate).localeCompare(
+        String(firstDate),
+      )
     })
 
   const invoices = cards.map((card) => {
@@ -161,22 +220,44 @@ export function buildCreditCardCenter({
       (transaction) => transaction.cardId === card.id,
     )
     const dates = invoiceDatesForMonth(selectedMonth, card)
+    const events = getInvoiceEvents(
+      invoiceEvents,
+      card.id,
+      selectedMonth,
+    )
+    const purchaseTotal = sum(items)
+    const temporalStatus = items.length
+      ? invoiceStatus(selectedMonth, card, now)
+      : 'empty'
+    const lifecycle = buildInvoiceLifecycle({
+      purchaseTotal,
+      events,
+      closingDate: dates.closingDate,
+      dueDate: dates.dueDate,
+      temporalStatus,
+      now,
+    })
 
     return {
       card,
       items,
-      total: sum(items),
+      total: lifecycle.invoiceTotal,
+      purchaseTotal,
       itemCount: items.length,
-      installmentCount: items.filter((item) => item.isInstallment).length,
+      installmentCount: items.filter(
+        (item) => item.isInstallment,
+      ).length,
       dates,
-      status: items.length
-        ? invoiceStatus(selectedMonth, card, now)
-        : 'empty',
+      events,
+      lifecycle,
+      status: lifecycle.status,
     }
   })
 
   const forecast = Array.from(
-    { length: Math.max(1, forecastMonths) },
+    {
+      length: Math.max(1, forecastMonths),
+    },
     (_, index) => {
       const month = shiftMonthKey(selectedMonth, index)
       const items = structured.filter(
@@ -200,7 +281,8 @@ export function buildCreditCardCenter({
   )
 
   const selectedLegacy = legacy.filter(
-    (transaction) => transaction.date?.slice(0, 7) === selectedMonth,
+    (transaction) =>
+      transaction.date?.slice(0, 7) === selectedMonth,
   )
 
   return {
@@ -209,15 +291,37 @@ export function buildCreditCardCenter({
     cards,
     invoices,
     selectedTransactions,
-    selectedTotal: sum(selectedTransactions),
+    selectedTotal: sum(
+      invoices,
+      (invoice) => invoice.lifecycle.invoiceTotal,
+    ),
+    selectedPurchaseTotal: sum(selectedTransactions),
+    selectedPaidTotal: sum(
+      invoices,
+      (invoice) => invoice.lifecycle.paidAmount,
+    ),
+    selectedRemainingTotal: sum(
+      invoices,
+      (invoice) => invoice.lifecycle.remainingAmount,
+    ),
+    selectedCreditTotal: sum(
+      invoices,
+      (invoice) => invoice.lifecycle.creditAmount,
+    ),
     selectedItemCount: selectedTransactions.length,
-    cardsWithTransactions: invoices.filter((invoice) => invoice.itemCount > 0)
-      .length,
+    cardsWithTransactions: invoices.filter(
+      (invoice) =>
+        invoice.itemCount > 0 ||
+        invoice.events.length > 0,
+    ).length,
     futureInstallmentCount: futureInstallments.length,
     futureInstallmentTotal: sum(futureInstallments),
     legacyCount: selectedLegacy.length,
     legacyTotal: sum(selectedLegacy),
     forecast,
-    forecastMax: Math.max(1, ...forecast.map((item) => item.total)),
+    forecastMax: Math.max(
+      1,
+      ...forecast.map((item) => item.total),
+    ),
   }
 }
