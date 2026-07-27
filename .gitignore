@@ -23,3 +23,7 @@ yarn-error.log*
 pnpm-debug.log*
 worker/**/.dev.vars
 worker/**/.env
+
+# Credenciais de contas de serviço
+serviceAccountKey.json
+cfp-money-????????????.json
