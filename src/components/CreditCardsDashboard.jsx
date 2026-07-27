@@ -23,6 +23,7 @@ import {
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
+import CreditCardsSettingsCard from './CreditCardsSettingsCard'
 import PremiumGate from './PremiumGate'
 
 const STATUS = {
@@ -181,6 +182,7 @@ function CreditCardsCenterContent() {
   const [selectedMonth, setSelectedMonth] = useState(monthKeyFromDate())
   const [selectedCardId, setSelectedCardId] = useState('all')
   const [managingCardId, setManagingCardId] = useState(null)
+  const [cardSettingsOpen, setCardSettingsOpen] = useState(false)
 
   const center = useMemo(
     () =>
@@ -255,16 +257,26 @@ function CreditCardsCenterContent() {
               <Plus size={14} />
               Nova compra
             </Link>
-            <Link
-              to="/profile"
+            <button
+              type="button"
+              onClick={() =>
+                setCardSettingsOpen((current) => !current)
+              }
               className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-bold text-white backdrop-blur hover:bg-white/15"
+              aria-expanded={cardSettingsOpen}
             >
               <Settings2 size={14} />
-              Gerenciar cartões
-            </Link>
+              {cardSettingsOpen ? 'Fechar cartões' : 'Meus cartões'}
+            </button>
           </div>
         </div>
       </header>
+
+      {cardSettingsOpen && (
+        <section aria-label="Gerenciamento de cartões">
+          <CreditCardsSettingsCard />
+        </section>
+      )}
 
       <Card className="shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">

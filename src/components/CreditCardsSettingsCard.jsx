@@ -203,7 +203,7 @@ function CreditCardsContent() {
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider text-[--brand-600]">
-                  Money Premium
+                  Cartões Premium
                 </p>
                 <h2 className="mt-0.5 text-sm font-black text-[--text-primary]">
                   Cartões e calendário de faturas

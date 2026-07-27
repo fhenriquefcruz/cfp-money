@@ -25,9 +25,6 @@ import { useAuth } from '../contexts/AuthContext'
 import { usePlan } from '../contexts/PlanContext'
 import { Card, Button, Input, Modal, Badge } from './ui'
 import { auth } from '../services/firebase'
-import MoneySettingsCard from './MoneySettingsCard'
-import CreditCardsSettingsCard from './CreditCardsSettingsCard'
-import ThemeToggle from './ThemeToggle'
 
 const PIX_KEY = 'fhenriquefcruz@gmail.com' // sua chave Pix
 const PIX_AMOUNT = 'R$ 19,90'
@@ -301,10 +298,6 @@ export default function Profile() {
         )}
       </Card>
 
-      <MoneySettingsCard />
-
-      <CreditCardsSettingsCard />
-
       {/* ── Informações pessoais ── */}
       <Card>
         <h2 className="text-sm font-bold text-[--text-primary] mb-5">Informações pessoais</h2>
@@ -384,10 +377,6 @@ export default function Profile() {
           >
             Alterar senha
           </Button>
-
-          <div className="border-t border-[--border-subtle] pt-3">
-            <ThemeToggle fullWidth />
-          </div>
 
           <Button variant="danger" fullWidth onClick={logout} icon={<LogOut size={15} />}>
             Sair da conta

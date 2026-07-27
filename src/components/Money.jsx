@@ -13,6 +13,7 @@ import {
   BarChart3,
   Crown,
   CreditCard,
+  Settings2,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
@@ -26,7 +27,8 @@ import {
   buildInstallmentTransactions,
 } from '../domain/creditCards'
 import { formatCurrency } from '../utils'
-import { Card, Button } from './ui'
+import { Card, Button, Modal } from './ui'
+import MoneySettingsCard from './MoneySettingsCard'
 import PremiumGate from './PremiumGate'
 import MoneyTransactionAction from './MoneyTransactionAction'
 import MoneyCreditTransactionAction from './MoneyCreditTransactionAction'
@@ -196,6 +198,7 @@ function MoneyContent() {
   const [messages, setMessages] = useState([INITIAL_MESSAGE])
   const [input, setInput] = useState('')
   const [isMutating, setIsMutating] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const inputRef = useRef(null)
   const messagesEndRef = useRef(null)
 
@@ -420,9 +423,19 @@ function MoneyContent() {
             </div>
           </div>
 
-          <div className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-semibold text-white/90 backdrop-blur">
-            <ShieldCheck size={14} />
-            Modo seguro: confirmação antes de salvar
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-xs font-black text-[--brand-700] shadow-sm transition-transform hover:-translate-y-0.5"
+            >
+              <Settings2 size={14} />
+              Preferências do Money
+            </button>
+            <div className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-semibold text-white/90 backdrop-blur">
+              <ShieldCheck size={14} />
+              Modo seguro
+            </div>
           </div>
         </div>
       </header>
@@ -452,13 +465,14 @@ function MoneyContent() {
                   a confirmação; depois, ainda é possível desfazer o lançamento.
                 </p>
               </div>
-              <Link
-                to="/profile"
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(true)}
                 className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-xs font-semibold text-[--text-primary] transition-colors hover:bg-[--bg-hover]"
               >
                 <CalendarRange size={14} />
                 Configurar ciclo financeiro
-              </Link>
+              </button>
             </div>
           </Card>
 
@@ -602,6 +616,16 @@ function MoneyContent() {
           </form>
         </Card>
       </div>
+
+      <Modal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        title="Preferências do Money"
+        size="lg"
+        closeOnBackdrop={false}
+      >
+        <MoneySettingsCard />
+      </Modal>
     </div>
   )
 }
