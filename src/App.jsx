@@ -17,6 +17,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import NotFound from './components/NotFound'
 
 const Dashboard = lazy(() => import('./components/Dashboard'))
+const Money = lazy(() => import('./components/Money'))
 const TransactionList = lazy(() => import('./components/TransactionList'))
 const Categories = lazy(() => import('./components/Categories'))
 const Goals = lazy(() => import('./components/Goals'))
@@ -47,6 +48,7 @@ const AppRoutes = () => {
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/money" element={<Money />} />
             <Route path="/transactions" element={<TransactionList />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/goals" element={<Goals />} />

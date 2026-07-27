@@ -16,6 +16,7 @@ import {
   X,
   ChevronRight,
   Shield,
+  Bot,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { Button } from './ui'
@@ -23,6 +24,7 @@ import { clsx } from 'clsx'
 
 const NAV_ITEMS = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/money', icon: Bot, label: 'Money' },
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transações' },
   { to: '/categories', icon: Tags, label: 'Categorias' },
   { to: '/goals', icon: Target, label: 'Metas' },
