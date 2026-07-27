@@ -32,6 +32,9 @@ import {
   summarizeTransactions,
   transactionsForMonth,
 } from '../domain/finance'
+import {
+  enqueueBudgetNotification,
+} from '../services/notificationService'
 
 const AppContext = createContext({})
 export const useApp = () => useContext(AppContext)
@@ -189,23 +192,58 @@ export const AppProvider = ({ children }) => {
           )
           .reduce((s, t) => s + t.amount, 0) + newTx.amount
       const pct = (spent / budget.amount) * 100
-      if (pct > 100)
-        showNotification(
-          `🚨 Orçamento de ${newTx.categoryName} EXCEDIDO! (${pct.toFixed(0)}%)`,
-          'error',
-        )
-      else if (pct >= 90)
-        showNotification(
-          `⚠️ ${pct.toFixed(0)}% do orçamento de ${newTx.categoryName} atingido!`,
-          'warning',
-        )
-      else if (pct >= 70)
-        showNotification(
-          `📊 ${pct.toFixed(0)}% do orçamento de ${newTx.categoryName} utilizado.`,
-          'info',
-        )
+
+      let threshold = null
+      let notificationType = 'info'
+      let notificationMessage = ''
+
+      if (pct > 100) {
+        threshold = 'over'
+        notificationType = 'error'
+        notificationMessage =
+          `🚨 Orçamento de ${newTx.categoryName} EXCEDIDO! (${pct.toFixed(0)}%)`
+      } else if (pct >= 100) {
+        threshold = 100
+        notificationType = 'error'
+        notificationMessage =
+          `⛔ Limite de ${newTx.categoryName} atingido!`
+      } else if (pct >= 90) {
+        threshold = 90
+        notificationType = 'warning'
+        notificationMessage =
+          `⚠️ ${pct.toFixed(0)}% do orçamento de ${newTx.categoryName} atingido!`
+      } else if (pct >= 70) {
+        threshold = 70
+        notificationMessage =
+          `📊 ${pct.toFixed(0)}% do orçamento de ${newTx.categoryName} utilizado.`
+      }
+
+      if (!threshold) return
+
+      showNotification(
+        notificationMessage,
+        notificationType,
+      )
+
+      if (user?.uid) {
+        enqueueBudgetNotification(user.uid, {
+          categoryId: newTx.categoryId,
+          categoryName:
+            newTx.categoryName || 'Categoria',
+          threshold,
+          percentage: pct,
+          spent,
+          limit: budget.amount,
+          monthKey: newTx.date.slice(0, 7),
+        }).catch((error) => {
+          console.error(
+            '[Meu Real] Fila de alerta por e-mail:',
+            error,
+          )
+        })
+      }
     },
-    [showNotification],
+    [showNotification, user?.uid],
   )
 
   // ── TRANSACTIONS ──
@@ -250,13 +288,14 @@ export const AppProvider = ({ children }) => {
       if (!user?.uid) return
       try {
         await updateTransaction(user.uid, id, data)
+        checkBudgetAlert(data)
         showNotification('Transação atualizada!')
       } catch (e) {
         showNotification('Erro ao atualizar transação.', 'error')
         throw e
       }
     },
-    [user?.uid, showNotification],
+    [user?.uid, showNotification, checkBudgetAlert],
   )
 
   const removeTransaction = useCallback(

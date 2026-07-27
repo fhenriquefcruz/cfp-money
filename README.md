@@ -88,3 +88,22 @@ Antes do lançamento:
 - `docs/RELEASE_CHECKLIST.md`.
 
 A publicação em GitHub Pages é temporária durante a transição de marca e infraestrutura.
+
+## Modo gratuito e notificações Premium
+
+Sem Cloud Functions implantadas, use:
+
+```env
+VITE_BACKEND_MODE=disabled
+VITE_TELEGRAM_ENABLED=false
+VITE_EMAIL_NOTIFICATIONS_ENABLED=false
+VITE_ENFORCE_LEGAL_GATE=false
+```
+
+O frontend permanece no Firebase Spark. Relatórios e alertas Premium por e-mail são processados pelo Worker em `worker/email-notifications`, com configuração descrita em `docs/EMAIL_NOTIFICATIONS_SETUP.md`.
+
+```bash
+npm run notifications:validate
+npm run notifications:install
+npm run notifications:deploy
+```

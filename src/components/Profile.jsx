@@ -25,7 +25,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { usePlan } from '../contexts/PlanContext'
 import { Card, Button, Input, Modal, Badge } from './ui'
 import { auth } from '../services/firebase'
-import PrivacyDataCard from './PrivacyDataCard'
+import PrivacyDataCardRouter from './PrivacyDataCardRouter'
+import EmailNotificationsCard from './EmailNotificationsCard'
 
 const PIX_KEY = 'fhenriquefcruz@gmail.com' // sua chave Pix
 const PIX_AMOUNT = 'R$ 19,90'
@@ -35,6 +36,7 @@ const PREMIUM_FEATURES = [
   'Dashboard avançado com previsões',
   'Relatórios completos + exportação PDF e CSV',
   'Alertas inteligentes de orçamento',
+  'Relatórios e alertas automáticos por e-mail',
 ]
 
 export default function Profile() {
@@ -385,7 +387,9 @@ export default function Profile() {
         </div>
       </Card>
 
-      <PrivacyDataCard />
+      <EmailNotificationsCard />
+
+      <PrivacyDataCardRouter />
 
       {/* ── Modal: Alterar senha ── */}
       <Modal

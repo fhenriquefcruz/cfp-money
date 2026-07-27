@@ -66,6 +66,23 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /notificationSubscribers/{uid} {
+      allow read: if owner(uid);
+      allow create, update: if owner(uid)
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'enabled',
+          'updatedAt'
+        ])
+        && request.resource.data.uid == uid
+        && request.resource.data.enabled == true;
+      allow delete: if owner(uid);
+    }
+
+    match /notificationDeliveries/{deliveryId} {
+      allow read, write: if false;
+    }
+
     match /privacyConsents/{consentId} {
       allow read: if admin();
       allow write: if false;

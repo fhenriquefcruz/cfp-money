@@ -13,7 +13,7 @@ import {
 import {
   getPrivacyStatus,
   recordLegalAcceptance,
-} from '../services/backend'
+} from '../services/privacyGateway'
 import { LEGAL_VERSIONS } from '../content/legal'
 import LegalDocument from './LegalDocument'
 import { Button, Modal } from './ui'

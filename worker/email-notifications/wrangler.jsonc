@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "meu-real-email-notifications",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-01",
+  "triggers": {
+    "crons": [
+      "*/15 * * * *"
+    ]
+  },
+  "vars": {
+    "FIREBASE_PROJECT_ID": "cfp-money",
+    "APP_URL": "https://fhenriquefcruz.github.io/cfp-money/#/profile",
+    "SENDER_NAME": "Meu Real",
+    "SENDER_EMAIL": "SUBSTITUA_PELO_REMETENTE_VERIFICADO",
+    "REPLY_TO_EMAIL": "fhenriquefcruz@gmail.com",
+    "MAX_USERS_PER_RUN": "100"
+  },
+  "secrets": {
+    "required": [
+      "GOOGLE_CLIENT_EMAIL",
+      "GOOGLE_PRIVATE_KEY",
+      "BREVO_API_KEY",
+      "ADMIN_TRIGGER_SECRET"
+    ]
+  }
+}

@@ -4,6 +4,7 @@ import {
   httpsCallable,
 } from 'firebase/functions'
 import { app } from './firebase'
+import { backendEnabled } from '../config/runtimeFeatures'
 
 const REGION = 'southamerica-east1'
 const functions = getFunctions(app, REGION)
@@ -20,6 +21,16 @@ if (
 }
 
 function callable(name) {
+  if (!backendEnabled) {
+    return async () => {
+      const error = new Error(
+        'Backend protegido indisponível no modo gratuito.',
+      )
+      error.code = 'backend/unavailable'
+      throw error
+    }
+  }
+
   return httpsCallable(functions, name)
 }
 
