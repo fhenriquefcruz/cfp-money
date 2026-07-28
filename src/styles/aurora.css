@@ -1,0 +1,235 @@
+/* ═══════════════════════════════════════════════════════════════
+   MEU REAL — AURORA FINANCIAL INTERFACE
+   Fundação visual global da Fase 20
+═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --aurora-indigo: #6366f1;
+  --aurora-cyan: #22d3ee;
+  --aurora-violet: #8b5cf6;
+  --aurora-emerald: #10b981;
+
+  --aurora-border: color-mix(in srgb, var(--border-default) 76%, var(--brand-300) 24%);
+
+  --aurora-surface: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+
+  --aurora-surface-elevated: color-mix(in srgb, var(--bg-elevated) 94%, transparent);
+
+  --aurora-shadow:
+    0 20px 60px rgba(15, 23, 42, 0.08), 0 4px 18px rgba(79, 70, 229, 0.055),
+    inset 0 1px rgba(255, 255, 255, 0.48);
+}
+
+:root[data-theme='dark'] {
+  --aurora-border: color-mix(in srgb, var(--border-default) 74%, var(--brand-400) 26%);
+
+  --aurora-surface: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+
+  --aurora-surface-elevated: color-mix(in srgb, var(--bg-elevated) 90%, transparent);
+
+  --aurora-shadow:
+    0 24px 72px rgba(0, 0, 0, 0.26), 0 6px 24px rgba(99, 102, 241, 0.08),
+    inset 0 1px rgba(255, 255, 255, 0.035);
+}
+
+/* ── Estrutura global ─────────────────────────────────────── */
+
+.aurora-app-shell {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 86% -8%, rgba(99, 102, 241, 0.13), transparent 31%),
+    radial-gradient(circle at 3% 88%, rgba(34, 211, 238, 0.075), transparent 30%),
+    radial-gradient(circle at 62% 102%, rgba(139, 92, 246, 0.07), transparent 32%), var(--bg-app);
+}
+
+:root[data-theme='dark'] .aurora-app-shell {
+  background:
+    radial-gradient(circle at 86% -8%, rgba(99, 102, 241, 0.17), transparent 32%),
+    radial-gradient(circle at 3% 88%, rgba(34, 211, 238, 0.075), transparent 31%),
+    radial-gradient(circle at 62% 102%, rgba(139, 92, 246, 0.09), transparent 34%), var(--bg-app);
+}
+
+.aurora-app-shell::before {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  content: '';
+  pointer-events: none;
+  opacity: 0.23;
+  background-image:
+    linear-gradient(rgba(99, 102, 241, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.055) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.55) 52%, transparent 96%);
+}
+
+:root[data-theme='dark'] .aurora-app-shell::before {
+  opacity: 0.32;
+}
+
+.aurora-app-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aurora-main {
+  position: relative;
+  scroll-behavior: smooth;
+}
+
+/* ── Cards e superfícies ──────────────────────────────────── */
+
+.aurora-card {
+  position: relative;
+  border: 1px solid var(--aurora-border);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--aurora-surface) 98%, white 2%),
+    var(--aurora-surface)
+  );
+  box-shadow: var(--aurora-shadow);
+  backdrop-filter: blur(18px);
+  transition:
+    transform 220ms var(--ease-out),
+    border-color 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out),
+    background-color 220ms var(--ease-out);
+}
+
+.aurora-card::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  content: '';
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.07),
+    transparent 26%,
+    transparent 76%,
+    rgba(99, 102, 241, 0.025)
+  );
+}
+
+.aurora-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.aurora-card--elevated {
+  background: var(--aurora-surface-elevated);
+  box-shadow:
+    0 26px 72px rgba(15, 23, 42, 0.11),
+    0 8px 28px rgba(79, 70, 229, 0.07),
+    inset 0 1px rgba(255, 255, 255, 0.5);
+}
+
+:root[data-theme='dark'] .aurora-card--elevated {
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.32),
+    0 8px 30px rgba(99, 102, 241, 0.1),
+    inset 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.aurora-card--glass {
+  background:
+    linear-gradient(145deg, rgba(99, 102, 241, 0.06), rgba(34, 211, 238, 0.025)),
+    var(--aurora-surface);
+}
+
+.aurora-card--hero {
+  border-color: rgba(165, 180, 252, 0.22);
+  background:
+    radial-gradient(circle at 88% 6%, rgba(34, 211, 238, 0.14), transparent 30%),
+    radial-gradient(circle at 8% 100%, rgba(139, 92, 246, 0.14), transparent 34%),
+    linear-gradient(145deg, #07111f 0%, #10133a 50%, #10284a 100%);
+  color: white;
+  box-shadow:
+    0 28px 80px rgba(15, 23, 42, 0.24),
+    0 8px 28px rgba(79, 70, 229, 0.14),
+    inset 0 1px rgba(255, 255, 255, 0.07);
+}
+
+.aurora-card--interactive:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--brand-400) 38%, var(--border-default));
+  box-shadow:
+    0 28px 72px rgba(15, 23, 42, 0.12),
+    0 8px 28px rgba(79, 70, 229, 0.09);
+}
+
+/* ── Navegação ────────────────────────────────────────────── */
+
+.aurora-sidebar {
+  border-color: color-mix(in srgb, var(--border-subtle) 75%, var(--brand-400) 25%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-sidebar) 94%, var(--brand-50) 6%),
+    color-mix(in srgb, var(--bg-sidebar) 98%, transparent)
+  );
+  box-shadow:
+    12px 0 46px rgba(15, 23, 42, 0.035),
+    inset -1px 0 rgba(99, 102, 241, 0.025);
+  backdrop-filter: blur(22px);
+}
+
+:root[data-theme='dark'] .aurora-sidebar {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(99, 102, 241, 0.13), transparent 28%),
+    linear-gradient(180deg, rgba(13, 20, 36, 0.98), rgba(10, 15, 30, 0.98));
+  box-shadow:
+    14px 0 54px rgba(0, 0, 0, 0.17),
+    inset -1px 0 rgba(129, 140, 248, 0.045);
+}
+
+.aurora-sidebar a[aria-current='page'] {
+  border: 1px solid rgba(165, 180, 252, 0.2);
+  background: linear-gradient(105deg, #4f46e5 0%, #635bdb 50%, #0e7490 115%) !important;
+  box-shadow:
+    0 12px 28px rgba(79, 70, 229, 0.2),
+    inset 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.aurora-brand-mark {
+  border: 1px solid rgba(165, 243, 252, 0.16);
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 46%, #0e7490 100%) !important;
+  box-shadow:
+    0 10px 24px rgba(79, 70, 229, 0.2),
+    inset 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.aurora-bottom-nav {
+  border-color: color-mix(in srgb, var(--border-subtle) 76%, var(--brand-300) 24%);
+  background: color-mix(in srgb, var(--bg-surface) 88%, transparent) !important;
+  box-shadow: 0 -14px 42px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(24px);
+}
+
+.aurora-mobile-drawer {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(99, 102, 241, 0.12), transparent 28%), var(--bg-sidebar) !important;
+  box-shadow: 22px 0 64px rgba(15, 23, 42, 0.18);
+}
+
+/* ── Acessibilidade ───────────────────────────────────────── */
+
+@media (max-width: 767px) {
+  .aurora-app-shell::before {
+    opacity: 0.15;
+    background-size: 38px 38px;
+  }
+
+  .aurora-card {
+    backdrop-filter: blur(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-card,
+  .aurora-card--interactive {
+    transition: none;
+    transform: none !important;
+  }
+}

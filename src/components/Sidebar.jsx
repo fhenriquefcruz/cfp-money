@@ -131,7 +131,7 @@ export default function Sidebar() {
         )}
       >
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-600]">
+          <div className="aurora-brand-mark flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-600]">
             <TrendingUp size={16} className="text-white" />
           </div>
           <AnimatePresence>
@@ -231,13 +231,13 @@ export default function Sidebar() {
       <motion.aside
         animate={{ width: collapsed ? 68 : 232 }}
         transition={{ duration: 0.2 }}
-        className="sticky top-0 hidden h-screen flex-shrink-0 flex-col overflow-hidden border-r border-[--border-subtle] bg-[--bg-sidebar] lg:flex"
+        className="aurora-sidebar sticky top-0 hidden h-screen flex-shrink-0 flex-col overflow-hidden border-r border-[--border-subtle] bg-[--bg-sidebar] lg:flex"
       >
         {sidebarContent}
       </motion.aside>
 
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
+        className="aurora-bottom-nav fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
       >
         {allItems.slice(0, 5).map(({ to, icon: Icon, label, premium }) => (
@@ -299,7 +299,7 @@ export default function Sidebar() {
               role="dialog"
               aria-modal="true"
               aria-label="Mais opções de navegação"
-              className="fixed bottom-0 left-0 top-0 z-50 flex w-72 flex-col bg-[--bg-sidebar] lg:hidden"
+              className="aurora-mobile-drawer fixed bottom-0 left-0 top-0 z-50 flex w-72 flex-col bg-[--bg-sidebar] lg:hidden"
               initial={{ x: -288 }}
               animate={{ x: 0 }}
               exit={{ x: -288 }}
@@ -307,7 +307,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[--brand-600]">
+                  <div className="aurora-brand-mark flex h-8 w-8 items-center justify-center rounded-xl bg-[--brand-600]">
                     <TrendingUp size={16} className="text-white" />
                   </div>
                   <div>

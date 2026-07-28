@@ -29,7 +29,7 @@ const Profile = lazy(() => import('./components/Profile'))
 const Admin = lazy(() => import('./components/Admin'))
 
 const LoadingScreen = () => (
-  <div className="flex items-center justify-center h-screen bg-[--bg-app]">
+  <div className="aurora-app-shell flex h-screen items-center justify-center bg-[--bg-app]">
     <div className="flex flex-col items-center gap-3">
       <div className="w-10 h-10 border-2 border-[--brand-500] border-t-transparent rounded-full animate-spin" />
       <p className="text-sm text-[--text-tertiary]">Carregando...</p>
@@ -43,9 +43,9 @@ const AppRoutes = () => {
   if (!user) return <Login />
 
   return (
-    <div className="flex min-h-screen bg-[--bg-app]">
+    <div className="aurora-app-shell flex min-h-screen bg-[--bg-app]">
       <Sidebar />
-      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto min-w-0">
+      <main className="aurora-main min-w-0 flex-1 overflow-auto p-4 md:p-6 lg:p-8">
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" />} />
