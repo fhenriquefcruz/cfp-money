@@ -1,11 +1,5 @@
-import {
-  buildMoneyTransactionDraft,
-  normalizeMoneyCommand,
-} from './moneyTransactionDraft'
-import {
-  calculateInvoiceSchedule,
-  splitInstallmentAmounts,
-} from './creditCards'
+import { buildMoneyTransactionDraft, normalizeMoneyCommand } from './moneyTransactionDraft'
+import { calculateInvoiceSchedule, splitInstallmentAmounts } from './creditCards'
 
 function parseInstallments(normalizedMessage) {
   const patterns = [
@@ -46,17 +40,11 @@ function hasCreditIntent(normalizedMessage, cards) {
 
 function findCard(normalizedMessage, cards) {
   return [...cards]
-    .sort(
-      (a, b) =>
-        normalizeMoneyCommand(b.name).length -
-        normalizeMoneyCommand(a.name).length,
-    )
+    .sort((a, b) => normalizeMoneyCommand(b.name).length - normalizeMoneyCommand(a.name).length)
     .find((card) => {
       const normalizedName = normalizeMoneyCommand(card.name)
-      const matchesName =
-        normalizedName && normalizedMessage.includes(normalizedName)
-      const matchesLast4 =
-        card.last4 && normalizedMessage.includes(String(card.last4))
+      const matchesName = normalizedName && normalizedMessage.includes(normalizedName)
+      const matchesLast4 = card.last4 && normalizedMessage.includes(String(card.last4))
       return matchesName || matchesLast4
     })
 }
@@ -66,12 +54,10 @@ function findDuplicateCreditDraft(draft, transactions) {
 
   return (
     transactions.find((transaction) => {
-      const existingPurchaseDate =
-        transaction.originalPurchaseDate || transaction.purchaseDate
+      const existingPurchaseDate = transaction.originalPurchaseDate || transaction.purchaseDate
 
       const existingTotal =
-        transaction.originalAmount ||
-        (!transaction.isInstallment ? transaction.amount : null)
+        transaction.originalAmount || (!transaction.isInstallment ? transaction.amount : null)
 
       return (
         transaction.isCreditPurchase &&
@@ -102,16 +88,16 @@ export function buildMoneyCreditDraft({
     return {
       type: 'credit_card_setup_required',
       title: 'Cadastre um cartão antes de continuar',
-      text:
-        'O Money precisa do fechamento e do vencimento para calcular a fatura com segurança. Nenhuma compra foi criada.',
+      text: 'O Money precisa do fechamento e do vencimento para calcular a fatura com segurança. Nenhuma compra foi criada.',
       profileRoute: '/profile',
     }
   }
 
-  const messageWithExpenseContext =
-    /\b(gastei|paguei|comprei|despesa|custou)\b/.test(normalizedMessage)
-      ? message
-      : `Comprei ${message}`
+  const messageWithExpenseContext = /\b(gastei|paguei|comprei|despesa|custou)\b/.test(
+    normalizedMessage,
+  )
+    ? message
+    : `Comprei ${message}`
 
   const baseResponse = buildMoneyTransactionDraft({
     message: messageWithExpenseContext,
@@ -126,24 +112,16 @@ export function buildMoneyCreditDraft({
   }
 
   const matchedCard = findCard(normalizedMessage, activeCards)
-  const selectedCard =
-    matchedCard || (activeCards.length === 1 ? activeCards[0] : null)
+  const selectedCard = matchedCard || (activeCards.length === 1 ? activeCards[0] : null)
 
   const installments = parseInstallments(normalizedMessage)
   const purchaseDate = baseResponse.draft.date
   const schedule =
-    selectedCard && purchaseDate
-      ? calculateInvoiceSchedule(purchaseDate, selectedCard)
-      : null
+    selectedCard && purchaseDate ? calculateInvoiceSchedule(purchaseDate, selectedCard) : null
 
   const installmentAmounts =
-    selectedCard &&
-    baseResponse.draft.amount &&
-    Number(installments) >= 1
-      ? splitInstallmentAmounts(
-          Number(baseResponse.draft.amount),
-          Number(installments),
-        )
+    selectedCard && baseResponse.draft.amount && Number(installments) >= 1
+      ? splitInstallmentAmounts(Number(baseResponse.draft.amount), Number(installments))
       : []
 
   const draft = {
@@ -182,12 +160,8 @@ export function buildMoneyCreditDraft({
 
   return {
     type: 'credit_transaction_draft',
-    title:
-      Number(installments) > 1
-        ? 'Revise a compra parcelada'
-        : 'Revise a compra no cartão',
-    text:
-      'O Money calculou a fatura a partir do cartão cadastrado. Confira a compra, o cartão e as parcelas antes de salvar.',
+    title: Number(installments) > 1 ? 'Revise a compra parcelada' : 'Revise a compra no cartão',
+    text: 'O Money calculou a fatura a partir do cartão cadastrado. Confira a compra, o cartão e as parcelas antes de salvar.',
     draft,
     schedule,
     installmentAmounts,

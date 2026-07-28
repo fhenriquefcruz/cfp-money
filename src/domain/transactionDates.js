@@ -13,16 +13,13 @@ export function formatTransactionIsoDate(value) {
 export function isStructuredCreditPurchase(transaction = {}) {
   return Boolean(
     transaction.type === 'expense' &&
-      transaction.paymentMethod === 'credit_card' &&
-      transaction.isCreditPurchase,
+    transaction.paymentMethod === 'credit_card' &&
+    transaction.isCreditPurchase,
   )
 }
 
 export function getTransactionPurchaseDate(transaction = {}) {
-  const candidate =
-    transaction.purchaseDate ||
-    transaction.originalPurchaseDate ||
-    transaction.date
+  const candidate = transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date
 
   return validIsoDate(candidate) ? candidate : ''
 }
@@ -43,10 +40,7 @@ export function getTransactionDateContext(transaction = {}) {
   const accountingDate = getTransactionAccountingDate(transaction)
   const structuredCredit = isStructuredCreditPurchase(transaction)
   const hasSeparateAccountingDate = Boolean(
-    structuredCredit &&
-      purchaseDate &&
-      accountingDate &&
-      purchaseDate !== accountingDate,
+    structuredCredit && purchaseDate && accountingDate && purchaseDate !== accountingDate,
   )
 
   return {
@@ -63,6 +57,6 @@ export function getTransactionDateContext(transaction = {}) {
 export function isProtectedTransactionGroup(transaction = {}) {
   return Boolean(
     (transaction.isInstallment && transaction.installmentGroupId) ||
-      (transaction.isRecurring && transaction.recurringGroupId),
+    (transaction.isRecurring && transaction.recurringGroupId),
   )
 }

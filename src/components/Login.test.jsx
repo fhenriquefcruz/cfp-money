@@ -29,29 +29,21 @@ beforeEach(() => {
 test('apresenta uma entrada clara e orientada ao produto', () => {
   render(<Login />)
 
-  expect(
-    screen.getByRole('heading', { name: 'Continue com clareza.' }),
-  ).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Continue com clareza.' })).toBeInTheDocument()
   expect(
     screen.getByRole('heading', {
       name: 'Seu dinheiro, mais legível. Suas decisões, mais inteligentes.',
     }),
   ).toBeInTheDocument()
-  expect(
-    screen.getByRole('button', { name: 'Entrar no Meu Real' }),
-  ).toBeInTheDocument()
-  expect(
-    screen.getByRole('button', { name: 'Continuar com Google' }),
-  ).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Entrar no Meu Real' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Continuar com Google' })).toBeInTheDocument()
   expect(screen.getByText(/não movimenta dinheiro/i)).toBeInTheDocument()
 })
 
 test('troca imediatamente para criação de conta e mostra o Premium', async () => {
   render(<Login />)
 
-  fireEvent.click(
-    screen.getByRole('button', { name: 'Criar conta', pressed: false }),
-  )
+  fireEvent.click(screen.getByRole('button', { name: 'Criar conta', pressed: false }))
 
   expect(
     await screen.findByRole('heading', {
@@ -59,9 +51,7 @@ test('troca imediatamente para criação de conta e mostra o Premium', async () 
     }),
   ).toBeInTheDocument()
   expect(screen.getByText('Premium por 7 dias')).toBeInTheDocument()
-  expect(
-    screen.getByRole('button', { name: 'Criar minha conta' }),
-  ).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Criar minha conta' })).toBeInTheDocument()
 })
 
 test('mantém recuperação de senha fácil de localizar', async () => {
@@ -74,12 +64,8 @@ test('mantém recuperação de senha fácil de localizar', async () => {
       name: 'Vamos recuperar seu acesso.',
     }),
   ).toBeInTheDocument()
-  expect(
-    screen.getByRole('button', { name: 'Enviar link de recuperação' }),
-  ).toBeInTheDocument()
-  expect(
-    screen.getByRole('button', { name: 'Voltar para o acesso' }),
-  ).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Enviar link de recuperação' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Voltar para o acesso' })).toBeInTheDocument()
 })
 
 test('aciona o login Google sem submeter o formulário de senha', async () => {
@@ -87,9 +73,7 @@ test('aciona o login Google sem submeter o formulário de senha', async () => {
 
   render(<Login />)
 
-  fireEvent.click(
-    screen.getByRole('button', { name: 'Continuar com Google' }),
-  )
+  fireEvent.click(screen.getByRole('button', { name: 'Continuar com Google' }))
 
   await waitFor(() => {
     expect(authMocks.loginGoogle).toHaveBeenCalledTimes(1)

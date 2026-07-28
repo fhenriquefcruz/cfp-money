@@ -1,10 +1,6 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
-const {
-  buildCommercialMetrics,
-  percentage,
-  safeCount,
-} = require('../lib/commercialDomain')
+const { buildCommercialMetrics, percentage, safeCount } = require('../lib/commercialDomain')
 
 test('normaliza contagens inválidas', () => {
   assert.equal(safeCount(-5), 0)
@@ -27,9 +23,7 @@ test('monta métricas comerciais agregadas', () => {
     deletionFailed: 1,
     completedDeletions: 7,
     appCheckEnforced: true,
-    generatedAt: new Date(
-      '2026-07-27T12:00:00.000Z',
-    ),
+    generatedAt: new Date('2026-07-27T12:00:00.000Z'),
   })
 
   assert.equal(metrics.version, '18.0.0')

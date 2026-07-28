@@ -56,10 +56,7 @@ function formatInstallmentDistribution(maskedAmount, rawInstallments) {
     })
 
     return groups
-      .map(
-        (group) =>
-          `${group.count}× R$ ${maskCurrency(String(group.cents))}`,
-      )
+      .map((group) => `${group.count}× R$ ${maskCurrency(String(group.cents))}`)
       .join(' + ')
   } catch {
     return ''
@@ -159,13 +156,8 @@ function getEffectiveDate(baseDate, closingDay) {
 }
 
 export default function TransactionForm({ isOpen, onClose, transaction }) {
-  const {
-    categories,
-    creditCards,
-    createTransaction,
-    editTransaction,
-    addTransactionBatch,
-  } = useApp()
+  const { categories, creditCards, createTransaction, editTransaction, addTransactionBatch } =
+    useApp()
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
@@ -601,13 +593,11 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
                         <div className="p-2 rounded-lg bg-white/60 text-xs text-[--brand-700]">
                           Distribuição:{' '}
                           <strong>
-                            {formatInstallmentDistribution(
-                              form.amount,
-                              form.installments,
-                            )}
+                            {formatInstallmentDistribution(form.amount, form.installments)}
                           </strong>
                           <p className="mt-1 text-[10px] leading-relaxed text-[--brand-600]">
-                            Os centavos são ajustados entre as primeiras parcelas para preservar o valor total.
+                            Os centavos são ajustados entre as primeiras parcelas para preservar o
+                            valor total.
                           </p>
                         </div>
                       )}

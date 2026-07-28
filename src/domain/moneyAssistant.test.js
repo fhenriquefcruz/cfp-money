@@ -1,8 +1,5 @@
 import { analyzeMoney } from './money'
-import {
-  buildMoneyAssistantResponse,
-  parseMoneyAssistantIntent,
-} from './moneyAssistant'
+import { buildMoneyAssistantResponse, parseMoneyAssistantIntent } from './moneyAssistant'
 
 const categories = [
   { id: 'food', name: 'Alimentação' },

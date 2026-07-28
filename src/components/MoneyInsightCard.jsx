@@ -43,8 +43,7 @@ function resolveAnalysisDate(referenceDate) {
   const reference = new Date(referenceDate)
   const now = new Date()
   const isCurrentMonth =
-    reference.getFullYear() === now.getFullYear() &&
-    reference.getMonth() === now.getMonth()
+    reference.getFullYear() === now.getFullYear() && reference.getMonth() === now.getMonth()
 
   if (isCurrentMonth) return now
   return new Date(reference.getFullYear(), reference.getMonth() + 1, 0)
@@ -75,9 +74,7 @@ function MoneyInsightContent({ referenceDate }) {
   const toneStyle = TONE_STYLES[tone]
   const ToneIcon = toneStyle.icon
   const primaryInsight = analysis.insights[0]?.message
-  const categoryInsight = analysis.insights.find(
-    (insight) => insight.type === 'category_increase',
-  )
+  const categoryInsight = analysis.insights.find((insight) => insight.type === 'category_increase')
   const isLoading = loading.transactions || settingsLoading
 
   return (
@@ -142,8 +139,7 @@ function MoneyInsightContent({ referenceDate }) {
               <div className="h-20 rounded-2xl bg-[--bg-hover] animate-pulse" />
             </div>
           </div>
-        ) : analysis.current.transactionCount === 0 &&
-          analysis.previous.transactionCount === 0 ? (
+        ) : analysis.current.transactionCount === 0 && analysis.previous.transactionCount === 0 ? (
           <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-[--border-default] bg-[--bg-subtle] p-5 text-center">
             <div>
               <CalendarRange size={24} className="mx-auto text-[--text-tertiary]" />
@@ -159,10 +155,7 @@ function MoneyInsightContent({ referenceDate }) {
           <>
             <div className={`rounded-2xl border p-4 ${toneStyle.boxClass}`}>
               <div className="flex items-start gap-2.5">
-                <ToneIcon
-                  size={17}
-                  className={`mt-0.5 flex-shrink-0 ${toneStyle.iconClass}`}
-                />
+                <ToneIcon size={17} className={`mt-0.5 flex-shrink-0 ${toneStyle.iconClass}`} />
                 <p className="text-sm font-medium leading-relaxed text-[--text-primary]">
                   {primaryInsight}
                 </p>
@@ -178,7 +171,9 @@ function MoneyInsightContent({ referenceDate }) {
               <MoneyMetric
                 label="Projeção"
                 value={formatCurrency(analysis.projection.expenses)}
-                detail={analysis.projection.isPartial ? 'Estimativa de fechamento' : 'Ciclo fechado'}
+                detail={
+                  analysis.projection.isPartial ? 'Estimativa de fechamento' : 'Ciclo fechado'
+                }
               />
               <MoneyMetric
                 label="Período"

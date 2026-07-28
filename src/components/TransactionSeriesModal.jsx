@@ -31,13 +31,7 @@ function maskCurrency(raw) {
 function parseCurrency(masked) {
   if (!masked) return 0
 
-  return (
-    Number(
-      String(masked)
-        .replace(/\./g, '')
-        .replace(',', '.'),
-    ) || 0
-  )
+  return Number(String(masked).replace(/\./g, '').replace(',', '.')) || 0
 }
 
 function ScopeOption({ option, checked, onChange }) {
@@ -58,9 +52,7 @@ function ScopeOption({ option, checked, onChange }) {
         className="mt-1 h-4 w-4 accent-[--brand-600]"
       />
       <span>
-        <span className="block text-xs font-black text-[--text-primary]">
-          {option.label}
-        </span>
+        <span className="block text-xs font-black text-[--text-primary]">{option.label}</span>
         <span className="mt-1 block text-[10px] leading-relaxed text-[--text-tertiary]">
           {option.helper}
         </span>
@@ -78,10 +70,7 @@ export default function TransactionSeriesModal({
   onApply,
   onClose,
 }) {
-  const descriptor = useMemo(
-    () => getTransactionSeries(transaction),
-    [transaction],
-  )
+  const descriptor = useMemo(() => getTransactionSeries(transaction), [transaction])
   const [scope, setScope] = useState(SERIES_SCOPE.SINGLE)
   const [description, setDescription] = useState('')
   const [categoryId, setCategoryId] = useState('')
@@ -110,11 +99,7 @@ export default function TransactionSeriesModal({
     setScope(SERIES_SCOPE.SINGLE)
     setDescription(transaction.description || '')
     setCategoryId(transaction.categoryId || '')
-    setAmount(
-      maskCurrency(
-        String(Math.round(Number(transaction.amount || 0) * 100)),
-      ),
-    )
+    setAmount(maskCurrency(String(Math.round(Number(transaction.amount || 0) * 100))))
     setNotes(transaction.notes || '')
     setError('')
   }, [isOpen, transaction])
@@ -127,31 +112,18 @@ export default function TransactionSeriesModal({
         ? selection.selectedTotal
         : Number(transaction?.amount || 0)
 
-    setAmount(
-      maskCurrency(String(Math.round(defaultValue * 100))),
-    )
-  }, [
-    descriptor?.kind,
-    isOpen,
-    mode,
-    scope,
-    selection?.selectedTotal,
-    transaction?.amount,
-  ])
+    setAmount(maskCurrency(String(Math.round(defaultValue * 100))))
+  }, [descriptor?.kind, isOpen, mode, scope, selection?.selectedTotal, transaction?.amount])
 
   const filteredCategories = useMemo(
     () =>
       categories.filter(
-        (category) =>
-          category.type === transaction?.type ||
-          category.type === 'both',
+        (category) => category.type === transaction?.type || category.type === 'both',
       ),
     [categories, transaction?.type],
   )
 
-  const selectedCategory = categories.find(
-    (category) => category.id === categoryId,
-  )
+  const selectedCategory = categories.find((category) => category.id === categoryId)
   const scopeOptions = getSeriesScopeLabels(descriptor || {})
   const editing = mode === 'edit'
   const installment = descriptor?.kind === 'installment'
@@ -176,22 +148,10 @@ export default function TransactionSeriesModal({
           amount: parseCurrency(amount),
           description,
           notes,
-          categoryId:
-            selectedCategory?.id ||
-            transaction.categoryId ||
-            '',
-          categoryName:
-            selectedCategory?.name ||
-            transaction.categoryName ||
-            '',
-          categoryColor:
-            selectedCategory?.color ||
-            transaction.categoryColor ||
-            '',
-          categoryIcon:
-            selectedCategory?.icon ||
-            transaction.categoryIcon ||
-            '',
+          categoryId: selectedCategory?.id || transaction.categoryId || '',
+          categoryName: selectedCategory?.name || transaction.categoryName || '',
+          categoryColor: selectedCategory?.color || transaction.categoryColor || '',
+          categoryIcon: selectedCategory?.icon || transaction.categoryIcon || '',
         },
       })
     } catch (previewError) {
@@ -213,10 +173,7 @@ export default function TransactionSeriesModal({
 
   const handleApply = async () => {
     if (!preview || preview.error) {
-      setError(
-        preview?.error ||
-          'Não foi possível preparar a operação.',
-      )
+      setError(preview?.error || 'Não foi possível preparar a operação.')
       return
     }
 
@@ -255,12 +212,7 @@ export default function TransactionSeriesModal({
       closeOnEscape={!loading}
       footer={
         <div className="flex gap-3">
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={onClose}
-            disabled={loading}
-          >
+          <Button variant="secondary" fullWidth onClick={onClose} disabled={loading}>
             Cancelar
           </Button>
           <Button
@@ -269,9 +221,7 @@ export default function TransactionSeriesModal({
             loading={loading}
             onClick={handleApply}
           >
-            {editing
-              ? 'Aplicar alterações'
-              : 'Confirmar exclusão'}
+            {editing ? 'Aplicar alterações' : 'Confirmar exclusão'}
           </Button>
         </div>
       }
@@ -279,11 +229,7 @@ export default function TransactionSeriesModal({
       <div className="space-y-5">
         <div className="flex items-start gap-3 rounded-2xl border border-[--brand-200] bg-[--brand-50] p-4">
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-100] text-[--brand-700]">
-            {installment ? (
-              <Layers3 size={18} />
-            ) : (
-              <CalendarRange size={18} />
-            )}
+            {installment ? <Layers3 size={18} /> : <CalendarRange size={18} />}
           </div>
           <div>
             <p className="text-sm font-black text-[--brand-700]">
@@ -291,10 +237,8 @@ export default function TransactionSeriesModal({
             </p>
             <p className="mt-1 text-xs leading-relaxed text-[--brand-600]">
               {selection?.members.length || 0} registro
-              {selection?.members.length === 1 ? '' : 's'} na
-              série ·{' '}
-              {formatCurrency(selection?.seriesTotal || 0)} no
-              total atual
+              {selection?.members.length === 1 ? '' : 's'} na série ·{' '}
+              {formatCurrency(selection?.seriesTotal || 0)} no total atual
             </p>
           </div>
         </div>
@@ -320,9 +264,7 @@ export default function TransactionSeriesModal({
             <Input
               label="Descrição"
               value={description}
-              onChange={(event) =>
-                setDescription(event.target.value)
-              }
+              onChange={(event) => setDescription(event.target.value)}
               icon={<PencilLine size={15} />}
             />
 
@@ -336,16 +278,11 @@ export default function TransactionSeriesModal({
               <select
                 id="series-category"
                 value={categoryId}
-                onChange={(event) =>
-                  setCategoryId(event.target.value)
-                }
+                onChange={(event) => setCategoryId(event.target.value)}
                 className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
               >
                 {filteredCategories.map((category) => (
-                  <option
-                    key={category.id}
-                    value={category.id}
-                  >
+                  <option key={category.id} value={category.id}>
                     {category.icon} {category.name}
                   </option>
                 ))}
@@ -357,9 +294,7 @@ export default function TransactionSeriesModal({
                 htmlFor="series-amount"
                 className="mb-1.5 block text-sm font-medium text-[--text-secondary]"
               >
-                {installment
-                  ? 'Total das parcelas selecionadas'
-                  : 'Valor de cada lançamento'}
+                {installment ? 'Total das parcelas selecionadas' : 'Valor de cada lançamento'}
               </label>
               <div className="relative">
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[--text-secondary]">
@@ -370,9 +305,7 @@ export default function TransactionSeriesModal({
                   type="text"
                   inputMode="numeric"
                   value={amount}
-                  onChange={(event) =>
-                    setAmount(maskCurrency(event.target.value))
-                  }
+                  onChange={(event) => setAmount(maskCurrency(event.target.value))}
                   className="min-h-12 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] pl-10 pr-3 text-lg font-black text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
                 />
               </div>
@@ -394,27 +327,19 @@ export default function TransactionSeriesModal({
                 id="series-notes"
                 rows={3}
                 value={notes}
-                onChange={(event) =>
-                  setNotes(event.target.value)
-                }
+                onChange={(event) => setNotes(event.target.value)}
                 className="w-full resize-none rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 py-2.5 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
               />
             </div>
           </div>
         ) : (
           <div className="flex items-start gap-3 rounded-2xl border border-[--danger-border] bg-[--danger-bg] p-4">
-            <AlertTriangle
-              size={18}
-              className="mt-0.5 flex-shrink-0 text-[--danger-icon]"
-            />
+            <AlertTriangle size={18} className="mt-0.5 flex-shrink-0 text-[--danger-icon]" />
             <div>
-              <p className="text-sm font-black text-[--danger-text]">
-                Exclusão definitiva
-              </p>
+              <p className="text-sm font-black text-[--danger-text]">Exclusão definitiva</p>
               <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">
-                Os itens selecionados serão removidos em uma
-                única operação. Os registros restantes serão
-                renumerados automaticamente.
+                Os itens selecionados serão removidos em uma única operação. Os registros restantes
+                serão renumerados automaticamente.
               </p>
             </div>
           </div>
@@ -424,15 +349,9 @@ export default function TransactionSeriesModal({
           <div className="rounded-2xl border border-[--border-default] bg-[--bg-subtle] p-4">
             <div className="flex items-center gap-2">
               {editing ? (
-                <ReceiptText
-                  size={15}
-                  className="text-[--brand-600]"
-                />
+                <ReceiptText size={15} className="text-[--brand-600]" />
               ) : (
-                <Trash2
-                  size={15}
-                  className="text-[--danger-icon]"
-                />
+                <Trash2 size={15} className="text-[--danger-icon]" />
               )}
               <p className="text-xs font-black uppercase tracking-wider text-[--text-tertiary]">
                 Impacto antes de confirmar
@@ -451,15 +370,11 @@ export default function TransactionSeriesModal({
 
               <div className="rounded-xl bg-[--bg-surface] p-3">
                 <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-                  {editing
-                    ? 'Total do escopo'
-                    : 'Valor removido'}
+                  {editing ? 'Total do escopo' : 'Valor removido'}
                 </p>
                 <p className="mt-1 text-base font-black text-[--text-primary]">
                   {formatCurrency(
-                    editing
-                      ? preview.summary.selectedTotalAfter
-                      : preview.summary.removedTotal,
+                    editing ? preview.summary.selectedTotalAfter : preview.summary.removedTotal,
                   )}
                 </p>
               </div>
@@ -470,9 +385,7 @@ export default function TransactionSeriesModal({
                 </p>
                 <p className="mt-1 text-base font-black text-[--text-primary]">
                   {formatCurrency(
-                    editing
-                      ? preview.summary.seriesTotalAfter
-                      : preview.summary.remainingTotal,
+                    editing ? preview.summary.seriesTotalAfter : preview.summary.remainingTotal,
                   )}
                 </p>
               </div>

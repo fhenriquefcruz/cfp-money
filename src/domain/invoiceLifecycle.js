@@ -8,10 +8,7 @@ function fromCents(value) {
 }
 
 function sumCents(items, selector) {
-  return items.reduce(
-    (total, item) => total + toCents(selector(item)),
-    0,
-  )
+  return items.reduce((total, item) => total + toCents(selector(item)), 0)
 }
 
 function todayIso(now = new Date()) {
@@ -23,31 +20,21 @@ function todayIso(now = new Date()) {
 }
 
 export function buildInvoiceKey(cardId, invoiceMonth) {
-  return `${String(cardId || '').trim()}:${String(
-    invoiceMonth || '',
-  ).trim()}`
+  return `${String(cardId || '').trim()}:${String(invoiceMonth || '').trim()}`
 }
 
-export function getInvoiceEvents(
-  events = [],
-  cardId,
-  invoiceMonth,
-) {
+export function getInvoiceEvents(events = [], cardId, invoiceMonth) {
   const invoiceKey = buildInvoiceKey(cardId, invoiceMonth)
 
   return events
     .filter(
       (event) =>
         event.invoiceKey === invoiceKey ||
-        (event.cardId === cardId &&
-          event.invoiceMonth === invoiceMonth),
+        (event.cardId === cardId && event.invoiceMonth === invoiceMonth),
     )
     .sort((first, second) => {
       const firstDate =
-        first.eventDate ||
-        first.paymentDate ||
-        first.createdAt?.toDate?.()?.toISOString?.() ||
-        ''
+        first.eventDate || first.paymentDate || first.createdAt?.toDate?.()?.toISOString?.() || ''
       const secondDate =
         second.eventDate ||
         second.paymentDate ||
@@ -58,24 +45,17 @@ export function getInvoiceEvents(
     })
 }
 
-export function getPaymentReversibleAmount(
-  payment,
-  invoiceEvents = [],
-) {
+export function getPaymentReversibleAmount(payment, invoiceEvents = []) {
   if (!payment || payment.type !== 'payment') return 0
 
   const reversedCents = sumCents(
     invoiceEvents.filter(
-      (event) =>
-        event.type === 'reversal' &&
-        event.reversesEventId === payment.id,
+      (event) => event.type === 'reversal' && event.reversesEventId === payment.id,
     ),
     (event) => event.amount,
   )
 
-  return fromCents(
-    Math.max(0, toCents(payment.amount) - reversedCents),
-  )
+  return fromCents(Math.max(0, toCents(payment.amount) - reversedCents))
 }
 
 export function buildInvoiceLifecycle({
@@ -99,22 +79,11 @@ export function buildInvoiceLifecycle({
     (event) => event.amount,
   )
 
-  const invoiceTotalCents = Math.max(
-    0,
-    toCents(purchaseTotal) + adjustmentCents,
-  )
+  const invoiceTotalCents = Math.max(0, toCents(purchaseTotal) + adjustmentCents)
   const paidCents = Math.max(0, paymentCents - reversalCents)
-  const remainingCents = Math.max(
-    0,
-    invoiceTotalCents - paidCents,
-  )
-  const creditCents = Math.max(
-    0,
-    paidCents - invoiceTotalCents,
-  )
-  const manuallyClosed = events.some(
-    (event) => event.type === 'manual_close',
-  )
+  const remainingCents = Math.max(0, invoiceTotalCents - paidCents)
+  const creditCents = Math.max(0, paidCents - invoiceTotalCents)
+  const manuallyClosed = events.some((event) => event.type === 'manual_close')
   const today = todayIso(now)
   const isClosed =
     manuallyClosed ||
@@ -122,9 +91,7 @@ export function buildInvoiceLifecycle({
     temporalStatus === 'past_due' ||
     temporalStatus === 'due_today' ||
     Boolean(closingDate && closingDate < today)
-  const overdue = Boolean(
-    dueDate && dueDate < today && remainingCents > 0,
-  )
+  const overdue = Boolean(dueDate && dueDate < today && remainingCents > 0)
 
   let status = temporalStatus
   if (invoiceTotalCents === 0 && paidCents === 0) {
@@ -152,12 +119,8 @@ export function buildInvoiceLifecycle({
     paidAmount: fromCents(paidCents),
     remainingAmount: fromCents(remainingCents),
     creditAmount: fromCents(creditCents),
-    paymentCount: events.filter(
-      (event) => event.type === 'payment',
-    ).length,
-    reversalCount: events.filter(
-      (event) => event.type === 'reversal',
-    ).length,
+    paymentCount: events.filter((event) => event.type === 'payment').length,
+    reversalCount: events.filter((event) => event.type === 'reversal').length,
     manuallyClosed,
     isClosed,
     overdue,
@@ -166,13 +129,7 @@ export function buildInvoiceLifecycle({
   }
 }
 
-export function createInvoiceEventBase({
-  card,
-  invoiceMonth,
-  type,
-  eventDate,
-  notes = '',
-}) {
+export function createInvoiceEventBase({ card, invoiceMonth, type, eventDate, notes = '' }) {
   if (!card?.id) throw new Error('Cartão inválido.')
   if (!/^\d{4}-\d{2}$/.test(invoiceMonth || '')) {
     throw new Error('Mês da fatura inválido.')
@@ -245,19 +202,11 @@ export function createAdjustmentEvent({
       notes,
     }),
     direction,
-    signedAmount:
-      direction === 'credit'
-        ? -normalizedAmount
-        : normalizedAmount,
+    signedAmount: direction === 'credit' ? -normalizedAmount : normalizedAmount,
   }
 }
 
-export function createManualCloseEvent({
-  card,
-  invoiceMonth,
-  eventDate,
-  notes = '',
-}) {
+export function createManualCloseEvent({ card, invoiceMonth, eventDate, notes = '' }) {
   return createInvoiceEventBase({
     card,
     invoiceMonth,
@@ -275,10 +224,7 @@ export function createReversalEvent({
   eventDate,
   notes = '',
 }) {
-  const reversibleAmount = getPaymentReversibleAmount(
-    payment,
-    invoiceEvents,
-  )
+  const reversibleAmount = getPaymentReversibleAmount(payment, invoiceEvents)
 
   if (reversibleAmount <= 0) {
     throw new Error('Este pagamento já foi totalmente estornado.')

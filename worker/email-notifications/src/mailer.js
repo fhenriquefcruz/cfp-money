@@ -14,12 +14,7 @@ export function currency(value) {
   }).format(Number(value || 0))
 }
 
-function layout({
-  title,
-  preheader,
-  content,
-  appUrl,
-}) {
+function layout({ title, preheader, content, appUrl }) {
   return `<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -48,13 +43,7 @@ Este é um e-mail transacional solicitado nas preferências do Meu Real.
 </html>`
 }
 
-export function reportEmail({
-  name,
-  summary,
-  periodLabel,
-  appUrl,
-  test = false,
-}) {
+export function reportEmail({ name, summary, periodLabel, appUrl, test = false }) {
   const categories = summary.topCategories
     .map(
       (item) => `
@@ -92,26 +81,17 @@ ${categories || '<tr><td style="padding:8px 0;color:#667085">Nenhuma despesa no 
 <p style="margin:20px 0 0;font-size:12px;color:#667085">${summary.count} lançamento(s) considerado(s).</p>`
 
   return {
-    subject: test
-      ? 'Seu relatório de teste do Meu Real'
-      : 'Seu resumo financeiro do Meu Real',
+    subject: test ? 'Seu relatório de teste do Meu Real' : 'Seu resumo financeiro do Meu Real',
     html: layout({
-      title: test
-        ? 'Relatório de teste'
-        : 'Resumo financeiro',
-      preheader:
-        'Seu resumo financeiro está disponível.',
+      title: test ? 'Relatório de teste' : 'Resumo financeiro',
+      preheader: 'Seu resumo financeiro está disponível.',
       content,
       appUrl,
     }),
   }
 }
 
-export function alertsEmail({
-  name,
-  alerts,
-  appUrl,
-}) {
+export function alertsEmail({ name, alerts, appUrl }) {
   const items = alerts
     .map(
       (alert) => `
@@ -123,12 +103,10 @@ export function alertsEmail({
     .join('')
 
   return {
-    subject:
-      'Você tem novos alertas financeiros no Meu Real',
+    subject: 'Você tem novos alertas financeiros no Meu Real',
     html: layout({
       title: 'Alertas financeiros',
-      preheader:
-        'Há novos avisos sobre orçamento ou metas.',
+      preheader: 'Há novos avisos sobre orçamento ou metas.',
       appUrl,
       content: `
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6">Olá, ${escapeHtml(name || 'usuário')}.</p>
@@ -138,54 +116,34 @@ export function alertsEmail({
   }
 }
 
-export async function sendEmail(
-  env,
-  {
-    to,
-    name,
-    subject,
-    html,
-    tags = [],
-  },
-) {
-  const response = await fetch(
-    'https://api.brevo.com/v3/smtp/email',
-    {
-      method: 'POST',
-      headers: {
-        accept: 'application/json',
-        'api-key': env.BREVO_API_KEY,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        sender: {
-          email: env.SENDER_EMAIL,
-          name:
-            env.SENDER_NAME || 'Meu Real',
-        },
-        to: [{ email: to, name }],
-        subject,
-        htmlContent: html,
-        replyTo: env.REPLY_TO_EMAIL
-          ? {
-              email: env.REPLY_TO_EMAIL,
-              name:
-                env.SENDER_NAME || 'Meu Real',
-            }
-          : undefined,
-        tags: [
-          'meu-real',
-          'premium',
-          ...tags,
-        ],
-      }),
+export async function sendEmail(env, { to, name, subject, html, tags = [] }) {
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'api-key': env.BREVO_API_KEY,
+      'content-type': 'application/json',
     },
-  )
+    body: JSON.stringify({
+      sender: {
+        email: env.SENDER_EMAIL,
+        name: env.SENDER_NAME || 'Meu Real',
+      },
+      to: [{ email: to, name }],
+      subject,
+      htmlContent: html,
+      replyTo: env.REPLY_TO_EMAIL
+        ? {
+            email: env.REPLY_TO_EMAIL,
+            name: env.SENDER_NAME || 'Meu Real',
+          }
+        : undefined,
+      tags: ['meu-real', 'premium', ...tags],
+    }),
+  })
 
   if (!response.ok) {
-    throw new Error(
-      `Brevo falhou (${response.status}): ${await response.text()}`,
-    )
+    throw new Error(`Brevo falhou (${response.status}): ${await response.text()}`)
   }
 
   return response.json()

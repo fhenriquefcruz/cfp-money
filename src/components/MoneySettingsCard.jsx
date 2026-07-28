@@ -88,8 +88,8 @@ function MoneySettingsContent() {
             </p>
             <p className="mt-1 text-[11px] leading-relaxed text-[--brand-600]">
               O Money usa estas preferências somente para montar comparações, projeções e
-              relatórios. Datas, valores e registros já cadastrados permanecem exatamente como
-              foram inseridos.
+              relatórios. Datas, valores e registros já cadastrados permanecem exatamente como foram
+              inseridos.
             </p>
           </div>
         </div>
@@ -148,9 +148,7 @@ function MoneySettingsContent() {
             <section className="rounded-2xl border border-[--border-default] p-4">
               <div className="mb-3 flex items-center gap-2">
                 <GitCompareArrows size={15} className="text-[--brand-600]" />
-                <h3 className="text-sm font-bold text-[--text-primary]">
-                  Comparação padrão
-                </h3>
+                <h3 className="text-sm font-bold text-[--text-primary]">Comparação padrão</h3>
               </div>
               <Select
                 aria-label="Modo de comparação do Money"

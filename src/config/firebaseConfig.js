@@ -17,7 +17,9 @@ const TEST_CONFIG = {
 }
 
 function isPlaceholder(value) {
-  const normalized = String(value || '').trim().toLowerCase()
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase()
 
   return (
     !normalized ||
@@ -57,7 +59,5 @@ export function resolveFirebaseConfig(env = {}) {
   if (env.MODE === 'test') return TEST_CONFIG
 
   const details = issues.map((issue) => issue.envKey).join(', ')
-  throw new Error(
-    `[Meu Real] Configuração Firebase inválida. Revise: ${details}.`,
-  )
+  throw new Error(`[Meu Real] Configuração Firebase inválida. Revise: ${details}.`)
 }

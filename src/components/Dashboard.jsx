@@ -81,9 +81,7 @@ const TxItem = ({ tx, categories }) => {
         </p>
         <p className="text-xs text-[--text-tertiary]">
           {formatRelativeDate(dateContext.activityDate)}
-          {dateContext.hasSeparateAccountingDate
-            ? ` · fatura ${dateContext.accountingLabel}`
-            : ''}
+          {dateContext.hasSeparateAccountingDate ? ` · fatura ${dateContext.accountingLabel}` : ''}
           {cat && !tx.isSavings ? ` · ${cat.name}` : ''}
         </p>
       </div>
@@ -234,9 +232,7 @@ export default function Dashboard() {
 
   const healthScore = useMemo(() => {
     const savingRate =
-      currentSummary.income > 0
-        ? (currentSummary.savings / currentSummary.income) * 100
-        : 0
+      currentSummary.income > 0 ? (currentSummary.savings / currentSummary.income) * 100 : 0
     return calcHealthScore({
       balance: currentSummary.balance,
       income: currentSummary.income,
@@ -363,9 +359,7 @@ export default function Dashboard() {
               <div>
                 <div className="mb-1 flex items-center gap-1.5">
                   <Zap size={14} className="text-[#f59e0b]" />
-                  <p className="text-xs font-semibold text-[--text-tertiary]">
-                    Previsão de gastos
-                  </p>
+                  <p className="text-xs font-semibold text-[--text-tertiary]">Previsão de gastos</p>
                   <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
                 </div>
                 {isLoading ? (
@@ -389,9 +383,7 @@ export default function Dashboard() {
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="flex items-center gap-1.5">
                 <Heart size={14} className="text-[--danger-icon]" />
-                <p className="text-xs font-semibold text-[--text-tertiary]">
-                  Saúde financeira
-                </p>
+                <p className="text-xs font-semibold text-[--text-tertiary]">Saúde financeira</p>
                 <InfoTooltip text="Indicador sintético baseado no equilíbrio entre receitas, despesas, orçamento e poupança registrados." />
               </div>
             </div>

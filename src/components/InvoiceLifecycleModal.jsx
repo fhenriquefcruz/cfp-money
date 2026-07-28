@@ -1,13 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  CheckCircle2,
-  History,
-  LockKeyhole,
-  Receipt,
-  RotateCcw,
-  Scale,
-  Wallet,
-} from 'lucide-react'
+import { CheckCircle2, History, LockKeyhole, Receipt, RotateCcw, Scale, Wallet } from 'lucide-react'
 import {
   createAdjustmentEvent,
   createManualCloseEvent,
@@ -40,13 +32,7 @@ function maskCurrency(raw) {
 function parseCurrency(masked) {
   if (!masked) return 0
 
-  return (
-    Number(
-      String(masked)
-        .replace(/\./g, '')
-        .replace(',', '.'),
-    ) || 0
-  )
+  return Number(String(masked).replace(/\./g, '').replace(',', '.')) || 0
 }
 
 const EVENT_LABELS = {
@@ -57,10 +43,7 @@ const EVENT_LABELS = {
 }
 
 function EventRow({ event, allEvents, invoice, onReverse, loading }) {
-  const reversible =
-    event.type === 'payment'
-      ? getPaymentReversibleAmount(event, allEvents)
-      : 0
+  const reversible = event.type === 'payment' ? getPaymentReversibleAmount(event, allEvents) : 0
 
   const value =
     event.type === 'adjustment'
@@ -92,9 +75,7 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
           {event.sourceAccount ? ` · ${event.sourceAccount}` : ''}
         </p>
         {event.notes && (
-          <p className="mt-1 text-[10px] leading-relaxed text-[--text-secondary]">
-            {event.notes}
-          </p>
+          <p className="mt-1 text-[10px] leading-relaxed text-[--text-secondary]">{event.notes}</p>
         )}
       </div>
 
@@ -102,9 +83,7 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
         {event.type !== 'manual_close' && (
           <p
             className={`text-xs font-black ${
-              value < 0
-                ? 'text-[--success-icon]'
-                : 'text-[--text-primary]'
+              value < 0 ? 'text-[--success-icon]' : 'text-[--text-primary]'
             }`}
           >
             {value < 0 ? '−' : ''}
@@ -150,26 +129,13 @@ export default function InvoiceLifecycleModal({
     if (!isOpen || !invoice) return
 
     setTab('payment')
-    setAmount(
-      maskCurrency(
-        String(
-          Math.round(
-            Number(lifecycle?.remainingAmount || 0) * 100,
-          ),
-        ),
-      ),
-    )
+    setAmount(maskCurrency(String(Math.round(Number(lifecycle?.remainingAmount || 0) * 100))))
     setEventDate(todayIso())
     setSourceAccount('')
     setNotes('')
     setDirection('credit')
     setError('')
-  }, [
-    invoice?.card?.id,
-    invoiceMonth,
-    isOpen,
-    lifecycle?.remainingAmount,
-  ])
+  }, [invoice?.card?.id, invoiceMonth, isOpen, lifecycle?.remainingAmount])
 
   const paymentSummary = useMemo(
     () => ({
@@ -193,10 +159,7 @@ export default function InvoiceLifecycleModal({
         setSourceAccount('')
       }
     } catch (submitError) {
-      setError(
-        submitError?.message ||
-          'Não foi possível registrar o evento.',
-      )
+      setError(submitError?.message || 'Não foi possível registrar o evento.')
       throw submitError
     } finally {
       setLoading(false)
@@ -262,9 +225,7 @@ export default function InvoiceLifecycleModal({
           payment,
           invoiceEvents: events,
           eventDate: todayIso(),
-          notes: `Estorno do pagamento de ${formatCurrency(
-            payment.amount,
-          )}.`,
+          notes: `Estorno do pagamento de ${formatCurrency(payment.amount)}.`,
         }),
       )
     } catch {
@@ -284,32 +245,16 @@ export default function InvoiceLifecycleModal({
       closeOnEscape={!loading}
       footer={
         tab === 'history' ? (
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={onClose}
-          >
+          <Button variant="secondary" fullWidth onClick={onClose}>
             Fechar
           </Button>
         ) : (
           <div className="flex gap-3">
-            <Button
-              variant="secondary"
-              fullWidth
-              onClick={onClose}
-              disabled={loading}
-            >
+            <Button variant="secondary" fullWidth onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
-            <Button
-              variant="primary"
-              fullWidth
-              loading={loading}
-              onClick={handleSubmit}
-            >
-              {tab === 'payment'
-                ? 'Registrar pagamento'
-                : 'Registrar ajuste'}
+            <Button variant="primary" fullWidth loading={loading} onClick={handleSubmit}>
+              {tab === 'payment' ? 'Registrar pagamento' : 'Registrar ajuste'}
             </Button>
           </div>
         )
@@ -366,9 +311,7 @@ export default function InvoiceLifecycleModal({
           <div className="space-y-4">
             {tab === 'adjustment' && (
               <div>
-                <p className="mb-2 text-xs font-black text-[--text-secondary]">
-                  Tipo de ajuste
-                </p>
+                <p className="mb-2 text-xs font-black text-[--text-secondary]">Tipo de ajuste</p>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -401,9 +344,7 @@ export default function InvoiceLifecycleModal({
                 htmlFor="invoice-event-amount"
                 className="mb-1.5 block text-sm font-medium text-[--text-secondary]"
               >
-                {tab === 'payment'
-                  ? 'Valor pago'
-                  : 'Valor do ajuste'}
+                {tab === 'payment' ? 'Valor pago' : 'Valor do ajuste'}
               </label>
               <div className="relative">
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-black text-[--text-secondary]">
@@ -414,9 +355,7 @@ export default function InvoiceLifecycleModal({
                   type="text"
                   inputMode="numeric"
                   value={amount}
-                  onChange={(event) =>
-                    setAmount(maskCurrency(event.target.value))
-                  }
+                  onChange={(event) => setAmount(maskCurrency(event.target.value))}
                   className="min-h-12 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] pl-10 pr-3 text-lg font-black text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
                 />
               </div>
@@ -433,9 +372,7 @@ export default function InvoiceLifecycleModal({
                 id="invoice-event-date"
                 type="date"
                 value={eventDate}
-                onChange={(event) =>
-                  setEventDate(event.target.value)
-                }
+                onChange={(event) => setEventDate(event.target.value)}
                 className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
               />
             </div>
@@ -452,9 +389,7 @@ export default function InvoiceLifecycleModal({
                   id="invoice-source-account"
                   type="text"
                   value={sourceAccount}
-                  onChange={(event) =>
-                    setSourceAccount(event.target.value)
-                  }
+                  onChange={(event) => setSourceAccount(event.target.value)}
                   placeholder="Ex.: Banco do Brasil"
                   className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
                 />
@@ -472,9 +407,7 @@ export default function InvoiceLifecycleModal({
                 id="invoice-event-notes"
                 rows={3}
                 value={notes}
-                onChange={(event) =>
-                  setNotes(event.target.value)
-                }
+                onChange={(event) => setNotes(event.target.value)}
                 placeholder={
                   tab === 'adjustment'
                     ? 'O motivo é obrigatório para ajustes.'
@@ -502,8 +435,8 @@ export default function InvoiceLifecycleModal({
           <div>
             <div className="flex items-center gap-2 rounded-xl bg-[--brand-50] p-3 text-[10px] leading-relaxed text-[--brand-700]">
               <Receipt size={14} className="flex-shrink-0" />
-              Pagamentos ficam fora de Transações para não duplicar
-              despesas já contabilizadas pelas compras.
+              Pagamentos ficam fora de Transações para não duplicar despesas já contabilizadas pelas
+              compras.
             </div>
 
             <div className="mt-3 max-h-[360px] overflow-y-auto">
@@ -520,10 +453,7 @@ export default function InvoiceLifecycleModal({
                 ))
               ) : (
                 <div className="py-10 text-center">
-                  <History
-                    size={28}
-                    className="mx-auto text-[--text-tertiary]"
-                  />
+                  <History size={28} className="mx-auto text-[--text-tertiary]" />
                   <p className="mt-2 text-sm font-black text-[--text-primary]">
                     Nenhum evento registrado
                   </p>

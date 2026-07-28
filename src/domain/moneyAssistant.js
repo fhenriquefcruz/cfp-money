@@ -195,8 +195,11 @@ export function parseMoneyAssistantIntent(
     return {
       type: 'category_report',
       category,
-      requestedMonth:
-        requestedMonth || { year: now.getFullYear(), month: now.getMonth(), source: 'default' },
+      requestedMonth: requestedMonth || {
+        year: now.getFullYear(),
+        month: now.getMonth(),
+        source: 'default',
+      },
     }
   }
 
@@ -209,8 +212,11 @@ export function parseMoneyAssistantIntent(
   if (asksMonthlyReport) {
     return {
       type: 'monthly_report',
-      requestedMonth:
-        requestedMonth || { year: now.getFullYear(), month: now.getMonth(), source: 'default' },
+      requestedMonth: requestedMonth || {
+        year: now.getFullYear(),
+        month: now.getMonth(),
+        source: 'default',
+      },
     }
   }
 
@@ -244,8 +250,7 @@ export function buildMoneyAssistantResponse({
     return {
       type: 'help',
       title: intent.type === 'unknown' ? 'Ainda não entendi esse pedido' : 'Como posso ajudar',
-      text:
-        'Nesta fase, posso consultar seus dados sem alterar nenhum lançamento. Peça um relatório mensal, uma análise do período atual ou o total gasto em uma categoria.',
+      text: 'Nesta fase, posso consultar seus dados sem alterar nenhum lançamento. Peça um relatório mensal, uma análise do período atual ou o total gasto em uma categoria.',
       suggestions: [
         'Como estão minhas finanças?',
         'Quero o relatório do mês atual',

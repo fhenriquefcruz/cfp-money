@@ -11,9 +11,7 @@ import { Link } from 'react-router-dom'
 import { Button, Input, Select } from './ui'
 import { formatCurrency, formatDate, PAYMENT_METHODS } from '../utils'
 
-const SUPPORTED_PAYMENT_METHODS = PAYMENT_METHODS.filter(
-  (method) => method.id !== 'credit_card',
-)
+const SUPPORTED_PAYMENT_METHODS = PAYMENT_METHODS.filter((method) => method.id !== 'credit_card')
 
 function transactionLabel(type) {
   return type === 'income' ? 'Receita' : 'Despesa'
@@ -25,18 +23,13 @@ function CreatedTransaction({ response, onUndo, busy }) {
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-3 rounded-2xl border border-[--success-border] bg-[--success-bg] p-3.5">
-        <CheckCircle2
-          size={18}
-          className="mt-0.5 flex-shrink-0 text-[--success-icon]"
-        />
+        <CheckCircle2 size={18} className="mt-0.5 flex-shrink-0 text-[--success-icon]" />
         <div>
-          <p className="text-sm font-black text-[--success-text]">
-            Lançamento registrado
-          </p>
+          <p className="text-sm font-black text-[--success-text]">Lançamento registrado</p>
           <p className="mt-1 text-xs leading-relaxed text-[--success-text]">
             {transactionLabel(transaction.type)} de{' '}
-            <strong>{formatCurrency(transaction.amount)}</strong> em{' '}
-            {transaction.categoryName}, com data de {formatDate(transaction.date)}.
+            <strong>{formatCurrency(transaction.amount)}</strong> em {transaction.categoryName}, com
+            data de {formatDate(transaction.date)}.
           </p>
         </div>
       </div>
@@ -71,9 +64,7 @@ export default function MoneyTransactionAction({
   const eligibleCategories = useMemo(
     () =>
       categories.filter(
-        (category) =>
-          draft &&
-          (category.type === draft.type || category.type === 'both'),
+        (category) => draft && (category.type === draft.type || category.type === 'both'),
       ),
     [categories, draft],
   )
@@ -101,9 +92,7 @@ export default function MoneyTransactionAction({
       <div className="flex items-start gap-3 rounded-2xl border border-[--border-default] bg-[--bg-subtle] p-3.5">
         <RotateCcw size={17} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
         <div>
-          <p className="text-sm font-bold text-[--text-primary]">
-            Lançamento desfeito
-          </p>
+          <p className="text-sm font-bold text-[--text-primary]">Lançamento desfeito</p>
           <p className="mt-1 text-xs text-[--text-tertiary]">
             A transação criada pelo Money foi removida.
           </p>
@@ -116,17 +105,10 @@ export default function MoneyTransactionAction({
     return (
       <div className="space-y-3">
         <div className="flex items-start gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-3.5">
-          <AlertTriangle
-            size={18}
-            className="mt-0.5 flex-shrink-0 text-[--warning-icon]"
-          />
+          <AlertTriangle size={18} className="mt-0.5 flex-shrink-0 text-[--warning-icon]" />
           <div>
-            <p className="text-sm font-black text-[--text-primary]">
-              {response.title}
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">
-              {response.text}
-            </p>
+            <p className="text-sm font-black text-[--text-primary]">{response.title}</p>
+            <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">{response.text}</p>
           </div>
         </div>
         <Link
@@ -142,9 +124,7 @@ export default function MoneyTransactionAction({
 
   if (!draft) return null
 
-  const selectedCategory = categories.find(
-    (category) => category.id === draft.categoryId,
-  )
+  const selectedCategory = categories.find((category) => category.id === draft.categoryId)
 
   const update = (field, value) => {
     if (field === 'type') {
@@ -174,19 +154,13 @@ export default function MoneyTransactionAction({
     setDraft((current) => ({ ...current, [field]: value }))
   }
 
-  const isValid =
-    Number(draft.amount) > 0 &&
-    draft.categoryId &&
-    draft.paymentMethod &&
-    draft.date
+  const isValid = Number(draft.amount) > 0 && draft.categoryId && draft.paymentMethod && draft.date
 
   return (
     <div className="space-y-4">
       <div>
         <p className="text-sm font-black text-[--text-primary]">{response.title}</p>
-        <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">
-          {response.text}
-        </p>
+        <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">{response.text}</p>
       </div>
 
       <div className="flex items-start gap-2 rounded-xl border border-[--brand-200] bg-[--brand-50] p-3">
@@ -201,13 +175,8 @@ export default function MoneyTransactionAction({
           key={warning}
           className="flex items-start gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] p-3"
         >
-          <AlertTriangle
-            size={15}
-            className="mt-0.5 flex-shrink-0 text-[--warning-icon]"
-          />
-          <p className="text-[11px] leading-relaxed text-[--text-secondary]">
-            {warning}
-          </p>
+          <AlertTriangle size={15} className="mt-0.5 flex-shrink-0 text-[--warning-icon]" />
+          <p className="text-[11px] leading-relaxed text-[--text-secondary]">{warning}</p>
         </div>
       ))}
 
@@ -281,12 +250,7 @@ export default function MoneyTransactionAction({
       )}
 
       <div className="flex flex-col-reverse gap-2 border-t border-[--border-subtle] pt-4 sm:flex-row sm:justify-end">
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={busy}
-          onClick={onCancel}
-        >
+        <Button variant="secondary" size="sm" disabled={busy} onClick={onCancel}>
           Cancelar
         </Button>
         <Button
@@ -300,8 +264,7 @@ export default function MoneyTransactionAction({
               ...draft,
               amount: Number(draft.amount),
               description:
-                draft.description.trim() ||
-                (draft.type === 'income' ? 'Receita' : 'Despesa'),
+                draft.description.trim() || (draft.type === 'income' ? 'Receita' : 'Despesa'),
             })
           }
         >

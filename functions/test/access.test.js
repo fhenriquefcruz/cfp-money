@@ -1,10 +1,6 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
-const {
-  buildAccessUpdate,
-  calculateEntitlement,
-  normalizeAdminAction,
-} = require('../lib/access')
+const { buildAccessUpdate, calculateEntitlement, normalizeAdminAction } = require('../lib/access')
 
 test('trial ativo libera recursos premium', () => {
   const now = new Date('2026-07-27T12:00:00.000Z')
@@ -54,10 +50,7 @@ test('renovação soma meses ao prazo premium ainda ativo', () => {
   )
 
   assert.equal(update.plan, 'premium')
-  assert.equal(
-    update.premiumUntil.toISOString(),
-    '2026-09-09T00:00:00.000Z',
-  )
+  assert.equal(update.premiumUntil.toISOString(), '2026-09-09T00:00:00.000Z')
   assert.equal(update.blocked, false)
 })
 
@@ -75,10 +68,7 @@ test('ativação expirada começa a contar da data atual', () => {
     new Date('2026-07-27T00:00:00.000Z'),
   )
 
-  assert.equal(
-    update.premiumUntil.toISOString(),
-    '2026-09-25T00:00:00.000Z',
-  )
+  assert.equal(update.premiumUntil.toISOString(), '2026-09-25T00:00:00.000Z')
 })
 
 test('rejeita prazo administrativo fora do limite', () => {

@@ -16,25 +16,16 @@ function decodeValue(value = {}) {
     return value.timestampValue
   }
   if ('arrayValue' in value) {
-    return (
-      value.arrayValue.values || []
-    ).map(decodeValue)
+    return (value.arrayValue.values || []).map(decodeValue)
   }
   if ('mapValue' in value) {
-    return decodeFields(
-      value.mapValue.fields || {},
-    )
+    return decodeFields(value.mapValue.fields || {})
   }
   return null
 }
 
 function decodeFields(fields = {}) {
-  return Object.fromEntries(
-    Object.entries(fields).map(([key, value]) => [
-      key,
-      decodeValue(value),
-    ]),
-  )
+  return Object.fromEntries(Object.entries(fields).map(([key, value]) => [key, decodeValue(value)]))
 }
 
 function encodeValue(value) {
@@ -53,9 +44,7 @@ function encodeValue(value) {
     return { booleanValue: value }
   }
   if (typeof value === 'number') {
-    return Number.isInteger(value)
-      ? { integerValue: String(value) }
-      : { doubleValue: value }
+    return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value }
   }
   if (typeof value === 'object') {
     return {
@@ -68,16 +57,13 @@ function encodeValue(value) {
 }
 
 function encodeFields(data = {}) {
-  return Object.fromEntries(
-    Object.entries(data).map(([key, value]) => [
-      key,
-      encodeValue(value),
-    ]),
-  )
+  return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, encodeValue(value)]))
 }
 
 function documentId(name) {
-  return String(name || '').split('/').pop()
+  return String(name || '')
+    .split('/')
+    .pop()
 }
 
 export function decodeDocument(document) {
@@ -98,63 +84,43 @@ function base(env) {
 
 async function request(env, path, options = {}) {
   const token = await getGoogleAccessToken(env)
-  const response = await fetch(
-    `${base(env)}/${path}`,
-    {
-      ...options,
-      headers: {
-        authorization: `Bearer ${token}`,
-        'content-type': 'application/json',
-        ...(options.headers || {}),
-      },
+  const response = await fetch(`${base(env)}/${path}`, {
+    ...options,
+    headers: {
+      authorization: `Bearer ${token}`,
+      'content-type': 'application/json',
+      ...(options.headers || {}),
     },
-  )
+  })
 
   return response
 }
 
 export async function getDocument(env, path) {
-  const response = await request(
-    env,
-    path
-      .split('/')
-      .map(encodeURIComponent)
-      .join('/'),
-  )
+  const response = await request(env, path.split('/').map(encodeURIComponent).join('/'))
 
   if (response.status === 404) return null
   if (!response.ok) {
-    throw new Error(
-      `Firestore GET ${path} falhou (${response.status}): ${await response.text()}`,
-    )
+    throw new Error(`Firestore GET ${path} falhou (${response.status}): ${await response.text()}`)
   }
 
   return decodeDocument(await response.json())
 }
 
-export async function listCollection(
-  env,
-  path,
-  { limit = 2000 } = {},
-) {
+export async function listCollection(env, path, { limit = 2000 } = {}) {
   const items = []
   let pageToken = ''
 
   while (items.length < limit) {
     const separator = path.includes('?') ? '&' : '?'
     const query = new URLSearchParams({
-      pageSize: String(
-        Math.min(1000, limit - items.length),
-      ),
+      pageSize: String(Math.min(1000, limit - items.length)),
     })
     if (pageToken) {
       query.set('pageToken', pageToken)
     }
 
-    const response = await request(
-      env,
-      `${path}${separator}${query.toString()}`,
-    )
+    const response = await request(env, `${path}${separator}${query.toString()}`)
 
     if (response.status === 404) return []
     if (!response.ok) {
@@ -164,11 +130,7 @@ export async function listCollection(
     }
 
     const data = await response.json()
-    items.push(
-      ...(data.documents || []).map(
-        decodeDocument,
-      ),
-    )
+    items.push(...(data.documents || []).map(decodeDocument))
 
     if (!data.nextPageToken) break
     pageToken = data.nextPageToken
@@ -177,106 +139,58 @@ export async function listCollection(
   return items
 }
 
-export async function patchDocument(
-  env,
-  path,
-  data,
-  fieldPaths = Object.keys(data),
-) {
-  const encodedPath = path
-    .split('/')
-    .map(encodeURIComponent)
-    .join('/')
+export async function patchDocument(env, path, data, fieldPaths = Object.keys(data)) {
+  const encodedPath = path.split('/').map(encodeURIComponent).join('/')
   const query = new URLSearchParams()
 
   for (const field of fieldPaths) {
-    query.append(
-      'updateMask.fieldPaths',
-      field,
-    )
+    query.append('updateMask.fieldPaths', field)
   }
 
-  const response = await request(
-    env,
-    `${encodedPath}?${query.toString()}`,
-    {
-      method: 'PATCH',
-      body: JSON.stringify({
-        fields: encodeFields(data),
-      }),
-    },
-  )
+  const response = await request(env, `${encodedPath}?${query.toString()}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      fields: encodeFields(data),
+    }),
+  })
 
   if (!response.ok) {
-    throw new Error(
-      `Firestore PATCH ${path} falhou (${response.status}): ${await response.text()}`,
-    )
+    throw new Error(`Firestore PATCH ${path} falhou (${response.status}): ${await response.text()}`)
   }
 
   return decodeDocument(await response.json())
 }
 
-export async function createOrReplaceDocument(
-  env,
-  path,
-  data,
-) {
-  const encodedPath = path
-    .split('/')
-    .map(encodeURIComponent)
-    .join('/')
+export async function createOrReplaceDocument(env, path, data) {
+  const encodedPath = path.split('/').map(encodeURIComponent).join('/')
 
-  const response = await request(
-    env,
-    encodedPath,
-    {
-      method: 'PATCH',
-      body: JSON.stringify({
-        fields: encodeFields(data),
-      }),
-    },
-  )
+  const response = await request(env, encodedPath, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      fields: encodeFields(data),
+    }),
+  })
 
   if (!response.ok) {
-    throw new Error(
-      `Firestore WRITE ${path} falhou (${response.status}): ${await response.text()}`,
-    )
+    throw new Error(`Firestore WRITE ${path} falhou (${response.status}): ${await response.text()}`)
   }
 
   return decodeDocument(await response.json())
 }
 
 export async function hashKey(value) {
-  const digest = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(value),
-  )
-  return [...new Uint8Array(digest)]
-    .map((byte) =>
-      byte.toString(16).padStart(2, '0'),
-    )
-    .join('')
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 
 export async function deleteDocument(env, path) {
-  const encodedPath = path
-    .split('/')
-    .map(encodeURIComponent)
-    .join('/')
+  const encodedPath = path.split('/').map(encodeURIComponent).join('/')
 
-  const response = await request(
-    env,
-    encodedPath,
-    { method: 'DELETE' },
-  )
+  const response = await request(env, encodedPath, { method: 'DELETE' })
 
-  if (
-    response.status !== 404 &&
-    !response.ok
-  ) {
+  if (response.status !== 404 && !response.ok) {
     throw new Error(
       `Firestore DELETE ${path} falhou (${response.status}): ${await response.text()}`,
     )
   }
 }
-

@@ -133,7 +133,11 @@ export function getFinancialCycle(referenceDate = new Date(), settings = {}) {
     elapsedEnd: asIsoDate(reference),
     elapsedDays: differenceInCalendarDays(reference, start) + 1,
     totalDays: differenceInCalendarDays(nextStart, start),
-    progress: clamp((differenceInCalendarDays(reference, start) + 1) / differenceInCalendarDays(nextStart, start), 0, 1),
+    progress: clamp(
+      (differenceInCalendarDays(reference, start) + 1) / differenceInCalendarDays(nextStart, start),
+      0,
+      1,
+    ),
     settings: normalized,
   }
 }
@@ -146,20 +150,12 @@ export function getEquivalentPeriods(referenceDate = new Date(), settings = {}) 
   const previousElapsedEnd =
     current.settings.comparisonMode === 'full_cycle'
       ? previous.end
-      : asIsoDate(
-          addDays(
-            previous.start,
-            Math.min(current.elapsedDays, previous.totalDays) - 1,
-          ),
-        )
+      : asIsoDate(addDays(previous.start, Math.min(current.elapsedDays, previous.totalDays) - 1))
 
   return {
     current: {
       start: current.start,
-      end:
-        current.settings.comparisonMode === 'full_cycle'
-          ? current.end
-          : current.elapsedEnd,
+      end: current.settings.comparisonMode === 'full_cycle' ? current.end : current.elapsedEnd,
       cycleEnd: current.end,
       elapsedDays: current.elapsedDays,
       totalDays: current.totalDays,
@@ -219,8 +215,7 @@ export function calculateCategoryChanges(currentTransactions = [], previousTrans
 
       return {
         categoryId: currentItem?.categoryId || previousItem?.categoryId || null,
-        categoryName:
-          currentItem?.categoryName || previousItem?.categoryName || 'Sem categoria',
+        categoryName: currentItem?.categoryName || previousItem?.categoryName || 'Sem categoria',
         currentTotal,
         previousTotal,
         difference: currentTotal - previousTotal,
@@ -251,9 +246,7 @@ export function analyzeMoney(transactions = [], settings = {}, referenceDate = n
   const incomeChangePercent = safePercentChange(currentIncome, previousIncome)
 
   const projectedExpenses =
-    periods.current.progress > 0
-      ? currentExpenses / periods.current.progress
-      : currentExpenses
+    periods.current.progress > 0 ? currentExpenses / periods.current.progress : currentExpenses
 
   const categoryChanges = calculateCategoryChanges(currentTransactions, previousTransactions)
   const largestIncrease = categoryChanges.find((category) => category.difference > 0) || null

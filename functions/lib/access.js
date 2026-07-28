@@ -11,21 +11,14 @@ function toDate(value) {
 }
 
 function differenceInDays(futureDate, now) {
-  return Math.ceil(
-    (futureDate.getTime() - now.getTime()) / DAY_IN_MS,
-  )
+  return Math.ceil((futureDate.getTime() - now.getTime()) / DAY_IN_MS)
 }
 
 function addThirtyDayMonths(baseDate, months) {
-  return new Date(
-    baseDate.getTime() + Number(months) * 30 * DAY_IN_MS,
-  )
+  return new Date(baseDate.getTime() + Number(months) * 30 * DAY_IN_MS)
 }
 
-function calculateEntitlement(
-  data,
-  { now = new Date(), isAdmin = false } = {},
-) {
+function calculateEntitlement(data, { now = new Date(), isAdmin = false } = {}) {
   const base = {
     plan: data?.plan || 'free',
     isPremium: false,
@@ -89,9 +82,7 @@ function calculateEntitlement(
       }
     }
 
-    const elapsedDays = Math.floor(
-      (now.getTime() - trialStart.getTime()) / DAY_IN_MS,
-    )
+    const elapsedDays = Math.floor((now.getTime() - trialStart.getTime()) / DAY_IN_MS)
     const daysLeft = TRIAL_DAYS - elapsedDays
 
     return daysLeft > 0
@@ -114,12 +105,7 @@ function calculateEntitlement(
 function normalizeAdminAction(data = {}) {
   const targetUid = String(data.targetUid || '').trim()
   const action = String(data.action || '').trim()
-  const allowedActions = new Set([
-    'activate',
-    'remove',
-    'block',
-    'unblock',
-  ])
+  const allowedActions = new Set(['activate', 'remove', 'block', 'unblock'])
 
   if (!targetUid) {
     throw new Error('Usuário de destino não informado.')
@@ -137,14 +123,8 @@ function normalizeAdminAction(data = {}) {
   if (action === 'activate') {
     const months = Number(data.months)
 
-    if (
-      !Number.isInteger(months) ||
-      months < 1 ||
-      months > MAX_PREMIUM_MONTHS
-    ) {
-      throw new Error(
-        `Use entre 1 e ${MAX_PREMIUM_MONTHS} meses.`,
-      )
+    if (!Number.isInteger(months) || months < 1 || months > MAX_PREMIUM_MONTHS) {
+      throw new Error(`Use entre 1 e ${MAX_PREMIUM_MONTHS} meses.`)
     }
 
     normalized.months = months
@@ -153,29 +133,19 @@ function normalizeAdminAction(data = {}) {
   return normalized
 }
 
-function buildAccessUpdate(
-  currentData,
-  command,
-  now = new Date(),
-) {
+function buildAccessUpdate(currentData, command, now = new Date()) {
   const normalized = normalizeAdminAction(command)
 
   if (normalized.action === 'activate') {
-    const currentPremiumUntil = toDate(
-      currentData?.premiumUntil,
-    )
+    const currentPremiumUntil = toDate(currentData?.premiumUntil)
     const baseDate =
-      currentPremiumUntil &&
-      currentPremiumUntil.getTime() > now.getTime()
+      currentPremiumUntil && currentPremiumUntil.getTime() > now.getTime()
         ? currentPremiumUntil
         : now
 
     return {
       plan: 'premium',
-      premiumUntil: addThirtyDayMonths(
-        baseDate,
-        normalized.months,
-      ),
+      premiumUntil: addThirtyDayMonths(baseDate, normalized.months),
       blocked: false,
     }
   }

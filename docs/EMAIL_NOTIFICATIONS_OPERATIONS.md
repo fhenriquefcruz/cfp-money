@@ -46,7 +46,6 @@ Ao atender uma exclusão manual, remova também:
 - entregas cujo campo `uid` corresponda ao titular;
 - dados no provedor de e-mail, quando aplicável.
 
-
 ## Eficiência no plano gratuito
 
 O Worker não percorre todas as contas. Ele consulta apenas `notificationSubscribers`, lê transações somente quando um relatório está vencendo e processa alertas de orçamento pela fila do próprio usuário. Essa arquitetura reduz leituras desnecessárias do Firestore.

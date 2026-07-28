@@ -1,11 +1,4 @@
-import {
-  deleteDoc,
-  doc,
-  getDoc,
-  onSnapshot,
-  serverTimestamp,
-  setDoc,
-} from 'firebase/firestore'
+import { deleteDoc, doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from './firebase'
 import {
   DEFAULT_EMAIL_NOTIFICATION_SETTINGS,
@@ -14,83 +7,46 @@ import {
   normalizeEmailNotificationSettings,
 } from '../domain/emailNotifications'
 
-const settingsRef = (uid) =>
-  doc(
-    db,
-    'users',
-    uid,
-    'notificationSettings',
-    'email',
-  )
+const settingsRef = (uid) => doc(db, 'users', uid, 'notificationSettings', 'email')
 
-const subscriberRef = (uid) =>
-  doc(db, 'notificationSubscribers', uid)
+const subscriberRef = (uid) => doc(db, 'notificationSubscribers', uid)
 
-const queueRef = (uid, id) =>
-  doc(
-    db,
-    'users',
-    uid,
-    'notificationQueue',
-    id,
-  )
+const queueRef = (uid, id) => doc(db, 'users', uid, 'notificationQueue', id)
 
 function safeQueueId(value) {
-  return encodeURIComponent(
-    String(value)
-      .replace(/\//g, '-')
-      .slice(0, 400),
-  )
+  return encodeURIComponent(String(value).replace(/\//g, '-').slice(0, 400))
 }
 
-export async function getEmailNotificationSettings(
-  uid,
-) {
+export async function getEmailNotificationSettings(uid) {
   const snapshot = await getDoc(settingsRef(uid))
 
-  return normalizeEmailNotificationSettings(
-    snapshot.exists() ? snapshot.data() : {},
-  )
+  return normalizeEmailNotificationSettings(snapshot.exists() ? snapshot.data() : {})
 }
 
-export function onEmailNotificationSettingsChange(
-  uid,
-  callback,
-  onError,
-) {
+export function onEmailNotificationSettingsChange(uid, callback, onError) {
   return onSnapshot(
     settingsRef(uid),
     (snapshot) =>
       callback(
         normalizeEmailNotificationSettings(
-          snapshot.exists()
-            ? snapshot.data()
-            : DEFAULT_EMAIL_NOTIFICATION_SETTINGS,
+          snapshot.exists() ? snapshot.data() : DEFAULT_EMAIL_NOTIFICATION_SETTINGS,
         ),
       ),
     onError,
   )
 }
 
-export async function saveEmailNotificationSettings(
-  uid,
-  settings,
-) {
-  const normalized =
-    normalizeEmailNotificationSettings(
-      settings,
-    )
+export async function saveEmailNotificationSettings(uid, settings) {
+  const normalized = normalizeEmailNotificationSettings(settings)
 
   await setDoc(
     settingsRef(uid),
     {
       ...normalized,
-      settingsVersion:
-        NOTIFICATION_SETTINGS_VERSION,
+      settingsVersion: NOTIFICATION_SETTINGS_VERSION,
       updatedAt: serverTimestamp(),
       consentAt: normalized.enabled
-        ? normalized.consentAt ||
-          serverTimestamp()
+        ? normalized.consentAt || serverTimestamp()
         : normalized.consentAt || null,
     },
     { merge: true },
@@ -107,17 +63,13 @@ export async function saveEmailNotificationSettings(
       { merge: true },
     )
   } else {
-    await deleteDoc(subscriberRef(uid)).catch(
-      () => {},
-    )
+    await deleteDoc(subscriberRef(uid)).catch(() => {})
   }
 
   return normalized
 }
 
-export async function requestEmailNotificationTest(
-  uid,
-) {
+export async function requestEmailNotificationTest(uid) {
   const testRequestId = nextTestRequestId()
 
   await setDoc(
@@ -145,29 +97,18 @@ export async function requestEmailNotificationTest(
 
 export async function enqueueBudgetNotification(
   uid,
-  {
-    categoryId,
-    categoryName,
-    threshold,
-    percentage,
-    spent,
-    limit,
-    monthKey,
-  },
+  { categoryId, categoryName, threshold, percentage, spent, limit, monthKey },
 ) {
   if (!uid || !categoryId || !threshold) return
 
-  const id = safeQueueId(
-    `budget:${monthKey}:${categoryId}:${threshold}`,
-  )
+  const id = safeQueueId(`budget:${monthKey}:${categoryId}:${threshold}`)
 
   await setDoc(
     queueRef(uid, id),
     {
       type: 'budget',
       categoryId,
-      categoryName:
-        categoryName || 'Categoria',
+      categoryName: categoryName || 'Categoria',
       threshold,
       percentage: Number(percentage || 0),
       spent: Number(spent || 0),
@@ -180,9 +121,7 @@ export async function enqueueBudgetNotification(
   )
 }
 
-export async function clearEmailNotificationSettings(
-  uid,
-) {
+export async function clearEmailNotificationSettings(uid) {
   await Promise.all([
     deleteDoc(settingsRef(uid)).catch(() => {}),
     deleteDoc(subscriberRef(uid)).catch(() => {}),

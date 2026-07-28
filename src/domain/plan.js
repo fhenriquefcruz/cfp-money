@@ -37,9 +37,7 @@ export function calculatePlanStatus(data, { now = new Date(), isAdmin = false } 
     if (!premiumUntil) return { ...base, isExpired: true }
 
     const daysLeft = Math.ceil((premiumUntil.getTime() - now.getTime()) / DAY_IN_MS)
-    return daysLeft > 0
-      ? { ...base, isPremium: true, daysLeft }
-      : { ...base, isExpired: true }
+    return daysLeft > 0 ? { ...base, isPremium: true, daysLeft } : { ...base, isExpired: true }
   }
 
   if (data.plan === 'trial' || !data.plan) {

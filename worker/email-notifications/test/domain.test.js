@@ -15,8 +15,7 @@ test('valida premium e trial ativo', () => {
     isPremiumUser(
       {
         plan: 'premium',
-        premiumUntil:
-          '2026-08-01T00:00:00Z',
+        premiumUntil: '2026-08-01T00:00:00Z',
       },
       now,
     ),
@@ -26,8 +25,7 @@ test('valida premium e trial ativo', () => {
     isPremiumUser(
       {
         plan: 'trial',
-        trialStart:
-          '2026-07-25T00:00:00Z',
+        trialStart: '2026-07-25T00:00:00Z',
       },
       now,
     ),
@@ -37,8 +35,7 @@ test('valida premium e trial ativo', () => {
     isPremiumUser(
       {
         plan: 'trial',
-        trialStart:
-          '2026-07-01T00:00:00Z',
+        trialStart: '2026-07-01T00:00:00Z',
       },
       now,
     ),
@@ -89,17 +86,11 @@ test('identifica progresso e prazo da meta', () => {
     },
     new Date('2026-07-27T12:00:00Z'),
   )
-  assert.deepEqual(alerts, [
-    'progress-80',
-    'deadline-7',
-  ])
+  assert.deepEqual(alerts, ['progress-80', 'deadline-7'])
 })
 
 test('resume lançamentos do período', () => {
-  const range = reportRange(
-    'weekly',
-    new Date('2026-07-27T12:00:00Z'),
-  )
+  const range = reportRange('weekly', new Date('2026-07-27T12:00:00Z'))
   const summary = summarizeTransactions(
     [
       {
@@ -120,8 +111,5 @@ test('resume lançamentos do período', () => {
   assert.equal(summary.income, 1000)
   assert.equal(summary.expenses, 250)
   assert.equal(summary.balance, 750)
-  assert.equal(
-    summary.topCategories[0].name,
-    'Alimentação',
-  )
+  assert.equal(summary.topCategories[0].name, 'Alimentação')
 })

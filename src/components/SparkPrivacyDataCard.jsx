@@ -1,12 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  Clock3,
-  Download,
-  FileText,
-  ShieldCheck,
-  Trash2,
-  XCircle,
-} from 'lucide-react'
+import { Clock3, Download, FileText, ShieldCheck, Trash2, XCircle } from 'lucide-react'
 import {
   cancelAccountDeletion,
   exportMyData,
@@ -21,16 +14,11 @@ import { Button, Card, Modal } from './ui'
 const PHRASE = 'EXCLUIR MINHA CONTA'
 
 function downloadJson(data) {
-  const blob = new Blob(
-    [JSON.stringify(data, null, 2)],
-    { type: 'application/json;charset=utf-8' },
-  )
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = url
-  anchor.download = `meu-real-dados-${new Date()
-    .toISOString()
-    .slice(0, 10)}.json`
+  anchor.download = `meu-real-dados-${new Date().toISOString().slice(0, 10)}.json`
   document.body.appendChild(anchor)
   anchor.click()
   anchor.remove()
@@ -42,11 +30,9 @@ export default function SparkPrivacyDataCard() {
   const [message, setMessage] = useState('')
   const [action, setAction] = useState('')
   const [legalType, setLegalType] = useState(null)
-  const [acceptanceOpen, setAcceptanceOpen] =
-    useState(false)
+  const [acceptanceOpen, setAcceptanceOpen] = useState(false)
   const [accepted, setAccepted] = useState(false)
-  const [deletionOpen, setDeletionOpen] =
-    useState(false)
+  const [deletionOpen, setDeletionOpen] = useState(false)
   const [confirmation, setConfirmation] = useState('')
 
   const load = async () => {
@@ -54,9 +40,7 @@ export default function SparkPrivacyDataCard() {
   }
 
   useEffect(() => {
-    load().catch((error) =>
-      setMessage(error.message),
-    )
+    load().catch((error) => setMessage(error.message))
   }, [])
 
   const legalSummary = useMemo(
@@ -82,9 +66,7 @@ export default function SparkPrivacyDataCard() {
     }
   }
 
-  const pending =
-    status?.deletionRequest?.status ===
-    'pending-manual'
+  const pending = status?.deletionRequest?.status === 'pending-manual'
 
   return (
     <>
@@ -95,9 +77,7 @@ export default function SparkPrivacyDataCard() {
               <ShieldCheck size={17} />
             </div>
             <div>
-              <h2 className="text-sm font-black text-[--text-primary]">
-                Privacidade e dados
-              </h2>
+              <h2 className="text-sm font-black text-[--text-primary]">Privacidade e dados</h2>
               <p className="mt-1 text-xs text-[--text-tertiary]">
                 Operação compatível com o plano gratuito.
               </p>
@@ -109,38 +89,19 @@ export default function SparkPrivacyDataCard() {
           <div className="rounded-2xl border border-[--border-default] p-3">
             <div className="flex items-center gap-2">
               <FileText size={15} />
-              <p className="text-xs font-black">
-                Documentos jurídicos
-              </p>
+              <p className="text-xs font-black">Documentos jurídicos</p>
             </div>
-            <p className="mt-1 text-[10px] text-[--text-tertiary]">
-              {legalSummary}
-            </p>
+            <p className="mt-1 text-[10px] text-[--text-tertiary]">{legalSummary}</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => setLegalType('terms')}
-              >
+              <Button size="sm" variant="secondary" onClick={() => setLegalType('terms')}>
                 Termos
               </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => setLegalType('privacy')}
-              >
+              <Button size="sm" variant="secondary" onClick={() => setLegalType('privacy')}>
                 Privacidade
               </Button>
             </div>
             {status?.requiresAcceptance && (
-              <Button
-                size="sm"
-                fullWidth
-                className="mt-2"
-                onClick={() =>
-                  setAcceptanceOpen(true)
-                }
-              >
+              <Button size="sm" fullWidth className="mt-2" onClick={() => setAcceptanceOpen(true)}>
                 Revisar e aceitar
               </Button>
             )}
@@ -149,13 +110,10 @@ export default function SparkPrivacyDataCard() {
           <div className="rounded-2xl border border-[--border-default] p-3">
             <div className="flex items-center gap-2">
               <Download size={15} />
-              <p className="text-xs font-black">
-                Portabilidade
-              </p>
+              <p className="text-xs font-black">Portabilidade</p>
             </div>
             <p className="mt-1 text-[10px] text-[--text-tertiary]">
-              Gera no navegador um arquivo JSON com os dados
-              acessíveis pela própria conta.
+              Gera no navegador um arquivo JSON com os dados acessíveis pela própria conta.
             </p>
             <Button
               size="sm"
@@ -163,13 +121,7 @@ export default function SparkPrivacyDataCard() {
               fullWidth
               className="mt-3"
               loading={action === 'export'}
-              onClick={() =>
-                run(
-                  'export',
-                  exportMyData,
-                  'Exportação gerada.',
-                )
-              }
+              onClick={() => run('export', exportMyData, 'Exportação gerada.')}
             >
               Exportar meus dados
             </Button>
@@ -179,13 +131,10 @@ export default function SparkPrivacyDataCard() {
             <div className="rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-3">
               <div className="flex items-center gap-2">
                 <Clock3 size={15} />
-                <p className="text-xs font-black">
-                  Exclusão solicitada
-                </p>
+                <p className="text-xs font-black">Exclusão solicitada</p>
               </div>
               <p className="mt-1 text-[10px]">
-                No plano gratuito, a solicitação é processada
-                manualmente pelo responsável.
+                No plano gratuito, a solicitação é processada manualmente pelo responsável.
               </p>
               <Button
                 size="sm"
@@ -194,13 +143,7 @@ export default function SparkPrivacyDataCard() {
                 className="mt-3"
                 icon={<XCircle size={14} />}
                 loading={action === 'cancel'}
-                onClick={() =>
-                  run(
-                    'cancel',
-                    cancelAccountDeletion,
-                    'Solicitação cancelada.',
-                  )
-                }
+                onClick={() => run('cancel', cancelAccountDeletion, 'Solicitação cancelada.')}
               >
                 Cancelar solicitação
               </Button>
@@ -209,13 +152,11 @@ export default function SparkPrivacyDataCard() {
             <div className="rounded-2xl border border-[--danger-border] bg-[--danger-bg] p-3">
               <div className="flex items-center gap-2">
                 <Trash2 size={15} />
-                <p className="text-xs font-black">
-                  Encerrar conta
-                </p>
+                <p className="text-xs font-black">Encerrar conta</p>
               </div>
               <p className="mt-1 text-[10px]">
-                Registre uma solicitação para atendimento
-                manual enquanto o backend gratuito estiver ativo.
+                Registre uma solicitação para atendimento manual enquanto o backend gratuito estiver
+                ativo.
               </p>
               <Button
                 size="sm"
@@ -229,27 +170,17 @@ export default function SparkPrivacyDataCard() {
             </div>
           )}
 
-          {message && (
-            <p className="rounded-xl border p-3 text-xs">
-              {message}
-            </p>
-          )}
+          {message && <p className="rounded-xl border p-3 text-xs">{message}</p>}
         </div>
       </Card>
 
       <Modal
         isOpen={Boolean(legalType)}
         onClose={() => setLegalType(null)}
-        title={
-          legalType === 'terms'
-            ? 'Termos de Uso'
-            : 'Política de Privacidade'
-        }
+        title={legalType === 'terms' ? 'Termos de Uso' : 'Política de Privacidade'}
         size="lg"
       >
-        {legalType && (
-          <LegalDocument type={legalType} />
-        )}
+        {legalType && <LegalDocument type={legalType} />}
       </Modal>
 
       <Modal
@@ -267,10 +198,8 @@ export default function SparkPrivacyDataCard() {
                 async () => {
                   await recordLegalAcceptance({
                     accepted,
-                    termsVersion:
-                      LEGAL_VERSIONS.terms,
-                    privacyVersion:
-                      LEGAL_VERSIONS.privacy,
+                    termsVersion: LEGAL_VERSIONS.terms,
+                    privacyVersion: LEGAL_VERSIONS.privacy,
                   })
                   setAcceptanceOpen(false)
                   setAccepted(false)
@@ -293,13 +222,9 @@ export default function SparkPrivacyDataCard() {
             <input
               type="checkbox"
               checked={accepted}
-              onChange={(event) =>
-                setAccepted(event.target.checked)
-              }
+              onChange={(event) => setAccepted(event.target.checked)}
             />
-            <span className="text-xs">
-              Li e aceito os documentos apresentados.
-            </span>
+            <span className="text-xs">Li e aceito os documentos apresentados.</span>
           </label>
         </div>
       </Modal>
@@ -340,9 +265,7 @@ export default function SparkPrivacyDataCard() {
         </p>
         <input
           value={confirmation}
-          onChange={(event) =>
-            setConfirmation(event.target.value)
-          }
+          onChange={(event) => setConfirmation(event.target.value)}
           className="mt-3 min-h-11 w-full rounded-xl border px-3"
         />
       </Modal>

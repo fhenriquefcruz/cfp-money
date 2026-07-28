@@ -46,10 +46,7 @@ export const PlanProvider = ({ children }) => {
     )
   }, [user?.uid])
 
-  const status = useMemo(
-    () => calculatePlanStatus(planData, { isAdmin }),
-    [isAdmin, planData],
-  )
+  const status = useMemo(() => calculatePlanStatus(planData, { isAdmin }), [isAdmin, planData])
 
   const isCurrentUserDocument = Boolean(
     user?.uid && planDocumentUid && user.uid === planDocumentUid,

@@ -33,15 +33,11 @@ export default function TelegramIntegrationCard() {
   const [loading, setLoading] = useState(true)
   const [action, setAction] = useState('')
   const [message, setMessage] = useState('')
-  const botUsername = String(
-    import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '',
-  )
+  const botUsername = String(import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '')
     .trim()
     .replace(/^@/, '')
 
-  const botUrl = botUsername
-    ? `https://t.me/${botUsername}`
-    : ''
+  const botUrl = botUsername ? `https://t.me/${botUsername}` : ''
 
   const integrationLabel = useMemo(() => {
     if (!status.linked) return 'Não vinculado'
@@ -62,10 +58,7 @@ export default function TelegramIntegrationCard() {
         },
       })
     } catch (error) {
-      setMessage(
-        error?.message ||
-          'Não foi possível consultar a integração.',
-      )
+      setMessage(error?.message || 'Não foi possível consultar a integração.')
     } finally {
       setLoading(false)
     }
@@ -83,10 +76,7 @@ export default function TelegramIntegrationCard() {
       const data = await createTelegramLinkCode()
       setCodeData(data)
     } catch (error) {
-      setMessage(
-        error?.message ||
-          'Não foi possível gerar o código.',
-      )
+      setMessage(error?.message || 'Não foi possível gerar o código.')
     } finally {
       setAction('')
     }
@@ -103,19 +93,14 @@ export default function TelegramIntegrationCard() {
     setMessage('')
 
     try {
-      const result = await updateTelegramPreferences(
-        preferences,
-      )
+      const result = await updateTelegramPreferences(preferences)
       setStatus((current) => ({
         ...current,
         preferences: result.preferences,
       }))
       setMessage('Preferências do Telegram salvas.')
     } catch (error) {
-      setMessage(
-        error?.message ||
-          'Não foi possível salvar as preferências.',
-      )
+      setMessage(error?.message || 'Não foi possível salvar as preferências.')
     } finally {
       setAction('')
     }
@@ -147,10 +132,7 @@ export default function TelegramIntegrationCard() {
       setCodeData(null)
       setMessage('Telegram desvinculado.')
     } catch (error) {
-      setMessage(
-        error?.message ||
-          'Não foi possível desvincular.',
-      )
+      setMessage(error?.message || 'Não foi possível desvincular.')
     } finally {
       setAction('')
     }
@@ -165,9 +147,7 @@ export default function TelegramIntegrationCard() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-base font-black text-[--text-primary]">
-                Money no Telegram
-              </h2>
+              <h2 className="text-base font-black text-[--text-primary]">Money no Telegram</h2>
               <span
                 className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
                   status.linked
@@ -179,8 +159,8 @@ export default function TelegramIntegrationCard() {
               </span>
             </div>
             <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-              Consulte saldos e registre lançamentos por mensagem,
-              sempre com confirmação antes de salvar.
+              Consulte saldos e registre lançamentos por mensagem, sempre com confirmação antes de
+              salvar.
             </p>
           </div>
         </div>
@@ -189,38 +169,24 @@ export default function TelegramIntegrationCard() {
       <div className="space-y-5 p-5">
         {loading ? (
           <div className="flex min-h-24 items-center justify-center">
-            <Loader2
-              size={22}
-              className="animate-spin text-[--brand-600]"
-            />
+            <Loader2 size={22} className="animate-spin text-[--brand-600]" />
           </div>
         ) : status.linked ? (
           <>
             <div className="flex items-start gap-3 rounded-2xl border border-[--success-border] bg-[--success-bg] p-4">
-              <CheckCircle2
-                size={17}
-                className="mt-0.5 flex-shrink-0 text-[--success-icon]"
-              />
+              <CheckCircle2 size={17} className="mt-0.5 flex-shrink-0 text-[--success-icon]" />
               <div>
-                <p className="text-xs font-black text-[--success-text]">
-                  Integração ativa
-                </p>
+                <p className="text-xs font-black text-[--success-text]">Integração ativa</p>
                 <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
-                  O bot está autorizado a consultar e criar dados
-                  apenas para a sua conta vinculada.
+                  O bot está autorizado a consultar e criar dados apenas para a sua conta vinculada.
                 </p>
               </div>
             </div>
 
             <div>
               <div className="mb-2 flex items-center gap-2">
-                <BellRing
-                  size={15}
-                  className="text-[--brand-600]"
-                />
-                <p className="text-xs font-black text-[--text-primary]">
-                  Resumos e alertas
-                </p>
+                <BellRing size={15} className="text-[--brand-600]" />
+                <p className="text-xs font-black text-[--text-primary]">Resumos e alertas</p>
               </div>
 
               <div className="space-y-2">
@@ -230,11 +196,7 @@ export default function TelegramIntegrationCard() {
                     'Resumo diário',
                     'Enviado às 8h com receitas, despesas e saldo do ciclo.',
                   ],
-                  [
-                    'weeklySummary',
-                    'Resumo semanal',
-                    'Enviado nas manhãs de segunda-feira.',
-                  ],
+                  ['weeklySummary', 'Resumo semanal', 'Enviado nas manhãs de segunda-feira.'],
                   [
                     'invoiceAlerts',
                     'Alertas de fatura',
@@ -247,9 +209,7 @@ export default function TelegramIntegrationCard() {
                   >
                     <input
                       type="checkbox"
-                      checked={Boolean(
-                        status.preferences[field],
-                      )}
+                      checked={Boolean(status.preferences[field])}
                       disabled={action === 'preferences'}
                       onChange={() => togglePreference(field)}
                       className="mt-1 h-4 w-4 accent-[--brand-600]"
@@ -293,17 +253,11 @@ export default function TelegramIntegrationCard() {
         ) : (
           <>
             <div className="flex items-start gap-3 rounded-2xl border border-[--brand-200] bg-[--brand-50] p-4">
-              <ShieldCheck
-                size={17}
-                className="mt-0.5 flex-shrink-0 text-[--brand-600]"
-              />
+              <ShieldCheck size={17} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
               <div>
-                <p className="text-xs font-black text-[--brand-700]">
-                  Vinculação segura
-                </p>
+                <p className="text-xs font-black text-[--brand-700]">Vinculação segura</p>
                 <p className="mt-1 text-[11px] leading-relaxed text-[--brand-600]">
-                  O código expira em dez minutos e pode ser usado
-                  somente uma vez.
+                  O código expira em dez minutos e pode ser usado somente uma vez.
                 </p>
               </div>
             </div>
@@ -340,10 +294,7 @@ export default function TelegramIntegrationCard() {
                 <ol className="space-y-1 text-[11px] leading-relaxed text-[--text-secondary]">
                   <li>1. Abra o bot no Telegram.</li>
                   <li>
-                    2. Envie{' '}
-                    <code className="font-bold">
-                      /vincular {codeData.code}
-                    </code>
+                    2. Envie <code className="font-bold">/vincular {codeData.code}</code>
                   </li>
                   <li>3. Volte aqui e reabra as preferências.</li>
                 </ol>
@@ -360,11 +311,7 @@ export default function TelegramIntegrationCard() {
                       Abrir bot
                     </a>
                   )}
-                  <Button
-                    variant="secondary"
-                    fullWidth
-                    onClick={loadStatus}
-                  >
+                  <Button variant="secondary" fullWidth onClick={loadStatus}>
                     Verificar vínculo
                   </Button>
                 </div>

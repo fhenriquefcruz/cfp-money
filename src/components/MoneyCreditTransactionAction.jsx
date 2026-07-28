@@ -11,22 +11,14 @@ import {
 import { Link } from 'react-router-dom'
 import { Button, Input, Select } from './ui'
 import { formatCurrency, formatDate } from '../utils'
-import {
-  calculateInvoiceSchedule,
-  splitInstallmentAmounts,
-} from '../domain/creditCards'
+import { calculateInvoiceSchedule, splitInstallmentAmounts } from '../domain/creditCards'
 
 function CancelledMessage() {
   return (
     <div className="flex items-start gap-3 rounded-2xl border border-[--border-default] bg-[--bg-subtle] p-3.5">
-      <XCircle
-        size={17}
-        className="mt-0.5 flex-shrink-0 text-[--text-tertiary]"
-      />
+      <XCircle size={17} className="mt-0.5 flex-shrink-0 text-[--text-tertiary]" />
       <div>
-        <p className="text-sm font-bold text-[--text-primary]">
-          Compra cancelada
-        </p>
+        <p className="text-sm font-bold text-[--text-primary]">Compra cancelada</p>
         <p className="mt-1 text-xs text-[--text-tertiary]">
           Nenhuma parcela ou transação foi criada.
         </p>
@@ -38,14 +30,9 @@ function CancelledMessage() {
 function UndoneMessage() {
   return (
     <div className="flex items-start gap-3 rounded-2xl border border-[--border-default] bg-[--bg-subtle] p-3.5">
-      <RotateCcw
-        size={17}
-        className="mt-0.5 flex-shrink-0 text-[--brand-600]"
-      />
+      <RotateCcw size={17} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
       <div>
-        <p className="text-sm font-bold text-[--text-primary]">
-          Compra desfeita
-        </p>
+        <p className="text-sm font-bold text-[--text-primary]">Compra desfeita</p>
         <p className="mt-1 text-xs text-[--text-tertiary]">
           Todas as transações criadas para essa compra foram removidas.
         </p>
@@ -59,28 +46,19 @@ function CreatedCreditPurchase({ response, onUndo, busy }) {
   const count = response.transactions?.length || 0
   const total =
     response.originalAmount ||
-    response.transactions?.reduce(
-      (sum, transaction) => sum + Number(transaction.amount || 0),
-      0,
-    ) ||
+    response.transactions?.reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0) ||
     0
 
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-3 rounded-2xl border border-[--success-border] bg-[--success-bg] p-3.5">
-        <CheckCircle2
-          size={18}
-          className="mt-0.5 flex-shrink-0 text-[--success-icon]"
-        />
+        <CheckCircle2 size={18} className="mt-0.5 flex-shrink-0 text-[--success-icon]" />
         <div>
-          <p className="text-sm font-black text-[--success-text]">
-            Compra registrada
-          </p>
+          <p className="text-sm font-black text-[--success-text]">Compra registrada</p>
           <p className="mt-1 text-xs leading-relaxed text-[--success-text]">
-            <strong>{formatCurrency(total)}</strong> no cartão{' '}
-            {first?.cardName || 'selecionado'}
-            {count > 1 ? ` em ${count} parcelas` : ''}. Primeira fatura com
-            vencimento em {formatDate(first?.dueDate || first?.date)}.
+            <strong>{formatCurrency(total)}</strong> no cartão {first?.cardName || 'selecionado'}
+            {count > 1 ? ` em ${count} parcelas` : ''}. Primeira fatura com vencimento em{' '}
+            {formatDate(first?.dueDate || first?.date)}.
           </p>
         </div>
       </div>
@@ -117,17 +95,10 @@ export default function MoneyCreditTransactionAction({
     return (
       <div className="space-y-3">
         <div className="flex items-start gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-3.5">
-          <CreditCard
-            size={18}
-            className="mt-0.5 flex-shrink-0 text-[--warning-icon]"
-          />
+          <CreditCard size={18} className="mt-0.5 flex-shrink-0 text-[--warning-icon]" />
           <div>
-            <p className="text-sm font-black text-[--text-primary]">
-              {response.title}
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">
-              {response.text}
-            </p>
+            <p className="text-sm font-black text-[--text-primary]">{response.title}</p>
+            <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">{response.text}</p>
           </div>
         </div>
         <Link
@@ -142,13 +113,7 @@ export default function MoneyCreditTransactionAction({
   }
 
   if (response.type === 'credit_transaction_created') {
-    return (
-      <CreatedCreditPurchase
-        response={response}
-        onUndo={onUndo}
-        busy={busy}
-      />
-    )
+    return <CreatedCreditPurchase response={response} onUndo={onUndo} busy={busy} />
   }
 
   if (response.type === 'credit_transaction_cancelled') {
@@ -162,10 +127,7 @@ export default function MoneyCreditTransactionAction({
   if (response.type === 'credit_transaction_error') {
     return (
       <div className="flex items-start gap-3 rounded-2xl border border-[--danger-border] bg-[--danger-bg] p-3.5">
-        <AlertTriangle
-          size={17}
-          className="mt-0.5 flex-shrink-0 text-[--danger-icon]"
-        />
+        <AlertTriangle size={17} className="mt-0.5 flex-shrink-0 text-[--danger-icon]" />
         <div>
           <p className="text-sm font-bold text-[--danger-text]">
             Não foi possível registrar a compra
@@ -182,13 +144,10 @@ export default function MoneyCreditTransactionAction({
 
   const activeCards = creditCards.filter((card) => card.active !== false)
   const eligibleCategories = categories.filter(
-    (category) =>
-      category.type === 'expense' || category.type === 'both',
+    (category) => category.type === 'expense' || category.type === 'both',
   )
   const selectedCard = activeCards.find((card) => card.id === draft.cardId)
-  const selectedCategory = eligibleCategories.find(
-    (category) => category.id === draft.categoryId,
-  )
+  const selectedCategory = eligibleCategories.find((category) => category.id === draft.categoryId)
 
   const installmentCount = Number(draft.installments)
   const schedule =
@@ -205,31 +164,22 @@ export default function MoneyCreditTransactionAction({
 
     const [year, month] = schedule.dueDate.split('-').map(Number)
 
-    return Array.from(
-      { length: Math.min(installmentCount, 4) },
-      (_, index) => {
-        const date = new Date(year, month - 1 + index, 1)
-        const lastDay = new Date(
-          date.getFullYear(),
-          date.getMonth() + 1,
-          0,
-        ).getDate()
-        date.setDate(Math.min(Number(selectedCard.dueDay), lastDay))
+    return Array.from({ length: Math.min(installmentCount, 4) }, (_, index) => {
+      const date = new Date(year, month - 1 + index, 1)
+      const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+      date.setDate(Math.min(Number(selectedCard.dueDay), lastDay))
 
-        return [
-          date.getFullYear(),
-          String(date.getMonth() + 1).padStart(2, '0'),
-          String(date.getDate()).padStart(2, '0'),
-        ].join('-')
-      },
-    )
+      return [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0'),
+      ].join('-')
+    })
   })()
 
   const update = (field, value) => {
     if (field === 'categoryId') {
-      const category = eligibleCategories.find(
-        (item) => item.id === value,
-      )
+      const category = eligibleCategories.find((item) => item.id === value)
       setDraft((current) => ({
         ...current,
         categoryId: value,
@@ -265,22 +215,15 @@ export default function MoneyCreditTransactionAction({
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm font-black text-[--text-primary]">
-          {response.title}
-        </p>
-        <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">
-          {response.text}
-        </p>
+        <p className="text-sm font-black text-[--text-primary]">{response.title}</p>
+        <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">{response.text}</p>
       </div>
 
       <div className="flex items-start gap-2 rounded-xl border border-[--brand-200] bg-[--brand-50] p-3">
-        <ShieldCheck
-          size={15}
-          className="mt-0.5 flex-shrink-0 text-[--brand-600]"
-        />
+        <ShieldCheck size={15} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
         <p className="text-[11px] leading-relaxed text-[--brand-700]">
-          A data da compra será preservada. Dashboard e relatórios usarão os
-          vencimentos das faturas. Nada foi salvo até este momento.
+          A data da compra será preservada. Dashboard e relatórios usarão os vencimentos das
+          faturas. Nada foi salvo até este momento.
         </p>
       </div>
 
@@ -289,13 +232,8 @@ export default function MoneyCreditTransactionAction({
           key={warning}
           className="flex items-start gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] p-3"
         >
-          <AlertTriangle
-            size={15}
-            className="mt-0.5 flex-shrink-0 text-[--warning-icon]"
-          />
-          <p className="text-[11px] leading-relaxed text-[--text-secondary]">
-            {warning}
-          </p>
+          <AlertTriangle size={15} className="mt-0.5 flex-shrink-0 text-[--warning-icon]" />
+          <p className="text-[11px] leading-relaxed text-[--text-secondary]">{warning}</p>
         </div>
       ))}
 
@@ -366,17 +304,12 @@ export default function MoneyCreditTransactionAction({
         <div className="rounded-2xl border border-[--brand-200] bg-[--brand-50] p-3.5">
           <div className="flex items-center gap-2">
             <ReceiptText size={15} className="text-[--brand-600]" />
-            <p className="text-xs font-black text-[--brand-700]">
-              Prévia das faturas
-            </p>
+            <p className="text-xs font-black text-[--brand-700]">Prévia das faturas</p>
           </div>
 
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {previewDates.map((date, index) => (
-              <div
-                key={`${date}-${index}`}
-                className="rounded-xl bg-white/60 p-2.5"
-              >
+              <div key={`${date}-${index}`} className="rounded-xl bg-white/60 p-2.5">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-[--brand-600]">
                   {index + 1}/{installmentCount}
                 </p>
@@ -402,18 +335,12 @@ export default function MoneyCreditTransactionAction({
 
       {selectedCard && selectedCategory && (
         <p className="text-[10px] text-[--text-tertiary]">
-          {selectedCard.name} · {selectedCategory.name} · compra em{' '}
-          {formatDate(draft.purchaseDate)}
+          {selectedCard.name} · {selectedCategory.name} · compra em {formatDate(draft.purchaseDate)}
         </p>
       )}
 
       <div className="flex flex-col-reverse gap-2 border-t border-[--border-subtle] pt-4 sm:flex-row sm:justify-end">
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={busy}
-          onClick={onCancel}
-        >
+        <Button variant="secondary" size="sm" disabled={busy} onClick={onCancel}>
           Cancelar
         </Button>
         <Button
@@ -431,9 +358,7 @@ export default function MoneyCreditTransactionAction({
             })
           }
         >
-          {installmentCount > 1
-            ? `Confirmar ${installmentCount} parcelas`
-            : 'Confirmar compra'}
+          {installmentCount > 1 ? `Confirmar ${installmentCount} parcelas` : 'Confirmar compra'}
         </Button>
       </div>
     </div>

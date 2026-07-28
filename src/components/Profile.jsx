@@ -167,14 +167,14 @@ export default function Profile() {
   const planLabel = isLoading
     ? 'Carregando'
     : status.isAdminBypass
-    ? 'Administrador'
-    : status.isPremium
-      ? status.isTrial
-        ? 'Trial Premium'
-        : 'Premium Ativo'
-      : status.isExpired
-        ? 'Expirado'
-        : 'Gratuito'
+      ? 'Administrador'
+      : status.isPremium
+        ? status.isTrial
+          ? 'Trial Premium'
+          : 'Premium Ativo'
+        : status.isExpired
+          ? 'Expirado'
+          : 'Gratuito'
   const planVariant = isLoading
     ? 'warning'
     : status.isPremium

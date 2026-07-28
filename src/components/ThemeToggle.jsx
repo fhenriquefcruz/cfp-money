@@ -3,11 +3,7 @@ import { Moon, Sun } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useTheme } from '../contexts/ThemeContext'
 
-export default function ThemeToggle({
-  compact = false,
-  fullWidth = false,
-  className = '',
-}) {
+export default function ThemeToggle({ compact = false, fullWidth = false, className = '' }) {
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'
   const actionLabel = isDark ? 'Ativar tema claro' : 'Ativar tema escuro'

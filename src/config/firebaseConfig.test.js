@@ -33,12 +33,8 @@ test('detecta campos ausentes e placeholders', () => {
     }),
   )
 
-  expect(issues.map((issue) => issue.envKey)).toContain(
-    'VITE_FIREBASE_AUTH_DOMAIN',
-  )
-  expect(issues.map((issue) => issue.envKey)).toContain(
-    'VITE_FIREBASE_PROJECT_ID',
-  )
+  expect(issues.map((issue) => issue.envKey)).toContain('VITE_FIREBASE_AUTH_DOMAIN')
+  expect(issues.map((issue) => issue.envKey)).toContain('VITE_FIREBASE_PROJECT_ID')
 })
 
 test('rejeita configuração inválida fora dos testes', () => {

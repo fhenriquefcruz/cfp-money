@@ -1,25 +1,11 @@
-import React, {
-  useCallback,
-  useEffect,
-  useState,
-} from 'react'
-import {
-  AlertTriangle,
-  FileCheck2,
-  Loader2,
-  RefreshCw,
-  ShieldCheck,
-} from 'lucide-react'
-import {
-  getPrivacyStatus,
-  recordLegalAcceptance,
-} from '../services/privacyGateway'
+import React, { useCallback, useEffect, useState } from 'react'
+import { AlertTriangle, FileCheck2, Loader2, RefreshCw, ShieldCheck } from 'lucide-react'
+import { getPrivacyStatus, recordLegalAcceptance } from '../services/privacyGateway'
 import { LEGAL_VERSIONS } from '../content/legal'
 import LegalDocument from './LegalDocument'
 import { Button, Modal } from './ui'
 
-const ENFORCE_LEGAL_GATE =
-  import.meta.env.VITE_ENFORCE_LEGAL_GATE === 'true'
+const ENFORCE_LEGAL_GATE = import.meta.env.VITE_ENFORCE_LEGAL_GATE === 'true'
 
 export default function LegalGate() {
   const [status, setStatus] = useState(null)
@@ -36,14 +22,8 @@ export default function LegalGate() {
     try {
       setStatus(await getPrivacyStatus())
     } catch (statusError) {
-      console.error(
-        '[Meu Real] Consentimento jurídico:',
-        statusError,
-      )
-      setError(
-        statusError?.message ||
-          'Não foi possível validar os documentos jurídicos.',
-      )
+      console.error('[Meu Real] Consentimento jurídico:', statusError)
+      setError(statusError?.message || 'Não foi possível validar os documentos jurídicos.')
     } finally {
       setLoading(false)
     }
@@ -68,10 +48,7 @@ export default function LegalGate() {
         requiresAcceptance: false,
       }))
     } catch (acceptError) {
-      setError(
-        acceptError?.message ||
-          'Não foi possível registrar a aceitação.',
-      )
+      setError(acceptError?.message || 'Não foi possível registrar a aceitação.')
     } finally {
       setSaving(false)
     }
@@ -80,10 +57,7 @@ export default function LegalGate() {
   if (loading) {
     return (
       <div className="pointer-events-none fixed bottom-4 right-4 z-50 rounded-xl border border-[--border-default] bg-[--bg-surface] p-3 shadow-lg">
-        <Loader2
-          size={18}
-          className="animate-spin text-[--brand-600]"
-        />
+        <Loader2 size={18} className="animate-spin text-[--brand-600]" />
       </div>
     )
   }
@@ -97,12 +71,7 @@ export default function LegalGate() {
         closeOnEscape={false}
         size="md"
         footer={
-          <Button
-            variant="primary"
-            fullWidth
-            icon={<RefreshCw size={15} />}
-            onClick={loadStatus}
-          >
+          <Button variant="primary" fullWidth icon={<RefreshCw size={15} />} onClick={loadStatus}>
             Tentar novamente
           </Button>
         }
@@ -112,13 +81,10 @@ export default function LegalGate() {
             <AlertTriangle size={21} />
           </div>
           <div>
-            <h2 className="text-lg font-black text-[--text-primary]">
-              Verificação indisponível
-            </h2>
+            <h2 className="text-lg font-black text-[--text-primary]">Verificação indisponível</h2>
             <p className="mt-2 text-sm leading-relaxed text-[--text-secondary]">
-              Não foi possível confirmar a versão dos Termos e
-              da Política de Privacidade. O acesso permanece
-              protegido até a conexão ser restabelecida.
+              Não foi possível confirmar a versão dos Termos e da Política de Privacidade. O acesso
+              permanece protegido até a conexão ser restabelecida.
             </p>
           </div>
           <p className="rounded-xl border border-[--border-default] bg-[--bg-subtle] p-3 text-xs text-[--text-tertiary]">
@@ -161,8 +127,7 @@ export default function LegalGate() {
               Transparência e privacidade
             </h2>
             <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-              Revise os documentos atuais para continuar
-              usando o Meu Real.
+              Revise os documentos atuais para continuar usando o Meu Real.
             </p>
           </div>
         </header>
@@ -200,14 +165,11 @@ export default function LegalGate() {
           <input
             type="checkbox"
             checked={accepted}
-            onChange={(event) =>
-              setAccepted(event.target.checked)
-            }
+            onChange={(event) => setAccepted(event.target.checked)}
             className="mt-1 h-4 w-4 accent-[--brand-600]"
           />
           <span className="text-xs leading-relaxed text-[--text-secondary]">
-            Li e aceito os Termos de Uso e a Política
-            de Privacidade.
+            Li e aceito os Termos de Uso e a Política de Privacidade.
           </span>
         </label>
 

@@ -22,29 +22,17 @@ function uid() {
 }
 
 export const getPrivacyStatus = () =>
-  backendEnabled
-    ? getBackendPrivacyStatus()
-    : getSparkPrivacyStatus(uid())
+  backendEnabled ? getBackendPrivacyStatus() : getSparkPrivacyStatus(uid())
 
 export const recordLegalAcceptance = (data) =>
-  backendEnabled
-    ? recordBackendLegalAcceptance(data)
-    : recordSparkLegalAcceptance(uid(), data)
+  backendEnabled ? recordBackendLegalAcceptance(data) : recordSparkLegalAcceptance(uid(), data)
 
-export const exportMyData = () =>
-  backendEnabled
-    ? exportBackendData()
-    : exportSparkData(uid())
+export const exportMyData = () => (backendEnabled ? exportBackendData() : exportSparkData(uid()))
 
 export const requestAccountDeletion = (data) =>
   backendEnabled
     ? requestBackendDeletion(data)
-    : requestSparkAccountDeletion(
-        uid(),
-        data?.confirmation,
-      )
+    : requestSparkAccountDeletion(uid(), data?.confirmation)
 
 export const cancelAccountDeletion = () =>
-  backendEnabled
-    ? cancelBackendDeletion()
-    : cancelSparkAccountDeletion(uid())
+  backendEnabled ? cancelBackendDeletion() : cancelSparkAccountDeletion(uid())

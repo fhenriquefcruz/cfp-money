@@ -1,13 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import {
-  CreditCard,
-  Edit2,
-  Info,
-  Plus,
-  ReceiptText,
-  ShieldCheck,
-  Trash2,
-} from 'lucide-react'
+import { CreditCard, Edit2, Info, Plus, ReceiptText, ShieldCheck, Trash2 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { Button, Card, Input, Modal } from './ui'
 import PremiumGate from './PremiumGate'
@@ -26,8 +18,7 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
   const [errors, setErrors] = useState({})
 
   const update = (field) => (event) => {
-    const value =
-      field === 'active' ? event.target.checked : event.target.value
+    const value = field === 'active' ? event.target.checked : event.target.value
     setForm((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: '' }))
   }
@@ -54,13 +45,10 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3 rounded-2xl border border-[--brand-200] bg-[--brand-50] p-3.5">
-        <ShieldCheck
-          size={16}
-          className="mt-0.5 flex-shrink-0 text-[--brand-600]"
-        />
+        <ShieldCheck size={16} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
         <p className="text-xs leading-relaxed text-[--brand-700]">
-          Cadastre apenas informações de identificação e calendário. Nunca informe
-          número completo, código de segurança ou senha.
+          Cadastre apenas informações de identificação e calendário. Nunca informe número completo,
+          código de segurança ou senha.
         </p>
       </div>
 
@@ -115,12 +103,9 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
           className="mt-0.5 h-4 w-4 accent-[--brand-600]"
         />
         <span>
-          <span className="block text-sm font-medium text-[--text-primary]">
-            Cartão ativo
-          </span>
+          <span className="block text-sm font-medium text-[--text-primary]">Cartão ativo</span>
           <span className="block text-xs text-[--text-tertiary]">
-            Cartões inativos permanecem no histórico, mas deixam de aparecer em
-            novos lançamentos.
+            Cartões inativos permanecem no histórico, mas deixam de aparecer em novos lançamentos.
           </span>
         </span>
       </label>
@@ -138,13 +123,7 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
 }
 
 function CreditCardsContent() {
-  const {
-    creditCards,
-    createCreditCard,
-    editCreditCard,
-    removeCreditCard,
-    loading,
-  } = useApp()
+  const { creditCards, createCreditCard, editCreditCard, removeCreditCard, loading } = useApp()
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
@@ -209,18 +188,12 @@ function CreditCardsContent() {
                   Cartões e calendário de faturas
                 </h2>
                 <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-                  Centralize fechamento e vencimento para evitar lançamentos na
-                  competência errada.
+                  Centralize fechamento e vencimento para evitar lançamentos na competência errada.
                 </p>
               </div>
             </div>
 
-            <Button
-              variant="primary"
-              size="sm"
-              icon={<Plus size={14} />}
-              onClick={openNew}
-            >
+            <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={openNew}>
               Adicionar cartão
             </Button>
           </div>
@@ -228,18 +201,14 @@ function CreditCardsContent() {
 
         <div className="p-5">
           <div className="mb-4 flex items-start gap-3 rounded-2xl border border-[--border-default] bg-[--bg-subtle] p-3.5">
-            <Info
-              size={16}
-              className="mt-0.5 flex-shrink-0 text-[--brand-600]"
-            />
+            <Info size={16} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
             <div>
               <p className="text-xs font-bold text-[--text-primary]">
                 Como o Meu Real utilizará esses dados?
               </p>
               <p className="mt-1 text-[11px] leading-relaxed text-[--text-tertiary]">
-                A data da compra será preservada, enquanto o lançamento financeiro
-                será associado ao vencimento da fatura. O histórico antigo não será
-                recalculado.
+                A data da compra será preservada, enquanto o lançamento financeiro será associado ao
+                vencimento da fatura. O histórico antigo não será recalculado.
               </p>
             </div>
           </div>
@@ -251,16 +220,12 @@ function CreditCardsContent() {
             </div>
           ) : creditCards.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[--border-default] bg-[--bg-subtle] p-6 text-center">
-              <ReceiptText
-                size={26}
-                className="mx-auto text-[--text-tertiary]"
-              />
+              <ReceiptText size={26} className="mx-auto text-[--text-tertiary]" />
               <p className="mt-2 text-sm font-bold text-[--text-primary]">
                 Nenhum cartão cadastrado
               </p>
               <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-                Cadastre o primeiro cartão para calcular faturas e parcelas
-                automaticamente.
+                Cadastre o primeiro cartão para calcular faturas e parcelas automaticamente.
               </p>
             </div>
           ) : (
@@ -356,20 +321,15 @@ function CreditCardsContent() {
             >
               Cancelar
             </Button>
-            <Button
-              variant="danger"
-              fullWidth
-              onClick={confirmDelete}
-              loading={saving}
-            >
+            <Button variant="danger" fullWidth onClick={confirmDelete} loading={saving}>
               Excluir
             </Button>
           </div>
         }
       >
         <p className="text-sm leading-relaxed text-[--text-secondary]">
-          O cadastro de <strong>{deleteCard?.name}</strong> será removido. Transações
-          anteriores que já possuem o nome e os dados desse cartão serão preservadas.
+          O cadastro de <strong>{deleteCard?.name}</strong> será removido. Transações anteriores que
+          já possuem o nome e os dados desse cartão serão preservadas.
         </p>
       </Modal>
     </>

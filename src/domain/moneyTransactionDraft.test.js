@@ -1,7 +1,4 @@
-import {
-  buildMoneyTransactionDraft,
-  parseMoneyAmount,
-} from './moneyTransactionDraft'
+import { buildMoneyTransactionDraft, parseMoneyAmount } from './moneyTransactionDraft'
 
 const categories = [
   {

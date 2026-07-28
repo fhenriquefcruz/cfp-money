@@ -24,21 +24,13 @@ function daysInMonth(year, monthIndex) {
 }
 
 function dateWithClampedDay(year, monthIndex, day) {
-  return new Date(
-    year,
-    monthIndex,
-    Math.min(clampDay(day), daysInMonth(year, monthIndex)),
-  )
+  return new Date(year, monthIndex, Math.min(clampDay(day), daysInMonth(year, monthIndex)))
 }
 
 function addMonthsWithDay(value, amount, preferredDay) {
   const date = asLocalDate(value)
   const target = new Date(date.getFullYear(), date.getMonth() + amount, 1)
-  return dateWithClampedDay(
-    target.getFullYear(),
-    target.getMonth(),
-    preferredDay,
-  )
+  return dateWithClampedDay(target.getFullYear(), target.getMonth(), preferredDay)
 }
 
 function toIsoDate(value) {
@@ -59,7 +51,9 @@ export function normalizeCreditCard(card = {}) {
   return {
     id: card.id || null,
     name: String(card.name || '').trim(),
-    last4: String(card.last4 || '').replace(/\D/g, '').slice(-4),
+    last4: String(card.last4 || '')
+      .replace(/\D/g, '')
+      .slice(-4),
     closingDay: clampDay(card.closingDay),
     dueDay: clampDay(card.dueDay),
     active: card.active !== false,
@@ -70,14 +64,9 @@ export function calculateInvoiceSchedule(purchaseDate, rawCard) {
   const purchase = asLocalDate(purchaseDate)
   const card = normalizeCreditCard(rawCard)
 
-  const closingMonthOffset =
-    purchase.getDate() > card.closingDay ? 1 : 0
+  const closingMonthOffset = purchase.getDate() > card.closingDay ? 1 : 0
 
-  const closingMonth = new Date(
-    purchase.getFullYear(),
-    purchase.getMonth() + closingMonthOffset,
-    1,
-  )
+  const closingMonth = new Date(purchase.getFullYear(), purchase.getMonth() + closingMonthOffset, 1)
 
   const closingDate = dateWithClampedDay(
     closingMonth.getFullYear(),
@@ -111,17 +100,10 @@ export function splitInstallmentAmounts(totalAmount, installments) {
   const base = Math.floor(totalCents / count)
   const remainder = totalCents - base * count
 
-  return Array.from({ length: count }, (_, index) =>
-    (base + (index < remainder ? 1 : 0)) / 100,
-  )
+  return Array.from({ length: count }, (_, index) => (base + (index < remainder ? 1 : 0)) / 100)
 }
 
-export function buildCreditTransaction({
-  baseData,
-  totalAmount,
-  purchaseDate,
-  card: rawCard,
-}) {
+export function buildCreditTransaction({ baseData, totalAmount, purchaseDate, card: rawCard }) {
   const card = normalizeCreditCard(rawCard)
   const schedule = calculateInvoiceSchedule(purchaseDate, card)
 
@@ -156,15 +138,10 @@ export function buildInstallmentTransactions({
   const card = normalizeCreditCard(rawCard)
   const schedule = calculateInvoiceSchedule(purchaseDate, card)
   const amounts = splitInstallmentAmounts(totalAmount, installments)
-  const resolvedGroupId =
-    groupId || `${Date.now()}_${Math.random().toString(36).slice(2)}`
+  const resolvedGroupId = groupId || `${Date.now()}_${Math.random().toString(36).slice(2)}`
 
   return amounts.map((amount, index) => {
-    const dueDate = addMonthsWithDay(
-      schedule.dueDate,
-      index,
-      card.dueDay,
-    )
+    const dueDate = addMonthsWithDay(schedule.dueDate, index, card.dueDay)
 
     return {
       ...baseData,
@@ -176,13 +153,7 @@ export function buildInstallmentTransactions({
       invoiceClosingDate:
         index === 0
           ? schedule.closingDate
-          : toIsoDate(
-              addMonthsWithDay(
-                schedule.closingDate,
-                index,
-                card.closingDay,
-              ),
-            ),
+          : toIsoDate(addMonthsWithDay(schedule.closingDate, index, card.closingDay)),
       dueDate: toIsoDate(dueDate),
       invoiceMonth: toMonthKey(dueDate),
       paymentMethod: 'credit_card',

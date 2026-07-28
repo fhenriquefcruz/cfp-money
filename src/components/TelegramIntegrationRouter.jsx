@@ -16,13 +16,10 @@ export default function TelegramIntegrationRouter() {
           <Send size={19} />
         </div>
         <div>
-          <h2 className="text-sm font-black text-[--text-primary]">
-            Money no Telegram
-          </h2>
+          <h2 className="text-sm font-black text-[--text-primary]">Money no Telegram</h2>
           <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-            Integração temporariamente indisponível no modo
-            gratuito. O código foi preservado para futura
-            ativação.
+            Integração temporariamente indisponível no modo gratuito. O código foi preservado para
+            futura ativação.
           </p>
         </div>
       </div>

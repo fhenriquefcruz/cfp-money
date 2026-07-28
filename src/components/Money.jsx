@@ -22,10 +22,7 @@ import { analyzeMoney } from '../domain/money'
 import { buildMoneyAssistantResponse } from '../domain/moneyAssistant'
 import { buildMoneyTransactionDraft } from '../domain/moneyTransactionDraft'
 import { buildMoneyCreditDraft } from '../domain/moneyCreditDraft'
-import {
-  buildCreditTransaction,
-  buildInstallmentTransactions,
-} from '../domain/creditCards'
+import { buildCreditTransaction, buildInstallmentTransactions } from '../domain/creditCards'
 import { formatCurrency } from '../utils'
 import { Card, Button, Modal } from './ui'
 import MoneySettingsCard from './MoneySettingsCard'
@@ -40,8 +37,7 @@ const INITIAL_MESSAGE = {
   response: {
     type: 'help',
     title: 'Olá, eu sou o Money',
-    text:
-      'Posso consultar seus dados e preparar receitas, despesas e compras no cartão. Todo lançamento aparece como rascunho editável e só é salvo após sua confirmação.',
+    text: 'Posso consultar seus dados e preparar receitas, despesas e compras no cartão. Todo lançamento aparece como rascunho editável e só é salvo após sua confirmação.',
     suggestions: [
       'Comprei 600 no Nubank em 3 vezes no mercado',
       'Paguei 180 no dentista por Pix ontem',
@@ -204,10 +200,7 @@ function MoneyContent() {
   const messagesEndRef = useRef(null)
 
   const isLoading =
-    loading.transactions ||
-    loading.categories ||
-    loading.creditCards ||
-    settingsLoading
+    loading.transactions || loading.categories || loading.creditCards || settingsLoading
   const canSend = input.trim().length > 0 && !isLoading
 
   const safeDataStatus = useMemo(
@@ -226,9 +219,7 @@ function MoneyContent() {
 
   const updateAssistantMessage = (messageId, response) => {
     setMessages((current) =>
-      current.map((message) =>
-        message.id === messageId ? { ...message, response } : message,
-      ),
+      current.map((message) => (message.id === messageId ? { ...message, response } : message)),
     )
   }
 
@@ -245,8 +236,7 @@ function MoneyContent() {
       updateAssistantMessage(messageId, {
         type: 'transaction_error',
         title: 'Não foi possível salvar',
-        text:
-          'O lançamento não foi criado. Seus dados anteriores permanecem intactos; tente novamente.',
+        text: 'O lançamento não foi criado. Seus dados anteriores permanecem intactos; tente novamente.',
         draft,
       })
     } finally {
@@ -259,12 +249,8 @@ function MoneyContent() {
   }
 
   const confirmCreditDraft = async (messageId, draft) => {
-    const selectedCard = creditCards.find(
-      (card) => card.id === draft.cardId,
-    )
-    const selectedCategory = categories.find(
-      (category) => category.id === draft.categoryId,
-    )
+    const selectedCard = creditCards.find((card) => card.id === draft.cardId)
+    const selectedCategory = categories.find((category) => category.id === draft.categoryId)
 
     if (!selectedCard || !selectedCategory) return
 
@@ -447,23 +433,21 @@ function MoneyContent() {
             <div className="border-b border-[--border-subtle] bg-[--brand-50] p-4">
               <div className="flex items-center gap-2">
                 <Info size={16} className="text-[--brand-600]" />
-                <h2 className="text-sm font-black text-[--text-primary]">
-                  Como funciona
-                </h2>
+                <h2 className="text-sm font-black text-[--text-primary]">Como funciona</h2>
               </div>
             </div>
             <div className="space-y-3 p-4">
               <p className="text-xs leading-relaxed text-[--text-secondary]">
-                Escreva como falaria normalmente. O Money pode consultar seus dados ou preparar
-                um lançamento simples. Antes de salvar, ele apresenta todos os campos para revisão.
+                Escreva como falaria normalmente. O Money pode consultar seus dados ou preparar um
+                lançamento simples. Antes de salvar, ele apresenta todos os campos para revisão.
               </p>
               <div className="rounded-2xl border border-[--brand-200] bg-[--brand-50] p-3">
                 <p className="text-[11px] font-bold text-[--brand-700]">
                   Seus dados permanecem intactos
                 </p>
                 <p className="mt-1 text-[10px] leading-relaxed text-[--brand-600]">
-                  Consultas não alteram registros. Novas receitas e despesas só são gravadas após
-                  a confirmação; depois, ainda é possível desfazer o lançamento.
+                  Consultas não alteram registros. Novas receitas e despesas só são gravadas após a
+                  confirmação; depois, ainda é possível desfazer o lançamento.
                 </p>
               </div>
               <button
@@ -505,7 +489,10 @@ function MoneyContent() {
           </Card>
         </aside>
 
-        <Card className="order-1 flex h-[min(620px,calc(100dvh-190px))] min-h-[480px] flex-col overflow-hidden shadow-sm lg:order-2" padding={false}>
+        <Card
+          className="order-1 flex h-[min(620px,calc(100dvh-190px))] min-h-[480px] flex-col overflow-hidden shadow-sm lg:order-2"
+          padding={false}
+        >
           <div className="border-b border-[--border-subtle] bg-gradient-to-r from-[--brand-50] to-[--bg-surface] px-4 py-3.5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -522,9 +509,7 @@ function MoneyContent() {
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex items-start gap-3 ${
-                  message.role === 'user' ? 'justify-end' : ''
-                }`}
+                className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}
               >
                 {message.role === 'assistant' && (
                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-white shadow-sm">
@@ -550,15 +535,9 @@ function MoneyContent() {
                       busy={isMutating}
                       onConfirm={(draft) => confirmDraft(message.id, draft)}
                       onCancel={() => cancelDraft(message.id)}
-                      onUndo={(transactionId) =>
-                        undoTransaction(message.id, transactionId)
-                      }
-                      onConfirmCredit={(draft) =>
-                        confirmCreditDraft(message.id, draft)
-                      }
-                      onCancelCredit={() =>
-                        cancelCreditDraft(message.id)
-                      }
+                      onUndo={(transactionId) => undoTransaction(message.id, transactionId)}
+                      onConfirmCredit={(draft) => confirmCreditDraft(message.id, draft)}
+                      onCancelCredit={() => cancelCreditDraft(message.id)}
                       onUndoCredit={(transactionIds) =>
                         undoCreditPurchase(message.id, transactionIds)
                       }
@@ -611,8 +590,8 @@ function MoneyContent() {
               </Button>
             </div>
             <p className="mt-2 text-[10px] leading-relaxed text-[--text-tertiary]">
-              Pressione Enter para enviar ou Shift + Enter para quebrar a linha. Receitas,
-              despesas, cartões e parcelas passam por revisão antes de serem salvos.
+              Pressione Enter para enviar ou Shift + Enter para quebrar a linha. Receitas, despesas,
+              cartões e parcelas passam por revisão antes de serem salvos.
             </p>
           </form>
         </Card>

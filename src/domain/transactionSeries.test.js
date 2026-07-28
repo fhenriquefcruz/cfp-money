@@ -83,12 +83,11 @@ test('identifica parcelamentos e recorrências', () => {
 })
 
 test('ordena e seleciona esta parcela e as próximas', () => {
-  expect(
-    getSeriesMembers(
-      transactions,
-      installments[1],
-    ).map((item) => item.id),
-  ).toEqual(['p1', 'p2', 'p3'])
+  expect(getSeriesMembers(transactions, installments[1]).map((item) => item.id)).toEqual([
+    'p1',
+    'p2',
+    'p3',
+  ])
 
   const selection = getSeriesSelection({
     transactions,
@@ -96,10 +95,7 @@ test('ordena e seleciona esta parcela e as próximas', () => {
     scope: SERIES_SCOPE.FOLLOWING,
   })
 
-  expect(selection.selected.map((item) => item.id)).toEqual([
-    'p2',
-    'p3',
-  ])
+  expect(selection.selected.map((item) => item.id)).toEqual(['p2', 'p3'])
   expect(selection.remaining.map((item) => item.id)).toEqual(['p1'])
 })
 
@@ -114,9 +110,7 @@ test('redistribui centavos ao editar o total de uma compra parcelada', () => {
     },
   })
 
-  const amountById = Object.fromEntries(
-    plan.updates.map((item) => [item.id, item.data.amount]),
-  )
+  const amountById = Object.fromEntries(plan.updates.map((item) => [item.id, item.data.amount]))
 
   expect(amountById).toEqual({
     p1: 36.67,
@@ -124,11 +118,7 @@ test('redistribui centavos ao editar o total de uma compra parcelada', () => {
     p3: 36.66,
   })
   expect(plan.summary.seriesTotalAfter).toBe(110)
-  expect(
-    plan.updates.every(
-      (item) => item.data.originalAmount === 110,
-    ),
-  ).toBe(true)
+  expect(plan.updates.every((item) => item.data.originalAmount === 110)).toBe(true)
 })
 
 test('edita somente o saldo restante do parcelamento', () => {
@@ -144,9 +134,7 @@ test('edita somente o saldo restante do parcelamento', () => {
 
   expect(plan.summary.selectedTotalAfter).toBe(50)
   expect(plan.summary.seriesTotalAfter).toBe(83.34)
-  expect(
-    plan.updates.find((item) => item.id === 'p1').data,
-  ).toEqual({ originalAmount: 83.34 })
+  expect(plan.updates.find((item) => item.id === 'p1').data).toEqual({ originalAmount: 83.34 })
 })
 
 test('aplica valor por ocorrência em uma recorrência', () => {
@@ -162,9 +150,7 @@ test('aplica valor por ocorrência em uma recorrência', () => {
 
   expect(plan.summary.affectedCount).toBe(2)
   expect(plan.summary.selectedTotalAfter).toBe(190)
-  expect(
-    plan.updates.filter((item) => item.data.amount === 95),
-  ).toHaveLength(2)
+  expect(plan.updates.filter((item) => item.data.amount === 95)).toHaveLength(2)
 })
 
 test('exclui uma parcela e renumera o restante', () => {

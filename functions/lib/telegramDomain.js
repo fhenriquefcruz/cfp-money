@@ -16,10 +16,7 @@ function normalizeText(value = '') {
     .toLowerCase()
 }
 
-function datePartsInTimeZone(
-  date = new Date(),
-  timeZone = DEFAULT_TIME_ZONE,
-) {
+function datePartsInTimeZone(date = new Date(), timeZone = DEFAULT_TIME_ZONE) {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone,
     year: 'numeric',
@@ -28,15 +25,10 @@ function datePartsInTimeZone(
     weekday: 'short',
   }).formatToParts(date)
 
-  return Object.fromEntries(
-    parts.map((part) => [part.type, part.value]),
-  )
+  return Object.fromEntries(parts.map((part) => [part.type, part.value]))
 }
 
-function isoDateInTimeZone(
-  date = new Date(),
-  timeZone = DEFAULT_TIME_ZONE,
-) {
+function isoDateInTimeZone(date = new Date(), timeZone = DEFAULT_TIME_ZONE) {
   const parts = datePartsInTimeZone(date, timeZone)
   return `${parts.year}-${parts.month}-${parts.day}`
 }
@@ -79,19 +71,11 @@ function parseBrazilianAmount(message = '') {
 function inferType(message = '') {
   const normalized = normalizeText(message)
 
-  if (
-    /\b(recebi|ganhei|entrou|salario|pagamento recebido|renda)\b/.test(
-      normalized,
-    )
-  ) {
+  if (/\b(recebi|ganhei|entrou|salario|pagamento recebido|renda)\b/.test(normalized)) {
     return 'income'
   }
 
-  if (
-    /\b(gastei|paguei|comprei|custou|despesa|saida)\b/.test(
-      normalized,
-    )
-  ) {
+  if (/\b(gastei|paguei|comprei|custou|despesa|saida)\b/.test(normalized)) {
     return 'expense'
   }
 
@@ -130,18 +114,17 @@ function inferCategory(message = '', type = 'expense') {
   ]
   const rules = type === 'income' ? incomeRules : expenseRules
 
-  return rules.find(([, pattern]) => pattern.test(normalized))?.[0] ||
+  return (
+    rules.find(([, pattern]) => pattern.test(normalized))?.[0] ||
     (type === 'income' ? 'Outras receitas' : 'Outras despesas')
+  )
 }
 
 function cleanDescription(message = '', amount = 0) {
   let description = String(message)
     .replace(/\/\w+/g, ' ')
     .replace(/r\$\s*/gi, ' ')
-    .replace(
-      /(?:\d{1,3}(?:\.\d{3})*(?:,\d{1,2})|\d+(?:[.,]\d{1,2})?)/g,
-      ' ',
-    )
+    .replace(/(?:\d{1,3}(?:\.\d{3})*(?:,\d{1,2})|\d+(?:[.,]\d{1,2})?)/g, ' ')
     .replace(
       /\b(gastei|paguei|comprei|custou|recebi|ganhei|entrou|por|no|na|via|hoje|ontem|pix|debito|crédito|credito|dinheiro|transferencia)\b/gi,
       ' ',
@@ -150,8 +133,7 @@ function cleanDescription(message = '', amount = 0) {
     .trim()
 
   if (!description) {
-    description =
-      amount > 0 ? 'Lançamento pelo Telegram' : 'Lançamento'
+    description = amount > 0 ? 'Lançamento pelo Telegram' : 'Lançamento'
   }
 
   return description.charAt(0).toUpperCase() + description.slice(1)
@@ -163,25 +145,19 @@ function findCard(message = '', creditCards = []) {
   return creditCards.find((card) => {
     const cardName = normalizeText(card.name)
     const last4 = String(card.last4 || '')
-    return (
-      (cardName && normalized.includes(cardName)) ||
-      (last4 && normalized.includes(last4))
-    )
+    return (cardName && normalized.includes(cardName)) || (last4 && normalized.includes(last4))
   })
 }
 
 function parseInstallments(message = '') {
   const normalized = normalizeText(message)
   const match =
-    normalized.match(/\b(\d{1,2})\s*x\b/) ||
-    normalized.match(/\bem\s+(\d{1,2})\s+vezes?\b/)
+    normalized.match(/\b(\d{1,2})\s*x\b/) || normalized.match(/\bem\s+(\d{1,2})\s+vezes?\b/)
 
   if (!match) return 1
 
   const count = Number(match[1])
-  return Number.isInteger(count) && count >= 1 && count <= 24
-    ? count
-    : 1
+  return Number.isInteger(count) && count >= 1 && count <= 24 ? count : 1
 }
 
 function splitInstallments(total, count) {
@@ -189,9 +165,7 @@ function splitInstallments(total, count) {
   const base = Math.floor(totalCents / count)
   const remainder = totalCents % count
 
-  return Array.from({ length: count }, (_, index) =>
-    fromCents(base + (index < remainder ? 1 : 0)),
-  )
+  return Array.from({ length: count }, (_, index) => fromCents(base + (index < remainder ? 1 : 0)))
 }
 
 function invoiceDueDate(purchaseDate, card, installmentOffset = 0) {
@@ -203,21 +177,13 @@ function invoiceDueDate(purchaseDate, card, installmentOffset = 0) {
   const target = new Date(
     Date.UTC(
       year,
-      month -
-        1 +
-        closingMonthOffset +
-        dueAfterClosingOffset +
-        installmentOffset,
+      month - 1 + closingMonthOffset + dueAfterClosingOffset + installmentOffset,
       1,
       12,
     ),
   )
   const maxDay = new Date(
-    Date.UTC(
-      target.getUTCFullYear(),
-      target.getUTCMonth() + 1,
-      0,
-    ),
+    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
   ).getUTCDate()
 
   const due = Math.min(Math.max(1, dueDay), maxDay)
@@ -239,32 +205,22 @@ function parseMoneyMessage({
   const type = inferType(message)
   const inferredPaymentMethod = inferPaymentMethod(message)
   const purchaseDate = isoDateInTimeZone(now, timeZone)
-  const matchedCard =
-    type === 'expense'
-      ? findCard(message, creditCards)
-      : null
-  const paymentMethod = matchedCard
-    ? 'credit_card'
-    : inferredPaymentMethod
-  const card =
-    paymentMethod === 'credit_card'
-      ? matchedCard
-      : null
+  const matchedCard = type === 'expense' ? findCard(message, creditCards) : null
+  const paymentMethod = matchedCard ? 'credit_card' : inferredPaymentMethod
+  const card = paymentMethod === 'credit_card' ? matchedCard : null
   const installments = card ? parseInstallments(message) : 1
 
   if (!amount || !type) {
     return {
       ok: false,
-      reason:
-        'Não consegui identificar ao mesmo tempo o tipo e o valor do lançamento.',
+      reason: 'Não consegui identificar ao mesmo tempo o tipo e o valor do lançamento.',
     }
   }
 
   if (paymentMethod === 'credit_card' && !card) {
     return {
       ok: false,
-      reason:
-        'Você mencionou cartão, mas não identifiquei qual cartão cadastrado deve ser usado.',
+      reason: 'Você mencionou cartão, mas não identifiquei qual cartão cadastrado deve ser usado.',
       needsCard: true,
     }
   }
@@ -294,21 +250,14 @@ function parseMoneyMessage({
   }
 }
 
-function buildPeriod(
-  moneySettings = {},
-  now = new Date(),
-  timeZone = DEFAULT_TIME_ZONE,
-) {
+function buildPeriod(moneySettings = {}, now = new Date(), timeZone = DEFAULT_TIME_ZONE) {
   const today = isoDateInTimeZone(now, timeZone)
   const [year, month, day] = today.split('-').map(Number)
   const cycleType = moneySettings.cycleType || 'calendar_month'
   const startDay =
     cycleType === 'calendar_month'
       ? 1
-      : Math.min(
-          28,
-          Math.max(1, Number(moneySettings.cycleStartDay) || 1),
-        )
+      : Math.min(28, Math.max(1, Number(moneySettings.cycleStartDay) || 1))
 
   let startYear = year
   let startMonth = month
@@ -390,17 +339,10 @@ function buildTransactionDocuments(draft, groupId) {
     ]
   }
 
-  const amounts = splitInstallments(
-    draft.amount,
-    draft.installments,
-  )
+  const amounts = splitInstallments(draft.amount, draft.installments)
 
   return amounts.map((amount, index) => {
-    const dueDate = invoiceDueDate(
-      draft.purchaseDate,
-      draft.card,
-      index,
-    )
+    const dueDate = invoiceDueDate(draft.purchaseDate, draft.card, index)
 
     return {
       description: draft.description,

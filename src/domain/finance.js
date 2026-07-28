@@ -1,5 +1,4 @@
-const asAmount = (value) =>
-  Number.isFinite(Number(value)) ? Number(value) : 0
+const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
 
 export function summarizeTransactions(transactions = []) {
   return transactions.reduce(
@@ -55,11 +54,7 @@ export function defaultDateRangeEnd(startDate, days = 30) {
   ].join('-')
 }
 
-export function calculateBudgetUsage(
-  transactions = [],
-  budget,
-  referenceDate = new Date(),
-) {
+export function calculateBudgetUsage(transactions = [], budget, referenceDate = new Date()) {
   if (!budget || asAmount(budget.amount) <= 0) {
     return { spent: 0, percent: 0 }
   }
@@ -77,10 +72,7 @@ export function calculateBudgetUsage(
         date.getMonth() === referenceDate.getMonth()
       )
     })
-    .reduce(
-      (total, transaction) => total + asAmount(transaction.amount),
-      0,
-    )
+    .reduce((total, transaction) => total + asAmount(transaction.amount), 0)
 
   return {
     spent,

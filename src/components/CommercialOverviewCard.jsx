@@ -21,12 +21,8 @@ function Metric({ icon: Icon, label, value, detail }) {
           {label}
         </p>
       </div>
-      <p className="mt-2 text-2xl font-black tabular-nums text-[--text-primary]">
-        {value}
-      </p>
-      <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
-        {detail}
-      </p>
+      <p className="mt-2 text-2xl font-black tabular-nums text-[--text-primary]">{value}</p>
+      <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">{detail}</p>
     </div>
   )
 }
@@ -34,21 +30,13 @@ function Metric({ icon: Icon, label, value, detail }) {
 function CheckRow({ label, ok }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-[--border-subtle] px-3 py-2">
-      <span className="text-xs text-[--text-secondary]">
-        {label}
-      </span>
+      <span className="text-xs text-[--text-secondary]">{label}</span>
       <span
         className={`inline-flex items-center gap-1 text-[10px] font-black ${
-          ok
-            ? 'text-[--success-text]'
-            : 'text-[--warning-text]'
+          ok ? 'text-[--success-text]' : 'text-[--warning-text]'
         }`}
       >
-        {ok ? (
-          <CheckCircle2 size={13} />
-        ) : (
-          <AlertTriangle size={13} />
-        )}
+        {ok ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
         {ok ? 'Pronto' : 'Pendente'}
       </span>
     </div>
@@ -67,10 +55,7 @@ export default function CommercialOverviewCard() {
     try {
       setMetrics(await getCommercialMetrics())
     } catch (loadError) {
-      setError(
-        loadError?.message ||
-          'Não foi possível carregar as métricas operacionais.',
-      )
+      setError(loadError?.message || 'Não foi possível carregar as métricas operacionais.')
     } finally {
       setLoading(false)
     }
@@ -92,8 +77,7 @@ export default function CommercialOverviewCard() {
               Operação e prontidão comercial
             </h2>
             <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-              Indicadores agregados, sem exposição dos dados
-              financeiros dos usuários.
+              Indicadores agregados, sem exposição dos dados financeiros dos usuários.
             </p>
           </div>
         </div>
@@ -118,10 +102,7 @@ export default function CommercialOverviewCard() {
 
         {!error && loading && !metrics && (
           <div className="flex min-h-28 items-center justify-center">
-            <RefreshCw
-              size={20}
-              className="animate-spin text-[--brand-600]"
-            />
+            <RefreshCw size={20} className="animate-spin text-[--brand-600]" />
           </div>
         )}
 
@@ -156,14 +137,8 @@ export default function CommercialOverviewCard() {
 
             <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
               <div className="space-y-2">
-                <CheckRow
-                  label="Backend privilegiado"
-                  ok={metrics.readiness.checks.backend}
-                />
-                <CheckRow
-                  label="Integração Telegram"
-                  ok={metrics.readiness.checks.telegram}
-                />
+                <CheckRow label="Backend privilegiado" ok={metrics.readiness.checks.backend} />
+                <CheckRow label="Integração Telegram" ok={metrics.readiness.checks.telegram} />
                 <CheckRow
                   label="Privacidade e portabilidade"
                   ok={metrics.readiness.checks.privacy}
@@ -172,44 +147,30 @@ export default function CommercialOverviewCard() {
                   label="Índices versionados"
                   ok={metrics.readiness.checks.indexesManaged}
                 />
-                <CheckRow
-                  label="App Check obrigatório"
-                  ok={metrics.readiness.checks.appCheck}
-                />
+                <CheckRow label="App Check obrigatório" ok={metrics.readiness.checks.appCheck} />
               </div>
 
               <div className="rounded-2xl border border-[--border-default] bg-[--bg-elevated] p-4">
-                <p className="text-xs font-black text-[--text-primary]">
-                  Índice de prontidão
-                </p>
+                <p className="text-xs font-black text-[--text-primary]">Índice de prontidão</p>
                 <p className="mt-2 text-4xl font-black tabular-nums text-[--brand-600]">
                   {metrics.readiness.percentage}%
                 </p>
                 <p className="mt-2 text-[10px] leading-relaxed text-[--text-tertiary]">
-                  {metrics.readiness.completed} de{' '}
-                  {metrics.readiness.total} controles técnicos
+                  {metrics.readiness.completed} de {metrics.readiness.total} controles técnicos
                   monitorados.
                 </p>
                 <p className="mt-3 text-[10px] text-[--text-tertiary]">
-                  Atualizado em{' '}
-                  {new Date(
-                    metrics.generatedAt,
-                  ).toLocaleString('pt-BR')}
+                  Atualizado em {new Date(metrics.generatedAt).toLocaleString('pt-BR')}
                 </p>
               </div>
             </div>
 
             {!metrics.readiness.checks.appCheck && (
               <div className="flex items-start gap-3 rounded-xl border border-[--warning-border] bg-[--warning-bg] p-3">
-                <AlertTriangle
-                  size={15}
-                  className="mt-0.5 flex-shrink-0 text-[--warning-text]"
-                />
+                <AlertTriangle size={15} className="mt-0.5 flex-shrink-0 text-[--warning-text]" />
                 <p className="text-xs leading-relaxed text-[--warning-text]">
-                  O App Check permanece em modo de preparação.
-                  Antes do lançamento comercial, ative a
-                  exigência somente depois de validar os tokens
-                  no domínio definitivo.
+                  O App Check permanece em modo de preparação. Antes do lançamento comercial, ative
+                  a exigência somente depois de validar os tokens no domínio definitivo.
                 </p>
               </div>
             )}

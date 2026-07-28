@@ -1,6 +1,7 @@
 # Índice da sala de dados
 
 ## Produto
+
 - README;
 - arquitetura;
 - mapa de dados;
@@ -9,6 +10,7 @@
 - inventário de dependências.
 
 ## Tecnologia
+
 - código e histórico Git;
 - testes e CI;
 - regras e índices;
@@ -17,6 +19,7 @@
 - incidentes e riscos conhecidos.
 
 ## Jurídico
+
 - titularidade;
 - Termos e Política;
 - operadores e fornecedores;
@@ -25,6 +28,7 @@
 - contratos comerciais.
 
 ## Negócio
+
 - usuários cadastrados;
 - usuários ativos;
 - planos e receita;
