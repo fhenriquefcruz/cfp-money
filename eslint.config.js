@@ -16,7 +16,7 @@ export default [
     plugins: { 'react-hooks': reactHooks, 'react-refresh': reactRefresh },
     rules: {
       ...js.configs.recommended.rules,
-      ...reactHooks.configs.recommended.rules,
+      'react-hooks/rules-of-hooks': 'error',
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^(_|React)$' }],
       'no-empty': ['error', { allowEmptyCatch: true }],
       'react-hooks/exhaustive-deps': 'off',

@@ -5,15 +5,15 @@ import { backendEnabled } from '../config/runtimeFeatures'
 const REGION = 'southamerica-east1'
 const functions = getFunctions(app, REGION)
 
-let emulatorConnected = false
+const emulatorFlag = '__MEU_REAL_FUNCTIONS_EMULATOR_CONNECTED__'
 
 if (
   import.meta.env.DEV &&
   import.meta.env.VITE_USE_FUNCTIONS_EMULATOR === 'true' &&
-  !emulatorConnected
+  !globalThis[emulatorFlag]
 ) {
   connectFunctionsEmulator(functions, '127.0.0.1', 5001)
-  emulatorConnected = true
+  globalThis[emulatorFlag] = true
 }
 
 function callable(name) {
