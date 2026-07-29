@@ -314,7 +314,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         }
       }
       onClose()
-    } catch (_) {
+    } catch {
     } finally {
       setLoading(false)
     }

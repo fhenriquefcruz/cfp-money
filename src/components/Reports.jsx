@@ -110,7 +110,7 @@ function SavingRateBadge({ rate }) {
 }
 
 function ReportsContent() {
-  const { transactions, categories, getSummary } = useApp()
+  const { transactions, getSummary } = useApp()
   const [searchParams] = useSearchParams()
   const requestedMonth = searchParams.get('month')
   const initialMonth = /^\d{4}-\d{2}$/.test(requestedMonth || '')
@@ -198,7 +198,7 @@ function ReportsContent() {
   const handleExportPDF = async () => {
     setExporting(true)
     try {
-      await exportToPDF(reportTransactions, categories, periodTotals)
+      await exportToPDF(reportTransactions, periodTotals)
     } catch (e) {
       console.error(e)
     } finally {
@@ -248,7 +248,7 @@ function ReportsContent() {
             size="sm"
             className="w-full min-[560px]:w-auto"
             icon={<Download size={14} />}
-            onClick={() => exportToCSV(reportTransactions, categories)}
+            onClick={() => exportToCSV(reportTransactions)}
             disabled={!hasTx}
           >
             CSV

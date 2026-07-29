@@ -289,17 +289,23 @@ export const StatCard = ({ label, value, icon, color, loading, trend, tooltip })
 )
 
 export const Badge = ({ children, color }) => (
-  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[--bg-hover] text-[--text-secondary]">
+  <span
+    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[--bg-hover] text-[--text-secondary]"
+    style={color ? { color } : undefined}
+  >
     {children}
   </span>
 )
 
-export const ProgressBar = ({ value, max, animated }) => {
-  const percent = Math.min(100, (value / max) * 100)
+export const ProgressBar = ({ value, max, animated = false }) => {
+  const percent = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0
   return (
     <div className="h-2 bg-[--bg-hover] rounded-full overflow-hidden">
       <div
-        className="h-full bg-[--brand-500] rounded-full transition-all duration-300"
+        className={clsx(
+          'h-full bg-[--brand-500] rounded-full',
+          animated && 'transition-all duration-300',
+        )}
         style={{ width: `${percent}%` }}
       />
     </div>
