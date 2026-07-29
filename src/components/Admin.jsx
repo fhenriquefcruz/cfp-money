@@ -224,10 +224,7 @@ export default function Admin() {
       await adminSetUserAccess(command)
       showToast(successMessage)
     } catch (actionError) {
-      setError(
-        actionError?.message ||
-          'Não foi possível concluir a ação administrativa.',
-      )
+      setError(actionError?.message || 'Não foi possível concluir a ação administrativa.')
     }
   }
 

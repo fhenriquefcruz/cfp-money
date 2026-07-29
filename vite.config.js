@@ -8,12 +8,23 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          charts: ['recharts'],
-          motion: ['framer-motion'],
+        codeSplitting: {
+          groups: [
+            {
+              name: 'firebase',
+              test: /[\\/]node_modules[\\/](?:@firebase|firebase)[\\/]/,
+            },
+            {
+              name: 'charts',
+              test: /[\\/]node_modules[\\/]recharts[\\/]/,
+            },
+            {
+              name: 'motion',
+              test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
+            },
+          ],
         },
       },
     },

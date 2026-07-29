@@ -1,6 +1,7 @@
 # Checklist de release
 
 ## Código
+
 - [ ] `npm run validate:all`;
 - [ ] `npm run format:check`;
 - [ ] CI aprovada;
@@ -8,6 +9,7 @@
 - [ ] changelog atualizado.
 
 ## Firebase
+
 - [ ] projeto correto selecionado;
 - [ ] regras revisadas;
 - [ ] índices implantados;
@@ -17,6 +19,7 @@
 - [ ] agendamentos verificados.
 
 ## Produto
+
 - [ ] login;
 - [ ] lançamentos;
 - [ ] cartões e faturas;
@@ -27,6 +30,7 @@
 - [ ] painel Admin.
 
 ## Comercial
+
 - [ ] identidade jurídica preenchida;
 - [ ] Termos e Política revisados;
 - [ ] preço e escopo aprovados;

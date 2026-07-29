@@ -16,9 +16,7 @@ const card = {
 }
 
 test('cria chave estável da fatura', () => {
-  expect(buildInvoiceKey('nubank', '2026-08')).toBe(
-    'nubank:2026-08',
-  )
+  expect(buildInvoiceKey('nubank', '2026-08')).toBe('nubank:2026-08')
 })
 
 test('calcula pagamento parcial e saldo pendente', () => {
@@ -133,8 +131,7 @@ test('estorno reduz o valor pago sem apagar o pagamento', () => {
     reversesEventId: 'pay-1',
   })
   expect(lifecycle.paidAmount).toBe(0)
-  expect(getPaymentReversibleAmount(payment, [payment, reversal]))
-    .toBe(0)
+  expect(getPaymentReversibleAmount(payment, [payment, reversal])).toBe(0)
 })
 
 test('cria eventos validados', () => {
@@ -186,7 +183,5 @@ test('filtra eventos da fatura correta', () => {
     },
   ]
 
-  expect(getInvoiceEvents(events, 'nubank', '2026-08')).toEqual([
-    events[0],
-  ])
+  expect(getInvoiceEvents(events, 'nubank', '2026-08')).toEqual([events[0]])
 })

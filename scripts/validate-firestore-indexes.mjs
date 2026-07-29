@@ -1,17 +1,10 @@
 import fs from 'node:fs'
 
-const file = new URL(
-  '../firestore.indexes.json',
-  import.meta.url,
-)
-const parsed = JSON.parse(
-  fs.readFileSync(file, 'utf8'),
-)
+const file = new URL('../firestore.indexes.json', import.meta.url)
+const parsed = JSON.parse(fs.readFileSync(file, 'utf8'))
 
 if (!Array.isArray(parsed.indexes)) {
-  throw new Error(
-    'firestore.indexes.json deve conter o array indexes.',
-  )
+  throw new Error('firestore.indexes.json deve conter o array indexes.')
 }
 
 const required = [
@@ -21,29 +14,19 @@ const required = [
   },
   {
     collectionGroup: 'users',
-    fields: [
-      'acceptedTermsVersion',
-      'acceptedPrivacyVersion',
-    ],
+    fields: ['acceptedTermsVersion', 'acceptedPrivacyVersion'],
   },
 ]
 
 for (const expected of required) {
   const found = parsed.indexes.some((index) => {
-    if (
-      index.collectionGroup !==
-      expected.collectionGroup
-    ) {
+    if (index.collectionGroup !== expected.collectionGroup) {
       return false
     }
 
-    const fields = (index.fields || []).map(
-      (field) => field.fieldPath,
-    )
+    const fields = (index.fields || []).map((field) => field.fieldPath)
 
-    return expected.fields.every((field) =>
-      fields.includes(field),
-    )
+    return expected.fields.every((field) => fields.includes(field))
   })
 
   if (!found) {
@@ -53,6 +36,4 @@ for (const expected of required) {
   }
 }
 
-console.log(
-  `Firestore: ${parsed.indexes.length} índice(s) validado(s).`,
-)
+console.log(`Firestore: ${parsed.indexes.length} índice(s) validado(s).`)

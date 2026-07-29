@@ -15,11 +15,7 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
-import {
-  buildCreditCardCenter,
-  monthKeyFromDate,
-  shiftMonthKey,
-} from '../domain/creditCardCenter'
+import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
@@ -48,12 +44,8 @@ function SummaryCard({ icon: Icon, label, value, helper }) {
           <p className="text-[10px] font-black uppercase tracking-wider text-[--text-tertiary]">
             {label}
           </p>
-          <p className="mt-2 text-xl font-black tracking-tight text-[--text-primary]">
-            {value}
-          </p>
-          <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
-            {helper}
-          </p>
+          <p className="mt-2 text-xl font-black tracking-tight text-[--text-primary]">{value}</p>
+          <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">{helper}</p>
         </div>
         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-100] text-[--brand-600]">
           <Icon size={17} />
@@ -97,8 +89,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
           </div>
 
           <p className="mt-1 text-[10px] text-[--text-tertiary]">
-            Fecha em {formatDate(dates.closingDate)} · vence em{' '}
-            {formatDate(dates.dueDate)}
+            Fecha em {formatDate(dates.closingDate)} · vence em {formatDate(dates.dueDate)}
           </p>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
@@ -137,9 +128,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
 
 function TransactionRow({ transaction }) {
   const purchaseDate =
-    transaction.purchaseDate ||
-    transaction.originalPurchaseDate ||
-    transaction.date
+    transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date
 
   return (
     <div className="flex items-center gap-3 border-b border-[--border-subtle] py-3 last:border-b-0">
@@ -159,8 +148,7 @@ function TransactionRow({ transaction }) {
           )}
         </div>
         <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-          {transaction.categoryName || 'Sem categoria'} · compra em{' '}
-          {formatDate(purchaseDate)}
+          {transaction.categoryName || 'Sem categoria'} · compra em {formatDate(purchaseDate)}
         </p>
       </div>
 
@@ -172,13 +160,7 @@ function TransactionRow({ transaction }) {
 }
 
 function CreditCardsCenterContent() {
-  const {
-    transactions,
-    creditCards,
-    invoiceEvents,
-    loading,
-    createInvoiceEvent,
-  } = useApp()
+  const { transactions, creditCards, invoiceEvents, loading, createInvoiceEvent } = useApp()
   const [selectedMonth, setSelectedMonth] = useState(monthKeyFromDate())
   const [selectedCardId, setSelectedCardId] = useState('all')
   const [managingCardId, setManagingCardId] = useState(null)
@@ -199,31 +181,20 @@ function CreditCardsCenterContent() {
   const visibleInvoices =
     selectedCardId === 'all'
       ? center.invoices
-      : center.invoices.filter(
-          (invoice) => invoice.card.id === selectedCardId,
-        )
+      : center.invoices.filter((invoice) => invoice.card.id === selectedCardId)
 
   const visibleTransactions =
     selectedCardId === 'all'
       ? center.selectedTransactions
-      : center.selectedTransactions.filter(
-          (transaction) => transaction.cardId === selectedCardId,
-        )
+      : center.selectedTransactions.filter((transaction) => transaction.cardId === selectedCardId)
 
   const selectedInvoice =
     selectedCardId === 'all'
       ? null
-      : center.invoices.find(
-          (invoice) => invoice.card.id === selectedCardId,
-        )
-  const managedInvoice = center.invoices.find(
-    (invoice) => invoice.card.id === managingCardId,
-  )
+      : center.invoices.find((invoice) => invoice.card.id === selectedCardId)
+  const managedInvoice = center.invoices.find((invoice) => invoice.card.id === managingCardId)
 
-  const loadingData =
-    loading.transactions ||
-    loading.creditCards ||
-    loading.invoiceEvents
+  const loadingData = loading.transactions || loading.creditCards || loading.invoiceEvents
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-5 pb-24 lg:pb-6">
@@ -243,8 +214,8 @@ function CreditCardsCenterContent() {
                 </span>
               </div>
               <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/70">
-                Acompanhe vencimentos, parcelas e compromissos futuros sem
-                confundir a data da compra com o mês da fatura.
+                Acompanhe vencimentos, parcelas e compromissos futuros sem confundir a data da
+                compra com o mês da fatura.
               </p>
             </div>
           </div>
@@ -259,9 +230,7 @@ function CreditCardsCenterContent() {
             </Link>
             <button
               type="button"
-              onClick={() =>
-                setCardSettingsOpen((current) => !current)
-              }
+              onClick={() => setCardSettingsOpen((current) => !current)}
               className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-bold text-white backdrop-blur hover:bg-white/15"
               aria-expanded={cardSettingsOpen}
             >
@@ -292,9 +261,7 @@ function CreditCardsCenterContent() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() =>
-                setSelectedMonth((month) => shiftMonthKey(month, -1))
-              }
+              onClick={() => setSelectedMonth((month) => shiftMonthKey(month, -1))}
               className="flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] bg-[--bg-surface] text-[--text-secondary] hover:bg-[--bg-hover]"
               aria-label="Fatura do mês anterior"
             >
@@ -320,9 +287,7 @@ function CreditCardsCenterContent() {
 
             <button
               type="button"
-              onClick={() =>
-                setSelectedMonth((month) => shiftMonthKey(month, 1))
-              }
+              onClick={() => setSelectedMonth((month) => shiftMonthKey(month, 1))}
               className="flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] bg-[--bg-surface] text-[--text-secondary] hover:bg-[--bg-hover]"
               aria-label="Fatura do próximo mês"
             >
@@ -346,10 +311,7 @@ function CreditCardsCenterContent() {
       {loadingData ? (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }, (_, index) => (
-            <div
-              key={index}
-              className="h-28 animate-pulse rounded-2xl bg-[--bg-hover]"
-            />
+            <div key={index} className="h-28 animate-pulse rounded-2xl bg-[--bg-hover]" />
           ))}
         </div>
       ) : (
@@ -387,18 +349,14 @@ function CreditCardsCenterContent() {
 
           {center.legacyCount > 0 && (
             <div className="flex items-start gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4">
-              <Info
-                size={17}
-                className="mt-0.5 flex-shrink-0 text-[--warning-icon]"
-              />
+              <Info size={17} className="mt-0.5 flex-shrink-0 text-[--warning-icon]" />
               <div>
                 <p className="text-xs font-black text-[--text-primary]">
                   Existem compras antigas fora da consolidação
                 </p>
                 <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
-                  Esses registros continuam nos relatórios gerais, mas não possuem
-                  cartão, fechamento e vencimento suficientes para compor uma
-                  fatura estruturada.
+                  Esses registros continuam nos relatórios gerais, mas não possuem cartão,
+                  fechamento e vencimento suficientes para compor uma fatura estruturada.
                 </p>
               </div>
             </div>
@@ -421,10 +379,7 @@ function CreditCardsCenterContent() {
 
                 <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 xl:grid-cols-3 2xl:grid-cols-6">
                   {center.forecast.map((item) => {
-                    const height = Math.max(
-                      8,
-                      Math.round((item.total / center.forecastMax) * 62),
-                    )
+                    const height = Math.max(8, Math.round((item.total / center.forecastMax) * 62))
                     const active = item.month === selectedMonth
 
                     return (
@@ -462,10 +417,7 @@ function CreditCardsCenterContent() {
               <div className="space-y-3">
                 {visibleInvoices.length === 0 ? (
                   <Card className="border-dashed text-center shadow-sm">
-                    <CreditCard
-                      size={28}
-                      className="mx-auto text-[--text-tertiary]"
-                    />
+                    <CreditCard size={28} className="mx-auto text-[--text-tertiary]" />
                     <p className="mt-2 text-sm font-black text-[--text-primary]">
                       Nenhum cartão cadastrado
                     </p>
@@ -481,9 +433,7 @@ function CreditCardsCenterContent() {
                       selected={selectedCardId === invoice.card.id}
                       onSelect={() =>
                         setSelectedCardId((current) =>
-                          current === invoice.card.id
-                            ? 'all'
-                            : invoice.card.id,
+                          current === invoice.card.id ? 'all' : invoice.card.id,
                         )
                       }
                     />
@@ -502,9 +452,7 @@ function CreditCardsCenterContent() {
                     <p className="mt-1 text-[10px] text-[--text-tertiary]">
                       {selectedCardId === 'all'
                         ? 'Todos os cartões'
-                        : center.cards.find(
-                            (card) => card.id === selectedCardId,
-                          )?.name}
+                        : center.cards.find((card) => card.id === selectedCardId)?.name}
                     </p>
                   </div>
 
@@ -512,9 +460,7 @@ function CreditCardsCenterContent() {
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        onClick={() =>
-                          setManagingCardId(selectedInvoice.card.id)
-                        }
+                        onClick={() => setManagingCardId(selectedInvoice.card.id)}
                         className="min-h-10 rounded-xl bg-[--brand-600] px-3 text-[10px] font-black text-white"
                       >
                         Gerenciar fatura
@@ -534,25 +480,18 @@ function CreditCardsCenterContent() {
               <div className="max-h-[620px] overflow-y-auto p-4">
                 {visibleTransactions.length === 0 ? (
                   <div className="py-12 text-center">
-                    <ReceiptText
-                      size={30}
-                      className="mx-auto text-[--text-tertiary]"
-                    />
+                    <ReceiptText size={30} className="mx-auto text-[--text-tertiary]" />
                     <p className="mt-3 text-sm font-black text-[--text-primary]">
                       Nenhuma compra nesta fatura
                     </p>
                     <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-                      Compras estruturadas aparecerão aqui conforme o vencimento
-                      calculado.
+                      Compras estruturadas aparecerão aqui conforme o vencimento calculado.
                     </p>
                   </div>
                 ) : (
                   visibleTransactions.map((transaction, index) => (
                     <TransactionRow
-                      key={
-                        transaction.id ||
-                        `${transaction.cardId}-${transaction.date}-${index}`
-                      }
+                      key={transaction.id || `${transaction.cardId}-${transaction.date}-${index}`}
                       transaction={transaction}
                     />
                   ))

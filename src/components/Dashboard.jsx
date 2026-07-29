@@ -81,14 +81,12 @@ const TxItem = ({ tx, categories }) => {
         </p>
         <p className="text-xs text-[--text-tertiary]">
           {formatRelativeDate(dateContext.activityDate)}
-          {dateContext.hasSeparateAccountingDate
-            ? ` · fatura ${dateContext.accountingLabel}`
-            : ''}
+          {dateContext.hasSeparateAccountingDate ? ` · fatura ${dateContext.accountingLabel}` : ''}
           {cat && !tx.isSavings ? ` · ${cat.name}` : ''}
         </p>
       </div>
       <span
-        className={`text-sm font-bold tabular-nums flex-shrink-0 ${
+        className={`max-w-[46%] flex-shrink-0 break-words text-right text-xs font-bold tabular-nums [overflow-wrap:anywhere] sm:text-sm ${
           tx.isSavings
             ? 'text-[--brand-500]'
             : isIncome
@@ -234,9 +232,7 @@ export default function Dashboard() {
 
   const healthScore = useMemo(() => {
     const savingRate =
-      currentSummary.income > 0
-        ? (currentSummary.savings / currentSummary.income) * 100
-        : 0
+      currentSummary.income > 0 ? (currentSummary.savings / currentSummary.income) * 100 : 0
     return calcHealthScore({
       balance: currentSummary.balance,
       income: currentSummary.income,
@@ -254,12 +250,15 @@ export default function Dashboard() {
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
-    <div className="space-y-5 pb-24 lg:pb-6">
+    <div className="dashboard-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-24 sm:space-y-5 lg:pb-6">
       {/* Header — mês com destaque, saudação secundária */}
-      <motion.div className="flex flex-wrap items-start justify-between gap-3" {...fade}>
+      <motion.div
+        className="dashboard-premium__toolbar flex flex-wrap items-start justify-between gap-3"
+        {...fade}
+      >
         <div className="min-w-0 flex-1">
           {/* Mês é o destaque principal */}
-          <div className="flex items-center gap-1.5 mb-0.5">
+          <div className="mb-0.5 flex min-w-0 flex-wrap items-center gap-1.5">
             <button
               onClick={() => setViewDate((d) => subMonths(d, 1))}
               className="w-11 h-11 -ml-3 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
@@ -291,8 +290,8 @@ export default function Dashboard() {
             {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'} 👋
           </p>
         </div>
-        <Link to="/transactions">
-          <Button variant="primary" icon={<Plus />} size="sm">
+        <Link to="/transactions" className="w-full min-[420px]:w-auto">
+          <Button variant="primary" icon={<Plus />} size="sm" fullWidth>
             Nova transação
           </Button>
         </Link>
@@ -300,7 +299,7 @@ export default function Dashboard() {
 
       {/* Hero — saldo do mês como principal, sem duplicar nos cards abaixo */}
       <motion.div
-        className="relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] text-white"
+        className="aurora-balance-hero relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-4 text-white sm:p-6"
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.05 }}
@@ -321,13 +320,13 @@ export default function Dashboard() {
             <div className="h-12 w-44 rounded-xl bg-white/20 animate-pulse mb-4" />
           ) : (
             <p
-              className={`text-4xl sm:text-5xl font-black tabular-nums mb-4 ${currentSummary.balance >= 0 ? 'text-white' : 'text-red-300'}`}
+              className={`mb-4 break-words text-[clamp(1.9rem,10vw,3.75rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${currentSummary.balance >= 0 ? 'text-white' : 'text-red-300'}`}
             >
               {formatCurrency(currentSummary.balance)}
             </p>
           )}
           {/* Receitas / Despesas / Poupança — linha secundária */}
-          <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/15">
+          <div className="grid grid-cols-2 gap-2 border-t border-white/15 pt-4 min-[560px]:grid-cols-3 min-[560px]:gap-3">
             <div>
               <p className="text-white/55 text-[11px] mb-0.5">↑ Receitas</p>
               <p className="text-sm font-bold text-green-300">
@@ -340,7 +339,7 @@ export default function Dashboard() {
                 {formatCurrency(currentSummary.expenses)}
               </p>
             </div>
-            <div>
+            <div className="col-span-2 min-[560px]:col-span-1">
               <p className="text-white/55 text-[11px] mb-0.5 flex items-center gap-1">
                 <PiggyBank size={10} /> Poupança
               </p>
@@ -352,20 +351,18 @@ export default function Dashboard() {
 
       {/* Resumo executivo: indicadores essenciais e análise do Money */}
       <motion.div
-        className="grid grid-cols-1 gap-4 xl:grid-cols-12"
+        className="dashboard-bento-grid grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <div className="grid gap-4 sm:grid-cols-2 xl:col-span-5 xl:grid-cols-1 xl:grid-rows-2">
-          <Card className="h-full shadow-sm">
+        <div className="grid min-w-0 gap-4 md:grid-cols-[1.15fr_0.85fr] xl:col-span-5 xl:grid-cols-1 xl:grid-rows-2">
+          <Card variant="elevated" className="h-full shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="mb-1 flex items-center gap-1.5">
                   <Zap size={14} className="text-[#f59e0b]" />
-                  <p className="text-xs font-semibold text-[--text-tertiary]">
-                    Previsão de gastos
-                  </p>
+                  <p className="text-xs font-semibold text-[--text-tertiary]">Previsão de gastos</p>
                   <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
                 </div>
                 {isLoading ? (
@@ -385,13 +382,11 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <Card className="h-full shadow-sm">
+          <Card variant="elevated" className="h-full shadow-sm">
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="flex items-center gap-1.5">
                 <Heart size={14} className="text-[--danger-icon]" />
-                <p className="text-xs font-semibold text-[--text-tertiary]">
-                  Saúde financeira
-                </p>
+                <p className="text-xs font-semibold text-[--text-tertiary]">Saúde financeira</p>
                 <InfoTooltip text="Indicador sintético baseado no equilíbrio entre receitas, despesas, orçamento e poupança registrados." />
               </div>
             </div>
@@ -405,7 +400,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Gráficos — altura maior */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.15 }}>
           <Card>
             <div className="flex items-center gap-2 mb-4">
@@ -532,7 +527,7 @@ export default function Dashboard() {
       </div>
 
       {/* Linha inferior */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.25 }}>
           <Card>
             <div className="flex items-center justify-between mb-4">

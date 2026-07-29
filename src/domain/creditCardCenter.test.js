@@ -153,15 +153,9 @@ test('preserva cartão removido a partir do retrato salvo na transação', () =>
 })
 
 test('expõe estado temporal sem afirmar que a fatura foi paga', () => {
-  expect(
-    invoiceStatus('2026-08', cards[1], new Date(2026, 7, 12)),
-  ).toBe('closed')
-  expect(
-    invoiceStatus('2026-08', cards[1], new Date(2026, 7, 20)),
-  ).toBe('past_due')
-  expect(
-    invoiceStatus('2026-09', cards[1], new Date(2026, 7, 20)),
-  ).toBe('future')
+  expect(invoiceStatus('2026-08', cards[1], new Date(2026, 7, 12))).toBe('closed')
+  expect(invoiceStatus('2026-08', cards[1], new Date(2026, 7, 20))).toBe('past_due')
+  expect(invoiceStatus('2026-09', cards[1], new Date(2026, 7, 20))).toBe('future')
 })
 
 test('navega e rotula meses em português', () => {

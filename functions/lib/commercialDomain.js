@@ -7,18 +7,14 @@ const DEFAULT_READINESS_CHECKS = Object.freeze({
 
 function safeCount(value) {
   const number = Number(value)
-  return Number.isFinite(number) && number > 0
-    ? Math.trunc(number)
-    : 0
+  return Number.isFinite(number) && number > 0 ? Math.trunc(number) : 0
 }
 
 function percentage(numerator, denominator) {
   const total = safeCount(denominator)
   if (!total) return 0
 
-  return Math.round(
-    (safeCount(numerator) / total) * 10_000,
-  ) / 100
+  return Math.round((safeCount(numerator) / total) * 10_000) / 100
 }
 
 function buildCommercialMetrics({
@@ -52,23 +48,13 @@ function buildCommercialMetrics({
     generatedAt: generatedAt.toISOString(),
     counts,
     rates: {
-      telegramAdoption: percentage(
-        counts.telegramLinked,
-        counts.totalUsers,
-      ),
-      legalAcceptance: percentage(
-        counts.legalAccepted,
-        counts.totalUsers,
-      ),
+      telegramAdoption: percentage(counts.telegramLinked, counts.totalUsers),
+      legalAcceptance: percentage(counts.legalAccepted, counts.totalUsers),
     },
-    deletionBacklog:
-      counts.deletionPending +
-      counts.deletionProcessing +
-      counts.deletionFailed,
+    deletionBacklog: counts.deletionPending + counts.deletionProcessing + counts.deletionFailed,
     readiness: {
       checks,
-      completed: Object.values(checks).filter(Boolean)
-        .length,
+      completed: Object.values(checks).filter(Boolean).length,
       total: Object.keys(checks).length,
       percentage: percentage(
         Object.values(checks).filter(Boolean).length,

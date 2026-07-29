@@ -20,7 +20,6 @@ VITE_ENFORCE_LEGAL_GATE=false
 
 O código das Cloud Functions não é removido.
 
-
 Depois que o Worker estiver implantado e o teste de saúde estiver aprovado, altere somente:
 
 ```env

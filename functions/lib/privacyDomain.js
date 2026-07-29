@@ -15,9 +15,7 @@ function toIso(value) {
   if (value instanceof Date) return value.toISOString()
 
   const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? null
-    : date.toISOString()
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
 }
 
 function serializeFirestoreValue(value) {
@@ -37,10 +35,7 @@ function serializeFirestoreValue(value) {
 
   if (typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [
-        key,
-        serializeFirestoreValue(item),
-      ]),
+      Object.entries(value).map(([key, item]) => [key, serializeFirestoreValue(item)]),
     )
   }
 
@@ -48,19 +43,16 @@ function serializeFirestoreValue(value) {
 }
 
 function buildDeletionSchedule(now = new Date()) {
-  return new Date(
-    now.getTime() + DELETION_GRACE_DAYS * DAY_IN_MS,
-  )
+  return new Date(now.getTime() + DELETION_GRACE_DAYS * DAY_IN_MS)
 }
 
 function validateDeletionConfirmation(value) {
   if (
-    String(value || '').trim().toUpperCase() !==
-    DELETION_CONFIRMATION
+    String(value || '')
+      .trim()
+      .toUpperCase() !== DELETION_CONFIRMATION
   ) {
-    throw new Error(
-      `Digite exatamente "${DELETION_CONFIRMATION}".`,
-    )
+    throw new Error(`Digite exatamente "${DELETION_CONFIRMATION}".`)
   }
 
   return true
@@ -68,18 +60,14 @@ function validateDeletionConfirmation(value) {
 
 function validateLegalAcceptance(data = {}) {
   if (data.accepted !== true) {
-    throw new Error(
-      'É necessário aceitar os Termos e a Política de Privacidade.',
-    )
+    throw new Error('É necessário aceitar os Termos e a Política de Privacidade.')
   }
 
   if (
     data.termsVersion !== LEGAL_VERSIONS.terms ||
     data.privacyVersion !== LEGAL_VERSIONS.privacy
   ) {
-    throw new Error(
-      'A versão jurídica informada não é a versão atual.',
-    )
+    throw new Error('A versão jurídica informada não é a versão atual.')
   }
 
   return {
@@ -89,22 +77,16 @@ function validateLegalAcceptance(data = {}) {
 }
 
 function buildPrivacyStatus(userData = {}, deletionData = null) {
-  const acceptedTerms =
-    userData.acceptedTermsVersion === LEGAL_VERSIONS.terms
-  const acceptedPrivacy =
-    userData.acceptedPrivacyVersion ===
-    LEGAL_VERSIONS.privacy
+  const acceptedTerms = userData.acceptedTermsVersion === LEGAL_VERSIONS.terms
+  const acceptedPrivacy = userData.acceptedPrivacyVersion === LEGAL_VERSIONS.privacy
 
   return {
     termsVersion: LEGAL_VERSIONS.terms,
     privacyVersion: LEGAL_VERSIONS.privacy,
-    acceptedTermsVersion:
-      userData.acceptedTermsVersion || null,
-    acceptedPrivacyVersion:
-      userData.acceptedPrivacyVersion || null,
+    acceptedTermsVersion: userData.acceptedTermsVersion || null,
+    acceptedPrivacyVersion: userData.acceptedPrivacyVersion || null,
     acceptedAt: toIso(userData.legalAcceptedAt),
-    requiresAcceptance:
-      !acceptedTerms || !acceptedPrivacy,
+    requiresAcceptance: !acceptedTerms || !acceptedPrivacy,
     deletionRequest: deletionData
       ? {
           status: deletionData.status || 'pending',
@@ -134,8 +116,7 @@ function buildPortableExport({
       profile: serializeFirestoreValue(user),
     },
     data: serializeFirestoreValue(collections),
-    customCategories:
-      serializeFirestoreValue(ownedCategories),
+    customCategories: serializeFirestoreValue(ownedCategories),
     integration: serializeFirestoreValue(integration),
     relatedData: serializeFirestoreValue(relatedData),
     notes: [

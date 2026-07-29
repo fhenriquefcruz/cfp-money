@@ -27,6 +27,7 @@ import { Card, Button, Input, Modal, Badge } from './ui'
 import { auth } from '../services/firebase'
 import PrivacyDataCardRouter from './PrivacyDataCardRouter'
 import EmailNotificationsCard from './EmailNotificationsCard'
+import PwaInstallCard from './PwaInstallCard'
 
 const PIX_KEY = 'fhenriquefcruz@gmail.com' // sua chave Pix
 const PIX_AMOUNT = 'R$ 19,90'
@@ -167,14 +168,14 @@ export default function Profile() {
   const planLabel = isLoading
     ? 'Carregando'
     : status.isAdminBypass
-    ? 'Administrador'
-    : status.isPremium
-      ? status.isTrial
-        ? 'Trial Premium'
-        : 'Premium Ativo'
-      : status.isExpired
-        ? 'Expirado'
-        : 'Gratuito'
+      ? 'Administrador'
+      : status.isPremium
+        ? status.isTrial
+          ? 'Trial Premium'
+          : 'Premium Ativo'
+        : status.isExpired
+          ? 'Expirado'
+          : 'Gratuito'
   const planVariant = isLoading
     ? 'warning'
     : status.isPremium
@@ -386,6 +387,8 @@ export default function Profile() {
           </Button>
         </div>
       </Card>
+
+      <PwaInstallCard />
 
       <EmailNotificationsCard />
 

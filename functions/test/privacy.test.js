@@ -14,43 +14,25 @@ const {
 test('serializa datas e objetos aninhados', () => {
   const serialized = serializeFirestoreValue({
     createdAt: {
-      toDate: () =>
-        new Date('2026-07-27T12:00:00.000Z'),
+      toDate: () => new Date('2026-07-27T12:00:00.000Z'),
     },
     list: [new Date('2026-07-28T12:00:00.000Z')],
   })
 
-  assert.equal(
-    serialized.createdAt,
-    '2026-07-27T12:00:00.000Z',
-  )
-  assert.equal(
-    serialized.list[0],
-    '2026-07-28T12:00:00.000Z',
-  )
+  assert.equal(serialized.createdAt, '2026-07-27T12:00:00.000Z')
+  assert.equal(serialized.list[0], '2026-07-28T12:00:00.000Z')
 })
 
 test('exige frase exata para exclusão', () => {
-  assert.equal(
-    validateDeletionConfirmation(DELETION_CONFIRMATION),
-    true,
-  )
+  assert.equal(validateDeletionConfirmation(DELETION_CONFIRMATION), true)
 
-  assert.throws(
-    () => validateDeletionConfirmation('excluir'),
-    /Digite exatamente/,
-  )
+  assert.throws(() => validateDeletionConfirmation('excluir'), /Digite exatamente/)
 })
 
 test('agenda exclusão para sete dias', () => {
-  const scheduled = buildDeletionSchedule(
-    new Date('2026-07-27T00:00:00.000Z'),
-  )
+  const scheduled = buildDeletionSchedule(new Date('2026-07-27T00:00:00.000Z'))
 
-  assert.equal(
-    scheduled.toISOString(),
-    '2026-08-03T00:00:00.000Z',
-  )
+  assert.equal(scheduled.toISOString(), '2026-08-03T00:00:00.000Z')
 })
 
 test('exige versões jurídicas atuais', () => {
@@ -102,17 +84,12 @@ test('monta exportação portátil sem segredos', () => {
     relatedData: {
       privacyConsents: [{ termsVersion: '1.0.0' }],
     },
-    generatedAt: new Date(
-      '2026-07-27T12:00:00.000Z',
-    ),
+    generatedAt: new Date('2026-07-27T12:00:00.000Z'),
   })
 
   assert.equal(exported.schemaVersion, '1.0.0')
   assert.equal(exported.subject.uid, 'user-1')
   assert.equal(exported.data.transactions[0].amount, 100)
   assert.equal(exported.integration.linked, true)
-  assert.equal(
-    exported.relatedData.privacyConsents[0].termsVersion,
-    '1.0.0',
-  )
+  assert.equal(exported.relatedData.privacyConsents[0].termsVersion, '1.0.0')
 })

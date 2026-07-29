@@ -26,13 +26,13 @@ Estrutura sugerida:
 
 ## Exemplo de composição
 
-| Item | Valor estimado |
-|---|---:|
-| Implantação | R$ 90.000,00 |
-| Licença e infraestrutura por 12 meses | R$ 120.000,00 |
-| Suporte | R$ 60.000,00 |
-| Treinamento | R$ 30.000,00 |
-| Segurança e conformidade | R$ 35.000,00 |
-| Total estimado | R$ 335.000,00 |
+| Item                                  | Valor estimado |
+| ------------------------------------- | -------------: |
+| Implantação                           |   R$ 90.000,00 |
+| Licença e infraestrutura por 12 meses |  R$ 120.000,00 |
+| Suporte                               |   R$ 60.000,00 |
+| Treinamento                           |   R$ 30.000,00 |
+| Segurança e conformidade              |   R$ 35.000,00 |
+| Total estimado                        |  R$ 335.000,00 |
 
 O exemplo não é laudo de avaliação nem valor oficial de licitação.

@@ -5,8 +5,7 @@
   isolation: isolate;
   background:
     radial-gradient(circle at 84% 12%, rgba(99, 102, 241, 0.16), transparent 29%),
-    radial-gradient(circle at 8% 86%, rgba(34, 211, 238, 0.1), transparent 31%),
-    var(--bg-app);
+    radial-gradient(circle at 8% 86%, rgba(34, 211, 238, 0.1), transparent 31%), var(--bg-app);
 }
 
 .login-future-grid {
@@ -67,8 +66,12 @@
     linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
   background-size: 46px 46px;
-  mask-image:
-    radial-gradient(circle at 55% 45%, black 0%, rgba(0, 0, 0, 0.72) 43%, transparent 82%);
+  mask-image: radial-gradient(
+    circle at 55% 45%,
+    black 0%,
+    rgba(0, 0, 0, 0.72) 43%,
+    transparent 82%
+  );
 }
 
 .login-gradient-text {
@@ -89,14 +92,13 @@
 
 .login-panel-scan {
   opacity: 0.32;
-  background:
-    linear-gradient(
-      115deg,
-      transparent 20%,
-      rgba(165, 243, 252, 0.08) 42%,
-      rgba(196, 181, 253, 0.08) 52%,
-      transparent 72%
-    );
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(165, 243, 252, 0.08) 42%,
+    rgba(196, 181, 253, 0.08) 52%,
+    transparent 72%
+  );
   transform: translateX(-90%);
   animation: login-panel-scan 8s ease-in-out infinite;
 }
@@ -187,8 +189,7 @@
   .login-future-shell {
     background:
       radial-gradient(circle at 88% 4%, rgba(99, 102, 241, 0.17), transparent 27%),
-      radial-gradient(circle at 2% 95%, rgba(34, 211, 238, 0.1), transparent 29%),
-      var(--bg-app);
+      radial-gradient(circle at 2% 95%, rgba(34, 211, 238, 0.1), transparent 29%), var(--bg-app);
   }
 }
 

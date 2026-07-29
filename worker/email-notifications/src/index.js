@@ -14,16 +14,10 @@ import {
   listCollection,
   patchDocument,
 } from './firestore.js'
-import {
-  alertsEmail,
-  currency,
-  reportEmail,
-  sendEmail,
-} from './mailer.js'
+import { alertsEmail, currency, reportEmail, sendEmail } from './mailer.js'
 
 const CONSENT_VERSION = '1.0.0'
-const DEFAULT_TIME_ZONE =
-  'America/Campo_Grande'
+const DEFAULT_TIME_ZONE = 'America/Campo_Grande'
 
 function settingsDefaults(value = {}) {
   return {
@@ -47,19 +41,14 @@ function settingsDefaults(value = {}) {
 }
 
 function periodLabel(range) {
-  const formatter = new Intl.DateTimeFormat(
-    'pt-BR',
-    {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      timeZone: 'UTC',
-    },
-  )
+  const formatter = new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
 
-  return `${formatter.format(
-    range.start,
-  )} a ${formatter.format(range.end)}`
+  return `${formatter.format(range.start)} a ${formatter.format(range.end)}`
 }
 
 async function deliveryPath(env, rawKey) {
@@ -68,49 +57,25 @@ async function deliveryPath(env, rawKey) {
 }
 
 async function wasDelivered(env, rawKey) {
-  return Boolean(
-    await getDocument(
-      env,
-      await deliveryPath(env, rawKey),
-    ),
-  )
+  return Boolean(await getDocument(env, await deliveryPath(env, rawKey)))
 }
 
-async function recordDelivery(
-  env,
-  rawKey,
-  data,
-) {
-  await createOrReplaceDocument(
-    env,
-    await deliveryPath(env, rawKey),
-    {
-      key: rawKey,
-      status: 'sent',
-      sentAt: new Date(),
-      ...data,
-    },
-  )
+async function recordDelivery(env, rawKey, data) {
+  await createOrReplaceDocument(env, await deliveryPath(env, rawKey), {
+    key: rawKey,
+    status: 'sent',
+    sentAt: new Date(),
+    ...data,
+  })
 }
 
 async function readTransactions(env, uid) {
-  return listCollection(
-    env,
-    `users/${uid}/transactions`,
-    { limit: 3000 },
-  )
+  return listCollection(env, `users/${uid}/transactions`, { limit: 3000 })
 }
 
-function goalAlertMessage(
-  goal,
-  candidate,
-) {
-  const target = Number(
-    goal.targetAmount || 0,
-  )
-  const current = Number(
-    goal.currentAmount || 0,
-  )
+function goalAlertMessage(goal, candidate) {
+  const target = Number(goal.targetAmount || 0)
+  const current = Number(goal.currentAmount || 0)
   const remaining = Math.max(0, target - current)
   const name = goal.name || 'Meta'
 
@@ -118,9 +83,7 @@ function goalAlertMessage(
     return {
       level: 'warning',
       title: `${name}: meta concluída`,
-      message: `O objetivo de ${currency(
-        target,
-      )} foi alcançado.`,
+      message: `O objetivo de ${currency(target)} foi alcançado.`,
     }
   }
 
@@ -128,9 +91,7 @@ function goalAlertMessage(
     return {
       level: 'warning',
       title: `${name}: reta final`,
-      message: `A meta atingiu pelo menos 80%. Faltam ${currency(
-        remaining,
-      )}.`,
+      message: `A meta atingiu pelo menos 80%. Faltam ${currency(remaining)}.`,
     }
   }
 
@@ -138,22 +99,15 @@ function goalAlertMessage(
     return {
       level: 'danger',
       title: `${name}: prazo encerrado`,
-      message: `A meta ainda possui ${currency(
-        remaining,
-      )} pendentes após o prazo.`,
+      message: `A meta ainda possui ${currency(remaining)} pendentes após o prazo.`,
     }
   }
 
   const days = candidate.split('-').pop()
   return {
-    level:
-      Number(days) <= 1
-        ? 'danger'
-        : 'warning',
+    level: Number(days) <= 1 ? 'danger' : 'warning',
     title: `${name}: prazo próximo`,
-    message: `Faltam ${days} dia(s) para o prazo e ${currency(
-      remaining,
-    )} para concluir.`,
+    message: `Faltam ${days} dia(s) para o prazo e ${currency(remaining)} para concluir.`,
   }
 }
 
@@ -167,69 +121,39 @@ function acceptsQueueAlert(settings, item) {
 
   return (
     Array.isArray(settings.budgetThresholds) &&
-    settings.budgetThresholds.includes(
-      Number(item.threshold),
-    )
+    settings.budgetThresholds.includes(Number(item.threshold))
   )
 }
 
 function queueAlertMessage(item) {
-  const exceeded =
-    Number(item.spent || 0) -
-    Number(item.limit || 0)
+  const exceeded = Number(item.spent || 0) - Number(item.limit || 0)
   const over = item.threshold === 'over'
 
   return {
     key: `queue:${item.id}`,
-    queuePath: item.name
-      .split('/documents/')
-      .pop(),
-    level:
-      over || Number(item.threshold) >= 100
-        ? 'danger'
-        : 'warning',
+    queuePath: item.name.split('/documents/').pop(),
+    level: over || Number(item.threshold) >= 100 ? 'danger' : 'warning',
     title: over
       ? `${item.categoryName}: limite ultrapassado`
       : `${item.categoryName}: ${item.threshold}% do limite`,
     message: over
-      ? `Gasto atual ${currency(
-          item.spent,
-        )}, limite ${currency(
-          item.limit,
-        )} e excesso ${currency(
+      ? `Gasto atual ${currency(item.spent)}, limite ${currency(item.limit)} e excesso ${currency(
           exceeded,
         )}.`
-      : `Gasto atual ${currency(
-          item.spent,
-        )} de ${currency(
-          item.limit,
-        )} (${Number(
+      : `Gasto atual ${currency(item.spent)} de ${currency(item.limit)} (${Number(
           item.percentage || 0,
         ).toFixed(0)}%).`,
   }
 }
 
-async function collectQueueAlerts({
-  env,
-  user,
-  settings,
-  local,
-}) {
-  const queue = await listCollection(
-    env,
-    `users/${user.id}/notificationQueue`,
-    { limit: 100 },
-  )
+async function collectQueueAlerts({ env, user, settings, local }) {
+  const queue = await listCollection(env, `users/${user.id}/notificationQueue`, { limit: 100 })
   const pending = []
 
   for (const item of queue) {
     const path = `users/${user.id}/notificationQueue/${item.id}`
 
-    if (
-      item.type === 'budget' &&
-      item.monthKey &&
-      item.monthKey !== local.monthKey
-    ) {
+    if (item.type === 'budget' && item.monthKey && item.monthKey !== local.monthKey) {
       await deleteDocument(env, path)
       continue
     }
@@ -257,53 +181,31 @@ async function collectQueueAlerts({
   return pending
 }
 
-async function collectGoalAlerts({
-  env,
-  user,
-  settings,
-  now,
-  local,
-}) {
+async function collectGoalAlerts({ env, user, settings, now, local }) {
   if (
     !settings.goalAlerts ||
-    local.hour !==
-      Number(settings.reportHour || 8) ||
+    local.hour !== Number(settings.reportHour || 8) ||
     local.minute >= 15
   ) {
     return []
   }
 
-  const goals = await listCollection(
-    env,
-    `users/${user.id}/goals`,
-    { limit: 500 },
-  )
+  const goals = await listCollection(env, `users/${user.id}/goals`, { limit: 500 })
   const pending = []
 
   for (const goal of goals) {
-    const candidates = goalAlertCandidates(
-      goal,
-      now,
-    ).filter((candidate) => {
+    const candidates = goalAlertCandidates(goal, now).filter((candidate) => {
       if (candidate.startsWith('progress-')) {
-        const threshold = Number(
-          candidate.split('-').pop(),
-        )
-        return (
-          settings.goalProgressThresholds || []
-        ).includes(threshold)
+        const threshold = Number(candidate.split('-').pop())
+        return (settings.goalProgressThresholds || []).includes(threshold)
       }
 
       if (candidate === 'deadline-overdue') {
         return true
       }
 
-      const days = Number(
-        candidate.split('-').pop(),
-      )
-      return (
-        settings.goalDeadlineDays || []
-      ).includes(days)
+      const days = Number(candidate.split('-').pop())
+      return (settings.goalDeadlineDays || []).includes(days)
     })
 
     for (const candidate of candidates) {
@@ -323,23 +225,9 @@ async function collectGoalAlerts({
   return pending
 }
 
-async function sendReport({
-  env,
-  user,
-  settings,
-  transactions,
-  now,
-  test,
-  local,
-}) {
-  const range = reportRange(
-    test ? 'weekly' : settings.frequency,
-    now,
-  )
-  const summary = summarizeTransactions(
-    transactions,
-    range,
-  )
+async function sendReport({ env, user, settings, transactions, now, test, local }) {
+  const range = reportRange(test ? 'weekly' : settings.frequency, now)
+  const summary = summarizeTransactions(transactions, range)
   const key = test
     ? `test:${user.id}:${settings.testRequestId}`
     : `report:${user.id}:${settings.frequency}:${local.dateKey}`
@@ -359,27 +247,19 @@ async function sendReport({
     to: user.email,
     name: user.displayName,
     ...email,
-    tags: [
-      test ? 'test' : 'report',
-      settings.frequency,
-    ],
+    tags: [test ? 'test' : 'report', settings.frequency],
   })
 
   await recordDelivery(env, key, {
     uid: user.id,
     type: test ? 'test' : 'report',
-    providerMessageId:
-      response.messageId || '',
+    providerMessageId: response.messageId || '',
   })
 
   return true
 }
 
-async function sendAlerts({
-  env,
-  user,
-  alerts,
-}) {
+async function sendAlerts({ env, user, alerts }) {
   if (!alerts.length) return 0
 
   const email = alertsEmail({
@@ -395,34 +275,22 @@ async function sendAlerts({
   })
 
   for (const alert of alerts) {
-    await recordDelivery(
-      env,
-      alert.deliveryKey,
-      {
-        uid: user.id,
-        type: 'alert',
-        alertKey: alert.key,
-        providerMessageId:
-          response.messageId || '',
-      },
-    )
+    await recordDelivery(env, alert.deliveryKey, {
+      uid: user.id,
+      type: 'alert',
+      alertKey: alert.key,
+      providerMessageId: response.messageId || '',
+    })
 
     if (alert.queuePath) {
-      await deleteDocument(
-        env,
-        alert.queuePath,
-      )
+      await deleteDocument(env, alert.queuePath)
     }
   }
 
   return alerts.length
 }
 
-async function processUser({
-  env,
-  user,
-  now,
-}) {
+async function processUser({ env, user, now }) {
   if (!isPremiumUser(user, now)) {
     return {
       uid: user.id,
@@ -430,17 +298,10 @@ async function processUser({
     }
   }
 
-  const rawSettings = await getDocument(
-    env,
-    `users/${user.id}/notificationSettings/email`,
-  )
-  const settings = settingsDefaults(
-    rawSettings || {},
-  )
+  const rawSettings = await getDocument(env, `users/${user.id}/notificationSettings/email`)
+  const settings = settingsDefaults(rawSettings || {})
 
-  const hasConsent =
-    settings.consentVersion ===
-    CONSENT_VERSION
+  const hasConsent = settings.consentVersion === CONSENT_VERSION
   if (!settings.enabled || !hasConsent) {
     return {
       uid: user.id,
@@ -455,28 +316,16 @@ async function processUser({
     }
   }
 
-  const local = localParts(
-    now,
-    settings.timeZone ||
-      DEFAULT_TIME_ZONE,
-  )
+  const local = localParts(now, settings.timeZone || DEFAULT_TIME_ZONE)
   const testPending =
-    Boolean(settings.testRequestId) &&
-    settings.testRequestId !==
-      settings.lastTestProcessedId
-  const reportDue = isReportDue(
-    settings,
-    now,
-  )
+    Boolean(settings.testRequestId) && settings.testRequestId !== settings.lastTestProcessedId
+  const reportDue = isReportDue(settings, now)
 
   let transactions = null
   let reports = 0
 
   if (testPending || reportDue) {
-    transactions = await readTransactions(
-      env,
-      user.id,
-    )
+    transactions = await readTransactions(env, user.id)
   }
 
   if (testPending) {
@@ -494,14 +343,10 @@ async function processUser({
       env,
       `users/${user.id}/notificationSettings/email`,
       {
-        lastTestProcessedId:
-          settings.testRequestId,
+        lastTestProcessedId: settings.testRequestId,
         lastTestSentAt: new Date(),
       },
-      [
-        'lastTestProcessedId',
-        'lastTestSentAt',
-      ],
+      ['lastTestProcessedId', 'lastTestSentAt'],
     )
     if (sent) reports += 1
   }
@@ -548,61 +393,30 @@ async function processUser({
   }
 }
 
-async function resolveUsers(
-  env,
-  onlyUid,
-) {
+async function resolveUsers(env, onlyUid) {
   if (onlyUid) {
-    const user = await getDocument(
-      env,
-      `users/${onlyUid}`,
-    )
+    const user = await getDocument(env, `users/${onlyUid}`)
     return user ? [user] : []
   }
 
-  const maxUsers = Math.max(
-    1,
-    Math.min(
-      1000,
-      Number(env.MAX_USERS_PER_RUN || 250),
-    ),
-  )
-  const subscriptions = await listCollection(
-    env,
-    'notificationSubscribers',
-    { limit: maxUsers },
-  )
+  const maxUsers = Math.max(1, Math.min(1000, Number(env.MAX_USERS_PER_RUN || 250)))
+  const subscriptions = await listCollection(env, 'notificationSubscribers', { limit: maxUsers })
   const users = []
 
   for (const subscription of subscriptions) {
-    if (
-      subscription.enabled === false ||
-      !subscription.uid
-    ) {
+    if (subscription.enabled === false || !subscription.uid) {
       continue
     }
 
-    const user = await getDocument(
-      env,
-      `users/${subscription.uid}`,
-    )
+    const user = await getDocument(env, `users/${subscription.uid}`)
     if (user) users.push(user)
   }
 
   return users
 }
 
-async function processAll(
-  env,
-  {
-    now = new Date(),
-    onlyUid = '',
-  } = {},
-) {
-  const users = await resolveUsers(
-    env,
-    onlyUid,
-  )
+async function processAll(env, { now = new Date(), onlyUid = '' } = {}) {
+  const users = await resolveUsers(env, onlyUid)
   const results = []
 
   for (const user of users) {
@@ -615,17 +429,11 @@ async function processAll(
         }),
       )
     } catch (error) {
-      console.error(
-        '[Meu Real] Falha no usuário:',
-        user.id,
-        error,
-      )
+      console.error('[Meu Real] Falha no usuário:', user.id, error)
       results.push({
         uid: user.id,
         status: 'failed',
-        error: String(
-          error?.message || error,
-        ).slice(0, 300),
+        error: String(error?.message || error).slice(0, 300),
       })
     }
   }
@@ -638,26 +446,20 @@ async function processAll(
 }
 
 function json(data, status = 200) {
-  return new Response(
-    JSON.stringify(data, null, 2),
-    {
-      status,
-      headers: {
-        'content-type':
-          'application/json;charset=utf-8',
-        'cache-control': 'no-store',
-      },
+  return new Response(JSON.stringify(data, null, 2), {
+    status,
+    headers: {
+      'content-type': 'application/json;charset=utf-8',
+      'cache-control': 'no-store',
     },
-  )
+  })
 }
 
 export default {
   async scheduled(controller, env, ctx) {
     ctx.waitUntil(
       processAll(env, {
-        now: new Date(
-          controller.scheduledTime,
-        ),
+        now: new Date(controller.scheduledTime),
       }),
     )
   },
@@ -665,37 +467,21 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url)
 
-    if (
-      request.method === 'GET' &&
-      url.pathname === '/health'
-    ) {
+    if (request.method === 'GET' && url.pathname === '/health') {
       return json({
         ok: true,
-        service:
-          'meu-real-email-notifications',
+        service: 'meu-real-email-notifications',
         version: '19.0.0',
       })
     }
 
-    if (
-      request.method === 'POST' &&
-      url.pathname === '/run'
-    ) {
-      const authorization =
-        request.headers.get('authorization')
-      if (
-        authorization !==
-        `Bearer ${env.ADMIN_TRIGGER_SECRET}`
-      ) {
-        return json(
-          { ok: false, error: 'forbidden' },
-          403,
-        )
+    if (request.method === 'POST' && url.pathname === '/run') {
+      const authorization = request.headers.get('authorization')
+      if (authorization !== `Bearer ${env.ADMIN_TRIGGER_SECRET}`) {
+        return json({ ok: false, error: 'forbidden' }, 403)
       }
 
-      const body = await request
-        .json()
-        .catch(() => ({}))
+      const body = await request.json().catch(() => ({}))
       return json(
         await processAll(env, {
           onlyUid: String(body.uid || ''),
@@ -703,10 +489,7 @@ export default {
       )
     }
 
-    return json(
-      { ok: false, error: 'not-found' },
-      404,
-    )
+    return json({ ok: false, error: 'not-found' }, 404)
   },
 }
 

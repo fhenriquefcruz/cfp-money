@@ -20,24 +20,18 @@ function fromCents(value) {
 }
 
 function sumAmounts(items = []) {
-  return fromCents(
-    items.reduce((total, item) => total + toCents(item.amount), 0),
-  )
+  return fromCents(items.reduce((total, item) => total + toCents(item.amount), 0))
 }
 
 function compareMembers(first, second) {
-  const firstPosition =
-    Number(first.installmentNum) || Number(first.recurringNum) || 0
-  const secondPosition =
-    Number(second.installmentNum) || Number(second.recurringNum) || 0
+  const firstPosition = Number(first.installmentNum) || Number(first.recurringNum) || 0
+  const secondPosition = Number(second.installmentNum) || Number(second.recurringNum) || 0
 
   if (firstPosition && secondPosition && firstPosition !== secondPosition) {
     return firstPosition - secondPosition
   }
 
-  const byDate = String(first.date || '').localeCompare(
-    String(second.date || ''),
-  )
+  const byDate = String(first.date || '').localeCompare(String(second.date || ''))
   if (byDate !== 0) return byDate
 
   return String(first.id || '').localeCompare(String(second.id || ''))
@@ -56,10 +50,7 @@ export function getTransactionSeries(transaction = {}) {
     return {
       kind: 'recurring',
       id: transaction.recurringGroupId,
-      label:
-        transaction.type === 'income'
-          ? 'receita recorrente'
-          : 'despesa recorrente',
+      label: transaction.type === 'income' ? 'receita recorrente' : 'despesa recorrente',
     }
   }
 
@@ -77,19 +68,12 @@ export function getSeriesMembers(transactions = [], anchor = {}) {
   return transactions
     .filter((transaction) => {
       const candidate = getTransactionSeries(transaction)
-      return (
-        candidate?.kind === descriptor.kind &&
-        candidate?.id === descriptor.id
-      )
+      return candidate?.kind === descriptor.kind && candidate?.id === descriptor.id
     })
     .sort(compareMembers)
 }
 
-export function getSeriesSelection({
-  transactions = [],
-  anchor,
-  scope = SERIES_SCOPE.SINGLE,
-}) {
+export function getSeriesSelection({ transactions = [], anchor, scope = SERIES_SCOPE.SINGLE }) {
   const descriptor = getTransactionSeries(anchor)
 
   if (!descriptor) {
@@ -138,12 +122,7 @@ function buildMetadataPatch(changes = {}) {
     patch.notes = String(changes.notes || '').trim()
   }
 
-  const categoryFields = [
-    'categoryId',
-    'categoryName',
-    'categoryColor',
-    'categoryIcon',
-  ]
+  const categoryFields = ['categoryId', 'categoryName', 'categoryColor', 'categoryIcon']
 
   categoryFields.forEach((field) => {
     if (field in changes) patch[field] = changes[field] || ''
@@ -182,10 +161,7 @@ export function buildSeriesEditPlan({
 
   let selectedAmounts
   if (selection.descriptor.kind === 'installment') {
-    selectedAmounts = splitInstallmentAmounts(
-      requestedAmount,
-      selection.selected.length,
-    )
+    selectedAmounts = splitInstallmentAmounts(requestedAmount, selection.selected.length)
   } else {
     selectedAmounts = selection.selected.map(() => requestedAmount)
   }
@@ -200,17 +176,12 @@ export function buildSeriesEditPlan({
   let seriesTotalAfter
   if (selection.descriptor.kind === 'installment') {
     const selectedAmountById = new Map(
-      selection.selected.map((item, index) => [
-        item.id,
-        selectedAmounts[index],
-      ]),
+      selection.selected.map((item, index) => [item.id, selectedAmounts[index]]),
     )
 
     seriesTotalAfter = sumAmounts(
       selection.members.map((item) => ({
-        amount: selectedAmountById.has(item.id)
-          ? selectedAmountById.get(item.id)
-          : item.amount,
+        amount: selectedAmountById.has(item.id) ? selectedAmountById.get(item.id) : item.amount,
       })),
     )
 
@@ -220,14 +191,10 @@ export function buildSeriesEditPlan({
       })
     })
   } else {
-    const selectedIds = new Set(
-      selection.selected.map((item) => item.id),
-    )
+    const selectedIds = new Set(selection.selected.map((item) => item.id))
     seriesTotalAfter = sumAmounts(
       selection.members.map((item) => ({
-        amount: selectedIds.has(item.id)
-          ? requestedAmount
-          : item.amount,
+        amount: selectedIds.has(item.id) ? requestedAmount : item.amount,
       })),
     )
   }
@@ -245,20 +212,14 @@ export function buildSeriesEditPlan({
       affectedCount: selection.selected.length,
       memberCount: selection.members.length,
       selectedTotalBefore: selection.selectedTotal,
-      selectedTotalAfter: sumAmounts(
-        selectedAmounts.map((amount) => ({ amount })),
-      ),
+      selectedTotalAfter: sumAmounts(selectedAmounts.map((amount) => ({ amount }))),
       seriesTotalBefore: selection.seriesTotal,
       seriesTotalAfter,
     },
   }
 }
 
-export function buildSeriesDeletePlan({
-  transactions = [],
-  anchor,
-  scope = SERIES_SCOPE.SINGLE,
-}) {
+export function buildSeriesDeletePlan({ transactions = [], anchor, scope = SERIES_SCOPE.SINGLE }) {
   const selection = getSeriesSelection({
     transactions,
     anchor,
@@ -312,23 +273,17 @@ export function getSeriesScopeLabels(descriptor = {}) {
   return [
     {
       value: SERIES_SCOPE.SINGLE,
-      label: installment
-        ? 'Somente esta parcela'
-        : 'Somente este lançamento',
+      label: installment ? 'Somente esta parcela' : 'Somente este lançamento',
       helper: 'Altera ou remove apenas o item selecionado.',
     },
     {
       value: SERIES_SCOPE.FOLLOWING,
-      label: installment
-        ? 'Esta parcela e as próximas'
-        : 'Este lançamento e os próximos',
+      label: installment ? 'Esta parcela e as próximas' : 'Este lançamento e os próximos',
       helper: 'Mantém intactos os registros anteriores.',
     },
     {
       value: SERIES_SCOPE.ALL,
-      label: installment
-        ? 'Toda a compra parcelada'
-        : 'Toda a recorrência',
+      label: installment ? 'Toda a compra parcelada' : 'Toda a recorrência',
       helper: 'Aplica a operação em todos os registros da série.',
     },
   ]

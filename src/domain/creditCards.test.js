@@ -84,11 +84,7 @@ test('cria parcelas em faturas mensais consecutivas', () => {
   })
 
   expect(items).toHaveLength(3)
-  expect(items.map((item) => item.date)).toEqual([
-    '2026-09-01',
-    '2026-10-01',
-    '2026-11-01',
-  ])
+  expect(items.map((item) => item.date)).toEqual(['2026-09-01', '2026-10-01', '2026-11-01'])
   expect(items.map((item) => item.amount)).toEqual([400, 400, 400])
   expect(items[0]).toMatchObject({
     installmentNum: 1,

@@ -31,8 +31,7 @@ const MODES = {
   login: {
     eyebrow: 'Acesso ao seu espaço financeiro',
     title: 'Continue com clareza.',
-    description:
-      'Entre para acompanhar seu dinheiro, revisar decisões e conversar com o Money.',
+    description: 'Entre para acompanhar seu dinheiro, revisar decisões e conversar com o Money.',
     action: 'Entrar no Meu Real',
   },
   register: {
@@ -45,8 +44,7 @@ const MODES = {
   forgot: {
     eyebrow: 'Recuperação segura',
     title: 'Vamos recuperar seu acesso.',
-    description:
-      'Informe seu e-mail. Você receberá um link seguro para definir uma nova senha.',
+    description: 'Informe seu e-mail. Você receberá um link seguro para definir uma nova senha.',
     action: 'Enviar link de recuperação',
   },
 }
@@ -77,11 +75,7 @@ const PRODUCT_STEPS = [
 
 function GoogleMark() {
   return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-[18px] w-[18px] flex-shrink-0"
-    >
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px] flex-shrink-0">
       <path
         fill="#4285F4"
         d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.39a4.61 4.61 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.97-4.33 2.97-7.41Z"
@@ -187,9 +181,7 @@ function ProductIntelligencePreview() {
               <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
                 Saldo projetado
               </p>
-              <p className="mt-1 text-2xl font-black tracking-tight text-white">
-                R$ 4.280,00
-              </p>
+              <p className="mt-1 text-2xl font-black tracking-tight text-white">R$ 4.280,00</p>
             </div>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-300/10 text-emerald-200 ring-1 ring-emerald-300/20">
               <Activity size={16} />
@@ -431,8 +423,8 @@ export default function Login() {
               transition={{ delay: 0.12, duration: 0.55 }}
               className="mt-5 max-w-xl text-sm leading-7 text-white/62 xl:text-[15px]"
             >
-              Uma experiência financeira criada para reduzir esforço, organizar prioridades
-              e transformar números em contexto útil para o dia a dia.
+              Uma experiência financeira criada para reduzir esforço, organizar prioridades e
+              transformar números em contexto útil para o dia a dia.
             </motion.p>
 
             <ProductIntelligencePreview />
@@ -499,222 +491,219 @@ export default function Login() {
               <ExperienceTabs mode={mode} onChange={switchMode} />
 
               <motion.div
-                  key={mode}
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className={mode === 'forgot' ? '' : 'mt-7'}>
-                    {mode === 'forgot' && (
-                      <button
-                        type="button"
-                        onClick={() => switchMode('login')}
-                        className="mb-5 inline-flex min-h-11 items-center gap-1.5 text-xs font-bold text-[--text-brand] hover:underline"
-                      >
-                        <ChevronRight size={13} className="rotate-180" />
-                        Voltar para o acesso
-                      </button>
-                    )}
-
-                    <div className="flex items-center gap-2">
-                      <span className="h-px w-5 bg-[--brand-400]" />
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[--brand-600]">
-                        {content.eyebrow}
-                      </p>
-                    </div>
-
-                    <h2
-                      id="login-title"
-                      className="mt-3 text-3xl font-black leading-[1.08] tracking-[-0.035em] text-[--text-primary] sm:text-[2rem]"
+                key={mode}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className={mode === 'forgot' ? '' : 'mt-7'}>
+                  {mode === 'forgot' && (
+                    <button
+                      type="button"
+                      onClick={() => switchMode('login')}
+                      className="mb-5 inline-flex min-h-11 items-center gap-1.5 text-xs font-bold text-[--text-brand] hover:underline"
                     >
-                      {content.title}
-                    </h2>
-                    <p className="mt-2 max-w-md text-sm leading-6 text-[--text-secondary]">
-                      {content.description}
+                      <ChevronRight size={13} className="rotate-180" />
+                      Voltar para o acesso
+                    </button>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <span className="h-px w-5 bg-[--brand-400]" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[--brand-600]">
+                      {content.eyebrow}
                     </p>
                   </div>
 
-                  {mode === 'register' && (
-                    <div className="mt-5 overflow-hidden rounded-2xl border border-[--brand-200] bg-[--brand-50]">
-                      <div className="flex items-start gap-3 p-3.5">
-                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[--brand-600] to-violet-600 text-white shadow-sm">
-                          <Zap size={15} />
-                        </div>
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-xs font-black text-[--brand-700]">
-                              Premium por 7 dias
-                            </p>
-                            <span className="rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[--brand-700]">
-                              sem cartão
-                            </span>
-                          </div>
-                          <p className="mt-1 text-[11px] leading-relaxed text-[--brand-600]">
-                            Teste Money, projeções, cartões, parcelamentos e relatórios completos.
+                  <h2
+                    id="login-title"
+                    className="mt-3 text-3xl font-black leading-[1.08] tracking-[-0.035em] text-[--text-primary] sm:text-[2rem]"
+                  >
+                    {content.title}
+                  </h2>
+                  <p className="mt-2 max-w-md text-sm leading-6 text-[--text-secondary]">
+                    {content.description}
+                  </p>
+                </div>
+
+                {mode === 'register' && (
+                  <div className="mt-5 overflow-hidden rounded-2xl border border-[--brand-200] bg-[--brand-50]">
+                    <div className="flex items-start gap-3 p-3.5">
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[--brand-600] to-violet-600 text-white shadow-sm">
+                        <Zap size={15} />
+                      </div>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-xs font-black text-[--brand-700]">
+                            Premium por 7 dias
                           </p>
+                          <span className="rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[--brand-700]">
+                            sem cartão
+                          </span>
                         </div>
+                        <p className="mt-1 text-[11px] leading-relaxed text-[--brand-600]">
+                          Teste Money, projeções, cartões, parcelamentos e relatórios completos.
+                        </p>
                       </div>
                     </div>
-                  )}
-
-                  <div aria-live="polite">
-                    {successMsg && (
-                      <motion.div
-                        role="status"
-                        initial={{ opacity: 0, y: -6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-5 flex items-start gap-2.5 rounded-2xl border border-[--success-border] bg-[--success-bg] p-3.5 text-sm text-[--success-text]"
-                      >
-                        <Check size={15} className="mt-0.5 flex-shrink-0" />
-                        <span>{successMsg}</span>
-                      </motion.div>
-                    )}
-
-                    {error && (
-                      <motion.div
-                        role="alert"
-                        initial={{ opacity: 0, y: -6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-5 rounded-2xl border border-[--danger-border] bg-[--danger-bg] p-3.5 text-sm text-[--danger-text]"
-                      >
-                        {error}
-                      </motion.div>
-                    )}
                   </div>
+                )}
 
-                  {mode !== 'forgot' && (
-                    <div className="mt-6">
-                      <button
-                        type="button"
-                        onClick={handleGoogleLogin}
-                        disabled={isLoading || isGoogleLoading}
-                        className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[--border-default] bg-[--bg-surface] px-4 text-sm font-bold text-[--text-primary] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[--brand-300] hover:bg-[--bg-hover] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[--brand-500] disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isGoogleLoading ? (
-                          <Loader2 size={18} className="animate-spin text-[--brand-600]" />
-                        ) : (
-                          <GoogleMark />
-                        )}
-                        Continuar com Google
-                      </button>
-
-                      <div className="my-4 flex items-center gap-3" aria-hidden="true">
-                        <span className="h-px flex-1 bg-[--border-subtle]" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[--text-tertiary]">
-                          ou use seu e-mail
-                        </span>
-                        <span className="h-px flex-1 bg-[--border-subtle]" />
-                      </div>
-                    </div>
+                <div aria-live="polite">
+                  {successMsg && (
+                    <motion.div
+                      role="status"
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-5 flex items-start gap-2.5 rounded-2xl border border-[--success-border] bg-[--success-bg] p-3.5 text-sm text-[--success-text]"
+                    >
+                      <Check size={15} className="mt-0.5 flex-shrink-0" />
+                      <span>{successMsg}</span>
+                    </motion.div>
                   )}
 
-                  <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-                    {mode === 'register' && (
-                      <Input
-                        label="Como podemos chamar você?"
-                        type="text"
-                        placeholder="Seu nome"
-                        value={form.name}
-                        onChange={updateForm('name')}
-                        icon={<User size={17} />}
-                        error={errors.name}
-                        required
-                        autoComplete="name"
-                        autoFocus
-                        className="min-h-12 rounded-2xl bg-[--bg-elevated] shadow-sm"
-                      />
-                    )}
+                  {error && (
+                    <motion.div
+                      role="alert"
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-5 rounded-2xl border border-[--danger-border] bg-[--danger-bg] p-3.5 text-sm text-[--danger-text]"
+                    >
+                      {error}
+                    </motion.div>
+                  )}
+                </div>
 
+                {mode !== 'forgot' && (
+                  <div className="mt-6">
+                    <button
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      disabled={isLoading || isGoogleLoading}
+                      className="flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[--border-default] bg-[--bg-surface] px-4 text-sm font-bold text-[--text-primary] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[--brand-300] hover:bg-[--bg-hover] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[--brand-500] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isGoogleLoading ? (
+                        <Loader2 size={18} className="animate-spin text-[--brand-600]" />
+                      ) : (
+                        <GoogleMark />
+                      )}
+                      Continuar com Google
+                    </button>
+
+                    <div className="my-4 flex items-center gap-3" aria-hidden="true">
+                      <span className="h-px flex-1 bg-[--border-subtle]" />
+                      <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[--text-tertiary]">
+                        ou use seu e-mail
+                      </span>
+                      <span className="h-px flex-1 bg-[--border-subtle]" />
+                    </div>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                  {mode === 'register' && (
                     <Input
-                      label="E-mail"
-                      type="email"
-                      placeholder="voce@exemplo.com"
-                      value={form.email}
-                      onChange={updateForm('email')}
-                      icon={<Mail size={17} />}
-                      error={errors.email}
+                      label="Como podemos chamar você?"
+                      type="text"
+                      placeholder="Seu nome"
+                      value={form.name}
+                      onChange={updateForm('name')}
+                      icon={<User size={17} />}
+                      error={errors.name}
                       required
-                      autoComplete="email"
-                      autoFocus={mode !== 'register'}
+                      autoComplete="name"
+                      autoFocus
                       className="min-h-12 rounded-2xl bg-[--bg-elevated] shadow-sm"
                     />
+                  )}
 
-                    {mode !== 'forgot' && (
-                      <div>
-                        <Input
-                          label="Senha"
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder="Mínimo de 6 caracteres"
-                          value={form.password}
-                          onChange={updateForm('password')}
-                          icon={<Lock size={17} />}
-                          error={errors.password}
-                          required
-                          autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                          className="min-h-12 rounded-2xl bg-[--bg-elevated] shadow-sm"
-                          iconRight={
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword((current) => !current)}
-                              className="flex h-9 w-9 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
-                              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                              aria-pressed={showPassword}
-                            >
-                              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                          }
-                        />
-
-                        <div className="mt-1.5 flex items-center justify-between gap-3 px-1">
-                          <p className="inline-flex items-center gap-1.5 text-[10px] text-[--text-tertiary]">
-                            <Fingerprint size={11} />
-                            Autenticação protegida
-                          </p>
-                          {mode === 'login' && (
-                            <button
-                              type="button"
-                              onClick={() => switchMode('forgot')}
-                              className="min-h-10 text-[11px] font-bold text-[--text-brand] hover:underline"
-                            >
-                              Esqueci a senha
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      size="lg"
-                      fullWidth
-                      loading={isLoading}
-                      disabled={isGoogleLoading}
-                      className="login-primary-action min-h-[52px] rounded-2xl text-[15px] shadow-lg"
-                      iconRight={<ArrowRight size={17} />}
-                    >
-                      {content.action}
-                    </Button>
-                  </form>
-
-                  <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
-                    <ShieldCheck
-                      size={15}
-                      className="mt-0.5 flex-shrink-0 text-[--success-icon]"
-                    />
-                    <p className="text-[10px] leading-relaxed text-[--text-tertiary]">
-                      O Meu Real não movimenta dinheiro nem solicita senha bancária. Você registra,
-                      revisa e controla as próprias informações.
-                    </p>
-                  </div>
+                  <Input
+                    label="E-mail"
+                    type="email"
+                    placeholder="voce@exemplo.com"
+                    value={form.email}
+                    onChange={updateForm('email')}
+                    icon={<Mail size={17} />}
+                    error={errors.email}
+                    required
+                    autoComplete="email"
+                    autoFocus={mode !== 'register'}
+                    className="min-h-12 rounded-2xl bg-[--bg-elevated] shadow-sm"
+                  />
 
                   {mode !== 'forgot' && (
-                    <p className="mt-5 text-center text-[11px] leading-relaxed text-[--text-tertiary]">
-                      Ao continuar, você concorda com os Termos de uso e a Política de privacidade
-                      aplicáveis ao serviço.
-                    </p>
+                    <div>
+                      <Input
+                        label="Senha"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Mínimo de 6 caracteres"
+                        value={form.password}
+                        onChange={updateForm('password')}
+                        icon={<Lock size={17} />}
+                        error={errors.password}
+                        required
+                        autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                        className="min-h-12 rounded-2xl bg-[--bg-elevated] shadow-sm"
+                        iconRight={
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword((current) => !current)}
+                            className="flex h-9 w-9 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
+                            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                            aria-pressed={showPassword}
+                          >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        }
+                      />
+
+                      <div className="mt-1.5 flex items-center justify-between gap-3 px-1">
+                        <p className="inline-flex items-center gap-1.5 text-[10px] text-[--text-tertiary]">
+                          <Fingerprint size={11} />
+                          Autenticação protegida
+                        </p>
+                        {mode === 'login' && (
+                          <button
+                            type="button"
+                            onClick={() => switchMode('forgot')}
+                            className="min-h-10 text-[11px] font-bold text-[--text-brand] hover:underline"
+                          >
+                            Esqueci a senha
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   )}
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    fullWidth
+                    loading={isLoading}
+                    disabled={isGoogleLoading}
+                    className="login-primary-action min-h-[52px] rounded-2xl text-[15px] shadow-lg"
+                    iconRight={<ArrowRight size={17} />}
+                  >
+                    {content.action}
+                  </Button>
+                </form>
+
+                <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
+                  <ShieldCheck size={15} className="mt-0.5 flex-shrink-0 text-[--success-icon]" />
+                  <p className="text-[10px] leading-relaxed text-[--text-tertiary]">
+                    O Meu Real não movimenta dinheiro nem solicita senha bancária. Você registra,
+                    revisa e controla as próprias informações.
+                  </p>
+                </div>
+
+                {mode !== 'forgot' && (
+                  <p className="mt-5 text-center text-[11px] leading-relaxed text-[--text-tertiary]">
+                    Ao continuar, você concorda com os Termos de uso e a Política de privacidade
+                    aplicáveis ao serviço.
+                  </p>
+                )}
               </motion.div>
             </motion.section>
 

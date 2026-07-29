@@ -13,10 +13,8 @@ import { db } from './firebase'
 import { LEGAL_VERSIONS } from '../content/legal'
 
 const userRef = (uid) => doc(db, 'users', uid)
-const legalRef = (uid) =>
-  doc(db, 'users', uid, 'privacyPreferences', 'legal')
-const deletionRef = (uid) =>
-  doc(db, 'users', uid, 'privacyRequests', 'accountDeletion')
+const legalRef = (uid) => doc(db, 'users', uid, 'privacyPreferences', 'legal')
+const deletionRef = (uid) => doc(db, 'users', uid, 'privacyRequests', 'accountDeletion')
 
 const knownCollections = [
   'transactions',
@@ -37,20 +35,13 @@ function serialize(value) {
   }
   if (Array.isArray(value)) return value.map(serialize)
   if (typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [
-        key,
-        serialize(item),
-      ]),
-    )
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, serialize(item)]))
   }
   return value
 }
 
 async function readCollection(uid, name) {
-  const snapshot = await getDocs(
-    collection(db, 'users', uid, name),
-  )
+  const snapshot = await getDocs(collection(db, 'users', uid, name))
   return snapshot.docs.map((item) => ({
     id: item.id,
     ...serialize(item.data()),
@@ -58,38 +49,27 @@ async function readCollection(uid, name) {
 }
 
 export async function getSparkPrivacyStatus(uid) {
-  const [legalSnapshot, deletionSnapshot] =
-    await Promise.all([
-      getDoc(legalRef(uid)),
-      getDoc(deletionRef(uid)),
-    ])
+  const [legalSnapshot, deletionSnapshot] = await Promise.all([
+    getDoc(legalRef(uid)),
+    getDoc(deletionRef(uid)),
+  ])
 
-  const legal = legalSnapshot.exists()
-    ? serialize(legalSnapshot.data())
-    : null
-  const deletionRequest = deletionSnapshot.exists()
-    ? serialize(deletionSnapshot.data())
-    : null
+  const legal = legalSnapshot.exists() ? serialize(legalSnapshot.data()) : null
+  const deletionRequest = deletionSnapshot.exists() ? serialize(deletionSnapshot.data()) : null
 
   return {
     requiresAcceptance:
       legal?.termsVersion !== LEGAL_VERSIONS.terms ||
-      legal?.privacyVersion !==
-        LEGAL_VERSIONS.privacy,
+      legal?.privacyVersion !== LEGAL_VERSIONS.privacy,
     legal,
     deletionRequest,
     mode: 'spark',
   }
 }
 
-export async function recordSparkLegalAcceptance(
-  uid,
-  data,
-) {
+export async function recordSparkLegalAcceptance(uid, data) {
   if (!data?.accepted) {
-    throw new Error(
-      'Confirme a leitura e a aceitação dos documentos.',
-    )
+    throw new Error('Confirme a leitura e a aceitação dos documentos.')
   }
 
   await setDoc(
@@ -108,58 +88,31 @@ export async function recordSparkLegalAcceptance(
 }
 
 export async function exportSparkData(uid) {
-  const [
-    userSnapshot,
-    subscriptionSnapshot,
-    categoriesSnapshot,
-    ...groups
-  ] = await Promise.all([
-      getDoc(userRef(uid)),
-      getDoc(doc(db, 'notificationSubscribers', uid)),
-      getDocs(
-        query(
-          collection(db, 'categories'),
-          where('ownerUid', '==', uid),
-        ),
-      ),
-      ...knownCollections.map((name) =>
-        readCollection(uid, name),
-      ),
-    ])
+  const [userSnapshot, subscriptionSnapshot, categoriesSnapshot, ...groups] = await Promise.all([
+    getDoc(userRef(uid)),
+    getDoc(doc(db, 'notificationSubscribers', uid)),
+    getDocs(query(collection(db, 'categories'), where('ownerUid', '==', uid))),
+    ...knownCollections.map((name) => readCollection(uid, name)),
+  ])
 
   return {
     exportedAt: new Date().toISOString(),
     mode: 'spark',
-    user: userSnapshot.exists()
-      ? serialize(userSnapshot.data())
+    user: userSnapshot.exists() ? serialize(userSnapshot.data()) : null,
+    notificationSubscription: subscriptionSnapshot.exists()
+      ? serialize(subscriptionSnapshot.data())
       : null,
-    notificationSubscription:
-      subscriptionSnapshot.exists()
-        ? serialize(subscriptionSnapshot.data())
-        : null,
-    categories: categoriesSnapshot.docs.map(
-      (item) => ({
-        id: item.id,
-        ...serialize(item.data()),
-      }),
-    ),
-    collections: Object.fromEntries(
-      knownCollections.map((name, index) => [
-        name,
-        groups[index],
-      ]),
-    ),
+    categories: categoriesSnapshot.docs.map((item) => ({
+      id: item.id,
+      ...serialize(item.data()),
+    })),
+    collections: Object.fromEntries(knownCollections.map((name, index) => [name, groups[index]])),
   }
 }
 
-export async function requestSparkAccountDeletion(
-  uid,
-  confirmation,
-) {
+export async function requestSparkAccountDeletion(uid, confirmation) {
   if (confirmation !== 'EXCLUIR MINHA CONTA') {
-    throw new Error(
-      'Digite exatamente EXCLUIR MINHA CONTA.',
-    )
+    throw new Error('Digite exatamente EXCLUIR MINHA CONTA.')
   }
 
   await setDoc(
@@ -168,8 +121,7 @@ export async function requestSparkAccountDeletion(
       status: 'pending-manual',
       requestedAt: serverTimestamp(),
       mode: 'spark',
-      note:
-        'Solicitação registrada para processamento manual.',
+      note: 'Solicitação registrada para processamento manual.',
     },
     { merge: true },
   )

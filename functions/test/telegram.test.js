@@ -70,11 +70,7 @@ test('prepara compra parcelada no cartão cadastrado', () => {
 })
 
 test('divide parcelas sem perder centavos', () => {
-  assert.deepEqual(splitInstallments(100, 3), [
-    33.34,
-    33.33,
-    33.33,
-  ])
+  assert.deepEqual(splitInstallments(100, 3), [33.34, 33.33, 33.33])
 })
 
 test('calcula vencimento conforme fechamento', () => {

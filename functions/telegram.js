@@ -1,13 +1,6 @@
 const crypto = require('node:crypto')
-const {
-  FieldValue,
-  Timestamp,
-} = require('firebase-admin/firestore')
-const {
-  HttpsError,
-  onCall,
-  onRequest,
-} = require('firebase-functions/v2/https')
+const { FieldValue, Timestamp } = require('firebase-admin/firestore')
+const { HttpsError, onCall, onRequest } = require('firebase-functions/v2/https')
 const { onSchedule } = require('firebase-functions/v2/scheduler')
 const { defineSecret } = require('firebase-functions/params')
 const {
@@ -22,24 +15,23 @@ const {
 } = require('./lib/telegramDomain')
 
 const TELEGRAM_BOT_TOKEN = defineSecret('TELEGRAM_BOT_TOKEN')
-const TELEGRAM_WEBHOOK_SECRET = defineSecret(
-  'TELEGRAM_WEBHOOK_SECRET',
-)
+const TELEGRAM_WEBHOOK_SECRET = defineSecret('TELEGRAM_WEBHOOK_SECRET')
 
 const BOT_API = 'https://api.telegram.org'
 const DRAFT_TTL_MINUTES = 15
 
 function escapeHtml(value = '') {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
+  return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 }
 
 function hmacCode(code, secret) {
   return crypto
     .createHmac('sha256', secret)
-    .update(String(code || '').trim().toUpperCase())
+    .update(
+      String(code || '')
+        .trim()
+        .toUpperCase(),
+    )
     .digest('hex')
 }
 
@@ -57,8 +49,7 @@ function privateChat(update) {
 }
 
 function getTelegramIdentity(update) {
-  const source =
-    update.message?.from || update.callback_query?.from || {}
+  const source = update.message?.from || update.callback_query?.from || {}
 
   return {
     telegramUserId: String(source.id || ''),
@@ -69,30 +60,21 @@ function getTelegramIdentity(update) {
 }
 
 function getChatId(update) {
-  return String(
-    update.message?.chat?.id ||
-      update.callback_query?.message?.chat?.id ||
-      '',
-  )
+  return String(update.message?.chat?.id || update.callback_query?.message?.chat?.id || '')
 }
 
 async function telegramApi(token, method, payload = {}) {
-  const response = await fetch(
-    `${BOT_API}/bot${token}/${method}`,
-    {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(payload),
+  const response = await fetch(`${BOT_API}/bot${token}/${method}`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
     },
-  )
+    body: JSON.stringify(payload),
+  })
   const data = await response.json()
 
   if (!response.ok || !data.ok) {
-    throw new Error(
-      data.description || `Telegram API: ${method} falhou.`,
-    )
+    throw new Error(data.description || `Telegram API: ${method} falhou.`)
   }
 
   return data.result
@@ -133,11 +115,7 @@ async function getLinkByTelegramUser(db, telegramUserId) {
 }
 
 async function getUserCards(db, uid) {
-  const snapshot = await db
-    .collection('users')
-    .doc(uid)
-    .collection('creditCards')
-    .get()
+  const snapshot = await db.collection('users').doc(uid).collection('creditCards').get()
 
   return snapshot.docs
     .map((document) => ({
@@ -171,16 +149,8 @@ async function getUserFinancialContext(db, uid) {
   }
 
   const userData = userSnapshot.data()
-  const period = buildPeriod(
-    userData.moneySettings || {},
-    new Date(),
-    DEFAULT_TIME_ZONE,
-  )
-  const transactions = await getPeriodTransactions(
-    db,
-    uid,
-    period,
-  )
+  const period = buildPeriod(userData.moneySettings || {}, new Date(), DEFAULT_TIME_ZONE)
+  const transactions = await getPeriodTransactions(db, uid, period)
 
   return {
     userData,
@@ -219,9 +189,7 @@ function draftPreview(draft) {
   const lines = [
     '<b>Revise antes de salvar</b>',
     '',
-    `${draft.type === 'income' ? 'Receita' : 'Despesa'}: <b>${formatCurrency(
-      draft.amount,
-    )}</b>`,
+    `${draft.type === 'income' ? 'Receita' : 'Despesa'}: <b>${formatCurrency(draft.amount)}</b>`,
     `Descrição: ${escapeHtml(draft.description)}`,
     `Categoria: ${escapeHtml(draft.categoryName)}`,
     `Data: ${draft.date.split('-').reverse().join('/')}`,
@@ -230,9 +198,7 @@ function draftPreview(draft) {
   if (draft.kind === 'credit_purchase') {
     lines.push(
       `Cartão: ${escapeHtml(draft.card.name)}${
-        draft.card.last4
-          ? ` •••• ${escapeHtml(draft.card.last4)}`
-          : ''
+        draft.card.last4 ? ` •••• ${escapeHtml(draft.card.last4)}` : ''
       }`,
       `Parcelas: ${draft.installments}x`,
     )
@@ -244,11 +210,7 @@ function draftPreview(draft) {
       transfer: 'Transferência',
       other: 'Outro',
     }
-    lines.push(
-      `Pagamento: ${
-        labels[draft.paymentMethod] || 'Outro'
-      }`,
-    )
+    lines.push(`Pagamento: ${labels[draft.paymentMethod] || 'Outro'}`)
   }
 
   return lines.join('\n')
@@ -270,10 +232,7 @@ async function linkAccount({
     throw new Error('O código deve ter oito caracteres.')
   }
 
-  const codeHash = hmacCode(
-    normalizedCode,
-    integrationSecret,
-  )
+  const codeHash = hmacCode(normalizedCode, integrationSecret)
   const querySnapshot = await db
     .collection('integrationLinkCodes')
     .where('codeHash', '==', codeHash)
@@ -299,23 +258,13 @@ async function linkAccount({
     const codeData = codeSnapshot.data()
     const expiresAt = codeData.expiresAt?.toDate?.()
 
-    if (
-      codeData.status !== 'pending' ||
-      !expiresAt ||
-      expiresAt.getTime() <= Date.now()
-    ) {
+    if (codeData.status !== 'pending' || !expiresAt || expiresAt.getTime() <= Date.now()) {
       throw new Error('Código expirado ou já utilizado.')
     }
 
     const userRef = db.collection('users').doc(codeData.uid)
-    const userIntegrationRef = db
-      .collection('userIntegrations')
-      .doc(integrationDocId(codeData.uid))
-    const [
-      userSnapshot,
-      telegramSnapshot,
-      userIntegrationSnapshot,
-    ] = await transaction.getAll(
+    const userIntegrationRef = db.collection('userIntegrations').doc(integrationDocId(codeData.uid))
+    const [userSnapshot, telegramSnapshot, userIntegrationSnapshot] = await transaction.getAll(
       userRef,
       telegramRef,
       userIntegrationRef,
@@ -325,14 +274,10 @@ async function linkAccount({
       throw new Error('Conta do Meu Real não encontrada.')
     }
 
-    const entitlement = calculateEntitlement(
-      userSnapshot.data(),
-    )
+    const entitlement = calculateEntitlement(userSnapshot.data())
 
     if (!entitlement.isPremium || entitlement.blocked) {
-      throw new Error(
-        'A conta precisa estar com Premium ativo.',
-      )
+      throw new Error('A conta precisa estar com Premium ativo.')
     }
 
     if (
@@ -340,25 +285,13 @@ async function linkAccount({
       telegramSnapshot.data().uid !== codeData.uid &&
       telegramSnapshot.data().status === 'active'
     ) {
-      throw new Error(
-        'Este Telegram já está vinculado a outra conta.',
-      )
+      throw new Error('Este Telegram já está vinculado a outra conta.')
     }
 
     if (userIntegrationSnapshot.exists) {
-      const previousTelegramUserId = String(
-        userIntegrationSnapshot.data().telegramUserId || '',
-      )
-      if (
-        previousTelegramUserId &&
-        previousTelegramUserId !==
-          identity.telegramUserId
-      ) {
-        transaction.delete(
-          db
-            .collection('integrationLinks')
-            .doc(previousTelegramUserId),
-        )
+      const previousTelegramUserId = String(userIntegrationSnapshot.data().telegramUserId || '')
+      if (previousTelegramUserId && previousTelegramUserId !== identity.telegramUserId) {
+        transaction.delete(db.collection('integrationLinks').doc(previousTelegramUserId))
       }
     }
 
@@ -390,13 +323,8 @@ async function linkAccount({
   })
 }
 
-async function unlinkByTelegramUser(
-  db,
-  telegramUserId,
-) {
-  const telegramRef = db
-    .collection('integrationLinks')
-    .doc(telegramLinkDocId(telegramUserId))
+async function unlinkByTelegramUser(db, telegramUserId) {
+  const telegramRef = db.collection('integrationLinks').doc(telegramLinkDocId(telegramUserId))
   const telegramSnapshot = await telegramRef.get()
 
   if (!telegramSnapshot.exists) return false
@@ -406,23 +334,14 @@ async function unlinkByTelegramUser(
   batch.delete(telegramRef)
 
   if (uid) {
-    batch.delete(
-      db
-        .collection('userIntegrations')
-        .doc(integrationDocId(uid)),
-    )
+    batch.delete(db.collection('userIntegrations').doc(integrationDocId(uid)))
   }
 
   await batch.commit()
   return true
 }
 
-async function createDraft({
-  db,
-  link,
-  message,
-  telegramMessageId,
-}) {
+async function createDraft({ db, link, message, telegramMessageId }) {
   const cards = await getUserCards(db, link.uid)
   const parsed = parseMoneyMessage({
     message,
@@ -434,9 +353,7 @@ async function createDraft({
   if (!parsed.ok) return parsed
 
   const draftRef = db.collection('telegramDrafts').doc()
-  const expiresAt = new Date(
-    Date.now() + DRAFT_TTL_MINUTES * 60 * 1000,
-  )
+  const expiresAt = new Date(Date.now() + DRAFT_TTL_MINUTES * 60 * 1000)
 
   await draftRef.set({
     uid: link.uid,
@@ -456,11 +373,7 @@ async function createDraft({
   }
 }
 
-async function confirmDraft({
-  db,
-  draftId,
-  telegramUserId,
-}) {
+async function confirmDraft({ db, draftId, telegramUserId }) {
   const draftRef = db.collection('telegramDrafts').doc(draftId)
   let createdCount = 0
 
@@ -474,10 +387,7 @@ async function confirmDraft({
     const data = draftSnapshot.data()
     const expiresAt = data.expiresAt?.toDate?.()
 
-    if (
-      data.telegramUserId !== telegramUserId ||
-      data.status !== 'pending'
-    ) {
+    if (data.telegramUserId !== telegramUserId || data.status !== 'pending') {
       throw new Error('Rascunho indisponível.')
     }
 
@@ -490,18 +400,11 @@ async function confirmDraft({
     }
 
     const groupId = crypto.randomUUID()
-    const documents = buildTransactionDocuments(
-      data.draft,
-      groupId,
-    )
+    const documents = buildTransactionDocuments(data.draft, groupId)
     createdCount = documents.length
 
     documents.forEach((documentData) => {
-      const transactionRef = db
-        .collection('users')
-        .doc(data.uid)
-        .collection('transactions')
-        .doc()
+      const transactionRef = db.collection('users').doc(data.uid).collection('transactions').doc()
 
       transaction.set(transactionRef, {
         ...documentData,
@@ -520,11 +423,7 @@ async function confirmDraft({
   return createdCount
 }
 
-async function cancelDraft({
-  db,
-  draftId,
-  telegramUserId,
-}) {
+async function cancelDraft({ db, draftId, telegramUserId }) {
   const draftRef = db.collection('telegramDrafts').doc(draftId)
 
   await db.runTransaction(async (transaction) => {
@@ -533,10 +432,7 @@ async function cancelDraft({
     if (!snapshot.exists) return
     const data = snapshot.data()
 
-    if (
-      data.telegramUserId !== telegramUserId ||
-      data.status !== 'pending'
-    ) {
+    if (data.telegramUserId !== telegramUserId || data.status !== 'pending') {
       return
     }
 
@@ -547,12 +443,7 @@ async function cancelDraft({
   })
 }
 
-async function sendFinancialSummary(
-  token,
-  chatId,
-  context,
-  title = 'Resumo do ciclo',
-) {
+async function sendFinancialSummary(token, chatId, context, title = 'Resumo do ciclo') {
   const { period, summary } = context
 
   return sendMessage(
@@ -590,10 +481,7 @@ async function recentTransactions(db, uid) {
 }
 
 async function invoiceAlerts(db, uid) {
-  const today = isoDateInTimeZone(
-    new Date(),
-    DEFAULT_TIME_ZONE,
-  )
+  const today = isoDateInTimeZone(new Date(), DEFAULT_TIME_ZONE)
   const limitDate = addDaysIso(today, 3)
   const snapshot = await db
     .collection('users')
@@ -624,11 +512,7 @@ async function invoiceAlerts(db, uid) {
 
   if (!grouped.size) return []
 
-  const eventsSnapshot = await db
-    .collection('users')
-    .doc(uid)
-    .collection('invoiceEvents')
-    .get()
+  const eventsSnapshot = await db.collection('users').doc(uid).collection('invoiceEvents').get()
   const events = eventsSnapshot.docs.map((document) => ({
     id: document.id,
     ...document.data(),
@@ -640,24 +524,15 @@ async function invoiceAlerts(db, uid) {
       const invoiceEvents = events.filter(
         (event) =>
           event.invoiceKey === invoiceKey ||
-          (event.cardId === invoice.cardId &&
-            event.invoiceMonth === invoice.invoiceMonth),
+          (event.cardId === invoice.cardId && event.invoiceMonth === invoice.invoiceMonth),
       )
       const paid =
         invoiceEvents
           .filter((event) => event.type === 'payment')
-          .reduce(
-            (total, event) =>
-              total + Number(event.amount || 0),
-            0,
-          ) -
+          .reduce((total, event) => total + Number(event.amount || 0), 0) -
         invoiceEvents
           .filter((event) => event.type === 'reversal')
-          .reduce(
-            (total, event) =>
-              total + Number(event.amount || 0),
-            0,
-          )
+          .reduce((total, event) => total + Number(event.amount || 0), 0)
 
       return {
         ...invoice,
@@ -667,25 +542,14 @@ async function invoiceAlerts(db, uid) {
     .filter((invoice) => invoice.remaining > 0)
 }
 
-async function handleMessage({
-  db,
-  token,
-  update,
-  integrationSecret,
-  calculateEntitlement,
-}) {
+async function handleMessage({ db, token, update, integrationSecret, calculateEntitlement }) {
   const message = update.message
   const chatId = getChatId(update)
   const identity = getTelegramIdentity(update)
   const text = String(message.text || '').trim()
-  const link = await getLinkByTelegramUser(
-    db,
-    identity.telegramUserId,
-  )
+  const link = await getLinkByTelegramUser(db, identity.telegramUserId)
   const [command, argument = ''] = text.split(/\s+/, 2)
-  const normalizedCommand = command
-    .split('@')[0]
-    .toLowerCase()
+  const normalizedCommand = command.split('@')[0].toLowerCase()
 
   if (normalizedCommand === '/start' || normalizedCommand === '/ajuda') {
     await sendMessage(token, chatId, helpMessage(Boolean(link)))
@@ -713,26 +577,17 @@ async function handleMessage({
         ].join('\n'),
       )
     } catch (error) {
-      await sendMessage(
-        token,
-        chatId,
-        `Não foi possível vincular: ${escapeHtml(error.message)}`,
-      )
+      await sendMessage(token, chatId, `Não foi possível vincular: ${escapeHtml(error.message)}`)
     }
     return
   }
 
   if (normalizedCommand === '/desvincular') {
-    const removed = await unlinkByTelegramUser(
-      db,
-      identity.telegramUserId,
-    )
+    const removed = await unlinkByTelegramUser(db, identity.telegramUserId)
     await sendMessage(
       token,
       chatId,
-      removed
-        ? 'A conexão com o Meu Real foi removida.'
-        : 'Este Telegram não estava vinculado.',
+      removed ? 'A conexão com o Meu Real foi removida.' : 'Este Telegram não estava vinculado.',
     )
     return
   }
@@ -757,20 +612,13 @@ async function handleMessage({
       chatId,
       [
         '<b>Saldo do ciclo financeiro</b>',
-        `${context.period.start
-          .split('-')
-          .reverse()
-          .join('/')} a ${context.period.end
+        `${context.period.start.split('-').reverse().join('/')} a ${context.period.end
           .split('-')
           .reverse()
           .join('/')}`,
         '',
-        `<b>${formatCurrency(
-          context.summary.balance,
-        )}</b>`,
-        `Receitas ${formatCurrency(
-          context.summary.income,
-        )} · despesas ${formatCurrency(
+        `<b>${formatCurrency(context.summary.balance)}</b>`,
+        `Receitas ${formatCurrency(context.summary.income)} · despesas ${formatCurrency(
           context.summary.expenses,
         )}`,
       ].join('\n'),
@@ -779,11 +627,7 @@ async function handleMessage({
   }
 
   if (normalizedCommand === '/resumo') {
-    await sendFinancialSummary(
-      token,
-      chatId,
-      await getUserFinancialContext(db, link.uid),
-    )
+    await sendFinancialSummary(token, chatId, await getUserFinancialContext(db, link.uid))
     return
   }
 
@@ -791,11 +635,7 @@ async function handleMessage({
     const items = await recentTransactions(db, link.uid)
 
     if (!items.length) {
-      await sendMessage(
-        token,
-        chatId,
-        'Nenhum lançamento encontrado.',
-      )
+      await sendMessage(token, chatId, 'Nenhum lançamento encontrado.')
       return
     }
 
@@ -806,14 +646,8 @@ async function handleMessage({
         '<b>Últimos lançamentos</b>',
         '',
         ...items.map((item) => {
-          const sign =
-            item.type === 'income' && !item.isSavings
-              ? '+'
-              : '−'
-          return `${item.date
-            .split('-')
-            .reverse()
-            .join('/')} · ${escapeHtml(
+          const sign = item.type === 'income' && !item.isSavings ? '+' : '−'
+          return `${item.date.split('-').reverse().join('/')} · ${escapeHtml(
             item.description || 'Lançamento',
           )}\n${sign}${formatCurrency(item.amount)}`
         }),
@@ -823,11 +657,7 @@ async function handleMessage({
   }
 
   if (normalizedCommand.startsWith('/')) {
-    await sendMessage(
-      token,
-      chatId,
-      'Comando não reconhecido. Use <code>/ajuda</code>.',
-    )
+    await sendMessage(token, chatId, 'Comando não reconhecido. Use <code>/ajuda</code>.')
     return
   }
 
@@ -839,9 +669,7 @@ async function handleMessage({
   })
 
   if (!result.ok) {
-    const cards = result.needsCard
-      ? await getUserCards(db, link.uid)
-      : []
+    const cards = result.needsCard ? await getUserCards(db, link.uid) : []
 
     await sendMessage(
       token,
@@ -849,9 +677,7 @@ async function handleMessage({
       [
         escapeHtml(result.reason),
         cards.length
-          ? `Cartões ativos: ${cards
-              .map((card) => escapeHtml(card.name))
-              .join(', ')}.`
+          ? `Cartões ativos: ${cards.map((card) => escapeHtml(card.name)).join(', ')}.`
           : '',
         'Exemplo: <i>Paguei R$ 80 no mercado por Pix</i>.',
       ]
@@ -861,45 +687,32 @@ async function handleMessage({
     return
   }
 
-  await sendMessage(
-    token,
-    chatId,
-    draftPreview(result.draft),
-    {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: '✅ Confirmar',
-              callback_data: `c:${result.draftId}`,
-            },
-            {
-              text: '✏️ Cancelar',
-              callback_data: `x:${result.draftId}`,
-            },
-          ],
+  await sendMessage(token, chatId, draftPreview(result.draft), {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: '✅ Confirmar',
+            callback_data: `c:${result.draftId}`,
+          },
+          {
+            text: '✏️ Cancelar',
+            callback_data: `x:${result.draftId}`,
+          },
         ],
-      },
+      ],
     },
-  )
+  })
 }
 
-async function handleCallback({
-  db,
-  token,
-  update,
-}) {
+async function handleCallback({ db, token, update }) {
   const callback = update.callback_query
   const identity = getTelegramIdentity(update)
   const data = String(callback.data || '')
   const [action, draftId] = data.split(':', 2)
 
   if (!draftId || !['c', 'x'].includes(action)) {
-    await answerCallback(
-      token,
-      callback.id,
-      'Ação inválida.',
-    )
+    await answerCallback(token, callback.id, 'Ação inválida.')
     return
   }
 
@@ -911,11 +724,7 @@ async function handleCallback({
         telegramUserId: identity.telegramUserId,
       })
 
-      await answerCallback(
-        token,
-        callback.id,
-        'Lançamento salvo.',
-      )
+      await answerCallback(token, callback.id, 'Lançamento salvo.')
       await telegramApi(token, 'editMessageText', {
         chat_id: callback.message.chat.id,
         message_id: callback.message.message_id,
@@ -936,11 +745,7 @@ async function handleCallback({
       draftId,
       telegramUserId: identity.telegramUserId,
     })
-    await answerCallback(
-      token,
-      callback.id,
-      'Rascunho cancelado.',
-    )
+    await answerCallback(token, callback.id, 'Rascunho cancelado.')
     await telegramApi(token, 'editMessageText', {
       chat_id: callback.message.chat.id,
       message_id: callback.message.message_id,
@@ -948,11 +753,7 @@ async function handleCallback({
       parse_mode: 'HTML',
     })
   } catch (error) {
-    await answerCallback(
-      token,
-      callback.id,
-      error.message,
-    )
+    await answerCallback(token, callback.id, error.message)
   }
 }
 
@@ -962,10 +763,7 @@ function createTelegramFunctions({
   integrationLinkSecret,
   calculateEntitlement,
 }) {
-  const callableSecrets = [
-    integrationLinkSecret,
-    TELEGRAM_BOT_TOKEN,
-  ]
+  const callableSecrets = [integrationLinkSecret, TELEGRAM_BOT_TOKEN]
 
   const getTelegramIntegrationStatus = onCall(
     callableOptions({
@@ -973,10 +771,7 @@ function createTelegramFunctions({
     }),
     async (request) => {
       if (!request.auth?.uid) {
-        throw new HttpsError(
-          'unauthenticated',
-          'Faça login para continuar.',
-        )
+        throw new HttpsError('unauthenticated', 'Faça login para continuar.')
       }
 
       const snapshot = await db
@@ -998,118 +793,75 @@ function createTelegramFunctions({
         provider: 'telegram',
         username: data.username || '',
         firstName: data.firstName || '',
-        linkedAt:
-          data.linkedAt?.toDate?.()?.toISOString?.() || null,
+        linkedAt: data.linkedAt?.toDate?.()?.toISOString?.() || null,
         preferences: {
-          dailySummary: Boolean(
-            data.preferences?.dailySummary,
-          ),
-          weeklySummary: Boolean(
-            data.preferences?.weeklySummary,
-          ),
-          invoiceAlerts:
-            data.preferences?.invoiceAlerts !== false,
+          dailySummary: Boolean(data.preferences?.dailySummary),
+          weeklySummary: Boolean(data.preferences?.weeklySummary),
+          invoiceAlerts: data.preferences?.invoiceAlerts !== false,
         },
       }
     },
   )
 
-  const updateTelegramPreferences = onCall(
-    callableOptions(),
-    async (request) => {
-      if (!request.auth?.uid) {
-        throw new HttpsError(
-          'unauthenticated',
-          'Faça login para continuar.',
-        )
-      }
+  const updateTelegramPreferences = onCall(callableOptions(), async (request) => {
+    if (!request.auth?.uid) {
+      throw new HttpsError('unauthenticated', 'Faça login para continuar.')
+    }
 
-      const preferences = {
-        dailySummary: Boolean(
-          request.data?.dailySummary,
-        ),
-        weeklySummary: Boolean(
-          request.data?.weeklySummary,
-        ),
-        invoiceAlerts:
-          request.data?.invoiceAlerts !== false,
-      }
-      const ref = db
-        .collection('userIntegrations')
-        .doc(integrationDocId(request.auth.uid))
-      const snapshot = await ref.get()
+    const preferences = {
+      dailySummary: Boolean(request.data?.dailySummary),
+      weeklySummary: Boolean(request.data?.weeklySummary),
+      invoiceAlerts: request.data?.invoiceAlerts !== false,
+    }
+    const ref = db.collection('userIntegrations').doc(integrationDocId(request.auth.uid))
+    const snapshot = await ref.get()
 
-      if (!snapshot.exists) {
-        throw new HttpsError(
-          'failed-precondition',
-          'Telegram ainda não vinculado.',
-        )
-      }
+    if (!snapshot.exists) {
+      throw new HttpsError('failed-precondition', 'Telegram ainda não vinculado.')
+    }
 
-      const telegramUserId = String(
-        snapshot.data().telegramUserId || '',
-      )
-      const batch = db.batch()
-      batch.update(ref, {
+    const telegramUserId = String(snapshot.data().telegramUserId || '')
+    const batch = db.batch()
+    batch.update(ref, {
+      preferences,
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+
+    if (telegramUserId) {
+      batch.update(db.collection('integrationLinks').doc(telegramUserId), {
         preferences,
         updatedAt: FieldValue.serverTimestamp(),
       })
+    }
 
-      if (telegramUserId) {
-        batch.update(
-          db
-            .collection('integrationLinks')
-            .doc(telegramUserId),
-          {
-            preferences,
-            updatedAt: FieldValue.serverTimestamp(),
-          },
-        )
-      }
+    await batch.commit()
+    return {
+      ok: true,
+      preferences,
+    }
+  })
 
-      await batch.commit()
-      return {
-        ok: true,
-        preferences,
-      }
-    },
-  )
+  const unlinkTelegramIntegration = onCall(callableOptions(), async (request) => {
+    if (!request.auth?.uid) {
+      throw new HttpsError('unauthenticated', 'Faça login para continuar.')
+    }
 
-  const unlinkTelegramIntegration = onCall(
-    callableOptions(),
-    async (request) => {
-      if (!request.auth?.uid) {
-        throw new HttpsError(
-          'unauthenticated',
-          'Faça login para continuar.',
-        )
-      }
+    const ref = db.collection('userIntegrations').doc(integrationDocId(request.auth.uid))
+    const snapshot = await ref.get()
 
-      const ref = db
-        .collection('userIntegrations')
-        .doc(integrationDocId(request.auth.uid))
-      const snapshot = await ref.get()
+    if (!snapshot.exists) return { ok: true }
 
-      if (!snapshot.exists) return { ok: true }
+    const telegramUserId = String(snapshot.data().telegramUserId || '')
+    const batch = db.batch()
+    batch.delete(ref)
 
-      const telegramUserId = String(
-        snapshot.data().telegramUserId || '',
-      )
-      const batch = db.batch()
-      batch.delete(ref)
+    if (telegramUserId) {
+      batch.delete(db.collection('integrationLinks').doc(telegramUserId))
+    }
 
-      if (telegramUserId) {
-        batch.delete(
-          db
-            .collection('integrationLinks')
-            .doc(telegramUserId),
-        )
-      }
-
-      await batch.commit()
-      return { ok: true }
-    },
-  )
+    await batch.commit()
+    return { ok: true }
+  })
 
   const telegramWebhook = onRequest(
     {
@@ -1117,11 +869,7 @@ function createTelegramFunctions({
       timeoutSeconds: 60,
       memory: '256MiB',
       maxInstances: 10,
-      secrets: [
-        integrationLinkSecret,
-        TELEGRAM_BOT_TOKEN,
-        TELEGRAM_WEBHOOK_SECRET,
-      ],
+      secrets: [integrationLinkSecret, TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET],
     },
     async (request, response) => {
       if (request.method !== 'POST') {
@@ -1129,16 +877,10 @@ function createTelegramFunctions({
         return
       }
 
-      const expectedSecret =
-        TELEGRAM_WEBHOOK_SECRET.value()
-      const receivedSecret = request.get(
-        'x-telegram-bot-api-secret-token',
-      )
+      const expectedSecret = TELEGRAM_WEBHOOK_SECRET.value()
+      const receivedSecret = request.get('x-telegram-bot-api-secret-token')
 
-      if (
-        !expectedSecret ||
-        receivedSecret !== expectedSecret
-      ) {
+      if (!expectedSecret || receivedSecret !== expectedSecret) {
         response.status(403).send('Forbidden')
         return
       }
@@ -1164,16 +906,12 @@ function createTelegramFunctions({
             db,
             token,
             update,
-            integrationSecret:
-              integrationLinkSecret.value(),
+            integrationSecret: integrationLinkSecret.value(),
             calculateEntitlement,
           })
         }
       } catch (error) {
-        console.error(
-          '[Meu Real] Telegram webhook:',
-          error,
-        )
+        console.error('[Meu Real] Telegram webhook:', error)
         const chatId = getChatId(update)
 
         if (chatId) {
@@ -1213,41 +951,25 @@ function createTelegramFunctions({
       for (const document of snapshot.docs) {
         const integration = document.data()
 
-        if (
-          integration.status !== 'active' ||
-          !integration.chatId
-        ) {
+        if (integration.status !== 'active' || !integration.chatId) {
           continue
         }
 
         const preferences = integration.preferences || {}
 
         try {
-          if (
-            preferences.dailySummary ||
-            (preferences.weeklySummary &&
-              weekday === 'Mon')
-          ) {
-            const context = await getUserFinancialContext(
-              db,
-              integration.uid,
-            )
+          if (preferences.dailySummary || (preferences.weeklySummary && weekday === 'Mon')) {
+            const context = await getUserFinancialContext(db, integration.uid)
             await sendFinancialSummary(
               token,
               integration.chatId,
               context,
-              preferences.weeklySummary &&
-                weekday === 'Mon'
-                ? 'Resumo semanal'
-                : 'Resumo diário',
+              preferences.weeklySummary && weekday === 'Mon' ? 'Resumo semanal' : 'Resumo diário',
             )
           }
 
           if (preferences.invoiceAlerts !== false) {
-            const alerts = await invoiceAlerts(
-              db,
-              integration.uid,
-            )
+            const alerts = await invoiceAlerts(db, integration.uid)
 
             if (alerts.length) {
               await sendMessage(
@@ -1258,25 +980,17 @@ function createTelegramFunctions({
                   '',
                   ...alerts.map(
                     (invoice) =>
-                      `${escapeHtml(
-                        invoice.cardName,
-                      )} · ${invoice.dueDate
+                      `${escapeHtml(invoice.cardName)} · ${invoice.dueDate
                         .split('-')
                         .reverse()
-                        .join('/')}\nPendente: <b>${formatCurrency(
-                        invoice.remaining,
-                      )}</b>`,
+                        .join('/')}\nPendente: <b>${formatCurrency(invoice.remaining)}</b>`,
                   ),
                 ].join('\n\n'),
               )
             }
           }
         } catch (error) {
-          console.error(
-            '[Meu Real] Resumo Telegram:',
-            integration.uid,
-            error,
-          )
+          console.error('[Meu Real] Resumo Telegram:', integration.uid, error)
         }
       }
     },

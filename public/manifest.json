@@ -1,15 +1,51 @@
 {
-  "name": "Meu Real",
+  "id": "/cfp-money/",
+  "name": "Meu Real — Money",
   "short_name": "Meu Real",
-  "description": "Controle financeiro pessoal simples, seguro e responsivo",
-  "start_url": "/cfp-money/",
-  "display": "standalone",
+  "description": "Controle financeiro pessoal com o assistente Money",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "/cfp-money/#/dashboard",
   "scope": "/cfp-money/",
-  "background_color": "#0f172a",
-  "theme_color": "#6366f1",
-  "orientation": "portrait-primary",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#070b18",
+  "theme_color": "#4f46e5",
+  "orientation": "any",
+  "categories": ["finance", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
-    { "src": "/cfp-money/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/cfp-money/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/cfp-money/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/cfp-money/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "url": "/cfp-money/#/dashboard",
+      "icons": [{ "src": "/cfp-money/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Falar com o Money",
+      "short_name": "Money",
+      "url": "/cfp-money/#/money",
+      "icons": [{ "src": "/cfp-money/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Relatórios",
+      "short_name": "Relatórios",
+      "url": "/cfp-money/#/reports",
+      "icons": [{ "src": "/cfp-money/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

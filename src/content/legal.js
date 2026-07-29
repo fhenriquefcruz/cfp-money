@@ -4,14 +4,9 @@ export const LEGAL_VERSIONS = {
 }
 
 export const LEGAL_IDENTITY = {
-  controller:
-    import.meta.env.VITE_LEGAL_CONTROLLER_NAME ||
-    'Responsável pelo Meu Real',
-  contactEmail:
-    import.meta.env.VITE_LEGAL_CONTACT_EMAIL ||
-    'contato@exemplo.com',
-  country:
-    import.meta.env.VITE_LEGAL_COUNTRY || 'Brasil',
+  controller: import.meta.env.VITE_LEGAL_CONTROLLER_NAME || 'Responsável pelo Meu Real',
+  contactEmail: import.meta.env.VITE_LEGAL_CONTACT_EMAIL || 'contato@exemplo.com',
+  country: import.meta.env.VITE_LEGAL_COUNTRY || 'Brasil',
 }
 
 export const TERMS_SECTIONS = [

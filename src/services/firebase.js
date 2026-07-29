@@ -1,9 +1,6 @@
 // src/services/firebase.js
 import { initializeApp } from 'firebase/app'
-import {
-  initializeAppCheck,
-  ReCaptchaEnterpriseProvider,
-} from 'firebase/app-check' 
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -40,16 +37,12 @@ const firebaseConfig = resolveFirebaseConfig(import.meta.env)
 
 export const app = initializeApp(firebaseConfig)
 
-const appCheckSiteKey = String(
-  import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY || '',
-).trim()
+const appCheckSiteKey = String(import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY || '').trim()
 
 export const appCheck =
   appCheckSiteKey && typeof window !== 'undefined'
     ? initializeAppCheck(app, {
-        provider: new ReCaptchaEnterpriseProvider(
-          appCheckSiteKey,
-        ),
+        provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
         isTokenAutoRefreshEnabled: true,
       })
     : null
@@ -177,10 +170,7 @@ export const deleteTransaction = async (uid, id) => deleteDoc(userDoc(uid, 'tran
 
 // ── INVOICE EVENTS ──
 export const onInvoiceEventsChange = (uid, callback) => {
-  const q = query(
-    userCol(uid, 'invoiceEvents'),
-    orderBy('eventDate', 'desc'),
-  )
+  const q = query(userCol(uid, 'invoiceEvents'), orderBy('eventDate', 'desc'))
 
   return onSnapshot(q, (snapshot) =>
     callback(
@@ -221,8 +211,7 @@ export const updateCreditCard = async (uid, id, data) =>
     updatedAt: serverTimestamp(),
   })
 
-export const deleteCreditCard = async (uid, id) =>
-  deleteDoc(userDoc(uid, 'creditCards', id))
+export const deleteCreditCard = async (uid, id) => deleteDoc(userDoc(uid, 'creditCards', id))
 
 export const addTransactionBatch = async (uid, items) => {
   const batch = writeBatch(db)

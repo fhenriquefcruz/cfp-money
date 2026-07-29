@@ -214,13 +214,30 @@ export const Modal = ({
   )
 }
 
-export const Card = ({ children, padding = true, className }) => (
+const CARD_VARIANTS = {
+  default: '',
+  elevated: 'aurora-card--elevated',
+  glass: 'aurora-card--glass',
+  hero: 'aurora-card--hero',
+}
+
+export const Card = ({
+  children,
+  padding = true,
+  variant = 'default',
+  interactive = false,
+  className,
+  ...props
+}) => (
   <div
     className={clsx(
-      'bg-[--bg-surface] border border-[--border-default] rounded-2xl',
+      'aurora-card rounded-2xl',
+      CARD_VARIANTS[variant] || CARD_VARIANTS.default,
+      interactive && 'aurora-card--interactive',
       padding && 'p-4',
       className,
     )}
+    {...props}
   >
     {children}
   </div>

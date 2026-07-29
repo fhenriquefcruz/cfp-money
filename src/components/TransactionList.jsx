@@ -172,9 +172,7 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
             </span>
           )}
           {protectedGroup && (
-            <span className="text-[10px] text-[--warning-text]">
-              Série gerenciável
-            </span>
+            <span className="text-[10px] text-[--warning-text]">Série gerenciável</span>
           )}
           {tx.notes && (
             <span

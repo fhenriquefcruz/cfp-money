@@ -59,21 +59,13 @@ test('filtra por mês sem depender do fuso horário', () => {
 
 test('ignora datas inválidas ao filtrar o mês', () => {
   expect(
-    transactionsForMonth(
-      [...transactions, { type: 'expense', amount: 10, date: '' }],
-      2026,
-      6,
-    ),
+    transactionsForMonth([...transactions, { type: 'expense', amount: 10, date: '' }], 2026, 6),
   ).toHaveLength(2)
 })
 
 test('calcula uso do orçamento mensal', () => {
   expect(
-    calculateBudgetUsage(
-      transactions,
-      { categoryId: 'food', amount: 500 },
-      new Date(2026, 6, 15),
-    ),
+    calculateBudgetUsage(transactions, { categoryId: 'food', amount: 500 }, new Date(2026, 6, 15)),
   ).toEqual({ spent: 250, percent: 50 })
 })
 

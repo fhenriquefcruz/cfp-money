@@ -6,24 +6,9 @@ const PAYMENT_PATTERNS = [
   { id: 'boleto', patterns: [/\bboleto\b/] },
 ]
 
-const EXPENSE_WORDS = [
-  'gastei',
-  'paguei',
-  'comprei',
-  'despesa',
-  'custou',
-  'saiu',
-  'debitei',
-]
+const EXPENSE_WORDS = ['gastei', 'paguei', 'comprei', 'despesa', 'custou', 'saiu', 'debitei']
 
-const INCOME_WORDS = [
-  'recebi',
-  'ganhei',
-  'entrou',
-  'receita',
-  'salario',
-  'pagamento recebido',
-]
+const INCOME_WORDS = ['recebi', 'ganhei', 'entrou', 'receita', 'salario', 'pagamento recebido']
 
 const CATEGORY_KEYWORDS = {
   alimentacao: [
@@ -36,62 +21,13 @@ const CATEGORY_KEYWORDS = {
     'comida',
     'padaria',
   ],
-  transporte: [
-    'uber',
-    '99',
-    'taxi',
-    'gasolina',
-    'combustivel',
-    'onibus',
-    'estacionamento',
-  ],
-  moradia: [
-    'aluguel',
-    'condominio',
-    'energia',
-    'luz',
-    'agua',
-    'internet',
-    'casa',
-  ],
-  saude: [
-    'dentista',
-    'medico',
-    'consulta',
-    'farmacia',
-    'remedio',
-    'academia',
-    'exame',
-  ],
-  educacao: [
-    'curso',
-    'livro',
-    'faculdade',
-    'escola',
-    'mensalidade',
-    'material escolar',
-  ],
-  lazer: [
-    'cinema',
-    'viagem',
-    'passeio',
-    'jogo',
-    'festa',
-    'show',
-  ],
-  roupas: [
-    'roupa',
-    'camisa',
-    'calca',
-    'sapato',
-    'tenis',
-  ],
-  salario: [
-    'salario',
-    'pagamento',
-    'remuneracao',
-    'holerite',
-  ],
+  transporte: ['uber', '99', 'taxi', 'gasolina', 'combustivel', 'onibus', 'estacionamento'],
+  moradia: ['aluguel', 'condominio', 'energia', 'luz', 'agua', 'internet', 'casa'],
+  saude: ['dentista', 'medico', 'consulta', 'farmacia', 'remedio', 'academia', 'exame'],
+  educacao: ['curso', 'livro', 'faculdade', 'escola', 'mensalidade', 'material escolar'],
+  lazer: ['cinema', 'viagem', 'passeio', 'jogo', 'festa', 'show'],
+  roupas: ['roupa', 'camisa', 'calca', 'sapato', 'tenis'],
+  salario: ['salario', 'pagamento', 'remuneracao', 'holerite'],
 }
 
 export function normalizeMoneyCommand(value = '') {
@@ -197,10 +133,7 @@ function findCategoryFromText(normalizedMessage, categories, type) {
   )
 
   const directMatch = eligible
-    .sort(
-      (a, b) =>
-        normalizeMoneyCommand(b.name).length - normalizeMoneyCommand(a.name).length,
-    )
+    .sort((a, b) => normalizeMoneyCommand(b.name).length - normalizeMoneyCommand(a.name).length)
     .find((category) => normalizedMessage.includes(normalizeMoneyCommand(category.name)))
 
   if (directMatch) return { category: directMatch, matchedKeyword: directMatch.name }
@@ -288,8 +221,7 @@ export function buildMoneyTransactionDraft({
     return {
       type: 'transaction_advanced_required',
       title: 'Esta compra precisa do fluxo de cartão',
-      text:
-        'Para evitar lançar a compra na fatura errada, cartão de crédito e parcelamentos ainda devem ser cadastrados pela tela de Transações. O Money não simplificará esse pedido automaticamente.',
+      text: 'Para evitar lançar a compra na fatura errada, cartão de crédito e parcelamentos ainda devem ser cadastrados pela tela de Transações. O Money não simplificará esse pedido automaticamente.',
       transactionRoute: '/transactions',
     }
   }
@@ -297,16 +229,8 @@ export function buildMoneyTransactionDraft({
   const amount = parseMoneyAmount(normalizedMessage)
   const paymentMethod = detectPaymentMethod(normalizedMessage)
   const date = parseTransactionDate(normalizedMessage, now)
-  const { category, matchedKeyword } = findCategoryFromText(
-    normalizedMessage,
-    categories,
-    type,
-  )
-  const description = deriveDescription(
-    normalizedMessage,
-    matchedKeyword,
-    category?.name,
-  )
+  const { category, matchedKeyword } = findCategoryFromText(normalizedMessage, categories, type)
+  const description = deriveDescription(normalizedMessage, matchedKeyword, category?.name)
 
   const draft = {
     type,
@@ -340,8 +264,7 @@ export function buildMoneyTransactionDraft({
   return {
     type: 'transaction_draft',
     title: type === 'income' ? 'Revise a receita' : 'Revise a despesa',
-    text:
-      'O Money preparou um rascunho. Confira todos os campos; o lançamento só será salvo depois da confirmação.',
+    text: 'O Money preparou um rascunho. Confira todos os campos; o lançamento só será salvo depois da confirmação.',
     draft,
     missingFields,
     warnings,

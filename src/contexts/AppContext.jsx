@@ -32,9 +32,7 @@ import {
   summarizeTransactions,
   transactionsForMonth,
 } from '../domain/finance'
-import {
-  enqueueBudgetNotification,
-} from '../services/notificationService'
+import { enqueueBudgetNotification } from '../services/notificationService'
 
 const AppContext = createContext({})
 export const useApp = () => useContext(AppContext)
@@ -129,13 +127,11 @@ export const AppProvider = ({ children }) => {
     const unsubTx = onTransactionsChange(uid, (txs) =>
       dispatch({ type: 'SET_TRANSACTIONS', payload: txs }),
     )
-    const unsubInvoiceEvents = onInvoiceEventsChange(
-      uid,
-      (events) =>
-        dispatch({
-          type: 'SET_INVOICE_EVENTS',
-          payload: events,
-        }),
+    const unsubInvoiceEvents = onInvoiceEventsChange(uid, (events) =>
+      dispatch({
+        type: 'SET_INVOICE_EVENTS',
+        payload: events,
+      }),
     )
 
     // Carrega o resto em paralelo
@@ -200,46 +196,35 @@ export const AppProvider = ({ children }) => {
       if (pct > 100) {
         threshold = 'over'
         notificationType = 'error'
-        notificationMessage =
-          `🚨 Orçamento de ${newTx.categoryName} EXCEDIDO! (${pct.toFixed(0)}%)`
+        notificationMessage = `🚨 Orçamento de ${newTx.categoryName} EXCEDIDO! (${pct.toFixed(0)}%)`
       } else if (pct >= 100) {
         threshold = 100
         notificationType = 'error'
-        notificationMessage =
-          `⛔ Limite de ${newTx.categoryName} atingido!`
+        notificationMessage = `⛔ Limite de ${newTx.categoryName} atingido!`
       } else if (pct >= 90) {
         threshold = 90
         notificationType = 'warning'
-        notificationMessage =
-          `⚠️ ${pct.toFixed(0)}% do orçamento de ${newTx.categoryName} atingido!`
+        notificationMessage = `⚠️ ${pct.toFixed(0)}% do orçamento de ${newTx.categoryName} atingido!`
       } else if (pct >= 70) {
         threshold = 70
-        notificationMessage =
-          `📊 ${pct.toFixed(0)}% do orçamento de ${newTx.categoryName} utilizado.`
+        notificationMessage = `📊 ${pct.toFixed(0)}% do orçamento de ${newTx.categoryName} utilizado.`
       }
 
       if (!threshold) return
 
-      showNotification(
-        notificationMessage,
-        notificationType,
-      )
+      showNotification(notificationMessage, notificationType)
 
       if (user?.uid) {
         enqueueBudgetNotification(user.uid, {
           categoryId: newTx.categoryId,
-          categoryName:
-            newTx.categoryName || 'Categoria',
+          categoryName: newTx.categoryName || 'Categoria',
           threshold,
           percentage: pct,
           spent,
           limit: budget.amount,
           monthKey: newTx.date.slice(0, 7),
         }).catch((error) => {
-          console.error(
-            '[Meu Real] Fila de alerta por e-mail:',
-            error,
-          )
+          console.error('[Meu Real] Fila de alerta por e-mail:', error)
         })
       }
     },
@@ -317,12 +302,7 @@ export const AppProvider = ({ children }) => {
       if (!user?.uid) return
       try {
         await fbDeleteBatch(user.uid, ids)
-        showNotification(
-          ids.length > 1
-            ? 'Compra parcelada removida.'
-            : 'Compra removida.',
-          'info',
-        )
+        showNotification(ids.length > 1 ? 'Compra parcelada removida.' : 'Compra removida.', 'info')
       } catch (e) {
         showNotification('Erro ao desfazer compra.', 'error')
         throw e
@@ -350,10 +330,7 @@ export const AppProvider = ({ children }) => {
         )
         return id
       } catch (error) {
-        showNotification(
-          'Não foi possível registrar o evento da fatura.',
-          'error',
-        )
+        showNotification('Não foi possível registrar o evento da fatura.', 'error')
         throw error
       }
     },
@@ -375,10 +352,7 @@ export const AppProvider = ({ children }) => {
             ? `${affected} registro${affected === 1 ? '' : 's'} removido${affected === 1 ? '' : 's'} da série.`
             : `${affected} registro${affected === 1 ? '' : 's'} atualizado${affected === 1 ? '' : 's'} na série.`
 
-        showNotification(
-          message,
-          operation?.action === 'delete' ? 'info' : 'success',
-        )
+        showNotification(message, operation?.action === 'delete' ? 'info' : 'success')
         return operation?.summary
       } catch (error) {
         showNotification(

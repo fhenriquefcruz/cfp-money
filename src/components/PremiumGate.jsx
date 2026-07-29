@@ -60,13 +60,8 @@ function CompactPremiumGate({ feature, description, benefits }) {
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {(benefits || DEFAULT_BENEFITS).slice(0, 4).map((benefit) => (
             <div key={benefit} className="flex items-start gap-2">
-              <CheckCircle
-                size={13}
-                className="mt-0.5 flex-shrink-0 text-[--success-icon]"
-              />
-              <span className="text-[11px] leading-relaxed text-[--text-secondary]">
-                {benefit}
-              </span>
+              <CheckCircle size={13} className="mt-0.5 flex-shrink-0 text-[--success-icon]" />
+              <span className="text-[11px] leading-relaxed text-[--text-secondary]">{benefit}</span>
             </div>
           ))}
         </div>
@@ -101,13 +96,7 @@ export default function PremiumGate({
   if (status.isPremium) return children
 
   if (variant === 'card') {
-    return (
-      <CompactPremiumGate
-        feature={feature}
-        description={description}
-        benefits={benefits}
-      />
-    )
+    return <CompactPremiumGate feature={feature} description={description} benefits={benefits} />
   }
 
   const resolvedBenefits = benefits || DEFAULT_BENEFITS
@@ -180,8 +169,8 @@ export default function PremiumGate({
               Seus dados continuam seguros
             </p>
             <p className="mt-1 text-[11px] leading-relaxed text-[--text-tertiary]">
-              O bloqueio Premium limita apenas o acesso ao benefício. Nenhuma transação,
-              categoria, meta, orçamento ou preferência já salva é removida.
+              O bloqueio Premium limita apenas o acesso ao benefício. Nenhuma transação, categoria,
+              meta, orçamento ou preferência já salva é removida.
             </p>
           </div>
         </div>

@@ -1,7 +1,4 @@
-import {
-  buildInvoiceLifecycle,
-  getInvoiceEvents,
-} from './invoiceLifecycle'
+import { buildInvoiceLifecycle, getInvoiceEvents } from './invoiceLifecycle'
 
 function pad(value) {
   return String(value).padStart(2, '0')
@@ -12,16 +9,11 @@ function daysInMonth(year, monthIndex) {
 }
 
 function clampDay(year, monthIndex, day) {
-  return Math.min(
-    daysInMonth(year, monthIndex),
-    Math.max(1, Number(day) || 1),
-  )
+  return Math.min(daysInMonth(year, monthIndex), Math.max(1, Number(day) || 1))
 }
 
 function isoDate(year, monthIndex, day) {
-  return `${year}-${pad(monthIndex + 1)}-${pad(
-    clampDay(year, monthIndex, day),
-  )}`
+  return `${year}-${pad(monthIndex + 1)}-${pad(clampDay(year, monthIndex, day))}`
 }
 
 export function monthKeyFromDate(value = new Date()) {
@@ -35,9 +27,7 @@ export function monthKeyFromDate(value = new Date()) {
 
 export function shiftMonthKey(monthKey, amount) {
   const [year, month] = monthKey.split('-').map(Number)
-  return monthKeyFromDate(
-    new Date(year, month - 1 + amount, 1),
-  )
+  return monthKeyFromDate(new Date(year, month - 1 + amount, 1))
 }
 
 export function labelForMonth(monthKey) {
@@ -56,29 +46,17 @@ export function invoiceDatesForMonth(monthKey, rawCard = {}) {
   const dueDay = Number(rawCard.dueDay) || 1
   const closingDay = Number(rawCard.closingDay) || 1
   const closingMonthOffset = dueDay > closingDay ? 0 : -1
-  const closingReference = new Date(
-    year,
-    dueMonthIndex + closingMonthOffset,
-    1,
-  )
+  const closingReference = new Date(year, dueMonthIndex + closingMonthOffset, 1)
 
   return {
-    closingDate: isoDate(
-      closingReference.getFullYear(),
-      closingReference.getMonth(),
-      closingDay,
-    ),
+    closingDate: isoDate(closingReference.getFullYear(), closingReference.getMonth(), closingDay),
     dueDate: isoDate(year, dueMonthIndex, dueDay),
   }
 }
 
 export function invoiceStatus(monthKey, card, now = new Date()) {
   const currentMonth = monthKeyFromDate(now)
-  const today = [
-    now.getFullYear(),
-    pad(now.getMonth() + 1),
-    pad(now.getDate()),
-  ].join('-')
+  const today = [now.getFullYear(), pad(now.getMonth() + 1), pad(now.getDate())].join('-')
   const dates = invoiceDatesForMonth(monthKey, card)
 
   if (monthKey > currentMonth) return 'future'
@@ -88,14 +66,12 @@ export function invoiceStatus(monthKey, card, now = new Date()) {
   return 'forming'
 }
 
-export function isStructuredCreditTransaction(
-  transaction = {},
-) {
+export function isStructuredCreditTransaction(transaction = {}) {
   return Boolean(
     transaction.type === 'expense' &&
-      transaction.paymentMethod === 'credit_card' &&
-      transaction.isCreditPurchase &&
-      transaction.cardId,
+    transaction.paymentMethod === 'credit_card' &&
+    transaction.isCreditPurchase &&
+    transaction.cardId,
   )
 }
 
@@ -122,8 +98,7 @@ function cardSnapshotFromTransaction(transaction) {
 
 function sum(items, selector = (item) => item.amount) {
   const cents = items.reduce(
-    (total, item) =>
-      total + Math.round(Number(selector(item) || 0) * 100),
+    (total, item) => total + Math.round(Number(selector(item) || 0) * 100),
     0,
   )
 
@@ -138,9 +113,7 @@ export function buildCreditCardCenter({
   now = new Date(),
   forecastMonths = 6,
 }) {
-  const structured = transactions.filter(
-    isStructuredCreditTransaction,
-  )
+  const structured = transactions.filter(isStructuredCreditTransaction)
   const legacy = transactions.filter(
     (transaction) =>
       transaction.type === 'expense' &&
@@ -160,10 +133,7 @@ export function buildCreditCardCenter({
 
   structured.forEach((transaction) => {
     if (!cardMap.has(transaction.cardId)) {
-      cardMap.set(
-        transaction.cardId,
-        cardSnapshotFromTransaction(transaction),
-      )
+      cardMap.set(transaction.cardId, cardSnapshotFromTransaction(transaction))
     }
   })
 
@@ -189,46 +159,24 @@ export function buildCreditCardCenter({
       return 1
     }
 
-    return String(first.name).localeCompare(
-      String(second.name),
-      'pt-BR',
-    )
+    return String(first.name).localeCompare(String(second.name), 'pt-BR')
   })
 
   const selectedTransactions = structured
-    .filter(
-      (transaction) =>
-        transactionInvoiceMonth(transaction) === selectedMonth,
-    )
+    .filter((transaction) => transactionInvoiceMonth(transaction) === selectedMonth)
     .sort((first, second) => {
-      const firstDate =
-        first.purchaseDate ||
-        first.originalPurchaseDate ||
-        first.date
-      const secondDate =
-        second.purchaseDate ||
-        second.originalPurchaseDate ||
-        second.date
+      const firstDate = first.purchaseDate || first.originalPurchaseDate || first.date
+      const secondDate = second.purchaseDate || second.originalPurchaseDate || second.date
 
-      return String(secondDate).localeCompare(
-        String(firstDate),
-      )
+      return String(secondDate).localeCompare(String(firstDate))
     })
 
   const invoices = cards.map((card) => {
-    const items = selectedTransactions.filter(
-      (transaction) => transaction.cardId === card.id,
-    )
+    const items = selectedTransactions.filter((transaction) => transaction.cardId === card.id)
     const dates = invoiceDatesForMonth(selectedMonth, card)
-    const events = getInvoiceEvents(
-      invoiceEvents,
-      card.id,
-      selectedMonth,
-    )
+    const events = getInvoiceEvents(invoiceEvents, card.id, selectedMonth)
     const purchaseTotal = sum(items)
-    const temporalStatus = items.length
-      ? invoiceStatus(selectedMonth, card, now)
-      : 'empty'
+    const temporalStatus = items.length ? invoiceStatus(selectedMonth, card, now) : 'empty'
     const lifecycle = buildInvoiceLifecycle({
       purchaseTotal,
       events,
@@ -244,9 +192,7 @@ export function buildCreditCardCenter({
       total: lifecycle.invoiceTotal,
       purchaseTotal,
       itemCount: items.length,
-      installmentCount: items.filter(
-        (item) => item.isInstallment,
-      ).length,
+      installmentCount: items.filter((item) => item.isInstallment).length,
       dates,
       events,
       lifecycle,
@@ -261,8 +207,7 @@ export function buildCreditCardCenter({
     (_, index) => {
       const month = shiftMonthKey(selectedMonth, index)
       const items = structured.filter(
-        (transaction) =>
-          transactionInvoiceMonth(transaction) === month,
+        (transaction) => transactionInvoiceMonth(transaction) === month,
       )
 
       return {
@@ -276,13 +221,11 @@ export function buildCreditCardCenter({
 
   const futureInstallments = structured.filter(
     (transaction) =>
-      transaction.isInstallment &&
-      transactionInvoiceMonth(transaction) > selectedMonth,
+      transaction.isInstallment && transactionInvoiceMonth(transaction) > selectedMonth,
   )
 
   const selectedLegacy = legacy.filter(
-    (transaction) =>
-      transaction.date?.slice(0, 7) === selectedMonth,
+    (transaction) => transaction.date?.slice(0, 7) === selectedMonth,
   )
 
   return {
@@ -291,37 +234,20 @@ export function buildCreditCardCenter({
     cards,
     invoices,
     selectedTransactions,
-    selectedTotal: sum(
-      invoices,
-      (invoice) => invoice.lifecycle.invoiceTotal,
-    ),
+    selectedTotal: sum(invoices, (invoice) => invoice.lifecycle.invoiceTotal),
     selectedPurchaseTotal: sum(selectedTransactions),
-    selectedPaidTotal: sum(
-      invoices,
-      (invoice) => invoice.lifecycle.paidAmount,
-    ),
-    selectedRemainingTotal: sum(
-      invoices,
-      (invoice) => invoice.lifecycle.remainingAmount,
-    ),
-    selectedCreditTotal: sum(
-      invoices,
-      (invoice) => invoice.lifecycle.creditAmount,
-    ),
+    selectedPaidTotal: sum(invoices, (invoice) => invoice.lifecycle.paidAmount),
+    selectedRemainingTotal: sum(invoices, (invoice) => invoice.lifecycle.remainingAmount),
+    selectedCreditTotal: sum(invoices, (invoice) => invoice.lifecycle.creditAmount),
     selectedItemCount: selectedTransactions.length,
     cardsWithTransactions: invoices.filter(
-      (invoice) =>
-        invoice.itemCount > 0 ||
-        invoice.events.length > 0,
+      (invoice) => invoice.itemCount > 0 || invoice.events.length > 0,
     ).length,
     futureInstallmentCount: futureInstallments.length,
     futureInstallmentTotal: sum(futureInstallments),
     legacyCount: selectedLegacy.length,
     legacyTotal: sum(selectedLegacy),
     forecast,
-    forecastMax: Math.max(
-      1,
-      ...forecast.map((item) => item.total),
-    ),
+    forecastMax: Math.max(1, ...forecast.map((item) => item.total)),
   }
 }
