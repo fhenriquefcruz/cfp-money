@@ -15,9 +15,9 @@ concurrency:
 
 jobs:
   validate:
-    name: Lint, tests and build
+    name: Complete quality validation
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       VITE_FIREBASE_API_KEY: test-api-key
       VITE_FIREBASE_AUTH_DOMAIN: test-project.firebaseapp.com
@@ -28,31 +28,32 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configure Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+            worker/email-notifications/package-lock.json
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
         run: npm ci
 
-      - name: Install backend dependencies
-        run: npm install --prefix functions
+      - name: Install Functions dependencies
+        run: npm ci --prefix functions
 
-      - name: Lint
-        run: npm run lint
+      - name: Install Worker dependencies
+        run: npm ci --prefix worker/email-notifications
 
-      - name: Tests
-        run: npm run test
+      - name: Complete validation
+        run: npm run validate:all
 
-      - name: Backend validation
-        run: npm run functions:validate
+      - name: Formatting
+        run: npm run format:check
 
-      - name: Firestore indexes
-        run: npm run validate:indexes
-
-      - name: Production build
-        run: npm run build
+      - name: Whitespace validation
+        run: git diff --check

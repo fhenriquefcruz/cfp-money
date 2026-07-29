@@ -1,12 +1,5 @@
 // src/utils/index.jsx
-import {
-  differenceInCalendarDays,
-  format,
-  startOfMonth,
-  endOfMonth,
-  subMonths,
-  parseISO,
-} from 'date-fns'
+import { differenceInCalendarDays, format, subMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 // ── CAPITALIZE ──
@@ -119,7 +112,7 @@ export const PAYMENT_METHODS = [
 export const getPaymentLabel = (id) => PAYMENT_METHODS.find((m) => m.id === id)?.label || id
 
 // ── CSV EXPORT ──
-export const exportToCSV = (transactions, categories) => {
+export const exportToCSV = (transactions) => {
   const headers = ['Data', 'Tipo', 'Descrição', 'Categoria', 'Valor', 'Pagamento', 'Poupança']
   const rows = transactions.map((t) => [
     formatDate(t.date),
@@ -140,7 +133,7 @@ export const exportToCSV = (transactions, categories) => {
 }
 
 // ── PDF EXPORT ──
-export const exportToPDF = async (transactions, categories, summary = {}) => {
+export const exportToPDF = async (transactions, summary = {}) => {
   const { jsPDF } = await import('jspdf')
   const { default: autoTable } = await import('jspdf-autotable')
 

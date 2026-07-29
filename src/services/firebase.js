@@ -105,7 +105,7 @@ export const registerEmail = async (email, password, displayName) => {
   await updateProfile(cred.user, { displayName })
   try {
     await sendEmailVerification(cred.user)
-  } catch (_) {}
+  } catch {}
   await setDoc(doc(db, 'users', cred.user.uid), {
     email,
     displayName,

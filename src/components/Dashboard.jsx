@@ -178,13 +178,8 @@ export default function Dashboard() {
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
   const isCurrentMonth = year === new Date().getFullYear() && month === new Date().getMonth()
-  const prevD = subMonths(viewDate, 1)
 
   const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
-  const prevSummary = useMemo(
-    () => getSummary(prevD.getFullYear(), prevD.getMonth()),
-    [prevD, transactions],
-  )
   const categoryTotals = useMemo(() => getCategoryTotals(year, month), [year, month, transactions])
   const monthlyData = useMemo(
     () => getMonthlyData(transactions, 6, viewDate),
