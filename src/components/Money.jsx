@@ -128,7 +128,7 @@ function AssistantResponse({
     )
   }
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <div>
         <p className="text-sm font-bold text-[--text-primary]">{response.title}</p>
         <p className="mt-1 text-sm leading-relaxed text-[--text-secondary]">{response.text}</p>
@@ -140,7 +140,7 @@ function AssistantResponse({
       </div>
 
       {response.metrics?.length > 0 && (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid min-w-0 grid-cols-1 gap-2 min-[360px]:grid-cols-2">
           {response.metrics.map((metric) => (
             <Metric key={metric.label} metric={metric} />
           ))}
@@ -154,7 +154,7 @@ function AssistantResponse({
       {response.reportMonth && (
         <Link
           to={`/reports?month=${response.reportMonth}`}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[--brand-600] px-3 text-xs font-semibold text-white transition-colors hover:bg-[--brand-700]"
+          className="inline-flex min-h-11 max-w-full flex-wrap items-center justify-center gap-2 break-words rounded-xl bg-[--brand-600] px-3 text-center text-xs font-semibold text-white transition-colors hover:bg-[--brand-700]"
         >
           <FileText size={14} />
           Abrir relatório completo
@@ -163,13 +163,13 @@ function AssistantResponse({
       )}
 
       {response.suggestions?.length > 0 && (
-        <div className="flex flex-wrap gap-2 pt-1">
+        <div className="flex min-w-0 flex-col gap-2 pt-1 min-[420px]:flex-row min-[420px]:flex-wrap">
           {response.suggestions.map((suggestion) => (
             <button
               key={suggestion}
               type="button"
               onClick={() => onSuggestion(suggestion)}
-              className="min-h-11 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 py-2 text-left text-xs text-[--text-secondary] transition-colors hover:border-[--brand-500] hover:text-[--text-brand]"
+              className="min-h-11 w-full max-w-full break-words rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 py-2 text-left text-xs text-[--text-secondary] transition-colors hover:border-[--brand-500] hover:text-[--text-brand] min-[420px]:w-auto"
             >
               {suggestion}
             </button>
@@ -388,14 +388,14 @@ function MoneyContent() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 pb-24 lg:pb-6">
-      <header className="overflow-hidden rounded-3xl border border-[--brand-200] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-4 text-white shadow-lg sm:p-5">
+    <div className="money-premium mx-auto flex w-full min-w-0 max-w-7xl flex-col gap-3 overflow-x-clip pb-24 sm:gap-4 lg:pb-6">
+      <header className="money-premium__hero overflow-hidden rounded-[28px] border border-[--brand-200] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-4 text-white shadow-lg sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="flex min-w-0 items-start gap-3">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 shadow-inner backdrop-blur">
               <Bot size={23} />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-black sm:text-3xl">Money</h1>
                 <span className="inline-flex items-center gap-1 rounded-full bg-yellow-300 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-yellow-900">
@@ -410,16 +410,16 @@ function MoneyContent() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
             <button
               type="button"
               onClick={() => setSettingsOpen(true)}
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-xs font-black text-[--brand-700] shadow-sm transition-transform hover:-translate-y-0.5"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-white px-3 text-xs font-black text-[--brand-700] shadow-sm transition-transform hover:-translate-y-0.5 sm:w-auto"
             >
               <Settings2 size={14} />
               Preferências do Money
             </button>
-            <div className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-semibold text-white/90 backdrop-blur">
+            <div className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-semibold text-white/90 backdrop-blur sm:w-auto">
               <ShieldCheck size={14} />
               Modo seguro
             </div>
@@ -427,8 +427,8 @@ function MoneyContent() {
         </div>
       </header>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="order-2 grid gap-4 lg:order-1 lg:max-h-[620px] lg:overflow-y-auto lg:pr-1">
+      <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="order-2 grid min-w-0 gap-4 lg:order-1 lg:max-h-[620px] lg:overflow-y-auto lg:pr-1">
           <Card className="overflow-hidden shadow-sm" padding={false}>
             <div className="border-b border-[--border-subtle] bg-[--brand-50] p-4">
               <div className="flex items-center gap-2">
@@ -490,14 +490,16 @@ function MoneyContent() {
         </aside>
 
         <Card
-          className="order-1 flex h-[min(620px,calc(100dvh-190px))] min-h-[480px] flex-col overflow-hidden shadow-sm lg:order-2"
+          className="money-chat-surface order-1 flex h-[min(620px,calc(100dvh-7rem))] min-h-[360px] min-w-0 flex-col overflow-hidden shadow-sm sm:min-h-[480px] lg:order-2"
           padding={false}
         >
           <div className="border-b border-[--border-subtle] bg-gradient-to-r from-[--brand-50] to-[--bg-surface] px-4 py-3.5">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <Sparkles size={15} className="text-[--brand-600]" />
-                <p className="text-xs font-semibold text-[--text-secondary]">{safeDataStatus}</p>
+                <p className="min-w-0 break-words text-xs font-semibold text-[--text-secondary]">
+                  {safeDataStatus}
+                </p>
               </div>
               <p className="text-[10px] text-[--text-tertiary]">
                 Conversa não armazenada no Firestore
@@ -505,27 +507,29 @@ function MoneyContent() {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 sm:p-5">
+          <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-x-hidden overflow-y-auto overscroll-contain p-3 sm:p-5">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}
+                className={`flex min-w-0 items-start gap-2 sm:gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}
               >
                 {message.role === 'assistant' && (
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-white shadow-sm">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-600] text-white shadow-sm sm:h-9 sm:w-9 sm:rounded-2xl">
                     <Bot size={16} />
                   </div>
                 )}
 
                 <div
-                  className={`max-w-[90%] rounded-2xl p-3.5 sm:max-w-[78%] ${
+                  className={`min-w-0 max-w-[calc(100%_-_2.5rem)] overflow-hidden rounded-2xl p-3 [overflow-wrap:anywhere] sm:max-w-[78%] sm:p-3.5 ${
                     message.role === 'user'
                       ? 'bg-[--brand-600] text-white shadow-sm'
                       : 'border border-[--border-default] bg-[--bg-surface] shadow-sm'
                   }`}
                 >
                   {message.role === 'user' ? (
-                    <p className="text-sm leading-relaxed">{message.text}</p>
+                    <p className="break-words text-sm leading-relaxed [overflow-wrap:anywhere]">
+                      {message.text}
+                    </p>
                   ) : (
                     <AssistantResponse
                       response={message.response}
@@ -546,7 +550,7 @@ function MoneyContent() {
                 </div>
 
                 {message.role === 'user' && (
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-[--bg-hover] text-[--text-secondary]">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[--bg-hover] text-[--text-secondary] sm:h-9 sm:w-9 sm:rounded-2xl">
                     <User size={15} />
                   </div>
                 )}
@@ -559,7 +563,7 @@ function MoneyContent() {
             onSubmit={handleSubmit}
             className="shrink-0 border-t border-[--border-subtle] bg-[--bg-surface] p-3 sm:p-4"
           >
-            <div className="flex items-end gap-2">
+            <div className="flex min-w-0 items-end gap-2">
               <label htmlFor="money-message" className="sr-only">
                 Fale com o Money
               </label>
@@ -577,7 +581,7 @@ function MoneyContent() {
                   }
                 }}
                 placeholder="Ex.: Comprei R$ 600 no Nubank em 3 vezes"
-                className="min-h-12 max-h-32 flex-1 resize-y rounded-2xl border border-[--border-default] bg-[--bg-elevated] px-4 py-3 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] disabled:opacity-60"
+                className="min-h-12 max-h-32 min-w-0 flex-1 resize-y rounded-2xl border border-[--border-default] bg-[--bg-elevated] px-4 py-3 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] disabled:opacity-60"
               />
               <Button
                 type="submit"

@@ -43,9 +43,9 @@ const AppRoutes = () => {
   if (!user) return <Login />
 
   return (
-    <div className="aurora-app-shell flex min-h-screen bg-[--bg-app]">
+    <div className="aurora-app-shell flex h-dvh min-h-0 overflow-hidden bg-[--bg-app]">
       <Sidebar />
-      <main className="aurora-main min-w-0 flex-1 overflow-auto p-4 md:p-6 lg:p-8">
+      <main className="aurora-main min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 sm:px-5 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" />} />

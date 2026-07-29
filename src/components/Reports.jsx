@@ -61,7 +61,7 @@ const ChartTooltip = ({ active, payload, label }) => {
 
 function KPI({ label, value, sub, color, icon, tooltip }) {
   return (
-    <div className="flex items-center gap-3 p-4 bg-[--bg-surface] border border-[--border-default] rounded-2xl">
+    <div className="report-kpi flex min-w-0 items-center gap-3 rounded-2xl border border-[--border-default] bg-[--bg-surface] p-4">
       <div
         className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
         style={{ background: color + '18', color }}
@@ -73,7 +73,9 @@ function KPI({ label, value, sub, color, icon, tooltip }) {
           <p className="text-xs text-[--text-tertiary]">{label}</p>
           {tooltip && <InfoTooltip text={tooltip} size={11} />}
         </div>
-        <p className="text-lg font-black tabular-nums text-[--text-primary]">{value}</p>
+        <p className="break-words text-base font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere] min-[390px]:text-lg">
+          {value}
+        </p>
         {sub && <p className="text-[10px] text-[--text-tertiary]">{sub}</p>}
       </div>
     </div>
@@ -85,7 +87,7 @@ function SavingRateBadge({ rate }) {
   const label = rate >= 20 ? '🎉 Ótimo' : rate >= 10 ? '⚠️ Razoável' : '🚨 Atenção'
   return (
     <div
-      className="flex items-center gap-2 p-3 rounded-xl border"
+      className="reports-saving-rate flex min-w-0 items-center gap-2 rounded-2xl border p-3 sm:p-4"
       style={{ background: color + '10', borderColor: color + '30' }}
     >
       <div className="flex-1">
@@ -211,22 +213,22 @@ function ReportsContent() {
   ]
 
   return (
-    <div className="space-y-5 pb-24 lg:pb-6">
+    <div className="reports-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-24 sm:space-y-5 lg:pb-6">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="reports-premium__header flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-[--text-primary]">Relatórios</h1>
           <p className="text-xs text-[--text-tertiary] mt-0.5">Análise do seu período financeiro</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-2 text-xs text-[--text-tertiary]">
+        <div className="reports-premium__filters flex min-w-0 flex-wrap items-center gap-2">
+          <label className="grid w-full min-w-0 gap-1 text-xs text-[--text-tertiary] min-[560px]:w-auto">
             Mês final
             <input
               type="month"
               value={referenceMonth}
               onChange={(event) => setReferenceMonth(event.target.value)}
               aria-label="Mês final do relatório"
-              className="min-h-11 text-sm border border-[--border-default] rounded-xl px-3 py-2 bg-[--bg-elevated]
+              className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 py-2 text-sm min-[560px]:w-auto
                 text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
             />
           </label>
@@ -234,7 +236,7 @@ function ReportsContent() {
             value={period}
             onChange={(e) => setPeriod(Number(e.target.value))}
             aria-label="Período do relatório"
-            className="min-h-11 text-sm border border-[--border-default] rounded-xl px-3 py-2 bg-[--bg-elevated]
+            className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 py-2 text-sm min-[560px]:w-auto
               text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
           >
             <option value={3}>3 meses</option>
@@ -244,6 +246,7 @@ function ReportsContent() {
           <Button
             variant="secondary"
             size="sm"
+            className="w-full min-[560px]:w-auto"
             icon={<Download size={14} />}
             onClick={() => exportToCSV(reportTransactions, categories)}
             disabled={!hasTx}
@@ -253,6 +256,7 @@ function ReportsContent() {
           <Button
             variant="primary"
             size="sm"
+            className="w-full min-[560px]:w-auto"
             icon={<FileText size={14} />}
             onClick={handleExportPDF}
             loading={exporting}
@@ -278,7 +282,7 @@ function ReportsContent() {
       ) : (
         <>
           {/* KPIs */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid min-w-0 grid-cols-1 gap-3 min-[390px]:grid-cols-2 xl:grid-cols-4">
             <KPI
               label="Receitas"
               value={formatCurrency(periodTotals.income)}
@@ -313,12 +317,12 @@ function ReportsContent() {
           {periodTotals.income > 0 && <SavingRateBadge rate={periodTotals.savingRate} />}
 
           {/* Tabs */}
-          <div className="flex gap-1 p-1 bg-[--bg-hover] rounded-2xl">
+          <div className="reports-premium__tabs scrollbar-none flex min-w-0 snap-x gap-1 overflow-x-auto rounded-2xl bg-[--bg-hover] p-1">
             {TABS.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex-1 py-2 px-3 rounded-xl text-sm font-semibold transition-all duration-150
+                className={`min-w-[112px] flex-1 snap-start whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-150
                   ${
                     tab === t.id
                       ? 'bg-[--bg-surface] text-[--text-primary] shadow-sm'
@@ -411,7 +415,7 @@ function ReportsContent() {
               </Card>
 
               {/* Média por mês */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid min-w-0 grid-cols-1 gap-3 min-[390px]:grid-cols-2">
                 <Card>
                   <p className="text-xs text-[--text-tertiary] mb-1 flex items-center gap-1">
                     Gasto médio mensal{' '}
@@ -571,7 +575,7 @@ function ReportsContent() {
                       </BarChart>
                     </ResponsiveContainer>
 
-                    <div className="grid grid-cols-2 gap-3 mt-4">
+                    <div className="mt-4 grid min-w-0 grid-cols-1 gap-3 min-[390px]:grid-cols-2">
                       <div className="text-center p-3 bg-[--brand-50] rounded-xl border border-[--brand-200]">
                         <p className="text-xs text-[--brand-600] mb-0.5">Total poupado</p>
                         <p className="text-xl font-black text-[--brand-700]">
