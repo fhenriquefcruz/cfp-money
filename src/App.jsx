@@ -11,6 +11,7 @@ import Login from './components/Login'
 import PlanAlert from './components/PlanAlert'
 import Onboarding from './components/Onboarding'
 import LegalGate from './components/LegalGate'
+import PwaUpdateNotice from './components/PwaUpdateNotice'
 
 // Notificações globais
 import NotificationStack from './components/NotificationStack'
@@ -68,6 +69,7 @@ const AppRoutes = () => {
       <Onboarding />
       <LegalGate />
       <NotificationStack />
+      <PwaUpdateNotice />
     </div>
   )
 }
