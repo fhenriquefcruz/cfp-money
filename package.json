@@ -16,7 +16,7 @@
     "functions:install": "npm install --prefix functions",
     "functions:test": "npm run test --prefix functions",
     "functions:validate": "npm run validate --prefix functions",
-    "validate:all": "npm run validate && npm run functions:validate && npm run validate:indexes && npm run notifications:validate && npm run validate:pwa",
+    "validate:all": "npm run validate && npm run functions:validate && npm run validate:indexes && npm run notifications:validate && npm run validate:pwa && npm run validate:responsive",
     "emulators": "firebase emulators:start",
     "deploy:backend": "firebase deploy --only functions",
     "deploy:firebase": "firebase deploy --only firestore,functions",
@@ -29,7 +29,8 @@
     "notifications:validate": "npm run validate --prefix worker/email-notifications",
     "notifications:install": "npm install --prefix worker/email-notifications",
     "notifications:dev": "npm run dev --prefix worker/email-notifications",
-    "notifications:deploy": "npm run deploy --prefix worker/email-notifications"
+    "notifications:deploy": "npm run deploy --prefix worker/email-notifications",
+    "validate:responsive": "node scripts/validate-responsive-ui.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.0",

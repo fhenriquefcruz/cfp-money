@@ -111,7 +111,7 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -16 }}
-      className="flex items-center gap-3 px-4 py-3.5 hover:bg-[--bg-hover] transition-colors group cursor-default"
+      className="transaction-row group grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 px-3 py-3.5 transition-colors hover:bg-[--bg-hover] sm:flex sm:items-center sm:px-4"
     >
       {/* Ícone */}
       <div
@@ -126,7 +126,7 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <p className="text-sm font-semibold text-[--text-primary] truncate max-w-[200px]">
+          <p className="max-w-full truncate text-sm font-semibold text-[--text-primary] sm:max-w-[200px]">
             {tx.description || (isSavings ? 'Poupança' : cat?.name) || 'Sem descrição'}
           </p>
           {tx.isInstallment && (
@@ -194,9 +194,9 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
       </div>
 
       {/* Valor + ações */}
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="transaction-row__aside col-start-2 flex min-w-0 flex-wrap items-center justify-between gap-2 sm:ml-auto sm:flex-shrink-0 sm:flex-nowrap">
         <span
-          className={`text-sm font-bold tabular-nums ${
+          className={`min-w-0 break-words text-sm font-bold tabular-nums [overflow-wrap:anywhere] ${
             isSavings
               ? 'text-[--brand-500]'
               : isIncome
@@ -207,7 +207,7 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
           {isSavings ? '' : isIncome ? '+' : '−'}
           {formatCurrency(tx.amount)}
         </span>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 sm:opacity-100 transition-opacity">
+        <div className="flex flex-shrink-0 gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
           <button
             onClick={() => onEdit(tx)}
             className="w-11 h-11 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-elevated] text-[--text-tertiary] hover:text-[--text-brand] transition-colors"
@@ -380,9 +380,9 @@ export default function TransactionList() {
   }
 
   return (
-    <div className="space-y-4 pb-28 lg:pb-6">
+    <div className="operational-page transactions-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-28 lg:pb-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="operational-page__header flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black text-[--text-primary]">Transações</h1>
           <p className="text-xs text-[--text-tertiary] mt-0.5">{filtered.length} encontradas</p>
@@ -402,7 +402,7 @@ export default function TransactionList() {
               variant="ghost"
               size="sm"
               icon={<Download size={14} />}
-              onClick={() => exportToCSV(filtered, categories)}
+              onClick={() => exportToCSV(filtered)}
             >
               CSV
             </Button>
@@ -410,7 +410,7 @@ export default function TransactionList() {
               variant="ghost"
               size="sm"
               icon={<FileText size={14} />}
-              onClick={() => exportToPDF(filtered, categories, summary)}
+              onClick={() => exportToPDF(filtered, summary)}
             >
               PDF
             </Button>
@@ -422,7 +422,7 @@ export default function TransactionList() {
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="operational-summary-grid grid grid-cols-2 gap-2 sm:grid-cols-4">
         {[
           {
             label: 'Receitas',
@@ -451,7 +451,7 @@ export default function TransactionList() {
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-[--bg-surface] border border-[--border-default] rounded-2xl p-3 flex items-center gap-2"
+            className="operational-summary-card flex min-w-0 items-center gap-2 rounded-2xl border border-[--border-default] bg-[--bg-surface] p-3"
           >
             <div
               className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -461,7 +461,10 @@ export default function TransactionList() {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] text-[--text-tertiary] leading-none mb-0.5">{s.label}</p>
-              <p className="text-sm font-black tabular-nums truncate" style={{ color: s.color }}>
+              <p
+                className="break-words text-xs font-black tabular-nums [overflow-wrap:anywhere] min-[390px]:text-sm"
+                style={{ color: s.color }}
+              >
                 {formatCurrency(s.value)}
               </p>
             </div>
@@ -470,7 +473,7 @@ export default function TransactionList() {
       </div>
 
       {/* Busca + filtros */}
-      <div className="space-y-2">
+      <div className="transaction-tools space-y-2">
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <Search
@@ -569,7 +572,7 @@ export default function TransactionList() {
             >
               <div
                 id="transaction-filters"
-                className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-[--bg-subtle] rounded-2xl border border-[--border-subtle]"
+                className="grid grid-cols-1 gap-2 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 min-[420px]:grid-cols-2 sm:grid-cols-3"
               >
                 {/* Tipo */}
                 <div>
@@ -645,7 +648,7 @@ export default function TransactionList() {
                   </select>
                 </div>
                 {/* Datas */}
-                <div className="col-span-2 grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2 min-[420px]:col-span-2 min-[420px]:grid-cols-2">
                   <div>
                     <label
                       htmlFor="transaction-date-from"
@@ -700,7 +703,7 @@ export default function TransactionList() {
       </div>
 
       {/* Lista agrupada por data */}
-      <div className="bg-[--bg-surface] border border-[--border-default] rounded-2xl overflow-hidden">
+      <div className="transaction-list-surface overflow-hidden rounded-2xl border border-[--border-default] bg-[--bg-surface]">
         {filtered.length === 0 ? (
           <div className="p-8">
             <EmptyState
@@ -722,7 +725,7 @@ export default function TransactionList() {
               {grouped.map(([date, txs]) => (
                 <div key={date}>
                   {/* Cabeçalho do grupo */}
-                  <div className="flex items-center justify-between px-4 py-2 bg-[--bg-subtle] border-b border-[--border-subtle]">
+                  <div className="transaction-date-header flex flex-wrap items-center justify-between gap-2 border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2">
                     <p className="text-xs font-bold text-[--text-secondary]">{dateLabel(date)}</p>
                     <div className="flex items-center gap-3 text-xs tabular-nums">
                       {txs.some((t) => t.type === 'income' && !t.isSavings) && (
@@ -781,7 +784,7 @@ export default function TransactionList() {
       {/* FAB mobile */}
       <button
         onClick={handleNew}
-        className="lg:hidden fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-[--brand-600]
+        className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom,0px))] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[--brand-600] lg:hidden
           text-white shadow-lg flex items-center justify-center hover:bg-[--brand-700]
           active:scale-95 transition-all"
         aria-label="Adicionar nova transação"

@@ -131,7 +131,7 @@ function TransactionRow({ transaction }) {
     transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date
 
   return (
-    <div className="flex items-center gap-3 border-b border-[--border-subtle] py-3 last:border-b-0">
+    <div className="credit-card-transaction flex min-w-0 flex-wrap items-center gap-3 border-b border-[--border-subtle] py-3 last:border-b-0 sm:flex-nowrap">
       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[--bg-hover] text-base">
         {transaction.categoryIcon || '💳'}
       </div>
@@ -152,7 +152,7 @@ function TransactionRow({ transaction }) {
         </p>
       </div>
 
-      <p className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
+      <p className="max-w-full break-words text-right text-xs font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere] sm:flex-shrink-0">
         {formatCurrency(transaction.amount)}
       </p>
     </div>
@@ -197,9 +197,9 @@ function CreditCardsCenterContent() {
   const loadingData = loading.transactions || loading.creditCards || loading.invoiceEvents
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-5 pb-24 lg:pb-6">
-      <header className="overflow-hidden rounded-3xl border border-[--brand-200] bg-gradient-to-br from-slate-950 via-indigo-950 to-[--brand-700] p-5 text-white shadow-xl sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-5">
+    <div className="operational-page credit-cards-premium mx-auto min-w-0 w-full max-w-7xl space-y-5 pb-24 lg:pb-6">
+      <header className="operational-hero credit-cards-premium__hero overflow-hidden rounded-3xl border border-[--brand-200] bg-gradient-to-br from-slate-950 via-indigo-950 to-[--brand-700] p-5 text-white shadow-xl sm:p-6">
+        <div className="operational-hero__layout flex flex-wrap items-start justify-between gap-5">
           <div className="flex items-start gap-3">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/10 text-cyan-100 ring-1 ring-white/20 backdrop-blur">
               <WalletCards size={22} />
@@ -220,7 +220,7 @@ function CreditCardsCenterContent() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="operational-hero__actions flex flex-wrap gap-2">
             <Link
               to="/transactions"
               className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-xs font-bold text-indigo-900 shadow-sm transition-transform hover:-translate-y-0.5"
@@ -258,7 +258,7 @@ function CreditCardsCenterContent() {
             </h2>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="credit-cards-period flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setSelectedMonth((month) => shiftMonthKey(month, -1))}
@@ -281,7 +281,7 @@ function CreditCardsCenterContent() {
                   setSelectedMonth(event.target.value)
                   setSelectedCardId('all')
                 }}
-                className="min-h-11 rounded-xl border border-[--border-default] bg-[--bg-surface] pl-9 pr-3 text-xs font-semibold text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+                className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-surface] pl-9 pr-3 text-xs font-semibold text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] sm:w-auto"
               />
             </label>
 
@@ -362,7 +362,7 @@ function CreditCardsCenterContent() {
             </div>
           )}
 
-          <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,0.88fr)_minmax(380px,1.12fr)]">
+          <div className="credit-cards-premium__grid grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,0.88fr)_minmax(380px,1.12fr)]">
             <div className="space-y-4">
               <Card className="shadow-sm">
                 <div className="flex items-center justify-between gap-3">

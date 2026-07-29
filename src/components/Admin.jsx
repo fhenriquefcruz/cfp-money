@@ -60,7 +60,7 @@ function StatusBadge({ u }) {
   const style = STATUS_STYLES[info.key]
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold ${style.bg} ${style.text}`}
+      className={`inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold ${style.bg} ${style.text}`}
     >
       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${style.dot}`} />
       {info.label}
@@ -78,7 +78,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
   return (
     <>
       {/* Linha principal — grid fixo */}
-      <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr_auto] items-stretch sm:items-center gap-3 px-4 py-3 border-b border-[--border-subtle] last:border-0 hover:bg-[--bg-hover] transition-colors">
+      <div className="admin-user-row grid grid-cols-1 items-stretch gap-3 border-b border-[--border-subtle] px-4 py-3 transition-colors last:border-0 hover:bg-[--bg-hover] sm:grid-cols-[2fr_1fr_auto] sm:items-center">
         {/* Coluna 1: usuário */}
         <button
           className="flex min-h-11 w-full items-center gap-2.5 min-w-0 text-left"
@@ -107,7 +107,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
         </div>
 
         {/* Coluna 3: ações agrupadas */}
-        <div className="flex w-full sm:w-auto items-center gap-2 flex-shrink-0">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:flex-shrink-0">
           {/* Select + Ativar colados */}
           <div className="flex min-w-0 flex-1 sm:flex-none items-center rounded-xl border border-[--border-default] overflow-hidden">
             <select
@@ -297,7 +297,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="space-y-5 pb-24 lg:pb-6">
+    <div className="operational-page admin-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6">
       <div>
         <h1 className="text-2xl font-black text-[--text-primary]">Painel Admin</h1>
         <p className="text-sm text-[--text-tertiary]">Usuários em tempo real</p>
@@ -310,7 +310,7 @@ export default function Admin() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           {
             label: 'Total',
@@ -366,13 +366,13 @@ export default function Admin() {
       </Card>
 
       {/* Tabela de usuários */}
-      <Card className="!p-0 overflow-hidden">
+      <Card className="admin-users-surface !p-0 overflow-hidden">
         {/* Cabeçalho da tabela */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[--border-subtle]">
+        <div className="admin-users-toolbar flex flex-col gap-3 border-b border-[--border-subtle] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-sm font-bold text-[--text-primary]">
             Usuários <span className="text-[--text-tertiary] font-normal">({filtered.length})</span>
           </h2>
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <Search
               size={13}
               className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[--text-tertiary]"
@@ -381,13 +381,13 @@ export default function Admin() {
               placeholder="Buscar..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="text-xs border border-[--border-default] rounded-xl pl-7 pr-3 py-1.5 bg-[--bg-elevated] text-[--text-primary] focus:outline-none focus:border-[--brand-500] w-44"
+              className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-elevated] py-1.5 pl-7 pr-3 text-xs text-[--text-primary] focus:border-[--brand-500] focus:outline-none sm:w-44"
             />
           </div>
         </div>
 
         {/* Header de colunas */}
-        <div className="grid grid-cols-[1fr_auto_auto] sm:grid-cols-[2fr_1fr_auto] px-4 py-2 bg-[--bg-subtle] border-b border-[--border-subtle]">
+        <div className="grid grid-cols-[1fr_auto] border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2 sm:grid-cols-[2fr_1fr_auto]">
           <span className="text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider">
             Usuário
           </span>

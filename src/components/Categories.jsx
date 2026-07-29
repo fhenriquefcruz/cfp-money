@@ -217,7 +217,7 @@ export default function Categories() {
         <div className="flex gap-1 flex-shrink-0">
           <button
             onClick={() => handleOpen(cat)}
-            className="p-2 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] hover:text-[--text-primary] transition-colors"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
             title={cat.isDefault ? 'Ver detalhes' : 'Editar'}
           >
             <Edit2 size={14} />
@@ -225,7 +225,7 @@ export default function Categories() {
           {!cat.isDefault && (
             <button
               onClick={() => handleDelete(cat.id)}
-              className="p-2 rounded-lg hover:bg-[--danger-bg] text-[--text-tertiary] hover:text-[--danger-text] transition-colors"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
               title="Excluir"
             >
               <Trash2 size={14} />
@@ -237,9 +237,9 @@ export default function Categories() {
   )
 
   return (
-    <div className="space-y-6 pb-28 lg:pb-6">
+    <div className="operational-page categories-premium mx-auto min-w-0 max-w-[1600px] space-y-6 pb-28 lg:pb-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="operational-page__header flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black text-[--text-primary]">Categorias</h1>
@@ -259,7 +259,7 @@ export default function Categories() {
           <h2 className="text-sm font-semibold text-[--text-tertiary] uppercase tracking-wider mb-3">
             Despesas ({expenseCategories.length})
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="operational-card-grid grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {expenseCategories.map((cat) => (
               <CategoryCard key={cat.id} cat={cat} />
             ))}
@@ -273,7 +273,7 @@ export default function Categories() {
           <h2 className="text-sm font-semibold text-[--text-tertiary] uppercase tracking-wider mb-3">
             Receitas ({incomeCategories.length})
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="operational-card-grid grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {incomeCategories.map((cat) => (
               <CategoryCard key={cat.id} cat={cat} />
             ))}
@@ -328,15 +328,14 @@ export default function Categories() {
               {showEmojiPicker && (
                 <div
                   ref={emojiPickerRef}
-                  className="absolute z-50 mt-1 p-3 bg-[--bg-elevated] border border-[--border-default] rounded-xl shadow-xl w-full grid grid-cols-8 gap-1.5 max-h-52 overflow-y-auto"
-                  style={{ minWidth: 260 }}
+                  className="absolute z-50 mt-1 grid max-h-52 w-full grid-cols-4 gap-1.5 overflow-y-auto rounded-xl border border-[--border-default] bg-[--bg-elevated] p-3 shadow-xl min-[390px]:grid-cols-6 sm:grid-cols-8"
                 >
                   {EMOJI_LIST.map((emoji) => (
                     <button
                       key={emoji}
                       type="button"
                       onClick={() => selectEmoji(emoji)}
-                      className={`w-8 h-8 text-xl hover:bg-[--bg-hover] rounded-lg transition-colors flex items-center justify-center ${
+                      className={`flex aspect-square w-full min-w-0 items-center justify-center rounded-lg text-xl transition-colors hover:bg-[--bg-hover] ${
                         form.icon === emoji ? 'bg-[--brand-100] ring-2 ring-[--brand-500]' : ''
                       }`}
                     >
@@ -357,7 +356,7 @@ export default function Categories() {
                   key={c}
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, color: c }))}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
+                  className={`h-11 w-11 rounded-full border-2 transition-all ${
                     form.color === c
                       ? 'border-white ring-2 ring-[--brand-500] scale-110'
                       : 'border-transparent hover:scale-105'

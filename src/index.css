@@ -353,3 +353,220 @@ body {
     transform: none !important;
   }
 }
+
+/* ── AURORA OPERATIONAL EXPERIENCE · FASE 20.3 ── */
+.operational-page {
+  width: 100%;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.operational-page__header {
+  border: 1px solid var(--aurora-border);
+  border-radius: 24px;
+  padding: clamp(0.9rem, 2vw, 1.25rem);
+  background:
+    radial-gradient(
+      circle at 88% 12%,
+      color-mix(in srgb, var(--brand-400) 13%, transparent),
+      transparent 36%
+    ),
+    var(--aurora-surface);
+  box-shadow: var(--aurora-shadow-soft);
+  backdrop-filter: blur(16px);
+}
+
+.operational-card-grid > *,
+.operational-summary-grid > *,
+.credit-cards-premium__grid > * {
+  min-width: 0;
+}
+
+.operational-summary-card {
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--aurora-shadow-soft);
+}
+
+.operational-summary-card::after {
+  position: absolute;
+  right: -1.4rem;
+  bottom: -2.2rem;
+  width: 4.8rem;
+  height: 4.8rem;
+  content: '';
+  pointer-events: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-400) 8%, transparent);
+}
+
+.transaction-list-surface,
+.admin-users-surface {
+  box-shadow: var(--aurora-shadow-soft);
+}
+
+.transaction-date-header,
+.transaction-row,
+.transaction-row__aside,
+.credit-card-transaction,
+.admin-user-row {
+  min-width: 0;
+}
+
+.credit-cards-premium__hero {
+  position: relative;
+  isolation: isolate;
+}
+
+.credit-cards-premium__hero::after {
+  position: absolute;
+  z-index: -1;
+  top: -7rem;
+  right: -5rem;
+  width: 17rem;
+  height: 17rem;
+  content: '';
+  pointer-events: none;
+  border-radius: 999px;
+  background: rgb(103 232 249 / 14%);
+  filter: blur(4px);
+}
+
+.profile-premium .aurora-card,
+.goals-premium .aurora-card,
+.budgets-premium .aurora-card,
+.categories-premium .aurora-card,
+.admin-premium .aurora-card,
+.credit-cards-premium .aurora-card {
+  min-width: 0;
+}
+
+@media (max-width: 639px) {
+  .operational-page {
+    gap: 0.85rem;
+  }
+
+  .operational-page__header {
+    border-radius: 22px;
+    padding: 0.9rem;
+  }
+
+  .operational-summary-grid {
+    gap: 0.6rem;
+  }
+
+  .operational-summary-card {
+    align-items: flex-start;
+    padding: 0.75rem;
+  }
+
+  .transaction-row__aside {
+    width: 100%;
+  }
+
+  .transaction-row__aside button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .transaction-date-header > div {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .transaction-tools > div:first-child {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .operational-hero__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .operational-hero__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .operational-hero__actions > * {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .credit-cards-premium__hero {
+    margin-inline: -0.25rem;
+    border-radius: 24px;
+  }
+
+  .credit-cards-period {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    width: 100%;
+  }
+
+  .credit-cards-period > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  .credit-card-transaction > p {
+    width: 100%;
+    text-align: right;
+  }
+
+  .admin-users-toolbar {
+    align-items: stretch;
+  }
+
+  .admin-user-row {
+    padding: 0.75rem;
+  }
+
+  .profile-premium .aurora-card {
+    padding: 0.875rem;
+  }
+}
+
+@media (max-width: 359px) {
+  .operational-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .operational-hero__actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .transaction-row {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .operational-card-grid .aurora-card,
+  .operational-summary-card,
+  .transaction-list-surface,
+  .admin-users-surface {
+    transition:
+      transform 180ms var(--ease-out),
+      box-shadow 180ms var(--ease-out),
+      border-color 180ms var(--ease-out);
+  }
+
+  .operational-card-grid .aurora-card:hover,
+  .operational-summary-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--brand-400) 30%, var(--border-default));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operational-card-grid .aurora-card,
+  .operational-summary-card,
+  .transaction-list-surface,
+  .admin-users-surface {
+    transition: none;
+    transform: none !important;
+  }
+}
