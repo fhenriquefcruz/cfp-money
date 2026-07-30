@@ -185,7 +185,7 @@ export default function Profile() {
         : 'warning'
 
   return (
-    <div className="space-y-5 pb-24 lg:pb-6 max-w-lg">
+    <div className="operational-page profile-premium mx-auto w-full min-w-0 max-w-3xl space-y-5 pb-24 lg:pb-6">
       <h1 className="text-2xl font-black text-[--text-primary]">Perfil</h1>
 
       {successMsg && (
@@ -202,14 +202,14 @@ export default function Profile() {
       {/* ── Meu Plano ── */}
       <Card>
         <button
-          className="w-full flex items-center justify-between"
+          className="flex w-full flex-col items-stretch justify-between gap-3 min-[420px]:flex-row min-[420px]:items-center"
           onClick={() => setShowPlanDetail((v) => !v)}
         >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[--brand-100] flex items-center justify-center">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="w-9 h-9 flex-shrink-0 rounded-xl bg-[--brand-100] flex items-center justify-center">
               <Shield size={16} className="text-[--brand-600]" />
             </div>
-            <div className="text-left">
+            <div className="min-w-0 text-left">
               <p className="text-sm font-bold text-[--text-primary]">Meu Plano</p>
               <p className="text-xs text-[--text-tertiary]">
                 {isLoading
@@ -226,7 +226,7 @@ export default function Profile() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start min-[420px]:self-auto">
             <Badge variant={planVariant}>{planLabel}</Badge>
             {showPlanDetail ? (
               <ChevronUp size={14} className="text-[--text-tertiary]" />
@@ -332,9 +332,9 @@ export default function Profile() {
               onChange={handlePhotoChange}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="font-bold text-[--text-primary]">{user?.displayName || 'Usuário'}</p>
-            <p className="text-sm text-[--text-tertiary]">{user?.email}</p>
+            <p className="break-all text-sm text-[--text-tertiary]">{user?.email}</p>
             <p className="text-xs text-[--text-tertiary] mt-0.5">Foto: máx. 2MB</p>
           </div>
         </div>
@@ -472,8 +472,8 @@ export default function Profile() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[--bg-elevated] border border-[--border-default]">
-              <code className="flex-1 text-sm font-mono text-[--brand-600] truncate">
+            <div className="flex min-w-0 items-center gap-2 rounded-xl border border-[--border-default] bg-[--bg-elevated] p-2.5">
+              <code className="min-w-0 flex-1 break-all whitespace-normal font-mono text-sm text-[--brand-600]">
                 {PIX_KEY}
               </code>
               <button
@@ -487,7 +487,7 @@ export default function Profile() {
 
             <div className="space-y-1 text-xs text-[--text-secondary]">
               <p>3. No campo de mensagem/descrição do Pix, escreva seu e-mail:</p>
-              <code className="block bg-[--bg-elevated] border border-[--border-default] px-3 py-2 rounded-xl text-[--text-primary] font-mono text-xs">
+              <code className="block break-all rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 py-2 font-mono text-xs text-[--text-primary]">
                 {user?.email}
               </code>
               <p className="pt-1">4. Após o pagamento, o acesso será liberado em até 24h.</p>

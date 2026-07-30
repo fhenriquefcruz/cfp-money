@@ -237,7 +237,7 @@ export default function Sidebar() {
       </motion.aside>
 
       <nav
-        className="aurora-bottom-nav fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
+        className="aurora-bottom-nav fixed bottom-0 left-0 right-0 z-[70] flex items-center justify-around border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
       >
         {allItems.slice(0, 5).map(({ to, icon: Icon, label, premium }) => (
@@ -273,7 +273,7 @@ export default function Sidebar() {
         <button
           type="button"
           className="flex min-h-14 flex-col items-center gap-1 px-1 py-2 text-[--text-tertiary] sm:px-3"
-          onClick={() => setMobileOpen(true)}
+          onClick={() => setMobileOpen((current) => !current)}
           aria-expanded={mobileOpen}
           aria-controls="mobile-more-menu"
         >
@@ -288,7 +288,7 @@ export default function Sidebar() {
         {mobileOpen && (
           <>
             <motion.div
-              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden"
+              className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-0 right-0 top-0 z-[60] bg-black/50 backdrop-blur-sm lg:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -297,9 +297,9 @@ export default function Sidebar() {
             <motion.div
               id="mobile-more-menu"
               role="dialog"
-              aria-modal="true"
+              aria-modal="false"
               aria-label="Mais opções de navegação"
-              className="aurora-mobile-drawer fixed bottom-0 left-0 top-0 z-50 flex w-72 flex-col bg-[--bg-sidebar] lg:hidden"
+              className="aurora-mobile-drawer fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-0 top-0 z-[60] flex w-[min(18rem,86vw)] flex-col overflow-hidden bg-[--bg-sidebar] shadow-2xl lg:hidden"
               initial={{ x: -288 }}
               animate={{ x: 0 }}
               exit={{ x: -288 }}

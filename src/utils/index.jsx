@@ -133,7 +133,24 @@ export const exportToCSV = (transactions) => {
 }
 
 // ── PDF EXPORT ──
-export const exportToPDF = async (transactions, summary = {}) => {
+export const resolveExportSummary = (summaryOrCategories = {}, legacySummary) => {
+  if (legacySummary && typeof legacySummary === 'object' && !Array.isArray(legacySummary)) {
+    return legacySummary
+  }
+
+  if (
+    summaryOrCategories &&
+    typeof summaryOrCategories === 'object' &&
+    !Array.isArray(summaryOrCategories)
+  ) {
+    return summaryOrCategories
+  }
+
+  return {}
+}
+
+export const exportToPDF = async (transactions, summaryOrCategories = {}, legacySummary) => {
+  const summary = resolveExportSummary(summaryOrCategories, legacySummary)
   const { jsPDF } = await import('jspdf')
   const { default: autoTable } = await import('jspdf-autotable')
 

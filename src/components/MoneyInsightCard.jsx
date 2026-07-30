@@ -51,7 +51,7 @@ function resolveAnalysisDate(referenceDate) {
 
 function MoneyMetric({ label, value, detail }) {
   return (
-    <div className="rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3.5">
+    <div className="money-insight-metric min-w-0 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3.5">
       <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
         {label}
       </p>
@@ -78,8 +78,8 @@ function MoneyInsightContent({ referenceDate }) {
   const isLoading = loading.transactions || settingsLoading
 
   return (
-    <Card className="h-full overflow-hidden shadow-sm" padding={false}>
-      <div className="border-b border-[--border-subtle] bg-gradient-to-r from-[--brand-50] via-[--bg-surface] to-[--bg-surface] p-5">
+    <Card className="money-insight-card h-full overflow-hidden shadow-sm" padding={false}>
+      <div className="money-insight-card__header border-b border-[--border-subtle] bg-gradient-to-r from-[--brand-50] via-[--bg-surface] to-[--bg-surface] p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
             <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-white shadow-sm">
@@ -118,8 +118,8 @@ function MoneyInsightContent({ referenceDate }) {
         </div>
       </div>
 
-      <div className="flex h-full flex-col gap-4 p-5">
-        <div className="flex items-start gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3.5">
+      <div className="money-insight-card__content flex h-full flex-col gap-4 p-5">
+        <div className="money-insight-card__explainer flex items-start gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3.5">
           <Info size={16} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
           <div>
             <p className="text-xs font-bold text-[--text-primary]">O que este painel mostra?</p>
@@ -162,7 +162,7 @@ function MoneyInsightContent({ referenceDate }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="money-insight-card__metrics grid grid-cols-3 gap-2 sm:gap-3">
               <MoneyMetric
                 label="Despesas"
                 value={formatCurrency(analysis.current.expenses)}
@@ -183,7 +183,7 @@ function MoneyInsightContent({ referenceDate }) {
             </div>
 
             {categoryInsight && (
-              <div className="mt-auto border-t border-[--border-subtle] pt-4">
+              <div className="money-insight-card__movement mt-auto border-t border-[--border-subtle] pt-4">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-[--text-tertiary]">
                   Movimento de destaque
                 </p>

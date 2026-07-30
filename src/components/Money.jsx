@@ -128,7 +128,7 @@ function AssistantResponse({
     )
   }
   return (
-    <div className="min-w-0 space-y-3">
+    <div className="money-assistant-response min-w-0 space-y-3">
       <div>
         <p className="text-sm font-bold text-[--text-primary]">{response.title}</p>
         <p className="mt-1 text-sm leading-relaxed text-[--text-secondary]">{response.text}</p>
@@ -490,7 +490,7 @@ function MoneyContent() {
         </aside>
 
         <Card
-          className="money-chat-surface order-1 flex h-[min(620px,calc(100dvh-7rem))] min-h-[360px] min-w-0 flex-col overflow-hidden shadow-sm sm:min-h-[480px] lg:order-2"
+          className="money-chat-surface order-1 flex h-[clamp(24rem,calc(100dvh-15rem),34rem)] min-h-0 min-w-0 flex-col overflow-hidden shadow-sm sm:h-[min(620px,calc(100dvh-7rem))] sm:min-h-[480px] lg:order-2"
           padding={false}
         >
           <div className="border-b border-[--border-subtle] bg-gradient-to-r from-[--brand-50] to-[--bg-surface] px-4 py-3.5">
@@ -520,14 +520,14 @@ function MoneyContent() {
                 )}
 
                 <div
-                  className={`min-w-0 max-w-[calc(100%_-_2.5rem)] overflow-hidden rounded-2xl p-3 [overflow-wrap:anywhere] sm:max-w-[78%] sm:p-3.5 ${
+                  className={`money-message-bubble min-w-0 max-w-[calc(100%_-_2.25rem)] overflow-hidden rounded-2xl p-2.5 [overflow-wrap:anywhere] sm:max-w-[78%] sm:p-3.5 ${
                     message.role === 'user'
                       ? 'bg-[--brand-600] text-white shadow-sm'
                       : 'border border-[--border-default] bg-[--bg-surface] shadow-sm'
                   }`}
                 >
                   {message.role === 'user' ? (
-                    <p className="break-words text-sm leading-relaxed [overflow-wrap:anywhere]">
+                    <p className="money-user-message break-words text-[13px] leading-relaxed [overflow-wrap:anywhere] sm:text-sm">
                       {message.text}
                     </p>
                   ) : (
@@ -561,7 +561,7 @@ function MoneyContent() {
 
           <form
             onSubmit={handleSubmit}
-            className="shrink-0 border-t border-[--border-subtle] bg-[--bg-surface] p-3 sm:p-4"
+            className="money-chat-composer shrink-0 border-t border-[--border-subtle] bg-[--bg-surface] p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom,0px))] sm:p-4"
           >
             <div className="flex min-w-0 items-end gap-2">
               <label htmlFor="money-message" className="sr-only">
@@ -581,21 +581,20 @@ function MoneyContent() {
                   }
                 }}
                 placeholder="Ex.: Comprei R$ 600 no Nubank em 3 vezes"
-                className="min-h-12 max-h-32 min-w-0 flex-1 resize-y rounded-2xl border border-[--border-default] bg-[--bg-elevated] px-4 py-3 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] disabled:opacity-60"
+                className="money-chat-input min-h-11 max-h-28 min-w-0 flex-1 resize-y rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 py-2.5 text-[15px] leading-snug text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] disabled:opacity-60 sm:min-h-12 sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm"
               />
               <Button
                 type="submit"
                 variant="primary"
                 disabled={!canSend}
                 aria-label="Enviar mensagem ao Money"
-                className="h-12 w-12 flex-shrink-0 p-0"
+                className="h-11 w-11 flex-shrink-0 p-0 sm:h-12 sm:w-12"
               >
                 <Send size={17} />
               </Button>
             </div>
             <p className="mt-2 text-[10px] leading-relaxed text-[--text-tertiary]">
-              Pressione Enter para enviar ou Shift + Enter para quebrar a linha. Receitas, despesas,
-              cartões e parcelas passam por revisão antes de serem salvos.
+              Enter envia · Shift + Enter quebra a linha · lançamentos sempre passam por revisão.
             </p>
           </form>
         </Card>

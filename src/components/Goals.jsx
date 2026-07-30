@@ -264,8 +264,8 @@ function GoalsContent() {
   const hasGoals = goals.length > 0
 
   return (
-    <div className="space-y-5 pb-24 lg:pb-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="operational-page goals-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6">
+      <div className="operational-page__header flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black text-[--text-primary]">Metas</h1>
@@ -290,7 +290,7 @@ function GoalsContent() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="operational-card-grid grid grid-cols-1 gap-4 md:grid-cols-2">
           <AnimatePresence>
             {sortedGoals.map((goal) => (
               <GoalCard
@@ -314,7 +314,7 @@ function GoalsContent() {
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           />
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 min-[390px]:grid-cols-2">
             <Input
               label="Valor alvo (R$)"
               type="number"

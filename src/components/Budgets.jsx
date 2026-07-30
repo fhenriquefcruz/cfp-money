@@ -109,7 +109,7 @@ function BudgetCard({ cat, budget, spent, onEdit, onRemove }) {
         {budget ? (
           <>
             {/* Valores */}
-            <div className="flex justify-between items-baseline mb-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
               <div>
                 <span
                   className="text-2xl font-black tabular-nums"
@@ -261,9 +261,9 @@ export default function Budgets() {
   }
 
   return (
-    <div className="space-y-5 pb-24 lg:pb-6">
+    <div className="operational-page budgets-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="operational-page__header flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black text-[--text-primary]">Orçamentos mensais</h1>
@@ -285,7 +285,7 @@ export default function Budgets() {
 
       {/* Resumo geral */}
       {budgets.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             {
               label: 'Total orçado',
@@ -327,7 +327,10 @@ export default function Budgets() {
           description="Crie categorias de despesa para definir orçamentos."
         />
       ) : (
-        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <motion.div
+          layout
+          className="operational-card-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+        >
           <AnimatePresence>
             {sortedCategories.map((cat) => (
               <BudgetCard

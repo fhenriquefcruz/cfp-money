@@ -120,8 +120,8 @@ function HealthScore({ score }) {
   const r = 28,
     circ = 2 * Math.PI * r
   return (
-    <div className="flex min-w-0 items-center gap-3">
-      <div className="relative w-16 h-16 flex-shrink-0">
+    <div className="dashboard-health-score flex min-w-0 items-center gap-2 sm:gap-3">
+      <div className="dashboard-health-ring relative h-16 w-16 flex-shrink-0">
         <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
           <circle cx="32" cy="32" r={r} fill="none" stroke="var(--bg-hover)" strokeWidth="6" />
           <circle
@@ -142,7 +142,7 @@ function HealthScore({ score }) {
           </span>
         </div>
       </div>
-      <div className="min-w-0">
+      <div className="dashboard-health-copy min-w-0">
         <div className="flex items-center gap-1">
           <p className="text-sm font-bold text-[--text-primary]">
             Saúde {label} {emoji}
@@ -253,7 +253,7 @@ export default function Dashboard() {
       >
         <div className="min-w-0 flex-1">
           {/* Mês é o destaque principal */}
-          <div className="mb-0.5 flex min-w-0 flex-wrap items-center gap-1.5">
+          <div className="dashboard-month-nav mb-0.5 flex min-w-0 flex-nowrap items-center gap-1">
             <button
               onClick={() => setViewDate((d) => subMonths(d, 1))}
               className="w-11 h-11 -ml-3 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
@@ -261,7 +261,7 @@ export default function Dashboard() {
             >
               <ChevronLeft size={16} />
             </button>
-            <h1 className="min-w-0 text-xl sm:text-2xl font-black text-[--text-primary] capitalize">
+            <h1 className="min-w-0 flex-1 truncate text-base font-black capitalize text-[--text-primary] min-[390px]:text-lg sm:text-2xl">
               {format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })}
             </h1>
             <button
@@ -274,27 +274,33 @@ export default function Dashboard() {
             {!isCurrentMonth && (
               <button
                 onClick={() => setViewDate(new Date())}
-                className="min-h-11 px-2 text-xs text-[--text-brand] hover:underline"
+                className="dashboard-today min-h-11 px-2 text-xs text-[--text-brand] hover:underline"
               >
                 Hoje
               </button>
             )}
           </div>
           {/* Saudação secundária */}
-          <p className="text-xs text-[--text-tertiary]">
+          <p className="dashboard-greeting text-xs text-[--text-tertiary]">
             {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'} 👋
           </p>
         </div>
-        <Link to="/transactions" className="w-full min-[420px]:w-auto">
-          <Button variant="primary" icon={<Plus />} size="sm" fullWidth>
-            Nova transação
+        <Link to="/transactions" className="dashboard-quick-add w-auto flex-shrink-0">
+          <Button
+            variant="primary"
+            icon={<Plus />}
+            size="sm"
+            aria-label="Nova transação"
+            className="dashboard-quick-add__button"
+          >
+            <span className="dashboard-quick-add__label">Nova transação</span>
           </Button>
         </Link>
       </motion.div>
 
       {/* Hero — saldo do mês como principal, sem duplicar nos cards abaixo */}
       <motion.div
-        className="aurora-balance-hero relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-4 text-white sm:p-6"
+        className="aurora-balance-hero relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-3 text-white sm:p-6"
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.05 }}
@@ -315,13 +321,13 @@ export default function Dashboard() {
             <div className="h-12 w-44 rounded-xl bg-white/20 animate-pulse mb-4" />
           ) : (
             <p
-              className={`mb-4 break-words text-[clamp(1.9rem,10vw,3.75rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${currentSummary.balance >= 0 ? 'text-white' : 'text-red-300'}`}
+              className={`mb-3 break-words text-[clamp(1.7rem,8.5vw,3.75rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${currentSummary.balance >= 0 ? 'text-white' : 'text-red-300'}`}
             >
               {formatCurrency(currentSummary.balance)}
             </p>
           )}
           {/* Receitas / Despesas / Poupança — linha secundária */}
-          <div className="grid grid-cols-2 gap-2 border-t border-white/15 pt-4 min-[560px]:grid-cols-3 min-[560px]:gap-3">
+          <div className="dashboard-balance-breakdown grid grid-cols-3 gap-1.5 border-t border-white/15 pt-3 min-[560px]:gap-3 min-[560px]:pt-4">
             <div>
               <p className="text-white/55 text-[11px] mb-0.5">↑ Receitas</p>
               <p className="text-sm font-bold text-green-300">
@@ -334,7 +340,7 @@ export default function Dashboard() {
                 {formatCurrency(currentSummary.expenses)}
               </p>
             </div>
-            <div className="col-span-2 min-[560px]:col-span-1">
+            <div>
               <p className="text-white/55 text-[11px] mb-0.5 flex items-center gap-1">
                 <PiggyBank size={10} /> Poupança
               </p>
@@ -346,13 +352,13 @@ export default function Dashboard() {
 
       {/* Resumo executivo: indicadores essenciais e análise do Money */}
       <motion.div
-        className="dashboard-bento-grid grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-12"
+        className="dashboard-bento-grid grid min-w-0 grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <div className="grid min-w-0 gap-4 md:grid-cols-[1.15fr_0.85fr] xl:col-span-5 xl:grid-cols-1 xl:grid-rows-2">
-          <Card variant="elevated" className="h-full shadow-sm">
+        <div className="dashboard-compact-kpis grid min-w-0 gap-2 sm:gap-4 md:grid-cols-[1.15fr_0.85fr] xl:col-span-5 xl:grid-cols-1 xl:grid-rows-2">
+          <Card variant="elevated" className="dashboard-forecast-card h-full shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="mb-1 flex items-center gap-1.5">
@@ -367,7 +373,7 @@ export default function Dashboard() {
                     {formatCurrency(forecast)}
                   </p>
                 )}
-                <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
+                <p className="dashboard-forecast-helper mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
                   Referência média para apoiar o planejamento do mês.
                 </p>
               </div>
@@ -377,7 +383,7 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <Card variant="elevated" className="h-full shadow-sm">
+          <Card variant="elevated" className="dashboard-health-card h-full shadow-sm">
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="flex items-center gap-1.5">
                 <Heart size={14} className="text-[--danger-icon]" />
@@ -389,7 +395,7 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <div className="min-w-0 xl:col-span-7">
+        <div className="dashboard-money-insight col-span-2 min-w-0 xl:col-span-7">
           <MoneyInsightCard referenceDate={viewDate} />
         </div>
       </motion.div>

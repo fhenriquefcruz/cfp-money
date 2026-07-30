@@ -346,7 +346,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
       closeOnBackdrop={false}
       closeOnEscape={false}
       footer={
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <Button variant="secondary" fullWidth onClick={onClose}>
             Cancelar
           </Button>
@@ -426,7 +426,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
               </p>
             )}
             <div
-              className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto pr-1
+              className="grid max-h-40 grid-cols-2 gap-2 overflow-y-auto pr-1 min-[390px]:grid-cols-3 sm:grid-cols-4
               scrollbar-thin scrollbar-thumb-[--border-default] scrollbar-track-transparent"
             >
               {filteredCategories.map((cat) => (
@@ -454,7 +454,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         )}
 
         {/* Data + Pagamento */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="transaction-date-payment-grid grid grid-cols-1 gap-3 min-[430px]:grid-cols-2">
           <Input
             label="Data"
             type="date"
