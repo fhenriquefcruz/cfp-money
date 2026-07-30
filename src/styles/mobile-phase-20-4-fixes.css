@@ -1,0 +1,85 @@
+/* ── FECHAMENTO DA FASE 20.4 · VIEWPORT, TOQUE E FORMULÁRIOS ── */
+:root {
+  --app-visual-viewport-height: 100dvh;
+  --app-visual-viewport-offset-top: 0px;
+  --app-keyboard-inset: 0px;
+}
+
+@media (max-width: 1023px) {
+  .aurora-main {
+    padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)) !important;
+  }
+}
+
+@media (max-width: 639px) {
+  button,
+  [role='button'] {
+    min-height: 2.75rem;
+  }
+
+  .money-chat-input {
+    font-size: 16px !important;
+  }
+
+  .dashboard-month-nav > button,
+  .dashboard-quick-add__button,
+  .category-card__actions button {
+    width: 2.75rem !important;
+    min-width: 2.75rem !important;
+    height: 2.75rem !important;
+    min-height: 2.75rem !important;
+  }
+
+  .money-insight-card__header a,
+  .money-premium__hero > div > div:last-child > * {
+    min-height: 2.75rem !important;
+  }
+
+  .dashboard-premium__toolbar,
+  .credit-cards-period-card,
+  .categories-premium .operational-page__header {
+    top: env(safe-area-inset-top, 0px) !important;
+  }
+
+  [role='dialog'] {
+    max-height: calc(
+      var(--app-visual-viewport-height, 100dvh) - env(safe-area-inset-top, 0px) - 0.5rem
+    ) !important;
+  }
+
+  [role='dialog'] > [class~='overflow-y-auto'] {
+    scroll-padding-block: 1rem;
+    scroll-behavior: smooth;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+
+  [role='dialog'] > [class*='border-t'] {
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 -12px 28px rgb(15 23 42 / 8%);
+  }
+
+  .app-keyboard-open [role='dialog'] {
+    max-height: calc(
+      var(--app-visual-viewport-height, 100dvh) - env(safe-area-inset-top, 0px) - 0.25rem
+    ) !important;
+  }
+}
+
+@media (max-width: 359px) {
+  .dashboard-month-nav > button,
+  .dashboard-quick-add__button {
+    width: 2.75rem !important;
+    min-width: 2.75rem !important;
+    height: 2.75rem !important;
+    min-height: 2.75rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [role='dialog'] > [class~='overflow-y-auto'] {
+    scroll-behavior: auto;
+  }
+}

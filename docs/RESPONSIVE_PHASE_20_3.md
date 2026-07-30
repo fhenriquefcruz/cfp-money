@@ -14,10 +14,14 @@ Esta entrega conclui a padronização mobile das principais áreas operacionais 
 
 ## Critérios
 
-- suporte a 320, 360, 390 e 430 px;
+- suporte estrutural a 320, 360, 390 e 430 px;
 - nenhuma rolagem horizontal involuntária;
 - ações essenciais visíveis em dispositivos sem hover;
 - valores e identificadores longos podem quebrar linha;
-- áreas de toque de pelo menos 44 px;
-- `prefers-reduced-motion` respeitado;
+- controles móveis essenciais com alvos de toque de pelo menos 44 px;
+- redução de movimento aplicada às transições CSS cobertas nesta fase;
 - desktop preservado.
+
+A certificação final em dispositivos e navegadores pertence à Fase 20.5. A auditoria integral de
+contraste, foco, leitores de tela, navegação por teclado, alvos de toque e redução de movimento
+pertence à Fase 20.6.

@@ -17,6 +17,9 @@ const files = {
   money: await read('src/components/Money.jsx'),
   moneyInsight: await read('src/components/MoneyInsightCard.jsx'),
   transactionForm: await read('src/components/TransactionForm.jsx'),
+  main: await read('src/main.jsx'),
+  mobileCss: await read('src/styles/mobile-phase-20-4-fixes.css'),
+  mobileViewport: await read('src/mobile/mobileViewport.js'),
 }
 
 const requireToken = (name, content, token) => {
@@ -32,7 +35,7 @@ const rejectToken = (name, content, token) => {
 }
 
 for (const [name, content] of Object.entries(files)) {
-  if (!['css', 'ui', 'transactionForm'].includes(name)) {
+  if (!['css', 'ui', 'transactionForm', 'main', 'mobileCss', 'mobileViewport'].includes(name)) {
     requireToken(name, content, 'min-w-0')
   }
 }
@@ -67,6 +70,15 @@ requireToken('money', files.money, 'money-chat-input')
 requireToken('money', files.money, 'money-chat-composer')
 requireToken('moneyInsight', files.moneyInsight, 'money-insight-card__metrics')
 requireToken('transactionForm', files.transactionForm, 'min-[430px]:grid-cols-2')
+requireToken('main', files.main, "import './styles/mobile-phase-20-4-fixes.css'")
+requireToken('main', files.main, 'initializeMobileViewportExperience()')
+requireToken('mobileCss', files.mobileCss, '--app-visual-viewport-height')
+requireToken('mobileCss', files.mobileCss, 'font-size: 16px !important')
+requireToken('mobileCss', files.mobileCss, 'min-height: 2.75rem')
+requireToken('mobileCss', files.mobileCss, 'safe-area-inset-top')
+requireToken('mobileViewport', files.mobileViewport, 'window.visualViewport')
+requireToken('mobileViewport', files.mobileViewport, 'revealFocusedControl')
+requireToken('mobileViewport', files.mobileViewport, 'scrollRegion.scrollBy')
 rejectToken('transactions', files.transactions, 'exportToPDF(filtered, categories, summary)')
 
 console.log('Interface responsiva validada com sucesso.')
