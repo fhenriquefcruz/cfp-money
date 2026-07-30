@@ -33,6 +33,8 @@ import {
   transactionsForMonth,
 } from '../domain/finance'
 import { enqueueBudgetNotification } from '../services/notificationService'
+import { E2E_MODE } from '../e2e/runtime'
+import { createE2EAppState } from '../e2e/fixtures'
 
 const AppContext = createContext({})
 export const useApp = () => useContext(AppContext)
@@ -85,6 +87,24 @@ function reducer(state, action) {
         invoiceEvents: action.payload,
         loading: { ...state.loading, invoiceEvents: false },
       }
+    case 'E2E_ADD_TRANSACTION':
+      return { ...state, transactions: [action.payload, ...state.transactions] }
+    case 'E2E_ADD_TRANSACTION_BATCH':
+      return { ...state, transactions: [...action.payload, ...state.transactions] }
+    case 'E2E_UPDATE_TRANSACTION':
+      return {
+        ...state,
+        transactions: state.transactions.map((transaction) =>
+          transaction.id === action.payload.id
+            ? { ...transaction, ...action.payload.data }
+            : transaction,
+        ),
+      }
+    case 'E2E_REMOVE_TRANSACTION':
+      return {
+        ...state,
+        transactions: state.transactions.filter((transaction) => transaction.id !== action.payload),
+      }
     case 'ADD_NOTIFICATION':
       return { ...state, notifications: [...state.notifications, action.payload] }
     case 'REMOVE_NOTIFICATION':
@@ -98,7 +118,9 @@ function reducer(state, action) {
 
 export const AppProvider = ({ children }) => {
   const { user } = useAuth()
-  const [state, dispatch] = useReducer(reducer, initialState)
+  const [state, dispatch] = useReducer(reducer, undefined, () =>
+    E2E_MODE ? createE2EAppState() : initialState,
+  )
   const stateRef = useRef(state)
   stateRef.current = state
 
@@ -115,6 +137,8 @@ export const AppProvider = ({ children }) => {
 
   // ── Carrega dados ao logar ──
   useEffect(() => {
+    if (E2E_MODE) return undefined
+
     if (!user?.uid) {
       dispatch({ type: 'RESET' })
       return
@@ -236,7 +260,21 @@ export const AppProvider = ({ children }) => {
     async (data) => {
       if (!user?.uid) return
       try {
-        const transactionId = await addTransaction(user.uid, data)
+        const transactionId = E2E_MODE
+          ? `e2e-transaction-${Date.now()}`
+          : await addTransaction(user.uid, data)
+
+        if (E2E_MODE) {
+          dispatch({
+            type: 'E2E_ADD_TRANSACTION',
+            payload: {
+              ...data,
+              id: transactionId,
+              createdAt: new Date().toISOString(),
+            },
+          })
+        }
+
         showNotification('Transação adicionada!')
         checkBudgetAlert(data)
         return transactionId
@@ -252,7 +290,21 @@ export const AppProvider = ({ children }) => {
     async (items) => {
       if (!user?.uid) return
       try {
-        const transactionIds = await fbAddBatch(user.uid, items)
+        const transactionIds = E2E_MODE
+          ? items.map((_, index) => `e2e-batch-${Date.now()}-${index}`)
+          : await fbAddBatch(user.uid, items)
+
+        if (E2E_MODE) {
+          dispatch({
+            type: 'E2E_ADD_TRANSACTION_BATCH',
+            payload: items.map((item, index) => ({
+              ...item,
+              id: transactionIds[index],
+              createdAt: new Date().toISOString(),
+            })),
+          })
+        }
+
         items.forEach(checkBudgetAlert)
         showNotification(
           items[0]?.isInstallment
@@ -272,7 +324,11 @@ export const AppProvider = ({ children }) => {
     async (id, data) => {
       if (!user?.uid) return
       try {
-        await updateTransaction(user.uid, id, data)
+        if (E2E_MODE) {
+          dispatch({ type: 'E2E_UPDATE_TRANSACTION', payload: { id, data } })
+        } else {
+          await updateTransaction(user.uid, id, data)
+        }
         checkBudgetAlert(data)
         showNotification('Transação atualizada!')
       } catch (e) {
@@ -287,7 +343,11 @@ export const AppProvider = ({ children }) => {
     async (id) => {
       if (!user?.uid) return
       try {
-        await deleteTransaction(user.uid, id)
+        if (E2E_MODE) {
+          dispatch({ type: 'E2E_REMOVE_TRANSACTION', payload: id })
+        } else {
+          await deleteTransaction(user.uid, id)
+        }
         showNotification('Transação removida.', 'info')
       } catch (e) {
         showNotification('Erro ao remover transação.', 'error')

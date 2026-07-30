@@ -34,6 +34,27 @@ const rejectToken = (name, content, token) => {
   }
 }
 
+const maxArbitraryZIndex = (name, content) => {
+  const values = [...content.matchAll(/\bz-\[(\d+)\]/g)].map((match) => Number(match[1]))
+
+  if (values.length === 0) {
+    throw new Error(`${name}: nenhuma camada z-index arbitrária encontrada`)
+  }
+
+  return Math.max(...values)
+}
+
+const requireLayerAbove = (upperName, upperContent, lowerName, lowerContent) => {
+  const upperZIndex = maxArbitraryZIndex(upperName, upperContent)
+  const lowerZIndex = maxArbitraryZIndex(lowerName, lowerContent)
+
+  if (upperZIndex <= lowerZIndex) {
+    throw new Error(
+      `${upperName}: camada ${upperZIndex} deve ficar acima de ${lowerName}: ${lowerZIndex}`,
+    )
+  }
+}
+
 for (const [name, content] of Object.entries(files)) {
   if (!['css', 'ui', 'transactionForm', 'main', 'mobileCss', 'mobileViewport'].includes(name)) {
     requireToken(name, content, 'min-w-0')
@@ -62,7 +83,9 @@ requireToken('cards', files.cards, 'credit-cards-summary-grid')
 requireToken('categories', files.categories, 'min-[360px]:grid-cols-2')
 requireToken('sidebar', files.sidebar, 'z-[70]')
 requireToken('sidebar', files.sidebar, 'bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))]')
-requireToken('ui', files.ui, 'z-[100]')
+requireToken('ui', files.ui, 'createPortal')
+requireToken('ui', files.ui, 'document.body')
+requireLayerAbove('modal global', files.ui, 'navegação inferior', files.sidebar)
 requireToken('ui', files.ui, 'min-h-0 flex-1 overflow-y-auto overscroll-contain')
 requireToken('dashboard', files.dashboard, 'dashboard-month-nav')
 requireToken('dashboard', files.dashboard, 'dashboard-compact-kpis')
@@ -78,7 +101,9 @@ requireToken('mobileCss', files.mobileCss, 'min-height: 2.75rem')
 requireToken('mobileCss', files.mobileCss, 'safe-area-inset-top')
 requireToken('mobileViewport', files.mobileViewport, 'window.visualViewport')
 requireToken('mobileViewport', files.mobileViewport, 'revealFocusedControl')
-requireToken('mobileViewport', files.mobileViewport, 'scrollRegion.scrollBy')
+requireToken('mobileViewport', files.mobileViewport, 'scrollRegion.scrollTop = nextScrollTop')
+requireToken('mobileViewport', files.mobileViewport, 'ResizeObserver')
+requireToken('mobileViewport', files.mobileViewport, 'requestAnimationFrame')
 rejectToken('transactions', files.transactions, 'exportToPDF(filtered, categories, summary)')
 
 console.log('Interface responsiva validada com sucesso.')

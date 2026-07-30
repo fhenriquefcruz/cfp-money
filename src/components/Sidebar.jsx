@@ -237,7 +237,7 @@ export default function Sidebar() {
       </motion.aside>
 
       <nav
-        className="aurora-bottom-nav fixed bottom-0 left-0 right-0 z-[70] flex items-center justify-around border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
+        className="aurora-bottom-nav fixed bottom-0 left-0 right-0 z-[70] grid grid-cols-6 items-stretch overflow-x-clip border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
       >
         {allItems.slice(0, 5).map(({ to, icon: Icon, label, premium }) => (
@@ -246,7 +246,7 @@ export default function Sidebar() {
             to={to}
             className={({ isActive }) =>
               clsx(
-                'flex min-h-14 min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2 transition-all duration-150 sm:px-3',
+                'flex min-h-14 w-full min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 transition-all duration-150 min-[360px]:px-1 sm:px-3',
                 isActive ? 'text-[--brand-600]' : 'text-[--text-tertiary]',
               )
             }
@@ -272,7 +272,7 @@ export default function Sidebar() {
 
         <button
           type="button"
-          className="flex min-h-14 flex-col items-center gap-1 px-1 py-2 text-[--text-tertiary] sm:px-3"
+          className="flex min-h-14 w-full min-w-0 flex-col items-center gap-1 px-0.5 py-2 text-[--text-tertiary] min-[360px]:px-1 sm:px-3"
           onClick={() => setMobileOpen((current) => !current)}
           aria-expanded={mobileOpen}
           aria-controls="mobile-more-menu"

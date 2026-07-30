@@ -1,5 +1,6 @@
 // src/components/ui.jsx
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
 import { Loader2 } from 'lucide-react'
@@ -164,11 +165,11 @@ export const Modal = ({
     }
   }, [closeOnEscape, isOpen])
 
-  if (!isOpen) return null
+  if (!isOpen || typeof document === 'undefined') return null
   const sizes = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl' }
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={(event) => {
         if (closeOnBackdrop && event.target === event.currentTarget) onClose()
       }}
@@ -210,7 +211,8 @@ export const Modal = ({
           </div>
         )}
       </motion.div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

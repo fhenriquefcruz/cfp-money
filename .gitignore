@@ -27,3 +27,7 @@ worker/**/.env
 # Credenciais de contas de serviço
 serviceAccountKey.json
 cfp-money-????????????.json
+
+# Artefatos locais do Playwright
+playwright-report/
+test-results/

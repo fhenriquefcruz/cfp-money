@@ -4,18 +4,21 @@ import { getPrivacyStatus, recordLegalAcceptance } from '../services/privacyGate
 import { LEGAL_VERSIONS } from '../content/legal'
 import LegalDocument from './LegalDocument'
 import { Button, Modal } from './ui'
+import { E2E_MODE } from '../e2e/runtime'
 
 const ENFORCE_LEGAL_GATE = import.meta.env.VITE_ENFORCE_LEGAL_GATE === 'true'
 
 export default function LegalGate() {
-  const [status, setStatus] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [status, setStatus] = useState(E2E_MODE ? { requiresAcceptance: false } : null)
+  const [loading, setLoading] = useState(!E2E_MODE)
   const [saving, setSaving] = useState(false)
   const [accepted, setAccepted] = useState(false)
   const [tab, setTab] = useState('terms')
   const [error, setError] = useState('')
 
   const loadStatus = useCallback(async () => {
+    if (E2E_MODE) return
+
     setLoading(true)
     setError('')
 

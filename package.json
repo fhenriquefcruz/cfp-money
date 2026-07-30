@@ -30,7 +30,10 @@
     "notifications:install": "npm install --prefix worker/email-notifications",
     "notifications:dev": "npm run dev --prefix worker/email-notifications",
     "notifications:deploy": "npm run deploy --prefix worker/email-notifications",
-    "validate:responsive": "node scripts/validate-responsive-ui.mjs"
+    "validate:responsive": "node scripts/validate-responsive-ui.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "clsx": "^2.1.0",
@@ -48,6 +51,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@playwright/test": "^1.62.0",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.5.0",

@@ -2,6 +2,8 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { useAuth } from './AuthContext'
 import { onMoneySettingsChange, updateMoneySettings } from '../services/firebase'
 import { DEFAULT_MONEY_SETTINGS, normalizeMoneySettings } from '../domain/money'
+import { E2E_MODE } from '../e2e/runtime'
+import { e2eMoneySettings } from '../e2e/fixtures'
 
 const MoneyContext = createContext(null)
 
@@ -13,12 +15,16 @@ export const useMoney = () => {
 
 export const MoneyProvider = ({ children }) => {
   const { user } = useAuth()
-  const [settings, setSettings] = useState(DEFAULT_MONEY_SETTINGS)
-  const [isLoading, setIsLoading] = useState(true)
+  const [settings, setSettings] = useState(
+    E2E_MODE ? normalizeMoneySettings(e2eMoneySettings) : DEFAULT_MONEY_SETTINGS,
+  )
+  const [isLoading, setIsLoading] = useState(!E2E_MODE)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (E2E_MODE) return undefined
+
     if (!user?.uid) {
       setSettings(DEFAULT_MONEY_SETTINGS)
       setIsLoading(false)
@@ -52,7 +58,7 @@ export const MoneyProvider = ({ children }) => {
       setError(null)
 
       try {
-        await updateMoneySettings(user.uid, normalized)
+        if (!E2E_MODE) await updateMoneySettings(user.uid, normalized)
         setSettings(normalized)
         return normalized
       } catch (saveError) {

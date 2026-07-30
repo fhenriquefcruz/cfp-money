@@ -63,8 +63,9 @@ function formatInstallmentDistribution(maskedAmount, rawInstallments) {
   }
 }
 
-function CurrencyInput({ label, value, onChange, error, placeholder = '0,00', required }) {
-  const inputId = React.useId()
+function CurrencyInput({ id, label, value, onChange, error, placeholder = '0,00', required }) {
+  const generatedId = React.useId()
+  const inputId = id || generatedId
   const errorId = `${inputId}-error`
 
   return (
@@ -75,7 +76,11 @@ function CurrencyInput({ label, value, onChange, error, placeholder = '0,00', re
           className="text-sm font-medium text-[--text-secondary] block mb-1.5"
         >
           {label}
-          {required && <span className="text-[--danger-text] ml-0.5">*</span>}
+          {required && (
+            <span aria-hidden="true" className="ml-0.5 text-[--danger-text]">
+              *
+            </span>
+          )}
         </label>
       )}
       <div className="relative">
@@ -384,6 +389,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
 
         {/* Valor */}
         <CurrencyInput
+          id="transaction-amount"
           label="Valor"
           required
           value={form.amount}
