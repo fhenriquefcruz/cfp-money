@@ -168,7 +168,7 @@ export const Modal = ({
   const sizes = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl' }
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={(event) => {
         if (closeOnBackdrop && event.target === event.currentTarget) onClose()
       }}
@@ -184,12 +184,12 @@ export const Modal = ({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         className={clsx(
-          'w-full bg-[--bg-surface] rounded-2xl shadow-xl max-h-[calc(100dvh-1rem)] sm:max-h-[90vh] overflow-y-auto',
+          'flex w-full max-h-[calc(100dvh-env(safe-area-inset-top,0px)-0.5rem)] flex-col overflow-hidden rounded-t-[28px] bg-[--bg-surface] shadow-2xl sm:max-h-[90vh] sm:rounded-2xl',
           sizes[size],
         )}
       >
         {title && (
-          <div className="flex items-center justify-between p-4 border-b border-[--border-subtle] sticky top-0 bg-[--bg-surface] z-10">
+          <div className="z-10 flex flex-shrink-0 items-center justify-between border-b border-[--border-subtle] bg-[--bg-surface] px-4 py-3">
             <h3 id={titleId} className="text-lg font-bold text-[--text-primary]">
               {title}
             </h3>
@@ -203,9 +203,9 @@ export const Modal = ({
             </button>
           </div>
         )}
-        <div className="p-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">{children}</div>
         {footer && (
-          <div className="p-4 border-t border-[--border-subtle] sticky bottom-0 bg-[--bg-surface]">
+          <div className="flex-shrink-0 border-t border-[--border-subtle] bg-[--bg-surface] px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] pt-3 sm:p-4">
             {footer}
           </div>
         )}

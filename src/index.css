@@ -570,3 +570,419 @@ body {
     transform: none !important;
   }
 }
+
+/* ── AURORA MOBILE UX AUDIT · FASE 20.4 ── */
+.dashboard-month-nav,
+.dashboard-compact-kpis,
+.dashboard-money-insight,
+.money-message-bubble,
+.money-assistant-response,
+.credit-cards-summary-grid,
+.categories-card-grid,
+.transaction-date-payment-grid {
+  min-width: 0;
+}
+
+@media (max-width: 639px) {
+  .dashboard-premium__toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    margin-inline: -0.25rem;
+    padding: 0.35rem 0.4rem;
+    border: 1px solid color-mix(in srgb, var(--border-default) 78%, transparent);
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+    box-shadow: 0 12px 28px rgb(15 23 42 / 8%);
+    backdrop-filter: blur(18px);
+  }
+
+  .dashboard-premium__toolbar > div {
+    min-width: 0;
+  }
+
+  .dashboard-month-nav {
+    margin: 0;
+  }
+
+  .dashboard-month-nav > button {
+    width: 2.5rem;
+    height: 2.5rem;
+    min-height: 2.5rem;
+  }
+
+  .dashboard-greeting,
+  .dashboard-today,
+  .dashboard-quick-add__label {
+    display: none;
+  }
+
+  .dashboard-quick-add__button {
+    width: 2.5rem;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    padding: 0;
+  }
+
+  .aurora-balance-hero {
+    min-height: auto;
+    padding: 0.9rem;
+  }
+
+  .dashboard-balance-breakdown > div {
+    min-width: 0;
+  }
+
+  .dashboard-balance-breakdown p {
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-compact-kpis {
+    display: contents;
+  }
+
+  .dashboard-forecast-card,
+  .dashboard-health-card {
+    min-height: 7.25rem;
+    padding: 0.75rem;
+  }
+
+  .dashboard-forecast-card > div > div:last-child,
+  .dashboard-forecast-helper,
+  .dashboard-health-copy > p:last-child {
+    display: none;
+  }
+
+  .dashboard-forecast-card p.text-2xl {
+    font-size: clamp(1rem, 5vw, 1.35rem);
+  }
+
+  .dashboard-health-score {
+    align-items: center;
+  }
+
+  .dashboard-health-ring {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .dashboard-health-ring svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .dashboard-health-copy p {
+    font-size: 0.72rem;
+    line-height: 1.2;
+  }
+
+  .money-insight-card__header,
+  .money-insight-card__content {
+    padding: 0.8rem;
+  }
+
+  .money-insight-card__header > div {
+    gap: 0.5rem;
+  }
+
+  .money-insight-card__header a {
+    min-height: 2.5rem;
+    padding-inline: 0.55rem;
+  }
+
+  .money-insight-card__explainer,
+  .money-insight-card__movement {
+    display: none;
+  }
+
+  .money-insight-card__content {
+    gap: 0.75rem;
+  }
+
+  .money-insight-card__metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .money-insight-metric {
+    padding: 0.6rem;
+  }
+
+  .money-insight-metric p:first-child {
+    font-size: 0.52rem;
+    letter-spacing: 0.04em;
+  }
+
+  .money-insight-metric p:nth-child(2) {
+    overflow-wrap: anywhere;
+    font-size: clamp(0.65rem, 3vw, 0.8rem);
+    line-height: 1.15;
+  }
+
+  .money-insight-metric p:last-child {
+    display: none;
+  }
+
+  .money-premium__hero {
+    padding: 0.75rem;
+  }
+
+  .money-premium__hero > div {
+    gap: 0.65rem;
+  }
+
+  .money-premium__hero > div > div:first-child {
+    gap: 0.65rem;
+  }
+
+  .money-premium__hero > div > div:first-child > div:first-child {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.9rem;
+  }
+
+  .money-premium__hero h1 {
+    font-size: 1.35rem !important;
+  }
+
+  .money-premium__hero p {
+    display: none;
+  }
+
+  .money-premium__hero > div > div:last-child {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+    gap: 0.45rem;
+  }
+
+  .money-premium__hero > div > div:last-child > * {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.5rem;
+    padding-inline: 0.55rem;
+    font-size: 0.65rem;
+  }
+
+  .money-chat-surface {
+    border-radius: 20px !important;
+  }
+
+  .money-chat-surface > div:first-child {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .money-chat-surface > div:first-child p:last-child {
+    display: none;
+  }
+
+  .money-chat-surface > div:nth-child(2) {
+    gap: 0.65rem;
+    padding: 0.65rem;
+  }
+
+  .money-message-bubble {
+    border-radius: 16px;
+  }
+
+  .money-assistant-response {
+    gap: 0.55rem;
+  }
+
+  .money-assistant-response > div:first-child > p:first-child {
+    font-size: 0.78rem;
+  }
+
+  .money-assistant-response > div:first-child > p:nth-child(2) {
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+
+  .money-assistant-response button,
+  .money-assistant-response a {
+    font-size: 0.7rem;
+  }
+
+  .money-chat-input {
+    font-size: 15px !important;
+  }
+
+  .money-chat-composer > p {
+    margin-top: 0.4rem;
+    font-size: 0.58rem;
+    line-height: 1.3;
+  }
+
+  .credit-cards-premium {
+    gap: 0.85rem;
+  }
+
+  .credit-cards-premium__hero {
+    padding: 0.9rem;
+  }
+
+  .credit-cards-premium__hero p {
+    display: none;
+  }
+
+  .credit-cards-premium__hero h1 {
+    font-size: 1.35rem !important;
+  }
+
+  .credit-cards-period-card {
+    position: sticky;
+    top: 0;
+    z-index: 28;
+    padding: 0.75rem;
+    border-color: color-mix(in srgb, var(--border-default) 78%, transparent);
+    background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+    backdrop-filter: blur(18px);
+  }
+
+  .credit-cards-period-card > div {
+    gap: 0.5rem;
+  }
+
+  .credit-cards-period-card h2 {
+    margin-top: 0;
+    font-size: 0.9rem;
+  }
+
+  .credit-cards-period-card > div > div:first-child > p {
+    display: none;
+  }
+
+  .credit-cards-period {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    gap: 0.35rem;
+  }
+
+  .credit-cards-period > :last-child {
+    grid-column: auto;
+    padding-inline: 0.55rem;
+    font-size: 0.62rem;
+  }
+
+  .credit-cards-summary-card {
+    padding: 0.7rem;
+  }
+
+  .credit-cards-summary-card > div > div:last-child {
+    display: none;
+  }
+
+  .credit-cards-summary-card p:nth-child(2) {
+    margin-top: 0.35rem;
+    overflow-wrap: anywhere;
+    font-size: clamp(0.95rem, 4.8vw, 1.2rem);
+    line-height: 1.15;
+  }
+
+  .credit-cards-summary-card p:nth-child(3) {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .categories-premium {
+    gap: 0.9rem;
+  }
+
+  .categories-premium .operational-page__header {
+    position: sticky;
+    top: 0;
+    z-index: 28;
+    background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+  }
+
+  .categories-premium .operational-page__header h1 {
+    font-size: 1.35rem !important;
+  }
+
+  .category-card__content {
+    min-height: 8rem;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.7rem;
+  }
+
+  .category-card__identity {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+  }
+
+  .category-card__identity > div:first-child {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+
+  .category-card__identity p {
+    font-size: 0.78rem;
+    line-height: 1.15;
+  }
+
+  .category-card__actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: auto;
+  }
+
+  .category-card__actions button {
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+  }
+}
+
+@media (max-width: 359px) {
+  .dashboard-premium__toolbar {
+    margin-inline: -0.35rem;
+  }
+
+  .dashboard-month-nav > button,
+  .dashboard-quick-add__button {
+    width: 2.25rem;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    min-height: 2.25rem;
+  }
+
+  .dashboard-bento-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-compact-kpis {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-money-insight {
+    grid-column: auto;
+  }
+
+  .credit-cards-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .credit-cards-period {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .credit-cards-period > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  .money-premium__hero > div > div:last-child {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-premium__toolbar,
+  .credit-cards-period-card,
+  .categories-premium .operational-page__header {
+    scroll-behavior: auto;
+  }
+}

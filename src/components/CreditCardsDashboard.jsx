@@ -38,7 +38,7 @@ const STATUS = {
 
 function SummaryCard({ icon: Icon, label, value, helper }) {
   return (
-    <Card className="shadow-sm">
+    <Card className="credit-cards-summary-card shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-black uppercase tracking-wider text-[--text-tertiary]">
@@ -247,7 +247,7 @@ function CreditCardsCenterContent() {
         </section>
       )}
 
-      <Card className="shadow-sm">
+      <Card className="credit-cards-period-card shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-wider text-[--brand-600]">
@@ -309,14 +309,14 @@ function CreditCardsCenterContent() {
       </Card>
 
       {loadingData ? (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="credit-cards-summary-grid operational-summary-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
           {Array.from({ length: 4 }, (_, index) => (
             <div key={index} className="h-28 animate-pulse rounded-2xl bg-[--bg-hover]" />
           ))}
         </div>
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="credit-cards-summary-grid operational-summary-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
             <SummaryCard
               icon={CircleDollarSign}
               label="Total das faturas"

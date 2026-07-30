@@ -192,9 +192,9 @@ export default function Categories() {
   const incomeCategories = categories.filter((c) => c.type === 'income')
 
   const CategoryCard = ({ cat }) => (
-    <Card key={cat.id} padding={false}>
-      <div className="p-3 sm:p-4 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3 min-w-0">
+    <Card key={cat.id} className="category-card" padding={false}>
+      <div className="category-card__content flex items-center justify-between gap-2 p-3 sm:p-4">
+        <div className="category-card__identity flex min-w-0 items-center gap-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
             style={{ background: cat.color + '20' }}
@@ -214,7 +214,7 @@ export default function Categories() {
             </div>
           </div>
         </div>
-        <div className="flex gap-1 flex-shrink-0">
+        <div className="category-card__actions flex flex-shrink-0 gap-1">
           <button
             onClick={() => handleOpen(cat)}
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
@@ -259,7 +259,7 @@ export default function Categories() {
           <h2 className="text-sm font-semibold text-[--text-tertiary] uppercase tracking-wider mb-3">
             Despesas ({expenseCategories.length})
           </h2>
-          <div className="operational-card-grid grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="operational-card-grid categories-card-grid grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-3">
             {expenseCategories.map((cat) => (
               <CategoryCard key={cat.id} cat={cat} />
             ))}
@@ -273,7 +273,7 @@ export default function Categories() {
           <h2 className="text-sm font-semibold text-[--text-tertiary] uppercase tracking-wider mb-3">
             Receitas ({incomeCategories.length})
           </h2>
-          <div className="operational-card-grid grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="operational-card-grid categories-card-grid grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-3">
             {incomeCategories.map((cat) => (
               <CategoryCard key={cat.id} cat={cat} />
             ))}
