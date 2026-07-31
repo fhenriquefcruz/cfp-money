@@ -33,7 +33,10 @@
     "validate:responsive": "node scripts/validate-responsive-ui.mjs",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "test:a11y": "playwright test --config=playwright.accessibility.config.js",
+    "test:a11y:headed": "playwright test --config=playwright.accessibility.config.js --headed",
+    "test:a11y:report": "playwright show-report playwright-a11y-report"
   },
   "dependencies": {
     "clsx": "^2.1.0",
@@ -50,6 +53,7 @@
     "recharts": "^2.12.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@eslint/js": "10.0.1",
     "@playwright/test": "^1.62.0",
     "@testing-library/jest-dom": "^6.4.0",

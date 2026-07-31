@@ -490,8 +490,12 @@ export default function Dashboard() {
                       nameKey="categoryName"
                       paddingAngle={2}
                     >
-                      {categoryTotals.map((_, i) => (
-                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                      {categoryTotals.map((category, i) => (
+                        <Cell
+                          key={category.categoryId || category.categoryName || i}
+                          fill={PIE_COLORS[i % PIE_COLORS.length]}
+                          aria-label={`${category.categoryName}: ${formatCurrency(category.total)}`}
+                        />
                       ))}
                     </Pie>
                     <Tooltip
