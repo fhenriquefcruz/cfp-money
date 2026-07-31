@@ -9,3 +9,5 @@ test-results/
 
 # Relatório gerado pela auditoria de acessibilidade
 playwright-a11y-report/
+playwright-pwa-report/
+test-results-pwa/

@@ -1,13 +1,22 @@
-//s
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
   base: '/cfp-money/',
+
   build: {
     outDir: 'dist',
     sourcemap: false,
+
+    modulePreload: {
+      resolveDependencies: (_filename, dependencies, context) => {
+        if (context.hostType !== 'html') return dependencies
+
+        return dependencies.filter((dependency) => !dependency.includes('charts-'))
+      },
+    },
+
     rolldownOptions: {
       output: {
         codeSplitting: {
@@ -29,6 +38,7 @@ export default defineConfig({
       },
     },
   },
+
   test: {
     include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
     environment: 'jsdom',
