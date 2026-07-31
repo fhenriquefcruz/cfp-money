@@ -148,10 +148,11 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
           {cat && !isSavings && tx.description !== cat.name && (
             <span
-              className="text-[10px] font-medium px-2 py-0.5 rounded-full flex-shrink-0"
+              className="flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold"
               style={{
                 background: (cat.color || '#6366f1') + '15',
-                color: cat.color || '#6366f1',
+                borderColor: (cat.color || '#6366f1') + '45',
+                color: 'var(--text-secondary)',
               }}
             >
               {cat.icon} {cat.name}
@@ -198,7 +199,7 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
         <span
           className={`min-w-0 break-words text-sm font-bold tabular-nums [overflow-wrap:anywhere] ${
             isSavings
-              ? 'text-[--brand-500]'
+              ? 'text-[--brand-600]'
               : isIncome
                 ? 'text-[--success-icon]'
                 : 'text-[--danger-icon]'

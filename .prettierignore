@@ -6,3 +6,6 @@ package-lock.json
 # Artefatos gerados pelo Playwright
 playwright-report/
 test-results/
+
+# Relatório gerado pela auditoria de acessibilidade
+playwright-a11y-report/

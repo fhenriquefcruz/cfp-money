@@ -349,7 +349,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
       title={isEditing ? 'Editar transação' : 'Nova transação'}
       size="sm"
       closeOnBackdrop={false}
-      closeOnEscape={false}
+      closeOnEscape
       footer={
         <div className="grid grid-cols-2 gap-2">
           <Button variant="secondary" fullWidth onClick={onClose}>

@@ -31,3 +31,6 @@ cfp-money-????????????.json
 # Artefatos locais do Playwright
 playwright-report/
 test-results/
+
+# Relatório local da auditoria de acessibilidade
+playwright-a11y-report/

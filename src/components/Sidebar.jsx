@@ -114,6 +114,8 @@ export default function Sidebar() {
   const location = useLocation()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const mobileTriggerRef = React.useRef(null)
+  const mobileDrawerRef = React.useRef(null)
   const allItems = isAdmin
     ? [...NAV_ITEMS, { to: '/admin', icon: Shield, label: 'Admin' }]
     : NAV_ITEMS
@@ -121,6 +123,69 @@ export default function Sidebar() {
   useEffect(() => {
     setMobileOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!mobileOpen) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    const focusableSelector =
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+    const getFocusableElements = () =>
+      Array.from(mobileDrawerRef.current?.querySelectorAll(focusableSelector) || []).filter(
+        (element) =>
+          !element.hasAttribute('hidden') &&
+          element.getAttribute('aria-hidden') !== 'true' &&
+          element.getClientRects().length > 0,
+      )
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setMobileOpen(false)
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      const drawer = mobileDrawerRef.current
+      const focusableElements = getFocusableElements()
+
+      if (!drawer || focusableElements.length === 0) {
+        event.preventDefault()
+        drawer?.focus()
+        return
+      }
+
+      const first = focusableElements[0]
+      const last = focusableElements[focusableElements.length - 1]
+      const active = document.activeElement
+      const focusOutsideDrawer = !drawer.contains(active)
+
+      if (event.shiftKey && (active === first || focusOutsideDrawer)) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (active === last || focusOutsideDrawer)) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', handleKeyDown, true)
+
+    const focusTimer = window.setTimeout(() => {
+      const firstFocusable = getFocusableElements()[0]
+      ;(firstFocusable || mobileDrawerRef.current)?.focus()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyDown, true)
+      mobileTriggerRef.current?.focus?.()
+    }
+  }, [mobileOpen])
 
   const sidebarContent = (
     <div className="flex h-full flex-col">
@@ -271,11 +336,13 @@ export default function Sidebar() {
         ))}
 
         <button
+          ref={mobileTriggerRef}
           type="button"
           className="flex min-h-14 w-full min-w-0 flex-col items-center gap-1 px-0.5 py-2 text-[--text-tertiary] min-[360px]:px-1 sm:px-3"
           onClick={() => setMobileOpen((current) => !current)}
           aria-expanded={mobileOpen}
           aria-controls="mobile-more-menu"
+          aria-haspopup="dialog"
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-xl">
             <Menu size={18} />
@@ -295,10 +362,12 @@ export default function Sidebar() {
               onClick={() => setMobileOpen(false)}
             />
             <motion.div
+              ref={mobileDrawerRef}
               id="mobile-more-menu"
               role="dialog"
-              aria-modal="false"
+              aria-modal="true"
               aria-label="Mais opções de navegação"
+              tabIndex={-1}
               className="aurora-mobile-drawer fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-0 top-0 z-[60] flex w-[min(18rem,86vw)] flex-col overflow-hidden bg-[--bg-sidebar] shadow-2xl lg:hidden"
               initial={{ x: -288 }}
               animate={{ x: 0 }}

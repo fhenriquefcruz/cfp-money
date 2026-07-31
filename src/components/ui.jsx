@@ -144,23 +144,54 @@ export const Modal = ({
 
     const previouslyFocused = document.activeElement
     const previousOverflow = document.body.style.overflow
+    const focusableSelector =
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+    const getFocusableElements = () =>
+      Array.from(dialogRef.current?.querySelectorAll(focusableSelector) || []).filter(
+        (element) =>
+          !element.hasAttribute('hidden') &&
+          element.getAttribute('aria-hidden') !== 'true' &&
+          element.getClientRects().length > 0,
+      )
+
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape' && closeOnEscape) onCloseRef.current()
+      if (event.key !== 'Tab') return
+
+      const dialog = dialogRef.current
+      const focusableElements = getFocusableElements()
+
+      if (!dialog || focusableElements.length === 0) {
+        event.preventDefault()
+        dialog?.focus()
+        return
+      }
+
+      const first = focusableElements[0]
+      const last = focusableElements[focusableElements.length - 1]
+      const active = document.activeElement
+      const focusOutsideDialog = !dialog.contains(active)
+
+      if (event.shiftKey && (active === first || focusOutsideDialog)) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (active === last || focusOutsideDialog)) {
+        event.preventDefault()
+        first.focus()
+      }
     }
 
     document.body.style.overflow = 'hidden'
-    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('keydown', handleKeyDown, true)
     const focusTimer = window.setTimeout(() => {
-      const focusable = dialogRef.current?.querySelector(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      )
-      ;(focusable || dialogRef.current)?.focus()
+      const firstFocusable = getFocusableElements()[0]
+      ;(firstFocusable || dialogRef.current)?.focus()
     }, 0)
 
     return () => {
       window.clearTimeout(focusTimer)
       document.body.style.overflow = previousOverflow
-      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('keydown', handleKeyDown, true)
       previouslyFocused?.focus?.()
     }
   }, [closeOnEscape, isOpen])
@@ -181,6 +212,13 @@ export const Modal = ({
         aria-labelledby={title ? titleId : undefined}
         aria-label={title ? undefined : 'Janela de diálogo'}
         tabIndex={-1}
+        onKeyDownCapture={(event) => {
+          if (event.key !== 'Escape' || !closeOnEscape) return
+
+          event.preventDefault()
+          event.stopPropagation()
+          onClose()
+        }}
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
