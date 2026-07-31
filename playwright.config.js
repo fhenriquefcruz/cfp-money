@@ -36,6 +36,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     reducedMotion: 'reduce',
+    serviceWorkers: 'block',
   },
   webServer: {
     command: 'npm run build && npm run preview -- --host 127.0.0.1 --port 4177',

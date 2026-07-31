@@ -34,30 +34,54 @@ async function waitForServiceWorkerControl(page) {
 }
 
 async function readWorkerVersion(page) {
-  return page.evaluate(
-    () =>
-      new Promise((resolve, reject) => {
-        const controller = navigator.serviceWorker.controller
+  let workerVersion = null
 
-        if (!controller) {
-          reject(new Error('Página sem service worker controlador.'))
-          return
+  await expect
+    .poll(
+      async () => {
+        try {
+          workerVersion = await page.evaluate(
+            () =>
+              new Promise((resolve) => {
+                const controller = navigator.serviceWorker.controller
+
+                if (!controller) {
+                  resolve(null)
+                  return
+                }
+
+                const channel = new MessageChannel()
+                const timeout = window.setTimeout(() => resolve(null), 3_000)
+
+                channel.port1.onmessage = (event) => {
+                  window.clearTimeout(timeout)
+                  resolve(event.data)
+                }
+
+                controller.postMessage({ type: 'GET_VERSION' }, [channel.port2])
+              }),
+          )
+
+          return Boolean(
+            workerVersion?.version && workerVersion?.shellCache && workerVersion?.assetCache,
+          )
+        } catch (error) {
+          if (!isTransientNavigationError(error)) throw error
+
+          workerVersion = null
+          await page.waitForLoadState('domcontentloaded').catch(() => {})
+          return false
         }
+      },
+      {
+        timeout: 20_000,
+        intervals: [250, 500, 1_000],
+        message: 'O service worker deve responder com sua versão e caches',
+      },
+    )
+    .toBe(true)
 
-        const channel = new MessageChannel()
-        const timeout = window.setTimeout(
-          () => reject(new Error('O service worker não respondeu com a versão.')),
-          5_000,
-        )
-
-        channel.port1.onmessage = (event) => {
-          window.clearTimeout(timeout)
-          resolve(event.data)
-        }
-
-        controller.postMessage({ type: 'GET_VERSION' }, [channel.port2])
-      }),
-  )
+  return workerVersion
 }
 
 test('instala caches versionados sem armazenar endpoints de dados', async ({ page }) => {

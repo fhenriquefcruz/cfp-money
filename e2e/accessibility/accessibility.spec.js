@@ -38,25 +38,39 @@ async function waitForStableDocument(page, selector = 'main') {
     .poll(
       async () => {
         try {
-          return await page.evaluate(
-            (targetSelector) =>
+          return await page.evaluate((targetSelector) => {
+            const target = document.querySelector(targetSelector)
+
+            if (!target) return false
+
+            const activeFiniteAnimations = target
+              .getAnimations({ subtree: true })
+              .filter((animation) => {
+                const timing = animation.effect?.getTiming?.()
+                const isInfinite = timing?.iterations === Infinity
+
+                return !isInfinite && (animation.playState === 'running' || animation.pending)
+              })
+
+            return (
               document.readyState === 'complete' &&
-              Boolean(document.querySelector(targetSelector)) &&
-              !document.querySelector('[aria-busy="true"]'),
-            selector,
-          )
+              !document.querySelector('[aria-busy="true"]') &&
+              activeFiniteAnimations.length === 0
+            )
+          }, selector)
         } catch {
           return false
         }
       },
       {
-        message: `Documento não estabilizou para ${selector}.`,
-        timeout: 10_000,
+        message: `Documento e animações finitas não estabilizaram para ${selector}.`,
+        timeout: 15_000,
+        intervals: [100, 250, 500],
       },
     )
     .toBe(true)
 
-  await page.waitForTimeout(180)
+  await page.waitForTimeout(100)
 }
 
 async function analyzeWithRetry(page, include) {
