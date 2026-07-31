@@ -4,18 +4,22 @@ import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { calculatePlanStatus } from '../domain/plan'
 import { useAuth } from './AuthContext'
+import { E2E_MODE } from '../e2e/runtime'
+import { e2ePlanData, e2eUser } from '../e2e/fixtures'
 
 const PlanContext = createContext({})
 export const usePlan = () => useContext(PlanContext)
 
 export const PlanProvider = ({ children }) => {
   const { user, isAdmin } = useAuth()
-  const [planData, setPlanData] = useState(null)
-  const [planDocumentUid, setPlanDocumentUid] = useState(null)
-  const [isLoading, setIsLoading] = useState(Boolean(user?.uid))
+  const [planData, setPlanData] = useState(E2E_MODE ? e2ePlanData : null)
+  const [planDocumentUid, setPlanDocumentUid] = useState(E2E_MODE ? e2eUser.uid : null)
+  const [isLoading, setIsLoading] = useState(E2E_MODE ? false : Boolean(user?.uid))
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (E2E_MODE) return undefined
+
     if (!user?.uid) {
       setPlanData(null)
       setPlanDocumentUid(null)

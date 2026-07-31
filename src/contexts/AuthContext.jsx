@@ -1,5 +1,7 @@
 // src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { E2E_MODE } from '../e2e/runtime'
+import { e2eUser } from '../e2e/fixtures'
 import {
   onAuthChange,
   signInEmail,
@@ -18,12 +20,14 @@ export const useAuth = () => {
 }
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(E2E_MODE ? e2eUser : null)
+  const [loading, setLoading] = useState(!E2E_MODE)
   const [claims, setClaims] = useState({})
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (E2E_MODE) return undefined
+
     const unsubscribe = onAuthChange(async (u) => {
       setUser(u)
       setClaims(u ? (await u.getIdTokenResult()).claims : {})
@@ -97,6 +101,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = async () => {
+    if (E2E_MODE) return
     await logOut()
     setUser(null)
   }
