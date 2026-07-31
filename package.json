@@ -6,7 +6,7 @@
   "homepage": "https://fhenriquefcruz.github.io/cfp-money",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/generate-service-worker.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -16,7 +16,7 @@
     "functions:install": "npm install --prefix functions",
     "functions:test": "npm run test --prefix functions",
     "functions:validate": "npm run validate --prefix functions",
-    "validate:all": "npm run validate && npm run functions:validate && npm run validate:indexes && npm run notifications:validate && npm run validate:pwa && npm run validate:responsive",
+    "validate:all": "npm run validate && npm run functions:validate && npm run validate:indexes && npm run notifications:validate && npm run validate:pwa && npm run validate:responsive && npm run check:performance",
     "emulators": "firebase emulators:start",
     "deploy:backend": "firebase deploy --only functions",
     "deploy:firebase": "firebase deploy --only firestore,functions",
@@ -36,7 +36,12 @@
     "test:e2e:report": "playwright show-report",
     "test:a11y": "playwright test --config=playwright.accessibility.config.js",
     "test:a11y:headed": "playwright test --config=playwright.accessibility.config.js --headed",
-    "test:a11y:report": "playwright show-report playwright-a11y-report"
+    "test:a11y:report": "playwright show-report playwright-a11y-report",
+    "check:performance": "node scripts/check-performance-budget.mjs",
+    "validate:performance": "npm run build && npm run check:performance",
+    "test:pwa": "playwright test --config=playwright.pwa.config.js",
+    "test:pwa:headed": "playwright test --config=playwright.pwa.config.js --headed",
+    "test:pwa:report": "playwright show-report playwright-pwa-report"
   },
   "dependencies": {
     "clsx": "^2.1.0",

@@ -1,0 +1,50 @@
+name: Phase 20 performance and PWA
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  performance-and-pwa:
+    name: Performance budget and offline PWA
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Validate performance budget
+        run: npm run validate:performance
+
+      - name: Validate advanced PWA
+        run: npm run validate:pwa
+
+      - name: Test offline PWA
+        run: npm run test:pwa
+
+      - name: Upload PWA report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-pwa-report
+          path: playwright-pwa-report
+          if-no-files-found: ignore
+          retention-days: 7

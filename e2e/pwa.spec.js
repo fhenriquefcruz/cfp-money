@@ -15,5 +15,11 @@ test('manifesto e service worker permanecem disponíveis', async ({ page }, test
 
   const workerResponse = await page.request.get('./sw.js')
   expect(workerResponse.ok()).toBe(true)
-  expect(await workerResponse.text()).toContain('CACHE_VERSION')
+
+  const workerSource = await workerResponse.text()
+
+  expect(workerSource).toContain('const SW_VERSION =')
+  expect(workerSource).toContain('const PRECACHE_URLS =')
+  expect(workerSource).toContain('meu-real-shell-')
+  expect(workerSource).toContain('meu-real-assets-')
 })

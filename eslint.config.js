@@ -11,6 +11,8 @@ export default [
       'node_modules/**',
       'playwright-report/**',
       'playwright-a11y-report/**',
+      'playwright-pwa-report/**',
+      'test-results-pwa/**',
       'test-results/**',
       'blob-report/**',
     ],

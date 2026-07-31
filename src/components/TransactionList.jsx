@@ -140,7 +140,7 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
             </span>
           )}
           {isSavings && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[--brand-100] text-[--brand-700] flex-shrink-0">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[--brand-100] text-[--brand-800] flex-shrink-0">
               Poupança
             </span>
           )}
@@ -184,7 +184,7 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
             </span>
           )}
           <span
-            className="text-[10px] text-[--text-tertiary]"
+            className="text-[10px] text-[--text-secondary]"
             title={
               createdAtLabel ? 'Cadastrada em ' + createdAtLabel : 'Data de cadastro indisponível'
             }
@@ -199,7 +199,7 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
         <span
           className={`min-w-0 break-words text-sm font-bold tabular-nums [overflow-wrap:anywhere] ${
             isSavings
-              ? 'text-[--brand-600]'
+              ? 'text-[--brand-800]'
               : isIncome
                 ? 'text-[--success-icon]'
                 : 'text-[--danger-icon]'
