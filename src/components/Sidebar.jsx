@@ -351,78 +351,74 @@ export default function Sidebar() {
         </button>
       </nav>
 
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            <motion.div
-              className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-0 right-0 top-0 z-[60] bg-black/50 backdrop-blur-sm lg:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileOpen(false)}
-            />
-            <motion.div
-              ref={mobileDrawerRef}
-              id="mobile-more-menu"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Mais opções de navegação"
-              tabIndex={-1}
-              className="aurora-mobile-drawer fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-0 top-0 z-[60] flex w-[min(18rem,86vw)] flex-col overflow-hidden bg-[--bg-sidebar] shadow-2xl lg:hidden"
-              initial={{ x: -288 }}
-              animate={{ x: 0 }}
-              exit={{ x: -288 }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            >
-              <div className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-2">
-                  <div className="aurora-brand-mark flex h-8 w-8 items-center justify-center rounded-xl bg-[--brand-600]">
-                    <TrendingUp size={16} className="text-white" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-black text-[--text-primary]">Meu Real</p>
-                    <p className="text-[10px] text-[--text-tertiary]">
-                      {status.isPremium ? 'Experiência Premium' : 'Plano básico'}
-                    </p>
-                  </div>
+      {mobileOpen && (
+        <>
+          <motion.div
+            className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-0 right-0 top-0 z-[60] bg-black/50 backdrop-blur-sm lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => setMobileOpen(false)}
+          />
+          <motion.div
+            ref={mobileDrawerRef}
+            id="mobile-more-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mais opções de navegação"
+            tabIndex={-1}
+            className="aurora-mobile-drawer fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-0 top-0 z-[60] flex w-[min(18rem,86vw)] flex-col overflow-hidden bg-[--bg-sidebar] shadow-2xl lg:hidden"
+            initial={{ x: -288 }}
+            animate={{ x: 0 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+          >
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-2">
+                <div className="aurora-brand-mark flex h-8 w-8 items-center justify-center rounded-xl bg-[--brand-600]">
+                  <TrendingUp size={16} className="text-white" />
                 </div>
-                <button
-                  type="button"
+                <div>
+                  <p className="text-lg font-black text-[--text-primary]">Meu Real</p>
+                  <p className="text-[10px] text-[--text-tertiary]">
+                    {status.isPremium ? 'Experiência Premium' : 'Plano básico'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-[--text-tertiary] hover:bg-[--bg-hover]"
+                aria-label="Fechar menu"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <nav className="flex-1 space-y-1 overflow-y-auto px-3">
+              {allItems.map((item) => (
+                <NavItem
+                  key={item.to}
+                  {...item}
+                  collapsed={false}
                   onClick={() => setMobileOpen(false)}
-                  className="flex h-11 w-11 items-center justify-center rounded-xl text-[--text-tertiary] hover:bg-[--bg-hover]"
-                  aria-label="Fechar menu"
-                >
-                  <X size={18} />
-                </button>
-              </div>
+                />
+              ))}
+            </nav>
 
-              <nav className="flex-1 space-y-1 overflow-y-auto px-3">
-                {allItems.map((item) => (
-                  <NavItem
-                    key={item.to}
-                    {...item}
-                    collapsed={false}
-                    onClick={() => setMobileOpen(false)}
-                  />
-                ))}
-              </nav>
-
-              <div className="space-y-2 border-t border-[--border-subtle] p-4">
-                <ThemeToggle fullWidth />
-                <Button
-                  variant="ghost"
-                  fullWidth
-                  className="justify-start gap-3 text-[--danger-text]"
-                  onClick={logout}
-                >
-                  <LogOut size={16} />
-                  Sair da conta
-                </Button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            <div className="space-y-2 border-t border-[--border-subtle] p-4">
+              <ThemeToggle fullWidth />
+              <Button
+                variant="ghost"
+                fullWidth
+                className="justify-start gap-3 text-[--danger-text]"
+                onClick={logout}
+              >
+                <LogOut size={16} />
+                Sair da conta
+              </Button>
+            </div>
+          </motion.div>
+        </>
+      )}
     </>
   )
 }
