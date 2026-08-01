@@ -32,8 +32,9 @@ import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
 import { formatCurrency, formatRelativeDate, getMonthlyData } from '../utils'
+import { getCalendarMonthBounds, getRecentDashboardTransactions } from '../domain/dashboard'
 import { getTransactionDateContext } from '../domain/transactionDates'
-import { format, subMonths, addMonths, startOfMonth, endOfMonth } from 'date-fns'
+import { format, subMonths, addMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 const PIE_COLORS = [
@@ -187,15 +188,12 @@ export default function Dashboard() {
   )
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
-  const monthStart = startOfMonth(viewDate).toISOString().slice(0, 10)
-  const monthEnd = endOfMonth(viewDate).toISOString().slice(0, 10)
+  const monthBounds = useMemo(() => getCalendarMonthBounds(viewDate), [year, month])
+  const { start: monthStart, end: monthEnd } = monthBounds
 
   const monthTx = useMemo(
-    () =>
-      transactions
-        .filter((tx) => tx.date >= monthStart && tx.date <= monthEnd && !tx.isSavings)
-        .slice(0, 6),
-    [transactions, monthStart, monthEnd],
+    () => getRecentDashboardTransactions(transactions, monthBounds),
+    [transactions, monthBounds],
   )
 
   const savingsBalance = useMemo(
