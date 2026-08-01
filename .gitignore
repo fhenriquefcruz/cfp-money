@@ -36,3 +36,8 @@ test-results/
 playwright-a11y-report/
 playwright-pwa-report/
 test-results-pwa/
+
+# Logs locais do Firebase Emulator Suite
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
