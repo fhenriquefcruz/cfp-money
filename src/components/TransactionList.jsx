@@ -17,6 +17,8 @@ import {
   TrendingUp,
   TrendingDown,
   ArrowUpDown,
+  CheckCircle2,
+  Clock3,
 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { Button, EmptyState, Modal } from './ui'
@@ -35,6 +37,7 @@ import { ptBR } from 'date-fns/locale'
 import { defaultDateRangeEnd } from '../domain/finance'
 import { getTransactionDateContext } from '../domain/transactionDates'
 import { isTransactionSeries } from '../domain/transactionSeries'
+import { isPayableExpense, isTransactionPaid } from '../domain/paymentControl'
 
 const DATE_PRESETS = [
   {
@@ -95,11 +98,13 @@ function groupByDate(txs) {
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
 }
 
-function TxRow({ tx, cat, onEdit, onDelete }) {
+function TxRow({ tx, cat, onEdit, onDelete, onTogglePayment, paymentUpdating }) {
   const isIncome = tx.type === 'income' && !tx.isSavings
   const isSavings = tx.isSavings
   const dateContext = getTransactionDateContext(tx)
   const protectedGroup = isTransactionSeries(tx)
+  const payableExpense = isPayableExpense(tx)
+  const paid = isTransactionPaid(tx)
   const createdAt = tx.createdAt?.toDate?.() || (tx.createdAt ? new Date(tx.createdAt) : null)
   const createdAtLabel =
     createdAt && !Number.isNaN(createdAt.getTime())
@@ -183,6 +188,23 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
               💬 {tx.notes}
             </span>
           )}
+          {payableExpense && (
+            <button
+              type="button"
+              onClick={() => onTogglePayment(tx)}
+              disabled={paymentUpdating}
+              aria-pressed={paid}
+              aria-label={`${paid ? 'Marcar como pendente' : 'Marcar como paga'}: ${tx.description || cat?.name || 'despesa'}`}
+              className={`inline-flex min-h-10 items-center gap-1 rounded-full border px-2.5 text-[10px] font-bold transition-colors disabled:cursor-wait disabled:opacity-60 ${
+                paid
+                  ? 'border-[--success-border] bg-[--success-bg] text-[--success-text]'
+                  : 'border-[--warning-border] bg-[--warning-bg] text-[--warning-text]'
+              }`}
+            >
+              {paid ? <CheckCircle2 size={12} /> : <Clock3 size={12} />}
+              {paymentUpdating ? 'Salvando…' : paid ? 'Pago' : 'Pendente'}
+            </button>
+          )}
           <span
             className="text-[10px] text-[--text-secondary]"
             title={
@@ -237,6 +259,7 @@ export default function TransactionList() {
     createTransaction,
     showNotification,
     applyTransactionSeriesOperation,
+    setTransactionPaymentStatus,
   } = useApp()
 
   const [search, setSearch] = useState('')
@@ -253,6 +276,7 @@ export default function TransactionList() {
   const [importText, setImportText] = useState('')
   const [page, setPage] = useState(1)
   const [sortAsc, setSortAsc] = useState(false)
+  const [paymentUpdatingIds, setPaymentUpdatingIds] = useState(() => new Set())
   const PER_PAGE = 30
 
   const filtered = useMemo(() => {
@@ -338,6 +362,19 @@ export default function TransactionList() {
     if (!deleteId) return
     await removeTransaction(deleteId)
     setDeleteId(null)
+  }
+  const handleTogglePayment = async (transaction) => {
+    const isPaid = isTransactionPaid(transaction)
+    setPaymentUpdatingIds((current) => new Set(current).add(transaction.id))
+    try {
+      await setTransactionPaymentStatus(transaction.id, !isPaid)
+    } finally {
+      setPaymentUpdatingIds((current) => {
+        const next = new Set(current)
+        next.delete(transaction.id)
+        return next
+      })
+    }
   }
   const clearFilters = () => {
     setTypeFilter('all')
@@ -760,6 +797,8 @@ export default function TransactionList() {
                         cat={categories.find((c) => c.id === tx.categoryId)}
                         onEdit={handleEdit}
                         onDelete={handleDeleteRequest}
+                        onTogglePayment={handleTogglePayment}
+                        paymentUpdating={paymentUpdatingIds.has(tx.id)}
                       />
                     ))}
                   </div>

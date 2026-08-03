@@ -8,6 +8,7 @@ import {
   getBudgets,
   addTransaction,
   updateTransaction,
+  updateTransactionPaymentStatus,
   deleteTransaction,
   onInvoiceEventsChange,
   addInvoiceEvent,
@@ -35,6 +36,7 @@ import {
 import { enqueueBudgetNotification } from '../services/notificationService'
 import { E2E_MODE } from '../e2e/runtime'
 import { createE2EAppState } from '../e2e/fixtures'
+import { createPaymentStatusChange } from '../domain/paymentControl'
 
 const AppContext = createContext({})
 export const useApp = () => useContext(AppContext)
@@ -337,6 +339,27 @@ export const AppProvider = ({ children }) => {
       }
     },
     [user?.uid, showNotification, checkBudgetAlert],
+  )
+
+  const setTransactionPaymentStatus = useCallback(
+    async (id, isPaid) => {
+      if (!user?.uid) return
+      try {
+        if (E2E_MODE) {
+          dispatch({
+            type: 'E2E_UPDATE_TRANSACTION',
+            payload: { id, data: createPaymentStatusChange(isPaid) },
+          })
+        } else {
+          await updateTransactionPaymentStatus(user.uid, id, isPaid)
+        }
+        showNotification(isPaid ? 'Despesa marcada como paga.' : 'Despesa marcada como pendente.')
+      } catch (error) {
+        showNotification('Erro ao atualizar o pagamento.', 'error')
+        throw error
+      }
+    },
+    [user?.uid, showNotification],
   )
 
   const removeTransaction = useCallback(
@@ -705,6 +728,7 @@ export const AppProvider = ({ children }) => {
         ...state,
         createTransaction,
         editTransaction,
+        setTransactionPaymentStatus,
         removeTransaction,
         removeTransactionBatch,
         addTransactionBatch,

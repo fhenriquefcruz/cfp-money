@@ -32,6 +32,7 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { resolveFirebaseConfig } from '../config/firebaseConfig'
+import { createPaymentPersistenceChange } from '../domain/paymentControl'
 
 const firebaseConfig = resolveFirebaseConfig(import.meta.env)
 
@@ -165,6 +166,12 @@ export const addTransaction = async (uid, data) => {
 
 export const updateTransaction = async (uid, id, data) =>
   updateDoc(userDoc(uid, 'transactions', id), { ...data, updatedAt: serverTimestamp() })
+
+export const updateTransactionPaymentStatus = async (uid, id, isPaid) =>
+  updateDoc(userDoc(uid, 'transactions', id), {
+    ...createPaymentPersistenceChange(isPaid, serverTimestamp()),
+    updatedAt: serverTimestamp(),
+  })
 
 export const deleteTransaction = async (uid, id) => deleteDoc(userDoc(uid, 'transactions', id))
 
