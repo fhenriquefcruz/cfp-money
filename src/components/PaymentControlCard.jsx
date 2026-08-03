@@ -18,6 +18,11 @@ export default function PaymentControlCard({ summary, loading = false }) {
               ? `${summary.paidCount} de ${summary.totalCount} despesas pagas`
               : 'Nenhuma despesa cadastrada neste mês'}
           </p>
+          {summary.card?.itemCount > 0 && (
+            <p className="mt-1 text-[10px] text-[--text-tertiary]">
+              Cartões seguem automaticamente os pagamentos registrados nas faturas.
+            </p>
+          )}
         </div>
         <Link
           to="/transactions"

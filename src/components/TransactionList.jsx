@@ -1,6 +1,7 @@
 // src/components/TransactionList.jsx
 import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import {
   Plus,
   Search,
@@ -37,7 +38,13 @@ import { ptBR } from 'date-fns/locale'
 import { defaultDateRangeEnd } from '../domain/finance'
 import { getTransactionDateContext } from '../domain/transactionDates'
 import { isTransactionSeries } from '../domain/transactionSeries'
-import { isPayableExpense, isTransactionPaid } from '../domain/paymentControl'
+import {
+  buildPaymentStatusIndex,
+  canToggleTransactionPayment,
+  getTransactionPaymentState,
+  isPayableExpense,
+  isTransactionPaid,
+} from '../domain/paymentControl'
 
 const DATE_PRESETS = [
   {
@@ -98,13 +105,14 @@ function groupByDate(txs) {
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
 }
 
-function TxRow({ tx, cat, onEdit, onDelete, onTogglePayment, paymentUpdating }) {
+function TxRow({ tx, cat, onEdit, onDelete, onTogglePayment, paymentUpdating, paymentState }) {
   const isIncome = tx.type === 'income' && !tx.isSavings
   const isSavings = tx.isSavings
   const dateContext = getTransactionDateContext(tx)
   const protectedGroup = isTransactionSeries(tx)
   const payableExpense = isPayableExpense(tx)
-  const paid = isTransactionPaid(tx)
+  const toggleablePayment = canToggleTransactionPayment(tx)
+  const paid = paymentState.status === 'paid'
   const createdAt = tx.createdAt?.toDate?.() || (tx.createdAt ? new Date(tx.createdAt) : null)
   const createdAtLabel =
     createdAt && !Number.isNaN(createdAt.getTime())
@@ -188,7 +196,7 @@ function TxRow({ tx, cat, onEdit, onDelete, onTogglePayment, paymentUpdating }) 
               💬 {tx.notes}
             </span>
           )}
-          {payableExpense && (
+          {payableExpense && toggleablePayment && (
             <button
               type="button"
               onClick={() => onTogglePayment(tx)}
@@ -204,6 +212,24 @@ function TxRow({ tx, cat, onEdit, onDelete, onTogglePayment, paymentUpdating }) 
               {paid ? <CheckCircle2 size={12} /> : <Clock3 size={12} />}
               {paymentUpdating ? 'Salvando…' : paid ? 'Pago' : 'Pendente'}
             </button>
+          )}
+          {payableExpense && !toggleablePayment && (
+            <Link
+              to="/cards"
+              aria-label={`Abrir fatura de ${tx.cardName || 'cartão'}`}
+              className={`inline-flex min-h-10 items-center gap-1 rounded-full border px-2.5 text-[10px] font-bold transition-colors ${
+                paid
+                  ? 'border-[--success-border] bg-[--success-bg] text-[--success-text]'
+                  : 'border-[--warning-border] bg-[--warning-bg] text-[--warning-text]'
+              }`}
+            >
+              {paid ? <CheckCircle2 size={12} /> : <Clock3 size={12} />}
+              {paymentState.detail === 'partial'
+                ? 'Fatura parcial'
+                : paid
+                  ? 'Fatura paga'
+                  : 'Fatura pendente'}
+            </Link>
           )}
           <span
             className="text-[10px] text-[--text-secondary]"
@@ -255,6 +281,8 @@ export default function TransactionList() {
   const {
     transactions,
     categories,
+    creditCards,
+    invoiceEvents,
     removeTransaction,
     createTransaction,
     showNotification,
@@ -278,6 +306,11 @@ export default function TransactionList() {
   const [sortAsc, setSortAsc] = useState(false)
   const [paymentUpdatingIds, setPaymentUpdatingIds] = useState(() => new Set())
   const PER_PAGE = 30
+
+  const paymentStatusIndex = useMemo(
+    () => buildPaymentStatusIndex({ transactions, creditCards, invoiceEvents }),
+    [transactions, creditCards, invoiceEvents],
+  )
 
   const filtered = useMemo(() => {
     let txs = transactions.filter((tx) => {
@@ -799,6 +832,7 @@ export default function TransactionList() {
                         onDelete={handleDeleteRequest}
                         onTogglePayment={handleTogglePayment}
                         paymentUpdating={paymentUpdatingIds.has(tx.id)}
+                        paymentState={getTransactionPaymentState(tx, paymentStatusIndex)}
                       />
                     ))}
                   </div>

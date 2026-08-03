@@ -35,7 +35,7 @@ import PaymentControlCard from './PaymentControlCard'
 import { formatCurrency, formatRelativeDate, getMonthlyData } from '../utils'
 import { getCalendarMonthBounds, getRecentDashboardTransactions } from '../domain/dashboard'
 import { getTransactionDateContext } from '../domain/transactionDates'
-import { summarizePaymentControl } from '../domain/paymentControl'
+import { buildPaymentControlOverview } from '../domain/paymentControl'
 import { format, subMonths, addMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -171,6 +171,8 @@ export default function Dashboard() {
     categories,
     goals,
     budgets,
+    creditCards,
+    invoiceEvents,
     loading,
     getSummary,
     getCategoryTotals,
@@ -194,8 +196,14 @@ export default function Dashboard() {
   const { start: monthStart, end: monthEnd } = monthBounds
 
   const paymentSummary = useMemo(
-    () => summarizePaymentControl(transactions, monthBounds),
-    [transactions, monthBounds],
+    () =>
+      buildPaymentControlOverview({
+        transactions,
+        creditCards,
+        invoiceEvents,
+        bounds: monthBounds,
+      }),
+    [transactions, creditCards, invoiceEvents, monthBounds],
   )
 
   const monthTx = useMemo(

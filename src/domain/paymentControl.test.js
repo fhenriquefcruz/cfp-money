@@ -1,7 +1,11 @@
 import { describe, expect, test } from 'vitest'
 import {
+  buildPaymentControlOverview,
+  buildPaymentStatusIndex,
+  canToggleTransactionPayment,
   createPaymentPersistenceChange,
   createPaymentStatusChange,
+  getTransactionPaymentState,
   getTransactionPaymentStatus,
   isTransactionPaid,
   summarizePaymentControl,
@@ -14,6 +18,28 @@ const expense = (overrides = {}) => ({
   date: '2026-08-03',
   ...overrides,
 })
+
+const card = {
+  id: 'nubank',
+  name: 'Nubank',
+  closingDay: 1,
+  dueDay: 10,
+  active: true,
+}
+
+const cardExpense = (overrides = {}) =>
+  expense({
+    id: 'card-expense',
+    amount: 300,
+    paymentMethod: 'credit_card',
+    isCreditPurchase: true,
+    cardId: card.id,
+    cardName: card.name,
+    invoiceMonth: '2026-08',
+    dueDate: '2026-08-10',
+    date: '2026-08-10',
+    ...overrides,
+  })
 
 describe('controle de pagamentos', () => {
   test('trata despesa antiga sem status como pendente', () => {
@@ -120,5 +146,84 @@ describe('controle de pagamentos', () => {
     expect(getTransactionPaymentStatus(expense({ date: '2026-09-03', isRecurring: true }))).toBe(
       'pending',
     )
+  })
+
+  test('usa a fatura como fonte de verdade para cartão estruturado', () => {
+    const transaction = cardExpense({ paymentStatus: 'paid' })
+    const statusIndex = buildPaymentStatusIndex({
+      transactions: [transaction],
+      creditCards: [card],
+      now: new Date(2026, 7, 5),
+    })
+
+    expect(canToggleTransactionPayment(transaction)).toBe(false)
+    expect(getTransactionPaymentState(transaction, statusIndex)).toMatchObject({
+      status: 'pending',
+      source: 'invoice',
+      detail: 'pending',
+    })
+  })
+
+  test('integra pagamento integral da fatura ao resumo mensal', () => {
+    const summary = buildPaymentControlOverview({
+      transactions: [cardExpense()],
+      creditCards: [card],
+      invoiceEvents: [
+        {
+          id: 'payment-1',
+          type: 'payment',
+          cardId: card.id,
+          invoiceMonth: '2026-08',
+          amount: 300,
+        },
+      ],
+      bounds: { start: '2026-08-01', end: '2026-08-31' },
+      now: new Date(2026, 7, 5),
+    })
+
+    expect(summary).toMatchObject({
+      totalAmount: 300,
+      paidAmount: 300,
+      pendingAmount: 0,
+      totalCount: 1,
+      paidCount: 1,
+      pendingCount: 0,
+      progress: 100,
+    })
+  })
+
+  test('considera pagamento parcial sem marcar as compras da fatura como pagas', () => {
+    const transaction = cardExpense()
+    const invoiceEvents = [
+      {
+        id: 'payment-1',
+        type: 'payment',
+        cardId: card.id,
+        invoiceMonth: '2026-08',
+        amount: 100,
+      },
+    ]
+    const statusIndex = buildPaymentStatusIndex({
+      transactions: [transaction],
+      creditCards: [card],
+      invoiceEvents,
+      now: new Date(2026, 7, 5),
+    })
+    const summary = buildPaymentControlOverview({
+      transactions: [transaction],
+      creditCards: [card],
+      invoiceEvents,
+      bounds: { start: '2026-08-01', end: '2026-08-31' },
+      now: new Date(2026, 7, 5),
+    })
+
+    expect(getTransactionPaymentState(transaction, statusIndex)).toMatchObject({
+      status: 'pending',
+      detail: 'partial',
+    })
+    expect(summary.paidAmount).toBe(100)
+    expect(summary.pendingAmount).toBe(200)
+    expect(summary.paidCount).toBe(0)
+    expect(summary.pendingCount).toBe(1)
   })
 })
