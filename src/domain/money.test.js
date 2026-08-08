@@ -159,3 +159,41 @@ test('não divide por zero quando não há período anterior', () => {
   expect(result.comparison.expenseChangePercent).toBeNull()
   expect(result.insights[0].message).toContain('não há despesas')
 })
+
+test('não extrapola uma despesa excepcional no início do ciclo', () => {
+  const result = analyzeMoney(
+    [
+      {
+        type: 'expense',
+        amount: 1200,
+        date: '2026-08-01',
+        categoryName: 'Saúde',
+      },
+    ],
+    {},
+    '2026-08-01',
+  )
+
+  expect(result.projection).toMatchObject({
+    expenses: 1200,
+    isPartial: true,
+    isAvailable: false,
+    confidence: 'insufficient',
+    minimumElapsedDays: 7,
+  })
+  expect(result.insights).toContainEqual(
+    expect.objectContaining({ type: 'expense_projection_pending' }),
+  )
+})
+
+test('libera a projeção com confiança explícita após o período mínimo', () => {
+  const result = analyzeMoney(
+    [{ type: 'expense', amount: 700, date: '2026-08-07', categoryName: 'Mercado' }],
+    {},
+    '2026-08-07',
+  )
+
+  expect(result.projection.isAvailable).toBe(true)
+  expect(result.projection.confidence).toBe('low')
+  expect(result.projection.expenses).toBeCloseTo(3100, 5)
+})

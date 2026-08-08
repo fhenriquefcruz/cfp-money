@@ -46,6 +46,12 @@ test('navegação inferior e menu Mais continuam acessíveis', async ({ page }) 
   await drawer.getByRole('link', { name: 'Relatórios' }).click()
   await expect(page).toHaveURL(/#\/reports$/)
   await expect(page.locator('.reports-premium')).toBeVisible()
+  await expect(drawer).toHaveCount(0)
+  await expect(bottomNavigation.getByRole('button', { name: 'Mais', exact: true })).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  )
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe('hidden')
   await expectNoHorizontalOverflow(page)
 })
 
