@@ -39,6 +39,12 @@ const TONE_STYLES = {
   },
 }
 
+const PROJECTION_CONFIDENCE_LABELS = {
+  low: 'inicial',
+  medium: 'moderada',
+  high: 'alta',
+}
+
 function resolveAnalysisDate(referenceDate) {
   const reference = new Date(referenceDate)
   const now = new Date()
@@ -170,9 +176,19 @@ function MoneyInsightContent({ referenceDate }) {
               />
               <MoneyMetric
                 label="Projeção"
-                value={formatCurrency(analysis.projection.expenses)}
+                value={
+                  analysis.projection.isAvailable
+                    ? formatCurrency(analysis.projection.expenses)
+                    : 'Aguardando dados'
+                }
                 detail={
-                  analysis.projection.isPartial ? 'Estimativa de fechamento' : 'Ciclo fechado'
+                  !analysis.projection.isAvailable
+                    ? `Disponível após ${analysis.projection.minimumElapsedDays} dias`
+                    : analysis.projection.isPartial
+                      ? `Estimativa · confiança ${
+                          PROJECTION_CONFIDENCE_LABELS[analysis.projection.confidence] || 'inicial'
+                        }`
+                      : 'Ciclo fechado'
                 }
               />
               <MoneyMetric

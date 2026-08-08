@@ -6,6 +6,7 @@ const DEFAULT_SETTINGS = Object.freeze({
 })
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+const MIN_PROJECTION_ELAPSED_DAYS = 7
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
@@ -245,8 +246,20 @@ export function analyzeMoney(transactions = [], settings = {}, referenceDate = n
   const expenseChangePercent = safePercentChange(currentExpenses, previousExpenses)
   const incomeChangePercent = safePercentChange(currentIncome, previousIncome)
 
+  const projectionIsPartial = periods.current.progress < 1
+  const projectionIsAvailable =
+    !projectionIsPartial || periods.current.elapsedDays >= MIN_PROJECTION_ELAPSED_DAYS
   const projectedExpenses =
-    periods.current.progress > 0 ? currentExpenses / periods.current.progress : currentExpenses
+    projectionIsAvailable && periods.current.progress > 0
+      ? currentExpenses / periods.current.progress
+      : currentExpenses
+  const projectionConfidence = !projectionIsAvailable
+    ? 'insufficient'
+    : !projectionIsPartial || periods.current.progress >= 0.66
+      ? 'high'
+      : periods.current.progress >= 0.33
+        ? 'medium'
+        : 'low'
 
   const categoryChanges = calculateCategoryChanges(currentTransactions, previousTransactions)
   const largestIncrease = categoryChanges.find((category) => category.difference > 0) || null
@@ -290,11 +303,17 @@ export function analyzeMoney(transactions = [], settings = {}, referenceDate = n
     })
   }
 
-  if (periods.current.progress < 1 && currentExpenses > 0) {
+  if (projectionIsPartial && currentExpenses > 0 && projectionIsAvailable) {
     insights.push({
       type: 'expense_projection',
       severity: 'neutral',
       message: `Mantendo o ritmo atual, a projeção de despesas para o fechamento do ciclo é de R$ ${projectedExpenses.toFixed(2).replace('.', ',')}.`,
+    })
+  } else if (projectionIsPartial && currentExpenses > 0) {
+    insights.push({
+      type: 'expense_projection_pending',
+      severity: 'info',
+      message: `A projeção ficará disponível após ${MIN_PROJECTION_ELAPSED_DAYS} dias do ciclo para evitar estimativas distorcidas.`,
     })
   }
 
@@ -322,7 +341,10 @@ export function analyzeMoney(transactions = [], settings = {}, referenceDate = n
     projection: {
       expenses: projectedExpenses,
       cycleProgress: periods.current.progress,
-      isPartial: periods.current.progress < 1,
+      isPartial: projectionIsPartial,
+      isAvailable: projectionIsAvailable,
+      confidence: projectionConfidence,
+      minimumElapsedDays: MIN_PROJECTION_ELAPSED_DAYS,
     },
     categories: {
       changes: categoryChanges,
