@@ -2,10 +2,6 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { extname, join } from 'node:path'
 
-const acceptedAdvisory = 'GHSA-QWWW-VCR4-C8H2'
-
-const allowedVulnerablePackages = new Set(['react-router', 'react-router-dom'])
-
 const errors = []
 
 const fail = (message) => {
@@ -15,8 +11,8 @@ const fail = (message) => {
 
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
 
-if (packageJson.dependencies?.['react-router-dom'] !== '7.18.1') {
-  fail('react-router-dom deve permanecer fixado em 7.18.1.')
+if (packageJson.dependencies?.['react-router-dom'] !== '7.18.2') {
+  fail('react-router-dom deve permanecer fixado em 7.18.2.')
 }
 
 if (packageJson.dependencies?.firebase !== '10.14.1') {
@@ -118,65 +114,14 @@ const runAudit = (omitDev) => {
   }
 }
 
-const extractAdvisoryIds = (via) => {
-  if (!via || typeof via !== 'object') {
-    return []
-  }
-
-  const source = [via.url, via.title, via.name].filter(Boolean).join(' ')
-
-  return [...source.matchAll(/GHSA-[0-9A-Z-]+/gi)].map((match) => match[0].toUpperCase())
-}
-
-const collectAdvisories = (vulnerabilities, packageName, seen = new Set()) => {
-  if (seen.has(packageName)) {
-    return new Set()
-  }
-
-  const nextSeen = new Set(seen)
-
-  nextSeen.add(packageName)
-
-  const entry = vulnerabilities[packageName]
-
-  if (!entry || !Array.isArray(entry.via)) {
-    return new Set()
-  }
-
-  const ids = new Set()
-
-  for (const via of entry.via) {
-    if (typeof via === 'string') {
-      for (const id of collectAdvisories(vulnerabilities, via, nextSeen)) {
-        ids.add(id)
-      }
-
-      continue
-    }
-
-    for (const id of extractAdvisoryIds(via)) {
-      ids.add(id)
-    }
-  }
-
-  return ids
-}
-
 const productionAudit = runAudit(true)
 
 const productionVulnerabilities = productionAudit.vulnerabilities ?? {}
 
 for (const [packageName, entry] of Object.entries(productionVulnerabilities)) {
-  const ids = collectAdvisories(productionVulnerabilities, packageName)
-
-  const accepted =
-    allowedVulnerablePackages.has(packageName) && ids.size === 1 && ids.has(acceptedAdvisory)
-
-  if (!accepted) {
-    fail(
-      `${packageName}: vulnerabilidade de produção não aceita; severidade ${entry.severity}; faixa ${entry.range}.`,
-    )
-  }
+  fail(
+    `${packageName}: vulnerabilidade de produção encontrada; severidade ${entry.severity}; faixa ${entry.range}.`,
+  )
 }
 
 const fullAudit = runAudit(false)
@@ -184,17 +129,8 @@ const fullAudit = runAudit(false)
 const fullVulnerabilities = fullAudit.vulnerabilities ?? {}
 
 for (const [packageName, entry] of Object.entries(fullVulnerabilities)) {
-  if (entry.severity !== 'high' && entry.severity !== 'critical') {
-    continue
-  }
-
-  const ids = collectAdvisories(fullVulnerabilities, packageName)
-
-  const accepted =
-    allowedVulnerablePackages.has(packageName) && ids.size === 1 && ids.has(acceptedAdvisory)
-
-  if (!accepted) {
-    fail(`${packageName}: vulnerabilidade ${entry.severity} fora da exceção documentada.`)
+  if (entry.severity === 'high' || entry.severity === 'critical') {
+    fail(`${packageName}: vulnerabilidade ${entry.severity} encontrada.`)
   }
 }
 
@@ -202,15 +138,7 @@ if (errors.length > 0) {
   process.exit(1)
 }
 
-const productionNames = Object.keys(productionVulnerabilities)
-
-if (productionNames.length === 0) {
-  console.log('Auditoria: nenhuma vulnerabilidade de produção encontrada.')
-} else {
-  console.log(
-    `Auditoria: produção contém somente ${acceptedAdvisory}, não aplicável ao modo declarativo sem RSC.`,
-  )
-}
+console.log('Auditoria: nenhuma vulnerabilidade de produção encontrada.')
 
 const summary = fullAudit.metadata?.vulnerabilities ?? {}
 
@@ -224,4 +152,4 @@ console.log(
   ].join(' '),
 )
 
-console.log('Auditoria: nenhuma vulnerabilidade alta ou crítica fora da exceção documentada.')
+console.log('Auditoria: nenhuma vulnerabilidade alta ou crítica encontrada.')
