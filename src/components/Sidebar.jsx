@@ -311,7 +311,7 @@ export default function Sidebar() {
             to={to}
             className={({ isActive }) =>
               clsx(
-                'flex min-h-14 w-full min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 transition-all duration-150 min-[360px]:px-1 sm:px-3',
+                'flex min-h-14 w-full min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 py-2 transition-all duration-150 max-[359px]:-translate-y-0.5 min-[360px]:px-1 sm:px-3',
                 isActive ? 'text-[--brand-600]' : 'text-[--text-tertiary]',
               )
             }
@@ -338,7 +338,7 @@ export default function Sidebar() {
         <button
           ref={mobileTriggerRef}
           type="button"
-          className="flex min-h-14 w-full min-w-0 flex-col items-center gap-1 px-0.5 py-2 text-[--text-tertiary] min-[360px]:px-1 sm:px-3"
+          className="flex min-h-14 w-full min-w-0 flex-col items-center gap-1 px-0.5 py-2 text-[--text-tertiary] max-[359px]:-translate-y-0.5 min-[360px]:px-1 sm:px-3"
           onClick={() => setMobileOpen((current) => !current)}
           aria-expanded={mobileOpen}
           aria-controls="mobile-more-menu"
