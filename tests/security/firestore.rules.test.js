@@ -350,3 +350,58 @@ test('bloqueia coleções internas e caminhos desconhecidos', async () => {
     }),
   )
 })
+
+test('permite ao admin atualizar somente campos de acesso com autoria própria', async () => {
+  const adminDatabase = environment.authenticatedContext('admin-user', { admin: true }).firestore()
+  const userReference = doc(adminDatabase, 'users', 'alice')
+  const now = Timestamp.now()
+
+  await assertSucceeds(
+    updateDoc(userReference, {
+      plan: 'premium',
+      premiumUntil: Timestamp.fromMillis(now.toMillis() + 30 * 86_400_000),
+      blocked: false,
+      updatedAt: now,
+      accessUpdatedAt: now,
+      accessUpdatedBy: 'admin-user',
+    }),
+  )
+
+  await assertFails(
+    updateDoc(userReference, {
+      blocked: true,
+      updatedAt: now,
+      accessUpdatedAt: now,
+      accessUpdatedBy: 'outro-admin',
+    }),
+  )
+
+  await assertFails(
+    updateDoc(userReference, {
+      displayName: 'Alterado pelo admin',
+      updatedAt: now,
+      accessUpdatedAt: now,
+      accessUpdatedBy: 'admin-user',
+    }),
+  )
+
+  await assertFails(
+    updateDoc(userReference, {
+      plan: 'premium',
+      premiumUntil: null,
+      updatedAt: now,
+      accessUpdatedAt: now,
+      accessUpdatedBy: 'admin-user',
+    }),
+  )
+
+  await assertFails(
+    updateDoc(userReference, {
+      plan: 'trial',
+      premiumUntil: null,
+      updatedAt: now,
+      accessUpdatedAt: now,
+      accessUpdatedBy: 'admin-user',
+    }),
+  )
+})
