@@ -8,6 +8,8 @@ import {
   getBudgets,
   addTransaction,
   updateTransaction,
+  updateTransactionPaymentStatus,
+  updateTransactionPaymentStatuses,
   deleteTransaction,
   onInvoiceEventsChange,
   addInvoiceEvent,
@@ -35,6 +37,10 @@ import {
 import { enqueueBudgetNotification } from '../services/notificationService'
 import { E2E_MODE } from '../e2e/runtime'
 import { createE2EAppState } from '../e2e/fixtures'
+import {
+  createPaymentStatusChange,
+  ensureTransactionPaymentDefaults,
+} from '../domain/paymentControl'
 
 const AppContext = createContext({})
 export const useApp = () => useContext(AppContext)
@@ -259,16 +265,17 @@ export const AppProvider = ({ children }) => {
   const createTransaction = useCallback(
     async (data) => {
       if (!user?.uid) return
+      const preparedData = ensureTransactionPaymentDefaults(data)
       try {
         const transactionId = E2E_MODE
           ? `e2e-transaction-${Date.now()}`
-          : await addTransaction(user.uid, data)
+          : await addTransaction(user.uid, preparedData)
 
         if (E2E_MODE) {
           dispatch({
             type: 'E2E_ADD_TRANSACTION',
             payload: {
-              ...data,
+              ...preparedData,
               id: transactionId,
               createdAt: new Date().toISOString(),
             },
@@ -276,7 +283,7 @@ export const AppProvider = ({ children }) => {
         }
 
         showNotification('Transação adicionada!')
-        checkBudgetAlert(data)
+        checkBudgetAlert(preparedData)
         return transactionId
       } catch (e) {
         showNotification('Erro ao adicionar transação.', 'error')
@@ -289,15 +296,16 @@ export const AppProvider = ({ children }) => {
   const addTransactionBatch = useCallback(
     async (items) => {
       if (!user?.uid) return
+      const preparedItems = items.map(ensureTransactionPaymentDefaults)
       try {
         const transactionIds = E2E_MODE
-          ? items.map((_, index) => `e2e-batch-${Date.now()}-${index}`)
-          : await fbAddBatch(user.uid, items)
+          ? preparedItems.map((_, index) => `e2e-batch-${Date.now()}-${index}`)
+          : await fbAddBatch(user.uid, preparedItems)
 
         if (E2E_MODE) {
           dispatch({
             type: 'E2E_ADD_TRANSACTION_BATCH',
-            payload: items.map((item, index) => ({
+            payload: preparedItems.map((item, index) => ({
               ...item,
               id: transactionIds[index],
               createdAt: new Date().toISOString(),
@@ -305,11 +313,11 @@ export const AppProvider = ({ children }) => {
           })
         }
 
-        items.forEach(checkBudgetAlert)
+        preparedItems.forEach(checkBudgetAlert)
         showNotification(
-          items[0]?.isInstallment
-            ? `${items.length} parcelas criadas!`
-            : `${items.length} entradas recorrentes criadas!`,
+          preparedItems[0]?.isInstallment
+            ? `${preparedItems.length} parcelas criadas!`
+            : `${preparedItems.length} entradas recorrentes criadas!`,
         )
         return transactionIds
       } catch (e) {
@@ -337,6 +345,72 @@ export const AppProvider = ({ children }) => {
       }
     },
     [user?.uid, showNotification, checkBudgetAlert],
+  )
+
+  const setTransactionPaymentStatus = useCallback(
+    async (id, isPaid) => {
+      if (!user?.uid) return
+      try {
+        if (E2E_MODE) {
+          dispatch({
+            type: 'E2E_UPDATE_TRANSACTION',
+            payload: { id, data: createPaymentStatusChange(isPaid) },
+          })
+        } else {
+          await updateTransactionPaymentStatus(user.uid, id, isPaid)
+        }
+        showNotification(isPaid ? 'Despesa marcada como paga.' : 'Despesa marcada como pendente.')
+      } catch (error) {
+        showNotification('Erro ao atualizar o pagamento.', 'error')
+        throw error
+      }
+    },
+    [user?.uid, showNotification],
+  )
+
+  const commitPaymentStatusOperation = useCallback(
+    async (operation) => {
+      if (!user?.uid) {
+        throw new Error('Usuário não autenticado.')
+      }
+
+      const changes = Array.isArray(operation?.changes) ? operation.changes : []
+
+      if (!changes.length) return null
+
+      try {
+        if (E2E_MODE) {
+          changes.forEach((change) => {
+            dispatch({
+              type: 'E2E_UPDATE_TRANSACTION',
+              payload: {
+                id: change.id,
+                data: change.data,
+              },
+            })
+          })
+        } else {
+          await updateTransactionPaymentStatuses(user.uid, operation)
+        }
+
+        showNotification(
+          operation.kind === 'undo'
+            ? 'Última ação de pagamentos desfeita.'
+            : `${changes.length} ${changes.length === 1 ? 'pagamento atualizado' : 'pagamentos atualizados'}.`,
+        )
+
+        return operation
+      } catch (error) {
+        showNotification(
+          operation.kind === 'undo'
+            ? 'Não foi possível desfazer a ação.'
+            : 'Erro ao atualizar pagamentos em massa.',
+          'error',
+        )
+        throw error
+      }
+    },
+    [user?.uid, showNotification],
   )
 
   const removeTransaction = useCallback(
@@ -705,6 +779,8 @@ export const AppProvider = ({ children }) => {
         ...state,
         createTransaction,
         editTransaction,
+        setTransactionPaymentStatus,
+        commitPaymentStatusOperation,
         removeTransaction,
         removeTransactionBatch,
         addTransactionBatch,

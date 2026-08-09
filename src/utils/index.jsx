@@ -113,23 +113,62 @@ export const getPaymentLabel = (id) => PAYMENT_METHODS.find((m) => m.id === id)?
 
 // ── CSV EXPORT ──
 export const exportToCSV = (transactions) => {
-  const headers = ['Data', 'Tipo', 'Descrição', 'Categoria', 'Valor', 'Pagamento', 'Poupança']
-  const rows = transactions.map((t) => [
-    formatDate(t.date),
-    t.isSavings ? 'Poupança' : t.type === 'income' ? 'Receita' : 'Despesa',
-    t.description || '',
-    t.categoryName || '',
-    t.amount.toFixed(2).replace('.', ','),
-    getPaymentLabel(t.paymentMethod),
-    t.isSavings ? 'Sim' : 'Não',
-  ])
+  const headers = [
+    'Data',
+    'Vencimento',
+    'Tipo',
+    'Descrição',
+    'Categoria',
+    'Valor',
+    'Forma de pagamento',
+    'Status pagamento',
+    'Pago em',
+    'Poupança',
+  ]
+
+  const paidAtIso = (value) => {
+    if (!value) return ''
+
+    const candidate =
+      typeof value?.toDate === 'function'
+        ? value.toDate()
+        : value instanceof Date
+          ? value
+          : new Date(value)
+
+    return Number.isNaN(candidate?.getTime?.()) ? '' : candidate.toISOString()
+  }
+
+  const rows = transactions.map((t) => {
+    const paymentStatus =
+      t.paymentStatus || (t.isPaid === true ? 'paid' : t.isPaid === false ? 'pending' : 'unknown')
+
+    return [
+      formatDate(t.date),
+      t.dueDate ? formatDate(t.dueDate) : '',
+      t.isSavings ? 'Poupança' : t.type === 'income' ? 'Receita' : 'Despesa',
+      t.description || '',
+      t.categoryName || '',
+      t.amount.toFixed(2).replace('.', ','),
+      getPaymentLabel(t.paymentMethod),
+      t.type === 'expense' && !t.isSavings ? paymentStatus : '',
+      paidAtIso(t.paidAt),
+      t.isSavings ? 'Sim' : 'Não',
+    ]
+  })
+
   const csv = [headers, ...rows]
-    .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';'))
+    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
     .join('\n')
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }))
-  a.download = `meu-real-${format(new Date(), 'yyyy-MM-dd')}.csv`
-  a.click()
+
+  const anchor = document.createElement('a')
+  anchor.href = URL.createObjectURL(
+    new Blob(['\uFEFF' + csv], {
+      type: 'text/csv;charset=utf-8;',
+    }),
+  )
+  anchor.download = `meu-real-${format(new Date(), 'yyyy-MM-dd')}.csv`
+  anchor.click()
 }
 
 // ── PDF EXPORT ──
@@ -329,23 +368,95 @@ export const exportToPDF = async (transactions, summaryOrCategories = {}, legacy
 
 // ── IMPORT CSV ──
 export const parseCSVImport = (csvText) => {
-  const lines = csvText.trim().split('\n')
+  const lines = csvText.trim().split(/\r?\n/)
+  if (lines.length < 2) return []
+
+  const parseLine = (line) =>
+    line.split(';').map((cell) => cell.replace(/^"|"$/g, '').replace(/""/g, '"').trim())
+
+  const headers = parseLine(lines[0])
+
+  const headerIndex = (...names) => headers.findIndex((header) => names.includes(header))
+
+  const cell = (cols, names, fallbackIndex = -1) => {
+    const index = headerIndex(...names)
+    const resolved = index >= 0 ? index : fallbackIndex
+    return resolved >= 0 ? cols[resolved] || '' : ''
+  }
+
+  const parseBrDate = (value) => {
+    if (!value) return ''
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+      return value.split('/').reverse().join('-')
+    }
+    return ''
+  }
+
+  const validPaymentStatuses = new Set(['unknown', 'pending', 'paid', 'cancelled'])
+
   const txs = []
+
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(';').map((c) => c.replace(/^"|"$/g, '').trim())
-    if (cols.length < 5) continue
-    const [date, type, description, category, value] = cols
-    const amount = parseFloat(value.replace(',', '.'))
-    if (isNaN(amount)) continue
-    txs.push({
-      date: date.split('/').reverse().join('-'),
-      type: type === 'Receita' ? 'income' : 'expense',
+    const cols = parseLine(lines[i])
+
+    const date = cell(cols, ['Data'], 0)
+    const dueDate = cell(cols, ['Vencimento'])
+    const type = cell(cols, ['Tipo'], 1)
+    const description = cell(cols, ['Descrição'], 2)
+    const category = cell(cols, ['Categoria'], 3)
+    const value = cell(cols, ['Valor'], 4)
+    const paymentLabel = cell(cols, ['Forma de pagamento', 'Pagamento'], 5)
+    const paymentStatus = cell(cols, ['Status pagamento'])
+    const paidAt = cell(cols, ['Pago em'])
+
+    const amount = parseFloat(String(value).replace(/\./g, '').replace(',', '.'))
+
+    if (!Number.isFinite(amount)) continue
+
+    const paymentMethod =
+      PAYMENT_METHODS.find((method) => method.id === paymentLabel || method.label === paymentLabel)
+        ?.id || 'pix'
+
+    const transaction = {
+      date: parseBrDate(date),
+      type: type === 'Receita' || type === 'Poupança' ? 'income' : 'expense',
       isSavings: type === 'Poupança',
       description,
       categoryName: category,
       amount,
-    })
+      paymentMethod,
+    }
+
+    const parsedDueDate = parseBrDate(dueDate)
+    if (parsedDueDate) {
+      transaction.dueDate = parsedDueDate
+    }
+
+    if (
+      transaction.type === 'expense' &&
+      !transaction.isSavings &&
+      validPaymentStatuses.has(paymentStatus)
+    ) {
+      transaction.paymentStatus = paymentStatus
+
+      if (paymentStatus === 'paid') {
+        transaction.isPaid = true
+      } else if (paymentStatus === 'pending' || paymentStatus === 'cancelled') {
+        transaction.isPaid = false
+      }
+    }
+
+    if (transaction.paymentStatus === 'paid' && paidAt) {
+      const parsedPaidAt = new Date(paidAt)
+      if (!Number.isNaN(parsedPaidAt.getTime())) {
+        transaction.paidAt = parsedPaidAt
+      }
+    }
+
+    txs.push(transaction)
   }
+
   return txs
 }
 

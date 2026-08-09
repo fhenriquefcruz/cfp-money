@@ -31,9 +31,11 @@ import { useApp } from '../contexts/AppContext'
 import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
+import PaymentControlCard from './PaymentControlCard'
 import { formatCurrency, formatRelativeDate, getMonthlyData } from '../utils'
 import { getCalendarMonthBounds, getRecentDashboardTransactions } from '../domain/dashboard'
 import { getTransactionDateContext } from '../domain/transactionDates'
+import { buildPaymentControlOverview } from '../domain/paymentControl'
 import { format, subMonths, addMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -169,6 +171,8 @@ export default function Dashboard() {
     categories,
     goals,
     budgets,
+    creditCards,
+    invoiceEvents,
     loading,
     getSummary,
     getCategoryTotals,
@@ -190,6 +194,17 @@ export default function Dashboard() {
 
   const monthBounds = useMemo(() => getCalendarMonthBounds(viewDate), [year, month])
   const { start: monthStart, end: monthEnd } = monthBounds
+
+  const paymentSummary = useMemo(
+    () =>
+      buildPaymentControlOverview({
+        transactions,
+        creditCards,
+        invoiceEvents,
+        bounds: monthBounds,
+      }),
+    [transactions, creditCards, invoiceEvents, monthBounds],
+  )
 
   const monthTx = useMemo(
     () => getRecentDashboardTransactions(transactions, monthBounds),
@@ -346,6 +361,11 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </motion.div>
+
+      {/* Controle mensal sem alterar os cálculos financeiros existentes */}
+      <motion.div {...fade} transition={{ delay: 0.08 }}>
+        <PaymentControlCard summary={paymentSummary} loading={isLoading} />
       </motion.div>
 
       {/* Resumo executivo: indicadores essenciais e análise do Money */}

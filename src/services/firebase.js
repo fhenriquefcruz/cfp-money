@@ -33,6 +33,7 @@ import {
 } from 'firebase/firestore'
 import { resolveFirebaseConfig } from '../config/firebaseConfig'
 import { securityRuntime } from '../config/securityRuntime'
+import { createPaymentPersistenceChange } from '../domain/paymentControl'
 
 const firebaseConfig = resolveFirebaseConfig(import.meta.env)
 
@@ -168,6 +169,40 @@ export const addTransaction = async (uid, data) => {
 
 export const updateTransaction = async (uid, id, data) =>
   updateDoc(userDoc(uid, 'transactions', id), { ...data, updatedAt: serverTimestamp() })
+
+export const updateTransactionPaymentStatus = async (uid, id, isPaid) =>
+  updateDoc(userDoc(uid, 'transactions', id), {
+    ...createPaymentPersistenceChange(isPaid, serverTimestamp()),
+    updatedAt: serverTimestamp(),
+  })
+
+export const updateTransactionPaymentStatuses = async (uid, operation = {}) => {
+  const changes = Array.isArray(operation.changes) ? operation.changes : []
+
+  if (!changes.length) return
+  if (changes.length > 450) {
+    throw new Error('A operação excede o limite seguro de alterações.')
+  }
+
+  const batch = writeBatch(db)
+
+  changes.forEach((change) => {
+    if (!change?.id || !change?.data) return
+
+    const data = { ...change.data }
+
+    if (change.toStatus === 'paid' && change.preservePaidAt !== true) {
+      data.paidAt = serverTimestamp()
+    }
+
+    batch.update(userDoc(uid, 'transactions', change.id), {
+      ...data,
+      updatedAt: serverTimestamp(),
+    })
+  })
+
+  await batch.commit()
+}
 
 export const deleteTransaction = async (uid, id) => deleteDoc(userDoc(uid, 'transactions', id))
 

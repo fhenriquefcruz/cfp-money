@@ -1,6 +1,7 @@
 // src/components/TransactionList.jsx
-import React, { useState, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import {
   Plus,
   Search,
@@ -17,6 +18,8 @@ import {
   TrendingUp,
   TrendingDown,
   ArrowUpDown,
+  CheckCircle2,
+  Clock3,
 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { Button, EmptyState, Modal } from './ui'
@@ -35,6 +38,17 @@ import { ptBR } from 'date-fns/locale'
 import { defaultDateRangeEnd } from '../domain/finance'
 import { getTransactionDateContext } from '../domain/transactionDates'
 import { isTransactionSeries } from '../domain/transactionSeries'
+import {
+  PAYMENT_STATUS,
+  buildPaymentBulkOperation,
+  buildPaymentStatusIndex,
+  buildPaymentUndoOperation,
+  canToggleTransactionPayment,
+  getTransactionPaymentState,
+  isPayableExpense,
+  isStructuredCreditTransaction,
+  isTransactionPaid,
+} from '../domain/paymentControl'
 
 const DATE_PRESETS = [
   {
@@ -95,11 +109,91 @@ function groupByDate(txs) {
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
 }
 
-function TxRow({ tx, cat, onEdit, onDelete }) {
+function manualPaymentPresentation(status) {
+  if (status === PAYMENT_STATUS.PAID) {
+    return {
+      label: 'Pago',
+      className: 'border-[--success-border] bg-[--success-bg] text-[--success-text]',
+    }
+  }
+
+  if (status === PAYMENT_STATUS.OVERDUE) {
+    return {
+      label: 'Atrasado',
+      className: 'border-[--danger-border] bg-[--danger-bg] text-[--danger-text]',
+    }
+  }
+
+  if (status === PAYMENT_STATUS.UNKNOWN) {
+    return {
+      label: 'A revisar',
+      className: 'border-[--warning-border] bg-[--warning-bg] text-[--warning-text]',
+    }
+  }
+
+  return {
+    label: 'Pendente',
+    className: 'border-[--warning-border] bg-[--warning-bg] text-[--warning-text]',
+  }
+}
+
+function invoicePaymentPresentation(paymentState = {}) {
+  if (paymentState.status === PAYMENT_STATUS.PAID) {
+    return {
+      label: 'Fatura paga',
+      className: 'border-[--success-border] bg-[--success-bg] text-[--success-text]',
+    }
+  }
+
+  if (paymentState.status === PAYMENT_STATUS.OVERDUE && paymentState.detail === 'overdue_partial') {
+    return {
+      label: 'Fatura parcial atrasada',
+      className: 'border-[--danger-border] bg-[--danger-bg] text-[--danger-text]',
+    }
+  }
+
+  if (paymentState.status === PAYMENT_STATUS.OVERDUE) {
+    return {
+      label: 'Fatura atrasada',
+      className: 'border-[--danger-border] bg-[--danger-bg] text-[--danger-text]',
+    }
+  }
+
+  if (paymentState.status === PAYMENT_STATUS.PARTIAL) {
+    return {
+      label: 'Fatura parcial',
+      className: 'border-[--warning-border] bg-[--warning-bg] text-[--warning-text]',
+    }
+  }
+
+  return {
+    label: 'Fatura pendente',
+    className: 'border-[--warning-border] bg-[--warning-bg] text-[--warning-text]',
+  }
+}
+
+function TxRow({
+  tx,
+  cat,
+  onEdit,
+  onDelete,
+  onTogglePayment,
+  paymentUpdating,
+  paymentState,
+  paymentSelected,
+  onPaymentSelect,
+}) {
   const isIncome = tx.type === 'income' && !tx.isSavings
   const isSavings = tx.isSavings
   const dateContext = getTransactionDateContext(tx)
   const protectedGroup = isTransactionSeries(tx)
+  const payableExpense = isPayableExpense(tx)
+  const structuredCredit = isStructuredCreditTransaction(tx)
+  const toggleablePayment = canToggleTransactionPayment(tx)
+  const paid = paymentState.status === PAYMENT_STATUS.PAID
+  const cancelled = paymentState.status === PAYMENT_STATUS.CANCELLED
+  const manualPresentation = manualPaymentPresentation(paymentState.status)
+  const invoicePresentation = invoicePaymentPresentation(paymentState)
   const createdAt = tx.createdAt?.toDate?.() || (tx.createdAt ? new Date(tx.createdAt) : null)
   const createdAtLabel =
     createdAt && !Number.isNaN(createdAt.getTime())
@@ -183,6 +277,57 @@ function TxRow({ tx, cat, onEdit, onDelete }) {
               💬 {tx.notes}
             </span>
           )}
+          {payableExpense && !structuredCredit && tx.dueDate && (
+            <span className="text-[10px] font-medium text-[--text-secondary]">
+              Vence: {tx.dueDate.split('-').reverse().join('/')}
+            </span>
+          )}
+
+          {payableExpense && toggleablePayment && (
+            <label
+              className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-full border border-[--border-default] bg-[--bg-surface] px-2.5 text-[10px] font-semibold text-[--text-secondary]"
+              title="Selecionar para ação em massa"
+            >
+              <input
+                type="checkbox"
+                checked={Boolean(paymentSelected)}
+                onChange={() => onPaymentSelect(tx)}
+                className="h-4 w-4 rounded accent-[--brand-600]"
+              />
+              <span>Selecionar</span>
+            </label>
+          )}
+
+          {payableExpense && toggleablePayment && (
+            <button
+              type="button"
+              onClick={() => onTogglePayment(tx)}
+              disabled={paymentUpdating}
+              aria-pressed={paid}
+              aria-label={`${paid ? 'Marcar como pendente' : 'Marcar como paga'}: ${tx.description || cat?.name || 'despesa'}`}
+              className={`inline-flex min-h-10 items-center gap-1 rounded-full border px-2.5 text-[10px] font-bold transition-colors disabled:cursor-wait disabled:opacity-60 ${manualPresentation.className}`}
+            >
+              {paid ? <CheckCircle2 size={12} /> : <Clock3 size={12} />}
+              {paymentUpdating ? 'Salvando…' : manualPresentation.label}
+            </button>
+          )}
+
+          {payableExpense && structuredCredit && !toggleablePayment && (
+            <Link
+              to="/cards"
+              aria-label={`Abrir fatura de ${tx.cardName || 'cartão'}`}
+              className={`inline-flex min-h-10 items-center gap-1 rounded-full border px-2.5 text-[10px] font-bold transition-colors ${invoicePresentation.className}`}
+            >
+              {paid ? <CheckCircle2 size={12} /> : <Clock3 size={12} />}
+              {invoicePresentation.label}
+            </Link>
+          )}
+
+          {payableExpense && cancelled && !structuredCredit && (
+            <span className="inline-flex min-h-10 items-center rounded-full border border-[--border-default] bg-[--bg-hover] px-2.5 text-[10px] font-bold text-[--text-tertiary]">
+              Cancelada
+            </span>
+          )}
           <span
             className="text-[10px] text-[--text-secondary]"
             title={
@@ -233,16 +378,21 @@ export default function TransactionList() {
   const {
     transactions,
     categories,
+    creditCards,
+    invoiceEvents,
     removeTransaction,
     createTransaction,
     showNotification,
     applyTransactionSeriesOperation,
+    setTransactionPaymentStatus,
+    commitPaymentStatusOperation,
   } = useApp()
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [catFilter, setCatFilter] = useState('all')
   const [payFilter, setPayFilter] = useState('all')
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('all')
   const [dateRange, setDateRange] = useState(getCurrentMonthRange)
   const [showFilters, setShowFilters] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -253,7 +403,16 @@ export default function TransactionList() {
   const [importText, setImportText] = useState('')
   const [page, setPage] = useState(1)
   const [sortAsc, setSortAsc] = useState(false)
+  const [paymentUpdatingIds, setPaymentUpdatingIds] = useState(() => new Set())
+  const [selectedPaymentIds, setSelectedPaymentIds] = useState(() => new Set())
+  const [lastPaymentOperation, setLastPaymentOperation] = useState(null)
+  const [bulkPaymentUpdating, setBulkPaymentUpdating] = useState(false)
   const PER_PAGE = 30
+
+  const paymentStatusIndex = useMemo(
+    () => buildPaymentStatusIndex({ transactions, creditCards, invoiceEvents }),
+    [transactions, creditCards, invoiceEvents],
+  )
 
   const filtered = useMemo(() => {
     let txs = transactions.filter((tx) => {
@@ -262,6 +421,25 @@ export default function TransactionList() {
       if (typeFilter === 'expense' && tx.type !== 'expense') return false
       if (catFilter !== 'all' && tx.categoryId !== catFilter) return false
       if (payFilter !== 'all' && tx.paymentMethod !== payFilter) return false
+
+      if (paymentStatusFilter !== 'all') {
+        if (!isPayableExpense(tx)) return false
+
+        const paymentState = getTransactionPaymentState(tx, paymentStatusIndex)
+        const status = paymentState.status
+
+        if (
+          paymentStatusFilter === 'to_pay' &&
+          ![PAYMENT_STATUS.PENDING, PAYMENT_STATUS.PARTIAL, PAYMENT_STATUS.OVERDUE].includes(status)
+        ) {
+          return false
+        }
+
+        if (paymentStatusFilter !== 'to_pay' && status !== paymentStatusFilter) {
+          return false
+        }
+      }
+
       if (dateRange.from && tx.date < dateRange.from) return false
       if (dateRange.to && tx.date > dateRange.to) return false
       if (search) {
@@ -277,7 +455,38 @@ export default function TransactionList() {
     })
     txs.sort((a, b) => (sortAsc ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date)))
     return txs
-  }, [transactions, typeFilter, catFilter, payFilter, dateRange, search, sortAsc])
+  }, [
+    transactions,
+    typeFilter,
+    catFilter,
+    payFilter,
+    paymentStatusFilter,
+    paymentStatusIndex,
+    dateRange,
+    search,
+    sortAsc,
+  ])
+
+  const bulkPaymentCandidates = useMemo(
+    () =>
+      filtered.filter(
+        (transaction) => isPayableExpense(transaction) && canToggleTransactionPayment(transaction),
+      ),
+    [filtered],
+  )
+
+  const selectedPaymentTransactions = useMemo(
+    () =>
+      transactions.filter(
+        (transaction) =>
+          selectedPaymentIds.has(transaction.id) && canToggleTransactionPayment(transaction),
+      ),
+    [transactions, selectedPaymentIds],
+  )
+
+  useEffect(() => {
+    setSelectedPaymentIds(new Set())
+  }, [typeFilter, catFilter, payFilter, paymentStatusFilter, dateRange.from, dateRange.to, search])
 
   const summary = useMemo(() => {
     const income = filtered
@@ -297,6 +506,7 @@ export default function TransactionList() {
     typeFilter !== 'all',
     catFilter !== 'all',
     payFilter !== 'all',
+    paymentStatusFilter !== 'all',
     hasCustomDateRange,
     !!search,
   ].filter(Boolean).length
@@ -339,10 +549,77 @@ export default function TransactionList() {
     await removeTransaction(deleteId)
     setDeleteId(null)
   }
+  const handleTogglePayment = async (transaction) => {
+    const isPaid = isTransactionPaid(transaction)
+    setPaymentUpdatingIds((current) => new Set(current).add(transaction.id))
+    try {
+      await setTransactionPaymentStatus(transaction.id, !isPaid)
+    } finally {
+      setPaymentUpdatingIds((current) => {
+        const next = new Set(current)
+        next.delete(transaction.id)
+        return next
+      })
+    }
+  }
+  const togglePaymentSelection = (transaction) => {
+    setSelectedPaymentIds((current) => {
+      const next = new Set(current)
+
+      if (next.has(transaction.id)) {
+        next.delete(transaction.id)
+      } else {
+        next.add(transaction.id)
+      }
+
+      return next
+    })
+  }
+
+  const selectVisiblePayments = () => {
+    setSelectedPaymentIds(new Set(bulkPaymentCandidates.map((transaction) => transaction.id)))
+  }
+
+  const handleBulkPaymentStatus = async (targetStatus) => {
+    const operation = buildPaymentBulkOperation(selectedPaymentTransactions, targetStatus)
+
+    if (!operation.changes.length) {
+      showNotification('Nenhuma alteração necessária.', 'info')
+      return
+    }
+
+    setBulkPaymentUpdating(true)
+
+    try {
+      await commitPaymentStatusOperation(operation)
+      setLastPaymentOperation(operation)
+      setSelectedPaymentIds(new Set())
+    } finally {
+      setBulkPaymentUpdating(false)
+    }
+  }
+
+  const handleUndoPaymentOperation = async () => {
+    if (!lastPaymentOperation) return
+
+    const undo = buildPaymentUndoOperation(lastPaymentOperation)
+
+    setBulkPaymentUpdating(true)
+
+    try {
+      await commitPaymentStatusOperation(undo)
+      setLastPaymentOperation(null)
+      setSelectedPaymentIds(new Set())
+    } finally {
+      setBulkPaymentUpdating(false)
+    }
+  }
+
   const clearFilters = () => {
     setTypeFilter('all')
     setCatFilter('all')
     setPayFilter('all')
+    setPaymentStatusFilter('all')
     setDateRange({ from: '', to: '' })
     setSearch('')
     setPage(1)
@@ -629,7 +906,7 @@ export default function TransactionList() {
                     htmlFor="transaction-payment-filter"
                     className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
                   >
-                    Pagamento
+                    Forma de pagamento
                   </label>
                   <select
                     id="transaction-payment-filter"
@@ -648,6 +925,34 @@ export default function TransactionList() {
                     ))}
                   </select>
                 </div>
+                {/* Status de pagamento */}
+                <div>
+                  <label
+                    htmlFor="transaction-payment-status-filter"
+                    className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
+                  >
+                    Status
+                  </label>
+                  <select
+                    id="transaction-payment-status-filter"
+                    value={paymentStatusFilter}
+                    onChange={(e) => {
+                      setPaymentStatusFilter(e.target.value)
+                      setPage(1)
+                    }}
+                    className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-2.5 py-2 text-xs text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+                  >
+                    <option value="all">Todos</option>
+                    <option value="unknown">A revisar</option>
+                    <option value="to_pay">A pagar</option>
+                    <option value="pending">Pendentes</option>
+                    <option value="partial">Parciais</option>
+                    <option value="overdue">Atrasadas</option>
+                    <option value="paid">Pagas</option>
+                    <option value="cancelled">Canceladas</option>
+                  </select>
+                </div>
+
                 {/* Datas */}
                 <div className="grid grid-cols-1 gap-2 min-[420px]:col-span-2 min-[420px]:grid-cols-2">
                   <div>
@@ -702,6 +1007,91 @@ export default function TransactionList() {
           )}
         </AnimatePresence>
       </div>
+
+      {(bulkPaymentCandidates.length > 0 || lastPaymentOperation) && (
+        <div className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-bold text-[--text-primary]">Ações de pagamento em massa</p>
+              <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+                Selecione despesas manuais. Cartões continuam sendo controlados pela fatura.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {bulkPaymentCandidates.length > 0 && (
+                <button
+                  type="button"
+                  disabled={bulkPaymentUpdating}
+                  onClick={selectVisiblePayments}
+                  className="min-h-10 rounded-xl border border-[--border-default] px-3 text-xs font-semibold text-[--text-secondary] hover:border-[--brand-500] disabled:opacity-50"
+                >
+                  Selecionar visíveis ({bulkPaymentCandidates.length})
+                </button>
+              )}
+
+              {lastPaymentOperation && (
+                <button
+                  type="button"
+                  disabled={bulkPaymentUpdating}
+                  onClick={handleUndoPaymentOperation}
+                  className="min-h-10 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-xs font-bold text-[--warning-text] disabled:opacity-50"
+                >
+                  Desfazer última ação
+                </button>
+              )}
+            </div>
+          </div>
+
+          {paymentStatusFilter === PAYMENT_STATUS.UNKNOWN && bulkPaymentCandidates.length > 0 && (
+            <p className="mt-2 rounded-xl bg-[--warning-bg] px-3 py-2 text-[10px] text-[--warning-text]">
+              Revisão de legado: nada é convertido automaticamente. Selecione somente os itens que
+              você confirmou.
+            </p>
+          )}
+
+          {selectedPaymentTransactions.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[--border-subtle] pt-3">
+              <span className="text-xs font-bold text-[--text-primary]">
+                {selectedPaymentTransactions.length}{' '}
+                {selectedPaymentTransactions.length === 1 ? 'selecionada' : 'selecionadas'}
+              </span>
+
+              <button
+                type="button"
+                disabled={bulkPaymentUpdating}
+                onClick={() => handleBulkPaymentStatus(PAYMENT_STATUS.PAID)}
+                className="min-h-10 rounded-xl border border-[--success-border] bg-[--success-bg] px-3 text-xs font-bold text-[--success-text] disabled:opacity-50"
+              >
+                Marcar como pagas
+              </button>
+
+              <button
+                type="button"
+                disabled={bulkPaymentUpdating}
+                onClick={() => handleBulkPaymentStatus(PAYMENT_STATUS.PENDING)}
+                className="min-h-10 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-xs font-bold text-[--warning-text] disabled:opacity-50"
+              >
+                Marcar como pendentes
+              </button>
+
+              <button
+                type="button"
+                disabled={bulkPaymentUpdating}
+                onClick={() => setSelectedPaymentIds(new Set())}
+                className="min-h-10 px-2 text-xs text-[--text-tertiary] hover:text-[--text-primary]"
+              >
+                Limpar seleção
+              </button>
+            </div>
+          )}
+
+          <p className="mt-2 text-[10px] text-[--text-tertiary]">
+            Ações em massa ficam registradas no histórico da transação. A última ação pode ser
+            desfeita nesta tela.
+          </p>
+        </div>
+      )}
 
       {/* Lista agrupada por data */}
       <div className="transaction-list-surface overflow-hidden rounded-2xl border border-[--border-default] bg-[--bg-surface]">
@@ -760,6 +1150,11 @@ export default function TransactionList() {
                         cat={categories.find((c) => c.id === tx.categoryId)}
                         onEdit={handleEdit}
                         onDelete={handleDeleteRequest}
+                        onTogglePayment={handleTogglePayment}
+                        paymentUpdating={paymentUpdatingIds.has(tx.id)}
+                        paymentState={getTransactionPaymentState(tx, paymentStatusIndex)}
+                        paymentSelected={selectedPaymentIds.has(tx.id)}
+                        onPaymentSelect={togglePaymentSelection}
                       />
                     ))}
                   </div>
