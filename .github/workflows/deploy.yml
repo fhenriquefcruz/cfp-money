@@ -49,7 +49,7 @@ jobs:
           VITE_EMAIL_NOTIFICATIONS_ENABLED: 'false'
           VITE_RECAPTCHA_ENTERPRISE_SITE_KEY: ${{ secrets.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY }}
           VITE_APP_CHECK_ENABLED: 'true'
-          VITE_REQUIRE_APP_CHECK: 'false'
+          VITE_REQUIRE_APP_CHECK: 'true'
           VITE_APP_CHECK_DEBUG: 'false'
 
       - name: Validate PWA
