@@ -274,7 +274,7 @@ export default function Dashboard() {
             >
               <ChevronLeft size={16} />
             </button>
-            <h1 className="min-w-0 flex-1 truncate text-base font-black capitalize text-[--text-primary] min-[390px]:text-lg sm:text-2xl">
+            <h1 className="min-w-0 truncate text-base font-black capitalize text-[--text-primary] min-[390px]:text-lg sm:text-2xl">
               {format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })}
             </h1>
             <button
