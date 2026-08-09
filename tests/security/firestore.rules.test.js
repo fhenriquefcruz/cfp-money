@@ -76,9 +76,6 @@ beforeEach(async () => {
         actorUid: 'admin-user',
         action: 'test',
       }),
-      setDoc(doc(database, 'integrationLinks', 'private-link'), {
-        uid: 'alice',
-      }),
     ])
   })
 })
@@ -340,8 +337,6 @@ test('valida assinantes de notificações', async () => {
 
 test('bloqueia coleções internas e caminhos desconhecidos', async () => {
   const aliceDatabase = environment.authenticatedContext('alice').firestore()
-
-  await assertFails(getDoc(doc(aliceDatabase, 'integrationLinks', 'private-link')))
 
   await assertFails(
     setDoc(doc(aliceDatabase, 'privacyAudit', 'client-write'), {

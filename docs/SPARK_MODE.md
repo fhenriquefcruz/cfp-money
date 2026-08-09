@@ -4,7 +4,6 @@
 
 ```env
 VITE_BACKEND_MODE=disabled
-VITE_TELEGRAM_ENABLED=false
 VITE_EMAIL_NOTIFICATIONS_ENABLED=false
 VITE_ENFORCE_LEGAL_GATE=false
 ```
@@ -15,7 +14,6 @@ VITE_ENFORCE_LEGAL_GATE=false
 - o Legal Gate usa uma subcoleção do próprio usuário;
 - a exportação é montada no navegador;
 - a exclusão é registrada para atendimento manual;
-- o Telegram mostra indisponibilidade sem erro;
 - o painel administrativo mantém os dados, mas ações privilegiadas exigem backend.
 
 O código das Cloud Functions não é removido.

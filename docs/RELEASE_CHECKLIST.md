@@ -24,7 +24,6 @@
 - [ ] lançamentos;
 - [ ] cartões e faturas;
 - [ ] Money;
-- [ ] Telegram;
 - [ ] exportação;
 - [ ] solicitação e cancelamento de exclusão;
 - [ ] painel Admin.

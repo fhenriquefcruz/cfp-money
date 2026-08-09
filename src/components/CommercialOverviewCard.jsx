@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock3,
-  MessageCircle,
   RefreshCw,
   ShieldCheck,
   Users,
@@ -108,18 +107,12 @@ export default function CommercialOverviewCard() {
 
         {metrics && (
           <>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
               <Metric
                 icon={Users}
                 label="Usuários"
                 value={metrics.counts.totalUsers}
                 detail="Contas registradas"
-              />
-              <Metric
-                icon={MessageCircle}
-                label="Telegram"
-                value={`${metrics.rates.telegramAdoption}%`}
-                detail={`${metrics.counts.telegramLinked} vínculo(s) ativo(s)`}
               />
               <Metric
                 icon={ShieldCheck}
@@ -138,7 +131,6 @@ export default function CommercialOverviewCard() {
             <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
               <div className="space-y-2">
                 <CheckRow label="Backend privilegiado" ok={metrics.readiness.checks.backend} />
-                <CheckRow label="Integração Telegram" ok={metrics.readiness.checks.telegram} />
                 <CheckRow
                   label="Privacidade e portabilidade"
                   ok={metrics.readiness.checks.privacy}

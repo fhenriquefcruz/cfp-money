@@ -31,7 +31,6 @@ function createCommercialFunctions({ db, callableOptions, appCheckEnforced }) {
 
       const [
         totalUsers,
-        telegramLinked,
         legalAccepted,
         deletionPending,
         deletionProcessing,
@@ -39,7 +38,6 @@ function createCommercialFunctions({ db, callableOptions, appCheckEnforced }) {
         completedDeletions,
       ] = await Promise.all([
         count(users),
-        count(db.collection('userIntegrations').where('status', '==', 'active')),
         count(
           users
             .where('acceptedTermsVersion', '==', LEGAL_VERSIONS.terms)
@@ -53,7 +51,6 @@ function createCommercialFunctions({ db, callableOptions, appCheckEnforced }) {
 
       return buildCommercialMetrics({
         totalUsers,
-        telegramLinked,
         legalAccepted,
         deletionPending,
         deletionProcessing,

@@ -1,7 +1,5 @@
 # Money Core — Fase 1
 
-Esta entrega inicia o núcleo financeiro do Money sem alterar o funcionamento atual do Meu Real e sem depender do Telegram.
-
 ## Recursos implementados
 
 - mês civil como comportamento padrão;
@@ -33,7 +31,6 @@ Esta entrega inicia o núcleo financeiro do Money sem alterar o funcionamento at
 2. criar o card “Análise do Money” no Dashboard;
 3. criar a rota interna `/money`;
 4. centralizar a geração de relatórios;
-5. somente depois conectar Telegram.
 
 ## Aplicação no Codespaces
 

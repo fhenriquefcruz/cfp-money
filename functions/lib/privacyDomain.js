@@ -103,7 +103,7 @@ function buildPortableExport({
   auth,
   collections,
   ownedCategories,
-  integration,
+  integration = null,
   relatedData = {},
   generatedAt = new Date(),
 }) {

@@ -43,32 +43,6 @@ export async function adminSetUserAccess(command) {
   return result.data
 }
 
-export async function createTelegramLinkCode() {
-  const result = await callable('createIntegrationLinkCode')({
-    provider: 'telegram',
-  })
-
-  return result.data
-}
-
-export async function getTelegramIntegrationStatus() {
-  const result = await callable('getTelegramIntegrationStatus')()
-
-  return result.data
-}
-
-export async function updateTelegramPreferences(preferences) {
-  const result = await callable('updateTelegramPreferences')(preferences)
-
-  return result.data
-}
-
-export async function unlinkTelegramIntegration() {
-  const result = await callable('unlinkTelegramIntegration')()
-
-  return result.data
-}
-
 export async function getPrivacyStatus() {
   const result = await callable('getPrivacyStatus')()
   return result.data

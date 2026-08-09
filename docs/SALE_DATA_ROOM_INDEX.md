@@ -32,7 +32,6 @@
 - usuários cadastrados;
 - usuários ativos;
 - planos e receita;
-- adoção do Telegram;
 - custos mensais;
 - suporte necessário;
 - oportunidades e propostas.

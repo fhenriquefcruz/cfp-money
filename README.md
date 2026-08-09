@@ -1,12 +1,9 @@
 # Meu Real
 
-Aplicação web responsiva de organização financeira pessoal com frontend React/Vite, Firebase Authentication, Cloud Firestore, Cloud Functions, assistente Money e integração opcional com Telegram.
-
 ## Recursos principais
 
 - receitas, despesas, cartões, faturas, metas e orçamentos;
 - assistente financeiro com confirmação antes de gravar;
-- Telegram com vínculo temporário e webhook protegido;
 - administração de acessos Premium;
 - exportação de dados, consentimento versionado e exclusão de conta;
 - métricas operacionais agregadas para administradores;
@@ -17,7 +14,6 @@ Aplicação web responsiva de organização financeira pessoal com frontend Reac
 - Node.js 20;
 - projeto Firebase com Firestore, Authentication e Functions;
 - plano com faturamento para funções agendadas;
-- bot do Telegram apenas quando a integração for usada.
 
 ## Instalação
 
@@ -47,12 +43,6 @@ npx firebase-tools@latest deploy --only firestore,functions
 npm run deploy
 ```
 
-Segredos necessários para o Telegram:
-
-- `INTEGRATION_LINK_SECRET`;
-- `TELEGRAM_BOT_TOKEN`;
-- `TELEGRAM_WEBHOOK_SECRET`.
-
 ## Configuração de produção
 
 Antes do lançamento:
@@ -63,8 +53,7 @@ Antes do lançamento:
 4. valide App Check e então habilite `ENFORCE_APP_CHECK`;
 5. após testar o backend jurídico, defina `VITE_ENFORCE_LEGAL_GATE=true`;
 6. implante regras, índices e funções;
-7. configure e teste o webhook do Telegram;
-8. execute o checklist de release e restauração.
+7. execute o checklist de release e restauração.
 
 ## Arquitetura
 
@@ -73,7 +62,6 @@ Antes do lançamento:
 - `src/domain`: regras financeiras puras;
 - `src/repositories`: contratos de persistência;
 - `src/services`: Firebase e chamadas do backend;
-- `functions`: operações privilegiadas, Telegram, privacidade e métricas;
 - `docs`: operação, segurança, transferência e material comercial.
 
 ## Documentação
@@ -95,7 +83,6 @@ Sem Cloud Functions implantadas, use:
 
 ```env
 VITE_BACKEND_MODE=disabled
-VITE_TELEGRAM_ENABLED=false
 VITE_EMAIL_NOTIFICATIONS_ENABLED=false
 VITE_ENFORCE_LEGAL_GATE=false
 ```

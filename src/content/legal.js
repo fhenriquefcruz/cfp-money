@@ -35,7 +35,7 @@ export const TERMS_SECTIONS = [
     title: '4. Dados inseridos',
     paragraphs: [
       'O usuário é responsável pela exatidão dos lançamentos e pelas informações enviadas à plataforma.',
-      'Antes de salvar lançamentos preparados pelo Money ou pelo Telegram, o usuário deve revisar os dados apresentados para confirmação.',
+      'Antes de salvar lançamentos preparados pelo Money, o usuário deve revisar os dados apresentados para confirmação.',
     ],
   },
   {
@@ -110,7 +110,6 @@ export const PRIVACY_SECTIONS = [
     title: '4. Compartilhamento e operadores',
     paragraphs: [
       'Dados podem ser processados por fornecedores de infraestrutura, autenticação, banco de dados, hospedagem, monitoramento e comunicação estritamente para operar o serviço.',
-      'Quando o usuário vincula o Telegram, as mensagens e respostas passam também pelos serviços do Telegram conforme as regras da própria plataforma.',
       'Informações podem ser compartilhadas quando necessário para cumprir ordem legal, proteger direitos ou investigar fraude e incidentes.',
     ],
   },

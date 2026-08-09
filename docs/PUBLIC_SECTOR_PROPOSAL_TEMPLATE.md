@@ -10,7 +10,6 @@ Contratação de plataforma digital de bem-estar e educação financeira, com im
 - organização financeira pessoal;
 - cartões, faturas, metas e orçamentos;
 - assistente conversacional;
-- integração opcional com Telegram;
 - portabilidade e exclusão;
 - painel agregado sem exposição financeira individual;
 - suporte e capacitação.

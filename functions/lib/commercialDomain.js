@@ -1,6 +1,5 @@
 const DEFAULT_READINESS_CHECKS = Object.freeze({
   backend: true,
-  telegram: true,
   privacy: true,
   indexesManaged: true,
 })
@@ -19,7 +18,6 @@ function percentage(numerator, denominator) {
 
 function buildCommercialMetrics({
   totalUsers,
-  telegramLinked,
   legalAccepted,
   deletionPending,
   deletionProcessing,
@@ -30,7 +28,6 @@ function buildCommercialMetrics({
 }) {
   const counts = {
     totalUsers: safeCount(totalUsers),
-    telegramLinked: safeCount(telegramLinked),
     legalAccepted: safeCount(legalAccepted),
     deletionPending: safeCount(deletionPending),
     deletionProcessing: safeCount(deletionProcessing),
@@ -48,7 +45,6 @@ function buildCommercialMetrics({
     generatedAt: generatedAt.toISOString(),
     counts,
     rates: {
-      telegramAdoption: percentage(counts.telegramLinked, counts.totalUsers),
       legalAcceptance: percentage(counts.legalAccepted, counts.totalUsers),
     },
     deletionBacklog: counts.deletionPending + counts.deletionProcessing + counts.deletionFailed,
