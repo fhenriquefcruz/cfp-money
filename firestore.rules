@@ -1,4 +1,5 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -10,27 +11,119 @@ service cloud.firestore {
     }
 
     function admin() {
-      return signedIn() && request.auth.token.admin == true;
+      return signedIn()
+        && 'admin' in request.auth.token
+        && request.auth.token.admin == true;
     }
 
     function validInitialUser() {
-      return request.resource.data.plan == 'trial'
+      return request.resource.data.keys().hasAll([
+          'email',
+          'displayName',
+          'plan',
+          'trialStart',
+          'premiumUntil',
+          'blocked',
+          'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'email',
+          'displayName',
+          'plan',
+          'trialStart',
+          'premiumUntil',
+          'blocked',
+          'createdAt'
+        ])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 120
+        && request.resource.data.plan == 'trial'
+        && request.resource.data.trialStart is timestamp
+        && request.resource.data.premiumUntil == null
         && request.resource.data.blocked == false
-        && request.resource.data.premiumUntil == null;
+        && request.resource.data.createdAt is timestamp;
+    }
+
+    function validOwnerUserUpdate() {
+      let changed =
+        request.resource.data.diff(resource.data).affectedKeys();
+
+      return changed.hasOnly([
+          'displayName',
+          'email',
+          'updatedAt',
+          'moneySettings',
+          'moneySettingsUpdatedAt'
+        ])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 120
+        && request.resource.data.get('moneySettings', {}) is map
+        && request.resource.data.get(
+          'updatedAt',
+          request.time
+        ) is timestamp
+        && request.resource.data.get(
+          'moneySettingsUpdatedAt',
+          request.time
+        ) is timestamp;
+    }
+
+    function ownsCustomCategory() {
+      return resource != null
+        && signedIn()
+        && resource.data.get('isDefault', true) == false
+        && resource.data.get('ownerUid', '') == request.auth.uid;
+    }
+
+    function validCustomCategoryOwner() {
+      return request.resource != null
+        && request.resource.data.get('isDefault', true) == false
+        && request.resource.data.get('ownerUid', '') == request.auth.uid;
+    }
+
+    function validCustomCategoryFields() {
+      return request.resource != null
+        && request.resource.data.get('name', '') is string
+        && request.resource.data.get('name', '').size() > 0
+        && request.resource.data.get('name', '').size() <= 120
+        && request.resource.data.get('icon', '') is string
+        && request.resource.data.get('icon', '').size() <= 20
+        && request.resource.data.get('color', '') is string
+        && request.resource.data.get('color', '').size() <= 40
+        && request.resource.data.get('type', '') is string
+        && (
+          request.resource.data.get('type', '') == 'income'
+          || request.resource.data.get('type', '') == 'expense'
+        );
+    }
+
+    function validNotificationSubscriber(uid) {
+      return request.resource.data.keys().hasOnly([
+          'uid',
+          'enabled',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'uid',
+          'enabled',
+          'updatedAt'
+        ])
+        && request.resource.data.uid == uid
+        && request.resource.data.enabled == true
+        && request.resource.data.updatedAt is timestamp;
     }
 
     match /users/{uid} {
       allow read: if owner(uid) || admin();
+
       allow create: if owner(uid) && validInitialUser();
-      allow update: if owner(uid)
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly([
-            'displayName',
-            'email',
-            'updatedAt',
-            'moneySettings',
-            'moneySettingsUpdatedAt'
-          ]);
+
+      allow update: if owner(uid) && validOwnerUserUpdate();
+
       allow delete: if false;
 
       match /{collection}/{document=**} {
@@ -39,18 +132,30 @@ service cloud.firestore {
     }
 
     match /categories/{categoryId} {
-      allow read: if signedIn()
-        && (
-          resource.data.isDefault == true
-          || resource.data.ownerUid == request.auth.uid
+      allow read: if admin()
+        || (
+          signedIn()
+          && (
+            resource.data.isDefault == true
+            || resource.data.ownerUid == request.auth.uid
+          )
         );
-      allow create: if signedIn()
-        && request.resource.data.isDefault == false
-        && request.resource.data.ownerUid == request.auth.uid;
-      allow update, delete: if signedIn()
-        && resource.data.isDefault == false
-        && resource.data.ownerUid == request.auth.uid;
-      allow write: if admin();
+
+      allow create: if admin()
+        || (
+          signedIn()
+          && validCustomCategoryOwner()
+          && validCustomCategoryFields()
+        );
+
+      allow update: if admin()
+        || (
+          ownsCustomCategory()
+          && validCustomCategoryOwner()
+          && validCustomCategoryFields()
+        );
+
+      allow delete: if admin() || ownsCustomCategory();
     }
 
     match /adminAudit/{auditId} {
@@ -68,14 +173,10 @@ service cloud.firestore {
 
     match /notificationSubscribers/{uid} {
       allow read: if owner(uid);
+
       allow create, update: if owner(uid)
-        && request.resource.data.keys().hasOnly([
-          'uid',
-          'enabled',
-          'updatedAt'
-        ])
-        && request.resource.data.uid == uid
-        && request.resource.data.enabled == true;
+        && validNotificationSubscriber(uid);
+
       allow delete: if owner(uid);
     }
 

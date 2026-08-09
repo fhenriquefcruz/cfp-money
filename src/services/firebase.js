@@ -32,18 +32,21 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { resolveFirebaseConfig } from '../config/firebaseConfig'
+import { securityRuntime } from '../config/securityRuntime'
 import { createPaymentPersistenceChange } from '../domain/paymentControl'
 
 const firebaseConfig = resolveFirebaseConfig(import.meta.env)
 
 export const app = initializeApp(firebaseConfig)
 
-const appCheckSiteKey = String(import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY || '').trim()
+if (securityRuntime.appCheckDebug && typeof globalThis !== 'undefined') {
+  globalThis.FIREBASE_APPCHECK_DEBUG_TOKEN = true
+}
 
 export const appCheck =
-  appCheckSiteKey && typeof window !== 'undefined'
+  securityRuntime.appCheckEnabled && typeof window !== 'undefined'
     ? initializeAppCheck(app, {
-        provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
+        provider: new ReCaptchaEnterpriseProvider(securityRuntime.appCheckSiteKey),
         isTokenAutoRefreshEnabled: true,
       })
     : null

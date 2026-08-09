@@ -1,9 +1,55 @@
 import { test, expect } from '@playwright/test'
 
+const PRIVATE_ROUTE = '/cfp-money/api/private-financial-data.json'
+
 const isTransientNavigationError = (error) =>
-  /Execution context was destroyed|Cannot find context|Target page, context or browser has been closed/i.test(
+  /Execution context was destroyed|Cannot find context|Target page, context or browser has been closed|Not attached to an active page|Frame was detached|Navigation interrupted by another one/i.test(
     String(error),
   )
+
+async function waitForStableControlledPage(page) {
+  await expect
+    .poll(
+      async () => {
+        try {
+          const marker = await page.evaluate(() => {
+            if (!navigator.serviceWorker.controller) return null
+
+            const value = `${Date.now()}-${Math.random()}`
+            window.__pwaStabilityMarker = value
+
+            return {
+              value,
+              ready: document.readyState === 'complete',
+            }
+          })
+
+          if (!marker?.ready) return false
+
+          await page.waitForTimeout(500)
+
+          return await page.evaluate(
+            (expectedMarker) =>
+              Boolean(
+                navigator.serviceWorker.controller &&
+                document.readyState === 'complete' &&
+                window.__pwaStabilityMarker === expectedMarker,
+              ),
+            marker.value,
+          )
+        } catch (error) {
+          if (isTransientNavigationError(error)) return false
+          throw error
+        }
+      },
+      {
+        timeout: 25_000,
+        intervals: [250, 500, 1_000],
+        message: 'A página controlada pelo service worker deve permanecer estável entre navegações',
+      },
+    )
+    .toBe(true)
+}
 
 async function waitForServiceWorkerControl(page) {
   await page.goto('./', { waitUntil: 'domcontentloaded' })
@@ -30,7 +76,59 @@ async function waitForServiceWorkerControl(page) {
     )
     .toBe(true)
 
-  await page.waitForLoadState('domcontentloaded')
+  await waitForStableControlledPage(page)
+}
+
+async function reloadStable(page, options) {
+  await expect
+    .poll(
+      async () => {
+        try {
+          await page.reload(options)
+          return true
+        } catch (error) {
+          if (!isTransientNavigationError(error)) throw error
+
+          await page.waitForLoadState('domcontentloaded').catch(() => {})
+          return false
+        }
+      },
+      {
+        timeout: 30_000,
+        intervals: [250, 500, 1_000],
+        message: 'A recarga deve concluir após a navegação transitória do service worker',
+      },
+    )
+    .toBe(true)
+
+  await waitForStableControlledPage(page)
+}
+
+async function evaluateStable(page, callback, argument) {
+  let result
+
+  await expect
+    .poll(
+      async () => {
+        try {
+          result = await page.evaluate(callback, argument)
+          return true
+        } catch (error) {
+          if (!isTransientNavigationError(error)) throw error
+
+          await page.waitForLoadState('domcontentloaded').catch(() => {})
+          return false
+        }
+      },
+      {
+        timeout: 20_000,
+        intervals: [250, 500, 1_000],
+        message: 'A avaliação deve ocorrer em um documento estável',
+      },
+    )
+    .toBe(true)
+
+  return result
 }
 
 async function readWorkerVersion(page) {
@@ -90,7 +188,7 @@ test('instala caches versionados sem armazenar endpoints de dados', async ({ pag
   const version = await readWorkerVersion(page)
   expect(version.version).toMatch(/^phase20-[a-f0-9]{12}$/)
 
-  const cacheState = await page.evaluate(async () => {
+  const cacheState = await evaluateStable(page, async () => {
     const names = await caches.keys()
     const entries = {}
 
@@ -119,28 +217,38 @@ test('instala caches versionados sem armazenar endpoints de dados', async ({ pag
 
 test('mantém o aplicativo disponível durante navegação offline', async ({ page, context }) => {
   await waitForServiceWorkerControl(page)
-  await page.reload({ waitUntil: 'networkidle' })
+  await reloadStable(page, { waitUntil: 'networkidle' })
 
   await context.setOffline(true)
-  await page.reload({ waitUntil: 'domcontentloaded' })
 
-  await expect(page.locator('#root')).toBeVisible()
-  await expect
-    .poll(() => page.locator('#root').evaluate((root) => root.childElementCount))
-    .toBeGreaterThan(0)
+  try {
+    await reloadStable(page, { waitUntil: 'domcontentloaded' })
 
-  await context.setOffline(false)
+    await expect(page.locator('#root')).toBeVisible()
+    await expect
+      .poll(() => page.locator('#root').evaluate((root) => root.childElementCount))
+      .toBeGreaterThan(0)
+  } finally {
+    await context.setOffline(false)
+  }
 })
 
 test('não adiciona rotas privadas ou arbitrárias ao cache', async ({ page }) => {
   await waitForServiceWorkerControl(page)
 
-  await page.evaluate(async () => {
-    await fetch('/cfp-money/api/private-financial-data.json').catch(() => {})
-  })
+  await evaluateStable(
+    page,
+    async (privateRoute) => {
+      await fetch(privateRoute).catch(() => {})
+      return true
+    },
+    PRIVATE_ROUTE,
+  )
 
-  const cached = await page.evaluate(async () =>
-    Boolean(await caches.match('/cfp-money/api/private-financial-data.json')),
+  const cached = await evaluateStable(
+    page,
+    async (privateRoute) => Boolean(await caches.match(privateRoute)),
+    PRIVATE_ROUTE,
   )
 
   expect(cached).toBe(false)
