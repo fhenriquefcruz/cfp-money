@@ -6,7 +6,12 @@
 VITE_BACKEND_MODE=disabled
 VITE_EMAIL_NOTIFICATIONS_ENABLED=false
 VITE_ENFORCE_LEGAL_GATE=false
+VITE_APP_CHECK_ENABLED=true
+VITE_REQUIRE_APP_CHECK=true
+VITE_APP_CHECK_DEBUG=false
 ```
+
+O enforcement do App Check permanece ativo no Firestore e Authentication.
 
 ## Comportamento
 
