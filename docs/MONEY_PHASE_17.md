@@ -21,7 +21,3 @@ Os textos incluídos são uma base técnica para o produto. Antes de comercializ
 ## Dependência
 
 A Fase 16 deve estar aplicada. O instalador verifica a existência de:
-
-- `functions/telegram.js`;
-- `src/components/TelegramIntegrationCard.jsx`;
-- exportações do Telegram em `functions/index.js`.

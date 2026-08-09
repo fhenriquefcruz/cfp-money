@@ -163,14 +163,6 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    match /integrationLinkCodes/{codeId} {
-      allow read, write: if false;
-    }
-
-    match /integrationLinks/{linkId} {
-      allow read, write: if false;
-    }
-
     match /notificationSubscribers/{uid} {
       allow read: if owner(uid);
 

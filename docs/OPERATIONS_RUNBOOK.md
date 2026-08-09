@@ -18,16 +18,11 @@ npm run deploy
 
 ## Segredos obrigatórios
 
-- `INTEGRATION_LINK_SECRET`;
-- `TELEGRAM_BOT_TOKEN`;
-- `TELEGRAM_WEBHOOK_SECRET`.
-
 ## Parâmetros e variáveis públicas
 
 - `ENFORCE_APP_CHECK`;
 - variáveis `VITE_FIREBASE_*`;
 - `VITE_RECAPTCHA_ENTERPRISE_SITE_KEY`;
-- `VITE_TELEGRAM_BOT_USERNAME`;
 - identidade e contato jurídico.
 
 ## Incidente

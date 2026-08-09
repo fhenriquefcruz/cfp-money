@@ -10,7 +10,6 @@ Manter o Meu Real funcional sem Cloud Functions pagas e adicionar uma infraestru
 - bloqueio local das chamadas para Functions inexistentes;
 - privacidade e exportação pelo navegador;
 - solicitação manual de exclusão;
-- Telegram preservado, mas desativado no modo gratuito;
 - preferências de e-mail no Perfil;
 - relatórios semanal, quinzenal e mensal;
 - alertas de orçamento e metas;

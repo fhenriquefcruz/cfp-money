@@ -2,8 +2,6 @@
 
 ## Objetivo
 
-Criar uma camada de backend transferível e auditável antes de implantar pagamentos automáticos e o bot do Telegram.
-
 ## Cloud Functions
 
 A fase adiciona funções chamáveis na região `southamerica-east1`:
@@ -26,15 +24,12 @@ A função `adminSetUserAccess`:
 - registra auditoria em `adminAudit`;
 - preserva o prazo restante ao renovar uma assinatura ativa.
 
-## Fundação do Telegram
-
 `createIntegrationLinkCode` gera um código temporário:
 
 - válido por 10 minutos;
 - disponível apenas para Premium ativo;
 - armazenado apenas como HMAC;
 - associado ao UID do Firebase;
-- preparado para consumo pelo webhook do Telegram na Fase 16.
 
 O código puro não é salvo no Firestore.
 
@@ -79,6 +74,5 @@ Isso reduz a dependência do desenvolvedor original em uma futura cessão integr
 - projeto Firebase no plano Blaze;
 - Firebase CLI autenticada;
 - dependências da pasta `functions` instaladas;
-- segredo `INTEGRATION_LINK_SECRET` configurado;
 - custom claim `admin: true` no administrador;
 - reCAPTCHA Enterprise recomendado antes de ativar a exigência do App Check.

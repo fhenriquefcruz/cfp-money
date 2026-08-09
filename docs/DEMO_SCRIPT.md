@@ -7,9 +7,8 @@
 5. fatura e pagamento;
 6. meta e orçamento;
 7. conversa com o Money;
-8. vínculo com Telegram em conta de teste;
-9. exportação dos dados;
-10. painel administrativo e métricas;
-11. arquitetura, segurança e transferência.
+8. exportação dos dados;
+9. painel administrativo e métricas;
+10. arquitetura, segurança e transferência.
 
 Use dados fictícios e nunca exponha contas reais durante apresentações.

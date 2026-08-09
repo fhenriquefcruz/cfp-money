@@ -77,10 +77,6 @@ test('monta exportação portátil sem segredos', () => {
       transactions: [{ amount: 100 }],
     },
     ownedCategories: [],
-    integration: {
-      provider: 'telegram',
-      linked: true,
-    },
     relatedData: {
       privacyConsents: [{ termsVersion: '1.0.0' }],
     },
@@ -90,6 +86,6 @@ test('monta exportação portátil sem segredos', () => {
   assert.equal(exported.schemaVersion, '1.0.0')
   assert.equal(exported.subject.uid, 'user-1')
   assert.equal(exported.data.transactions[0].amount, 100)
-  assert.equal(exported.integration.linked, true)
+  assert.equal(exported.integration, null)
   assert.equal(exported.relatedData.privacyConsents[0].termsVersion, '1.0.0')
 })

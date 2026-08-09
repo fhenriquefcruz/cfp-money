@@ -20,9 +20,7 @@ Contém cadastro, plano, preferências do Money, versões jurídicas aceitas e m
 - `categories`: categorias padrão e categorias próprias identificadas por `ownerUid`;
 - `adminAudit`: ações administrativas;
 - `integrationLinkCodes`: códigos temporários em HMAC;
-- `integrationLinks`: vínculo por identificador do Telegram;
 - `userIntegrations`: vínculo por UID;
-- `telegramDrafts`: rascunhos pendentes;
 - `privacyConsents`: histórico de aceites;
 - `accountDeletionRequests`: solicitações em prazo de segurança;
 - `privacyAudit`: confirmação pseudonimizada de exclusões concluídas.

@@ -7,7 +7,6 @@
 - [ ] domínio e DNS;
 - [ ] projeto Firebase;
 - [ ] projeto Google Cloud e faturamento;
-- [ ] bot e usuário do Telegram;
 - [ ] contas de e-mail e suporte;
 - [ ] documentação e contratos.
 
@@ -24,7 +23,6 @@
 
 - [ ] implantação reproduzida pelo comprador;
 - [ ] testes e CI aprovados;
-- [ ] webhook do Telegram reconfigurado;
 - [ ] plano de incidentes entregue;
 - [ ] custos mensais apresentados;
 - [ ] período de transição e horas incluídas foram encerrados.

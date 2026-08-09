@@ -7,10 +7,9 @@
     "node": "20"
   },
   "scripts": {
-    "lint": "node --check index.js && node --check telegram.js && node --check privacy.js && node --check commercial.js && node --check lib/access.js && node --check lib/telegramDomain.js && node --check lib/privacyDomain.js && node --check lib/commercialDomain.js && node --check scripts/set-telegram-webhook.js",
+    "lint": "node --check index.js && node --check privacy.js && node --check commercial.js && node --check lib/access.js && node --check lib/privacyDomain.js && node --check lib/commercialDomain.js",
     "test": "node --test test/*.test.js",
-    "validate": "npm run lint && npm run test",
-    "telegram:webhook": "node scripts/set-telegram-webhook.js"
+    "validate": "npm run lint && npm run test"
   },
   "dependencies": {
     "firebase-admin": "^14.2.0",

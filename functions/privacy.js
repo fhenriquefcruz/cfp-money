@@ -88,23 +88,7 @@ async function deleteQuery(db, query) {
 }
 
 async function deleteRelatedRootData(db, uid) {
-  const integrationRef = db.collection('userIntegrations').doc(`${uid}_telegram`)
-  const integrationSnapshot = await integrationRef.get()
-  const telegramUserId = String(integrationSnapshot.data()?.telegramUserId || '')
-
-  const directRefs = [db.collection('integrationLinkCodes').doc(uid), integrationRef]
-
-  if (telegramUserId) {
-    directRefs.push(db.collection('integrationLinks').doc(telegramUserId))
-  }
-
-  const writer = db.bulkWriter()
-  directRefs.forEach((ref) => writer.delete(ref))
-  await writer.close()
-
   await Promise.all([
-    deleteQuery(db, db.collection('integrationLinks').where('uid', '==', uid)),
-    deleteQuery(db, db.collection('telegramDrafts').where('uid', '==', uid)),
     deleteQuery(db, db.collection('categories').where('ownerUid', '==', uid)),
     deleteQuery(db, db.collection('privacyConsents').where('uid', '==', uid)),
     deleteQuery(db, db.collection('adminAudit').where('targetUid', '==', uid)),
@@ -192,39 +176,20 @@ function createPrivacyFunctions({ db, callableOptions }) {
     async (request) => {
       const auth = requireAuth(request)
       const userRef = db.collection('users').doc(auth.uid)
-      const [
-        userSnapshot,
-        categoriesSnapshot,
-        integrationSnapshot,
-        consentSnapshot,
-        telegramDraftSnapshot,
-        deletionSnapshot,
-        authRecord,
-      ] = await Promise.all([
-        userRef.get(),
-        db.collection('categories').where('ownerUid', '==', auth.uid).get(),
-        db.collection('userIntegrations').doc(`${auth.uid}_telegram`).get(),
-        db.collection('privacyConsents').where('uid', '==', auth.uid).get(),
-        db.collection('telegramDrafts').where('uid', '==', auth.uid).get(),
-        db.collection('accountDeletionRequests').doc(auth.uid).get(),
-        getAuth().getUser(auth.uid),
-      ])
+      const [userSnapshot, categoriesSnapshot, consentSnapshot, deletionSnapshot, authRecord] =
+        await Promise.all([
+          userRef.get(),
+          db.collection('categories').where('ownerUid', '==', auth.uid).get(),
+          db.collection('privacyConsents').where('uid', '==', auth.uid).get(),
+          db.collection('accountDeletionRequests').doc(auth.uid).get(),
+          getAuth().getUser(auth.uid),
+        ])
 
       if (!userSnapshot.exists) {
         throw new HttpsError('not-found', 'Documento do usuário não encontrado.')
       }
 
       const collections = await exportUserCollections(userRef)
-      const integration = integrationSnapshot.exists
-        ? {
-            provider: integrationSnapshot.data().provider || 'telegram',
-            linked: integrationSnapshot.data().status === 'active',
-            username: integrationSnapshot.data().username || null,
-            firstName: integrationSnapshot.data().firstName || null,
-            linkedAt: integrationSnapshot.data().linkedAt || null,
-            preferences: integrationSnapshot.data().preferences || {},
-          }
-        : null
 
       return buildPortableExport({
         uid: auth.uid,
@@ -235,13 +200,8 @@ function createPrivacyFunctions({ db, callableOptions }) {
           id: document.id,
           ...document.data(),
         })),
-        integration,
         relatedData: {
           privacyConsents: consentSnapshot.docs.map((document) => ({
-            id: document.id,
-            ...document.data(),
-          })),
-          telegramDrafts: telegramDraftSnapshot.docs.map((document) => ({
             id: document.id,
             ...document.data(),
           })),

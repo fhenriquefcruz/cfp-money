@@ -16,7 +16,6 @@ test('calcula percentual com duas casas', () => {
 test('monta métricas comerciais agregadas', () => {
   const metrics = buildCommercialMetrics({
     totalUsers: 100,
-    telegramLinked: 25,
     legalAccepted: 80,
     deletionPending: 2,
     deletionProcessing: 1,
@@ -27,7 +26,6 @@ test('monta métricas comerciais agregadas', () => {
   })
 
   assert.equal(metrics.version, '18.0.0')
-  assert.equal(metrics.rates.telegramAdoption, 25)
   assert.equal(metrics.rates.legalAcceptance, 80)
   assert.equal(metrics.deletionBacklog, 4)
   assert.equal(metrics.readiness.percentage, 100)
@@ -40,18 +38,16 @@ test('sinaliza App Check pendente', () => {
   })
 
   assert.equal(metrics.readiness.checks.appCheck, false)
-  assert.equal(metrics.readiness.completed, 4)
-  assert.equal(metrics.readiness.total, 5)
-  assert.equal(metrics.readiness.percentage, 80)
+  assert.equal(metrics.readiness.completed, 3)
+  assert.equal(metrics.readiness.total, 4)
+  assert.equal(metrics.readiness.percentage, 75)
 })
 
 test('não produz NaN sem usuários', () => {
   const metrics = buildCommercialMetrics({
     totalUsers: 0,
-    telegramLinked: 5,
     legalAccepted: 4,
   })
 
-  assert.equal(metrics.rates.telegramAdoption, 0)
   assert.equal(metrics.rates.legalAcceptance, 0)
 })
