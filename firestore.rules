@@ -72,6 +72,37 @@ service cloud.firestore {
         ) is timestamp;
     }
 
+    function validAdminAccessUpdate() {
+      let changed =
+        request.resource.data.diff(resource.data).affectedKeys();
+
+      return changed.hasOnly([
+          'plan',
+          'premiumUntil',
+          'blocked',
+          'updatedAt',
+          'accessUpdatedAt',
+          'accessUpdatedBy'
+        ])
+        && changed.hasAny(['plan', 'premiumUntil', 'blocked'])
+        && request.resource.data.blocked is bool
+        && (
+          !changed.hasAny(['plan', 'premiumUntil'])
+          || (
+            request.resource.data.plan == 'premium'
+            && request.resource.data.premiumUntil is timestamp
+            && request.resource.data.blocked == false
+          )
+          || (
+            request.resource.data.plan == 'free'
+            && request.resource.data.premiumUntil == null
+          )
+        )
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.accessUpdatedAt is timestamp
+        && request.resource.data.accessUpdatedBy == request.auth.uid;
+    }
+
     function ownsCustomCategory() {
       return resource != null
         && signedIn()
@@ -122,7 +153,7 @@ service cloud.firestore {
 
       allow create: if owner(uid) && validInitialUser();
 
-      allow update: if owner(uid) && validOwnerUserUpdate();
+      allow update: if (owner(uid) && validOwnerUserUpdate()) || (admin() && validAdminAccessUpdate());
 
       allow delete: if false;
 

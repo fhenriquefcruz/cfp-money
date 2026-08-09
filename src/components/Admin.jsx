@@ -18,7 +18,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Card } from './ui'
 import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
 import { onAllUsersChange } from '../services/firebase'
-import { adminSetUserAccess } from '../services/backend'
+import { adminSetUserAccess } from '../services/adminGateway'
 import CommercialOverviewRouter from './CommercialOverviewRouter'
 
 // Badges coloridos por status
