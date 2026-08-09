@@ -6,6 +6,7 @@ export {
   addTransaction,
   updateTransaction,
   updateTransactionPaymentStatus,
+  updateTransactionPaymentStatuses,
   deleteTransaction,
   onInvoiceEventsChange,
   addInvoiceEvent,

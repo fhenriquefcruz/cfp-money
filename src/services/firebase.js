@@ -176,6 +176,34 @@ export const updateTransactionPaymentStatus = async (uid, id, isPaid) =>
     updatedAt: serverTimestamp(),
   })
 
+export const updateTransactionPaymentStatuses = async (uid, operation = {}) => {
+  const changes = Array.isArray(operation.changes) ? operation.changes : []
+
+  if (!changes.length) return
+  if (changes.length > 450) {
+    throw new Error('A operação excede o limite seguro de alterações.')
+  }
+
+  const batch = writeBatch(db)
+
+  changes.forEach((change) => {
+    if (!change?.id || !change?.data) return
+
+    const data = { ...change.data }
+
+    if (change.toStatus === 'paid' && change.preservePaidAt !== true) {
+      data.paidAt = serverTimestamp()
+    }
+
+    batch.update(userDoc(uid, 'transactions', change.id), {
+      ...data,
+      updatedAt: serverTimestamp(),
+    })
+  })
+
+  await batch.commit()
+}
+
 export const deleteTransaction = async (uid, id) => deleteDoc(userDoc(uid, 'transactions', id))
 
 // ── INVOICE EVENTS ──

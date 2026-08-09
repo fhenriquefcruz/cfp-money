@@ -138,6 +138,7 @@ const EMPTY_FORM = {
   description: '',
   categoryId: '',
   date: format(new Date(), 'yyyy-MM-dd'),
+  dueDate: '',
   paymentMethod: 'pix',
   notes: '',
   // Cartão
@@ -179,6 +180,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         description: transaction.description || '',
         categoryId: transaction.categoryId || '',
         date: transaction.date,
+        dueDate: transaction.dueDate || '',
         paymentMethod: transaction.paymentMethod || 'pix',
         cardId: transaction.cardId || '',
         notes: transaction.notes || '',
@@ -256,7 +258,17 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
 
     try {
       if (isEditing) {
-        await editTransaction(transaction.id, { ...baseData, amount: baseAmount, date: form.date })
+        const editData = {
+          ...baseData,
+          amount: baseAmount,
+          date: form.date,
+        }
+
+        if (!transaction.isCreditPurchase) {
+          editData.dueDate = isExpense ? form.dueDate || '' : ''
+        }
+
+        await editTransaction(transaction.id, editData)
       } else if (form.isInstallment && isExpense) {
         const n = parseInt(form.installments)
         const groupId = `${Date.now()}_${Math.random().toString(36).slice(2)}`
@@ -276,10 +288,15 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           const amounts = splitInstallmentAmounts(baseAmount, n)
           const items = amounts.map((amount, i) => {
             const d = format(addMonths(new Date(form.date + 'T00:00:00'), i), 'yyyy-MM-dd')
+            const dueDate = form.dueDate
+              ? format(addMonths(new Date(form.dueDate + 'T00:00:00'), i), 'yyyy-MM-dd')
+              : ''
+
             return {
               ...baseData,
               amount,
               date: getEffectiveDate(d, form.closingDay),
+              dueDate,
               isInstallment: true,
               installmentNum: i + 1,
               installmentOf: n,
@@ -297,6 +314,10 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           ...baseData,
           amount: baseAmount,
           date: format(addMonths(new Date(form.date + 'T00:00:00'), i), 'yyyy-MM-dd'),
+          dueDate:
+            isExpense && form.dueDate
+              ? format(addMonths(new Date(form.dueDate + 'T00:00:00'), i), 'yyyy-MM-dd')
+              : '',
           recurringGroupId: groupId,
           recurringNum: i + 1,
           recurringOf: months,
@@ -315,7 +336,12 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         } else {
           const effDate =
             isExpense && form.isCredit ? getEffectiveDate(form.date, form.closingDay) : form.date
-          await createTransaction({ ...baseData, amount: baseAmount, date: effDate })
+          await createTransaction({
+            ...baseData,
+            amount: baseAmount,
+            date: effDate,
+            dueDate: isExpense ? form.dueDate || '' : '',
+          })
         }
       }
       onClose()
@@ -494,6 +520,16 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
             </div>
           )}
         </div>
+
+        {isExpense && !showCreditFields && (
+          <Input
+            label="Vencimento (opcional)"
+            type="date"
+            value={form.dueDate}
+            onChange={update('dueDate')}
+            icon={<Calendar size={15} />}
+          />
+        )}
 
         {/* Campos de cartão de crédito */}
         <AnimatePresence>
