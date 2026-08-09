@@ -47,7 +47,8 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_BACKEND_MODE: 'disabled'
           VITE_EMAIL_NOTIFICATIONS_ENABLED: 'false'
-          VITE_APP_CHECK_ENABLED: 'false'
+          VITE_RECAPTCHA_ENTERPRISE_SITE_KEY: ${{ secrets.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY }}
+          VITE_APP_CHECK_ENABLED: 'true'
           VITE_REQUIRE_APP_CHECK: 'false'
           VITE_APP_CHECK_DEBUG: 'false'
 
