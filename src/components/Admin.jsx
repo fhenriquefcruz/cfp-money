@@ -20,6 +20,7 @@ import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
 import { onAllUsersChange } from '../services/firebase'
 import { adminSetUserAccess } from '../services/adminGateway'
 import CommercialOverviewRouter from './CommercialOverviewRouter'
+import SupportAdminCard from './SupportAdminCard'
 
 // Badges coloridos por status
 const STATUS_STYLES = {
@@ -350,6 +351,8 @@ export default function Admin() {
       </div>
 
       <CommercialOverviewRouter />
+
+      <SupportAdminCard />
 
       {/* Instrução Pix */}
       <Card>

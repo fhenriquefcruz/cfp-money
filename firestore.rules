@@ -132,6 +132,79 @@ service cloud.firestore {
         );
     }
 
+    function validSupportCreate(requestId) {
+      return request.resource.data.keys().hasAll([
+          'uid',
+          'email',
+          'protocol',
+          'category',
+          'subject',
+          'message',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'email',
+          'protocol',
+          'category',
+          'subject',
+          'message',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.protocol == requestId
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.category is string
+        && (
+          request.resource.data.category == 'support'
+          || request.resource.data.category == 'technical'
+          || request.resource.data.category == 'billing'
+          || request.resource.data.category == 'cancellation'
+          || request.resource.data.category == 'privacy'
+        )
+        && request.resource.data.subject is string
+        && request.resource.data.subject.size() >= 4
+        && request.resource.data.subject.size() <= 120
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 10
+        && request.resource.data.message.size() <= 4000
+        && request.resource.data.status == 'open'
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    function validSupportAdminUpdate() {
+      let changed =
+        request.resource.data.diff(resource.data).affectedKeys();
+
+      return changed.hasOnly([
+          'status',
+          'response',
+          'respondedAt',
+          'updatedAt',
+          'responderUid'
+        ])
+        && changed.hasAny(['status', 'response'])
+        && request.resource.data.status is string
+        && (
+          request.resource.data.status == 'open'
+          || request.resource.data.status == 'in_progress'
+          || request.resource.data.status == 'answered'
+          || request.resource.data.status == 'closed'
+        )
+        && request.resource.data.response is string
+        && request.resource.data.response.size() >= 2
+        && request.resource.data.response.size() <= 4000
+        && request.resource.data.respondedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.responderUid == request.auth.uid;
+    }
+
     function validNotificationSubscriber(uid) {
       return request.resource.data.keys().hasOnly([
           'uid',
@@ -192,6 +265,14 @@ service cloud.firestore {
     match /adminAudit/{auditId} {
       allow read: if admin();
       allow write: if false;
+    }
+
+    match /supportRequests/{requestId} {
+      allow create: if signedIn() && validSupportCreate(requestId);
+      allow read: if signedIn()
+        && (resource.data.uid == request.auth.uid || admin());
+      allow update: if admin() && validSupportAdminUpdate();
+      allow delete: if false;
     }
 
     match /notificationSubscribers/{uid} {

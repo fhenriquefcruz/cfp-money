@@ -33,12 +33,12 @@
 
 ## Comercial
 
-- [ ] identidade jurídica preenchida;
-- [ ] Termos e Política revisados;
-- [ ] preço e escopo aprovados;
-- [ ] SLA definido;
+- [x] identidade jurídica preenchida;
+- [x] Termos e Política revisados;
+- [x] preço e escopo aprovados;
+- [x] SLA definido;
 - [ ] suporte e contato publicados;
-- [ ] backup e recuperação testados.
+- [x] backup e recuperação testados.
 
 ## Evidências de homologação
 

@@ -28,17 +28,11 @@ import { auth } from '../services/firebase'
 import PrivacyDataCardRouter from './PrivacyDataCardRouter'
 import EmailNotificationsCard from './EmailNotificationsCard'
 import PwaInstallCard from './PwaInstallCard'
+import SupportCard from './SupportCard'
+import { COMMERCIAL_OFFER, PREMIUM_FEATURES } from '../content/commercial'
 
 const PIX_KEY = 'fhenriquefcruz@gmail.com' // sua chave Pix
-const PIX_AMOUNT = 'R$ 19,90'
-
-const PREMIUM_FEATURES = [
-  'Money, seu assistente financeiro pessoal',
-  'Dashboard avançado com previsões',
-  'Relatórios completos + exportação PDF e CSV',
-  'Alertas inteligentes de orçamento',
-  'Relatórios e alertas automáticos por e-mail',
-]
+const PIX_AMOUNT = COMMERCIAL_OFFER.premiumPrice
 
 export default function Profile() {
   const { user, logout } = useAuth()
@@ -391,6 +385,8 @@ export default function Profile() {
       <PwaInstallCard />
 
       <EmailNotificationsCard />
+
+      <SupportCard />
 
       <PrivacyDataCardRouter />
 

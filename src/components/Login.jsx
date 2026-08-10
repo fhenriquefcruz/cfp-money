@@ -1,5 +1,5 @@
 // src/components/Login.jsx
-import React, { useState } from 'react'
+import React, { lazy, Suspense, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Activity,
@@ -26,6 +26,8 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { Button, Input } from './ui'
 import ThemeToggle from './ThemeToggle'
+
+const PublicLegalLinks = lazy(() => import('./PublicLegalLinks'))
 
 const MODES = {
   login: {
@@ -699,10 +701,9 @@ export default function Login() {
                 </div>
 
                 {mode !== 'forgot' && (
-                  <p className="mt-5 text-center text-[11px] leading-relaxed text-[--text-tertiary]">
-                    Ao continuar, você concorda com os Termos de uso e a Política de privacidade
-                    aplicáveis ao serviço.
-                  </p>
+                  <Suspense fallback={null}>
+                    <PublicLegalLinks />
+                  </Suspense>
                 )}
               </motion.div>
             </motion.section>

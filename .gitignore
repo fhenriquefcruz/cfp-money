@@ -41,3 +41,7 @@ test-results-pwa/
 firestore-debug.log
 firebase-debug.log
 ui-debug.log
+
+# Backups locais criptografados do Meu Real
+backups/
+*.json.enc

@@ -88,10 +88,17 @@ export async function recordSparkLegalAcceptance(uid, data) {
 }
 
 export async function exportSparkData(uid) {
-  const [userSnapshot, subscriptionSnapshot, categoriesSnapshot, ...groups] = await Promise.all([
+  const [
+    userSnapshot,
+    subscriptionSnapshot,
+    categoriesSnapshot,
+    supportRequestsSnapshot,
+    ...groups
+  ] = await Promise.all([
     getDoc(userRef(uid)),
     getDoc(doc(db, 'notificationSubscribers', uid)),
     getDocs(query(collection(db, 'categories'), where('ownerUid', '==', uid))),
+    getDocs(query(collection(db, 'supportRequests'), where('uid', '==', uid))),
     ...knownCollections.map((name) => readCollection(uid, name)),
   ])
 
@@ -103,6 +110,10 @@ export async function exportSparkData(uid) {
       ? serialize(subscriptionSnapshot.data())
       : null,
     categories: categoriesSnapshot.docs.map((item) => ({
+      id: item.id,
+      ...serialize(item.data()),
+    })),
+    supportRequests: supportRequestsSnapshot.docs.map((item) => ({
       id: item.id,
       ...serialize(item.data()),
     })),
