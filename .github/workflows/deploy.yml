@@ -37,7 +37,7 @@ jobs:
         run: npm run test
 
       - name: Build
-        run: npm run build
+        run: npm run validate:commercial && npm run build
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
@@ -51,6 +51,12 @@ jobs:
           VITE_APP_CHECK_ENABLED: 'true'
           VITE_REQUIRE_APP_CHECK: 'true'
           VITE_APP_CHECK_DEBUG: 'false'
+          VITE_LEGAL_CONTROLLER_NAME: ${{ secrets.VITE_LEGAL_CONTROLLER_NAME }}
+          VITE_LEGAL_REGISTRATION: ${{ secrets.VITE_LEGAL_REGISTRATION }}
+          VITE_LEGAL_ADDRESS: ${{ secrets.VITE_LEGAL_ADDRESS }}
+          VITE_LEGAL_CONTACT_EMAIL: ${{ secrets.VITE_LEGAL_CONTACT_EMAIL }}
+          VITE_LEGAL_COUNTRY: 'Brasil'
+          VITE_ENFORCE_LEGAL_GATE: 'true'
 
       - name: Validate PWA
         run: npm run validate:pwa

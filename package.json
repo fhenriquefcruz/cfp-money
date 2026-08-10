@@ -46,7 +46,11 @@
     "test:rules": "firebase emulators:exec --project demo-cfp-money-security --only firestore \"node --test tests/security/firestore.rules.test.js\"",
     "validate:security-config": "node scripts/validate-security-config.mjs",
     "validate:security": "npm run validate:security-config && npm run validate:production-audit && npm run test:security-runtime && npm run test:rules",
-    "validate:production-audit": "node scripts/validate-production-audit.mjs"
+    "validate:production-audit": "node scripts/validate-production-audit.mjs",
+    "backup:create": "node functions/tools/sparkBackup.js",
+    "backup:restore": "node functions/tools/sparkRestore.js",
+    "test:backup-recovery": "firebase emulators:exec --project demo-cfp-money-backup --only firestore \"node functions/tools/testBackupRecovery.js\"",
+    "validate:commercial": "node scripts/validate-commercial-readiness.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.0",

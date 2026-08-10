@@ -176,14 +176,21 @@ function createPrivacyFunctions({ db, callableOptions }) {
     async (request) => {
       const auth = requireAuth(request)
       const userRef = db.collection('users').doc(auth.uid)
-      const [userSnapshot, categoriesSnapshot, consentSnapshot, deletionSnapshot, authRecord] =
-        await Promise.all([
-          userRef.get(),
-          db.collection('categories').where('ownerUid', '==', auth.uid).get(),
-          db.collection('privacyConsents').where('uid', '==', auth.uid).get(),
-          db.collection('accountDeletionRequests').doc(auth.uid).get(),
-          getAuth().getUser(auth.uid),
-        ])
+      const [
+        userSnapshot,
+        categoriesSnapshot,
+        consentSnapshot,
+        deletionSnapshot,
+        supportSnapshot,
+        authRecord,
+      ] = await Promise.all([
+        userRef.get(),
+        db.collection('categories').where('ownerUid', '==', auth.uid).get(),
+        db.collection('privacyConsents').where('uid', '==', auth.uid).get(),
+        db.collection('accountDeletionRequests').doc(auth.uid).get(),
+        db.collection('supportRequests').where('uid', '==', auth.uid).get(),
+        getAuth().getUser(auth.uid),
+      ])
 
       if (!userSnapshot.exists) {
         throw new HttpsError('not-found', 'Documento do usuário não encontrado.')
@@ -211,6 +218,10 @@ function createPrivacyFunctions({ db, callableOptions }) {
                 ...deletionSnapshot.data(),
               }
             : null,
+          supportRequests: supportSnapshot.docs.map((document) => ({
+            id: document.id,
+            ...document.data(),
+          })),
         },
       })
     },

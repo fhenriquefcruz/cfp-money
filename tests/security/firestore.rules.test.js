@@ -405,3 +405,59 @@ test('permite ao admin atualizar somente campos de acesso com autoria própria',
     }),
   )
 })
+
+test('protege solicitações de suporte e permite resposta administrativa', async () => {
+  const aliceDatabase = environment.authenticatedContext('alice').firestore()
+  const bobDatabase = environment.authenticatedContext('bob').firestore()
+  const adminDatabase = environment.authenticatedContext('admin-user', { admin: true }).firestore()
+  const requestReference = doc(aliceDatabase, 'supportRequests', 'support-alice-1')
+  const now = Timestamp.now()
+
+  await assertSucceeds(
+    setDoc(requestReference, {
+      uid: 'alice',
+      email: 'alice@example.com',
+      protocol: 'support-alice-1',
+      category: 'privacy',
+      subject: 'Exercício de direito',
+      message: 'Quero confirmar quais dados estão vinculados à minha conta.',
+      status: 'open',
+      createdAt: now,
+      updatedAt: now,
+    }),
+  )
+
+  await assertSucceeds(getDoc(requestReference))
+  await assertFails(getDoc(doc(bobDatabase, 'supportRequests', 'support-alice-1')))
+  await assertSucceeds(getDoc(doc(adminDatabase, 'supportRequests', 'support-alice-1')))
+
+  await assertFails(
+    updateDoc(requestReference, {
+      status: 'closed',
+    }),
+  )
+
+  await assertSucceeds(
+    updateDoc(doc(adminDatabase, 'supportRequests', 'support-alice-1'), {
+      status: 'answered',
+      response: 'Solicitação recebida e respondida pelo canal oficial.',
+      respondedAt: now,
+      updatedAt: now,
+      responderUid: 'admin-user',
+    }),
+  )
+
+  await assertFails(
+    setDoc(doc(aliceDatabase, 'supportRequests', 'support-alice-invalid'), {
+      uid: 'alice',
+      email: 'alice@example.com',
+      protocol: 'outro-protocolo',
+      category: 'privacy',
+      subject: 'Teste',
+      message: 'Mensagem suficientemente longa.',
+      status: 'open',
+      createdAt: now,
+      updatedAt: now,
+    }),
+  )
+})

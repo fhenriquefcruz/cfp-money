@@ -1,6 +1,6 @@
 const LEGAL_VERSIONS = {
-  terms: '1.0.0',
-  privacy: '1.0.0',
+  terms: '1.1.0',
+  privacy: '1.1.0',
 }
 
 const DELETION_CONFIRMATION = 'EXCLUIR MINHA CONTA'

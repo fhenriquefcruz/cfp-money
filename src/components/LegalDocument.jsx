@@ -14,9 +14,14 @@ export default function LegalDocument({ type = 'privacy', compact = false }) {
         <h2 className="text-lg font-black text-[--text-primary]">
           {isTerms ? 'Termos de Uso' : 'Política de Privacidade'}
         </h2>
-        <p className="mt-1 text-xs text-[--text-tertiary]">
-          Versão {version} · {LEGAL_IDENTITY.controller}
-        </p>
+        <div className="mt-1 space-y-1 text-xs text-[--text-tertiary]">
+          <p>
+            Versão {version} · {LEGAL_IDENTITY.controller}
+          </p>
+          <p>{LEGAL_IDENTITY.registration}</p>
+          <p>{LEGAL_IDENTITY.address}</p>
+          <p className="break-all">{LEGAL_IDENTITY.contactEmail}</p>
+        </div>
       </header>
 
       {sections.map((section) => (
