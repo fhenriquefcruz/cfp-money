@@ -37,7 +37,7 @@
 - [x] Termos e Política revisados;
 - [x] preço e escopo aprovados;
 - [x] SLA definido;
-- [ ] suporte e contato publicados;
+- [x] suporte e contato publicados;
 - [x] backup e recuperação testados.
 
 ## Evidências de homologação
