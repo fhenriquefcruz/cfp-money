@@ -7,7 +7,7 @@ const distRoot = join(root, 'dist')
 const sourcePath = join(root, 'public', 'sw.js')
 const outputPath = join(distRoot, 'sw.js')
 const metadataPath = join(distRoot, 'pwa-build.json')
-const basePath = '/cfp-money/'
+const basePath = process.env.VITE_PUBLIC_BASE_PATH || '/cfp-money/'
 
 if (!existsSync(distRoot)) {
   throw new Error('Diretório dist ausente. Execute o build do Vite primeiro.')

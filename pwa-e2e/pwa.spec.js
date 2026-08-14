@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-const PRIVATE_ROUTE = '/cfp-money/api/private-financial-data.json'
+const PRIVATE_ROUTE = './api/private-financial-data.json'
 
 const isTransientNavigationError = (error) =>
   /Execution context was destroyed|Cannot find context|Target page, context or browser has been closed|Not attached to an active page|Frame was detached|Navigation interrupted by another one/i.test(

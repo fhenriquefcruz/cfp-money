@@ -45,7 +45,7 @@ walk(distRoot)
 const normalizeReference = (reference) =>
   reference
     .replace(/^https?:\/\/[^/]+/, '')
-    .replace(/^\/cfp-money\//, '')
+    .replace(/^\/(?:cfp-money\/)?/, '')
     .replace(/^\.\//, '')
     .replace(/^\//, '')
 
