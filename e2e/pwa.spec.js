@@ -10,7 +10,7 @@ test('manifesto e service worker permanecem disponíveis', async ({ page }, test
   expect(manifestResponse.ok()).toBe(true)
   const manifest = await manifestResponse.json()
   expect(manifest.display).toBe('standalone')
-  expect(manifest.start_url).toContain('/cfp-money/#/dashboard')
+  expect(manifest.start_url).toBe('./#/dashboard')
   expect(manifest.icons.length).toBeGreaterThanOrEqual(2)
 
   const workerResponse = await page.request.get('./sw.js')

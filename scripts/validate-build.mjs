@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 await build({
   configFile: false,
   plugins: [react()],
-  base: '/cfp-money/',
+  base: process.env.VITE_PUBLIC_BASE_PATH || '/cfp-money/',
   build: {
     outDir: 'dist',
     sourcemap: false,

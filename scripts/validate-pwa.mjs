@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const root = process.cwd()
+const expectedBasePath = process.env.VITE_PUBLIC_BASE_PATH || '/cfp-money/'
+const expectedAssetPrefix = `${expectedBasePath}assets/`
 const fail = (message) => {
   console.error(`PWA inválida: ${message}`)
   process.exitCode = 1
@@ -82,7 +84,7 @@ if (existsSync(generatedWorkerPath)) {
     fail('dist/sw.js não possui versão baseada no build')
   }
 
-  if (!generatedWorker.includes('/cfp-money/assets/')) {
+  if (!generatedWorker.includes(expectedAssetPrefix)) {
     fail('dist/sw.js não possui precache dos assets versionados')
   }
 

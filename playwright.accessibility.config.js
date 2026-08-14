@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const publicBasePath = process.env.VITE_PUBLIC_BASE_PATH || '/cfp-money/'
+const appUrl = `http://127.0.0.1:4178${publicBasePath}`
+
 const firebaseTestEnv = {
   VITE_E2E_MODE: 'true',
   VITE_FIREBASE_API_KEY: 'test-api-key',
@@ -22,7 +25,7 @@ export default defineConfig({
   },
   reporter: [['list'], ['html', { outputFolder: 'playwright-a11y-report', open: 'never' }]],
   use: {
-    baseURL: 'http://127.0.0.1:4178/cfp-money/',
+    baseURL: appUrl,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -31,7 +34,7 @@ export default defineConfig({
   },
   webServer: {
     command: 'npm run build && npm run preview -- --host 127.0.0.1 --port 4178',
-    url: 'http://127.0.0.1:4178/cfp-money/',
+    url: appUrl,
     reuseExistingServer: false,
     timeout: 120_000,
     env: {

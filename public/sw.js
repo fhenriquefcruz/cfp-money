@@ -1,5 +1,5 @@
 const SW_VERSION = '__SW_VERSION__'
-const BASE_PATH = '/cfp-money/'
+const BASE_PATH = new URL(self.registration.scope).pathname
 const OFFLINE_PATH = `${BASE_PATH}offline.html`
 const SHELL_CACHE = `meu-real-shell-${SW_VERSION}`
 const ASSET_CACHE = `meu-real-assets-${SW_VERSION}`
