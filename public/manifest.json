@@ -8,18 +8,11 @@
   "start_url": "./#/dashboard",
   "scope": "./",
   "display": "standalone",
-  "display_override": [
-    "window-controls-overlay",
-    "standalone",
-    "minimal-ui"
-  ],
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#070b18",
   "theme_color": "#4f46e5",
   "orientation": "any",
-  "categories": [
-    "finance",
-    "productivity"
-  ],
+  "categories": ["finance", "productivity"],
   "prefer_related_applications": false,
   "icons": [
     {
