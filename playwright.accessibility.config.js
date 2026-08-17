@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const publicBasePath = process.env.VITE_PUBLIC_BASE_PATH || '/cfp-money/'
-const appUrl = `http://127.0.0.1:4178${publicBasePath}`
+const previewBasePath = publicBasePath === './' ? '/' : publicBasePath
+const appUrl = `http://127.0.0.1:4178${previewBasePath}`
 
 const firebaseTestEnv = {
   VITE_E2E_MODE: 'true',
