@@ -1,5 +1,4 @@
 const { initializeApp } = require('firebase-admin/app')
-const { getAuth } = require('firebase-admin/auth')
 const { FieldValue, Timestamp, getFirestore } = require('firebase-admin/firestore')
 const { HttpsError, onCall } = require('firebase-functions/v2/https')
 const { defineBoolean } = require('firebase-functions/params')
@@ -48,74 +47,6 @@ function callableOptions(extra = {}) {
   }
 }
 
-
-function serializeDate(value) {
-  if (!value) return null
-
-  const date =
-    typeof value.toDate === 'function'
-      ? value.toDate()
-      : value instanceof Date
-        ? value
-        : new Date(value)
-
-  return Number.isNaN(date.getTime()) ? null : date.toISOString()
-}
-
-function profileFromAuthUser(userRecord) {
-  const createdAt = new Date(userRecord.metadata.creationTime)
-  const safeCreatedAt = Number.isNaN(createdAt.getTime()) ? new Date() : createdAt
-  const timestamp = Timestamp.fromDate(safeCreatedAt)
-
-  return {
-    email: userRecord.email || '',
-    displayName: userRecord.displayName || '',
-    plan: 'trial',
-    trialStart: timestamp,
-    premiumUntil: null,
-    blocked: false,
-    createdAt: timestamp,
-  }
-}
-
-async function listAuthenticationUsers() {
-  const users = []
-  let pageToken
-
-  do {
-    const page = await getAuth().listUsers(1000, pageToken)
-    users.push(...page.users)
-    pageToken = page.pageToken
-  } while (pageToken)
-
-  return users
-}
-
-function serializeAdminUser(userRecord, profile = {}, hasFirestoreProfile = false) {
-  return {
-    uid: userRecord.uid,
-    email: userRecord.email || profile.email || '',
-    displayName: profile.displayName || userRecord.displayName || '',
-    emailVerified: Boolean(userRecord.emailVerified),
-    disabled: Boolean(userRecord.disabled),
-    providers: (userRecord.providerData || []).map((provider) => provider.providerId),
-    authCreatedAt: userRecord.metadata.creationTime || null,
-    lastLoginAt: userRecord.metadata.lastSignInTime || null,
-    plan: profile.plan || 'trial',
-    trialStart:
-      serializeDate(profile.trialStart) ||
-      userRecord.metadata.creationTime ||
-      null,
-    premiumUntil: serializeDate(profile.premiumUntil),
-    blocked: Boolean(profile.blocked),
-    createdAt:
-      serializeDate(profile.createdAt) ||
-      userRecord.metadata.creationTime ||
-      null,
-    hasFirestoreProfile,
-  }
-}
-
 function serializeEntitlement(status) {
   return {
     plan: status.plan,
@@ -157,56 +88,6 @@ exports.getAccountEntitlement = onCall(callableOptions(), async (request) => {
   return serializeEntitlement(status)
 })
 
-exports.adminListUsers = onCall(callableOptions(), async (request) => {
-  requireAdmin(request)
-
-  const [authUsers, profileSnapshot] = await Promise.all([
-    listAuthenticationUsers(),
-    db.collection('users').get(),
-  ])
-
-  const profileByUid = new Map(
-    profileSnapshot.docs.map((snapshot) => [
-      snapshot.id,
-      snapshot.data(),
-    ]),
-  )
-
-  const authUidSet = new Set(authUsers.map((user) => user.uid))
-
-  const users = authUsers
-    .map((user) =>
-      serializeAdminUser(
-        user,
-        profileByUid.get(user.uid) || {},
-        profileByUid.has(user.uid),
-      ),
-    )
-    .sort((a, b) =>
-      String(a.email || '').localeCompare(String(b.email || ''), 'pt-BR'),
-    )
-
-  const orphanProfiles = profileSnapshot.docs
-    .filter((snapshot) => !authUidSet.has(snapshot.id))
-    .map((snapshot) => ({
-      uid: snapshot.id,
-      email: snapshot.data().email || '',
-      displayName: snapshot.data().displayName || '',
-    }))
-
-  return {
-    users,
-    total: users.length,
-    missingProfiles: users
-      .filter((user) => !user.hasFirestoreProfile)
-      .map((user) => ({
-        uid: user.uid,
-        email: user.email,
-      })),
-    orphanProfiles,
-  }
-})
-
 exports.adminSetUserAccess = onCall(callableOptions(), async (request) => {
   const actor = requireAdmin(request)
 
@@ -217,32 +98,18 @@ exports.adminSetUserAccess = onCall(callableOptions(), async (request) => {
     throw new HttpsError('invalid-argument', error.message)
   }
 
-  let authUser
-  try {
-    authUser = await getAuth().getUser(command.targetUid)
-  } catch (error) {
-    if (error?.code === 'auth/user-not-found') {
-      throw new HttpsError(
-        'not-found',
-        'Usuário não existe no Firebase Authentication.',
-      )
-    }
-    throw error
-  }
-
   const targetRef = db.collection('users').doc(command.targetUid)
   const auditRef = db.collection('adminAudit').doc()
-  const bootstrapProfile = profileFromAuthUser(authUser)
 
   await db.runTransaction(async (transaction) => {
     const targetSnapshot = await transaction.get(targetRef)
 
-    const before = targetSnapshot.exists
-      ? targetSnapshot.data()
-      : bootstrapProfile
+    if (!targetSnapshot.exists) {
+      throw new HttpsError('not-found', 'Usuário de destino não encontrado.')
+    }
 
+    const before = targetSnapshot.data()
     const update = buildAccessUpdate(before, command, new Date())
-
     const firestoreUpdate = {
       ...update,
       updatedAt: FieldValue.serverTimestamp(),
@@ -254,15 +121,7 @@ exports.adminSetUserAccess = onCall(callableOptions(), async (request) => {
       firestoreUpdate.premiumUntil = Timestamp.fromDate(update.premiumUntil)
     }
 
-    if (targetSnapshot.exists) {
-      transaction.update(targetRef, firestoreUpdate)
-    } else {
-      transaction.set(targetRef, {
-        ...bootstrapProfile,
-        ...firestoreUpdate,
-      })
-    }
-
+    transaction.update(targetRef, firestoreUpdate)
     transaction.set(auditRef, {
       actorUid: actor.uid,
       actorEmail: actor.token?.email || '',
@@ -284,7 +143,6 @@ exports.adminSetUserAccess = onCall(callableOptions(), async (request) => {
     action: command.action,
   }
 })
-
 
 const { createPrivacyFunctions } = require('./privacy')
 

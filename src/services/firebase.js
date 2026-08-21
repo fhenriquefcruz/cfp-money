@@ -65,14 +65,23 @@ const ensureUserDocument = async (user) => {
 
   if (snapshot.exists()) return
 
+  const authCreationDate = user.metadata?.creationTime
+    ? new Date(user.metadata.creationTime)
+    : null
+
+  const createdAt =
+    authCreationDate && !Number.isNaN(authCreationDate.getTime())
+      ? authCreationDate
+      : serverTimestamp()
+
   await setDoc(ref, {
     email: user.email || '',
     displayName: user.displayName || '',
     plan: 'trial',
-    trialStart: serverTimestamp(),
+    trialStart: createdAt,
     premiumUntil: null,
     blocked: false,
-    createdAt: serverTimestamp(),
+    createdAt,
   })
 }
 
