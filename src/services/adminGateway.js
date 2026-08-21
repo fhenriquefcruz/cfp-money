@@ -1,6 +1,9 @@
-import { backendEnabled } from '../config/runtimeFeatures'
-import { adminSetUserAccess as backendAdminSetUserAccess } from './backend'
-import { sparkAdminSetUserAccess } from './sparkAdmin'
+import {
+  adminListUsers as backendAdminListUsers,
+  adminSetUserAccess as backendAdminSetUserAccess,
+} from './backend'
+
+export const adminListUsers = () => backendAdminListUsers()
 
 export const adminSetUserAccess = (data) =>
-  backendEnabled ? backendAdminSetUserAccess(data) : sparkAdminSetUserAccess(data)
+  backendAdminSetUserAccess(data)

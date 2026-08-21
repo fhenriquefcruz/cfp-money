@@ -17,8 +17,7 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { Card } from './ui'
 import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
-import { onAllUsersChange } from '../services/firebase'
-import { adminSetUserAccess } from '../services/adminGateway'
+import { adminListUsers, adminSetUserAccess } from '../services/adminGateway'
 import CommercialOverviewRouter from './CommercialOverviewRouter'
 import SupportAdminCard from './SupportAdminCard'
 
@@ -54,6 +53,19 @@ const STATUS_STYLES = {
     text: 'text-gray-500 dark:text-gray-400',
     dot: 'bg-gray-300',
   },
+}
+
+function formatAdminDate(value) {
+  if (!value) return '—'
+
+  const date =
+    typeof value.toDate === 'function'
+      ? value.toDate()
+      : new Date(value)
+
+  return Number.isNaN(date.getTime())
+    ? '—'
+    : date.toLocaleDateString('pt-BR')
 }
 
 function StatusBadge({ u }) {
@@ -176,11 +188,29 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
               { label: 'Plano', value: u.plan || 'trial' },
               {
                 label: 'Cadastro',
-                value: u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString('pt-BR') : '—',
+                value: formatAdminDate(u.createdAt),
               },
               {
                 label: 'Premium até',
                 value: formatPlanExpiration(u),
+              },
+              {
+                label: 'Último login',
+                value: formatAdminDate(u.lastLoginAt),
+              },
+              {
+                label: 'Provedor',
+                value: Array.isArray(u.providers) && u.providers.length
+                  ? u.providers.join(', ')
+                  : '—',
+              },
+              { label: 'UID', value: u.uid || '—' },
+              {
+                label: 'Perfil',
+                value:
+                  u.hasFirestoreProfile === false
+                    ? 'Somente Authentication'
+                    : 'Sincronizado',
               },
               { label: 'Status', value: u.blocked ? '🔴 Bloqueado' : '🟢 Ativo' },
             ].map((r) => (
@@ -204,13 +234,28 @@ export default function Admin() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!isAdmin) return
-    const unsub = onAllUsersChange(
-      (data) => setUsers(data),
-      (err) => setError('Erro: ' + err.message),
-    )
+    if (!isAdmin) return undefined
+
+    let cancelled = false
+
+    const loadUsers = async () => {
+      try {
+        const result = await adminListUsers()
+        if (!cancelled) {
+          setUsers(Array.isArray(result?.users) ? result.users : [])
+          setError('')
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError('Erro: ' + (err?.message || 'Não foi possível carregar os usuários.'))
+        }
+      }
+    }
+
+    loadUsers()
+
     return () => {
-      if (unsub) unsub()
+      cancelled = true
     }
   }, [isAdmin])
 
@@ -223,6 +268,10 @@ export default function Admin() {
     setError('')
     try {
       await adminSetUserAccess(command)
+
+      const refreshed = await adminListUsers()
+      setUsers(Array.isArray(refreshed?.users) ? refreshed.users : [])
+
       showToast(successMessage)
     } catch (actionError) {
       setError(actionError?.message || 'Não foi possível concluir a ação administrativa.')
