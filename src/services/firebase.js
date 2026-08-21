@@ -80,6 +80,8 @@ const ensureUserDocument = async (user) => {
 export const signInEmail = async (email, password) => {
   const result = await signInWithEmailAndPassword(auth, email, password)
 
+  await ensureUserDocument(result.user)
+
   if (pendingGoogleCredential) {
     const credential = pendingGoogleCredential
     pendingGoogleCredential = null
