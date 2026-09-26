@@ -19,6 +19,11 @@ import { Link } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
 import { useMoney } from '../contexts/MoneyContext'
 import { analyzeMoney } from '../domain/money'
+import { analyzeSpendingLeaks } from '../domain/spendingLeaks'
+import { buildFinancialHealth } from '../domain/financialHealth'
+import { buildPaymentControlOverview } from '../domain/paymentControl'
+import { getCalendarMonthBounds } from '../domain/dashboard'
+import { buildMoneyPriorities } from '../domain/moneyPriorities'
 import { buildMoneyAssistantResponse } from '../domain/moneyAssistant'
 import { buildMoneyTransactionDraft } from '../domain/moneyTransactionDraft'
 import { buildMoneyCreditDraft } from '../domain/moneyCreditDraft'
@@ -29,6 +34,7 @@ import MoneySettingsCard from './MoneySettingsCard'
 import PremiumGate from './PremiumGate'
 import MoneyTransactionAction from './MoneyTransactionAction'
 import MoneyCreditTransactionAction from './MoneyCreditTransactionAction'
+import MoneyPrioritiesCard from './MoneyPrioritiesCard'
 
 const INITIAL_MESSAGE = {
   id: 'welcome',
@@ -183,8 +189,12 @@ function MoneyContent() {
   const {
     transactions,
     categories,
+    goals,
+    budgets,
     creditCards,
+    invoiceEvents,
     loading,
+    getSummary,
     createTransaction,
     addTransactionBatch,
     removeTransaction,
@@ -199,7 +209,88 @@ function MoneyContent() {
   const messagesEndRef = useRef(null)
 
   const isLoading =
-    loading.transactions || loading.categories || loading.creditCards || settingsLoading
+    loading.transactions ||
+    loading.categories ||
+    loading.goals ||
+    loading.budgets ||
+    loading.creditCards ||
+    loading.invoiceEvents ||
+    settingsLoading
+
+  const now = new Date()
+  const monthBounds = useMemo(() => getCalendarMonthBounds(now), [now.getFullYear(), now.getMonth()])
+  const currentSummary = useMemo(
+    () => getSummary(now.getFullYear(), now.getMonth()),
+    [getSummary, transactions, now.getFullYear(), now.getMonth()],
+  )
+  const paymentSummary = useMemo(
+    () =>
+      buildPaymentControlOverview({
+        transactions,
+        creditCards,
+        invoiceEvents,
+        bounds: monthBounds,
+        now,
+      }),
+    [transactions, creditCards, invoiceEvents, monthBounds],
+  )
+  const budgetAlerts = useMemo(
+    () =>
+      budgets
+        .map((budget) => {
+          const category = categories.find((item) => item.id === budget.categoryId)
+          const spent = transactions
+            .filter(
+              (transaction) =>
+                transaction.type === 'expense' &&
+                transaction.categoryId === budget.categoryId &&
+                transaction.date >= monthBounds.start &&
+                transaction.date <= monthBounds.end,
+            )
+            .reduce((total, transaction) => total + Number(transaction.amount || 0), 0)
+
+          return {
+            budget,
+            cat: category,
+            spent,
+            pct: Number(budget.amount || 0) > 0 ? (spent / Number(budget.amount)) * 100 : 0,
+          }
+        })
+        .filter((item) => item.pct >= 70)
+        .sort((a, b) => b.pct - a.pct),
+    [budgets, categories, transactions, monthBounds],
+  )
+  const financialHealth = useMemo(() => {
+    const savingRate =
+      currentSummary.income > 0 ? (currentSummary.savings / currentSummary.income) * 100 : 0
+    const hasBudgets = budgets.length > 0
+    const budgetsOk = hasBudgets && !budgetAlerts.some((item) => item.pct > 100)
+
+    return buildFinancialHealth({
+      balance: currentSummary.balance,
+      income: currentSummary.income,
+      savingRate,
+      hasBudgets,
+      budgetsOk,
+      goalsActive: goals.length > 0,
+    })
+  }, [currentSummary, budgets, budgetAlerts, goals])
+  const spendingLeakReport = useMemo(
+    () => analyzeSpendingLeaks(transactions, settings, now),
+    [transactions, settings, now.getFullYear(), now.getMonth(), now.getDate()],
+  )
+  const priorityReport = useMemo(
+    () =>
+      buildMoneyPriorities({
+        paymentSummary,
+        budgetAlerts,
+        balance: currentSummary.balance,
+        healthReport: financialHealth,
+        spendingLeakReport,
+        goals,
+      }),
+    [paymentSummary, budgetAlerts, currentSummary.balance, financialHealth, spendingLeakReport, goals],
+  )
   const canSend = input.trim().length > 0 && !isLoading
 
   const safeDataStatus = useMemo(
@@ -428,6 +519,8 @@ function MoneyContent() {
 
       <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="order-2 grid min-w-0 gap-4 lg:order-1 lg:max-h-[620px] lg:overflow-y-auto lg:pr-1">
+          <MoneyPrioritiesCard report={priorityReport} />
+
           <Card className="overflow-hidden shadow-sm" padding={false}>
             <div className="border-b border-[--border-subtle] bg-[--brand-50] p-4">
               <div className="flex items-center gap-2">
