@@ -77,12 +77,13 @@ function firestoreBase(projectId) {
   )}/databases/(default)/documents`
 }
 
-async function requestJson(url, token, options = {}) {
+async function requestJson(url, token, projectId, options = {}) {
   const response = await fetch(url, {
     ...options,
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
+      'x-goog-user-project': projectId,
       ...(options.headers || {}),
     },
   })
@@ -119,7 +120,7 @@ async function listFirestoreUsers(projectId, token) {
     url.searchParams.set('pageSize', '1000')
     if (pageToken) url.searchParams.set('pageToken', pageToken)
 
-    const { body } = await requestJson(url, token)
+    const { body } = await requestJson(url, token, projectId)
     users.push(...(body?.documents || []).map(firestoreDocumentToUser))
     pageToken = body?.nextPageToken || ''
   } while (pageToken)
@@ -131,6 +132,7 @@ async function documentExists(projectId, uid, token) {
   const { status } = await requestJson(
     `${firestoreBase(projectId)}/users/${encodeURIComponent(uid)}`,
     token,
+    projectId,
   )
   return status !== 404
 }
@@ -144,7 +146,7 @@ async function createUserDocument(projectId, user, token) {
   url.searchParams.set('documentId', user.uid)
 
   try {
-    await requestJson(url, token, {
+    await requestJson(url, token, projectId, {
       method: 'POST',
       body: JSON.stringify(buildFirestoreUserDocument(user)),
     })
