@@ -65,9 +65,7 @@ const ensureUserDocument = async (user) => {
 
   if (snapshot.exists()) return
 
-  const authCreationDate = user.metadata?.creationTime
-    ? new Date(user.metadata.creationTime)
-    : null
+  const authCreationDate = user.metadata?.creationTime ? new Date(user.metadata.creationTime) : null
 
   const createdAt =
     authCreationDate && !Number.isNaN(authCreationDate.getTime())
