@@ -118,11 +118,7 @@ function calcHealthScore({ balance, income, budgetsOk, goalsActive, savingRate }
 
 function HealthScore({ score }) {
   const color =
-    score >= 75
-      ? 'var(--success-icon)'
-      : score >= 50
-        ? 'var(--warning-icon)'
-        : 'var(--danger-icon)'
+    score >= 75 ? 'var(--success-icon)' : score >= 50 ? 'var(--warning-icon)' : 'var(--danger-icon)'
   const label = score >= 75 ? 'Ótima' : score >= 50 ? 'Regular' : 'Atenção'
   const emoji = score >= 75 ? '💚' : score >= 50 ? '💛' : '❤️'
   const r = 28,
