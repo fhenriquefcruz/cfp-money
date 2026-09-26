@@ -40,6 +40,20 @@ test('apresenta uma entrada clara e orientada ao produto', () => {
   expect(screen.getByText(/não movimenta dinheiro/i)).toBeInTheDocument()
 })
 
+test('apresenta o fluxo do Meu Real do registro até a decisão', () => {
+  render(<Login />)
+
+  const story = screen.getByLabelText(
+    'Demonstração do fluxo do Meu Real: registrar, organizar, compreender e decidir',
+  )
+
+  expect(story).toHaveTextContent('Registrar')
+  expect(story).toHaveTextContent('Organizar')
+  expect(story).toHaveTextContent('Compreender')
+  expect(story).toHaveTextContent('Decidir')
+  expect(story).toHaveTextContent('Money encontrou um padrão')
+})
+
 test('troca imediatamente para criação de conta e mostra o Premium', async () => {
   render(<Login />)
 
