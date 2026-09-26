@@ -25,6 +25,8 @@ import {
   ChevronLeft,
   ChevronRight,
   PiggyBank,
+  Clock3,
+  CircleCheckBig,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useApp } from '../contexts/AppContext'
@@ -165,6 +167,89 @@ function HealthScore({ score }) {
   )
 }
 
+function MonthAttentionCard({ items }) {
+  const toneClasses = {
+    danger: {
+      icon: 'bg-[--danger-bg] text-[--danger-icon] border-[--danger-border]',
+      link: 'hover:border-[--danger-border]',
+    },
+    warning: {
+      icon: 'bg-[--warning-bg] text-[--warning-icon] border-[--warning-border]',
+      link: 'hover:border-[--warning-border]',
+    },
+    brand: {
+      icon: 'bg-[--brand-50] text-[--brand-700] border-[--brand-200]',
+      link: 'hover:border-[--brand-300]',
+    },
+  }
+
+  return (
+    <Card variant="elevated" className="dashboard-attention-card overflow-hidden">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <div className="flex items-center gap-2">
+            <Zap size={15} className="text-[--brand-600]" />
+            <h2 className="text-sm font-black text-[--text-primary]">Central do mês</h2>
+          </div>
+          <p className="mt-1 text-xs text-[--text-tertiary]">
+            O que merece atenção agora, sem precisar procurar em várias telas.
+          </p>
+        </div>
+        {items.length > 0 && (
+          <span className="rounded-full border border-[--border-default] bg-[--bg-subtle] px-2.5 py-1 text-[10px] font-bold text-[--text-secondary]">
+            {items.length} {items.length === 1 ? 'ponto' : 'pontos'}
+          </span>
+        )}
+      </div>
+
+      {items.length === 0 ? (
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-[--success-border] bg-[--success-bg] p-3">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[--success-border] text-[--success-icon]">
+            <CircleCheckBig size={17} />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-[--success-text]">Nada crítico por agora</p>
+            <p className="mt-0.5 text-[10px] leading-relaxed text-[--success-text]">
+              Pagamentos e orçamentos não apresentam alertas relevantes neste mês.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
+          {items.map(({ id, title, detail, to, tone, icon: Icon }) => {
+            const classes = toneClasses[tone] || toneClasses.brand
+
+            return (
+              <Link
+                key={id}
+                to={to}
+                className={`group flex min-w-0 items-start gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 transition-colors hover:bg-[--bg-hover] ${classes.link}`}
+              >
+                <div
+                  className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border ${classes.icon}`}
+                >
+                  <Icon size={16} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-black text-[--text-primary]">{title}</p>
+                  <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">{detail}</p>
+                  <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand]">
+                    Ver detalhes
+                    <ChevronRight
+                      size={11}
+                      className="transition-transform group-hover:translate-x-0.5"
+                    />
+                  </span>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </Card>
+  )
+}
+
 export default function Dashboard() {
   const { user } = useAuth()
   const {
@@ -250,6 +335,65 @@ export default function Dashboard() {
       savingRate,
     })
   }, [currentSummary, budgets, budgetAlerts, goals])
+
+  const monthAttention = useMemo(() => {
+    const items = []
+
+    if (paymentSummary.overdueCount > 0) {
+      items.push({
+        id: 'overdue',
+        title: `${paymentSummary.overdueCount} ${
+          paymentSummary.overdueCount === 1 ? 'pagamento atrasado' : 'pagamentos atrasados'
+        }`,
+        detail: `${formatCurrency(paymentSummary.overdueAmount)} aguardando regularização.`,
+        to: '/transactions',
+        tone: 'danger',
+        icon: AlertTriangle,
+      })
+    }
+
+    if (paymentSummary.dueNext7DaysCount > 0) {
+      items.push({
+        id: 'due-soon',
+        title: `${paymentSummary.dueNext7DaysCount} ${
+          paymentSummary.dueNext7DaysCount === 1 ? 'vencimento próximo' : 'vencimentos próximos'
+        }`,
+        detail: `${formatCurrency(paymentSummary.dueNext7DaysAmount)} vencem nos próximos 7 dias.`,
+        to: '/transactions',
+        tone: 'warning',
+        icon: Clock3,
+      })
+    }
+
+    const budgetAttention = budgetAlerts[0]
+    if (budgetAttention) {
+      const { budget, cat, spent, pct } = budgetAttention
+      const isOver = spent > budget.amount
+      items.push({
+        id: `budget-${budget.id}`,
+        title: `${cat?.name || 'Orçamento'} em atenção`,
+        detail: isOver
+          ? `${formatCurrency(spent - budget.amount)} acima do limite mensal.`
+          : `${pct.toFixed(0)}% do limite mensal já foi utilizado.`,
+        to: '/budgets',
+        tone: pct >= 100 ? 'danger' : 'warning',
+        icon: Target,
+      })
+    }
+
+    if (items.length < 3 && currentSummary.balance < 0) {
+      items.push({
+        id: 'negative-balance',
+        title: 'Saldo do mês negativo',
+        detail: `${formatCurrency(Math.abs(currentSummary.balance))} acima das receitas do período.`,
+        to: '/transactions',
+        tone: 'danger',
+        icon: Wallet,
+      })
+    }
+
+    return items.slice(0, 3)
+  }, [paymentSummary, budgetAlerts, currentSummary.balance])
 
   const greeting = () => {
     const h = new Date().getHours()
@@ -365,6 +509,10 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </motion.div>
+
+      <motion.div {...fade} transition={{ delay: 0.075 }}>
+        <MonthAttentionCard items={monthAttention} />
       </motion.div>
 
       {/* Controle mensal sem alterar os cálculos financeiros existentes */}
