@@ -114,7 +114,8 @@ export default function TransactionCsvImportModal({
     setImporting(true)
     try {
       await onImport(selectedRows.map((row) => row.transaction))
-      close()
+      reset()
+      onClose()
     } finally {
       setImporting(false)
     }
