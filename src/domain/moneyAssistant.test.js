@@ -126,7 +126,6 @@ test('responde com ajuda para pedidos não reconhecidos', () => {
   expect(response.text).toContain('sem alterar')
 })
 
-
 test('entende pedido de diagnóstico de vazamentos', () => {
   expect(
     parseMoneyAssistantIntent(
@@ -171,7 +170,7 @@ test('reaproveita o diagnóstico de vazamentos dentro da conversa', () => {
 
   expect(response.type).toBe('spending_leaks')
   expect(response.title).toBe('Diagnóstico de vazamentos')
-  expect(response.findings.some((finding) => finding.title === 'Pequenos gastos estão somando')).toBe(
-    true,
-  )
+  expect(
+    response.findings.some((finding) => finding.title === 'Pequenos gastos estão somando'),
+  ).toBe(true)
 })
