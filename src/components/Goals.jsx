@@ -293,7 +293,7 @@ function GoalsContent() {
           }
         />
       ) : (
-        <div className="operational-card-grid grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="operational-card-grid goals-card-grid grid grid-cols-1 gap-4 md:grid-cols-2">
           <AnimatePresence>
             {sortedGoals.map((goal) => (
               <GoalCard
