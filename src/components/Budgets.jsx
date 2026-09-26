@@ -332,7 +332,7 @@ export default function Budgets() {
       ) : (
         <motion.div
           layout
-          className="operational-card-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          className="operational-card-grid budgets-card-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
         >
           <AnimatePresence>
             {sortedCategories.map((cat) => (
