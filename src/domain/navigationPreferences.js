@@ -7,8 +7,9 @@ const unique = (values) => [...new Set(values)]
 
 const validPaths = (values, allowedPaths) => {
   const allowed = new Set(allowedPaths)
-  return unique(Array.isArray(values) ? values : [])
-    .filter((path) => typeof path === 'string' && allowed.has(path))
+  return unique(Array.isArray(values) ? values : []).filter(
+    (path) => typeof path === 'string' && allowed.has(path),
+  )
 }
 
 export function normalizeNavigationPreferences(value, allowedPaths = []) {
