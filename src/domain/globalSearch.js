@@ -6,6 +6,7 @@ const clean = (value) =>
     .trim()
 
 const row = (label, to, terms = '') => [label, to, clean(`${label} ${terms}`)]
+const result = ([label, to]) => ({ label, to })
 
 export function searchGlobal({
   query = '',
@@ -19,28 +20,21 @@ export function searchGlobal({
     ...pages.map(([label, to]) => row(label, to)),
     ...transactions.map((item) => {
       const label = item.description || item.categoryName || 'Transação'
-      return row(
-        label,
-        `/transactions?search=${encodeURIComponent(label)}`,
-        item.categoryName,
-      )
+      return row(label, `/transactions?search=${encodeURIComponent(label)}`, item.categoryName)
     }),
     ...categories.map((item) => row(item.name || 'Categoria', '/categories')),
     ...goals.map((item) => row(item.name || 'Meta', '/goals')),
     ...creditCards.map((item) => row(item.name || 'Cartão', '/cards', item.last4)),
   ]
   const normalized = clean(query)
-  if (!normalized) return rows.slice(0, 8).map(([label, to]) => ({ label, to }))
+  if (!normalized) return rows.slice(0, 8).map(result)
 
   const words = normalized.split(/\s+/)
   return rows
     .filter((item) => words.every((word) => item[2].includes(word)))
-    .sort(
-      (a, b) =>
-        Number(clean(b[0]).startsWith(normalized)) - Number(clean(a[0]).startsWith(normalized)),
-    )
+    .sort((a, b) => b[2].startsWith(normalized) - a[2].startsWith(normalized))
     .slice(0, 8)
-    .map(([label, to]) => ({ label, to }))
+    .map(result)
 }
 
 export { clean as normalizeGlobalSearchText }
