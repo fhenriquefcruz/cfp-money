@@ -65,3 +65,28 @@ test('fecha pelo Escape', () => {
 
   expect(onClose).toHaveBeenCalled()
 })
+
+test('oferece favorito apenas para módulos reais', () => {
+  render(
+    <MemoryRouter initialEntries={['/dashboard']}>
+      <GlobalSearchPalette
+        open
+        onClose={() => {}}
+        pages={[
+          ['Dashboard', '/dashboard'],
+          ['Relatórios', '/reports'],
+        ]}
+        goals={[{ id: 'g1', name: 'Viagem' }]}
+      />
+    </MemoryRouter>,
+  )
+
+  expect(screen.getByRole('button', { name: 'Adicionar Relatórios aos favoritos' })).toBeVisible()
+
+  fireEvent.change(screen.getByLabelText('Termo da busca global'), {
+    target: { value: 'viagem' },
+  })
+
+  expect(screen.getByRole('button', { name: 'Viagem' })).toBeVisible()
+  expect(screen.queryByRole('button', { name: /Viagem.*favoritos/i })).not.toBeInTheDocument()
+})
