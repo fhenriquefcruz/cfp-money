@@ -80,7 +80,28 @@ const ensureUserDocument = async (user) => {
     premiumUntil: null,
     blocked: false,
     createdAt,
+    lastSeenAt: serverTimestamp(),
   })
+}
+
+const ACTIVITY_WRITE_INTERVAL_MS = 5 * 60 * 1000
+const lastActivityWriteAt = new Map()
+
+export const touchUserActivity = async (uid, { force = false } = {}) => {
+  if (!uid) return false
+
+  const now = Date.now()
+  const previousWrite = lastActivityWriteAt.get(uid) || 0
+
+  if (!force && now - previousWrite < ACTIVITY_WRITE_INTERVAL_MS) {
+    return false
+  }
+
+  await updateDoc(doc(db, 'users', uid), {
+    lastSeenAt: serverTimestamp(),
+  })
+  lastActivityWriteAt.set(uid, now)
+  return true
 }
 
 // ── AUTH ──
@@ -88,6 +109,7 @@ export const signInEmail = async (email, password) => {
   const result = await signInWithEmailAndPassword(auth, email, password)
 
   await ensureUserDocument(result.user)
+  await touchUserActivity(result.user.uid, { force: true })
 
   if (pendingGoogleCredential) {
     const credential = pendingGoogleCredential
@@ -104,6 +126,7 @@ export const signInGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider)
     await ensureUserDocument(result.user)
+    await touchUserActivity(result.user.uid, { force: true })
     return result
   } catch (error) {
     if (error.code === 'auth/account-exists-with-different-credential') {
@@ -127,7 +150,9 @@ export const registerEmail = async (email, password, displayName) => {
     premiumUntil: null,
     blocked: false,
     createdAt: serverTimestamp(),
+    lastSeenAt: serverTimestamp(),
   })
+  lastActivityWriteAt.set(cred.user.uid, Date.now())
   return cred
 }
 
