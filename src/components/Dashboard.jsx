@@ -511,7 +511,7 @@ export default function Dashboard() {
                 <InfoTooltip text="Pontuação de 0 a 100 baseada em saldo, poupança, orçamentos, metas e receitas. Abra o cálculo para ver a contribuição de cada fator." />
               </div>
             </div>
-            <FinancialHealthScore report={healthReport} />
+            <FinancialHealthScore report={healthReport} referenceDate={viewDate} />
           </Card>
         </div>
 
