@@ -81,7 +81,9 @@ test('oferece favorito apenas para módulos reais', () => {
     </MemoryRouter>,
   )
 
-  expect(screen.getByRole('button', { name: 'Adicionar Relatórios aos favoritos' })).toBeInTheDocument()
+  expect(
+    screen.getByRole('button', { name: 'Adicionar Relatórios aos favoritos' }),
+  ).toBeInTheDocument()
 
   fireEvent.change(screen.getByLabelText('Termo da busca global'), {
     target: { value: 'viagem' },
