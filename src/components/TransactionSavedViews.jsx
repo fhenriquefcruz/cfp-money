@@ -2,13 +2,7 @@ import React, { useState } from 'react'
 import { BookmarkPlus, X } from 'lucide-react'
 import { Button } from './ui'
 
-export default function TransactionSavedViews({
-  views,
-  canSave,
-  onApply,
-  onSave,
-  onDelete,
-}) {
+export default function TransactionSavedViews({ views, canSave, onApply, onSave, onDelete }) {
   const [isNaming, setIsNaming] = useState(false)
   const [name, setName] = useState('')
 
