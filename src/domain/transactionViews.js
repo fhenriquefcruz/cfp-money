@@ -5,6 +5,7 @@ const DEFAULT_FILTERS = Object.freeze({
   catFilter: 'all',
   payFilter: 'all',
   paymentStatusFilter: 'all',
+  datePreset: '',
   dateRange: { from: '', to: '' },
 })
 
@@ -27,6 +28,7 @@ export function normalizeTransactionViewFilters(filters = {}) {
       filters.paymentStatusFilter,
       DEFAULT_FILTERS.paymentStatusFilter,
     ),
+    datePreset: normalizeText(filters.datePreset),
     dateRange: {
       from: normalizeText(filters.dateRange?.from),
       to: normalizeText(filters.dateRange?.to),
