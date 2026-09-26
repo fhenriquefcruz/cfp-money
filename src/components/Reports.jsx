@@ -33,14 +33,14 @@ import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 const COLORS = [
-  '#6366f1',
-  '#10b981',
-  '#f59e0b',
-  '#ef4444',
-  '#8b5cf6',
-  '#ec4899',
-  '#14b8a6',
-  '#f97316',
+  '#c49d6b',
+  '#4e8066',
+  '#a7804e',
+  '#b64c43',
+  '#786c8d',
+  '#9a6671',
+  '#5f8587',
+  '#b87645',
 ]
 
 const ChartTooltip = ({ active, payload, label }) => {
@@ -184,7 +184,7 @@ function ReportsContent() {
             name: transaction.categoryName || 'Sem categoria',
             value: 0,
             count: 0,
-            color: transaction.categoryColor || '#6366f1',
+            color: transaction.categoryColor || '#c49d6b',
           }
         totals[categoryKey].value += transaction.amount
         totals[categoryKey].count += 1
@@ -303,14 +303,14 @@ function ReportsContent() {
             <KPI
               label="Saldo"
               value={formatCurrency(periodTotals.balance)}
-              color={periodTotals.balance >= 0 ? '#6366f1' : '#ef4444'}
+              color={periodTotals.balance >= 0 ? '#c49d6b' : '#ef4444'}
               icon={<ArrowLeftRight size={16} />}
               tooltip="Receitas menos despesas."
             />
             <KPI
               label="Poupança"
               value={formatCurrency(periodTotals.savings)}
-              color="#6366f1"
+              color="#c49d6b"
               icon={<PiggyBank size={16} />}
               tooltip="Total depositado em poupança no período."
             />
@@ -381,8 +381,8 @@ function ReportsContent() {
                   <AreaChart data={monthlyData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
                     <defs>
                       <linearGradient id="balG" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#c49d6b" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#c49d6b" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid
@@ -407,10 +407,10 @@ function ReportsContent() {
                       type="monotone"
                       dataKey="balance"
                       name="Saldo"
-                      stroke="#6366f1"
+                      stroke="#c49d6b"
                       strokeWidth={2.5}
                       fill="url(#balG)"
-                      dot={{ r: 4, fill: '#6366f1' }}
+                      dot={{ r: 4, fill: '#c49d6b' }}
                       activeDot={{ r: 6 }}
                     />
                   </AreaChart>
@@ -574,7 +574,7 @@ function ReportsContent() {
                           tickFormatter={(v) => formatCurrency(v, { compact: true })}
                         />
                         <Tooltip content={<ChartTooltip />} />
-                        <Bar dataKey="value" name="Poupança" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="value" name="Poupança" fill="#c49d6b" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
 
