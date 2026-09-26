@@ -214,7 +214,8 @@ export function buildCsvImportPreview(
   if (parsed.data.length > maxRows) {
     fatalIssues.push({
       code: 'too_many_rows',
-      message: `O arquivo possui ${parsed.data.length} linhas. O limite seguro por importação é ${maxRows}.`,
+      message:
+        `O arquivo possui ${parsed.data.length} linhas. O limite seguro por importação é ${maxRows}.`,
     })
   }
 
@@ -222,7 +223,13 @@ export function buildCsvImportPreview(
     return {
       fatalIssues,
       rows: [],
-      summary: { total: parsed.data.length, ready: 0, warnings: 0, errors: parsed.data.length, duplicates: 0 },
+      summary: {
+        total: parsed.data.length,
+        ready: 0,
+        warnings: 0,
+        errors: parsed.data.length,
+        duplicates: 0,
+      },
     }
   }
 
@@ -323,8 +330,16 @@ export function buildCsvImportPreview(
     const paidAtValue = findValue(rawRow, HEADER_ALIASES.paidAt)
     if (transaction.paymentStatus === 'paid' && paidAtValue) {
       const paidAt = parsePaidAt(paidAtValue)
-      if (paidAt) transaction.paidAt = paidAt
-      else pushIssue(issues, 'warning', 'invalid_paid_at', 'Data de pagamento inválida; será ignorada.')
+      if (paidAt) {
+        transaction.paidAt = paidAt
+      } else {
+        pushIssue(
+          issues,
+          'warning',
+          'invalid_paid_at',
+          'Data de pagamento inválida; será ignorada.',
+        )
+      }
     }
 
     if (!issues.some((issue) => issue.severity === 'error')) {
