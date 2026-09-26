@@ -455,8 +455,7 @@ body {
 :root[data-theme='dark'] .goals-card-grid .aurora-card,
 :root[data-theme='dark'] .budgets-card-grid .aurora-card {
   background:
-    linear-gradient(145deg, rgba(196, 157, 107, 0.028), transparent 42%),
-    var(--aurora-surface);
+    linear-gradient(145deg, rgba(196, 157, 107, 0.028), transparent 42%), var(--aurora-surface);
 }
 
 @media (hover: hover) and (pointer: fine) {
