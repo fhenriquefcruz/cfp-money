@@ -29,8 +29,10 @@ import { Card, Button } from './ui'
 import { formatCurrency, getMonthlyData, exportToCSV, exportToPDF } from '../utils'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
+import ReportExecutiveOverview from './ReportExecutiveOverview'
 import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { buildReportHighlights } from '../domain/reportHighlights'
 
 const COLORS = [
   '#c49d6b',
@@ -193,6 +195,17 @@ function ReportsContent() {
     return Object.values(totals).sort((first, second) => second.value - first.value)
   }, [reportTransactions])
 
+  const highlights = useMemo(
+    () =>
+      buildReportHighlights({
+        periodTotals,
+        categoryData,
+        monthlyData,
+        period,
+      }),
+    [periodTotals, categoryData, monthlyData, period],
+  )
+
   const hasTx = reportTransactions.length > 0
 
   const handleExportPDF = async () => {
@@ -221,7 +234,7 @@ function ReportsContent() {
       <div className="reports-premium__header flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-[--text-primary]">Relatórios</h1>
-          <p className="text-xs text-[--text-tertiary] mt-0.5">Análise do seu período financeiro</p>
+          <p className="text-xs text-[--text-tertiary] mt-0.5">Resumo executivo e detalhamento do período financeiro</p>
         </div>
         <div className="reports-premium__filters flex min-w-0 flex-wrap items-center gap-2">
           <label className="grid w-full min-w-0 gap-1 text-xs text-[--text-tertiary] min-[560px]:w-auto">
@@ -340,6 +353,8 @@ function ReportsContent() {
           {/* Visão Geral */}
           {tab === 'overview' && (
             <div className="space-y-4">
+              <ReportExecutiveOverview highlights={highlights} categoryData={categoryData} />
+
               <Card>
                 <div className="flex items-center gap-2 mb-4">
                   <h3 className="text-sm font-bold text-[--text-primary]">Receitas vs Despesas</h3>
