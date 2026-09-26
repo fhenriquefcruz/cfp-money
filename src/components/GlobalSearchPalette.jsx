@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { buildGlobalSearchIndex, searchGlobalIndex } from '../domain/globalSearch'
+import { Modal } from './ui'
 
 export default function GlobalSearchPalette({
   onClose,
@@ -11,21 +12,13 @@ export default function GlobalSearchPalette({
   isAdmin,
 }) {
   const navigate = useNavigate()
-  const inputRef = useRef(null)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
   const index = useMemo(
     () => buildGlobalSearchIndex({ transactions, categories, goals, creditCards, isAdmin }),
     [transactions, categories, goals, creditCards, isAdmin],
   )
-  const results = useMemo(() => searchGlobalIndex(index, query), [index, query])
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => inputRef.current?.focus(), 0)
-    return () => window.clearTimeout(timer)
-  }, [])
-
-  useEffect(() => setActive(0), [query])
+  const results = searchGlobalIndex(index, query)
 
   const openResult = (item) => {
     onClose()
@@ -33,7 +26,6 @@ export default function GlobalSearchPalette({
   }
 
   const onKeyDown = (event) => {
-    if (event.key === 'Escape') return onClose()
     if (!results.length) return
 
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -47,40 +39,23 @@ export default function GlobalSearchPalette({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-start justify-center bg-black/45 px-3 pt-[max(5vh,1.5rem)] backdrop-blur-sm sm:pt-[12vh]"
-      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
-    >
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-label="Busca global"
-        onKeyDown={onKeyDown}
-        className="w-full max-w-2xl overflow-hidden rounded-[24px] border border-[--border-default] bg-[--bg-elevated] shadow-2xl"
-      >
-        <div className="flex items-center gap-3 border-b border-[--border-subtle] px-4">
-          <span className="text-lg text-[--brand-600]" aria-hidden="true">⌕</span>
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Buscar no Meu Real..."
-            aria-label="Buscar no Meu Real"
-            className="min-h-14 min-w-0 flex-1 bg-transparent text-sm text-[--text-primary] outline-none placeholder:text-[--text-tertiary]"
-          />
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar busca global"
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-[--text-tertiary] hover:bg-[--bg-hover]"
-          >
-            <span className="text-xl leading-none" aria-hidden="true">×</span>
-          </button>
-        </div>
+    <Modal isOpen onClose={onClose} title="Buscar no Meu Real" size="lg">
+      <div onKeyDown={onKeyDown}>
+        <input
+          autoFocus
+          value={query}
+          onChange={(event) => {
+            setQuery(event.target.value)
+            setActive(0)
+          }}
+          placeholder="Transação, meta, cartão ou área..."
+          aria-label="Buscar no Meu Real"
+          className="min-h-12 w-full rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 text-sm text-[--text-primary] outline-none focus:ring-2 focus:ring-[--brand-500]"
+        />
 
-        <div className="max-h-[65vh] overflow-y-auto p-2">
+        <div className="mt-2 max-h-[55vh] overflow-y-auto">
           {query.trim() && !results.length ? (
-            <p className="px-4 py-10 text-center text-sm font-bold text-[--text-secondary]">
+            <p className="px-3 py-8 text-center text-sm font-bold text-[--text-secondary]">
               Nenhum resultado encontrado
             </p>
           ) : (
@@ -89,21 +64,16 @@ export default function GlobalSearchPalette({
                 key={item.id}
                 type="button"
                 onClick={() => openResult(item)}
-                className={`flex min-h-14 w-full items-center gap-3 rounded-2xl px-3 text-left ${
+                className={`flex min-h-12 w-full items-center rounded-xl px-3 text-left text-xs font-bold text-[--text-primary] ${
                   active === position ? 'bg-[--brand-50]' : 'hover:bg-[--bg-hover]'
                 }`}
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[--bg-subtle] text-[--brand-600]">
-                  ⌕
-                </span>
-                <span className="min-w-0 flex-1 truncate text-xs font-black text-[--text-primary]">
-                  {item.label}
-                </span>
+                {item.label}
               </button>
             ))
           )}
         </div>
-      </section>
-    </div>
+      </div>
+    </Modal>
   )
 }
