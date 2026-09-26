@@ -22,10 +22,15 @@ export function areTransactionFilterViewsEqual(a = {}, b = {}) {
   return JSON.stringify(left) === JSON.stringify(right)
 }
 
-export function createSavedTransactionFilter(
-  { id, name, filters, createdAt = new Date().toISOString() } = {},
-) {
-  const normalizedName = String(name || '').trim().replace(/\s+/g, ' ')
+export function createSavedTransactionFilter({
+  id,
+  name,
+  filters,
+  createdAt = new Date().toISOString(),
+} = {}) {
+  const normalizedName = String(name || '')
+    .trim()
+    .replace(/\s+/g, ' ')
 
   if (!normalizedName) {
     throw new Error('Informe um nome para a visão.')
@@ -43,8 +48,7 @@ export function upsertSavedTransactionFilter(items = [], nextItem) {
   const normalized = Array.isArray(items) ? items.filter(Boolean) : []
   const withoutSameId = normalized.filter((item) => item.id !== nextItem.id)
   const withoutSameName = withoutSameId.filter(
-    (item) =>
-      String(item.name || '').toLowerCase() !== nextItem.name.toLowerCase(),
+    (item) => String(item.name || '').toLowerCase() !== nextItem.name.toLowerCase(),
   )
 
   return [nextItem, ...withoutSameName].slice(0, MAX_SAVED_TRANSACTION_FILTERS)
