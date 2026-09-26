@@ -64,7 +64,7 @@ test('fecha pelo Escape', () => {
     </MemoryRouter>,
   )
 
-  fireEvent.keyDown(screen.getByRole('dialog', { name: 'Busca global' }), { key: 'Escape' })
+  fireEvent.keyDown(screen.getByLabelText('Buscar no Meu Real'), { key: 'Escape' })
 
   expect(onClose).toHaveBeenCalled()
 })
