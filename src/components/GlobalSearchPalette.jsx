@@ -1,23 +1,20 @@
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { searchGlobal } from '../domain/globalSearch'
 import { Modal } from './ui'
 
 export default function GlobalSearchPalette({
   onClose,
+  pages = [],
   transactions = [],
   categories = [],
   goals = [],
   creditCards = [],
-  isAdmin,
 }) {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const results = useMemo(
-    () => searchGlobal({ query, transactions, categories, goals, creditCards, isAdmin }),
-    [query, transactions, categories, goals, creditCards, isAdmin],
-  )
+  const results = searchGlobal({ query, pages, transactions, categories, goals, creditCards })
 
   const openResult = (item) => {
     onClose()
