@@ -264,7 +264,10 @@ function GoalsContent() {
   const hasGoals = goals.length > 0
 
   return (
-    <div data-tour="goals" className="operational-page goals-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6">
+    <div
+      data-tour="goals"
+      className="operational-page goals-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6"
+    >
       <div className="operational-page__header flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
