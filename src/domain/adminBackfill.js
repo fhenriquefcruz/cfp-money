@@ -56,7 +56,9 @@ function duplicateEmails(users) {
   const grouped = new Map()
 
   for (const user of users) {
-    const email = String(user.email || '').trim().toLowerCase()
+    const email = String(user.email || '')
+      .trim()
+      .toLowerCase()
     if (!email) continue
 
     const current = grouped.get(email) || []
