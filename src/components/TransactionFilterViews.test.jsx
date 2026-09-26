@@ -45,7 +45,11 @@ test('separa as visões por usuário no armazenamento local', () => {
   window.localStorage.clear()
 
   const { rerender } = render(
-    <TransactionFilterViews userId="user-a" filters={{ typeFilter: 'expense' }} onApply={() => {}} />,
+    <TransactionFilterViews
+      userId="user-a"
+      filters={{ typeFilter: 'expense' }}
+      onApply={() => {}}
+    />,
   )
 
   fireEvent.click(screen.getByRole('button', { name: /Salvar visão/i }))
