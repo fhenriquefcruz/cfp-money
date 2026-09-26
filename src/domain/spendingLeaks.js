@@ -114,6 +114,11 @@ function buildSmallExpensesFinding(expenses, totalExpenses, currentIncome) {
 }
 
 function buildCategoryAccelerationFinding(currentTransactions, previousTransactions, totalExpenses) {
+  const previousExpenses = previousTransactions.filter(
+    (transaction) => transaction.type === 'expense' && !transaction.isSavings,
+  )
+  if (previousExpenses.length < 3 || sumAmounts(previousExpenses) <= 0) return null
+
   const changes = calculateCategoryChanges(currentTransactions, previousTransactions)
   const materialDifference = Math.max(80, totalExpenses * 0.08)
   const materialCurrentTotal = Math.max(120, totalExpenses * 0.15)
