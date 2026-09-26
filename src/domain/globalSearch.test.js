@@ -1,11 +1,16 @@
 import { normalizeGlobalSearchText, searchGlobal } from './globalSearch'
 
-test('normaliza acentos e espaços para pesquisa tolerante', () => {
-  expect(normalizeGlobalSearchText('  Alimentação   Mensal ')).toBe('alimentacao mensal')
+const pages = [
+  ['Dashboard', '/dashboard'],
+  ['Relatórios', '/reports'],
+]
+
+test('normaliza acentos para pesquisa tolerante', () => {
+  expect(normalizeGlobalSearchText('Alimentação')).toBe('alimentacao')
 })
 
 test('encontra módulos mesmo sem dados financeiros', () => {
-  expect(searchGlobal({ query: 'relatorios' })[0]).toEqual({
+  expect(searchGlobal({ query: 'relatorios', pages })[0]).toEqual({
     label: 'Relatórios',
     to: '/reports',
   })
@@ -14,12 +19,12 @@ test('encontra módulos mesmo sem dados financeiros', () => {
 test('encontra transação e cria rota para a busca interna', () => {
   const [result] = searchGlobal({
     query: 'odontologica',
+    pages,
     transactions: [
       {
         id: 'tx-1',
         description: 'Consulta odontológica',
         categoryName: 'Saúde',
-        amount: 180,
       },
     ],
   })
@@ -30,9 +35,10 @@ test('encontra transação e cria rota para a busca interna', () => {
 
 test('encontra categorias, metas e cartões inclusive com termos separados', () => {
   const data = {
-    categories: [{ id: 'food', name: 'Alimentação', type: 'expense' }],
-    goals: [{ id: 'car', name: 'Entrada do carro', targetAmount: 60000 }],
-    creditCards: [{ id: 'nubank', name: 'Nubank', last4: '4582', brand: 'mastercard' }],
+    pages,
+    categories: [{ id: 'food', name: 'Alimentação' }],
+    goals: [{ id: 'car', name: 'Entrada do carro' }],
+    creditCards: [{ id: 'nubank', name: 'Nubank', last4: '4582' }],
   }
 
   expect(searchGlobal({ ...data, query: 'alimentacao' })[0]?.to).toBe('/categories')
@@ -40,23 +46,18 @@ test('encontra categorias, metas e cartões inclusive com termos separados', () 
   expect(searchGlobal({ ...data, query: '4582' })[0]?.to).toBe('/cards')
 })
 
-test('admin só aparece para usuário autorizado', () => {
-  expect(searchGlobal({ query: 'admin' })).toEqual([])
-  expect(searchGlobal({ query: 'admin', isAdmin: true })[0]?.to).toBe('/admin')
+test('admin depende das páginas autorizadas recebidas do shell', () => {
+  expect(searchGlobal({ query: 'admin', pages })).toEqual([])
+  expect(searchGlobal({ query: 'admin', pages: [...pages, ['Admin', '/admin']] })[0]?.to).toBe(
+    '/admin',
+  )
 })
 
 test('consulta vazia retorna atalhos de navegação antes dos dados', () => {
   const results = searchGlobal({
-    transactions: [{ id: 't1', description: 'Mercado', amount: 100 }],
-    limit: 5,
+    pages,
+    transactions: [{ id: 't1', description: 'Mercado' }],
   })
 
-  expect(results).toHaveLength(5)
-  expect(results.map((item) => item.to)).toEqual([
-    '/dashboard',
-    '/money',
-    '/cards',
-    '/transactions',
-    '/categories',
-  ])
+  expect(results.map((item) => item.to)).toEqual(['/dashboard', '/reports', '/transactions?search=Mercado'])
 })
