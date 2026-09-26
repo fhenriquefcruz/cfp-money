@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { buildGlobalSearchIndex, searchGlobalIndex } from '../domain/globalSearch'
+import { searchGlobal } from '../domain/globalSearch'
 import { Modal } from './ui'
 
 export default function GlobalSearchPalette({
@@ -14,11 +14,10 @@ export default function GlobalSearchPalette({
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const index = useMemo(
-    () => buildGlobalSearchIndex({ transactions, categories, goals, creditCards, isAdmin }),
-    [transactions, categories, goals, creditCards, isAdmin],
+  const results = useMemo(
+    () => searchGlobal({ query, transactions, categories, goals, creditCards, isAdmin }),
+    [query, transactions, categories, goals, creditCards, isAdmin],
   )
-  const results = searchGlobalIndex(index, query)
 
   const openResult = (item) => {
     onClose()
