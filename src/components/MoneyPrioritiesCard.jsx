@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 import { Card } from './ui'
 
 const LEVEL = {
-  critical: ['Prioridade', 'border-[--danger-border] bg-[--danger-bg]'],
-  warning: ['Atenção', 'border-[--warning-border] bg-[--warning-bg]'],
-  opportunity: ['Oportunidade', 'border-[--brand-200] bg-[--brand-50]'],
+  critical: ['Prioridade', 'money-priority--critical'],
+  warning: ['Atenção', 'money-priority--warning'],
+  opportunity: ['Oportunidade', 'money-priority--opportunity'],
 }
 
 export default function MoneyPrioritiesCard({ report }) {
