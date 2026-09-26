@@ -28,6 +28,7 @@ test('mostra somente os achados recebidos e oferece revisão das transações', 
         report={{
           status: 'attention',
           minimumExpenseCount: 5,
+          periods: { current: { end: '2026-09-20' } },
           findings: [
             {
               id: 'small-expenses',
@@ -47,5 +48,9 @@ test('mostra somente os achados recebidos e oferece revisão das transações', 
   expect(screen.getByRole('link', { name: /Ver pequenos gastos/i })).toHaveAttribute(
     'href',
     '/transactions',
+  )
+  expect(screen.getByRole('link', { name: /Analisar com o Money/i })).toHaveAttribute(
+    'href',
+    '/money?prompt=Quais+vazamentos+de+gastos+voc%C3%AA+encontrou+neste+per%C3%ADodo%3F&reference=2026-09-20',
   )
 })
