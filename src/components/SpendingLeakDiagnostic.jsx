@@ -95,7 +95,9 @@ export default function SpendingLeakDiagnostic({ report }) {
 
       {status === 'attention' && (
         <Link
-          to={buildMoneyPromptPath(MONEY_CONTEXT_PROMPTS.spendingLeaks)}
+          to={buildMoneyPromptPath(MONEY_CONTEXT_PROMPTS.spendingLeaks, {
+            referenceDate: report?.periods?.current?.end,
+          })}
           className="mt-3 inline-flex min-h-9 items-center gap-1.5 text-[10px] font-bold text-[--text-brand] hover:underline"
         >
           <Bot size={12} aria-hidden="true" />
