@@ -68,7 +68,8 @@ const MONEY_CAPABILITIES = [
   {
     icon: Sparkles,
     title: 'Diagnóstico de vazamentos',
-    description: 'Explica padrões de gasto que merecem revisão sem classificar o gasto como errado.',
+    description:
+      'Explica padrões de gasto que merecem revisão sem classificar o gasto como errado.',
   },
   {
     icon: FileText,
