@@ -218,7 +218,10 @@ function MoneyContent() {
     settingsLoading
 
   const now = new Date()
-  const monthBounds = useMemo(() => getCalendarMonthBounds(now), [now.getFullYear(), now.getMonth()])
+  const monthBounds = useMemo(
+    () => getCalendarMonthBounds(now),
+    [now.getFullYear(), now.getMonth()],
+  )
   const currentSummary = useMemo(
     () => getSummary(now.getFullYear(), now.getMonth()),
     [getSummary, transactions, now.getFullYear(), now.getMonth()],
@@ -289,7 +292,14 @@ function MoneyContent() {
         spendingLeakReport,
         goals,
       }),
-    [paymentSummary, budgetAlerts, currentSummary.balance, financialHealth, spendingLeakReport, goals],
+    [
+      paymentSummary,
+      budgetAlerts,
+      currentSummary.balance,
+      financialHealth,
+      spendingLeakReport,
+      goals,
+    ],
   )
   const canSend = input.trim().length > 0 && !isLoading
 
