@@ -95,7 +95,7 @@ describe('adminBackfill', () => {
 
 
 test('temporary formatting probe', async () => {
-  const source = fs.readFileSync(new URL('./adminBackfill.js', import.meta.url), 'utf8')
+  const source = fs.readFileSync('src/domain/adminBackfill.js', 'utf8')
   const formatted = await prettier.format(source, {
     parser: 'babel',
     semi: false,
