@@ -22,10 +22,12 @@ import {
   Clock3,
 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
+import { useAuth } from '../contexts/AuthContext'
 import { Button, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
 import TransactionSeriesModal from './TransactionSeriesModal'
 import TransactionCsvImportModal from './TransactionCsvImportModal'
+import TransactionFilterViews from './TransactionFilterViews'
 import {
   formatCurrency,
   getPaymentLabel,
@@ -375,6 +377,7 @@ function TxRow({
 }
 
 export default function TransactionList() {
+  const { user } = useAuth()
   const {
     transactions,
     categories,
@@ -509,6 +512,42 @@ export default function TransactionList() {
     hasCustomDateRange,
     !!search,
   ].filter(Boolean).length
+
+  const currentFilterView = useMemo(
+    () => ({
+      typeFilter,
+      catFilter,
+      payFilter,
+      paymentStatusFilter,
+      dateRange,
+      search,
+      sortAsc,
+    }),
+    [
+      typeFilter,
+      catFilter,
+      payFilter,
+      paymentStatusFilter,
+      dateRange,
+      search,
+      sortAsc,
+    ],
+  )
+
+  const applyFilterView = (view) => {
+    setTypeFilter(view.typeFilter || 'all')
+    setCatFilter(view.catFilter || 'all')
+    setPayFilter(view.payFilter || 'all')
+    setPaymentStatusFilter(view.paymentStatusFilter || 'all')
+    setDateRange({
+      from: view.dateRange?.from || '',
+      to: view.dateRange?.to || '',
+    })
+    setSearch(view.search || '')
+    setSortAsc(Boolean(view.sortAsc))
+    setPage(1)
+    setShowFilters(true)
+  }
 
   const handleEdit = (tx) => {
     if (isTransactionSeries(tx)) {
@@ -988,6 +1027,13 @@ export default function TransactionList() {
           )}
         </AnimatePresence>
       </div>
+
+      <TransactionFilterViews
+        userId={user?.uid}
+        filters={currentFilterView}
+        onApply={applyFilterView}
+        showNotification={showNotification}
+      />
 
       {(bulkPaymentCandidates.length > 0 || lastPaymentOperation) && (
         <div className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-3">
