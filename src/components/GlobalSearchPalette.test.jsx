@@ -3,28 +3,27 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { expect, test, vi } from 'vitest'
 import GlobalSearchPalette from './GlobalSearchPalette'
-import { buildGlobalSearchIndex } from '../domain/globalSearch'
 
 test('busca uma transação e navega para a lista com o termo preenchido', () => {
   const onClose = vi.fn()
-  const index = buildGlobalSearchIndex({
-    transactions: [
-      {
-        id: 'tx-1',
-        description: 'Consulta odontológica',
-        categoryName: 'Saúde',
-        type: 'expense',
-        amount: 180,
-      },
-    ],
-  })
+  const transactions = [
+    {
+      id: 'tx-1',
+      description: 'Consulta odontológica',
+      categoryName: 'Saúde',
+      type: 'expense',
+      amount: 180,
+    },
+  ]
 
   render(
     <MemoryRouter initialEntries={['/dashboard']}>
       <Routes>
         <Route
           path="*"
-          element={<GlobalSearchPalette open onClose={onClose} index={index} />}
+          element={
+            <GlobalSearchPalette open onClose={onClose} transactions={transactions} />
+          }
         />
       </Routes>
     </MemoryRouter>,
@@ -45,7 +44,6 @@ test('mostra estado vazio sem criar resultado artificial', () => {
       <GlobalSearchPalette
         open
         onClose={() => {}}
-        index={buildGlobalSearchIndex()}
       />
     </MemoryRouter>,
   )
@@ -62,7 +60,7 @@ test('fecha pelo Escape', () => {
 
   render(
     <MemoryRouter>
-      <GlobalSearchPalette open onClose={onClose} index={buildGlobalSearchIndex()} />
+      <GlobalSearchPalette open onClose={onClose} />
     </MemoryRouter>,
   )
 
