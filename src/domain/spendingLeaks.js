@@ -113,7 +113,11 @@ function buildSmallExpensesFinding(expenses, totalExpenses, currentIncome) {
   }
 }
 
-function buildCategoryAccelerationFinding(currentTransactions, previousTransactions, totalExpenses) {
+function buildCategoryAccelerationFinding(
+  currentTransactions,
+  previousTransactions,
+  totalExpenses,
+) {
   const previousExpenses = previousTransactions.filter(
     (transaction) => transaction.type === 'expense' && !transaction.isSavings,
   )
@@ -179,11 +183,7 @@ function removeOverlappingFindings(findings) {
   return findings
 }
 
-export function analyzeSpendingLeaks(
-  transactions = [],
-  settings = {},
-  referenceDate = new Date(),
-) {
+export function analyzeSpendingLeaks(transactions = [], settings = {}, referenceDate = new Date()) {
   const periods = getEquivalentPeriods(referenceDate, settings)
   const currentTransactions = filterTransactionsForPeriod(
     transactions,
@@ -206,8 +206,7 @@ export function analyzeSpendingLeaks(
     ),
   )
 
-  const hasEnoughData =
-    currentExpenses.length >= MIN_CURRENT_EXPENSE_COUNT && totalExpenses > 0
+  const hasEnoughData = currentExpenses.length >= MIN_CURRENT_EXPENSE_COUNT && totalExpenses > 0
 
   if (!hasEnoughData) {
     return {
