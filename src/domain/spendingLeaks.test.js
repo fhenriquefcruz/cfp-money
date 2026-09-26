@@ -12,12 +12,7 @@ const tx = (overrides = {}) => ({
 
 test('não força alerta quando ainda não há dados suficientes', () => {
   const report = analyzeSpendingLeaks(
-    [
-      tx({ amount: 40 }),
-      tx({ amount: 30 }),
-      tx({ amount: 20 }),
-      tx({ amount: 10 }),
-    ],
+    [tx({ amount: 40 }), tx({ amount: 30 }), tx({ amount: 20 }), tx({ amount: 10 })],
     {},
     new Date(2026, 8, 20),
   )
@@ -29,9 +24,24 @@ test('não força alerta quando ainda não há dados suficientes', () => {
 test('identifica repetição material de uma mesma descrição', () => {
   const report = analyzeSpendingLeaks(
     [
-      tx({ description: 'Delivery', amount: 90, categoryId: 'food', categoryName: 'Alimentação' }),
-      tx({ description: 'Delivery', amount: 85, categoryId: 'food', categoryName: 'Alimentação' }),
-      tx({ description: 'Delivery', amount: 95, categoryId: 'food', categoryName: 'Alimentação' }),
+      tx({
+        description: 'Delivery',
+        amount: 90,
+        categoryId: 'food',
+        categoryName: 'Alimentação',
+      }),
+      tx({
+        description: 'Delivery',
+        amount: 85,
+        categoryId: 'food',
+        categoryName: 'Alimentação',
+      }),
+      tx({
+        description: 'Delivery',
+        amount: 95,
+        categoryId: 'food',
+        categoryName: 'Alimentação',
+      }),
       tx({
         description: 'Combustível',
         amount: 400,
@@ -51,6 +61,7 @@ test('identifica repetição material de uma mesma descrição', () => {
   )
 
   const finding = report.findings.find((item) => item.type === 'repeated_description')
+
   expect(report.status).toBe('attention')
   expect(finding?.count).toBe(3)
   expect(finding?.amount).toBe(270)
@@ -70,7 +81,12 @@ test('identifica acúmulo de pequenos gastos quando o total se torna relevante',
   const report = analyzeSpendingLeaks(
     [
       ...expenses,
-      tx({ description: 'Aluguel', amount: 1000, categoryId: 'home', categoryName: 'Moradia' }),
+      tx({
+        description: 'Aluguel',
+        amount: 1000,
+        categoryId: 'home',
+        categoryName: 'Moradia',
+      }),
       tx({ type: 'income', amount: 3000, description: 'Salário' }),
     ],
     {},
@@ -78,6 +94,7 @@ test('identifica acúmulo de pequenos gastos quando o total se torna relevante',
   )
 
   const finding = report.findings.find((item) => item.type === 'small_expenses')
+
   expect(finding?.count).toBe(8)
   expect(finding?.amount).toBe(200)
 })
@@ -147,6 +164,7 @@ test('sinaliza categoria que ganhou peso material em relação ao período anter
   )
 
   const finding = report.findings.find((item) => item.type === 'category_acceleration')
+
   expect(finding?.categoryId).toBe('food')
   expect(finding?.difference).toBe(550)
 })
@@ -171,16 +189,36 @@ test('ignora recorrências e parcelas no vazamento repetido', () => {
 test('não sinaliza categoria sem histórico anterior suficiente', () => {
   const report = analyzeSpendingLeaks(
     [
-      tx({ amount: 800, description: 'Mercado', categoryId: 'food', categoryName: 'Alimentação' }),
+      tx({
+        amount: 800,
+        description: 'Mercado',
+        categoryId: 'food',
+        categoryName: 'Alimentação',
+      }),
       tx({
         amount: 200,
         description: 'Combustível',
         categoryId: 'car',
         categoryName: 'Transporte',
       }),
-      tx({ amount: 150, description: 'Farmácia', categoryId: 'health', categoryName: 'Saúde' }),
-      tx({ amount: 120, description: 'Internet', categoryId: 'home', categoryName: 'Moradia' }),
-      tx({ amount: 100, description: 'Cinema', categoryId: 'fun', categoryName: 'Lazer' }),
+      tx({
+        amount: 150,
+        description: 'Farmácia',
+        categoryId: 'health',
+        categoryName: 'Saúde',
+      }),
+      tx({
+        amount: 120,
+        description: 'Internet',
+        categoryId: 'home',
+        categoryName: 'Moradia',
+      }),
+      tx({
+        amount: 100,
+        description: 'Cinema',
+        categoryId: 'fun',
+        categoryName: 'Lazer',
+      }),
     ],
     {},
     new Date(2026, 8, 20),
