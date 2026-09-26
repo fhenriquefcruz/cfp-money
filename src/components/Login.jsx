@@ -362,9 +362,9 @@ export default function Login() {
   return (
     <div className="login-future-shell relative min-h-screen overflow-hidden">
       <div className="login-future-grid pointer-events-none absolute inset-0" />
-      <div className="login-orb login-orb-cyan pointer-events-none absolute" />
-      <div className="login-orb login-orb-violet pointer-events-none absolute" />
-      <div className="login-orb login-orb-indigo pointer-events-none absolute" />
+      <div className="login-orb login-orb-gold pointer-events-none absolute" />
+      <div className="login-orb login-orb-sage pointer-events-none absolute" />
+      <div className="login-orb login-orb-bronze pointer-events-none absolute" />
 
       <div className="absolute right-4 top-4 z-40 sm:right-6 sm:top-6">
         <ThemeToggle compact className="login-theme-control backdrop-blur-xl" />
