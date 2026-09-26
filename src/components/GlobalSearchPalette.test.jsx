@@ -1,8 +1,10 @@
 import React from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { expect, test, vi } from 'vitest'
+import { afterEach, expect, test, vi } from 'vitest'
 import GlobalSearchPalette from './GlobalSearchPalette'
+
+afterEach(cleanup)
 
 test('busca uma transação e navega para a lista com o termo preenchido', () => {
   const onClose = vi.fn()
