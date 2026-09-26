@@ -40,14 +40,14 @@ import { format, subMonths, addMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 const PIE_COLORS = [
-  '#6366f1',
-  '#10b981',
-  '#f59e0b',
-  '#ef4444',
-  '#8b5cf6',
-  '#ec4899',
-  '#14b8a6',
-  '#f97316',
+  '#c49d6b',
+  '#4e8066',
+  '#a7804e',
+  '#b64c43',
+  '#786c8d',
+  '#9a6671',
+  '#5f8587',
+  '#b87645',
 ]
 
 const ChartTooltip = ({ active, payload, label }) => {
@@ -74,7 +74,7 @@ const TxItem = ({ tx, categories }) => {
     <div className="flex items-center gap-3 py-3 border-b border-[--border-subtle] last:border-0">
       <div
         className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
-        style={{ background: tx.isSavings ? '#6366f115' : (cat?.color || '#6366f1') + '18' }}
+        style={{ background: tx.isSavings ? '#c49d6b15' : (cat?.color || '#c49d6b') + '18' }}
       >
         {tx.isSavings ? '🐷' : cat?.icon || (isIncome ? '💰' : '💸')}
       </div>
@@ -117,7 +117,12 @@ function calcHealthScore({ balance, income, budgetsOk, goalsActive, savingRate }
 }
 
 function HealthScore({ score }) {
-  const color = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444'
+  const color =
+    score >= 75
+      ? 'var(--success-icon)'
+      : score >= 50
+        ? 'var(--warning-icon)'
+        : 'var(--danger-icon)'
   const label = score >= 75 ? 'Ótima' : score >= 50 ? 'Regular' : 'Atenção'
   const emoji = score >= 75 ? '💚' : score >= 50 ? '💛' : '❤️'
   const r = 28,
