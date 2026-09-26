@@ -694,7 +694,8 @@ export default function TransactionList() {
     const filters = view?.filters || {}
     const preset = DATE_PRESETS.find((item) => item.id === filters.datePreset)
     const categoryStillExists =
-      filters.catFilter === 'all' || categories.some((category) => category.id === filters.catFilter)
+      filters.catFilter === 'all' ||
+      categories.some((category) => category.id === filters.catFilter)
 
     setTypeFilter(filters.typeFilter || 'all')
     setCatFilter(categoryStillExists ? filters.catFilter || 'all' : 'all')
@@ -706,7 +707,10 @@ export default function TransactionList() {
     setShowFilters(true)
 
     if (!categoryStillExists) {
-      showNotification('A categoria salva não existe mais; os outros filtros foram aplicados.', 'info')
+      showNotification(
+        'A categoria salva não existe mais; os outros filtros foram aplicados.',
+        'info',
+      )
     }
   }
 
