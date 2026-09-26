@@ -38,6 +38,8 @@ const NAV_ITEMS = [
   { to: '/profile', icon: User, label: 'Perfil' },
 ]
 
+const MOBILE_PRIMARY_PATHS = ['/dashboard', '/transactions', '/cards', '/money']
+
 const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
   const location = useLocation()
   const isActive = location.pathname === to
@@ -119,6 +121,10 @@ export default function Sidebar() {
   const allItems = isAdmin
     ? [...NAV_ITEMS, { to: '/admin', icon: Shield, label: 'Admin' }]
     : NAV_ITEMS
+  const mobilePrimaryItems = MOBILE_PRIMARY_PATHS.map((path) =>
+    allItems.find((item) => item.to === path),
+  ).filter(Boolean)
+  const mobileMoreItems = allItems.filter((item) => !MOBILE_PRIMARY_PATHS.includes(item.to))
 
   useEffect(() => {
     setMobileOpen(false)
@@ -302,10 +308,10 @@ export default function Sidebar() {
       </motion.aside>
 
       <nav
-        className="aurora-bottom-nav fixed bottom-0 left-0 right-0 z-[70] grid grid-cols-6 items-stretch overflow-x-clip border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
+        className="aurora-bottom-nav fixed bottom-0 left-0 right-0 z-[70] grid grid-cols-5 items-stretch overflow-x-clip border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
       >
-        {allItems.slice(0, 5).map(({ to, icon: Icon, label, premium }) => (
+        {mobilePrimaryItems.map(({ to, icon: Icon, label, premium }) => (
           <NavLink
             key={to}
             to={to}
@@ -394,7 +400,7 @@ export default function Sidebar() {
             </div>
 
             <nav className="flex-1 space-y-1 overflow-y-auto px-3">
-              {allItems.map((item) => (
+              {mobileMoreItems.map((item) => (
                 <NavItem
                   key={item.to}
                   {...item}
