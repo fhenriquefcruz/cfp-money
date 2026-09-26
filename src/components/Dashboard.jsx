@@ -316,7 +316,7 @@ export default function Dashboard() {
 
       {/* Hero — saldo do mês como principal, sem duplicar nos cards abaixo */}
       <motion.div
-        className="aurora-balance-hero relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-3 text-white sm:p-6"
+        className="aurora-balance-hero aurora-card--hero relative overflow-hidden rounded-[28px] p-3 text-white sm:p-6"
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.05 }}
@@ -383,7 +383,7 @@ export default function Dashboard() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="mb-1 flex items-center gap-1.5">
-                  <Zap size={14} className="text-[#f59e0b]" />
+                  <Zap size={14} className="text-[--brand-600]" />
                   <p className="text-xs font-semibold text-[--text-tertiary]">Previsão de gastos</p>
                   <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
                 </div>
@@ -398,7 +398,7 @@ export default function Dashboard() {
                   Referência média para apoiar o planejamento do mês.
                 </p>
               </div>
-              <div className="rounded-xl bg-amber-100 p-2 text-amber-700">
+              <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
                 <Zap size={16} />
               </div>
             </div>
