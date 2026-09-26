@@ -9,6 +9,7 @@ import {
   registerEmail,
   resetPassword,
   logOut,
+  touchUserActivity,
 } from '../services/firebase'
 
 const AuthContext = createContext({})
@@ -32,9 +33,43 @@ export const AuthProvider = ({ children }) => {
       setUser(u)
       setClaims(u ? (await u.getIdTokenResult()).claims : {})
       setLoading(false)
+
+      if (u?.uid) {
+        touchUserActivity(u.uid).catch((activityError) => {
+          console.warn('[Meu Real] Não foi possível registrar atividade:', activityError.code)
+        })
+      }
     })
     return unsubscribe
   }, [])
+
+  useEffect(() => {
+    if (E2E_MODE || !user?.uid || typeof window === 'undefined') return undefined
+
+    const markActive = () => {
+      if (document.visibilityState === 'hidden') return
+      touchUserActivity(user.uid).catch((activityError) => {
+        console.warn('[Meu Real] Não foi possível atualizar atividade:', activityError.code)
+      })
+    }
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') markActive()
+    }
+
+    markActive()
+    window.addEventListener('focus', markActive)
+    window.addEventListener('pointerdown', markActive, { passive: true })
+    window.addEventListener('keydown', markActive)
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      window.removeEventListener('focus', markActive)
+      window.removeEventListener('pointerdown', markActive)
+      window.removeEventListener('keydown', markActive)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [user?.uid])
 
   const clearError = () => setError(null)
 
