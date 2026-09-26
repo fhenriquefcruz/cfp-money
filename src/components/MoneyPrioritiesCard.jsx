@@ -3,6 +3,21 @@ import { AlertTriangle, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card } from './ui'
 
+const PRIORITIES_DESCRIPTION =
+  'Sinais de pagamentos, orçamento, saúde financeira e comportamento reunidos em ordem de relevância.'
+const CLEAR_DESCRIPTION =
+  'O Money não encontrou um ponto que mereça ser elevado acima dos demais neste momento.'
+const COUNT_BADGE_CLASS =
+  'rounded-full border border-[--border-default] bg-[--bg-surface] px-2 py-1 text-[10px] font-bold text-[--text-secondary]'
+const CLEAR_BOX_CLASS =
+  'flex items-start gap-3 rounded-2xl border border-[--success-border] bg-[--success-bg] p-3'
+const PRIORITY_ICON_CLASS =
+  'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[--bg-surface]/70'
+const BADGE_BASE_CLASS =
+  'rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide'
+const ACTION_CLASS =
+  'mt-2 inline-flex min-h-8 items-center gap-1 text-[10px] font-bold text-[--text-brand] hover:underline'
+
 const LEVEL_STYLES = {
   critical: {
     label: 'Prioridade',
@@ -42,13 +57,12 @@ export default function MoneyPrioritiesCard({ report }) {
               Suas prioridades agora
             </h2>
             <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
-              Sinais de pagamentos, orçamento, saúde financeira e comportamento reunidos em ordem
-              de relevância.
+              {PRIORITIES_DESCRIPTION}
             </p>
           </div>
 
           {priorities.length > 0 && (
-            <span className="rounded-full border border-[--border-default] bg-[--bg-surface] px-2 py-1 text-[10px] font-bold text-[--text-secondary]">
+            <span className={COUNT_BADGE_CLASS}>
               {priorities.length} {priorities.length === 1 ? 'ação' : 'ações'}
             </span>
           )}
@@ -57,15 +71,14 @@ export default function MoneyPrioritiesCard({ report }) {
 
       <div className="space-y-2 p-4">
         {priorities.length === 0 ? (
-          <div className="flex items-start gap-3 rounded-2xl border border-[--success-border] bg-[--success-bg] p-3">
+          <div className={CLEAR_BOX_CLASS}>
             <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-[--success-icon]" />
             <div>
               <p className="text-xs font-bold text-[--success-text]">
                 Nenhuma prioridade relevante agora
               </p>
               <p className="mt-1 text-[10px] leading-relaxed text-[--success-text]">
-                O Money não encontrou um ponto que mereça ser elevado acima dos demais neste
-                momento.
+                {CLEAR_DESCRIPTION}
               </p>
             </div>
           </div>
@@ -73,10 +86,6 @@ export default function MoneyPrioritiesCard({ report }) {
           priorities.map((priority, index) => {
             const styles = LEVEL_STYLES[priority.level] || LEVEL_STYLES.opportunity
             const PriorityIcon = styles.icon
-            const badgeClass =
-              'rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide'
-            const actionClass =
-              'mt-2 inline-flex min-h-8 items-center gap-1 text-[10px] font-bold text-[--text-brand] hover:underline'
 
             return (
               <div
@@ -85,7 +94,7 @@ export default function MoneyPrioritiesCard({ report }) {
                 data-testid="money-priority"
               >
                 <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[--bg-surface]/70">
+                  <div className={PRIORITY_ICON_CLASS}>
                     <PriorityIcon size={14} className={styles.iconClass} />
                   </div>
 
@@ -95,7 +104,7 @@ export default function MoneyPrioritiesCard({ report }) {
                         {index + 1}
                       </span>
                       <span
-                        className={`${badgeClass} ${styles.badgeClass}`}
+                        className={`${BADGE_BASE_CLASS} ${styles.badgeClass}`}
                       >
                         {styles.label}
                       </span>
@@ -110,7 +119,7 @@ export default function MoneyPrioritiesCard({ report }) {
 
                     <Link
                       to={priority.to}
-                      className={actionClass}
+                      className={ACTION_CLASS}
                     >
                       {priority.actionLabel}
                       <ArrowRight size={11} />
