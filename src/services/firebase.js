@@ -369,18 +369,37 @@ export const getBudgets = async (uid) => {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
 }
 
-export const setBudget = async (uid, categoryId, amount) => {
-  const snap = await getDocs(query(userCol(uid, 'budgets'), where('categoryId', '==', categoryId)))
-  if (!snap.empty) {
-    await updateDoc(snap.docs[0].ref, { categoryId, amount })
-  } else {
-    await addDoc(userCol(uid, 'budgets'), { categoryId, amount })
+export const setBudget = async (uid, categoryId, amount, monthKey) => {
+  if (!/^\\d{4}-\\d{2}$/.test(monthKey || '')) {
+    throw new Error('Competência mensal inválida.')
   }
+
+  const budgetId = `${monthKey}__${categoryId}`
+  await setDoc(
+    userDoc(uid, 'budgets', budgetId),
+    {
+      categoryId,
+      amount,
+      monthKey,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  )
+
+  return budgetId
 }
 
-export const deleteBudget = async (uid, categoryId) => {
-  const snap = await getDocs(query(userCol(uid, 'budgets'), where('categoryId', '==', categoryId)))
-  if (!snap.empty) await deleteDoc(snap.docs[0].ref)
+export const deleteBudget = async (uid, categoryId, monthKey, budgetId = '') => {
+  if (budgetId) {
+    await deleteDoc(userDoc(uid, 'budgets', budgetId))
+    return
+  }
+
+  if (!/^\\d{4}-\\d{2}$/.test(monthKey || '')) {
+    throw new Error('Competência mensal inválida.')
+  }
+
+  await deleteDoc(userDoc(uid, 'budgets', `${monthKey}__${categoryId}`))
 }
 
 // ── ADMIN ──
