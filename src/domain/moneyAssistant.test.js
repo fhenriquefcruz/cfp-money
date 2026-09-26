@@ -1,4 +1,5 @@
 import { analyzeMoney } from './money'
+import { analyzeSpendingLeaks } from './spendingLeaks'
 import { buildMoneyAssistantResponse, parseMoneyAssistantIntent } from './moneyAssistant'
 
 const categories = [
@@ -123,4 +124,54 @@ test('responde com ajuda para pedidos não reconhecidos', () => {
 
   expect(response.type).toBe('help')
   expect(response.text).toContain('sem alterar')
+})
+
+
+test('entende pedido de diagnóstico de vazamentos', () => {
+  expect(
+    parseMoneyAssistantIntent(
+      'Quais vazamentos de gastos você encontrou neste período?',
+      categories,
+      transactions,
+      now,
+    ),
+  ).toEqual({ type: 'spending_leaks' })
+})
+
+test('reaproveita o diagnóstico de vazamentos dentro da conversa', () => {
+  const leakTransactions = [
+    { type: 'income', amount: 3000, date: '2026-07-05', categoryName: 'Salário' },
+    ...Array.from({ length: 8 }, (_, index) => ({
+      type: 'expense',
+      amount: 25,
+      date: `2026-07-${String(index + 5).padStart(2, '0')}`,
+      description: `Café ${index}`,
+      categoryId: 'food',
+      categoryName: 'Alimentação',
+    })),
+    {
+      type: 'expense',
+      amount: 1000,
+      date: '2026-07-20',
+      description: 'Aluguel',
+      categoryId: 'home',
+      categoryName: 'Moradia',
+    },
+  ]
+
+  const response = buildMoneyAssistantResponse({
+    message: 'Quais vazamentos de gastos você encontrou neste período?',
+    transactions: leakTransactions,
+    categories,
+    settings: {},
+    now,
+    analyze: analyzeMoney,
+    analyzeLeaks: analyzeSpendingLeaks,
+  })
+
+  expect(response.type).toBe('spending_leaks')
+  expect(response.title).toBe('Diagnóstico de vazamentos')
+  expect(response.findings.some((finding) => finding.title === 'Pequenos gastos estão somando')).toBe(
+    true,
+  )
 })
