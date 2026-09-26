@@ -59,5 +59,9 @@ test('consulta vazia retorna atalhos de navegação antes dos dados', () => {
     transactions: [{ id: 't1', description: 'Mercado' }],
   })
 
-  expect(results.map((item) => item.to)).toEqual(['/dashboard', '/reports', '/transactions?search=Mercado'])
+  expect(results.map((item) => item.to)).toEqual([
+    '/dashboard',
+    '/reports',
+    '/transactions?search=Mercado',
+  ])
 })
