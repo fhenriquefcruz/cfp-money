@@ -146,7 +146,9 @@ export default function Onboarding() {
       >
         {/* Backdrop: no passo contextual, o próprio spotlight cria o escurecimento. */}
         <div
-          className={`absolute inset-0 ${highlightRect ? 'bg-transparent' : 'bg-black/70 backdrop-blur-sm'}`}
+          className={`absolute inset-0 ${
+            highlightRect ? 'bg-transparent' : 'bg-black/70 backdrop-blur-sm'
+          }`}
           onClick={finish}
         />
 
