@@ -328,6 +328,45 @@ export const AppProvider = ({ children }) => {
     [user?.uid, showNotification, checkBudgetAlert],
   )
 
+  const importTransactionBatch = useCallback(
+    async (items) => {
+      if (!user?.uid) return []
+      if (!Array.isArray(items) || items.length === 0) return []
+      if (items.length > 400) {
+        throw new Error('A importação excede o limite seguro de 400 transações.')
+      }
+
+      const preparedItems = items.map(ensureTransactionPaymentDefaults)
+
+      try {
+        const transactionIds = E2E_MODE
+          ? preparedItems.map((_, index) => `e2e-import-${Date.now()}-${index}`)
+          : await fbAddBatch(user.uid, preparedItems)
+
+        if (E2E_MODE) {
+          dispatch({
+            type: 'E2E_ADD_TRANSACTION_BATCH',
+            payload: preparedItems.map((item, index) => ({
+              ...item,
+              id: transactionIds[index],
+              createdAt: new Date().toISOString(),
+            })),
+          })
+        }
+
+        preparedItems.forEach(checkBudgetAlert)
+        showNotification(
+          `${preparedItems.length} ${preparedItems.length === 1 ? 'transação importada' : 'transações importadas'}!`,
+        )
+        return transactionIds
+      } catch (error) {
+        showNotification('Não foi possível concluir a importação.', 'error')
+        throw error
+      }
+    },
+    [user?.uid, showNotification, checkBudgetAlert],
+  )
+
   const editTransaction = useCallback(
     async (id, data) => {
       if (!user?.uid) return
@@ -784,6 +823,7 @@ export const AppProvider = ({ children }) => {
         removeTransaction,
         removeTransactionBatch,
         addTransactionBatch,
+        importTransactionBatch,
         createInvoiceEvent,
         applyTransactionSeriesOperation,
         createCreditCard,
