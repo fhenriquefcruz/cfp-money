@@ -4,7 +4,7 @@ import { ArrowRight, Bot, ChevronDown } from 'lucide-react'
 import { MONEY_CONTEXT_PROMPTS, buildMoneyPromptPath } from '../domain/moneyContext'
 import { ProgressBar } from './ui'
 
-export default function FinancialHealthScore({ report }) {
+export default function FinancialHealthScore({ report, referenceDate }) {
   const [expanded, setExpanded] = useState(false)
   const score = Number(report?.score || 0)
   const color =
@@ -51,7 +51,9 @@ export default function FinancialHealthScore({ report }) {
             </p>
           )}
           <Link
-            to={buildMoneyPromptPath(MONEY_CONTEXT_PROMPTS.financialHealth)}
+            to={buildMoneyPromptPath(MONEY_CONTEXT_PROMPTS.financialHealth, {
+              referenceDate,
+            })}
             className="mt-2 inline-flex min-h-8 items-center gap-1.5 text-[10px] font-bold text-[--text-brand] hover:underline"
           >
             <Bot size={11} aria-hidden="true" />
