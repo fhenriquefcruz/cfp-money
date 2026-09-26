@@ -151,27 +151,24 @@ test('sinaliza categoria que ganhou peso material em relação ao período anter
   expect(finding?.difference).toBe(550)
 })
 
-test(
-  'não classifica automaticamente gastos recorrentes ou parcelas como vazamento repetido',
-  () => {
-    const report = analyzeSpendingLeaks(
-      [
-        tx({ description: 'Academia', amount: 100, isRecurring: true }),
-        tx({ description: 'Academia', amount: 100, isRecurring: true }),
-        tx({ description: 'Academia', amount: 100, isRecurring: true }),
-        tx({ description: 'Parcela notebook', amount: 150, isInstallment: true }),
-        tx({ description: 'Parcela notebook', amount: 150, isInstallment: true }),
-        tx({ description: 'Parcela notebook', amount: 150, isInstallment: true }),
-      ],
-      {},
-      new Date(2026, 8, 20),
-    )
+test('ignora recorrências e parcelas no vazamento repetido', () => {
+  const report = analyzeSpendingLeaks(
+    [
+      tx({ description: 'Academia', amount: 100, isRecurring: true }),
+      tx({ description: 'Academia', amount: 100, isRecurring: true }),
+      tx({ description: 'Academia', amount: 100, isRecurring: true }),
+      tx({ description: 'Parcela notebook', amount: 150, isInstallment: true }),
+      tx({ description: 'Parcela notebook', amount: 150, isInstallment: true }),
+      tx({ description: 'Parcela notebook', amount: 150, isInstallment: true }),
+    ],
+    {},
+    new Date(2026, 8, 20),
+  )
 
-    expect(report.findings.some((item) => item.type === 'repeated_description')).toBe(false)
-  },
-)
+  expect(report.findings.some((item) => item.type === 'repeated_description')).toBe(false)
+})
 
-test('não chama concentração de categoria de vazamento sem histórico anterior suficiente', () => {
+test('não sinaliza categoria sem histórico anterior suficiente', () => {
   const report = analyzeSpendingLeaks(
     [
       tx({ amount: 800, description: 'Mercado', categoryId: 'food', categoryName: 'Alimentação' }),
