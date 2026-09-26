@@ -1,0 +1,72 @@
+import React from 'react'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { expect, test, vi } from 'vitest'
+import GlobalSearchPalette from './GlobalSearchPalette'
+import { buildGlobalSearchIndex } from '../domain/globalSearch'
+
+test('busca uma transação e navega para a lista com o termo preenchido', () => {
+  const onClose = vi.fn()
+  const index = buildGlobalSearchIndex({
+    transactions: [
+      {
+        id: 'tx-1',
+        description: 'Consulta odontológica',
+        categoryName: 'Saúde',
+        type: 'expense',
+        amount: 180,
+      },
+    ],
+  })
+
+  render(
+    <MemoryRouter initialEntries={['/dashboard']}>
+      <Routes>
+        <Route
+          path="*"
+          element={<GlobalSearchPalette open onClose={onClose} index={index} />}
+        />
+      </Routes>
+    </MemoryRouter>,
+  )
+
+  fireEvent.change(screen.getByLabelText('Buscar no Meu Real'), {
+    target: { value: 'odontologica' },
+  })
+
+  fireEvent.click(screen.getByRole('option', { name: /Consulta odontológica/i }))
+
+  expect(onClose).toHaveBeenCalled()
+})
+
+test('mostra estado vazio sem criar resultado artificial', () => {
+  render(
+    <MemoryRouter>
+      <GlobalSearchPalette
+        open
+        onClose={() => {}}
+        index={buildGlobalSearchIndex()}
+      />
+    </MemoryRouter>,
+  )
+
+  fireEvent.change(screen.getByLabelText('Buscar no Meu Real'), {
+    target: { value: 'algo inexistente 123' },
+  })
+
+  expect(screen.getByText('Nenhum resultado encontrado')).toBeInTheDocument()
+})
+
+test('fecha pelo Escape', () => {
+  const onClose = vi.fn()
+
+  render(
+    <MemoryRouter>
+      <GlobalSearchPalette open onClose={onClose} index={buildGlobalSearchIndex()} />
+    </MemoryRouter>,
+  )
+
+  fireEvent.keyDown(screen.getByRole('dialog', { name: 'Busca global' }), { key: 'Escape' })
+
+  expect(onClose).toHaveBeenCalled()
+})
