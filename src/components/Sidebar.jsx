@@ -401,11 +401,11 @@ export default function Sidebar() {
         <React.Suspense fallback={null}>
           <GlobalSearchPalette
             onClose={() => setSearchOpen(false)}
+            pages={allItems.map(({ label, to }) => [label, to])}
             transactions={transactions}
             categories={categories}
             goals={goals}
             creditCards={creditCards}
-            isAdmin={isAdmin}
           />
         </React.Suspense>
       )}
