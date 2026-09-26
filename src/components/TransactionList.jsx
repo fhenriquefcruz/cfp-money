@@ -523,15 +523,7 @@ export default function TransactionList() {
       search,
       sortAsc,
     }),
-    [
-      typeFilter,
-      catFilter,
-      payFilter,
-      paymentStatusFilter,
-      dateRange,
-      search,
-      sortAsc,
-    ],
+    [typeFilter, catFilter, payFilter, paymentStatusFilter, dateRange, search, sortAsc],
   )
 
   const applyFilterView = (view) => {
