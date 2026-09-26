@@ -1,0 +1,39 @@
+name: Phase 3 format once
+
+on:
+  push:
+    branches:
+      - feat/meu-real-usability-phase-3
+
+permissions:
+  contents: write
+
+concurrency:
+  group: phase3-format-once
+  cancel-in-progress: true
+
+jobs:
+  format:
+    if: ${{ !contains(github.event.head_commit.message, 'format phase 3 usability') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/meu-real-usability-phase-3
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format phase 3 files
+        run: npx prettier --write src/components/Dashboard.jsx src/components/TransactionForm.jsx src/domain/dashboard.js src/domain/dashboard.test.js
+      - name: Commit and remove formatter
+        run: |
+          rm -f .github/workflows/phase3-format-once.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/Dashboard.jsx src/components/TransactionForm.jsx src/domain/dashboard.js src/domain/dashboard.test.js .github/workflows/phase3-format-once.yml
+          git commit -m "chore: format phase 3 usability"
+          git pull --rebase origin feat/meu-real-usability-phase-3
+          git push origin HEAD:feat/meu-real-usability-phase-3
