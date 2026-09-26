@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
 import { useMoney } from '../contexts/MoneyContext'
 import { analyzeMoney } from '../domain/money'
+import { analyzeSpendingLeaks } from '../domain/spendingLeaks'
 import {
   formatMoneyPeriodLabel,
   getMoneyInsightHeadline,
@@ -20,6 +21,7 @@ import {
 import { formatCurrency } from '../utils'
 import { Card } from './ui'
 import PremiumGate from './PremiumGate'
+import SpendingLeakDiagnostic from './SpendingLeakDiagnostic'
 
 const TONE_STYLES = {
   positive: {
@@ -71,9 +73,14 @@ function MoneyInsightContent({ referenceDate }) {
   const { transactions, loading } = useApp()
   const { settings, isLoading: settingsLoading } = useMoney()
 
+  const analysisDate = useMemo(() => resolveAnalysisDate(referenceDate), [referenceDate])
   const analysis = useMemo(
-    () => analyzeMoney(transactions, settings, resolveAnalysisDate(referenceDate)),
-    [transactions, settings, referenceDate],
+    () => analyzeMoney(transactions, settings, analysisDate),
+    [transactions, settings, analysisDate],
+  )
+  const spendingLeakReport = useMemo(
+    () => analyzeSpendingLeaks(transactions, settings, analysisDate),
+    [transactions, settings, analysisDate],
   )
 
   const tone = getMoneyInsightTone(analysis)
@@ -208,6 +215,8 @@ function MoneyInsightContent({ referenceDate }) {
                 </p>
               </div>
             )}
+
+            <SpendingLeakDiagnostic report={spendingLeakReport} />
           </>
         )}
       </div>
