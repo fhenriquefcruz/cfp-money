@@ -255,7 +255,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
       description: form.description.trim() || (isSavings ? 'Depósito em Poupança' : ''),
       categoryId: isSavings ? '_savings' : form.categoryId,
       categoryName: isSavings ? 'Poupança' : cat?.name || '',
-      categoryColor: isSavings ? '#6366f1' : cat?.color || '',
+      categoryColor: isSavings ? '#c49d6b' : cat?.color || '',
       categoryIcon: isSavings ? '🐷' : cat?.icon || '',
       paymentMethod: form.paymentMethod,
       notes: form.notes.trim(),
