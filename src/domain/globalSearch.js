@@ -36,17 +36,19 @@ function scoreResult(result, normalizedQuery) {
   const detail = normalizeGlobalSearchText(result.detail)
   const keywords = normalizeGlobalSearchText(result.keywords)
   const haystack = `${label} ${detail} ${keywords}`.trim()
+  const queryTokens = normalizedQuery.split(' ').filter(Boolean)
+  const matchingTokens = queryTokens.filter((token) => haystack.includes(token)).length
+  const matchesPhrase = haystack.includes(normalizedQuery)
+  const matchesAllTokens = queryTokens.length > 0 && matchingTokens === queryTokens.length
 
-  if (!haystack.includes(normalizedQuery)) return 0
+  if (!matchesPhrase && !matchesAllTokens) return 0
 
-  let score = 40
+  let score = matchesPhrase ? 40 : 25
 
   if (label === normalizedQuery) score += 80
   else if (label.startsWith(normalizedQuery)) score += 55
   else if (label.includes(normalizedQuery)) score += 35
 
-  const queryTokens = normalizedQuery.split(' ').filter(Boolean)
-  const matchingTokens = queryTokens.filter((token) => haystack.includes(token)).length
   score += matchingTokens * 8
 
   if (result.kind === 'module') score += 8
