@@ -15,10 +15,11 @@ import {
   CreditCard,
   Settings2,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
 import { useMoney } from '../contexts/MoneyContext'
 import { analyzeMoney } from '../domain/money'
+import { analyzeSpendingLeaks } from '../domain/spendingLeaks'
 import { buildMoneyAssistantResponse } from '../domain/moneyAssistant'
 import { buildMoneyTransactionDraft } from '../domain/moneyTransactionDraft'
 import { buildMoneyCreditDraft } from '../domain/moneyCreditDraft'
@@ -41,6 +42,7 @@ const INITIAL_MESSAGE = {
       'Comprei 600 no Nubank em 3 vezes no mercado',
       'Paguei 180 no dentista por Pix ontem',
       'Como estão minhas finanças?',
+      'Quais vazamentos de gastos você encontrou neste período?',
       'Quero o relatório do mês atual',
     ],
   },
@@ -61,6 +63,11 @@ const MONEY_CAPABILITIES = [
     icon: BarChart3,
     title: 'Análise financeira',
     description: 'Compara períodos equivalentes e apresenta projeções de fechamento.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Diagnóstico de vazamentos',
+    description: 'Explica padrões de gasto que merecem revisão sem classificar o gasto como errado.',
   },
   {
     icon: FileText,
@@ -138,6 +145,29 @@ function AssistantResponse({
         )}
       </div>
 
+      {response.findings?.length > 0 && (
+        <div className="space-y-2">
+          {response.findings.map((finding) => (
+            <div
+              key={finding.id}
+              className="rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-3"
+            >
+              <p className="text-xs font-black text-[--warning-text]">{finding.title}</p>
+              <p className="mt-1 text-[10px] leading-relaxed text-[--warning-text]">
+                {finding.detail}
+              </p>
+              <Link
+                to={finding.to}
+                className="mt-2 inline-flex min-h-8 items-center gap-1 text-[10px] font-bold text-[--text-brand] hover:underline"
+              >
+                {finding.actionLabel}
+                <ArrowRight size={11} aria-hidden="true" />
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
+
       {response.metrics?.length > 0 && (
         <div className="grid min-w-0 grid-cols-1 gap-2 min-[360px]:grid-cols-2">
           {response.metrics.map((metric) => (
@@ -191,6 +221,7 @@ function MoneyContent() {
     removeTransactionBatch,
   } = useApp()
   const { settings, isLoading: settingsLoading } = useMoney()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [messages, setMessages] = useState([INITIAL_MESSAGE])
   const [input, setInput] = useState('')
   const [isMutating, setIsMutating] = useState(false)
@@ -215,6 +246,15 @@ function MoneyContent() {
       block: 'end',
     })
   }, [messages])
+
+  useEffect(() => {
+    const prompt = searchParams.get('prompt')?.trim()
+    if (!prompt) return
+
+    setInput(prompt)
+    setSearchParams({}, { replace: true })
+    window.setTimeout(() => inputRef.current?.focus(), 0)
+  }, [searchParams, setSearchParams])
 
   const updateAssistantMessage = (messageId, response) => {
     setMessages((current) =>
@@ -369,6 +409,7 @@ function MoneyContent() {
         settings,
         now: new Date(),
         analyze: analyzeMoney,
+        analyzeLeaks: analyzeSpendingLeaks,
       })
 
     const timestamp = Date.now()
