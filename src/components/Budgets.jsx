@@ -261,7 +261,10 @@ export default function Budgets() {
   }
 
   return (
-    <div data-tour="budgets" className="operational-page budgets-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6">
+    <div
+      data-tour="budgets"
+      className="operational-page budgets-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6"
+    >
       {/* Header */}
       <div className="operational-page__header flex flex-wrap items-center justify-between gap-3">
         <div>
