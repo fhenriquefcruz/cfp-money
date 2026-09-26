@@ -37,7 +37,6 @@ test('exclui o mês seguinte e ordena as transações recentes por atividade', (
   ).toEqual(['newer', 'credit-purchase', 'older'])
 })
 
-
 test('prioriza atrasos, vencimentos e orçamento antes do saldo negativo', () => {
   const signals = buildMonthAttentionSignals({
     paymentSummary: {

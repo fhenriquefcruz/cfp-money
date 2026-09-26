@@ -89,4 +89,3 @@ export function buildMonthAttentionSignals({
 
   return signals.slice(0, safeLimit)
 }
-

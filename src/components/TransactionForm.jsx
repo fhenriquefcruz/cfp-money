@@ -194,9 +194,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         notes: transaction.notes || '',
         isRecurring: transaction.isRecurring || false,
       })
-      setShowAdvanced(
-        Boolean(transaction.dueDate || transaction.notes || transaction.isRecurring),
-      )
+      setShowAdvanced(Boolean(transaction.dueDate || transaction.notes || transaction.isRecurring))
     } else {
       setForm(EMPTY_FORM)
       setShowAdvanced(false)

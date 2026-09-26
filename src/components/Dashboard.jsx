@@ -236,7 +236,9 @@ function MonthAttentionCard({ items }) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-black text-[--text-primary]">{title}</p>
-                  <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">{detail}</p>
+                  <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
+                    {detail}
+                  </p>
                   <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand]">
                     Ver detalhes
                     <ChevronRight
