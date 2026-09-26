@@ -15,6 +15,7 @@ const clean = (value) =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
+    .replace(/\s+/g, ' ')
     .trim()
 
 const row = (label, to, terms = '') => [label, to, clean(`${label} ${terms}`)]
