@@ -33,7 +33,7 @@ test('busca uma transação e navega para a lista com o termo preenchido', () =>
     target: { value: 'odontologica' },
   })
 
-  fireEvent.click(screen.getByRole('option', { name: /Consulta odontológica/i }))
+  fireEvent.click(screen.getByRole('button', { name: /Consulta odontológica/i }))
 
   expect(onClose).toHaveBeenCalled()
 })
