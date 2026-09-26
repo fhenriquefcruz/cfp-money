@@ -306,22 +306,6 @@ export default function Sidebar() {
         </button>
       </div>
 
-            <div className="px-3 pb-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileOpen(false)
-                  setSearchOpen(true)
-                }}
-                className="flex min-h-11 w-full items-center gap-3 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-left text-sm font-semibold text-[--text-secondary]"
-              >
-                <span className="w-[17px] text-center text-lg leading-none" aria-hidden="true">
-                  ⌕
-                </span>
-                <span className="flex-1">Buscar no Meu Real</span>
-              </button>
-            </div>
-
                         <nav className="flex-1 space-y-1 overflow-y-auto px-3">
         {allItems.map((item) => (
           <NavItem key={item.to} {...item} collapsed={collapsed} />
@@ -416,7 +400,6 @@ export default function Sidebar() {
       {searchOpen && (
         <React.Suspense fallback={null}>
           <GlobalSearchPalette
-            open
             onClose={() => setSearchOpen(false)}
             transactions={transactions}
             categories={categories}
@@ -466,6 +449,20 @@ export default function Sidebar() {
                 aria-label="Fechar menu"
               >
                 <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-3 pb-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false)
+                  setSearchOpen(true)
+                }}
+                className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-[--text-secondary] hover:bg-[--bg-hover]"
+              >
+                <span aria-hidden="true">⌕</span>
+                Buscar no Meu Real
               </button>
             </div>
 
