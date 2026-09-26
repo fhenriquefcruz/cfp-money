@@ -157,3 +157,20 @@ test('não classifica automaticamente gastos recorrentes ou parcelas como vazame
 
   expect(report.findings.some((item) => item.type === 'repeated_description')).toBe(false)
 })
+
+
+test('não chama concentração de categoria de vazamento sem histórico anterior suficiente', () => {
+  const report = analyzeSpendingLeaks(
+    [
+      tx({ amount: 800, description: 'Mercado', categoryId: 'food', categoryName: 'Alimentação' }),
+      tx({ amount: 200, description: 'Combustível', categoryId: 'car', categoryName: 'Transporte' }),
+      tx({ amount: 150, description: 'Farmácia', categoryId: 'health', categoryName: 'Saúde' }),
+      tx({ amount: 120, description: 'Internet', categoryId: 'home', categoryName: 'Moradia' }),
+      tx({ amount: 100, description: 'Cinema', categoryId: 'fun', categoryName: 'Lazer' }),
+    ],
+    {},
+    new Date(2026, 8, 20),
+  )
+
+  expect(report.findings.some((item) => item.type === 'category_acceleration')).toBe(false)
+})
