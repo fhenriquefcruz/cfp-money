@@ -103,9 +103,7 @@ export default function MoneyPrioritiesCard({ report }) {
                       <span className="text-[10px] font-black text-[--text-tertiary]">
                         {index + 1}
                       </span>
-                      <span
-                        className={`${BADGE_BASE_CLASS} ${styles.badgeClass}`}
-                      >
+                      <span className={`${BADGE_BASE_CLASS} ${styles.badgeClass}`}>
                         {styles.label}
                       </span>
                     </div>
@@ -117,10 +115,7 @@ export default function MoneyPrioritiesCard({ report }) {
                       {priority.detail}
                     </p>
 
-                    <Link
-                      to={priority.to}
-                      className={ACTION_CLASS}
-                    >
+                    <Link to={priority.to} className={ACTION_CLASS}>
                       {priority.actionLabel}
                       <ArrowRight size={11} />
                     </Link>
