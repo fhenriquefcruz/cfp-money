@@ -23,9 +23,7 @@ test('busca uma transação e navega para a lista com o termo preenchido', () =>
       <Routes>
         <Route
           path="*"
-          element={
-            <GlobalSearchPalette open onClose={onClose} transactions={transactions} />
-          }
+          element={<GlobalSearchPalette open onClose={onClose} transactions={transactions} />}
         />
       </Routes>
     </MemoryRouter>,
@@ -43,10 +41,7 @@ test('busca uma transação e navega para a lista com o termo preenchido', () =>
 test('mostra estado vazio sem criar resultado artificial', () => {
   render(
     <MemoryRouter>
-      <GlobalSearchPalette
-        open
-        onClose={() => {}}
-      />
+      <GlobalSearchPalette open onClose={() => {}} />
     </MemoryRouter>,
   )
 
