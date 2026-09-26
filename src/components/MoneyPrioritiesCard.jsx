@@ -73,6 +73,10 @@ export default function MoneyPrioritiesCard({ report }) {
           priorities.map((priority, index) => {
             const styles = LEVEL_STYLES[priority.level] || LEVEL_STYLES.opportunity
             const PriorityIcon = styles.icon
+            const badgeClass =
+              'rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide'
+            const actionClass =
+              'mt-2 inline-flex min-h-8 items-center gap-1 text-[10px] font-bold text-[--text-brand] hover:underline'
 
             return (
               <div
@@ -91,7 +95,7 @@ export default function MoneyPrioritiesCard({ report }) {
                         {index + 1}
                       </span>
                       <span
-                        className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${styles.badgeClass}`}
+                        className={`${badgeClass} ${styles.badgeClass}`}
                       >
                         {styles.label}
                       </span>
@@ -106,7 +110,7 @@ export default function MoneyPrioritiesCard({ report }) {
 
                     <Link
                       to={priority.to}
-                      className="mt-2 inline-flex min-h-8 items-center gap-1 text-[10px] font-bold text-[--text-brand] hover:underline"
+                      className={actionClass}
                     >
                       {priority.actionLabel}
                       <ArrowRight size={11} />
