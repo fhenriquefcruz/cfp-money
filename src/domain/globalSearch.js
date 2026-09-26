@@ -1,61 +1,30 @@
-const DEFAULT_LIMIT = 8
-
-const MODULES = [
-  { id: 'dashboard', label: 'Dashboard', detail: 'Visão geral financeira', to: '/dashboard' },
-  { id: 'money', label: 'Money', detail: 'Assistente e prioridades financeiras', to: '/money' },
-  { id: 'cards', label: 'Cartões', detail: 'Faturas, limites e parcelas', to: '/cards' },
-  { id: 'transactions', label: 'Transações', detail: 'Receitas, despesas e pagamentos', to: '/transactions' },
-  { id: 'categories', label: 'Categorias', detail: 'Organização dos lançamentos', to: '/categories' },
-  { id: 'goals', label: 'Metas', detail: 'Objetivos financeiros', to: '/goals' },
-  { id: 'budgets', label: 'Orçamentos', detail: 'Limites mensais por categoria', to: '/budgets' },
-  { id: 'reports', label: 'Relatórios', detail: 'Análises e consolidações', to: '/reports' },
-  { id: 'profile', label: 'Perfil', detail: 'Conta e preferências', to: '/profile' },
+const PAGES = [
+  ['Dashboard', '/dashboard'],
+  ['Money', '/money'],
+  ['Cartões', '/cards'],
+  ['Transações', '/transactions'],
+  ['Categorias', '/categories'],
+  ['Metas', '/goals'],
+  ['Orçamentos', '/budgets'],
+  ['Relatórios', '/reports'],
+  ['Perfil', '/profile'],
 ]
 
-export function normalizeGlobalSearchText(value) {
-  return String(value ?? '')
+export const normalizeGlobalSearchText = (value) =>
+  String(value ?? '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim()
-}
 
-const formatCurrency = (value) =>
-  new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(Number(value) || 0)
-
-const encodeSearch = (value) => encodeURIComponent(String(value || '').trim())
-
-function scoreResult(result, normalizedQuery) {
-  if (!normalizedQuery) return result.kind === 'module' ? 20 : 0
-
-  const label = normalizeGlobalSearchText(result.label)
-  const detail = normalizeGlobalSearchText(result.detail)
-  const keywords = normalizeGlobalSearchText(result.keywords)
-  const haystack = `${label} ${detail} ${keywords}`.trim()
-  const queryTokens = normalizedQuery.split(' ').filter(Boolean)
-  const matchingTokens = queryTokens.filter((token) => haystack.includes(token)).length
-  const matchesPhrase = haystack.includes(normalizedQuery)
-  const matchesAllTokens = queryTokens.length > 0 && matchingTokens === queryTokens.length
-
-  if (!matchesPhrase && !matchesAllTokens) return 0
-
-  let score = matchesPhrase ? 40 : 25
-
-  if (label === normalizedQuery) score += 80
-  else if (label.startsWith(normalizedQuery)) score += 55
-  else if (label.includes(normalizedQuery)) score += 35
-
-  score += matchingTokens * 8
-
-  if (result.kind === 'module') score += 8
-  if (result.kind === 'transaction') score += 5
-
-  return score
-}
+const result = (kind, id, label, to, terms = '') => ({
+  id: `${kind}-${id}`,
+  kind,
+  label,
+  to,
+  searchText: normalizeGlobalSearchText(`${label} ${terms}`),
+})
 
 export function buildGlobalSearchIndex({
   transactions = [],
@@ -64,103 +33,46 @@ export function buildGlobalSearchIndex({
   creditCards = [],
   isAdmin = false,
 } = {}) {
-  const moduleResults = [
-    ...MODULES,
-    ...(isAdmin
-      ? [{ id: 'admin', label: 'Admin', detail: 'Usuários e administração', to: '/admin' }]
-      : []),
-  ].map((item) => ({
-    ...item,
-    id: `module-${item.id}`,
-    kind: 'module',
-    group: 'Navegação',
-    keywords: item.detail,
-  }))
-
-  const transactionResults = (Array.isArray(transactions) ? transactions : []).map((transaction) => {
-    const description =
-      String(transaction.description || '').trim() ||
-      String(transaction.categoryName || '').trim() ||
-      'Transação'
-    const categoryName = String(transaction.categoryName || '').trim()
-    const typeLabel = transaction.isSavings
-      ? 'Poupança'
-      : transaction.type === 'income'
-        ? 'Receita'
-        : 'Despesa'
-
-    return {
-      id: `transaction-${transaction.id}`,
-      kind: 'transaction',
-      group: 'Transações',
-      label: description,
-      detail: [typeLabel, categoryName, formatCurrency(transaction.amount)].filter(Boolean).join(' · '),
-      keywords: [
-        transaction.notes,
-        transaction.paymentMethod,
-        transaction.date,
-        categoryName,
-        transaction.amount,
-      ]
-        .filter(Boolean)
-        .join(' '),
-      to: `/transactions?search=${encodeSearch(description)}`,
-    }
-  })
-
-  const categoryResults = (Array.isArray(categories) ? categories : []).map((category) => ({
-    id: `category-${category.id}`,
-    kind: 'category',
-    group: 'Categorias',
-    label: category.name || 'Categoria',
-    detail: category.type === 'income' ? 'Categoria de receita' : 'Categoria de despesa',
-    keywords: [category.icon, category.type].filter(Boolean).join(' '),
-    to: '/categories',
-  }))
-
-  const goalResults = (Array.isArray(goals) ? goals : []).map((goal) => ({
-    id: `goal-${goal.id}`,
-    kind: 'goal',
-    group: 'Metas',
-    label: goal.name || 'Meta',
-    detail: `Meta de ${formatCurrency(goal.targetAmount)}`,
-    keywords: [goal.emoji, goal.deadline, goal.currentAmount].filter(Boolean).join(' '),
-    to: '/goals',
-  }))
-
-  const cardResults = (Array.isArray(creditCards) ? creditCards : []).map((card) => ({
-    id: `card-${card.id}`,
-    kind: 'card',
-    group: 'Cartões',
-    label: card.name || 'Cartão',
-    detail: card.last4 ? `Final ${card.last4}` : 'Cartão de crédito',
-    keywords: [card.brand, card.last4, card.limit].filter(Boolean).join(' '),
-    to: '/cards',
-  }))
+  const pages = isAdmin ? [...PAGES, ['Admin', '/admin']] : PAGES
 
   return [
-    ...moduleResults,
-    ...transactionResults,
-    ...categoryResults,
-    ...goalResults,
-    ...cardResults,
+    ...pages.map(([label, to]) => result('module', to, label, to)),
+    ...transactions.map((item) => {
+      const label = item.description || item.categoryName || 'Transação'
+      return result(
+        'transaction',
+        item.id,
+        label,
+        `/transactions?search=${encodeURIComponent(label)}`,
+        [item.categoryName, item.notes, item.paymentMethod, item.date, item.amount].join(' '),
+      )
+    }),
+    ...categories.map((item) =>
+      result('category', item.id, item.name || 'Categoria', '/categories', item.type),
+    ),
+    ...goals.map((item) =>
+      result('goal', item.id, item.name || 'Meta', '/goals', [item.deadline, item.targetAmount].join(' ')),
+    ),
+    ...creditCards.map((item) =>
+      result('card', item.id, item.name || 'Cartão', '/cards', [item.brand, item.last4].join(' ')),
+    ),
   ]
 }
 
-export function searchGlobalIndex(index = [], query = '', limit = DEFAULT_LIMIT) {
-  const normalizedQuery = normalizeGlobalSearchText(query)
-  const safeLimit = Math.max(1, Number(limit) || DEFAULT_LIMIT)
+export function searchGlobalIndex(index = [], query = '', limit = 8) {
+  const normalized = normalizeGlobalSearchText(query)
+  if (!normalized) return index.filter((item) => item.kind === 'module').slice(0, limit)
 
-  return (Array.isArray(index) ? index : [])
-    .map((result, position) => ({
-      result,
-      position,
-      score: scoreResult(result, normalizedQuery),
-    }))
-    .filter(({ score }) => score > 0)
-    .sort((a, b) => b.score - a.score || a.position - b.position)
-    .slice(0, safeLimit)
-    .map(({ result }) => result)
+  const words = normalized.split(' ').filter(Boolean)
+
+  return index
+    .filter((item) => words.every((word) => item.searchText.includes(word)))
+    .sort((a, b) => {
+      const aLabel = normalizeGlobalSearchText(a.label)
+      const bLabel = normalizeGlobalSearchText(b.label)
+      const score = (label) =>
+        label === normalized ? 3 : label.startsWith(normalized) ? 2 : label.includes(normalized) ? 1 : 0
+      return score(bLabel) - score(aLabel)
+    })
+    .slice(0, limit)
 }
-
-export { DEFAULT_LIMIT as GLOBAL_SEARCH_RESULT_LIMIT }
