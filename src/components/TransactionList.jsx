@@ -25,12 +25,12 @@ import { useApp } from '../contexts/AppContext'
 import { Button, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
 import TransactionSeriesModal from './TransactionSeriesModal'
+import TransactionCsvImportModal from './TransactionCsvImportModal'
 import {
   formatCurrency,
   getPaymentLabel,
   exportToCSV,
   exportToPDF,
-  parseCSVImport,
   PAYMENT_METHODS,
 } from '../utils'
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
@@ -381,7 +381,7 @@ export default function TransactionList() {
     creditCards,
     invoiceEvents,
     removeTransaction,
-    createTransaction,
+    importTransactionBatch,
     showNotification,
     applyTransactionSeriesOperation,
     setTransactionPaymentStatus,
@@ -400,7 +400,6 @@ export default function TransactionList() {
   const [deleteId, setDeleteId] = useState(null)
   const [seriesAction, setSeriesAction] = useState(null)
   const [importModal, setImportModal] = useState(false)
-  const [importText, setImportText] = useState('')
   const [page, setPage] = useState(1)
   const [sortAsc, setSortAsc] = useState(false)
   const [paymentUpdatingIds, setPaymentUpdatingIds] = useState(() => new Set())
@@ -623,27 +622,6 @@ export default function TransactionList() {
     setDateRange({ from: '', to: '' })
     setSearch('')
     setPage(1)
-  }
-
-  const handleImport = async () => {
-    const txs = parseCSVImport(importText)
-    if (!txs.length) {
-      showNotification('Nenhuma transação no CSV.', 'warning')
-      return
-    }
-    for (const tx of txs) {
-      const cat = categories.find((c) => c.name.toLowerCase() === tx.categoryName?.toLowerCase())
-      await createTransaction({
-        ...tx,
-        categoryId: cat?.id || '',
-        categoryName: cat?.name || tx.categoryName || '',
-        categoryColor: cat?.color || '',
-        categoryIcon: cat?.icon || '',
-      })
-    }
-    setImportModal(false)
-    setImportText('')
-    showNotification(`${txs.length} transações importadas!`)
   }
 
   const dateLabel = (dateStr) => {
@@ -1225,55 +1203,14 @@ export default function TransactionList() {
         </p>
       </Modal>
 
-      {/* Modal importar */}
-      <Modal
+      <TransactionCsvImportModal
         isOpen={importModal}
         onClose={() => setImportModal(false)}
-        title="Importar CSV"
-        size="md"
-        footer={
-          <div className="flex gap-3">
-            <Button variant="secondary" fullWidth onClick={() => setImportModal(false)}>
-              Cancelar
-            </Button>
-            <Button variant="primary" fullWidth onClick={handleImport}>
-              Importar
-            </Button>
-          </div>
-        }
-      >
-        <div className="space-y-3">
-          <p className="text-sm text-[--text-secondary]">
-            Formato:{' '}
-            <code className="text-xs bg-[--bg-hover] px-2 py-0.5 rounded font-mono">
-              Data;Tipo;Descrição;Categoria;Valor;Pagamento
-            </code>
-          </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              const csv =
-                'Data;Tipo;Descrição;Categoria;Valor;Pagamento\n01/01/2025;Despesa;Almoço;Alimentação;25,90;pix\n05/01/2025;Receita;Salário;Salário;5000,00;transfer'
-              const a = document.createElement('a')
-              a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
-              a.download = 'template.csv'
-              a.click()
-            }}
-          >
-            Baixar template
-          </Button>
-          <textarea
-            value={importText}
-            onChange={(e) => setImportText(e.target.value)}
-            rows={8}
-            placeholder="Cole o conteúdo do CSV aqui..."
-            className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl p-3 text-sm
-              font-mono text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none
-              focus:ring-2 focus:ring-[--brand-500] resize-none"
-          />
-        </div>
-      </Modal>
+        categories={categories}
+        existingTransactions={transactions}
+        onImport={importTransactionBatch}
+      />
+
     </div>
   )
 }
