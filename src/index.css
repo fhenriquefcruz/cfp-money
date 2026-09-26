@@ -148,6 +148,31 @@ body {
   padding: clamp(0.15rem, 0.8vw, 0.5rem);
 }
 
+.dashboard-premium__toolbar h1 {
+  letter-spacing: -0.035em;
+}
+
+.dashboard-premium__toolbar .dashboard-greeting {
+  letter-spacing: 0.01em;
+}
+
+.dashboard-balance-breakdown > div {
+  min-width: 0;
+  padding-inline: clamp(0.15rem, 1.2vw, 0.8rem);
+}
+
+.dashboard-balance-breakdown > div + div {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-balance-breakdown > div:first-child {
+  padding-left: 0;
+}
+
+.dashboard-balance-breakdown > div:last-child {
+  padding-right: 0;
+}
+
 .aurora-balance-hero {
   isolation: isolate;
   border: 1px solid rgba(196, 157, 107, 0.24);
@@ -182,6 +207,25 @@ body {
 .dashboard-chart-grid .aurora-card {
   min-width: 0;
   overflow: hidden;
+  border-radius: 24px;
+}
+
+.dashboard-forecast-card,
+.dashboard-health-card {
+  border-radius: 22px;
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--bg-elevated) 96%, var(--brand-50) 4%),
+      var(--bg-elevated)
+    );
+}
+
+:root[data-theme='dark'] .dashboard-forecast-card,
+:root[data-theme='dark'] .dashboard-health-card {
+  background:
+    linear-gradient(145deg, rgba(196, 157, 107, 0.035), transparent 44%),
+    var(--bg-elevated);
 }
 
 .dashboard-premium .recharts-responsive-container,
