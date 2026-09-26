@@ -49,22 +49,22 @@ export default function GlobalSearchPalette({
           }}
           placeholder="Transação, meta, cartão ou área..."
           aria-label="Termo da busca global"
-          className="min-h-12 w-full rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 text-sm text-[--text-primary] outline-none focus:ring-2 focus:ring-[--brand-500]"
+          className="global-search-input"
         />
 
-        <div className="mt-2 max-h-[55vh] overflow-y-auto">
+        <div className="global-search-results">
           {query.trim() && !results.length ? (
-            <p className="px-3 py-8 text-center text-sm font-bold text-[--text-secondary]">
+            <p className="global-search-empty">
               Nenhum resultado encontrado
             </p>
           ) : (
             results.map((item, position) => (
               <button
-                key={item.id}
+                key={`${item.to}:${item.label}`}
                 type="button"
                 onClick={() => openResult(item)}
-                className={`flex min-h-12 w-full items-center rounded-xl px-3 text-left text-xs font-bold text-[--text-primary] ${
-                  active === position ? 'bg-[--brand-50]' : 'hover:bg-[--bg-hover]'
+                className={`global-search-result ${
+                  active === position ? 'global-search-result--active' : ''
                 }`}
               >
                 {item.label}
