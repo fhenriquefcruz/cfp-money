@@ -124,6 +124,13 @@ test('sinaliza categoria que ganhou peso material em relação ao período anter
         categoryId: 'home',
         categoryName: 'Moradia',
       }),
+      tx({
+        date: '2026-08-16',
+        amount: 200,
+        description: 'Transporte',
+        categoryId: 'car',
+        categoryName: 'Transporte',
+      }),
     ],
     {},
     new Date(2026, 8, 20),
