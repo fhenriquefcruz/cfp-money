@@ -3,6 +3,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   CircleDollarSign,
   CreditCard,
   Info,
@@ -16,24 +17,19 @@ import {
 import { Link } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
+import { getSimpleInvoiceStatus } from '../domain/creditCardPresentation'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
 import CreditCardsSettingsCard from './CreditCardsSettingsCard'
 import PremiumGate from './PremiumGate'
 
-const STATUS = {
-  forming: ['Em formação', 'bg-[--brand-100] text-[--brand-700]'],
-  closed: ['Fechada', 'bg-[--warning-bg] text-[--warning-text]'],
-  due_today: ['Vence hoje', 'bg-[--danger-bg] text-[--danger-text]'],
-  partially_paid: ['Parcial', 'bg-[--brand-100] text-[--brand-700]'],
-  paid: ['Paga', 'bg-[--success-bg] text-[--success-text]'],
-  overdue: ['Vencida', 'bg-[--danger-bg] text-[--danger-text]'],
-  overdue_partial: ['Vencida parcial', 'bg-[--danger-bg] text-[--danger-text]'],
-  overpaid: ['Crédito', 'bg-[--success-bg] text-[--success-text]'],
-  past_due: ['Vencimento passado', 'bg-[--bg-hover] text-[--text-secondary]'],
-  future: ['Futura', 'bg-[--bg-hover] text-[--text-tertiary]'],
-  empty: ['Sem lançamentos', 'bg-[--bg-hover] text-[--text-tertiary]'],
+const STATUS_TONE_CLASSES = {
+  brand: 'bg-[--brand-100] text-[--brand-700]',
+  warning: 'bg-[--warning-bg] text-[--warning-text]',
+  danger: 'bg-[--danger-bg] text-[--danger-text]',
+  success: 'bg-[--success-bg] text-[--success-text]',
+  neutral: 'bg-[--bg-hover] text-[--text-secondary]',
 }
 
 function SummaryCard({ icon: Icon, label, value, helper }) {
@@ -56,7 +52,8 @@ function SummaryCard({ icon: Icon, label, value, helper }) {
 }
 
 function InvoiceCard({ invoice, selected, onSelect }) {
-  const [statusLabel, statusClass] = STATUS[invoice.status] || STATUS.empty
+  const status = getSimpleInvoiceStatus(invoice.status)
+  const statusClass = STATUS_TONE_CLASSES[status.tone] || STATUS_TONE_CLASSES.neutral
   const { card, dates, lifecycle } = invoice
 
   return (
@@ -84,7 +81,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             <span
               className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${statusClass}`}
             >
-              {statusLabel}
+              {status.label}
             </span>
           </div>
 
@@ -111,9 +108,16 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             </div>
           </div>
           <p className="mt-2 text-[10px] text-[--text-tertiary]">
-            Pago: {formatCurrency(lifecycle.paidAmount)} · {invoice.itemCount} lançamento
+            Pago: {formatCurrency(lifecycle.paidAmount)} · {invoice.itemCount} compra
             {invoice.itemCount === 1 ? '' : 's'}
           </p>
+          <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
+            {status.helper}
+          </p>
+          <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand]">
+            Ver compras
+            <ChevronRight size={11} aria-hidden="true" />
+          </span>
 
           {card.historicalOnly && (
             <p className="mt-2 text-[9px] leading-relaxed text-[--warning-text]">
@@ -165,6 +169,7 @@ function CreditCardsCenterContent() {
   const [selectedCardId, setSelectedCardId] = useState('all')
   const [managingCardId, setManagingCardId] = useState(null)
   const [cardSettingsOpen, setCardSettingsOpen] = useState(false)
+  const [showForecast, setShowForecast] = useState(false)
 
   const center = useMemo(
     () =>
@@ -214,8 +219,8 @@ function CreditCardsCenterContent() {
                 </span>
               </div>
               <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/70">
-                Acompanhe vencimentos, parcelas e compromissos futuros sem confundir a data da
-                compra com o mês da fatura.
+                Veja quanto veio na fatura, quanto já foi pago, o que falta pagar e quais compras
+                compõem cada cartão.
               </p>
             </div>
           </div>
@@ -319,23 +324,23 @@ function CreditCardsCenterContent() {
           <div className="credit-cards-summary-grid operational-summary-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
             <SummaryCard
               icon={CircleDollarSign}
-              label="Total das faturas"
+              label="Fatura do mês"
               value={formatCurrency(center.selectedTotal)}
-              helper={`${center.selectedItemCount} lançamento${
+              helper={`${center.selectedItemCount} compra${
                 center.selectedItemCount === 1 ? '' : 's'
               } no período`}
             />
             <SummaryCard
               icon={CreditCard}
-              label="Total pago"
+              label="Já pago"
               value={formatCurrency(center.selectedPaidTotal)}
-              helper="Pagamentos líquidos, já descontados os estornos"
+              helper="Quanto já foi registrado como pagamento"
             />
             <SummaryCard
               icon={ReceiptText}
-              label="Saldo pendente"
+              label="Falta pagar"
               value={formatCurrency(center.selectedRemainingTotal)}
-              helper="Valor ainda necessário para liquidar as faturas"
+              helper="Saldo que ainda precisa ser pago neste mês"
             />
             <SummaryCard
               icon={Layers3}
@@ -368,15 +373,27 @@ function CreditCardsCenterContent() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h2 className="text-sm font-black text-[--text-primary]">
-                      Próximos compromissos
+                      Próximas faturas
                     </h2>
                     <p className="mt-1 text-[10px] text-[--text-tertiary]">
-                      Previsão baseada nas compras já lançadas
+                      Consulte somente quando quiser olhar compromissos futuros.
                     </p>
                   </div>
-                  <Sparkles size={16} className="text-[--brand-600]" />
+                  <button
+                    type="button"
+                    onClick={() => setShowForecast((current) => !current)}
+                    className="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-2.5 text-[10px] font-bold text-[--text-brand] hover:bg-[--brand-50]"
+                    aria-expanded={showForecast}
+                  >
+                    {showForecast ? 'Ocultar' : 'Ver previsão'}
+                    <ChevronDown
+                      size={13}
+                      className={`transition-transform ${showForecast ? 'rotate-180' : ''}`}
+                    />
+                  </button>
                 </div>
 
+                {showForecast && (
                 <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 xl:grid-cols-3 2xl:grid-cols-6">
                   {center.forecast.map((item) => {
                     const height = Math.max(8, Math.round((item.total / center.forecastMax) * 62))
@@ -412,6 +429,7 @@ function CreditCardsCenterContent() {
                     )
                   })}
                 </div>
+                )}
               </Card>
 
               <div className="space-y-3">
@@ -447,7 +465,7 @@ function CreditCardsCenterContent() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 className="text-sm font-black text-[--text-primary]">
-                      Lançamentos da fatura
+                      Compras da fatura
                     </h2>
                     <p className="mt-1 text-[10px] text-[--text-tertiary]">
                       {selectedCardId === 'all'
@@ -485,7 +503,7 @@ function CreditCardsCenterContent() {
                       Nenhuma compra nesta fatura
                     </p>
                     <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-                      Compras estruturadas aparecerão aqui conforme o vencimento calculado.
+                      As compras aparecerão aqui conforme o cartão e a fatura selecionados.
                     </p>
                   </div>
                 ) : (
