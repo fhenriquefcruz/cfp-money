@@ -1,29 +1,30 @@
 /* ═══════════════════════════════════════════════════════════════
-   LOGIN FUTURE EXPERIENCE — FASE 9
+   LOGIN — MEU REAL PRESENTATION EXPERIENCE
+   Graphite + mineral + bronze
 ═══════════════════════════════════════════════════════════════ */
 .login-future-shell {
   isolation: isolate;
   background:
-    radial-gradient(circle at 84% 12%, rgba(99, 102, 241, 0.16), transparent 29%),
-    radial-gradient(circle at 8% 86%, rgba(34, 211, 238, 0.1), transparent 31%), var(--bg-app);
+    radial-gradient(circle at 84% 12%, rgba(196, 157, 107, 0.11), transparent 30%),
+    radial-gradient(circle at 8% 86%, rgba(124, 125, 113, 0.07), transparent 32%), var(--bg-app);
 }
 
 .login-future-grid {
   z-index: -2;
-  opacity: 0.34;
+  opacity: 0.18;
   background-image:
-    linear-gradient(rgba(99, 102, 241, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.055) 1px, transparent 1px);
-  background-size: 56px 56px;
+    linear-gradient(rgba(60, 67, 70, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(60, 67, 70, 0.06) 1px, transparent 1px);
+  background-size: 58px 58px;
   mask-image: linear-gradient(to bottom, black, transparent 88%);
 }
 
 .login-orb {
   z-index: -1;
   border-radius: 9999px;
-  filter: blur(90px);
-  opacity: 0.28;
-  animation: login-orb-drift 14s ease-in-out infinite alternate;
+  filter: blur(96px);
+  opacity: 0.2;
+  animation: login-orb-drift 16s ease-in-out infinite alternate;
 }
 
 .login-orb-cyan {
@@ -31,7 +32,7 @@
   top: 12%;
   width: 320px;
   height: 320px;
-  background: rgba(34, 211, 238, 0.35);
+  background: rgba(196, 157, 107, 0.26);
 }
 
 .login-orb-violet {
@@ -39,7 +40,7 @@
   bottom: -70px;
   width: 360px;
   height: 360px;
-  background: rgba(139, 92, 246, 0.28);
+  background: rgba(124, 125, 113, 0.2);
   animation-delay: -4s;
 }
 
@@ -48,34 +49,34 @@
   bottom: 4%;
   width: 280px;
   height: 280px;
-  background: rgba(79, 70, 229, 0.32);
+  background: rgba(60, 67, 70, 0.24);
   animation-delay: -8s;
 }
 
 .login-hero-surface {
   background:
-    radial-gradient(circle at 20% 12%, rgba(34, 211, 238, 0.18), transparent 25%),
-    radial-gradient(circle at 82% 74%, rgba(139, 92, 246, 0.18), transparent 31%),
-    linear-gradient(145deg, #07111f 0%, #10133a 48%, #10284a 100%);
-  box-shadow: inset -1px 0 rgba(255, 255, 255, 0.06);
+    radial-gradient(circle at 20% 12%, rgba(196, 157, 107, 0.13), transparent 27%),
+    radial-gradient(circle at 82% 74%, rgba(124, 125, 113, 0.095), transparent 33%),
+    linear-gradient(145deg, #050607 0%, #0d0f10 46%, #171916 100%);
+  box-shadow: inset -1px 0 rgba(255, 255, 255, 0.045);
 }
 
 .login-hero-network {
-  opacity: 0.16;
+  opacity: 0.1;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-  background-size: 46px 46px;
+    linear-gradient(rgba(224, 228, 228, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(224, 228, 228, 0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
   mask-image: radial-gradient(
     circle at 55% 45%,
     black 0%,
-    rgba(0, 0, 0, 0.72) 43%,
+    rgba(0, 0, 0, 0.62) 43%,
     transparent 82%
   );
 }
 
 .login-gradient-text {
-  background: linear-gradient(92deg, #ffffff 4%, #a5f3fc 48%, #c4b5fd 94%);
+  background: linear-gradient(92deg, #ffffff 4%, #e0e4e4 48%, #c49d6b 96%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -83,57 +84,79 @@
 
 .login-intelligence-panel {
   background:
-    linear-gradient(145deg, rgba(15, 23, 42, 0.7), rgba(30, 41, 85, 0.48)),
-    rgba(255, 255, 255, 0.03);
+    linear-gradient(145deg, rgba(13, 15, 16, 0.92), rgba(27, 28, 25, 0.82)),
+    rgba(255, 255, 255, 0.02);
   box-shadow:
-    0 28px 80px rgba(0, 0, 0, 0.34),
-    inset 0 1px rgba(255, 255, 255, 0.08);
-}
-
-.login-panel-scan {
-  opacity: 0.32;
-  background: linear-gradient(
-    115deg,
-    transparent 20%,
-    rgba(165, 243, 252, 0.08) 42%,
-    rgba(196, 181, 253, 0.08) 52%,
-    transparent 72%
-  );
-  transform: translateX(-90%);
-  animation: login-panel-scan 8s ease-in-out infinite;
-}
-
-.login-auth-surface {
-  background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
-  box-shadow:
-    0 30px 90px rgba(15, 23, 42, 0.14),
-    0 8px 26px rgba(79, 70, 229, 0.08),
-    inset 0 1px color-mix(in srgb, white 50%, transparent);
-}
-
-:root[data-theme='dark'] .login-auth-surface {
-  background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
-  box-shadow:
-    0 34px 100px rgba(0, 0, 0, 0.44),
-    0 8px 32px rgba(99, 102, 241, 0.13),
+    0 28px 78px rgba(0, 0, 0, 0.36),
+    0 8px 28px rgba(196, 157, 107, 0.035),
     inset 0 1px rgba(255, 255, 255, 0.045);
 }
 
-.login-theme-control {
-  background: color-mix(in srgb, var(--bg-surface) 78%, transparent) !important;
+.login-panel-scan {
+  opacity: 0.2;
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(196, 157, 107, 0.08) 42%,
+    rgba(224, 228, 228, 0.045) 52%,
+    transparent 72%
+  );
+  transform: translateX(-90%);
+  animation: login-panel-scan 9s ease-in-out infinite;
+}
+
+.login-flow-track {
+  min-width: 0;
+}
+
+.login-flow-rail {
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.login-flow-progress {
+  width: 0;
+  border-radius: 999px;
+  box-shadow: 0 0 16px rgba(196, 157, 107, 0.24);
+}
+
+.login-flow-stage {
   box-shadow:
-    0 10px 30px rgba(15, 23, 42, 0.1),
-    inset 0 1px rgba(255, 255, 255, 0.08);
+    0 16px 42px rgba(0, 0, 0, 0.18),
+    inset 0 1px rgba(255, 255, 255, 0.035);
+}
+
+.login-auth-surface {
+  background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+  box-shadow:
+    0 30px 84px rgba(23, 25, 24, 0.12),
+    0 8px 24px rgba(93, 66, 42, 0.055),
+    inset 0 1px color-mix(in srgb, white 54%, transparent);
+}
+
+:root[data-theme='dark'] .login-auth-surface {
+  background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+  box-shadow:
+    0 34px 96px rgba(0, 0, 0, 0.46),
+    0 8px 30px rgba(196, 157, 107, 0.035),
+    inset 0 1px rgba(255, 255, 255, 0.028);
+}
+
+.login-theme-control {
+  background: color-mix(in srgb, var(--bg-surface) 86%, transparent) !important;
+  box-shadow:
+    0 10px 28px rgba(23, 25, 24, 0.09),
+    inset 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .login-primary-action {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(165, 180, 252, 0.35);
-  background: linear-gradient(105deg, #4f46e5 0%, #635bdb 45%, #0e7490 100%) !important;
+  border: 1px solid rgba(217, 187, 145, 0.26);
+  background: linear-gradient(105deg, #5d422a 0%, #7d5b37 46%, #9f7849 100%) !important;
   box-shadow:
-    0 14px 34px rgba(79, 70, 229, 0.24),
-    inset 0 1px rgba(255, 255, 255, 0.18) !important;
+    0 14px 32px rgba(93, 66, 42, 0.2),
+    inset 0 1px rgba(255, 255, 255, 0.12) !important;
 }
 
 .login-primary-action::before {
@@ -143,7 +166,7 @@
   background: linear-gradient(
     110deg,
     transparent 15%,
-    rgba(255, 255, 255, 0.2) 48%,
+    rgba(255, 255, 255, 0.16) 48%,
     transparent 78%
   );
   transform: translateX(-120%);
@@ -157,8 +180,8 @@
 .login-primary-action:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 18px 42px rgba(79, 70, 229, 0.3),
-    inset 0 1px rgba(255, 255, 255, 0.2) !important;
+    0 18px 40px rgba(93, 66, 42, 0.24),
+    inset 0 1px rgba(255, 255, 255, 0.14) !important;
 }
 
 .login-primary-action:active {
@@ -170,16 +193,16 @@
     transform: translate3d(0, 0, 0) scale(0.96);
   }
   100% {
-    transform: translate3d(24px, -18px, 0) scale(1.08);
+    transform: translate3d(22px, -16px, 0) scale(1.06);
   }
 }
 
 @keyframes login-panel-scan {
   0%,
-  20% {
+  24% {
     transform: translateX(-95%);
   }
-  55%,
+  58%,
   100% {
     transform: translateX(105%);
   }
@@ -188,15 +211,15 @@
 @media (max-width: 1279px) {
   .login-future-shell {
     background:
-      radial-gradient(circle at 88% 4%, rgba(99, 102, 241, 0.17), transparent 27%),
-      radial-gradient(circle at 2% 95%, rgba(34, 211, 238, 0.1), transparent 29%), var(--bg-app);
+      radial-gradient(circle at 88% 4%, rgba(196, 157, 107, 0.1), transparent 29%),
+      radial-gradient(circle at 2% 95%, rgba(124, 125, 113, 0.06), transparent 30%), var(--bg-app);
   }
 }
 
 @media (max-width: 767px) {
   .login-future-grid {
-    background-size: 38px 38px;
-    opacity: 0.25;
+    background-size: 40px 40px;
+    opacity: 0.11;
   }
 
   .login-orb-cyan {
@@ -214,8 +237,8 @@
   .login-auth-surface {
     border-radius: 24px;
     box-shadow:
-      0 22px 60px rgba(15, 23, 42, 0.12),
-      0 6px 20px rgba(79, 70, 229, 0.07);
+      0 22px 58px rgba(23, 25, 24, 0.1),
+      0 6px 18px rgba(93, 66, 42, 0.045);
   }
 }
 
