@@ -46,7 +46,8 @@ export function upsertSavedTransactionFilter(items = [], nextItem) {
   const normalized = Array.isArray(items) ? items.filter(Boolean) : []
   const withoutSameId = normalized.filter((item) => item.id !== nextItem.id)
   const withoutSameName = withoutSameId.filter(
-    (item) => String(item.name || '').toLowerCase() !== nextItem.name.toLowerCase(),
+    (item) =>
+      String(item.name || '').toLowerCase() !== nextItem.name.toLowerCase(),
   )
 
   return [nextItem, ...withoutSameName].slice(0, MAX_SAVED_TRANSACTION_FILTERS)
