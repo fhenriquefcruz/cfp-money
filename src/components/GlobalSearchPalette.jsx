@@ -11,6 +11,7 @@ import {
   Tags,
   Target,
   User,
+  X,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { searchGlobalIndex } from '../domain/globalSearch'
@@ -130,6 +131,14 @@ export default function GlobalSearchPalette({ open, onClose, index }) {
           <kbd className="hidden rounded-lg border border-[--border-default] bg-[--bg-subtle] px-2 py-1 text-[10px] font-bold text-[--text-tertiary] sm:inline-flex">
             Esc
           </kbd>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-[--text-tertiary] hover:bg-[--bg-hover] hover:text-[--text-primary]"
+            aria-label="Fechar busca global"
+          >
+            <X size={16} />
+          </button>
         </div>
 
         <div className="max-h-[min(65vh,32rem)] overflow-y-auto p-2">
