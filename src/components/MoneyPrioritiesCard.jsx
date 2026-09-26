@@ -22,9 +22,7 @@ export default function MoneyPrioritiesCard({ report }) {
 
       <div className="money-priorities-list">
         {!priorities.length ? (
-          <p className="money-priorities-clear">
-            Nenhuma prioridade relevante agora
-          </p>
+          <p className="money-priorities-clear">Nenhuma prioridade relevante agora</p>
         ) : (
           priorities.map((priority, index) => {
             const [label, tone] = LEVEL[priority.level] || LEVEL.opportunity
@@ -39,10 +37,7 @@ export default function MoneyPrioritiesCard({ report }) {
                 </p>
                 <p className="money-priority-title">{priority.title}</p>
                 <p className="money-priority-detail">{priority.detail}</p>
-                <Link
-                  to={priority.to}
-                  className="money-priority-action"
-                >
+                <Link to={priority.to} className="money-priority-action">
                   {priority.actionLabel}
                 </Link>
               </div>
