@@ -162,8 +162,14 @@ function getEffectiveDate(baseDate, closingDay) {
 }
 
 export default function TransactionForm({ isOpen, onClose, transaction }) {
-  const { categories, creditCards, createTransaction, editTransaction, addTransactionBatch } =
-    useApp()
+  const {
+    categories,
+    creditCards,
+    createTransaction,
+    editTransaction,
+    addTransactionBatch,
+    showNotification,
+  } = useApp()
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
@@ -345,7 +351,12 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         }
       }
       onClose()
-    } catch {
+    } catch (error) {
+      console.error('Erro ao salvar transação:', error)
+      showNotification(
+        'Não foi possível salvar a transação. Seus dados foram preservados. Tente novamente.',
+        'error',
+      )
     } finally {
       setLoading(false)
     }
