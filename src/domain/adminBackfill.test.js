@@ -1,5 +1,3 @@
-import fs from 'node:fs'
-import prettier from 'prettier'
 import { describe, expect, it } from 'vitest'
 import {
   buildFirestoreUserDocument,
@@ -93,20 +91,3 @@ describe('adminBackfill', () => {
   })
 })
 
-
-test('temporary formatting probe', async () => {
-  const source = fs.readFileSync('src/domain/adminBackfill.js', 'utf8')
-  const formatted = await prettier.format(source, {
-    parser: 'babel',
-    semi: false,
-    singleQuote: true,
-    trailingComma: 'all',
-    printWidth: 100,
-  })
-
-  if (source !== formatted) {
-    console.log('PRETTIER_EXPECTED_START\\n' + formatted + 'PRETTIER_EXPECTED_END')
-  }
-
-  expect(source).toBe(formatted)
-})
