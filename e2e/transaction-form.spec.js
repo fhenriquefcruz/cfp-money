@@ -22,6 +22,10 @@ test('formulário mantém foco, rolagem e rodapé visíveis com teclado simulado
   await dialog.getByLabel('Parcelado', { exact: true }).check()
   await dialog.getByLabel('Número de parcelas', { exact: true }).fill('6')
 
+  const advancedOptions = dialog.getByRole('button', { name: /Mais opções/i })
+  await advancedOptions.click()
+  await expect(advancedOptions).toHaveAttribute('aria-expanded', 'true')
+
   const notes = dialog.getByLabel('Observações', { exact: true })
   await notes.focus()
 
