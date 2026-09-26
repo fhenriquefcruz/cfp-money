@@ -67,13 +67,7 @@ export default function TransactionCsvImportModal({
     })
 
     setPreview(next)
-    setSelectedIds(
-      new Set(
-        next.rows
-          .filter((row) => row.selectedByDefault)
-          .map((row) => row.id),
-      ),
-    )
+    setSelectedIds(new Set(next.rows.filter((row) => row.selectedByDefault).map((row) => row.id)))
   }
 
   const handleFile = async (event) => {
@@ -101,9 +95,7 @@ export default function TransactionCsvImportModal({
   const selectRecommended = () => {
     setSelectedIds(
       new Set(
-        preview.rows
-          .filter((row) => row.importable && !row.duplicate)
-          .map((row) => row.id),
+        preview.rows.filter((row) => row.importable && !row.duplicate).map((row) => row.id),
       ),
     )
   }
@@ -143,7 +135,12 @@ export default function TransactionCsvImportModal({
       footer={
         preview?.rows?.length ? (
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="secondary" fullWidth disabled={importing} onClick={() => setPreview(null)}>
+            <Button
+              variant="secondary"
+              fullWidth
+              disabled={importing}
+              onClick={() => setPreview(null)}
+            >
               Voltar
             </Button>
             <Button
@@ -262,7 +259,9 @@ export default function TransactionCsvImportModal({
                 <p className="text-[10px] font-bold uppercase tracking-wide text-[--text-tertiary]">
                   {label}
                 </p>
-                <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">{value}</p>
+                <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">
+                  {value}
+                </p>
               </div>
             ))}
           </div>
@@ -273,7 +272,8 @@ export default function TransactionCsvImportModal({
                 {summary.duplicates} possível(is) duplicidade(s)
               </p>
               <p className="mt-1 text-[10px] text-[--warning-text]">
-                Elas ficam desmarcadas por padrão. Você ainda pode incluí-las manualmente após revisar.
+                Elas ficam desmarcadas por padrão. Você ainda pode incluí-las manualmente após
+                revisar.
               </p>
             </div>
           )}
@@ -320,7 +320,11 @@ export default function TransactionCsvImportModal({
                           </p>
                           <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
                             Linha {row.rowNumber} · {tx.date || 'data inválida'} ·{' '}
-                            {tx.isSavings ? 'Poupança' : tx.type === 'income' ? 'Receita' : 'Despesa'}
+                            {tx.isSavings
+                              ? 'Poupança'
+                              : tx.type === 'income'
+                                ? 'Receita'
+                                : 'Despesa'}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
