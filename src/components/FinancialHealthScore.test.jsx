@@ -17,12 +17,16 @@ test('mantém o detalhamento oculto até o usuário pedir para entender o score'
 
   render(
     <MemoryRouter>
-      <FinancialHealthScore report={report} />
+      <FinancialHealthScore report={report} referenceDate={new Date(2026, 7, 15)} />
     </MemoryRouter>,
   )
 
   expect(screen.getByText(/Maior oportunidade: Equilíbrio do mês/i)).toBeInTheDocument()
   expect(screen.queryByTestId('financial-health-breakdown')).not.toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /Conversar com o Money/i })).toHaveAttribute(
+    'href',
+    '/money?prompt=Como+est%C3%A3o+minhas+finan%C3%A7as%3F&reference=2026-08-15',
+  )
 
   fireEvent.click(screen.getByRole('button', { name: /Entender meu score/i }))
 
