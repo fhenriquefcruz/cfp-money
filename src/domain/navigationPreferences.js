@@ -22,14 +22,21 @@ export function readNavigationPreferences(uid, allowedPaths, storage = globalThi
   if (!uid || !storage) return EMPTY
 
   try {
-    return normalizeNavigationPreferences(JSON.parse(storage.getItem(keyFor(uid)) || '{}'), allowedPaths)
+    return normalizeNavigationPreferences(
+      JSON.parse(storage.getItem(keyFor(uid)) || '{}'),
+      allowedPaths,
+    )
   } catch {
     return EMPTY
   }
 }
 
 const save = (uid, value, storage) => {
-  if (uid && storage) storage.setItem(keyFor(uid), JSON.stringify(value))
+  try {
+    if (uid && storage) storage.setItem(keyFor(uid), JSON.stringify(value))
+  } catch {
+    // Preferências locais nunca devem impedir a navegação.
+  }
   return value
 }
 
