@@ -92,6 +92,8 @@ export function buildMoneyPriorities({
   }
 
   if (toNumber(balance) < 0) {
+    const balanceGap = formatMoney(Math.abs(toNumber(balance)))
+
     priorities.push(
       createPriority({
         id: 'negative-balance',
@@ -99,9 +101,7 @@ export function buildMoneyPriorities({
         level: 'critical',
         weight: 88,
         title: 'Recupere o equilíbrio do período',
-        detail: `As despesas estão ${formatMoney(
-          Math.abs(toNumber(balance)),
-        )} acima das receitas.`,
+        detail: `As despesas estão ${balanceGap} acima das receitas.`,
         actionLabel: 'Revisar transações',
         to: '/transactions',
         source: 'health',
@@ -136,6 +136,8 @@ export function buildMoneyPriorities({
 
   if (budgetAttention) {
     const categoryName = budgetAttention.cat?.name || 'Uma categoria'
+    const usedPercent = toNumber(budgetAttention.pct).toFixed(0)
+
     priorities.push(
       createPriority({
         id: `budget-attention-${budgetAttention.budget?.categoryId || categoryName}`,
@@ -143,9 +145,7 @@ export function buildMoneyPriorities({
         level: 'warning',
         weight: 72,
         title: `${categoryName} está perto do limite`,
-        detail: `${toNumber(budgetAttention.pct).toFixed(
-          0,
-        )}% do orçamento mensal já foi utilizado.`,
+        detail: `${usedPercent}% do orçamento mensal já foi utilizado.`,
         actionLabel: 'Acompanhar orçamento',
         to: '/budgets',
         source: 'budget',
@@ -172,6 +172,7 @@ export function buildMoneyPriorities({
 
   const healthAction = healthReport?.nextAction
   if (healthAction && toNumber(healthAction.missingPoints) > 0) {
+    const missingPoints = toNumber(healthAction.missingPoints)
     const duplicateAreas = {
       balance: 'balance',
       budgets: 'budget',
@@ -186,11 +187,9 @@ export function buildMoneyPriorities({
         id: `health-${healthAction.id || 'next'}`,
         area,
         level: 'opportunity',
-        weight: 45 + Math.min(20, toNumber(healthAction.missingPoints)),
+        weight: 45 + Math.min(20, missingPoints),
         title: `Fortaleça: ${healthAction.label}`,
-        detail: `Este fator ainda pode acrescentar até ${toNumber(
-          healthAction.missingPoints,
-        )} pontos à sua saúde financeira.`,
+        detail: `Este fator ainda pode acrescentar até ${missingPoints} pontos à sua saúde financeira.`,
         actionLabel: healthAction.actionLabel || 'Ver detalhes',
         to: healthAction.to || '/transactions',
         source: 'health',
