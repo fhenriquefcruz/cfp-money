@@ -292,7 +292,10 @@ export default function Sidebar() {
           )}
           aria-label="Abrir busca global"
         >
-          <span className="w-[17px] flex-shrink-0 text-center text-lg leading-none" aria-hidden="true">
+          <span
+            className="w-[17px] flex-shrink-0 text-center text-lg leading-none"
+            aria-hidden="true"
+          >
             ⌕
           </span>
           {!collapsed && (
@@ -306,7 +309,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-                        <nav className="flex-1 space-y-1 overflow-y-auto px-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3">
         {allItems.map((item) => (
           <NavItem key={item.to} {...item} collapsed={collapsed} />
         ))}
