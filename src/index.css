@@ -1081,10 +1081,23 @@ body {
   box-shadow: 0 0 0 2px var(--brand-500);
 }
 
+.global-search-hint {
+  margin: 0.5rem 0.25rem 0;
+  color: var(--text-tertiary);
+  font-size: 0.625rem;
+}
+
 .global-search-results {
   max-height: 55vh;
   margin-top: 0.5rem;
   overflow-y: auto;
+}
+
+.global-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .global-search-empty {
@@ -1114,6 +1127,22 @@ body {
 
 .global-search-result--active {
   background: var(--brand-50);
+}
+
+.global-search-favorite {
+  display: flex;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  color: var(--brand-600);
+  font-size: 1rem;
+  transition: background-color 150ms ease;
+}
+
+.global-search-favorite:hover {
+  background: var(--bg-hover);
 }
 
 .money-priorities-card {
