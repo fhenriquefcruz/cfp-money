@@ -1,6 +1,7 @@
 import React from 'react'
-import { AlertTriangle, ArrowRight, CheckCircle2, Search } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Bot, CheckCircle2, Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { MONEY_CONTEXT_PROMPTS, buildMoneyPromptPath } from '../domain/moneyContext'
 
 const STATE_STYLES = {
   attention: {
@@ -90,6 +91,16 @@ export default function SpendingLeakDiagnostic({ report }) {
             </div>
           ))}
         </div>
+      )}
+
+      {status === 'attention' && (
+        <Link
+          to={buildMoneyPromptPath(MONEY_CONTEXT_PROMPTS.spendingLeaks)}
+          className="mt-3 inline-flex min-h-9 items-center gap-1.5 text-[10px] font-bold text-[--text-brand] hover:underline"
+        >
+          <Bot size={12} aria-hidden="true" />
+          Analisar com o Money
+        </Link>
       )}
     </section>
   )
