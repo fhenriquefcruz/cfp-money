@@ -1210,7 +1210,6 @@ export default function TransactionList() {
         existingTransactions={transactions}
         onImport={importTransactionBatch}
       />
-
     </div>
   )
 }
