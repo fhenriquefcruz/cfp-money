@@ -26,7 +26,7 @@
   animation: login-orb-drift 14s ease-in-out infinite alternate;
 }
 
-.login-orb-cyan {
+.login-orb-gold {
   left: 42%;
   top: 12%;
   width: 320px;
@@ -34,7 +34,7 @@
   background: rgba(196, 157, 107, 0.26);
 }
 
-.login-orb-violet {
+.login-orb-sage {
   right: -80px;
   bottom: -70px;
   width: 360px;
@@ -43,7 +43,7 @@
   animation-delay: -4s;
 }
 
-.login-orb-indigo {
+.login-orb-bronze {
   left: -90px;
   bottom: 4%;
   width: 280px;
@@ -289,14 +289,14 @@
     opacity: 0.25;
   }
 
-  .login-orb-cyan {
+  .login-orb-gold {
     left: 45%;
     top: 8%;
     width: 220px;
     height: 220px;
   }
 
-  .login-orb-violet {
+  .login-orb-sage {
     width: 260px;
     height: 260px;
   }
@@ -305,7 +305,7 @@
     border-radius: 24px;
     box-shadow:
       0 22px 60px rgba(15, 23, 42, 0.12),
-      0 6px 20px rgba(79, 70, 229, 0.07);
+      0 6px 20px rgba(132, 89, 47, 0.07);
   }
 }
 
