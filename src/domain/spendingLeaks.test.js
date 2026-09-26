@@ -32,8 +32,18 @@ test('identifica repetição material de uma mesma descrição', () => {
       tx({ description: 'Delivery', amount: 90, categoryId: 'food', categoryName: 'Alimentação' }),
       tx({ description: 'Delivery', amount: 85, categoryId: 'food', categoryName: 'Alimentação' }),
       tx({ description: 'Delivery', amount: 95, categoryId: 'food', categoryName: 'Alimentação' }),
-      tx({ description: 'Combustível', amount: 400, categoryId: 'car', categoryName: 'Transporte' }),
-      tx({ description: 'Mercado', amount: 500, categoryId: 'market', categoryName: 'Alimentação' }),
+      tx({
+        description: 'Combustível',
+        amount: 400,
+        categoryId: 'car',
+        categoryName: 'Transporte',
+      }),
+      tx({
+        description: 'Mercado',
+        amount: 500,
+        categoryId: 'market',
+        categoryName: 'Alimentação',
+      }),
       tx({ type: 'income', amount: 4000, description: 'Salário' }),
     ],
     {},
@@ -141,7 +151,9 @@ test('sinaliza categoria que ganhou peso material em relação ao período anter
   expect(finding?.difference).toBe(550)
 })
 
-test('não classifica automaticamente gastos recorrentes ou parcelas como vazamento repetido', () => {
+test(
+  'não classifica automaticamente gastos recorrentes ou parcelas como vazamento repetido',
+  () => {
   const report = analyzeSpendingLeaks(
     [
       tx({ description: 'Academia', amount: 100, isRecurring: true }),
@@ -163,7 +175,12 @@ test('não chama concentração de categoria de vazamento sem histórico anterio
   const report = analyzeSpendingLeaks(
     [
       tx({ amount: 800, description: 'Mercado', categoryId: 'food', categoryName: 'Alimentação' }),
-      tx({ amount: 200, description: 'Combustível', categoryId: 'car', categoryName: 'Transporte' }),
+      tx({
+        amount: 200,
+        description: 'Combustível',
+        categoryId: 'car',
+        categoryName: 'Transporte',
+      }),
       tx({ amount: 150, description: 'Farmácia', categoryId: 'health', categoryName: 'Saúde' }),
       tx({ amount: 120, description: 'Internet', categoryId: 'home', categoryName: 'Moradia' }),
       tx({ amount: 100, description: 'Cinema', categoryId: 'fun', categoryName: 'Lazer' }),
