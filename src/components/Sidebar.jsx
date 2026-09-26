@@ -19,10 +19,14 @@ import {
   Bot,
   Crown,
   CreditCard,
+  Search,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePlan } from '../contexts/PlanContext'
+import { useApp } from '../contexts/AppContext'
 import { Button } from './ui'
+import GlobalSearchPalette from './GlobalSearchPalette'
+import { buildGlobalSearchIndex } from '../domain/globalSearch'
 import ThemeToggle from './ThemeToggle'
 import { clsx } from 'clsx'
 
@@ -113,9 +117,11 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
 export default function Sidebar() {
   const { user, logout, isAdmin } = useAuth()
   const { status } = usePlan()
+  const { transactions, categories, goals, creditCards } = useApp()
   const location = useLocation()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const mobileTriggerRef = React.useRef(null)
   const mobileDrawerRef = React.useRef(null)
   const allItems = isAdmin
@@ -125,10 +131,33 @@ export default function Sidebar() {
     allItems.find((item) => item.to === path),
   ).filter(Boolean)
   const mobileMoreItems = allItems.filter((item) => !MOBILE_PRIMARY_PATHS.includes(item.to))
+  const globalSearchIndex = React.useMemo(
+    () =>
+      buildGlobalSearchIndex({
+        transactions,
+        categories,
+        goals,
+        creditCards,
+        isAdmin,
+      }),
+    [transactions, categories, goals, creditCards, isAdmin],
+  )
 
   useEffect(() => {
     setMobileOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    const handleGlobalSearchShortcut = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+
+    document.addEventListener('keydown', handleGlobalSearchShortcut)
+    return () => document.removeEventListener('keydown', handleGlobalSearchShortcut)
+  }, [])
 
   useEffect(() => {
     if (!mobileOpen) return undefined
@@ -266,7 +295,43 @@ export default function Sidebar() {
         )}
       </AnimatePresence>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3">
+      <div className={clsx('px-3 pb-2', collapsed && 'flex justify-center')}>
+        <button
+          type="button"
+          onClick={() => setSearchOpen(true)}
+          className={clsx(
+            'group flex min-h-11 items-center rounded-xl border border-[--border-default] bg-[--bg-surface] text-[--text-secondary] transition-colors hover:border-[--brand-300] hover:text-[--text-primary]',
+            collapsed ? 'w-11 justify-center px-0' : 'w-full gap-3 px-3',
+          )}
+          aria-label="Abrir busca global"
+        >
+          <Search size={17} className="flex-shrink-0" />
+          {!collapsed && (
+            <>
+              <span className="min-w-0 flex-1 text-left text-xs font-semibold">Buscar</span>
+              <kbd className="rounded-md bg-[--bg-hover] px-1.5 py-0.5 text-[9px] font-bold text-[--text-tertiary]">
+                Ctrl K
+              </kbd>
+            </>
+          )}
+        </button>
+      </div>
+
+            <div className="px-3 pb-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false)
+                  setSearchOpen(true)
+                }}
+                className="flex min-h-11 w-full items-center gap-3 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-left text-sm font-semibold text-[--text-secondary]"
+              >
+                <Search size={17} />
+                <span className="flex-1">Buscar no Meu Real</span>
+              </button>
+            </div>
+
+                        <nav className="flex-1 space-y-1 overflow-y-auto px-3">
         {allItems.map((item) => (
           <NavItem key={item.to} {...item} collapsed={collapsed} />
         ))}
@@ -356,6 +421,12 @@ export default function Sidebar() {
           <span className="text-[10px] font-medium">Mais</span>
         </button>
       </nav>
+
+      <GlobalSearchPalette
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        index={globalSearchIndex}
+      />
 
       {mobileOpen && (
         <>
