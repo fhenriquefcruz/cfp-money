@@ -220,6 +220,14 @@ export function parseMoneyAssistantIntent(
     }
   }
 
+  const asksSpendingLeaks =
+    normalizedMessage.includes('vazamento de gastos') ||
+    normalizedMessage.includes('vazamentos de gastos') ||
+    normalizedMessage.includes('dinheiro escapando') ||
+    normalizedMessage.includes('onde meu dinheiro esta escapando')
+
+  if (asksSpendingLeaks) return { type: 'spending_leaks' }
+
   const asksFinancialStatus =
     normalizedMessage.includes('como estao minhas financas') ||
     normalizedMessage.includes('como estao meus gastos') ||
@@ -239,6 +247,7 @@ export function buildMoneyAssistantResponse({
   settings = {},
   now = new Date(),
   analyze,
+  analyzeLeaks,
 }) {
   const intent = parseMoneyAssistantIntent(message, categories, transactions, now)
 
@@ -250,13 +259,59 @@ export function buildMoneyAssistantResponse({
     return {
       type: 'help',
       title: intent.type === 'unknown' ? 'Ainda não entendi esse pedido' : 'Como posso ajudar',
-      text: 'Nesta fase, posso consultar seus dados sem alterar nenhum lançamento. Peça um relatório mensal, uma análise do período atual ou o total gasto em uma categoria.',
+      text: 'Nesta fase, posso consultar seus dados sem alterar nenhum lançamento. Peça um relatório mensal, uma análise do período atual, o diagnóstico de vazamentos ou o total gasto em uma categoria.',
       suggestions: [
         'Como estão minhas finanças?',
+        'Quais vazamentos de gastos você encontrou neste período?',
         'Quero o relatório do mês atual',
-        'Quero o relatório de abril',
         'Quanto gastei com alimentação este mês?',
       ],
+    }
+  }
+
+  if (intent.type === 'spending_leaks') {
+    if (typeof analyzeLeaks !== 'function') {
+      return {
+        type: 'help',
+        title: 'Diagnóstico indisponível',
+        text: 'O diagnóstico de vazamentos não está disponível neste momento. Você ainda pode pedir uma análise financeira geral do período.',
+        suggestions: ['Como estão minhas finanças?', 'Quero o relatório do mês atual'],
+      }
+    }
+
+    const report = analyzeLeaks(transactions, settings, now)
+
+    if (report.status === 'insufficient') {
+      return {
+        type: 'spending_leaks',
+        title: 'Ainda não há dados suficientes',
+        text: `O diagnóstico começa a ficar confiável após pelo menos ${report.minimumExpenseCount} despesas no período. No momento, encontrei ${report.currentExpenseCount}.`,
+        findings: [],
+      }
+    }
+
+    if (report.status === 'clear') {
+      return {
+        type: 'spending_leaks',
+        title: 'Nenhum vazamento relevante identificado',
+        text: 'Não encontrei padrões de gasto fora do seu comportamento recente que justifiquem um alerta neste período.',
+        findings: [],
+        suggestions: ['Como estão minhas finanças?', 'Quero o relatório do mês atual'],
+      }
+    }
+
+    return {
+      type: 'spending_leaks',
+      title: 'Diagnóstico de vazamentos',
+      text: `Encontrei ${report.findings.length} ${report.findings.length === 1 ? 'sinal que merece' : 'sinais que merecem'} revisão. Isso não significa que o gasto esteja errado; apenas mostra onde o dinheiro está se concentrando.`,
+      findings: report.findings.map((finding) => ({
+        id: finding.id,
+        title: finding.title,
+        detail: finding.detail,
+        actionLabel: finding.actionLabel,
+        to: finding.to,
+      })),
+      suggestions: ['Como estão minhas finanças?', 'Quero o relatório do mês atual'],
     }
   }
 
