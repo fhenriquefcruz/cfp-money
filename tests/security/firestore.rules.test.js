@@ -5,7 +5,7 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing'
-import { Timestamp, deleteDoc, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { Timestamp, deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 
 const PROJECT_ID = 'demo-cfp-money-security'
 
@@ -172,6 +172,12 @@ test('permite alterações comuns do perfil', async () => {
       moneySettingsUpdatedAt: Timestamp.now(),
     }),
   )
+
+  await assertSucceeds(
+    updateDoc(userReference, {
+      lastSeenAt: serverTimestamp(),
+    }),
+  )
 })
 
 test('impede escalação de plano e bloqueio pelo cliente', async () => {
@@ -220,6 +226,12 @@ test('impede escalação de plano e bloqueio pelo cliente', async () => {
   await assertFails(
     updateDoc(userReference, {
       moneySettings: 'configuração inválida',
+    }),
+  )
+
+  await assertFails(
+    updateDoc(userReference, {
+      lastSeenAt: Timestamp.fromDate(new Date('2020-01-01T00:00:00.000Z')),
     }),
   )
 
