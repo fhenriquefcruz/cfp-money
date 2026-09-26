@@ -22,9 +22,12 @@ export function areTransactionFilterViewsEqual(a = {}, b = {}) {
   return JSON.stringify(left) === JSON.stringify(right)
 }
 
-export function createSavedTransactionFilter(
-  { id, name, filters, createdAt = new Date().toISOString() } = {},
-) {
+export function createSavedTransactionFilter({
+  id,
+  name,
+  filters,
+  createdAt = new Date().toISOString(),
+} = {}) {
   const normalizedName = String(name || '').trim().replace(/\s+/g, ' ')
 
   if (!normalizedName) {
