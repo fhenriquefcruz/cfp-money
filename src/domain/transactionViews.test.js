@@ -27,6 +27,7 @@ test('normaliza, grava e restaura filtros sem persistir busca textual', () => {
     catFilter: 'food',
     payFilter: 'credit_card',
     paymentStatusFilter: 'to_pay',
+    datePreset: 'current_month',
     dateRange: { from: '2026-09-01', to: '2026-09-30' },
     search: 'não deve persistir',
   })
@@ -40,6 +41,7 @@ test('normaliza, grava e restaura filtros sem persistir busca textual', () => {
     catFilter: 'food',
     payFilter: 'credit_card',
     paymentStatusFilter: 'to_pay',
+    datePreset: 'current_month',
     dateRange: { from: '2026-09-01', to: '2026-09-30' },
   })
   expect(restored.filters.search).toBeUndefined()
