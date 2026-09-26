@@ -31,7 +31,7 @@ test('salva e reaplica uma visão de filtros somente após ação do usuário', 
 
   expect(screen.getByText('Pendentes alimentação')).toBeInTheDocument()
 
-  fireEvent.click(screen.getByRole('button', { name: /Pendentes alimentação/i }))
+  fireEvent.click(screen.getByRole('button', { name: /^Pendentes alimentação$/i }))
 
   expect(onApply).toHaveBeenCalledTimes(1)
   expect(onApply.mock.calls[0][0]).toMatchObject({
