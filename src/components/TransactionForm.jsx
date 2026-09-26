@@ -782,7 +782,6 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
             </motion.div>
           )}
         </AnimatePresence>
-        </div>
       </div>
     </Modal>
   )
