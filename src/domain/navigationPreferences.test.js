@@ -33,10 +33,7 @@ test('mantém recentes sem duplicidade e com o mais novo primeiro', () => {
   registerRecentNavigation('u1', '/goals', allowed, local)
   registerRecentNavigation('u1', '/dashboard', allowed, local)
 
-  expect(readNavigationPreferences('u1', allowed, local).recents).toEqual([
-    '/dashboard',
-    '/goals',
-  ])
+  expect(readNavigationPreferences('u1', allowed, local).recents).toEqual(['/dashboard', '/goals'])
 })
 
 test('limita favoritos para manter a experiência simples', () => {
