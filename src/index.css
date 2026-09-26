@@ -442,6 +442,42 @@ body {
   background: color-mix(in srgb, var(--brand-400) 8%, transparent);
 }
 
+.goals-card-grid .aurora-card,
+.budgets-card-grid .aurora-card {
+  min-height: 100%;
+  border-radius: 22px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--brand-50) 4%, transparent), transparent 42%),
+    var(--aurora-surface);
+  box-shadow: var(--aurora-shadow-soft);
+}
+
+:root[data-theme='dark'] .goals-card-grid .aurora-card,
+:root[data-theme='dark'] .budgets-card-grid .aurora-card {
+  background:
+    linear-gradient(145deg, rgba(196, 157, 107, 0.028), transparent 42%),
+    var(--aurora-surface);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .goals-card-grid .aurora-card,
+  .budgets-card-grid .aurora-card {
+    transition:
+      transform 180ms var(--ease-out),
+      border-color 180ms var(--ease-out),
+      box-shadow 180ms var(--ease-out);
+  }
+
+  .goals-card-grid .aurora-card:hover,
+  .budgets-card-grid .aurora-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--brand-500) 28%, var(--border-default));
+    box-shadow:
+      0 20px 48px rgba(23, 25, 24, 0.09),
+      0 5px 18px rgba(93, 66, 42, 0.045);
+  }
+}
+
 .transaction-list-surface,
 .admin-users-surface {
   box-shadow: var(--aurora-shadow-soft);
