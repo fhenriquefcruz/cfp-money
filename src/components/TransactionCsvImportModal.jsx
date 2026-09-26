@@ -94,9 +94,7 @@ export default function TransactionCsvImportModal({
 
   const selectRecommended = () => {
     setSelectedIds(
-      new Set(
-        preview.rows.filter((row) => row.importable && !row.duplicate).map((row) => row.id),
-      ),
+      new Set(preview.rows.filter((row) => row.importable && !row.duplicate).map((row) => row.id)),
     )
   }
 
@@ -158,12 +156,7 @@ export default function TransactionCsvImportModal({
             <Button variant="secondary" fullWidth disabled={importing} onClick={close}>
               Cancelar
             </Button>
-            <Button
-              variant="primary"
-              fullWidth
-              disabled={!sourceText.trim()}
-              onClick={analyze}
-            >
+            <Button variant="primary" fullWidth disabled={!sourceText.trim()} onClick={analyze}>
               Analisar CSV
             </Button>
           </div>
@@ -180,8 +173,8 @@ export default function TransactionCsvImportModal({
                   Nada será gravado nesta etapa
                 </p>
                 <p className="mt-1 text-[11px] leading-relaxed text-[--brand-700]">
-                  Primeiro o Meu Real valida cada linha e mostra uma prévia. A importação só acontece
-                  depois da sua confirmação.
+                  Primeiro o Meu Real valida cada linha e mostra uma prévia. A importação só
+                  acontece depois da sua confirmação.
                 </p>
               </div>
             </div>
@@ -191,12 +184,7 @@ export default function TransactionCsvImportModal({
             <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-xs font-bold text-[--text-secondary] hover:border-[--brand-500]">
               <FileUp size={14} />
               Escolher arquivo CSV
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                className="sr-only"
-                onChange={handleFile}
-              />
+              <input type="file" accept=".csv,text/csv" className="sr-only" onChange={handleFile} />
             </label>
             <Button variant="secondary" size="sm" onClick={downloadTemplate}>
               Baixar modelo
@@ -230,8 +218,8 @@ export default function TransactionCsvImportModal({
           </div>
 
           <p className="text-[10px] leading-relaxed text-[--text-tertiary]">
-            Colunas mínimas: Data, Tipo e Valor. Para despesas, informe também a Categoria. O formato
-            atual de exportação do Meu Real continua compatível.
+            Colunas mínimas: Data, Tipo e Valor. Para despesas, informe também a Categoria. O
+            formato atual de exportação do Meu Real continua compatível.
           </p>
 
           {preview?.fatalIssues?.map((issue) => (
