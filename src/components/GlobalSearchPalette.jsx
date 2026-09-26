@@ -1,15 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { buildGlobalSearchIndex, searchGlobalIndex } from '../domain/globalSearch'
-
-const KIND_LABELS = {
-  module: 'Área',
-  transaction: 'Transação',
-  category: 'Categoria',
-  goal: 'Meta',
-  card: 'Cartão',
-}
 
 export default function GlobalSearchPalette({
   onClose,
@@ -30,13 +21,8 @@ export default function GlobalSearchPalette({
   const results = useMemo(() => searchGlobalIndex(index, query), [index, query])
 
   useEffect(() => {
-    const overflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     const timer = window.setTimeout(() => inputRef.current?.focus(), 0)
-    return () => {
-      window.clearTimeout(timer)
-      document.body.style.overflow = overflow
-    }
+    return () => window.clearTimeout(timer)
   }, [])
 
   useEffect(() => setActive(0), [query])
@@ -88,7 +74,7 @@ export default function GlobalSearchPalette({
             aria-label="Fechar busca global"
             className="flex h-10 w-10 items-center justify-center rounded-xl text-[--text-tertiary] hover:bg-[--bg-hover]"
           >
-            <X size={16} />
+            <span className="text-xl leading-none" aria-hidden="true">×</span>
           </button>
         </div>
 
@@ -102,7 +88,6 @@ export default function GlobalSearchPalette({
               <button
                 key={item.id}
                 type="button"
-                onMouseEnter={() => setActive(position)}
                 onClick={() => openResult(item)}
                 className={`flex min-h-14 w-full items-center gap-3 rounded-2xl px-3 text-left ${
                   active === position ? 'bg-[--brand-50]' : 'hover:bg-[--bg-hover]'
@@ -113,9 +98,6 @@ export default function GlobalSearchPalette({
                 </span>
                 <span className="min-w-0 flex-1 truncate text-xs font-black text-[--text-primary]">
                   {item.label}
-                </span>
-                <span className="text-[9px] font-bold uppercase text-[--text-tertiary]">
-                  {KIND_LABELS[item.kind]}
                 </span>
               </button>
             ))
