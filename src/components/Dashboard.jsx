@@ -26,7 +26,7 @@ import {
   ChevronRight,
   PiggyBank,
   Clock3,
-  CircleCheckBig,
+  CheckCircle2,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useApp } from '../contexts/AppContext'
@@ -209,7 +209,7 @@ function MonthAttentionCard({ items }) {
       {items.length === 0 ? (
         <div className="mt-4 flex items-center gap-3 rounded-2xl border border-[--success-border] bg-[--success-bg] p-3">
           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[--success-border] text-[--success-icon]">
-            <CircleCheckBig size={17} />
+            <CheckCircle2 size={17} />
           </div>
           <div>
             <p className="text-sm font-bold text-[--success-text]">Nada crítico por agora</p>
