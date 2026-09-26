@@ -1,6 +1,6 @@
 // src/components/Login.jsx
-import React, { lazy, Suspense, useState } from 'react'
-import { motion } from 'framer-motion'
+import React, { lazy, Suspense, useEffect, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import {
   Activity,
   ArrowRight,
@@ -106,7 +106,7 @@ function BrandMark({ compact = false }) {
           compact ? 'h-10 w-10' : 'h-12 w-12'
         }`}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-300/30 via-indigo-400/20 to-violet-400/30" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#d9bb91]/35 via-[#7c7d71]/15 to-[#3c4346]/35" />
         <TrendingUp size={compact ? 19 : 22} className="relative z-10" />
       </div>
       <div>
@@ -129,121 +129,167 @@ function BrandMark({ compact = false }) {
   )
 }
 
-function SignalBars() {
-  const bars = [38, 54, 45, 68, 60, 78, 73, 88, 82, 96]
-
-  return (
-    <div className="flex h-24 items-end gap-1.5" aria-hidden="true">
-      {bars.map((height, index) => (
-        <motion.span
-          key={`${height}-${index}`}
-          initial={{ height: 8, opacity: 0.35 }}
-          animate={{ height: `${height}%`, opacity: 1 }}
-          transition={{
-            delay: 0.35 + index * 0.045,
-            duration: 0.55,
-            ease: [0.16, 1, 0.3, 1],
-          }}
-          className="min-w-0 flex-1 rounded-t-md bg-gradient-to-t from-cyan-400/30 via-cyan-300/65 to-white/90"
-        />
-      ))}
-    </div>
-  )
-}
+const FLOW_STEPS = [
+  {
+    label: 'Registrar',
+    title: 'Movimentação registrada',
+    detail: 'Mercado · R$ 184,90',
+    helper: 'Você informa o que aconteceu.',
+    icon: WalletCards,
+  },
+  {
+    label: 'Organizar',
+    title: 'Orçamento atualizado',
+    detail: 'Alimentação · 68% utilizado',
+    helper: 'O Meu Real organiza o impacto automaticamente.',
+    icon: CircleDollarSign,
+  },
+  {
+    label: 'Entender',
+    title: 'Situação recalculada',
+    detail: 'R$ 4.280,00 disponíveis no mês',
+    helper: 'Saldo, categorias e projeções ganham contexto.',
+    icon: Activity,
+  },
+  {
+    label: 'Decidir',
+    title: 'Money interpreta o cenário',
+    detail: 'Seu ritmo de gasto continua dentro do planejado.',
+    helper: 'A informação vira orientação para a próxima decisão.',
+    icon: Bot,
+  },
+]
 
 function ProductIntelligencePreview() {
+  const reduceMotion = useReducedMotion()
+  const [activeStep, setActiveStep] = useState(reduceMotion ? FLOW_STEPS.length - 1 : 0)
+
+  useEffect(() => {
+    if (reduceMotion) {
+      setActiveStep(FLOW_STEPS.length - 1)
+      return undefined
+    }
+
+    const timer = window.setInterval(() => {
+      setActiveStep((current) => (current + 1) % FLOW_STEPS.length)
+    }, 1850)
+
+    return () => window.clearInterval(timer)
+  }, [reduceMotion])
+
+  const current = FLOW_STEPS[activeStep]
+  const CurrentIcon = current.icon
+  const progress = (activeStep / (FLOW_STEPS.length - 1)) * 100
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: 0.18, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-      className="login-intelligence-panel relative mt-8 overflow-hidden rounded-[28px] border border-white/15 p-4 shadow-2xl backdrop-blur-xl xl:p-5"
+      className="login-intelligence-panel relative mt-8 overflow-hidden rounded-[28px] border border-white/10 p-4 shadow-2xl xl:p-5"
+      aria-hidden="true"
     >
       <div className="login-panel-scan pointer-events-none absolute inset-0" />
 
       <div className="relative z-10 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-50" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-300" />
-          </span>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/80">
-            Visão financeira em tempo real
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d9bb91]">
+            Do registro à decisão
+          </p>
+          <p className="mt-1 text-xs text-white/50">
+            Veja como uma movimentação percorre o Meu Real.
           </p>
         </div>
-        <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold text-white/55">
-          Ambiente demonstrativo
+        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold text-white/55">
+          Demonstração
         </span>
       </div>
 
-      <div className="relative z-10 mt-4 grid gap-3 sm:grid-cols-[1.16fr_0.84fr]">
-        <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
-                Saldo projetado
-              </p>
-              <p className="mt-1 text-2xl font-black tracking-tight text-white">R$ 4.280,00</p>
-            </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-300/10 text-emerald-200 ring-1 ring-emerald-300/20">
-              <Activity size={16} />
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <SignalBars />
-          </div>
-
-          <div className="mt-3 flex items-center justify-between text-[10px]">
-            <span className="text-white/40">Evolução do ciclo</span>
-            <span className="inline-flex items-center gap-1 font-bold text-emerald-200">
-              <TrendingUp size={11} />
-              tendência positiva
-            </span>
-          </div>
-        </div>
-
-        <div className="grid gap-3">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-3.5">
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
-                Orçamento
-              </p>
-              <CircleDollarSign size={14} className="text-violet-200" />
-            </div>
-            <p className="mt-2 text-lg font-black text-white">68%</p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: '68%' }}
-                transition={{ delay: 0.65, duration: 0.8 }}
-                className="h-full rounded-full bg-gradient-to-r from-violet-400 to-cyan-300"
-              />
-            </div>
-            <p className="mt-2 text-[10px] text-white/45">Dentro do planejado</p>
-          </div>
-
+      <div className="login-flow-track relative z-10 mt-5">
+        <div className="login-flow-rail absolute left-5 right-5 top-5 h-px bg-white/10">
           <motion.div
-            animate={{ y: [0, -4, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-            className="rounded-2xl border border-cyan-200/15 bg-gradient-to-br from-cyan-300/10 to-indigo-400/10 p-3.5"
-          >
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-200/10 text-cyan-100">
-                <Bot size={15} />
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-cyan-100/80">
-                  Money
+            className="login-flow-progress h-full origin-left bg-[#c49d6b]"
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: reduceMotion ? 0 : 0.55, ease: [0.16, 1, 0.3, 1] }}
+          />
+        </div>
+
+        <div className="relative grid grid-cols-4 gap-2">
+          {FLOW_STEPS.map((step, index) => {
+            const StepIcon = step.icon
+            const active = index === activeStep
+            const completed = index < activeStep
+
+            return (
+              <div key={step.label} className="flex min-w-0 flex-col items-center text-center">
+                <motion.div
+                  animate={{
+                    scale: active && !reduceMotion ? 1.08 : 1,
+                    borderColor: active || completed ? '#c49d6b' : 'rgba(255,255,255,0.12)',
+                    backgroundColor: active
+                      ? 'rgba(196,157,107,0.18)'
+                      : completed
+                        ? 'rgba(196,157,107,0.08)'
+                        : 'rgba(255,255,255,0.035)',
+                  }}
+                  transition={{ duration: 0.28 }}
+                  className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border text-white"
+                >
+                  <StepIcon size={15} className={active ? 'text-[#e8d4b8]' : 'text-white/55'} />
+                </motion.div>
+                <p
+                  className={`mt-2 truncate text-[9px] font-bold uppercase tracking-[0.08em] ${
+                    active ? 'text-[#e8d4b8]' : 'text-white/38'
+                  }`}
+                >
+                  {step.label}
                 </p>
-                <p className="text-[10px] text-white/45">Insight do período</p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="relative z-10 mt-5 min-h-[132px]">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={current.label}
+            initial={reduceMotion ? false : { opacity: 0, y: 10, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: -8, scale: 0.99 }}
+            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+            className="login-flow-stage rounded-[22px] border border-white/10 bg-black/20 p-4"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-[#c49d6b]/25 bg-[#c49d6b]/10 text-[#e8d4b8]">
+                <CurrentIcon size={17} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c49d6b]">
+                  {current.label}
+                </p>
+                <p className="mt-1 text-sm font-black text-white">{current.title}</p>
+                <p className="mt-1 text-xs font-semibold text-white/70">{current.detail}</p>
+                <p className="mt-2 text-[10px] leading-relaxed text-white/42">{current.helper}</p>
               </div>
             </div>
-            <p className="mt-3 text-xs leading-relaxed text-white/75">
-              Seus gastos estão mais estáveis. Alimentação foi a categoria com maior variação.
-            </p>
           </motion.div>
-        </div>
+        </AnimatePresence>
+      </div>
+
+      <div className="relative z-10 mt-3 grid grid-cols-3 gap-2">
+        {[
+          ['Saldo do mês', 'R$ 4.280'],
+          ['Orçamento', '68%'],
+          ['Próxima ação', 'Revisar'],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-2xl border border-white/[0.07] bg-white/[0.035] p-2.5">
+            <p className="truncate text-[8px] font-semibold uppercase tracking-[0.1em] text-white/32">
+              {label}
+            </p>
+            <p className="mt-1 truncate text-[11px] font-black text-white/78">{value}</p>
+          </div>
+        ))}
       </div>
     </motion.div>
   )
@@ -401,7 +447,7 @@ export default function Login() {
               initial={{ opacity: 0, x: -14 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 rounded-full border border-cyan-200/20 bg-cyan-200/[0.07] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/85 backdrop-blur"
+              className="inline-flex items-center gap-2 rounded-full border border-[#c49d6b]/25 bg-[#c49d6b]/[0.07] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#e8d4b8]/90 backdrop-blur"
             >
               <Orbit size={13} />
               Finanças mais claras, decisões mais conscientes
@@ -441,7 +487,7 @@ export default function Login() {
                   className="rounded-2xl border border-white/10 bg-white/[0.045] p-3.5 backdrop-blur-sm"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.07] text-cyan-100">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.07] text-[#e8d4b8]">
                       <Icon size={14} />
                     </div>
                     <p className="text-xs font-black text-white">{title}</p>
@@ -455,7 +501,7 @@ export default function Login() {
           <div className="relative z-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] font-medium text-white/38">
             {TRUST_POINTS.map((point) => (
               <span key={point} className="inline-flex items-center gap-1.5">
-                <Check size={11} className="text-cyan-200/70" />
+                <Check size={11} className="text-[#d9bb91]/80" />
                 {point}
               </span>
             ))}
@@ -532,7 +578,7 @@ export default function Login() {
                 {mode === 'register' && (
                   <div className="mt-5 overflow-hidden rounded-2xl border border-[--brand-200] bg-[--brand-50]">
                     <div className="flex items-start gap-3 p-3.5">
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[--brand-600] to-violet-600 text-white shadow-sm">
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[--brand-700] to-[--brand-500] text-white shadow-sm">
                         <Zap size={15} />
                       </div>
                       <div>
