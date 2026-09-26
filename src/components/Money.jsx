@@ -388,7 +388,7 @@ function MoneyContent() {
 
   return (
     <div className="money-premium mx-auto flex w-full min-w-0 max-w-7xl flex-col gap-3 overflow-x-clip pb-24 sm:gap-4 lg:pb-6">
-      <header className="money-premium__hero overflow-hidden rounded-[28px] border border-[--brand-200] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-4 text-white shadow-lg sm:p-5">
+      <header className="money-premium__hero aurora-card--hero overflow-hidden rounded-[28px] p-4 text-white sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="flex min-w-0 items-start gap-3">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 shadow-inner backdrop-blur">
@@ -413,7 +413,7 @@ function MoneyContent() {
             <button
               type="button"
               onClick={() => setSettingsOpen(true)}
-              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-white px-3 text-xs font-black text-[--brand-700] shadow-sm transition-transform hover:-translate-y-0.5 sm:w-auto"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/95 px-3 text-xs font-black text-[--brand-800] shadow-sm transition-transform hover:-translate-y-0.5 sm:w-auto"
             >
               <Settings2 size={14} />
               Preferências do Money
