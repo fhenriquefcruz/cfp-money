@@ -45,3 +45,6 @@ ui-debug.log
 # Backups locais criptografados do Meu Real
 backups/
 *.json.enc
+
+# Export local do Firebase Authentication (contém dados sensíveis)
+cfp-auth-users*.json
