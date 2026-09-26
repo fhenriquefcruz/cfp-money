@@ -1,29 +1,7 @@
-const PRIORITY_LIMIT = 3
-
-const toNumber = (value) => {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : 0
-}
-
-const formatMoney = (value) =>
-  new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(toNumber(value))
-
-const createPriority = ({ id, area, level, weight, title, detail, actionLabel, to, source }) => ({
-  id,
-  area,
-  level,
-  weight,
-  title,
-  detail,
-  actionLabel,
-  to,
-  source,
-})
+const LIMIT = 3
+const number = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
+const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+const money = (value) => currency.format(number(value))
 
 export function buildMoneyPriorities({
   paymentSummary = {},
@@ -34,191 +12,158 @@ export function buildMoneyPriorities({
   goals = [],
 } = {}) {
   const priorities = []
+  const alerts = Array.isArray(budgetAlerts) ? budgetAlerts : []
+  const add = (id, area, level, weight, title, detail, actionLabel, to, source) =>
+    priorities.push({ id, area, level, weight, title, detail, actionLabel, to, source })
 
-  if (toNumber(paymentSummary.overdueCount) > 0 && toNumber(paymentSummary.overdueAmount) > 0) {
-    priorities.push(
-      createPriority({
-        id: 'payments-overdue',
-        area: 'payments',
-        level: 'critical',
-        weight: 100,
-        title: 'Regularize pagamentos atrasados',
-        detail: `${paymentSummary.overdueCount} ${
-          paymentSummary.overdueCount === 1 ? 'pagamento soma' : 'pagamentos somam'
-        } ${formatMoney(paymentSummary.overdueAmount)} em atraso.`,
-        actionLabel: 'Revisar pagamentos',
-        to: '/transactions',
-        source: 'payment',
-      }),
+  if (number(paymentSummary.overdueCount) > 0 && number(paymentSummary.overdueAmount) > 0) {
+    const count = number(paymentSummary.overdueCount)
+    add(
+      'payments-overdue',
+      'payments',
+      'critical',
+      100,
+      'Regularize pagamentos atrasados',
+      `${count} ${count === 1 ? 'pagamento soma' : 'pagamentos somam'} ${money(
+        paymentSummary.overdueAmount,
+      )} em atraso.`,
+      'Revisar pagamentos',
+      '/transactions',
+      'payment',
     )
   }
 
-  const overBudget = (Array.isArray(budgetAlerts) ? budgetAlerts : [])
-    .filter((item) => toNumber(item.pct) > 100)
-    .sort((a, b) => toNumber(b.pct) - toNumber(a.pct))[0]
+  const overBudget = alerts
+    .filter((item) => number(item.pct) > 100)
+    .sort((a, b) => number(b.pct) - number(a.pct))[0]
 
   if (overBudget) {
-    const limit = toNumber(overBudget.budget?.amount)
-    const spent = toNumber(overBudget.spent)
-    const excess = Math.max(0, spent - limit)
-    const categoryName = overBudget.cat?.name || 'Uma categoria'
-
-    priorities.push(
-      createPriority({
-        id: `budget-over-${overBudget.budget?.categoryId || categoryName}`,
-        area: 'budget',
-        level: 'critical',
-        weight: 92,
-        title: `${categoryName} ultrapassou o orçamento`,
-        detail:
-          excess > 0
-            ? `${formatMoney(excess)} acima do limite definido para o período.`
-            : `${toNumber(overBudget.pct).toFixed(0)}% do limite mensal utilizado.`,
-        actionLabel: 'Revisar orçamento',
-        to: '/budgets',
-        source: 'budget',
-      }),
+    const name = overBudget.cat?.name || 'Uma categoria'
+    const excess = Math.max(0, number(overBudget.spent) - number(overBudget.budget?.amount))
+    add(
+      `budget-over-${overBudget.budget?.categoryId || name}`,
+      'budget',
+      'critical',
+      92,
+      `${name} ultrapassou o orçamento`,
+      excess
+        ? `${money(excess)} acima do limite definido para o período.`
+        : `${number(overBudget.pct).toFixed(0)}% do limite mensal utilizado.`,
+      'Revisar orçamento',
+      '/budgets',
+      'budget',
     )
   }
 
-  if (toNumber(balance) < 0) {
-    const balanceGap = formatMoney(Math.abs(toNumber(balance)))
-
-    priorities.push(
-      createPriority({
-        id: 'negative-balance',
-        area: 'balance',
-        level: 'critical',
-        weight: 88,
-        title: 'Recupere o equilíbrio do período',
-        detail: `As despesas estão ${balanceGap} acima das receitas.`,
-        actionLabel: 'Revisar transações',
-        to: '/transactions',
-        source: 'health',
-      }),
+  if (number(balance) < 0) {
+    add(
+      'negative-balance',
+      'balance',
+      'critical',
+      88,
+      'Recupere o equilíbrio do período',
+      `As despesas estão ${money(Math.abs(number(balance)))} acima das receitas.`,
+      'Revisar transações',
+      '/transactions',
+      'health',
     )
   }
 
   if (
-    toNumber(paymentSummary.dueNext7DaysCount) > 0 &&
-    toNumber(paymentSummary.dueNext7DaysAmount) > 0
+    number(paymentSummary.dueNext7DaysCount) > 0 &&
+    number(paymentSummary.dueNext7DaysAmount) > 0
   ) {
-    priorities.push(
-      createPriority({
-        id: 'payments-due-soon',
-        area: 'payments',
-        level: 'warning',
-        weight: 78,
-        title: 'Prepare os próximos vencimentos',
-        detail: `${paymentSummary.dueNext7DaysCount} ${
-          paymentSummary.dueNext7DaysCount === 1 ? 'obrigação vence' : 'obrigações vencem'
-        } nos próximos 7 dias, somando ${formatMoney(paymentSummary.dueNext7DaysAmount)}.`,
-        actionLabel: 'Ver vencimentos',
-        to: '/transactions',
-        source: 'payment',
-      }),
+    const count = number(paymentSummary.dueNext7DaysCount)
+    add(
+      'payments-due-soon',
+      'payments',
+      'warning',
+      78,
+      'Prepare os próximos vencimentos',
+      `${count} ${count === 1 ? 'obrigação vence' : 'obrigações vencem'} nos próximos 7 dias, somando ${money(
+        paymentSummary.dueNext7DaysAmount,
+      )}.`,
+      'Ver vencimentos',
+      '/transactions',
+      'payment',
     )
   }
 
-  const budgetAttention = (Array.isArray(budgetAlerts) ? budgetAlerts : [])
-    .filter((item) => toNumber(item.pct) >= 70 && toNumber(item.pct) <= 100)
-    .sort((a, b) => toNumber(b.pct) - toNumber(a.pct))[0]
+  const budgetAttention = alerts
+    .filter((item) => number(item.pct) >= 70 && number(item.pct) <= 100)
+    .sort((a, b) => number(b.pct) - number(a.pct))[0]
 
   if (budgetAttention) {
-    const categoryName = budgetAttention.cat?.name || 'Uma categoria'
-    const usedPercent = toNumber(budgetAttention.pct).toFixed(0)
-
-    priorities.push(
-      createPriority({
-        id: `budget-attention-${budgetAttention.budget?.categoryId || categoryName}`,
-        area: 'budget',
-        level: 'warning',
-        weight: 72,
-        title: `${categoryName} está perto do limite`,
-        detail: `${usedPercent}% do orçamento mensal já foi utilizado.`,
-        actionLabel: 'Acompanhar orçamento',
-        to: '/budgets',
-        source: 'budget',
-      }),
+    const name = budgetAttention.cat?.name || 'Uma categoria'
+    add(
+      `budget-attention-${budgetAttention.budget?.categoryId || name}`,
+      'budget',
+      'warning',
+      72,
+      `${name} está perto do limite`,
+      `${number(budgetAttention.pct).toFixed(0)}% do orçamento mensal já foi utilizado.`,
+      'Acompanhar orçamento',
+      '/budgets',
+      'budget',
     )
   }
 
-  const leakFinding = spendingLeakReport?.findings?.[0]
-  if (spendingLeakReport?.status === 'attention' && leakFinding) {
-    priorities.push(
-      createPriority({
-        id: `leak-${leakFinding.id}`,
-        area: 'spending',
-        level: 'warning',
-        weight: 66,
-        title: leakFinding.title,
-        detail: leakFinding.detail,
-        actionLabel: leakFinding.actionLabel || 'Revisar gastos',
-        to: leakFinding.to || '/transactions',
-        source: 'diagnostic',
-      }),
+  const leak = spendingLeakReport?.findings?.[0]
+  if (spendingLeakReport?.status === 'attention' && leak) {
+    add(
+      `leak-${leak.id}`,
+      'spending',
+      'warning',
+      66,
+      leak.title,
+      leak.detail,
+      leak.actionLabel || 'Revisar gastos',
+      leak.to || '/transactions',
+      'diagnostic',
     )
   }
 
-  const healthAction = healthReport?.nextAction
-  if (healthAction && toNumber(healthAction.missingPoints) > 0) {
-    const missingPoints = toNumber(healthAction.missingPoints)
-    const duplicateAreas = {
-      balance: 'balance',
-      budgets: 'budget',
-      income: 'income',
-      saving: 'saving',
-      goals: 'goals',
-    }
-    const area = duplicateAreas[healthAction.id] || healthAction.id || 'health'
-
-    priorities.push(
-      createPriority({
-        id: `health-${healthAction.id || 'next'}`,
-        area,
-        level: 'opportunity',
-        weight: 45 + Math.min(20, missingPoints),
-        title: `Fortaleça: ${healthAction.label}`,
-        detail: `Este fator ainda pode acrescentar até ${missingPoints} pontos à sua saúde financeira.`,
-        actionLabel: healthAction.actionLabel || 'Ver detalhes',
-        to: healthAction.to || '/transactions',
-        source: 'health',
-      }),
+  const health = healthReport?.nextAction
+  if (health && number(health.missingPoints) > 0) {
+    const areas = { budgets: 'budget' }
+    const missing = number(health.missingPoints)
+    add(
+      `health-${health.id || 'next'}`,
+      areas[health.id] || health.id || 'health',
+      'opportunity',
+      45 + Math.min(20, missing),
+      `Fortaleça: ${health.label}`,
+      `Este fator ainda pode acrescentar até ${missing} pontos à sua saúde financeira.`,
+      health.actionLabel || 'Ver detalhes',
+      health.to || '/transactions',
+      'health',
     )
   }
 
-  if ((!Array.isArray(goals) || goals.length === 0) && healthAction?.id !== 'goals') {
-    priorities.push(
-      createPriority({
-        id: 'goals-empty',
-        area: 'goals',
-        level: 'opportunity',
-        weight: 38,
-        title: 'Defina uma meta financeira',
-        detail: 'Uma meta ajuda a transformar sobra de caixa em um objetivo acompanhado.',
-        actionLabel: 'Criar meta',
-        to: '/goals',
-        source: 'goals',
-      }),
+  if ((!Array.isArray(goals) || !goals.length) && health?.id !== 'goals') {
+    add(
+      'goals-empty',
+      'goals',
+      'opportunity',
+      38,
+      'Defina uma meta financeira',
+      'Uma meta ajuda a transformar sobra de caixa em um objetivo acompanhado.',
+      'Criar meta',
+      '/goals',
+      'goals',
     )
   }
 
-  const deduplicated = []
-  const seenAreas = new Set()
-
-  priorities
+  const seen = new Set()
+  const ordered = priorities
     .sort((a, b) => b.weight - a.weight)
-    .forEach((priority) => {
-      if (seenAreas.has(priority.area)) return
-      seenAreas.add(priority.area)
-      deduplicated.push(priority)
-    })
+    .filter((item) => !seen.has(item.area) && seen.add(item.area))
 
   return {
-    priorities: deduplicated.slice(0, PRIORITY_LIMIT),
-    totalSignals: deduplicated.length,
-    hasCritical: deduplicated.some((priority) => priority.level === 'critical'),
+    priorities: ordered.slice(0, LIMIT),
+    totalSignals: ordered.length,
+    hasCritical: ordered.some((item) => item.level === 'critical'),
   }
 }
 
-export { PRIORITY_LIMIT as MONEY_PRIORITY_LIMIT }
+export { LIMIT as MONEY_PRIORITY_LIMIT }
