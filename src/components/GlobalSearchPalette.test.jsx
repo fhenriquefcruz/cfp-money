@@ -31,7 +31,7 @@ test('busca uma transação e navega para a lista com o termo preenchido', () =>
     </MemoryRouter>,
   )
 
-  fireEvent.change(screen.getByLabelText('Buscar no Meu Real'), {
+  fireEvent.change(screen.getByLabelText('Termo da busca global'), {
     target: { value: 'odontologica' },
   })
 
@@ -50,7 +50,7 @@ test('mostra estado vazio sem criar resultado artificial', () => {
     </MemoryRouter>,
   )
 
-  fireEvent.change(screen.getByLabelText('Buscar no Meu Real'), {
+  fireEvent.change(screen.getByLabelText('Termo da busca global'), {
     target: { value: 'algo inexistente 123' },
   })
 
@@ -66,7 +66,7 @@ test('fecha pelo Escape', () => {
     </MemoryRouter>,
   )
 
-  fireEvent.keyDown(screen.getByLabelText('Buscar no Meu Real'), { key: 'Escape' })
+  fireEvent.keyDown(screen.getByLabelText('Termo da busca global'), { key: 'Escape' })
 
   expect(onClose).toHaveBeenCalled()
 })
