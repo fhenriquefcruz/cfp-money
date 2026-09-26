@@ -25,10 +25,10 @@ import { useAuth } from '../contexts/AuthContext'
 import { usePlan } from '../contexts/PlanContext'
 import { useApp } from '../contexts/AppContext'
 import { Button } from './ui'
-import GlobalSearchPalette from './GlobalSearchPalette'
-import { buildGlobalSearchIndex } from '../domain/globalSearch'
 import ThemeToggle from './ThemeToggle'
 import { clsx } from 'clsx'
+
+const GlobalSearchPalette = React.lazy(() => import('./GlobalSearchPalette'))
 
 const NAV_ITEMS = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -131,18 +131,6 @@ export default function Sidebar() {
     allItems.find((item) => item.to === path),
   ).filter(Boolean)
   const mobileMoreItems = allItems.filter((item) => !MOBILE_PRIMARY_PATHS.includes(item.to))
-  const globalSearchIndex = React.useMemo(
-    () =>
-      buildGlobalSearchIndex({
-        transactions,
-        categories,
-        goals,
-        creditCards,
-        isAdmin,
-      }),
-    [transactions, categories, goals, creditCards, isAdmin],
-  )
-
   useEffect(() => {
     setMobileOpen(false)
   }, [location.pathname])
@@ -422,11 +410,19 @@ export default function Sidebar() {
         </button>
       </nav>
 
-      <GlobalSearchPalette
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
-        index={globalSearchIndex}
-      />
+      {searchOpen && (
+        <React.Suspense fallback={null}>
+          <GlobalSearchPalette
+            open
+            onClose={() => setSearchOpen(false)}
+            transactions={transactions}
+            categories={categories}
+            goals={goals}
+            creditCards={creditCards}
+            isAdmin={isAdmin}
+          />
+        </React.Suspense>
+      )}
 
       {mobileOpen && (
         <>
