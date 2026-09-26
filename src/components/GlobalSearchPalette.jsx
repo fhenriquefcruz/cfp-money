@@ -1,53 +1,33 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  ArrowLeftRight,
-  BarChart3,
-  Bot,
-  CreditCard,
-  LayoutDashboard,
-  PieChart,
-  Search,
-  Shield,
-  Tags,
-  Target,
-  User,
-  X,
-} from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { searchGlobalIndex } from '../domain/globalSearch'
+import { buildGlobalSearchIndex, searchGlobalIndex } from '../domain/globalSearch'
 
-const KIND_ICONS = {
-  module: Search,
-  transaction: ArrowLeftRight,
-  category: Tags,
-  goal: Target,
-  card: CreditCard,
-}
-
-const MODULE_ICONS = {
-  Dashboard: LayoutDashboard,
-  Money: Bot,
-  Cartões: CreditCard,
-  Transações: ArrowLeftRight,
-  Categorias: Tags,
-  Metas: Target,
-  Orçamentos: PieChart,
-  Relatórios: BarChart3,
-  Perfil: User,
-  Admin: Shield,
-}
-
-function ResultIcon({ result }) {
-  const Icon = result.kind === 'module' ? MODULE_ICONS[result.label] || Search : KIND_ICONS[result.kind]
-  return <Icon size={16} aria-hidden="true" />
-}
-
-export default function GlobalSearchPalette({ open, onClose, index }) {
+export default function GlobalSearchPalette({
+  open,
+  onClose,
+  transactions,
+  categories,
+  goals,
+  creditCards,
+  isAdmin,
+}) {
   const navigate = useNavigate()
   const inputRef = useRef(null)
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
 
+  const index = useMemo(
+    () =>
+      buildGlobalSearchIndex({
+        transactions,
+        categories,
+        goals,
+        creditCards,
+        isAdmin,
+      }),
+    [transactions, categories, goals, creditCards, isAdmin],
+  )
   const results = useMemo(() => searchGlobalIndex(index, query), [index, query])
 
   useEffect(() => {
@@ -182,7 +162,7 @@ export default function GlobalSearchPalette({ open, onClose, index }) {
                           : 'bg-[--bg-subtle] text-[--text-secondary]'
                       }`}
                     >
-                      <ResultIcon result={result} />
+                      <Search size={15} aria-hidden="true" />
                     </div>
 
                     <div className="min-w-0 flex-1">
