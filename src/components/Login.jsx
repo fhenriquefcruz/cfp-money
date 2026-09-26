@@ -283,7 +283,10 @@ function ProductIntelligencePreview() {
           ['Orçamento', '68%'],
           ['Próxima ação', 'Revisar'],
         ].map(([label, value]) => (
-          <div key={label} className="rounded-2xl border border-white/[0.07] bg-white/[0.035] p-2.5">
+          <div
+            key={label}
+            className="rounded-2xl border border-white/[0.07] bg-white/[0.035] p-2.5"
+          >
             <p className="truncate text-[8px] font-semibold uppercase tracking-[0.1em] text-white/32">
               {label}
             </p>

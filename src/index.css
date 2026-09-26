@@ -213,19 +213,17 @@ body {
 .dashboard-forecast-card,
 .dashboard-health-card {
   border-radius: 22px;
-  background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--bg-elevated) 96%, var(--brand-50) 4%),
-      var(--bg-elevated)
-    );
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--bg-elevated) 96%, var(--brand-50) 4%),
+    var(--bg-elevated)
+  );
 }
 
 :root[data-theme='dark'] .dashboard-forecast-card,
 :root[data-theme='dark'] .dashboard-health-card {
   background:
-    linear-gradient(145deg, rgba(196, 157, 107, 0.035), transparent 44%),
-    var(--bg-elevated);
+    linear-gradient(145deg, rgba(196, 157, 107, 0.035), transparent 44%), var(--bg-elevated);
 }
 
 .dashboard-premium .recharts-responsive-container,

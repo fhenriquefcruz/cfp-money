@@ -18,8 +18,7 @@
     0 18px 48px rgba(23, 25, 24, 0.07), 0 3px 10px rgba(93, 66, 42, 0.045),
     inset 0 1px rgba(255, 255, 255, 0.58);
 
-  --aurora-shadow-soft:
-    0 12px 32px rgba(23, 25, 24, 0.055), 0 2px 8px rgba(93, 66, 42, 0.035);
+  --aurora-shadow-soft: 0 12px 32px rgba(23, 25, 24, 0.055), 0 2px 8px rgba(93, 66, 42, 0.035);
 }
 
 :root[data-theme='dark'] {
@@ -31,8 +30,7 @@
     0 24px 66px rgba(0, 0, 0, 0.34), 0 7px 24px rgba(196, 157, 107, 0.035),
     inset 0 1px rgba(255, 255, 255, 0.025);
 
-  --aurora-shadow-soft:
-    0 16px 42px rgba(0, 0, 0, 0.24), 0 4px 14px rgba(196, 157, 107, 0.025);
+  --aurora-shadow-soft: 0 16px 42px rgba(0, 0, 0, 0.24), 0 4px 14px rgba(196, 157, 107, 0.025);
 }
 
 /* ── Estrutura global ─────────────────────────────────────── */
@@ -132,8 +130,7 @@
 
 .aurora-card--glass {
   background:
-    linear-gradient(145deg, rgba(196, 157, 107, 0.035), transparent 48%),
-    var(--aurora-surface);
+    linear-gradient(145deg, rgba(196, 157, 107, 0.035), transparent 48%), var(--aurora-surface);
 }
 
 .aurora-card--hero {
