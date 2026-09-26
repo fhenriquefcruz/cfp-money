@@ -13,17 +13,7 @@ const formatMoney = (value) =>
     maximumFractionDigits: 2,
   }).format(toNumber(value))
 
-const createPriority = ({
-  id,
-  area,
-  level,
-  weight,
-  title,
-  detail,
-  actionLabel,
-  to,
-  source,
-}) => ({
+const createPriority = ({ id, area, level, weight, title, detail, actionLabel, to, source }) => ({
   id,
   area,
   level,
