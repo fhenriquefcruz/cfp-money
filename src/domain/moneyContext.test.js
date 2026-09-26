@@ -1,9 +1,5 @@
 import { expect, test } from 'vitest'
-import {
-  MONEY_CONTEXT_PROMPTS,
-  buildMoneyPromptPath,
-  readMoneyPromptContext,
-} from './moneyContext'
+import { MONEY_CONTEXT_PROMPTS, buildMoneyPromptPath, readMoneyPromptContext } from './moneyContext'
 
 test('gera deep link seguro para abrir o Money com pergunta contextual', () => {
   const path = buildMoneyPromptPath(MONEY_CONTEXT_PROMPTS.spendingLeaks)
