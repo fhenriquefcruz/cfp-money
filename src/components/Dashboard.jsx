@@ -35,7 +35,11 @@ import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
 import PaymentControlCard from './PaymentControlCard'
 import { formatCurrency, formatRelativeDate, getMonthlyData } from '../utils'
-import { getCalendarMonthBounds, getRecentDashboardTransactions } from '../domain/dashboard'
+import {
+  buildMonthAttentionSignals,
+  getCalendarMonthBounds,
+  getRecentDashboardTransactions,
+} from '../domain/dashboard'
 import { getTransactionDateContext } from '../domain/transactionDates'
 import { buildPaymentControlOverview } from '../domain/paymentControl'
 import { format, subMonths, addMonths } from 'date-fns'
@@ -336,64 +340,63 @@ export default function Dashboard() {
     })
   }, [currentSummary, budgets, budgetAlerts, goals])
 
-  const monthAttention = useMemo(() => {
-    const items = []
+  const monthAttention = useMemo(
+    () =>
+      buildMonthAttentionSignals({
+        paymentSummary,
+        budgetAlerts,
+        balance: currentSummary.balance,
+      }).map((signal) => {
+        if (signal.type === 'overdue') {
+          return {
+            id: 'overdue',
+            title: `${signal.count} ${
+              signal.count === 1 ? 'pagamento atrasado' : 'pagamentos atrasados'
+            }`,
+            detail: `${formatCurrency(signal.amount)} aguardando regularização.`,
+            to: '/transactions',
+            tone: 'danger',
+            icon: AlertTriangle,
+          }
+        }
 
-    if (paymentSummary.overdueCount > 0) {
-      items.push({
-        id: 'overdue',
-        title: `${paymentSummary.overdueCount} ${
-          paymentSummary.overdueCount === 1 ? 'pagamento atrasado' : 'pagamentos atrasados'
-        }`,
-        detail: `${formatCurrency(paymentSummary.overdueAmount)} aguardando regularização.`,
-        to: '/transactions',
-        tone: 'danger',
-        icon: AlertTriangle,
-      })
-    }
+        if (signal.type === 'due-soon') {
+          return {
+            id: 'due-soon',
+            title: `${signal.count} ${
+              signal.count === 1 ? 'vencimento próximo' : 'vencimentos próximos'
+            }`,
+            detail: `${formatCurrency(signal.amount)} vencem nos próximos 7 dias.`,
+            to: '/transactions',
+            tone: 'warning',
+            icon: Clock3,
+          }
+        }
 
-    if (paymentSummary.dueNext7DaysCount > 0) {
-      items.push({
-        id: 'due-soon',
-        title: `${paymentSummary.dueNext7DaysCount} ${
-          paymentSummary.dueNext7DaysCount === 1 ? 'vencimento próximo' : 'vencimentos próximos'
-        }`,
-        detail: `${formatCurrency(paymentSummary.dueNext7DaysAmount)} vencem nos próximos 7 dias.`,
-        to: '/transactions',
-        tone: 'warning',
-        icon: Clock3,
-      })
-    }
+        if (signal.type === 'budget') {
+          return {
+            id: `budget-${signal.budgetId}`,
+            title: `${signal.categoryName} em atenção`,
+            detail: signal.isOver
+              ? `${formatCurrency(signal.excess)} acima do limite mensal.`
+              : `${signal.pct.toFixed(0)}% do limite mensal já foi utilizado.`,
+            to: '/budgets',
+            tone: signal.pct >= 100 ? 'danger' : 'warning',
+            icon: Target,
+          }
+        }
 
-    const budgetAttention = budgetAlerts[0]
-    if (budgetAttention) {
-      const { budget, cat, spent, pct } = budgetAttention
-      const isOver = spent > budget.amount
-      items.push({
-        id: `budget-${budget.id}`,
-        title: `${cat?.name || 'Orçamento'} em atenção`,
-        detail: isOver
-          ? `${formatCurrency(spent - budget.amount)} acima do limite mensal.`
-          : `${pct.toFixed(0)}% do limite mensal já foi utilizado.`,
-        to: '/budgets',
-        tone: pct >= 100 ? 'danger' : 'warning',
-        icon: Target,
-      })
-    }
-
-    if (items.length < 3 && currentSummary.balance < 0) {
-      items.push({
-        id: 'negative-balance',
-        title: 'Saldo do mês negativo',
-        detail: `${formatCurrency(Math.abs(currentSummary.balance))} acima das receitas do período.`,
-        to: '/transactions',
-        tone: 'danger',
-        icon: Wallet,
-      })
-    }
-
-    return items.slice(0, 3)
-  }, [paymentSummary, budgetAlerts, currentSummary.balance])
+        return {
+          id: 'negative-balance',
+          title: 'Saldo do mês negativo',
+          detail: `${formatCurrency(signal.amount)} acima das receitas do período.`,
+          to: '/transactions',
+          tone: 'danger',
+          icon: Wallet,
+        }
+      }),
+    [paymentSummary, budgetAlerts, currentSummary.balance],
+  )
 
   const greeting = () => {
     const h = new Date().getHours()
