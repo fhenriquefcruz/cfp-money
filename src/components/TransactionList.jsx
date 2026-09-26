@@ -658,7 +658,10 @@ export default function TransactionList() {
   }
 
   return (
-    <div data-tour="transactions" className="operational-page transactions-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-28 lg:pb-6">
+    <div
+      data-tour="transactions"
+      className="operational-page transactions-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-28 lg:pb-6"
+    >
       {/* Header */}
       <div className="operational-page__header flex flex-wrap items-center justify-between gap-3">
         <div>
