@@ -1,7 +1,7 @@
 // src/components/TransactionList.jsx
 import React, { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   Plus,
   Search,
@@ -389,6 +389,7 @@ function TxRow({
 
 export default function TransactionList() {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
   const {
     transactions,
     categories,
@@ -402,7 +403,7 @@ export default function TransactionList() {
     commitPaymentStatusOperation,
   } = useApp()
 
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(() => searchParams.get('search') || '')
   const [typeFilter, setTypeFilter] = useState('all')
   const [catFilter, setCatFilter] = useState('all')
   const [payFilter, setPayFilter] = useState('all')
@@ -501,6 +502,14 @@ export default function TransactionList() {
   useEffect(() => {
     setSelectedPaymentIds(new Set())
   }, [typeFilter, catFilter, payFilter, paymentStatusFilter, dateRange.from, dateRange.to, search])
+
+  useEffect(() => {
+    const routeSearch = searchParams.get('search') || ''
+    if (!routeSearch) return
+
+    setSearch(routeSearch)
+    setPage(1)
+  }, [searchParams])
 
   useEffect(() => {
     if (!user?.uid || typeof window === 'undefined') {
