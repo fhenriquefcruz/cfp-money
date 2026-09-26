@@ -20,6 +20,7 @@ import { useApp } from '../contexts/AppContext'
 import { useMoney } from '../contexts/MoneyContext'
 import { analyzeMoney } from '../domain/money'
 import { analyzeSpendingLeaks } from '../domain/spendingLeaks'
+import { readMoneyPromptContext } from '../domain/moneyContext'
 import { buildMoneyAssistantResponse } from '../domain/moneyAssistant'
 import { buildMoneyTransactionDraft } from '../domain/moneyTransactionDraft'
 import { buildMoneyCreditDraft } from '../domain/moneyCreditDraft'
@@ -224,6 +225,7 @@ function MoneyContent() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [messages, setMessages] = useState([INITIAL_MESSAGE])
   const [input, setInput] = useState('')
+  const [contextReferenceDate, setContextReferenceDate] = useState(null)
   const [isMutating, setIsMutating] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const inputRef = useRef(null)
@@ -248,10 +250,11 @@ function MoneyContent() {
   }, [messages])
 
   useEffect(() => {
-    const prompt = searchParams.get('prompt')?.trim()
-    if (!prompt) return
+    const context = readMoneyPromptContext(searchParams)
+    if (!context.prompt) return
 
-    setInput(prompt)
+    setInput(context.prompt)
+    setContextReferenceDate(context.referenceDate)
     setSearchParams({}, { replace: true })
     window.setTimeout(() => inputRef.current?.focus(), 0)
   }, [searchParams, setSearchParams])
@@ -383,12 +386,17 @@ function MoneyContent() {
     const normalized = text.trim()
     if (!normalized || isLoading || isMutating) return
 
+    const contextualNow = contextReferenceDate
+      ? new Date(`${contextReferenceDate}T12:00:00`)
+      : new Date()
+    const safeNow = Number.isNaN(contextualNow.getTime()) ? new Date() : contextualNow
+
     const creditResponse = buildMoneyCreditDraft({
       message: normalized,
       transactions,
       categories,
       creditCards,
-      now: new Date(),
+      now: safeNow,
     })
 
     const transactionResponse =
@@ -397,7 +405,7 @@ function MoneyContent() {
         message: normalized,
         transactions,
         categories,
-        now: new Date(),
+        now: safeNow,
       })
 
     const response =
@@ -407,7 +415,7 @@ function MoneyContent() {
         transactions,
         categories,
         settings,
-        now: new Date(),
+        now: safeNow,
         analyze: analyzeMoney,
         analyzeLeaks: analyzeSpendingLeaks,
       })
@@ -419,6 +427,7 @@ function MoneyContent() {
       { id: `assistant-${timestamp}`, role: 'assistant', response },
     ])
     setInput('')
+    setContextReferenceDate(null)
     window.setTimeout(() => inputRef.current?.focus(), 0)
   }
 
@@ -613,7 +622,10 @@ function MoneyContent() {
                 rows="1"
                 value={input}
                 disabled={isLoading || isMutating}
-                onChange={(event) => setInput(event.target.value)}
+                onChange={(event) => {
+                  setInput(event.target.value)
+                  setContextReferenceDate(null)
+                }}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault()
