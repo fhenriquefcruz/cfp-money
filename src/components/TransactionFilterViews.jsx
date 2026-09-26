@@ -29,12 +29,7 @@ function writeSavedViews(userId, views) {
   window.localStorage.setItem(storageKey(userId), JSON.stringify(views))
 }
 
-export default function TransactionFilterViews({
-  userId,
-  filters,
-  onApply,
-  showNotification,
-}) {
+export default function TransactionFilterViews({ userId, filters, onApply, showNotification }) {
   const [views, setViews] = useState(() => readSavedViews(userId))
   const [name, setName] = useState('')
   const [showSave, setShowSave] = useState(false)
