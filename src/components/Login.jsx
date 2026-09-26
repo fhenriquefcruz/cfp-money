@@ -106,7 +106,7 @@ function BrandMark({ compact = false }) {
           compact ? 'h-10 w-10' : 'h-12 w-12'
         }`}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-300/30 via-indigo-400/20 to-violet-400/30" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#c49d6b]/35 via-[#7c7d71]/20 to-[#e0e4e4]/20" />
         <TrendingUp size={compact ? 19 : 22} className="relative z-10" />
       </div>
       <div>
@@ -129,121 +129,103 @@ function BrandMark({ compact = false }) {
   )
 }
 
-function SignalBars() {
-  const bars = [38, 54, 45, 68, 60, 78, 73, 88, 82, 96]
+function ProductStoryPreview() {
+  const stages = [
+    {
+      step: '01',
+      eyebrow: 'Registrar',
+      title: 'Mercado · R$ 86,40',
+      detail: 'Despesa · Pix · hoje',
+      icon: WalletCards,
+    },
+    {
+      step: '02',
+      eyebrow: 'Organizar',
+      title: 'Alimentação · 72%',
+      detail: 'R$ 720 de R$ 1.000 do orçamento',
+      icon: CircleDollarSign,
+    },
+    {
+      step: '03',
+      eyebrow: 'Compreender',
+      title: 'Saldo · R$ 4.193,60',
+      detail: 'Seu mês foi atualizado automaticamente',
+      icon: Activity,
+    },
+    {
+      step: '04',
+      eyebrow: 'Decidir',
+      title: 'Money encontrou um padrão',
+      detail: 'Alimentação acelerou nos últimos 7 dias',
+      icon: Bot,
+    },
+  ]
 
-  return (
-    <div className="flex h-24 items-end gap-1.5" aria-hidden="true">
-      {bars.map((height, index) => (
-        <motion.span
-          key={`${height}-${index}`}
-          initial={{ height: 8, opacity: 0.35 }}
-          animate={{ height: `${height}%`, opacity: 1 }}
-          transition={{
-            delay: 0.35 + index * 0.045,
-            duration: 0.55,
-            ease: [0.16, 1, 0.3, 1],
-          }}
-          className="min-w-0 flex-1 rounded-t-md bg-gradient-to-t from-cyan-400/30 via-cyan-300/65 to-white/90"
-        />
-      ))}
-    </div>
-  )
-}
-
-function ProductIntelligencePreview() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: 0.18, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
       className="login-intelligence-panel relative mt-8 overflow-hidden rounded-[28px] border border-white/15 p-4 shadow-2xl backdrop-blur-xl xl:p-5"
+      aria-label="Demonstração do fluxo do Meu Real: registrar, organizar, compreender e decidir"
     >
       <div className="login-panel-scan pointer-events-none absolute inset-0" />
 
-      <div className="relative z-10 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-50" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-300" />
-          </span>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/80">
-            Visão financeira em tempo real
+      <div className="relative z-10 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#e7d3b5]">
+            Do registro à decisão
+          </p>
+          <p className="mt-1 max-w-md text-xs leading-relaxed text-white/55">
+            Uma movimentação entra uma vez. O Meu Real organiza o contexto e devolve clareza para
+            sua próxima decisão.
           </p>
         </div>
         <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold text-white/55">
-          Ambiente demonstrativo
+          Exemplo do Meu Real
         </span>
       </div>
 
-      <div className="relative z-10 mt-4 grid gap-3 sm:grid-cols-[1.16fr_0.84fr]">
-        <div className="rounded-2xl border border-white/10 bg-slate-950/25 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
-                Saldo projetado
-              </p>
-              <p className="mt-1 text-2xl font-black tracking-tight text-white">R$ 4.280,00</p>
-            </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-300/10 text-emerald-200 ring-1 ring-emerald-300/20">
-              <Activity size={16} />
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <SignalBars />
-          </div>
-
-          <div className="mt-3 flex items-center justify-between text-[10px]">
-            <span className="text-white/40">Evolução do ciclo</span>
-            <span className="inline-flex items-center gap-1 font-bold text-emerald-200">
-              <TrendingUp size={11} />
-              tendência positiva
-            </span>
-          </div>
-        </div>
-
-        <div className="grid gap-3">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-3.5">
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
-                Orçamento
-              </p>
-              <CircleDollarSign size={14} className="text-violet-200" />
-            </div>
-            <p className="mt-2 text-lg font-black text-white">68%</p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: '68%' }}
-                transition={{ delay: 0.65, duration: 0.8 }}
-                className="h-full rounded-full bg-gradient-to-r from-violet-400 to-cyan-300"
-              />
-            </div>
-            <p className="mt-2 text-[10px] text-white/45">Dentro do planejado</p>
-          </div>
-
-          <motion.div
-            animate={{ y: [0, -4, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-            className="rounded-2xl border border-cyan-200/15 bg-gradient-to-br from-cyan-300/10 to-indigo-400/10 p-3.5"
+      <div className="login-story-flow relative z-10 mt-4 grid gap-2 sm:grid-cols-2">
+        {stages.map(({ step, eyebrow, title, detail, icon: Icon }, index) => (
+          <div
+            key={step}
+            className={`login-story-stage login-story-stage--${index + 1} relative overflow-hidden rounded-2xl border border-white/10 bg-black/15 p-3.5`}
           >
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-200/10 text-cyan-100">
-                <Bot size={15} />
+            <div className="flex items-start gap-3">
+              <div className="login-story-icon flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-[#e7d3b5]">
+                <Icon size={15} />
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-cyan-100/80">
-                  Money
-                </p>
-                <p className="text-[10px] text-white/45">Insight do período</p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/40">
+                    {eyebrow}
+                  </p>
+                  <span className="font-mono text-[9px] text-white/25">{step}</span>
+                </div>
+                <p className="mt-1 break-words text-xs font-black text-white">{title}</p>
+                <p className="mt-1 text-[10px] leading-relaxed text-white/45">{detail}</p>
               </div>
             </div>
-            <p className="mt-3 text-xs leading-relaxed text-white/75">
-              Seus gastos estão mais estáveis. Alimentação foi a categoria com maior variação.
-            </p>
-          </motion.div>
-        </div>
+
+            {index < stages.length - 1 && (
+              <div
+                className="login-story-connector pointer-events-none absolute -bottom-2 right-4 hidden h-4 w-4 items-center justify-center rounded-full border border-white/10 bg-[#171613] text-[#d0ad7e] sm:flex"
+                aria-hidden="true"
+              >
+                <ArrowRight size={9} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="relative z-10 mt-3 flex items-center justify-between gap-3 border-t border-white/10 pt-3">
+        <p className="text-[10px] text-white/40">Registrar → Organizar → Compreender → Decidir</p>
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#d0ad7e]">
+          <Sparkles size={11} />
+          Menos operação. Mais contexto.
+        </span>
       </div>
     </motion.div>
   )
@@ -429,7 +411,7 @@ export default function Login() {
               transformar números em contexto útil para o dia a dia.
             </motion.p>
 
-            <ProductIntelligencePreview />
+            <ProductStoryPreview />
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {PRODUCT_STEPS.map(({ icon: Icon, title, description }, index) => (
