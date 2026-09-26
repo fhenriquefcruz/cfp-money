@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ChevronDown } from 'lucide-react'
+import { ArrowRight, Bot, ChevronDown } from 'lucide-react'
+import { MONEY_CONTEXT_PROMPTS, buildMoneyPromptPath } from '../domain/moneyContext'
 import { ProgressBar } from './ui'
 
 export default function FinancialHealthScore({ report }) {
@@ -49,6 +50,13 @@ export default function FinancialHealthScore({ report }) {
               Maior oportunidade: {report.nextAction.label} (+{report.nextAction.missingPoints} pts)
             </p>
           )}
+          <Link
+            to={buildMoneyPromptPath(MONEY_CONTEXT_PROMPTS.financialHealth)}
+            className="mt-2 inline-flex min-h-8 items-center gap-1.5 text-[10px] font-bold text-[--text-brand] hover:underline"
+          >
+            <Bot size={11} aria-hidden="true" />
+            Conversar com o Money
+          </Link>
         </div>
       </div>
 
