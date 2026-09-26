@@ -22,10 +22,12 @@ import {
   Clock3,
 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
+import { useAuth } from '../contexts/AuthContext'
 import { Button, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
 import TransactionSeriesModal from './TransactionSeriesModal'
 import TransactionCsvImportModal from './TransactionCsvImportModal'
+import TransactionSavedViews from './TransactionSavedViews'
 import {
   formatCurrency,
   getPaymentLabel,
@@ -49,9 +51,16 @@ import {
   isStructuredCreditTransaction,
   isTransactionPaid,
 } from '../domain/paymentControl'
+import {
+  createSavedTransactionView,
+  readSavedTransactionViews,
+  removeSavedTransactionView,
+  writeSavedTransactionViews,
+} from '../domain/transactionViews'
 
 const DATE_PRESETS = [
   {
+    id: 'current_month',
     label: 'Este mês',
     getRange: () => ({
       from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
@@ -59,6 +68,7 @@ const DATE_PRESETS = [
     }),
   },
   {
+    id: 'previous_month',
     label: 'Mês passado',
     getRange: () => ({
       from: format(startOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd'),
@@ -66,6 +76,7 @@ const DATE_PRESETS = [
     }),
   },
   {
+    id: 'next_month',
     label: 'Próximo mês',
     getRange: () => {
       const nextMonth = addMonths(new Date(), 1)
@@ -76,6 +87,7 @@ const DATE_PRESETS = [
     },
   },
   {
+    id: 'last_3_months',
     label: 'Últimos 3 meses',
     getRange: () => ({
       from: format(subMonths(new Date(), 3), 'yyyy-MM-dd'),
@@ -83,13 +95,14 @@ const DATE_PRESETS = [
     }),
   },
   {
+    id: 'current_year',
     label: 'Este ano',
     getRange: () => ({
       from: `${new Date().getFullYear()}-01-01`,
       to: format(new Date(), 'yyyy-MM-dd'),
     }),
   },
-  { label: 'Todos', getRange: () => ({ from: '', to: '' }) },
+  { id: 'all', label: 'Todos', getRange: () => ({ from: '', to: '' }) },
 ]
 
 function getCurrentMonthRange() {
@@ -375,6 +388,7 @@ function TxRow({
 }
 
 export default function TransactionList() {
+  const { user } = useAuth()
   const {
     transactions,
     categories,
@@ -400,6 +414,7 @@ export default function TransactionList() {
   const [deleteId, setDeleteId] = useState(null)
   const [seriesAction, setSeriesAction] = useState(null)
   const [importModal, setImportModal] = useState(false)
+  const [savedViews, setSavedViews] = useState([])
   const [page, setPage] = useState(1)
   const [sortAsc, setSortAsc] = useState(false)
   const [paymentUpdatingIds, setPaymentUpdatingIds] = useState(() => new Set())
@@ -487,6 +502,15 @@ export default function TransactionList() {
     setSelectedPaymentIds(new Set())
   }, [typeFilter, catFilter, payFilter, paymentStatusFilter, dateRange.from, dateRange.to, search])
 
+  useEffect(() => {
+    if (!user?.uid || typeof window === 'undefined') {
+      setSavedViews([])
+      return
+    }
+
+    setSavedViews(readSavedTransactionViews(user.uid, window.localStorage))
+  }, [user?.uid])
+
   const summary = useMemo(() => {
     const income = filtered
       .filter((t) => t.type === 'income' && !t.isSavings)
@@ -509,6 +533,18 @@ export default function TransactionList() {
     hasCustomDateRange,
     !!search,
   ].filter(Boolean).length
+  const savableFilterCount = [
+    typeFilter !== 'all',
+    catFilter !== 'all',
+    payFilter !== 'all',
+    paymentStatusFilter !== 'all',
+    hasCustomDateRange,
+  ].filter(Boolean).length
+  const currentDatePreset =
+    DATE_PRESETS.find((preset) => {
+      const range = preset.getRange()
+      return dateRange.from === range.from && dateRange.to === range.to
+    })?.id || ''
 
   const handleEdit = (tx) => {
     if (isTransactionSeries(tx)) {
@@ -622,6 +658,61 @@ export default function TransactionList() {
     setDateRange({ from: '', to: '' })
     setSearch('')
     setPage(1)
+  }
+
+  const persistSavedViews = (nextViews) => {
+    if (!user?.uid || typeof window === 'undefined') return false
+    const persisted = writeSavedTransactionViews(user.uid, nextViews, window.localStorage)
+    setSavedViews(persisted)
+    return true
+  }
+
+  const saveCurrentView = (name) => {
+    try {
+      const view = createSavedTransactionView(
+        name,
+        {
+          typeFilter,
+          catFilter,
+          payFilter,
+          paymentStatusFilter,
+          datePreset: currentDatePreset,
+          dateRange,
+        },
+        savedViews,
+      )
+      persistSavedViews([...savedViews, view])
+      showNotification('Visão salva para reutilizar depois.')
+      return true
+    } catch (error) {
+      showNotification(error.message || 'Não foi possível salvar a visão.', 'warning')
+      return false
+    }
+  }
+
+  const applySavedView = (view) => {
+    const filters = view?.filters || {}
+    const preset = DATE_PRESETS.find((item) => item.id === filters.datePreset)
+    const categoryStillExists =
+      filters.catFilter === 'all' || categories.some((category) => category.id === filters.catFilter)
+
+    setTypeFilter(filters.typeFilter || 'all')
+    setCatFilter(categoryStillExists ? filters.catFilter || 'all' : 'all')
+    setPayFilter(filters.payFilter || 'all')
+    setPaymentStatusFilter(filters.paymentStatusFilter || 'all')
+    setDateRange(preset ? preset.getRange() : filters.dateRange || { from: '', to: '' })
+    setSearch('')
+    setPage(1)
+    setShowFilters(true)
+
+    if (!categoryStillExists) {
+      showNotification('A categoria salva não existe mais; os outros filtros foram aplicados.', 'info')
+    }
+  }
+
+  const deleteSavedView = (viewId) => {
+    const nextViews = removeSavedTransactionView(savedViews, viewId)
+    persistSavedViews(nextViews)
   }
 
   const dateLabel = (dateStr) => {
@@ -819,6 +910,14 @@ export default function TransactionList() {
             })(),
           )}
         </div>
+
+        <TransactionSavedViews
+          views={savedViews}
+          canSave={savableFilterCount > 0}
+          onApply={applySavedView}
+          onSave={saveCurrentView}
+          onDelete={deleteSavedView}
+        />
 
         {/* Filtros expandíveis */}
         <AnimatePresence>
