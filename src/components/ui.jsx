@@ -181,8 +181,29 @@ export const Modal = ({
       }
     }
 
+    let viewportFrame = null
+    const keepFocusedControlVisible = () => {
+      if (viewportFrame) window.cancelAnimationFrame(viewportFrame)
+
+      viewportFrame = window.requestAnimationFrame(() => {
+        const dialog = dialogRef.current
+        const active = document.activeElement
+
+        if (!dialog || !active || !dialog.contains(active)) return
+
+        active.scrollIntoView({
+          block: 'nearest',
+          inline: 'nearest',
+          behavior: 'auto',
+        })
+      })
+    }
+
     document.body.style.overflow = 'hidden'
     document.addEventListener('keydown', handleKeyDown, true)
+    window.addEventListener('resize', keepFocusedControlVisible)
+    window.visualViewport?.addEventListener('resize', keepFocusedControlVisible)
+
     const focusTimer = window.setTimeout(() => {
       const firstFocusable = getFocusableElements()[0]
       ;(firstFocusable || dialogRef.current)?.focus()
@@ -190,8 +211,11 @@ export const Modal = ({
 
     return () => {
       window.clearTimeout(focusTimer)
+      if (viewportFrame) window.cancelAnimationFrame(viewportFrame)
       document.body.style.overflow = previousOverflow
       document.removeEventListener('keydown', handleKeyDown, true)
+      window.removeEventListener('resize', keepFocusedControlVisible)
+      window.visualViewport?.removeEventListener('resize', keepFocusedControlVisible)
       previouslyFocused?.focus?.()
     }
   }, [closeOnEscape, isOpen])
