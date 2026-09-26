@@ -213,7 +213,7 @@ function ReportsContent() {
   ]
 
   return (
-    <div className="reports-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-24 sm:space-y-5 lg:pb-6">
+    <div data-tour="reports" className="reports-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-24 sm:space-y-5 lg:pb-6">
       {/* Header */}
       <div className="reports-premium__header flex flex-wrap items-start justify-between gap-4">
         <div>
