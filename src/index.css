@@ -1063,3 +1063,148 @@ body {
     scroll-behavior: auto;
   }
 }
+
+
+/* Busca global e prioridades do Money — estilos fora do bundle JS */
+.global-search-input {
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid var(--border-default);
+  border-radius: 0.75rem;
+  padding: 0 0.75rem;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.global-search-input:focus {
+  box-shadow: 0 0 0 2px var(--brand-500);
+}
+
+.global-search-results {
+  max-height: 55vh;
+  margin-top: 0.5rem;
+  overflow-y: auto;
+}
+
+.global-search-empty {
+  padding: 2rem 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.global-search-result {
+  display: flex;
+  width: 100%;
+  min-height: 3rem;
+  align-items: center;
+  border-radius: 0.75rem;
+  padding: 0 0.75rem;
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.global-search-result:hover {
+  background: var(--bg-hover);
+}
+
+.global-search-result--active {
+  background: var(--brand-50);
+}
+
+.money-priorities-card {
+  overflow: hidden;
+  box-shadow: var(--aurora-shadow-soft);
+}
+
+.money-priorities-header {
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 1rem;
+}
+
+.money-priorities-title {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 900;
+}
+
+.money-priorities-subtitle,
+.money-priority-detail {
+  margin-top: 0.25rem;
+  font-size: 0.625rem;
+}
+
+.money-priorities-subtitle {
+  color: var(--text-tertiary);
+}
+
+.money-priorities-list {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.money-priorities-clear,
+.money-priority-item {
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+
+.money-priorities-clear {
+  background: var(--success-bg);
+  color: var(--success-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.money-priority-item {
+  border: 1px solid var(--border-default);
+}
+
+.money-priority--critical {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+}
+
+.money-priority--warning {
+  border-color: var(--warning-border);
+  background: var(--warning-bg);
+}
+
+.money-priority--opportunity {
+  border-color: var(--brand-200);
+  background: var(--brand-50);
+}
+
+.money-priority-level {
+  color: var(--text-tertiary);
+  font-size: 0.5625rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.money-priority-title {
+  margin-top: 0.25rem;
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.money-priority-detail {
+  color: var(--text-secondary);
+}
+
+.money-priority-action {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  margin-top: 0.5rem;
+  color: var(--text-brand);
+  font-size: 0.625rem;
+  font-weight: 700;
+}
