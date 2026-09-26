@@ -17,6 +17,7 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { Card } from './ui'
 import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
+import { getLastSeenPresentation, wasActiveWithin } from '../domain/adminActivity'
 import { onAllUsersChange } from '../services/firebase'
 import { adminSetUserAccess } from '../services/adminGateway'
 import CommercialOverviewRouter from './CommercialOverviewRouter'
@@ -70,16 +71,36 @@ function StatusBadge({ u }) {
   )
 }
 
+function ActivityStatus({ lastSeenAt }) {
+  const activity = getLastSeenPresentation(lastSeenAt)
+  const dotClass =
+    activity.status === 'active'
+      ? 'bg-emerald-500'
+      : activity.status === 'recent'
+        ? 'bg-blue-400'
+        : activity.status === 'inactive'
+          ? 'bg-gray-400'
+          : 'bg-gray-300'
+
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[--text-secondary]">
+      <span className={`h-2 w-2 flex-shrink-0 rounded-full ${dotClass}`} />
+      <span title={activity.detail}>{activity.label}</span>
+    </span>
+  )
+}
+
 function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
   const [expanded, setExpanded] = useState(false)
   const [months, setMonths] = useState(1)
   const planInfo = getPlanPresentation(u)
   const isPremiumActive = planInfo.key === 'premium'
+  const activity = getLastSeenPresentation(u.lastSeenAt)
 
   return (
     <>
       {/* Linha principal — grid fixo */}
-      <div className="admin-user-row grid grid-cols-1 items-stretch gap-3 border-b border-[--border-subtle] px-4 py-3 transition-colors last:border-0 hover:bg-[--bg-hover] sm:grid-cols-[2fr_1fr_auto] sm:items-center">
+      <div className="admin-user-row grid grid-cols-1 items-stretch gap-3 border-b border-[--border-subtle] px-4 py-3 transition-colors last:border-0 hover:bg-[--bg-hover] sm:grid-cols-[2fr_1fr_1fr_auto] sm:items-center">
         {/* Coluna 1: usuário */}
         <button
           className="flex min-h-11 w-full items-center gap-2.5 min-w-0 text-left"
@@ -107,7 +128,11 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
           <StatusBadge u={u} />
         </div>
 
-        {/* Coluna 3: ações agrupadas */}
+        <div className="hidden sm:block">
+          <ActivityStatus lastSeenAt={u.lastSeenAt} />
+        </div>
+
+        {/* Coluna 4: ações agrupadas */}
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:flex-shrink-0">
           {/* Select + Ativar colados */}
           <div className="flex min-w-0 flex-1 sm:flex-none items-center rounded-xl border border-[--border-default] overflow-hidden">
@@ -181,6 +206,10 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
               {
                 label: 'Premium até',
                 value: formatPlanExpiration(u),
+              },
+              {
+                label: 'Último uso',
+                value: activity.label,
               },
               { label: 'Status', value: u.blocked ? '🔴 Bloqueado' : '🟢 Ativo' },
             ].map((r) => (
@@ -295,6 +324,7 @@ export default function Admin() {
     premium: users.filter((u) => getPlanPresentation(u).key === 'premium').length,
     trial: users.filter((u) => getPlanPresentation(u).key === 'trial_active').length,
     blocked: users.filter((u) => u.blocked).length,
+    active7d: users.filter((u) => wasActiveWithin(u.lastSeenAt, 7)).length,
   }
 
   return (
@@ -311,7 +341,7 @@ export default function Admin() {
       )}
 
       {/* Stats */}
-      <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
           {
             label: 'Total',
@@ -329,6 +359,12 @@ export default function Admin() {
             label: 'Trial',
             value: stats.trial,
             icon: <Clock size={15} />,
+            style: STATUS_STYLES.trial_active,
+          },
+          {
+            label: 'Ativos 7d',
+            value: stats.active7d,
+            icon: <Users size={15} />,
             style: STATUS_STYLES.trial_active,
           },
           {
@@ -390,12 +426,15 @@ export default function Admin() {
         </div>
 
         {/* Header de colunas */}
-        <div className="grid grid-cols-[1fr_auto] border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2 sm:grid-cols-[2fr_1fr_auto]">
+        <div className="grid grid-cols-[1fr_auto] border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2 sm:grid-cols-[2fr_1fr_1fr_auto]">
           <span className="text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider">
             Usuário
           </span>
           <span className="hidden sm:block text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider">
             Status
+          </span>
+          <span className="hidden sm:block text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider">
+            Último uso
           </span>
           <span className="text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider text-right">
             Ações
