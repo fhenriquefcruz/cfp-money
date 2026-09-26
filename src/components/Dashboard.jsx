@@ -34,6 +34,7 @@ import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
 import PaymentControlCard from './PaymentControlCard'
+import FinancialHealthScore from './FinancialHealthScore'
 import { formatCurrency, formatRelativeDate, getMonthlyData } from '../utils'
 import {
   buildMonthAttentionSignals,
@@ -42,6 +43,7 @@ import {
 } from '../domain/dashboard'
 import { getTransactionDateContext } from '../domain/transactionDates'
 import { buildPaymentControlOverview } from '../domain/paymentControl'
+import { buildFinancialHealth } from '../domain/financialHealth'
 import { format, subMonths, addMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -106,67 +108,6 @@ const TxItem = ({ tx, categories }) => {
         {tx.isSavings ? '🐷' : isIncome ? '+' : '−'}
         {formatCurrency(tx.amount)}
       </span>
-    </div>
-  )
-}
-
-function calcHealthScore({ balance, income, budgetsOk, goalsActive, savingRate }) {
-  let s = 0
-  if (balance >= 0) s += 30
-  if (savingRate >= 20) s += 25
-  else if (savingRate >= 10) s += 12
-  else if (savingRate >= 0) s += 5
-  if (budgetsOk) s += 20
-  if (goalsActive) s += 15
-  if (income > 0) s += 10
-  return Math.min(100, s)
-}
-
-function HealthScore({ score }) {
-  const color =
-    score >= 75 ? 'var(--success-icon)' : score >= 50 ? 'var(--warning-icon)' : 'var(--danger-icon)'
-  const label = score >= 75 ? 'Ótima' : score >= 50 ? 'Regular' : 'Atenção'
-  const emoji = score >= 75 ? '💚' : score >= 50 ? '💛' : '❤️'
-  const r = 28,
-    circ = 2 * Math.PI * r
-  return (
-    <div className="dashboard-health-score flex min-w-0 items-center gap-2 sm:gap-3">
-      <div className="dashboard-health-ring relative h-16 w-16 flex-shrink-0">
-        <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
-          <circle cx="32" cy="32" r={r} fill="none" stroke="var(--bg-hover)" strokeWidth="6" />
-          <circle
-            cx="32"
-            cy="32"
-            r={r}
-            fill="none"
-            stroke={color}
-            strokeWidth="6"
-            strokeDasharray={`${(score / 100) * circ} ${circ}`}
-            strokeLinecap="round"
-            style={{ transition: 'stroke-dasharray 0.8s ease' }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xs font-black" style={{ color }}>
-            {score}
-          </span>
-        </div>
-      </div>
-      <div className="dashboard-health-copy min-w-0">
-        <div className="flex items-center gap-1">
-          <p className="text-sm font-bold text-[--text-primary]">
-            Saúde {label} {emoji}
-          </p>
-          <InfoTooltip text="Calculado com saldo, poupança, orçamentos e metas. Meta: acima de 75." />
-        </div>
-        <p className="text-xs text-[--text-tertiary] mt-0.5">
-          {score >= 75
-            ? 'Finanças equilibradas.'
-            : score >= 50
-              ? 'Há pontos a melhorar.'
-              : 'Revise seus gastos.'}
-        </p>
-      </div>
     </div>
   )
 }
@@ -330,15 +271,19 @@ export default function Dashboard() {
     [budgets, transactions, categories, monthStart, monthEnd],
   )
 
-  const healthScore = useMemo(() => {
+  const healthReport = useMemo(() => {
     const savingRate =
       currentSummary.income > 0 ? (currentSummary.savings / currentSummary.income) * 100 : 0
-    return calcHealthScore({
+    const hasBudgets = budgets.length > 0
+    const budgetsOk = hasBudgets && budgetAlerts.filter((budget) => budget.pct > 100).length === 0
+
+    return buildFinancialHealth({
       balance: currentSummary.balance,
       income: currentSummary.income,
-      budgetsOk: budgets.length > 0 && budgetAlerts.filter((b) => b.pct > 100).length === 0,
-      goalsActive: goals.length > 0,
       savingRate,
+      hasBudgets,
+      budgetsOk,
+      goalsActive: goals.length > 0,
     })
   }, [currentSummary, budgets, budgetAlerts, goals])
 
@@ -563,10 +508,10 @@ export default function Dashboard() {
               <div className="flex items-center gap-1.5">
                 <Heart size={14} className="text-[--danger-icon]" />
                 <p className="text-xs font-semibold text-[--text-tertiary]">Saúde financeira</p>
-                <InfoTooltip text="Indicador sintético baseado no equilíbrio entre receitas, despesas, orçamento e poupança registrados." />
+                <InfoTooltip text="Pontuação de 0 a 100 baseada em saldo, poupança, orçamentos, metas e receitas. Abra o cálculo para ver a contribuição de cada fator." />
               </div>
             </div>
-            <HealthScore score={healthScore} />
+            <FinancialHealthScore report={healthReport} />
           </Card>
         </div>
 
