@@ -383,7 +383,7 @@ export default function Login() {
               initial={{ opacity: 0, x: -14 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 rounded-full border border-cyan-200/20 bg-cyan-200/[0.07] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/85 backdrop-blur"
+              className="inline-flex items-center gap-2 rounded-full border border-[#d0ad7e]/25 bg-[#c49d6b]/[0.07] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#e7d3b5] backdrop-blur"
             >
               <Orbit size={13} />
               Finanças mais claras, decisões mais conscientes
@@ -423,7 +423,7 @@ export default function Login() {
                   className="rounded-2xl border border-white/10 bg-white/[0.045] p-3.5 backdrop-blur-sm"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.07] text-cyan-100">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.07] text-[#e7d3b5]">
                       <Icon size={14} />
                     </div>
                     <p className="text-xs font-black text-white">{title}</p>
@@ -437,7 +437,7 @@ export default function Login() {
           <div className="relative z-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] font-medium text-white/38">
             {TRUST_POINTS.map((point) => (
               <span key={point} className="inline-flex items-center gap-1.5">
-                <Check size={11} className="text-cyan-200/70" />
+                <Check size={11} className="text-[#d0ad7e]/80" />
                 {point}
               </span>
             ))}
@@ -514,7 +514,7 @@ export default function Login() {
                 {mode === 'register' && (
                   <div className="mt-5 overflow-hidden rounded-2xl border border-[--brand-200] bg-[--brand-50]">
                     <div className="flex items-start gap-3 p-3.5">
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[--brand-600] to-violet-600 text-white shadow-sm">
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[--brand-600] to-[#596d68] text-white shadow-sm">
                         <Zap size={15} />
                       </div>
                       <div>
