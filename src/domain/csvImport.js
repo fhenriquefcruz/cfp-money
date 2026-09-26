@@ -118,9 +118,7 @@ const resolveCategory = (categoryName, categories = []) => {
 
   return (
     categories.find(
-      (category) =>
-        categoryKey(category.name) === key ||
-        categoryKey(category.id) === key,
+      (category) => categoryKey(category.name) === key || categoryKey(category.id) === key,
     ) || null
   )
 }
@@ -214,8 +212,7 @@ export function buildCsvImportPreview(
   if (parsed.data.length > maxRows) {
     fatalIssues.push({
       code: 'too_many_rows',
-      message:
-        `O arquivo possui ${parsed.data.length} linhas. O limite seguro por importação é ${maxRows}.`,
+      message: `O arquivo possui ${parsed.data.length} linhas. O limite seguro por importação é ${maxRows}.`,
     })
   }
 
