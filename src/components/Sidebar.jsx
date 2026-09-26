@@ -19,7 +19,6 @@ import {
   Bot,
   Crown,
   CreditCard,
-  Search,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePlan } from '../contexts/PlanContext'
@@ -293,7 +292,9 @@ export default function Sidebar() {
           )}
           aria-label="Abrir busca global"
         >
-          <Search size={17} className="flex-shrink-0" />
+          <span className="w-[17px] flex-shrink-0 text-center text-lg leading-none" aria-hidden="true">
+            ⌕
+          </span>
           {!collapsed && (
             <>
               <span className="min-w-0 flex-1 text-left text-xs font-semibold">Buscar</span>
@@ -314,7 +315,9 @@ export default function Sidebar() {
                 }}
                 className="flex min-h-11 w-full items-center gap-3 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-left text-sm font-semibold text-[--text-secondary]"
               >
-                <Search size={17} />
+                <span className="w-[17px] text-center text-lg leading-none" aria-hidden="true">
+                  ⌕
+                </span>
                 <span className="flex-1">Buscar no Meu Real</span>
               </button>
             </div>
