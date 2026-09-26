@@ -258,7 +258,7 @@ export default function Dashboard() {
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
-    <div className="dashboard-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-24 sm:space-y-5 lg:pb-6">
+    <div data-tour="dashboard" className="dashboard-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-24 sm:space-y-5 lg:pb-6">
       {/* Header — mês com destaque, saudação secundária */}
       <motion.div
         className="dashboard-premium__toolbar flex flex-wrap items-start justify-between gap-3"
