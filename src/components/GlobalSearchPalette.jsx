@@ -49,7 +49,7 @@ export default function GlobalSearchPalette({
             setActive(0)
           }}
           placeholder="Transação, meta, cartão ou área..."
-          aria-label="Buscar no Meu Real"
+          aria-label="Termo da busca global"
           className="min-h-12 w-full rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 text-sm text-[--text-primary] outline-none focus:ring-2 focus:ring-[--brand-500]"
         />
 
