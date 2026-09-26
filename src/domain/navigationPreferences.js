@@ -40,7 +40,12 @@ const save = (uid, value, storage) => {
   return value
 }
 
-export function registerRecentNavigation(uid, path, allowedPaths, storage = globalThis.localStorage) {
+export function registerRecentNavigation(
+  uid,
+  path,
+  allowedPaths,
+  storage = globalThis.localStorage,
+) {
   const current = readNavigationPreferences(uid, allowedPaths, storage)
   if (!allowedPaths.includes(path)) return current
 
@@ -54,7 +59,12 @@ export function registerRecentNavigation(uid, path, allowedPaths, storage = glob
   )
 }
 
-export function toggleFavoriteNavigation(uid, path, allowedPaths, storage = globalThis.localStorage) {
+export function toggleFavoriteNavigation(
+  uid,
+  path,
+  allowedPaths,
+  storage = globalThis.localStorage,
+) {
   const current = readNavigationPreferences(uid, allowedPaths, storage)
   if (!allowedPaths.includes(path)) return current
 
