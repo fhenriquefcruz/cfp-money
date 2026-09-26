@@ -204,6 +204,13 @@ export function buildCsvImportPreview(
     })
   }
 
+  if (parsed.data.length === 0) {
+    fatalIssues.push({
+      code: 'no_rows',
+      message: 'O CSV possui cabeçalho, mas nenhuma transação para analisar.',
+    })
+  }
+
   if (parsed.data.length > maxRows) {
     fatalIssues.push({
       code: 'too_many_rows',
