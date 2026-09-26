@@ -24,7 +24,8 @@ service cloud.firestore {
           'trialStart',
           'premiumUntil',
           'blocked',
-          'createdAt'
+          'createdAt',
+          'lastSeenAt'
         ])
         && request.resource.data.keys().hasOnly([
           'email',
@@ -43,7 +44,11 @@ service cloud.firestore {
         && request.resource.data.trialStart is timestamp
         && request.resource.data.premiumUntil == null
         && request.resource.data.blocked == false
-        && request.resource.data.createdAt is timestamp;
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.get(
+          'lastSeenAt',
+          request.time
+        ) is timestamp;
     }
 
     function validOwnerUserUpdate() {
@@ -55,7 +60,8 @@ service cloud.firestore {
           'email',
           'updatedAt',
           'moneySettings',
-          'moneySettingsUpdatedAt'
+          'moneySettingsUpdatedAt',
+          'lastSeenAt'
         ])
         && request.resource.data.email is string
         && request.resource.data.email.size() <= 320
@@ -69,7 +75,15 @@ service cloud.firestore {
         && request.resource.data.get(
           'moneySettingsUpdatedAt',
           request.time
-        ) is timestamp;
+        ) is timestamp
+        && request.resource.data.get(
+          'lastSeenAt',
+          request.time
+        ) is timestamp
+        && (
+          !changed.hasAny(['lastSeenAt'])
+          || request.resource.data.lastSeenAt == request.time
+        );
     }
 
     function validAdminAccessUpdate() {
