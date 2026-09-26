@@ -1,0 +1,39 @@
+name: Phase 2 dashboard format once
+
+on:
+  push:
+    branches:
+      - feat/meu-real-design-phase-2
+
+permissions:
+  contents: write
+
+concurrency:
+  group: phase2-dashboard-format-once
+  cancel-in-progress: true
+
+jobs:
+  format:
+    if: ${{ !contains(github.event.head_commit.message, 'format phase 2 dashboard') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/meu-real-design-phase-2
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format Dashboard
+        run: npx prettier --write src/components/Dashboard.jsx
+      - name: Commit and remove formatter
+        run: |
+          rm -f .github/workflows/phase2-dashboard-format-once.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/Dashboard.jsx .github/workflows/phase2-dashboard-format-once.yml
+          git commit -m "chore: format phase 2 dashboard"
+          git pull --rebase origin feat/meu-real-design-phase-2
+          git push origin HEAD:feat/meu-real-design-phase-2
