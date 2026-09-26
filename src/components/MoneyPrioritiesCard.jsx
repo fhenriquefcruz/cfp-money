@@ -12,17 +12,17 @@ export default function MoneyPrioritiesCard({ report }) {
   const priorities = report?.priorities || []
 
   return (
-    <Card className="overflow-hidden shadow-sm" padding={false}>
-      <div className="border-b border-[--border-subtle] p-4">
-        <h2 className="text-sm font-black text-[--text-primary]">Suas prioridades agora</h2>
-        <p className="mt-1 text-[10px] text-[--text-tertiary]">
+    <Card className="money-priorities-card" padding={false}>
+      <div className="money-priorities-header">
+        <h2 className="money-priorities-title">Suas prioridades agora</h2>
+        <p className="money-priorities-subtitle">
           Até três ações reunidas pelo Money em ordem de relevância.
         </p>
       </div>
 
-      <div className="space-y-2 p-4">
+      <div className="money-priorities-list">
         {!priorities.length ? (
-          <p className="rounded-xl bg-[--success-bg] p-3 text-xs font-bold text-[--success-text]">
+          <p className="money-priorities-clear">
             Nenhuma prioridade relevante agora
           </p>
         ) : (
@@ -32,16 +32,16 @@ export default function MoneyPrioritiesCard({ report }) {
               <div
                 key={priority.id}
                 data-testid="money-priority"
-                className={`rounded-xl border p-3 ${tone}`}
+                className={`money-priority-item ${tone}`}
               >
-                <p className="text-[9px] font-black uppercase text-[--text-tertiary]">
+                <p className="money-priority-level">
                   {index + 1}. {label}
                 </p>
-                <p className="mt-1 text-xs font-black text-[--text-primary]">{priority.title}</p>
-                <p className="mt-1 text-[10px] text-[--text-secondary]">{priority.detail}</p>
+                <p className="money-priority-title">{priority.title}</p>
+                <p className="money-priority-detail">{priority.detail}</p>
                 <Link
                   to={priority.to}
-                  className="mt-2 inline-flex min-h-8 items-center text-[10px] font-bold text-[--text-brand]"
+                  className="money-priority-action"
                 >
                   {priority.actionLabel}
                 </Link>
