@@ -12,49 +12,49 @@ function getBudgetStatus(pct) {
   if (pct > 100)
     return {
       level: 'over',
-      color: '#ef4444',
+      color: 'var(--danger-text)',
       bgClass: 'bg-[--danger-bg]',
       borderClass: 'border-[--danger-border]',
-      barColor: '#ef4444',
+      barColor: 'var(--danger-icon)',
       icon: <Flame size={14} className="text-[--danger-text]" />,
       label: (pct) => `🚨 Limite ultrapassado! (${pct.toFixed(0)}% do orçamento)`,
     }
   if (pct === 100)
     return {
       level: 'exact',
-      color: '#f97316',
-      bgClass: 'bg-orange-50 dark:bg-orange-950/30',
-      borderClass: 'border-orange-300 dark:border-orange-800',
-      barColor: '#f97316',
-      icon: <AlertTriangle size={14} className="text-orange-600" />,
+      color: 'var(--warning-text)',
+      bgClass: 'bg-[--warning-bg]',
+      borderClass: 'border-[--warning-border]',
+      barColor: 'var(--warning-icon)',
+      icon: <AlertTriangle size={14} className="text-[--warning-icon]" />,
       label: () => `⛔ Limite atingido! Orçamento esgotado.`,
     }
   if (pct >= 90)
     return {
       level: 'critical',
-      color: '#f59e0b',
+      color: 'var(--warning-text)',
       bgClass: 'bg-[--warning-bg]',
       borderClass: 'border-[--warning-border]',
-      barColor: '#f59e0b',
+      barColor: 'var(--warning-icon)',
       icon: <AlertTriangle size={14} className="text-[--warning-icon]" />,
       label: (pct) => `⚠️ Atenção: ${pct.toFixed(0)}% do limite utilizado.`,
     }
   if (pct >= 70)
     return {
       level: 'warning',
-      color: '#eab308',
-      bgClass: 'bg-yellow-50 dark:bg-yellow-950/20',
-      borderClass: 'border-yellow-300 dark:border-yellow-800',
-      barColor: '#eab308',
-      icon: <TrendingUp size={14} className="text-yellow-600" />,
+      color: 'var(--warning-text)',
+      bgClass: 'bg-[--warning-bg]',
+      borderClass: 'border-[--warning-border]',
+      barColor: 'var(--warning-icon)',
+      icon: <TrendingUp size={14} className="text-[--warning-icon]" />,
       label: (pct) => `${pct.toFixed(0)}% do orçamento utilizado — fique atento.`,
     }
   return {
     level: 'ok',
-    color: '#10b981',
+    color: 'var(--success-text)',
     bgClass: '',
     borderClass: '',
-    barColor: '#10b981',
+    barColor: 'var(--success-icon)',
     icon: <CheckCircle size={14} className="text-[--success-icon]" />,
     label: (pct) => `${pct.toFixed(0)}% utilizado — dentro do limite.`,
   }
