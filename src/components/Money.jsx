@@ -388,7 +388,7 @@ function MoneyContent() {
 
   return (
     <div className="money-premium mx-auto flex w-full min-w-0 max-w-7xl flex-col gap-3 overflow-x-clip pb-24 sm:gap-4 lg:pb-6">
-      <header className="money-premium__hero overflow-hidden rounded-[28px] border border-[--brand-200] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-4 text-white shadow-lg sm:p-5">
+      <header className="money-premium__hero overflow-hidden rounded-[28px] border border-[--brand-200] bg-gradient-to-br from-[#101211] via-[#1a211f] to-[#35413e] p-4 text-white shadow-lg sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="flex min-w-0 items-start gap-3">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 shadow-inner backdrop-blur">
