@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: phase2-format
+  cancel-in-progress: true
+
 jobs:
   format:
     if: ${{ !contains(github.event.head_commit.message, 'autoformat phase2') }}
@@ -19,7 +23,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - run: npm ci
       - name: Format changed design files
@@ -34,4 +38,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/components/Login.jsx src/index.css src/styles/aurora.css
           git commit -m "chore: autoformat phase2"
+          git pull --rebase origin feat/meu-real-design-phase-2
           git push origin HEAD:feat/meu-real-design-phase-2
