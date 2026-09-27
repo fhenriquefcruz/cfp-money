@@ -1158,6 +1158,10 @@ body {
   transition: background-color 150ms ease;
 }
 
+.global-search-favorite[aria-pressed='false'] {
+  opacity: 0.45;
+}
+
 .global-search-favorite:hover {
   background: var(--bg-hover);
 }
