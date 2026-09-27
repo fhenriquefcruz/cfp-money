@@ -104,15 +104,69 @@ export const GoalsProvider = ({ children, notify, userId }) => {
   )
 }
 
+const CategoriesContext = createContext({ categories: [], loading: true })
+export const useCategories = () => useContext(CategoriesContext)
+
+export const CategoriesProvider = ({ children, notify, userId }) => {
+  const [categories, setCategories] = useState(() =>
+    E2E_MODE ? createE2EAppState().categories : null,
+  )
+
+  useEffect(() => {
+    if (E2E_MODE) return undefined
+    if (!userId) {
+      setCategories([])
+      return undefined
+    }
+
+    setCategories(null)
+    getCategories(userId)
+      .then(setCategories)
+      .catch((error) => {
+        console.error('[Meu Real] categorias:', error)
+        setCategories([])
+      })
+
+    return undefined
+  }, [userId])
+
+  const mutateCategory = async (action, message, type) => {
+    if (!userId) return
+    try {
+      await action()
+      setCategories(await getCategories(userId))
+      notify?.(message, type)
+    } catch (error) {
+      notify?.('Erro na categoria.', 'error')
+      throw error
+    }
+  }
+
+  return (
+    <CategoriesContext.Provider
+      value={{
+        categories: categories ?? [],
+        loading: categories === null,
+        createCategory: (data) =>
+          mutateCategory(() => addCategory(userId, data), 'Categoria criada!'),
+        editCategory: (id, data) =>
+          mutateCategory(() => updateCategory(userId, id, data), 'Categoria salva!'),
+        removeCategory: (id) =>
+          mutateCategory(() => deleteCategory(userId, id), 'Categoria removida.', 'info'),
+      }}
+    >
+      {children}
+    </CategoriesContext.Provider>
+  )
+}
+
 const initialState = {
   transactions: [],
-  categories: [],
   budgets: [],
   creditCards: [],
   invoiceEvents: [],
   loading: {
     transactions: true,
-    categories: true,
     budgets: true,
     creditCards: true,
     invoiceEvents: true,
@@ -127,12 +181,6 @@ function reducer(state, action) {
         ...state,
         transactions: action.payload,
         loading: { ...state.loading, transactions: false },
-      }
-    case 'SET_CATEGORIES':
-      return {
-        ...state,
-        categories: action.payload,
-        loading: { ...state.loading, categories: false },
       }
     case 'SET_BUDGETS':
       return { ...state, budgets: action.payload, loading: { ...state.loading, budgets: false } }
@@ -222,12 +270,10 @@ export const AppProvider = ({ children }) => {
     // Carrega o resto em paralelo
     const load = async () => {
       try {
-        const [cats, budgets, creditCards] = await Promise.all([
-          getCategories(uid),
+        const [budgets, creditCards] = await Promise.all([
           getBudgets(uid),
           getCreditCards(uid),
         ])
-        dispatch({ type: 'SET_CATEGORIES', payload: cats })
         dispatch({ type: 'SET_BUDGETS', payload: budgets })
         dispatch({ type: 'SET_CREDIT_CARDS', payload: creditCards })
       } catch (err) {
@@ -644,62 +690,6 @@ export const AppProvider = ({ children }) => {
     [user?.uid, refreshCreditCards, showNotification],
   )
 
-  // ── CATEGORIES ──
-  const refreshCats = useCallback(async () => {
-    if (!user?.uid) return
-    try {
-      const cats = await getCategories(user.uid)
-      dispatch({ type: 'SET_CATEGORIES', payload: cats })
-    } catch (e) {
-      console.error('[Meu Real] refreshCats:', e.code)
-    }
-  }, [user?.uid])
-
-  const createCategory = useCallback(
-    async (data) => {
-      if (!user?.uid) return
-      try {
-        await addCategory(user.uid, data)
-        await refreshCats()
-        showNotification('Categoria criada!')
-      } catch (e) {
-        showNotification('Erro ao criar categoria.', 'error')
-        throw e
-      }
-    },
-    [user?.uid, showNotification, refreshCats],
-  )
-
-  const editCategory = useCallback(
-    async (id, data) => {
-      if (!user?.uid) return
-      try {
-        await updateCategory(user.uid, id, data)
-        await refreshCats()
-        showNotification('Categoria atualizada!')
-      } catch (e) {
-        showNotification('Erro ao atualizar categoria.', 'error')
-        throw e
-      }
-    },
-    [user?.uid, showNotification, refreshCats],
-  )
-
-  const removeCategory = useCallback(
-    async (id) => {
-      if (!user?.uid) return
-      try {
-        await deleteCategory(user.uid, id)
-        await refreshCats()
-        showNotification('Categoria removida.', 'info')
-      } catch (e) {
-        showNotification('Erro ao remover categoria.', 'error')
-        throw e
-      }
-    },
-    [user?.uid, showNotification, refreshCats],
-  )
-
   // ── BUDGETS ──
   const refreshBudgets = useCallback(async () => {
     if (!user?.uid) return
@@ -826,9 +816,6 @@ export const AppProvider = ({ children }) => {
         createCreditCard,
         editCreditCard,
         removeCreditCard,
-        createCategory,
-        editCategory,
-        removeCategory,
         saveBudget,
         removeBudget,
         showNotification,
