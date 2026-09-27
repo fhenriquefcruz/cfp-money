@@ -61,11 +61,10 @@ export function searchGlobal({
     .sort((a, b) => {
       const left = clean(a.label)
       const right = clean(b.label)
-      const exact = Number(right === queryText) - Number(left === queryText)
-      if (exact) return exact
-
-      const prefix = Number(right.startsWith(queryText)) - Number(left.startsWith(queryText))
-      return prefix || left.localeCompare(right)
+      return (
+        Number(right === queryText) - Number(left === queryText) ||
+        left.localeCompare(right)
+      )
     })
     .slice(0, 10)
 }
