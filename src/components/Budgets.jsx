@@ -1,7 +1,6 @@
 // src/components/Budgets.jsx
 import React, { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { PieChart, Trash2 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Input, Modal } from './ui'
 import { formatCurrency } from '../utils'
@@ -58,7 +57,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
             className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
             aria-label={`Remover orçamento de ${category.name}`}
           >
-            <Trash2 size={14} />
+            <span aria-hidden="true" className="text-base leading-none">×</span>
           </button>
         )}
       </div>
@@ -338,7 +337,7 @@ export default function Budgets() {
 
       {expenseCategories.length === 0 ? (
         <EmptyState
-          icon={<PieChart />}
+          icon={<span aria-hidden="true">◎</span>}
           title="Nenhuma categoria de despesa"
           description="Crie categorias de despesa para definir orçamentos."
         />
