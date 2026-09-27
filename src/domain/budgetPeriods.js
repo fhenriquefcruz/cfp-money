@@ -22,9 +22,7 @@ export function getBudgetForMonth(
   )
   if (exact || monthKey !== currentMonthKey) return exact || null
 
-  return (
-    budgets.find((budget) => budget.categoryId === categoryId && !budget.monthKey) || null
-  )
+  return budgets.find((budget) => budget.categoryId === categoryId && !budget.monthKey) || null
 }
 
 export const getBudgetTransactionMonth = (transaction = {}) =>
