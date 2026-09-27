@@ -20,5 +20,7 @@
   - [x] listar usuários e alterar acessos pelo gateway administrativo;
   - [x] listar e responder atendimentos pelo gateway administrativo;
   - [x] preservar fallback Spark sem expor o caminho principal do backend Firebase;
-- [ ] testes de integração com Firebase Emulator Suite;
+- [x] testes de integração com Firebase Emulator Suite;
+  - [x] integrar Auth, Firestore Rules e Functions callable em projeto demo;
+  - [x] executar integração automaticamente no workflow de validação;
 - [ ] auditoria automatizada de acessibilidade e regressão visual.
