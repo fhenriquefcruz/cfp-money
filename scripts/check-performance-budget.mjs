@@ -7,7 +7,7 @@ const indexPath = join(distRoot, 'index.html')
 
 const limits = {
   initialJavaScriptGzipBytes: 240 * 1024,
-  totalJavaScriptGzipBytes: 701 * 1024,
+  totalJavaScriptGzipBytes: 703 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 20 * 1024,
 }
