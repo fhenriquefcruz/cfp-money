@@ -76,7 +76,7 @@ export function searchGlobal({
         label: item.name || 'Cartão',
         to: '/cards',
         kind: 'card',
-        context: item.last4 ? `Final ${item.last4}` : 'Cartão',
+        context: item.last4 ? `Cartão · Final ${item.last4}` : 'Cartão',
         terms: item.last4,
       }),
     ),
