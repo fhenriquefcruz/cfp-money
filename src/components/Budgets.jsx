@@ -46,7 +46,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
           <div className="min-w-0">
             <p className="truncate font-semibold text-[--text-primary]">{category.name}</p>
             <p className="text-xs text-[--text-tertiary]">
-              {budget ? `${formatCurrency(amount)} neste mês` : 'Sem limite neste mês'}
+              {budget ? `${formatCurrency(amount)} neste mês` : 'Sem limite'}
             </p>
           </div>
         </div>
@@ -68,7 +68,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
           <div className="mt-4 flex flex-wrap items-end justify-between gap-2">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-                Gasto na competência
+                Gasto no mês
               </p>
               <p className="mt-1 text-2xl font-black tabular-nums" style={{ color: barColor }}>
                 {formatCurrency(spent)}
@@ -119,7 +119,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
             }
             className="mt-3 min-h-10 w-full text-center text-xs font-semibold text-[--text-tertiary] transition-colors hover:text-[--text-brand]"
           >
-            Alterar limite deste mês
+            Alterar limite
           </button>
         </>
       ) : (
@@ -130,7 +130,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
             className="mt-2 inline-flex min-h-10 items-center gap-1.5 text-xs font-bold text-[--text-brand]"
           >
             <Plus size={12} />
-            Definir limite mensal
+            Definir limite
           </button>
         </div>
       )}
@@ -233,7 +233,7 @@ export default function Budgets() {
         </Button>
       </div>
 
-      <Card className="budget-period-selector shadow-sm">
+      <Card className="shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="mt-1 text-lg font-black text-[--text-primary]">{selectedLabel}</p>
 
