@@ -32,6 +32,7 @@ function getBudgetStatus(percent) {
 
   return { tone, label }
 }
+
 function BudgetCard({
   category,
   budget,
@@ -266,10 +267,7 @@ export default function Budgets() {
     >
       <div className="operational-page__header flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-[--text-primary]">Orçamento mensal</h1>
-            <InfoTooltip text="Cada competência possui seus próprios limites. Compras no cartão entram no orçamento pela data da compra, não pelo vencimento da fatura." />
-          </div>
+          <h1 className="text-2xl font-black text-[--text-primary]">Orçamento mensal</h1>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[--text-tertiary]">
             Defina quanto pretende gastar em cada categoria no mês escolhido. Meses anteriores não
             são somados ao consumo atual.
