@@ -22,11 +22,11 @@ import {
   Clock3,
 } from 'lucide-react'
 import {
-  useApp,
   useCategories,
   useCreditCards,
   useInvoiceEvents,
   useNotifications,
+  useTransactions,
 } from '../contexts/AppContext'
 import { useAuth } from '../contexts/AuthContext'
 import { Button, EmptyState, Modal } from './ui'
@@ -404,7 +404,7 @@ export default function TransactionList() {
     applyTransactionSeriesOperation,
     setTransactionPaymentStatus,
     commitPaymentStatusOperation,
-  } = useApp()
+  } = useTransactions()
   const { showNotification } = useNotifications()
   const { categories } = useCategories()
   const { creditCards } = useCreditCards()
