@@ -404,6 +404,7 @@ export default function Sidebar() {
         <React.Suspense fallback={null}>
           <GlobalSearchPalette
             onClose={() => setSearchOpen(false)}
+            userId={user?.uid}
             pages={allItems.map(({ label, to }) => [label, to])}
             transactions={transactions}
             categories={categories}
