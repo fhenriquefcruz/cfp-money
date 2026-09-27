@@ -16,7 +16,13 @@ import {
   Settings2,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useApp, useCategories, useCreditCards, useGoals } from '../contexts/AppContext'
+import {
+  useApp,
+  useCategories,
+  useCreditCards,
+  useGoals,
+  useInvoiceEvents,
+} from '../contexts/AppContext'
 import { useMoney } from '../contexts/MoneyContext'
 import { analyzeMoney } from '../domain/money'
 import { analyzeSpendingLeaks } from '../domain/spendingLeaks'
@@ -190,7 +196,6 @@ function MoneyContent() {
   const {
     transactions,
     budgets,
-    invoiceEvents,
     loading,
     getSummary,
     createTransaction,
@@ -201,6 +206,7 @@ function MoneyContent() {
   const { categories, loading: categoriesLoading } = useCategories()
   const { creditCards, loading: creditCardsLoading } = useCreditCards()
   const { goals, loading: goalsLoading } = useGoals()
+  const { invoiceEvents, loading: invoiceEventsLoading } = useInvoiceEvents()
   const { settings, isLoading: settingsLoading } = useMoney()
   const [messages, setMessages] = useState([INITIAL_MESSAGE])
   const [input, setInput] = useState('')
@@ -215,7 +221,7 @@ function MoneyContent() {
     goalsLoading ||
     loading.budgets ||
     creditCardsLoading ||
-    loading.invoiceEvents ||
+    invoiceEventsLoading ||
     settingsLoading
 
   const now = new Date()
