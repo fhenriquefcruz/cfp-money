@@ -50,9 +50,6 @@ import {
   ensureTransactionPaymentDefaults,
 } from '../domain/paymentControl'
 
-const AppContext = createContext({})
-export const useApp = () => useContext(AppContext)
-
 const NotificationsContext = createContext({
   notifications: [],
   showNotification: () => {},
@@ -790,35 +787,9 @@ export const TransactionsProvider = ({ children }) => {
     [user?.uid, showNotification],
   )
 
-  return (
-    <TransactionsContext.Provider
-      value={{
-        transactions: state.transactions,
-        loading: state.loading.transactions,
-        createTransaction,
-        editTransaction,
-        setTransactionPaymentStatus,
-        commitPaymentStatusOperation,
-        removeTransaction,
-        removeTransactionBatch,
-        addTransactionBatch,
-        importTransactionBatch,
-        applyTransactionSeriesOperation,
-      }}
-    >
-      {children}
-    </TransactionsContext.Provider>
-  )
-}
-
-export const AppProvider = ({ children }) => {
-  const { transactions } = useTransactions()
-  const transactionsRef = useRef(transactions)
-  transactionsRef.current = transactions
-
-  // ── CÁLCULOS ──
+  // ── CÁLCULOS DERIVADOS ──
   const getMonthTransactions = useCallback(
-    (year, month) => transactionsForMonth(transactionsRef.current, year, month),
+    (year, month) => transactionsForMonth(stateRef.current.transactions, year, month),
     [],
   )
 
@@ -860,28 +831,42 @@ export const AppProvider = ({ children }) => {
       const { expenses } = getSummary(d.getFullYear(), d.getMonth())
       if (expenses > 0) months.push(expenses)
     }
-    return months.length ? months.reduce((s, v) => s + v, 0) / months.length : 0
+    return months.length ? months.reduce((sum, value) => sum + value, 0) / months.length : 0
   }, [getSummary])
 
-  const getTotalBalance = useCallback(() => calculateCurrentBalance(transactionsRef.current), [])
+  const getTotalBalance = useCallback(
+    () => calculateCurrentBalance(stateRef.current.transactions),
+    [],
+  )
 
   const filterTransactions = useCallback(
     ({ year, month, categoryId, paymentMethod, type } = {}) =>
-      transactionsRef.current.filter((t) => {
-        const d = new Date(t.date + 'T00:00:00')
-        if (year && d.getFullYear() !== year) return false
-        if (month !== undefined && d.getMonth() !== month) return false
-        if (categoryId && t.categoryId !== categoryId) return false
-        if (paymentMethod && t.paymentMethod !== paymentMethod) return false
-        if (type && t.type !== type) return false
+      stateRef.current.transactions.filter((transaction) => {
+        const date = new Date(transaction.date + 'T00:00:00')
+        if (year && date.getFullYear() !== year) return false
+        if (month !== undefined && date.getMonth() !== month) return false
+        if (categoryId && transaction.categoryId !== categoryId) return false
+        if (paymentMethod && transaction.paymentMethod !== paymentMethod) return false
+        if (type && transaction.type !== type) return false
         return true
       }),
     [],
   )
 
   return (
-    <AppContext.Provider
+    <TransactionsContext.Provider
       value={{
+        transactions: state.transactions,
+        loading: state.loading.transactions,
+        createTransaction,
+        editTransaction,
+        setTransactionPaymentStatus,
+        commitPaymentStatusOperation,
+        removeTransaction,
+        removeTransactionBatch,
+        addTransactionBatch,
+        importTransactionBatch,
+        applyTransactionSeriesOperation,
         getMonthTransactions,
         getSummary,
         getCategoryTotals,
@@ -891,6 +876,6 @@ export const AppProvider = ({ children }) => {
       }}
     >
       {children}
-    </AppContext.Provider>
+    </TransactionsContext.Provider>
   )
 }
