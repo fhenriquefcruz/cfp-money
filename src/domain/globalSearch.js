@@ -60,10 +60,7 @@ export function searchGlobal({
     .sort((a, b) => {
       const left = clean(a.label)
       const right = clean(b.label)
-      return (
-        Number(right === queryText) - Number(left === queryText) ||
-        left.localeCompare(right)
-      )
+      return Number(right === queryText) - Number(left === queryText) || left.localeCompare(right)
     })
     .slice(0, 10)
 }
