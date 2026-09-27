@@ -813,7 +813,8 @@ export default function TransactionList() {
       {lastImportIds.length > 0 && (
         <div className="transaction-import-undo">
           <p>
-            Importadas: {lastImportIds.length} {lastImportIds.length === 1 ? 'transação' : 'transações'}.
+            Importadas: {lastImportIds.length}{' '}
+            {lastImportIds.length === 1 ? 'transação' : 'transações'}.
           </p>
           <Button variant="ghost" size="xs" onClick={handleUndoImport}>
             Desfazer importação
