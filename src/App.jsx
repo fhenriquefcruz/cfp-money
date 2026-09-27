@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import {
   AppProvider,
+  BudgetsProvider,
   CategoriesProvider,
   CreditCardsProvider,
   GoalsProvider,
@@ -99,13 +100,15 @@ export default function App() {
         <ThemeProvider>
           <AuthProvider>
             <NotificationsProvider>
-              <AppProvider>
-                <PlanProvider>
-                  <MoneyProvider>
-                    <AppRoutes />
-                  </MoneyProvider>
-                </PlanProvider>
-              </AppProvider>
+              <BudgetsProvider>
+                <AppProvider>
+                  <PlanProvider>
+                    <MoneyProvider>
+                      <AppRoutes />
+                    </MoneyProvider>
+                  </PlanProvider>
+                </AppProvider>
+              </BudgetsProvider>
             </NotificationsProvider>
           </AuthProvider>
         </ThemeProvider>
