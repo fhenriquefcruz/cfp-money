@@ -110,9 +110,7 @@ export default function GlobalSearchPalette({
                 >
                   <span>
                     <strong>{item.label}</strong>
-                    {item.context && (
-                      <small>{item.context}</small>
-                    )}
+                    {item.context && <small>{item.context}</small>}
                   </span>
                 </button>
 
