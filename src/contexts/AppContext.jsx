@@ -1,5 +1,13 @@
 // src/contexts/AppContext.jsx
-import React, { createContext, useContext, useEffect, useReducer, useCallback, useRef, useState } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  useCallback,
+  useRef,
+  useState,
+} from 'react'
 import { useAuth } from './AuthContext'
 import {
   onTransactionsChange,
