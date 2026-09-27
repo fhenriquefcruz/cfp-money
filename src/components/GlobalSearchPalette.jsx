@@ -3,19 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { searchGlobal } from '../domain/globalSearch'
 import { Modal } from './ui'
 
-const readFavorites = (uid) => {
-  try {
-    return (localStorage.getItem(`mr_nav_${uid}`) || '').split('|')
-  } catch {
-    return []
-  }
-}
-
-const orderPages = (pages, favorites) => [
-  ...favorites.map((path) => pages.find(([, to]) => to === path)).filter(Boolean),
-  ...pages.filter(([, to]) => !favorites.includes(to)),
-]
-
 export default function GlobalSearchPalette({
   onClose,
   userId,
@@ -26,12 +13,29 @@ export default function GlobalSearchPalette({
   creditCards = [],
 }) {
   const navigate = useNavigate()
+  const storageKey = `mrn:${userId || ''}`
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const [favorites, setFavorites] = useState(() => readFavorites(userId))
+  const [favorites, setFavorites] = useState(() => {
+    if (!userId) return []
+
+    try {
+      return (localStorage.getItem(storageKey) || '')
+        .split('|')
+        .filter((path) => path && pages.some(([, to]) => to === path))
+        .slice(0, 4)
+    } catch {
+      return []
+    }
+  })
+
+  const orderedPages = [
+    ...favorites.map((path) => pages.find(([, to]) => to === path)).filter(Boolean),
+    ...pages.filter(([, to]) => !favorites.includes(to)),
+  ]
   const results = searchGlobal({
     query,
-    pages: orderPages(pages, favorites),
+    pages: orderedPages,
     transactions,
     categories,
     goals,
@@ -44,12 +48,14 @@ export default function GlobalSearchPalette({
   }
 
   const toggleFavorite = (path) => {
+    if (!userId) return
+
     const next = favorites.includes(path)
       ? favorites.filter((item) => item !== path)
       : [path, ...favorites].slice(0, 4)
 
     try {
-      localStorage.setItem(`mr_nav_${userId}`, next.join('|'))
+      localStorage.setItem(storageKey, next.join('|'))
     } catch {}
 
     setFavorites(next)
@@ -57,6 +63,7 @@ export default function GlobalSearchPalette({
 
   const onKeyDown = (event) => {
     if (event.key === 'Escape') {
+      event.preventDefault()
       onClose()
       return
     }
@@ -101,27 +108,34 @@ export default function GlobalSearchPalette({
             return (
               <div className="global-search-row" key={item.id}>
                 <button
+                  type="button"
                   role="option"
                   aria-selected={active === index}
+                  onMouseEnter={() => setActive(index)}
                   onClick={() => open(item)}
                   className={`global-search-result ${
                     active === index ? 'global-search-result--active' : ''
                   }`}
                 >
-                  <span>
-                    <strong>{item.label}</strong>
-                    {item.context && <small>{item.context}</small>}
+                  <span className="min-w-0">
+                    <strong className="block truncate">{item.label}</strong>
+                    {item.context && (
+                      <small className="block truncate font-normal text-[--text-tertiary]">
+                        {item.context}
+                      </small>
+                    )}
                   </span>
                 </button>
 
                 {item.kind === 'page' && (
                   <button
+                    type="button"
                     onClick={() => toggleFavorite(item.to)}
                     className="global-search-favorite"
                     aria-label={`Favoritar ${item.label}`}
                     aria-pressed={favorite}
                   >
-                    ★
+                    {favorite ? '★' : '☆'}
                   </button>
                 )}
               </div>
