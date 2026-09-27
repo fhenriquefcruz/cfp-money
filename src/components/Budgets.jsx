@@ -1,12 +1,13 @@
 // src/components/Budgets.jsx
 import React, { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, PieChart, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Copy, PieChart, Plus, Trash2 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Input, Modal } from './ui'
 import { formatCurrency } from '../utils'
 import {
   budgetMonthKey,
+  buildBudgetCarryoverPlan,
   buildMonthlyBudgetOverview,
   getBudgetForMonth,
   getBudgetSpent,
@@ -139,18 +140,32 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
 }
 
 export default function Budgets() {
-  const { budgets, categories, saveBudget, removeBudget, transactions } = useApp()
+  const { budgets, categories, saveBudget, copyMonthlyBudgets, removeBudget, transactions } = useApp()
   const [searchParams] = useSearchParams()
   const currentMonthKey = budgetMonthKey()
   const requestedMonth = budgetMonthKey(searchParams.get('month') || '')
   const [selectedMonth, setSelectedMonth] = useState(requestedMonth || currentMonthKey)
   const [modalOpen, setModalOpen] = useState(false)
+  const [copyModalOpen, setCopyModalOpen] = useState(false)
   const [form, setForm] = useState({ categoryId: '', amount: '' })
   const [saving, setSaving] = useState(false)
+  const [copying, setCopying] = useState(false)
+  const sourceMonth = shiftBudgetMonth(selectedMonth, -1)
 
   const expenseCategories = useMemo(
     () => categories.filter((category) => category.type === 'expense'),
     [categories],
+  )
+
+  const carryoverPlan = useMemo(
+    () =>
+      buildBudgetCarryoverPlan({
+        budgets,
+        sourceMonthKey: sourceMonth,
+        targetMonthKey: selectedMonth,
+        categoryIds: expenseCategories.map((category) => category.id),
+      }),
+    [budgets, expenseCategories, selectedMonth, sourceMonth],
   )
 
   const overview = useMemo(
@@ -205,8 +220,22 @@ export default function Budgets() {
     }
   }
 
+  const handleCopyPreviousMonth = async () => {
+    if (!carryoverPlan.length) return
+
+    setCopying(true)
+    try {
+      await copyMonthlyBudgets(carryoverPlan, selectedMonth)
+      setCopyModalOpen(false)
+    } finally {
+      setCopying(false)
+    }
+  }
+
   const isCurrentMonth = selectedMonth === currentMonthKey
   const selectedLabel = monthLabel(selectedMonth)
+  const sourceLabel = monthLabel(sourceMonth)
+  const carryoverTotal = carryoverPlan.reduce((total, item) => total + item.amount, 0)
 
   return (
     <div
@@ -225,7 +254,19 @@ export default function Budgets() {
 
       <Card className="shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="mt-1 text-lg font-black text-[--text-primary]">{selectedLabel}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="mt-1 text-lg font-black text-[--text-primary]">{selectedLabel}</p>
+            {carryoverPlan.length > 0 && (
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Copy size={14} />}
+                onClick={() => setCopyModalOpen(true)}
+              >
+                Copiar {sourceLabel}
+              </Button>
+            )}
+          </div>
 
           <div className="flex items-center gap-1">
             <button
@@ -369,6 +410,41 @@ export default function Budgets() {
 
           <Button variant="primary" fullWidth onClick={handleSave} loading={saving}>
             Salvar orçamento mensal
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={copyModalOpen}
+        onClose={() => setCopyModalOpen(false)}
+        title={`Copiar orçamento de ${sourceLabel}`}
+      >
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-[--border-default] bg-[--bg-subtle] p-4">
+            <p className="text-sm font-semibold text-[--text-primary]">
+              {carryoverPlan.length}{' '}
+              {carryoverPlan.length === 1 ? 'limite será copiado' : 'limites serão copiados'} para{' '}
+              {selectedLabel}.
+            </p>
+            <p className="mt-2 text-sm text-[--text-secondary]">
+              Total de referência: {formatCurrency(carryoverTotal)}. Limites que já existem em{' '}
+              {selectedLabel} serão preservados.
+            </p>
+          </div>
+
+          <p className="text-xs leading-5 text-[--text-tertiary]">
+            A cópia usa somente orçamentos mensais explícitos de {sourceLabel}. Categorias removidas
+            e limites legados não são replicados.
+          </p>
+
+          <Button
+            variant="primary"
+            fullWidth
+            loading={copying}
+            disabled={!carryoverPlan.length}
+            onClick={handleCopyPreviousMonth}
+          >
+            Copiar para {selectedLabel}
           </Button>
         </div>
       </Modal>
