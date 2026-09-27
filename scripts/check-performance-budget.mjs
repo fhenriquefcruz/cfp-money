@@ -4,20 +4,6 @@ import { gzipSync } from 'node:zlib'
 
 const distRoot = 'dist'
 
-if (process.env.CI) {
-  const { format } = await import('prettier')
-  for (const path of ['src/components/Goals.jsx', 'src/domain/goalPlanning.js']) {
-    const source = readFileSync(path, 'utf8')
-    const formatted = await format(source, {
-      filepath: path,
-      semi: false,
-      singleQuote: true,
-      trailingComma: 'all',
-      printWidth: 100,
-    })
-    console.log(`__PRETTIER_BEGIN__${path}\n${formatted}__PRETTIER_END__${path}`)
-  }
-}
 const indexPath = join(distRoot, 'index.html')
 
 const limits = {
