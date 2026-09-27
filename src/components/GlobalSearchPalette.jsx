@@ -1,36 +1,23 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { searchGlobal } from '../domain/globalSearch'
 import {
   prioritizeNavigationPages,
-  readNavigationPreferences,
-  registerRecentNavigation,
-  toggleFavoriteNavigation,
+  readNavigationFavorites,
+  toggleNavigationFavorite,
 } from '../domain/navigationPreferences'
 import { Modal } from './ui'
 
 export default function GlobalSearchPalette(props) {
   const navigate = useNavigate()
-  const location = useLocation()
-  const allowedPaths = useMemo(() => (props.pages || []).map(([, to]) => to), [props.pages])
+  const allowedPaths = (props.pages || []).map(([, to]) => to)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const [preferences, setPreferences] = useState(() =>
-    readNavigationPreferences(props.userId, allowedPaths),
+  const [favorites, setFavorites] = useState(() =>
+    readNavigationFavorites(props.userId, allowedPaths),
   )
 
-  useEffect(() => {
-    setPreferences(
-      registerRecentNavigation(props.userId, location.pathname, allowedPaths),
-    )
-  }, [allowedPaths, location.pathname, props.userId])
-
-  const orderedPages = prioritizeNavigationPages(
-    props.pages || [],
-    preferences.favorites,
-    preferences.recents,
-    location.pathname,
-  )
+  const orderedPages = prioritizeNavigationPages(props.pages || [], favorites)
 
   const results = searchGlobal({
     query,
@@ -44,9 +31,7 @@ export default function GlobalSearchPalette(props) {
   }
 
   const toggleFavorite = (path) => {
-    setPreferences(
-      toggleFavoriteNavigation(props.userId, path, allowedPaths),
-    )
+    setFavorites(toggleNavigationFavorite(props.userId, path, allowedPaths))
   }
 
   const onKeyDown = (event) => {
@@ -87,7 +72,7 @@ export default function GlobalSearchPalette(props) {
       />
 
       {!query.trim() && (
-        <p className="global-search-hint">Favoritos e áreas recentes aparecem primeiro.</p>
+        <p className="global-search-hint">Seus módulos favoritos aparecem primeiro.</p>
       )}
 
       <div className="global-search-results" role="listbox">
@@ -98,7 +83,7 @@ export default function GlobalSearchPalette(props) {
             const isPage = (props.pages || []).some(
               ([label, to]) => label === item.label && to === item.to,
             )
-            const favorite = preferences.favorites.includes(item.to)
+            const favorite = favorites.includes(item.to)
 
             return (
               <div className="global-search-row" key={item.id}>
