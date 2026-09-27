@@ -3,58 +3,63 @@ import { useNavigate } from 'react-router-dom'
 import { searchGlobal } from '../domain/globalSearch'
 import { Modal } from './ui'
 
-const FAVORITE_LIMIT = 4
-const favoriteKey = (uid) => `meu_real_navigation_${uid}`
+const storageKey = (uid) => `mr_nav_${uid}`
 
-const readFavorites = (uid, allowed) => {
+const readFavorites = (uid, pages) => {
   if (!uid) return []
 
   try {
-    const values = JSON.parse(localStorage.getItem(favoriteKey(uid)) || '[]')
-    return [...new Set(Array.isArray(values) ? values : [])]
+    const allowed = pages.map(([, to]) => to)
+    return JSON.parse(localStorage.getItem(storageKey(uid)) || '[]')
       .filter((path) => allowed.includes(path))
-      .slice(0, FAVORITE_LIMIT)
+      .slice(0, 4)
   } catch {
     return []
   }
 }
 
-const orderPages = (pages, favorites) => {
-  const map = new Map(pages.map((page) => [page[1], page]))
-  return [...new Set([...favorites, ...map.keys()])].map((path) => map.get(path)).filter(Boolean)
-}
+const orderPages = (pages, favorites) => [
+  ...favorites.map((path) => pages.find(([, to]) => to === path)).filter(Boolean),
+  ...pages.filter(([, to]) => !favorites.includes(to)),
+]
 
-export default function GlobalSearchPalette(props) {
+export default function GlobalSearchPalette({
+  onClose,
+  userId,
+  pages = [],
+  transactions = [],
+  categories = [],
+  goals = [],
+  creditCards = [],
+}) {
   const navigate = useNavigate()
-  const allowedPaths = (props.pages || []).map(([, to]) => to)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const [favorites, setFavorites] = useState(() => readFavorites(props.userId, allowedPaths))
-  const orderedPages = orderPages(props.pages || [], favorites)
-
+  const [favorites, setFavorites] = useState(() => readFavorites(userId, pages))
   const results = searchGlobal({
     query,
-    ...props,
-    pages: orderedPages,
+    pages: orderPages(pages, favorites),
+    transactions,
+    categories,
+    goals,
+    creditCards,
   })
 
   const open = (item) => {
-    props.onClose()
+    onClose()
     navigate(item.to)
   }
 
   const toggleFavorite = (path) => {
-    if (!props.userId || !allowedPaths.includes(path)) return
+    if (!userId) return
 
     const next = favorites.includes(path)
       ? favorites.filter((item) => item !== path)
-      : [path, ...favorites].slice(0, FAVORITE_LIMIT)
+      : [path, ...favorites].slice(0, 4)
 
     try {
-      localStorage.setItem(favoriteKey(props.userId), JSON.stringify(next))
-    } catch {
-      // Favoritos locais não podem bloquear a busca.
-    }
+      localStorage.setItem(storageKey(userId), JSON.stringify(next))
+    } catch {}
 
     setFavorites(next)
   }
@@ -62,7 +67,7 @@ export default function GlobalSearchPalette(props) {
   const onKeyDown = (event) => {
     if (event.key === 'Escape') {
       event.preventDefault()
-      props.onClose()
+      onClose()
       return
     }
 
@@ -82,7 +87,7 @@ export default function GlobalSearchPalette(props) {
   }
 
   return (
-    <Modal isOpen onClose={props.onClose} title="Buscar no Meu Real" size="lg">
+    <Modal isOpen onClose={onClose} title="Buscar no Meu Real" size="lg">
       <input
         autoFocus
         value={query}
@@ -96,18 +101,11 @@ export default function GlobalSearchPalette(props) {
         className="global-search-input"
       />
 
-      {!query.trim() && (
-        <p className="global-search-hint">Seus módulos favoritos aparecem primeiro.</p>
-      )}
-
       <div className="global-search-results" role="listbox">
         {query.trim() && !results.length ? (
           <p className="global-search-empty">Nenhum resultado encontrado</p>
         ) : (
           results.map((item, index) => {
-            const isPage = (props.pages || []).some(
-              ([label, to]) => label === item.label && to === item.to,
-            )
             const favorite = favorites.includes(item.to)
 
             return (
@@ -132,14 +130,12 @@ export default function GlobalSearchPalette(props) {
                   </span>
                 </button>
 
-                {isPage && (
+                {item.kind === 'page' && (
                   <button
                     type="button"
                     onClick={() => toggleFavorite(item.to)}
                     className="global-search-favorite"
-                    aria-label={`${favorite ? 'Remover' : 'Adicionar'} ${item.label} ${
-                      favorite ? 'dos' : 'aos'
-                    } favoritos`}
+                    aria-label={`Favoritar ${item.label}`}
                     aria-pressed={favorite}
                   >
                     {favorite ? '★' : '☆'}
