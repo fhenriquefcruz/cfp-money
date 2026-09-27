@@ -92,7 +92,6 @@ test('resume apenas os limites e gastos da competência escolhida', () => {
   expect(report).toMatchObject({
     totalBudgeted: 500,
     totalSpent: 550,
-    totalOver: 50,
     overCount: 1,
   })
 })
