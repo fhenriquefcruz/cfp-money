@@ -19,15 +19,9 @@ import {
   getFirestore,
   setDoc,
 } from 'firebase/firestore'
-import {
-  connectFunctionsEmulator,
-  getFunctions,
-  httpsCallable,
-} from 'firebase/functions'
+import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions'
 
-const requireFromFunctions = createRequire(
-  new URL('../../functions/package.json', import.meta.url),
-)
+const requireFromFunctions = createRequire(new URL('../../functions/package.json', import.meta.url))
 const {
   deleteApp: deleteAdminApp,
   initializeApp: initializeAdminApp,
@@ -47,16 +41,8 @@ function parseHost(value, fallbackHost, fallbackPort) {
 }
 
 const authAddress = parseHost(process.env.FIREBASE_AUTH_EMULATOR_HOST, '127.0.0.1', 9099)
-const firestoreAddress = parseHost(
-  process.env.FIRESTORE_EMULATOR_HOST,
-  '127.0.0.1',
-  8080,
-)
-const functionsAddress = parseHost(
-  process.env.FUNCTIONS_EMULATOR_HOST,
-  '127.0.0.1',
-  5001,
-)
+const firestoreAddress = parseHost(process.env.FIRESTORE_EMULATOR_HOST, '127.0.0.1', 8080)
+const functionsAddress = parseHost(process.env.FUNCTIONS_EMULATOR_HOST, '127.0.0.1', 5001)
 
 test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', async () => {
   const app = initializeApp(
@@ -162,10 +148,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     assert.equal(adminToken.claims.admin, true)
 
     const usersResult = await adminListUsers()
-    assert.equal(
-      usersResult.data.users.some((user) => user.uid === uid),
-      true,
-    )
+    assert.equal(usersResult.data.users.some((user) => user.uid === uid), true)
 
     const adminSetUserAccess = httpsCallable(functions, 'adminSetUserAccess')
     const accessResult = await adminSetUserAccess({
