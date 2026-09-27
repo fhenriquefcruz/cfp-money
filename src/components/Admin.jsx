@@ -17,8 +17,7 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { Card } from './ui'
 import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
-import { onAllUsersChange } from '../services/firebase'
-import { adminSetUserAccess } from '../services/adminGateway'
+import { adminListUsers, adminSetUserAccess } from '../services/adminGateway'
 import CommercialOverviewRouter from './CommercialOverviewRouter'
 import SupportAdminCard from './SupportAdminCard'
 
@@ -204,13 +203,19 @@ export default function Admin() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!isAdmin) return
-    const unsub = onAllUsersChange(
-      (data) => setUsers(data),
-      (err) => setError('Erro: ' + err.message),
-    )
+    if (!isAdmin) return undefined
+    let active = true
+
+    adminListUsers()
+      .then((data) => {
+        if (active) setUsers(data)
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError?.message || 'Não foi possível carregar os usuários.')
+      })
+
     return () => {
-      if (unsub) unsub()
+      active = false
     }
   }, [isAdmin])
 
@@ -223,6 +228,7 @@ export default function Admin() {
     setError('')
     try {
       await adminSetUserAccess(command)
+      setUsers(await adminListUsers())
       showToast(successMessage)
     } catch (actionError) {
       setError(actionError?.message || 'Não foi possível concluir a ação administrativa.')
@@ -301,7 +307,7 @@ export default function Admin() {
     <div className="operational-page admin-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6">
       <div>
         <h1 className="text-2xl font-black text-[--text-primary]">Painel Admin</h1>
-        <p className="text-sm text-[--text-tertiary]">Usuários em tempo real</p>
+        <p className="text-sm text-[--text-tertiary]">Usuários cadastrados e controle de acesso</p>
       </div>
 
       {toast && (
