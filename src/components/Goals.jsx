@@ -11,7 +11,7 @@ import {
   CheckCircle,
   MoreVertical,
 } from 'lucide-react'
-import { useGoals } from '../contexts/GoalsContext'
+import { useGoals } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
 import { formatCurrency, formatDate } from '../utils'
 import InfoTooltip from './InfoTooltip'
