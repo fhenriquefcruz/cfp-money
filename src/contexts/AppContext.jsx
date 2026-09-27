@@ -4,7 +4,6 @@ import { useAuth } from './AuthContext'
 import {
   onTransactionsChange,
   getCategories,
-  getGoals,
   getBudgets,
   addTransaction,
   updateTransaction,
@@ -23,9 +22,6 @@ import {
   addCategory,
   updateCategory,
   deleteCategory,
-  addGoal,
-  updateGoal,
-  deleteGoal,
   setBudget,
   deleteBudget,
 } from '../repositories/appRepository'
@@ -48,14 +44,12 @@ export const useApp = () => useContext(AppContext)
 const initialState = {
   transactions: [],
   categories: [],
-  goals: [],
   budgets: [],
   creditCards: [],
   invoiceEvents: [],
   loading: {
     transactions: true,
     categories: true,
-    goals: true,
     budgets: true,
     creditCards: true,
     invoiceEvents: true,
@@ -77,8 +71,6 @@ function reducer(state, action) {
         categories: action.payload,
         loading: { ...state.loading, categories: false },
       }
-    case 'SET_GOALS':
-      return { ...state, goals: action.payload, loading: { ...state.loading, goals: false } }
     case 'SET_BUDGETS':
       return { ...state, budgets: action.payload, loading: { ...state.loading, budgets: false } }
     case 'SET_CREDIT_CARDS':
@@ -167,14 +159,12 @@ export const AppProvider = ({ children }) => {
     // Carrega o resto em paralelo
     const load = async () => {
       try {
-        const [cats, goals, budgets, creditCards] = await Promise.all([
+        const [cats, budgets, creditCards] = await Promise.all([
           getCategories(uid),
-          getGoals(uid),
           getBudgets(uid),
           getCreditCards(uid),
         ])
         dispatch({ type: 'SET_CATEGORIES', payload: cats })
-        dispatch({ type: 'SET_GOALS', payload: goals })
         dispatch({ type: 'SET_BUDGETS', payload: budgets })
         dispatch({ type: 'SET_CREDIT_CARDS', payload: creditCards })
       } catch (err) {
@@ -647,61 +637,6 @@ export const AppProvider = ({ children }) => {
     [user?.uid, showNotification, refreshCats],
   )
 
-  // ── GOALS ──
-  const refreshGoals = useCallback(async () => {
-    if (!user?.uid) return
-    try {
-      dispatch({ type: 'SET_GOALS', payload: await getGoals(user.uid) })
-    } catch (e) {
-      console.error('[Meu Real] refreshGoals:', e.code)
-    }
-  }, [user?.uid])
-
-  const createGoal = useCallback(
-    async (data) => {
-      if (!user?.uid) return
-      try {
-        await addGoal(user.uid, data)
-        await refreshGoals()
-        showNotification('Meta criada!')
-      } catch (e) {
-        showNotification('Erro ao criar meta.', 'error')
-        throw e
-      }
-    },
-    [user?.uid, showNotification, refreshGoals],
-  )
-
-  const editGoal = useCallback(
-    async (id, data) => {
-      if (!user?.uid) return
-      try {
-        await updateGoal(user.uid, id, data)
-        await refreshGoals()
-        showNotification('Meta atualizada!')
-      } catch (e) {
-        showNotification('Erro ao atualizar meta.', 'error')
-        throw e
-      }
-    },
-    [user?.uid, showNotification, refreshGoals],
-  )
-
-  const removeGoal = useCallback(
-    async (id) => {
-      if (!user?.uid) return
-      try {
-        await deleteGoal(user.uid, id)
-        await refreshGoals()
-        showNotification('Meta removida.', 'info')
-      } catch (e) {
-        showNotification('Erro ao remover meta.', 'error')
-        throw e
-      }
-    },
-    [user?.uid, showNotification, refreshGoals],
-  )
-
   // ── BUDGETS ──
   const refreshBudgets = useCallback(async () => {
     if (!user?.uid) return
@@ -831,9 +766,6 @@ export const AppProvider = ({ children }) => {
         createCategory,
         editCategory,
         removeCategory,
-        createGoal,
-        editGoal,
-        removeGoal,
         saveBudget,
         removeBudget,
         showNotification,
