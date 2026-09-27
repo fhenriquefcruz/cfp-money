@@ -6,13 +6,13 @@ const clean = (value) =>
     .replace(/\s+/g, ' ')
     .trim()
 
-const row = (id, label, to, kind, context = '', terms = '') => ({
+const row = (id, label, to, kind, context = '') => ({
   id,
   label,
   to,
   kind,
   context,
-  searchable: clean(`${label} ${context} ${terms}`),
+  searchable: clean(`${label} ${context}`),
 })
 
 export function searchGlobal({
@@ -35,7 +35,6 @@ export function searchGlobal({
         `/transactions?search=${encodeURIComponent(label)}&scope=all`,
         'transaction',
         context,
-        item.notes || '',
       )
     }),
     ...categories.map((item, index) =>
