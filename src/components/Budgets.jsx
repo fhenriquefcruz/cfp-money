@@ -61,13 +61,7 @@ function BudgetCard({
           {budget && (
             <button
               type="button"
-              onClick={() =>
-                onRemove({
-                  categoryId: category.id,
-                  monthKey,
-                  budgetId: budget.id,
-                })
-              }
+              onClick={() => onRemove(category.id, monthKey, budget.id)}
               className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
               aria-label={`Remover orçamento de ${category.name}`}
             >
@@ -231,10 +225,6 @@ export default function Budgets() {
     }
   }
 
-  const handleRemove = async ({ categoryId, monthKey, budgetId }) => {
-    await removeBudget(categoryId, monthKey, budgetId)
-  }
-
   const isCurrentMonth = selectedMonth === currentMonthKey
   const selectedLabel = monthLabel(selectedMonth)
 
@@ -356,7 +346,7 @@ export default function Budgets() {
                   spent={spent}
                   monthKey={selectedMonth}
                   onEdit={openEditor}
-                  onRemove={handleRemove}
+                  onRemove={removeBudget}
                 />
               )
           })}
