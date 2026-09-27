@@ -31,6 +31,7 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import {
   useApp,
+  useBudgets,
   useCategories,
   useCreditCards,
   useGoals,
@@ -206,8 +207,8 @@ function MonthAttentionCard({ items }) {
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const { transactions, budgets, loading, getSummary, getCategoryTotals, getSpendingForecast } =
-    useApp()
+  const { transactions, loading, getSummary, getCategoryTotals, getSpendingForecast } = useApp()
+  const { budgets } = useBudgets()
   const { categories } = useCategories()
   const { creditCards } = useCreditCards()
   const { goals } = useGoals()
