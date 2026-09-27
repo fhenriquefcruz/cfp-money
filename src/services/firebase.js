@@ -402,24 +402,6 @@ export const deleteBudget = async (uid, categoryId, monthKey, budgetId = '') => 
   await deleteDoc(userDoc(uid, 'budgets', `${monthKey}__${categoryId}`))
 }
 
-// ── ADMIN ──
-// Listener em tempo real para todos os usuários (apenas admin)
-export const onAllUsersChange = (callback, onError) => {
-  const q = query(collection(db, 'users'), orderBy('email'))
-  const unsubscribe = onSnapshot(
-    q,
-    (snapshot) => {
-      const users = snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }))
-      callback(users)
-    },
-    (error) => {
-      console.error('[Meu Real] Erro no listener de usuários:', error)
-      if (onError) onError(error)
-    },
-  )
-  return unsubscribe
-}
-
 // ══════════════════════════════════════════════════════════════
 // SEED CATEGORIAS PADRÃO
 // ══════════════════════════════════════════════════════════════
