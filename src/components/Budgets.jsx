@@ -140,7 +140,14 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
 }
 
 export default function Budgets() {
-  const { budgets, categories, saveBudget, copyMonthlyBudgets, removeBudget, transactions } = useApp()
+  const {
+    budgets,
+    categories,
+    saveBudget,
+    copyMonthlyBudgets,
+    removeBudget,
+    transactions,
+  } = useApp()
   const [searchParams] = useSearchParams()
   const currentMonthKey = budgetMonthKey()
   const requestedMonth = budgetMonthKey(searchParams.get('month') || '')
@@ -163,6 +170,7 @@ export default function Budgets() {
         budgets,
         sourceMonthKey: sourceMonth,
         targetMonthKey: selectedMonth,
+        currentMonthKey,
         categoryIds: expenseCategories.map((category) => category.id),
       }),
     [budgets, expenseCategories, selectedMonth, sourceMonth],
