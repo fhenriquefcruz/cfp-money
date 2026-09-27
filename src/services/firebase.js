@@ -370,7 +370,7 @@ export const getBudgets = async (uid) => {
 }
 
 export const setBudget = async (uid, categoryId, amount, monthKey) => {
-  if (!/^\\d{4}-\\d{2}$/.test(monthKey || '')) {
+  if (!/^\d{4}-\d{2}$/.test(monthKey || '')) {
     throw new Error('Competência mensal inválida.')
   }
 
@@ -390,7 +390,7 @@ export const setBudget = async (uid, categoryId, amount, monthKey) => {
 }
 
 export const setBudgetsBatch = async (uid, items, monthKey) => {
-  if (!/^\\d{4}-\\d{2}$/.test(monthKey || '')) {
+  if (!/^\d{4}-\d{2}$/.test(monthKey || '')) {
     throw new Error('Competência mensal inválida.')
   }
 
@@ -434,7 +434,7 @@ export const deleteBudget = async (uid, categoryId, monthKey, budgetId = '') => 
     return
   }
 
-  if (!/^\\d{4}-\\d{2}$/.test(monthKey || '')) {
+  if (!/^\d{4}-\d{2}$/.test(monthKey || '')) {
     throw new Error('Competência mensal inválida.')
   }
 
