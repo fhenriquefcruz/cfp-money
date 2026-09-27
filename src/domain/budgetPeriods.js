@@ -53,19 +53,22 @@ export function getBudgetsForMonth(
     .filter(Boolean)
 }
 
+export function getBudgetTransactionMonth(transaction = {}) {
+  return getTransactionActivityDate(transaction)?.slice(0, 7) || ''
+}
+
 export function getBudgetSpent(transactions = [], categoryId, monthKey) {
   if (!MONTH_KEY_PATTERN.test(monthKey || '')) return 0
 
   return transactions
-    .filter((transaction) => {
-      if (transaction.type !== 'expense') return false
-      if (transaction.isSavings) return false
-      if (transaction.paymentStatus === 'cancelled') return false
-      if (transaction.categoryId !== categoryId) return false
-
-      const activityDate = getTransactionActivityDate(transaction)
-      return activityDate?.slice(0, 7) === monthKey
-    })
+    .filter(
+      (transaction) =>
+        transaction.type === 'expense' &&
+        !transaction.isSavings &&
+        transaction.paymentStatus !== 'cancelled' &&
+        transaction.categoryId === categoryId &&
+        getBudgetTransactionMonth(transaction) === monthKey,
+    )
     .reduce((total, transaction) => total + (Number(transaction.amount) || 0), 0)
 }
 
