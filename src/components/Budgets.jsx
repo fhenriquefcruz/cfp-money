@@ -35,7 +35,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
 
   return (
     <Card className={isOver ? 'ring-2 ring-[--danger-border]' : ''}>
-    <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <div
             className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-xl"
@@ -70,10 +70,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
               <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
                 Gasto na competência
               </p>
-              <p
-                className="mt-1 text-2xl font-black tabular-nums"
-                style={{ color: barColor }}
-              >
+              <p className="mt-1 text-2xl font-black tabular-nums" style={{ color: barColor }}>
                 {formatCurrency(spent)}
               </p>
             </div>
@@ -238,11 +235,7 @@ export default function Budgets() {
 
       <Card className="budget-period-selector shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="mt-1 text-lg font-black text-[--text-primary]">
-              {selectedLabel}
-            </p>
-          </div>
+          <p className="mt-1 text-lg font-black text-[--text-primary]">{selectedLabel}</p>
 
           <div className="flex items-center gap-1">
             <button
@@ -323,25 +316,25 @@ export default function Budgets() {
       ) : (
         <div className="operational-card-grid budgets-card-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {sortedCategories.map((category) => {
-              const budget = getBudgetForMonth(
-                budgets,
-                category.id,
-                selectedMonth,
-                currentMonthKey,
-              )
-              const spent = getBudgetSpent(transactions, category.id, selectedMonth)
+            const budget = getBudgetForMonth(
+              budgets,
+              category.id,
+              selectedMonth,
+              currentMonthKey,
+            )
+            const spent = getBudgetSpent(transactions, category.id, selectedMonth)
 
-              return (
-                <BudgetCard
-                  key={category.id}
-                  category={category}
-                  budget={budget}
-                  spent={spent}
-                  monthKey={selectedMonth}
-                  onEdit={openEditor}
-                  onRemove={removeBudget}
-                />
-              )
+            return (
+              <BudgetCard
+                key={category.id}
+                category={category}
+                budget={budget}
+                spent={spent}
+                monthKey={selectedMonth}
+                onEdit={openEditor}
+                onRemove={removeBudget}
+              />
+            )
           })}
         </div>
       )}
