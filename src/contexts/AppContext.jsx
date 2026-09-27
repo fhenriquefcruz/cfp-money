@@ -715,32 +715,15 @@ export const AppProvider = ({ children }) => {
   const saveBudget = useCallback(
     async (categoryId, amount, monthKey) => {
       if (!user?.uid) return
+      const items = Array.isArray(categoryId) ? categoryId : [{ categoryId, amount }]
       try {
-        await setBudget(user.uid, categoryId, amount, monthKey)
-        await refreshBudgets()
-        showNotification('Orçamento mensal salvo!')
+        for (const item of items) await setBudget(user.uid, item.categoryId, item.amount, monthKey)
+        showNotification(items.length > 1 ? 'Orçamentos copiados!' : 'Orçamento mensal salvo!')
       } catch (e) {
         showNotification('Erro ao salvar orçamento.', 'error')
         throw e
-      }
-    },
-    [user?.uid, showNotification, refreshBudgets],
-  )
-
-  const copyMonthlyBudgets = useCallback(
-    async (items, monthKey) => {
-      if (!user?.uid || !items?.length) return
-
-      try {
-        for (const item of items) {
-          await setBudget(user.uid, item.categoryId, item.amount, monthKey)
-        }
+      } finally {
         await refreshBudgets()
-        showNotification('Orçamentos do mês anterior copiados!')
-      } catch (error) {
-        await refreshBudgets()
-        showNotification('Erro ao copiar orçamentos.', 'error')
-        throw error
       }
     },
     [user?.uid, showNotification, refreshBudgets],
@@ -851,7 +834,6 @@ export const AppProvider = ({ children }) => {
         editGoal,
         removeGoal,
         saveBudget,
-        copyMonthlyBudgets,
         removeBudget,
         showNotification,
         dismissNotification,
