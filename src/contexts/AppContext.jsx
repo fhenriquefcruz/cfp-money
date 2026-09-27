@@ -715,15 +715,16 @@ export const AppProvider = ({ children }) => {
   const saveBudget = useCallback(
     async (categoryId, amount, monthKey) => {
       if (!user?.uid) return
-      const items = Array.isArray(categoryId) ? categoryId : [{ categoryId, amount }]
       try {
-        for (const item of items) await setBudget(user.uid, item.categoryId, item.amount, monthKey)
-        showNotification(items.length > 1 ? 'Orçamentos copiados!' : 'Orçamento mensal salvo!')
+        const items = Array.isArray(categoryId) ? categoryId : [{ categoryId, amount }]
+        await Promise.all(
+          items.map((item) => setBudget(user.uid, item.categoryId, item.amount, monthKey)),
+        )
+        await refreshBudgets()
+        showNotification('Orçamento atualizado!')
       } catch (e) {
         showNotification('Erro ao salvar orçamento.', 'error')
         throw e
-      } finally {
-        await refreshBudgets()
       }
     },
     [user?.uid, showNotification, refreshBudgets],
