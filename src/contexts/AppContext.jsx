@@ -392,14 +392,17 @@ export const InvoiceEventsProvider = ({ children, userId }) => {
   )
 }
 
-const initialState = {
+const TransactionsContext = createContext({ transactions: [], loading: true })
+export const useTransactions = () => useContext(TransactionsContext)
+
+const transactionsInitialState = {
   transactions: [],
   loading: {
     transactions: true,
   },
 }
 
-function reducer(state, action) {
+function transactionsReducer(state, action) {
   switch (action.type) {
     case 'SET_TRANSACTIONS':
       return {
@@ -426,17 +429,22 @@ function reducer(state, action) {
         transactions: state.transactions.filter((transaction) => transaction.id !== action.payload),
       }
     case 'RESET':
-      return { ...initialState }
+      return { ...transactionsInitialState }
     default:
       return state
   }
 }
 
-export const AppProvider = ({ children }) => {
+export const TransactionsProvider = ({ children }) => {
   const { user } = useAuth()
   const { budgets } = useBudgets()
-  const [state, dispatch] = useReducer(reducer, undefined, () =>
-    E2E_MODE ? createE2EAppState() : initialState,
+  const [state, dispatch] = useReducer(transactionsReducer, undefined, () =>
+    E2E_MODE
+      ? {
+          transactions: createE2EAppState().transactions,
+          loading: { transactions: false },
+        }
+      : transactionsInitialState,
   )
   const stateRef = useRef(state)
   stateRef.current = state
@@ -781,9 +789,35 @@ export const AppProvider = ({ children }) => {
     [user?.uid, showNotification],
   )
 
+  return (
+    <TransactionsContext.Provider
+      value={{
+        transactions: state.transactions,
+        loading: state.loading.transactions,
+        createTransaction,
+        editTransaction,
+        setTransactionPaymentStatus,
+        commitPaymentStatusOperation,
+        removeTransaction,
+        removeTransactionBatch,
+        addTransactionBatch,
+        importTransactionBatch,
+        applyTransactionSeriesOperation,
+      }}
+    >
+      {children}
+    </TransactionsContext.Provider>
+  )
+}
+
+export const AppProvider = ({ children }) => {
+  const { transactions } = useTransactions()
+  const transactionsRef = useRef(transactions)
+  transactionsRef.current = transactions
+
   // ── CÁLCULOS ──
   const getMonthTransactions = useCallback(
-    (year, month) => transactionsForMonth(stateRef.current.transactions, year, month),
+    (year, month) => transactionsForMonth(transactionsRef.current, year, month),
     [],
   )
 
@@ -829,13 +863,13 @@ export const AppProvider = ({ children }) => {
   }, [getSummary])
 
   const getTotalBalance = useCallback(
-    () => calculateCurrentBalance(stateRef.current.transactions),
+    () => calculateCurrentBalance(transactionsRef.current),
     [],
   )
 
   const filterTransactions = useCallback(
     ({ year, month, categoryId, paymentMethod, type } = {}) =>
-      stateRef.current.transactions.filter((t) => {
+      transactionsRef.current.filter((t) => {
         const d = new Date(t.date + 'T00:00:00')
         if (year && d.getFullYear() !== year) return false
         if (month !== undefined && d.getMonth() !== month) return false
@@ -850,16 +884,6 @@ export const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider
       value={{
-        ...state,
-        createTransaction,
-        editTransaction,
-        setTransactionPaymentStatus,
-        commitPaymentStatusOperation,
-        removeTransaction,
-        removeTransactionBatch,
-        addTransactionBatch,
-        importTransactionBatch,
-        applyTransactionSeriesOperation,
         getMonthTransactions,
         getSummary,
         getCategoryTotals,
