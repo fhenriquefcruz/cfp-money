@@ -12,6 +12,7 @@
   - [x] extrair Categorias para CategoriesContext;
   - [x] extrair Cartões para CreditCardsContext;
   - [x] extrair eventos de fatura para InvoiceEventsContext;
+  - [x] extrair notificações globais para NotificationsContext;
   - [ ] extrair os demais domínios operacionais sem regressão de performance;
 - [ ] migrar operações administrativas para Cloud Functions callable;
 - [ ] testes de integração com Firebase Emulator Suite;
