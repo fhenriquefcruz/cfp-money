@@ -30,6 +30,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useApp } from '../contexts/AppContext'
+import { useGoals } from '../contexts/GoalsContext'
 import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
@@ -203,7 +204,6 @@ export default function Dashboard() {
   const {
     transactions,
     categories,
-    goals,
     budgets,
     creditCards,
     invoiceEvents,
@@ -212,6 +212,7 @@ export default function Dashboard() {
     getCategoryTotals,
     getSpendingForecast,
   } = useApp()
+  const { goals } = useGoals()
 
   const [viewDate, setViewDate] = useState(new Date())
   const year = viewDate.getFullYear()
