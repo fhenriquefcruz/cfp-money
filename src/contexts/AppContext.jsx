@@ -1,9 +1,10 @@
 // src/contexts/AppContext.jsx
-import React, { createContext, useContext, useEffect, useReducer, useCallback, useRef } from 'react'
+import React, { createContext, useContext, useEffect, useReducer, useCallback, useRef, useState } from 'react'
 import { useAuth } from './AuthContext'
 import {
   onTransactionsChange,
   getCategories,
+  getGoals,
   getBudgets,
   addTransaction,
   updateTransaction,
@@ -22,6 +23,9 @@ import {
   addCategory,
   updateCategory,
   deleteCategory,
+  addGoal,
+  updateGoal,
+  deleteGoal,
   setBudget,
   deleteBudget,
 } from '../repositories/appRepository'
@@ -40,6 +44,58 @@ import {
 
 const AppContext = createContext({})
 export const useApp = () => useContext(AppContext)
+
+const GoalsContext = createContext({ goals: [], loading: true })
+export const useGoals = () => useContext(GoalsContext)
+
+export const GoalsProvider = ({ children, notify, userId }) => {
+  const [goals, setGoals] = useState(() => (E2E_MODE ? createE2EAppState().goals : []))
+  const [loading, setLoading] = useState(!E2E_MODE)
+
+  useEffect(() => {
+    if (E2E_MODE) return undefined
+    if (!userId) {
+      setGoals([])
+      setLoading(false)
+      return undefined
+    }
+
+    setLoading(true)
+    getGoals(userId)
+      .then(setGoals)
+      .catch((error) => console.error('[Meu Real] metas:', error))
+      .finally(() => setLoading(false))
+
+    return undefined
+  }, [userId])
+
+  const mutateGoal = async (action, message, type = 'success') => {
+    if (!userId) return
+    try {
+      await action()
+      setGoals(await getGoals(userId))
+      notify?.(message, type)
+    } catch (error) {
+      notify?.('Erro ao atualizar meta.', 'error')
+      throw error
+    }
+  }
+
+  return (
+    <GoalsContext.Provider
+      value={{
+        goals,
+        loading,
+        createGoal: (data) => mutateGoal(() => addGoal(userId, data), 'Meta criada!'),
+        editGoal: (id, data) =>
+          mutateGoal(() => updateGoal(userId, id, data), 'Meta atualizada!'),
+        removeGoal: (id) => mutateGoal(() => deleteGoal(userId, id), 'Meta removida.', 'info'),
+      }}
+    >
+      {children}
+    </GoalsContext.Provider>
+  )
+}
 
 const initialState = {
   transactions: [],
