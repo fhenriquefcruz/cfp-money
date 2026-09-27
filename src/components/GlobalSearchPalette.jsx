@@ -5,15 +5,11 @@ import { Modal } from './ui'
 
 const storageKey = (uid) => `mr_nav_${uid}`
 
-const readFavorites = (uid, pages) => {
+const readFavorites = (uid) => {
   if (!uid) return []
 
   try {
-    const allowed = pages.map(([, to]) => to)
-    return (localStorage.getItem(storageKey(uid)) || '')
-      .split('|')
-      .filter((path) => allowed.includes(path))
-      .slice(0, 4)
+    return (localStorage.getItem(storageKey(uid)) || '').split('|').filter(Boolean).slice(0, 4)
   } catch {
     return []
   }
@@ -36,7 +32,7 @@ export default function GlobalSearchPalette({
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const [favorites, setFavorites] = useState(() => readFavorites(userId, pages))
+  const [favorites, setFavorites] = useState(() => readFavorites(userId))
   const results = searchGlobal({
     query,
     pages: orderPages(pages, favorites),
