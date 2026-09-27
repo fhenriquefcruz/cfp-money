@@ -16,9 +16,8 @@ import {
   Settings2,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useApp } from '../contexts/AppContext'
+import { useApp, useGoals } from '../contexts/AppContext'
 import { useMoney } from '../contexts/MoneyContext'
-import { useGoals } from '../contexts/GoalsContext'
 import { analyzeMoney } from '../domain/money'
 import { analyzeSpendingLeaks } from '../domain/spendingLeaks'
 import { buildFinancialHealth } from '../domain/financialHealth'
