@@ -90,7 +90,7 @@ export default function GlobalSearchPalette({
           setActive(0)
         }}
         placeholder="Buscar..."
-        aria-label="Busca global"
+        aria-label="Pesquisar"
         className="global-search-input"
       />
 
