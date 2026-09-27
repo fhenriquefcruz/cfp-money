@@ -10,27 +10,36 @@ test('normaliza acentos para pesquisa tolerante', () => {
 })
 
 test('encontra módulos mesmo sem dados financeiros', () => {
-  expect(searchGlobal({ query: 'relatorios', pages })[0]).toEqual({
+  expect(searchGlobal({ query: 'relatorios', pages })[0]).toMatchObject({
     label: 'Relatórios',
     to: '/reports',
+    kind: 'page',
   })
 })
 
-test('encontra transação e cria rota para a busca interna', () => {
+test('encontra transação e abre a busca interna sem limitar ao mês atual', () => {
   const [result] = searchGlobal({
     query: 'odontologica',
     pages,
     transactions: [
       {
         id: 'tx-1',
+        date: '2026-02-10',
         description: 'Consulta odontológica',
         categoryName: 'Saúde',
+        amount: 180,
       },
     ],
   })
 
-  expect(result.label).toBe('Consulta odontológica')
-  expect(decodeURIComponent(result.to)).toContain('Consulta odontológica')
+  expect(result).toMatchObject({
+    id: 'transaction:tx-1',
+    label: 'Consulta odontológica',
+    kind: 'transaction',
+  })
+  expect(decodeURIComponent(result.to)).toContain('search=Consulta odontológica')
+  expect(result.to).toContain('scope=all')
+  expect(result.context).toContain('Saúde')
 })
 
 test('encontra categorias, metas e cartões inclusive com termos separados', () => {
@@ -41,9 +50,19 @@ test('encontra categorias, metas e cartões inclusive com termos separados', () 
     creditCards: [{ id: 'nubank', name: 'Nubank', last4: '4582' }],
   }
 
-  expect(searchGlobal({ ...data, query: 'alimentacao' })[0]?.to).toBe('/categories')
-  expect(searchGlobal({ ...data, query: 'entrada carro' })[0]?.to).toBe('/goals')
-  expect(searchGlobal({ ...data, query: '4582' })[0]?.to).toBe('/cards')
+  expect(searchGlobal({ ...data, query: 'alimentacao' })[0]).toMatchObject({
+    to: '/categories',
+    kind: 'category',
+  })
+  expect(searchGlobal({ ...data, query: 'entrada carro' })[0]).toMatchObject({
+    to: '/goals',
+    kind: 'goal',
+  })
+  expect(searchGlobal({ ...data, query: '4582' })[0]).toMatchObject({
+    to: '/cards',
+    kind: 'card',
+    context: 'Final 4582',
+  })
 })
 
 test('admin depende das páginas autorizadas recebidas do shell', () => {
@@ -53,15 +72,23 @@ test('admin depende das páginas autorizadas recebidas do shell', () => {
   )
 })
 
-test('consulta vazia retorna atalhos de navegação antes dos dados', () => {
+test('consulta vazia retorna somente atalhos de navegação', () => {
   const results = searchGlobal({
     pages,
     transactions: [{ id: 't1', description: 'Mercado' }],
   })
 
-  expect(results.map((item) => item.to)).toEqual([
-    '/dashboard',
-    '/reports',
-    '/transactions?search=Mercado',
-  ])
+  expect(results.map((item) => item.to)).toEqual(['/dashboard', '/reports'])
+})
+
+test('prioriza correspondência exata antes de correspondência parcial', () => {
+  const results = searchGlobal({
+    query: 'mercado',
+    transactions: [
+      { id: '1', description: 'Supermercado Central' },
+      { id: '2', description: 'Mercado' },
+    ],
+  })
+
+  expect(results[0].label).toBe('Mercado')
 })
