@@ -340,7 +340,12 @@ function GoalsContent() {
           </div>
           <p className="text-sm text-[--text-tertiary]">{goals.length} metas definidas</p>
         </div>
-        <Button variant="primary" size="sm" icon={<span aria-hidden="true">+</span>} onClick={() => handleOpen()}>
+        <Button
+          variant="primary"
+          size="sm"
+          icon={<span aria-hidden="true">+</span>}
+          onClick={() => handleOpen()}
+        >
           Nova meta
         </Button>
       </div>
@@ -386,7 +391,11 @@ function GoalsContent() {
           title="Nenhuma meta definida"
           description="Crie uma meta financeira, como uma viagem, um carro ou a reserva de emergência."
           action={
-            <Button variant="primary" icon={<span aria-hidden="true">+</span>} onClick={() => handleOpen()}>
+            <Button
+              variant="primary"
+              icon={<span aria-hidden="true">+</span>}
+              onClick={() => handleOpen()}
+            >
               Criar primeira meta
             </Button>
           }
