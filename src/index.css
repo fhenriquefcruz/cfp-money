@@ -1121,6 +1121,23 @@ body {
   text-align: left;
 }
 
+.global-search-result > span {
+  min-width: 0;
+}
+
+.global-search-result strong,
+.global-search-result small {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.global-search-result small {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
 .global-search-result:hover {
   background: var(--bg-hover);
 }
