@@ -1,12 +1,17 @@
 import React from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, expect, test, vi } from 'vitest'
 import GlobalSearchPalette from './GlobalSearchPalette'
 
 afterEach(cleanup)
 
-test('busca uma transação e navega para a lista com o termo preenchido', () => {
+function LocationProbe() {
+  const location = useLocation()
+  return <output data-testid="location">{`${location.pathname}${location.search}`}</output>
+}
+
+test('busca uma transação e navega para a lista com o termo e todos os períodos', () => {
   const onClose = vi.fn()
   const transactions = [
     {
@@ -15,6 +20,7 @@ test('busca uma transação e navega para a lista com o termo preenchido', () =>
       categoryName: 'Saúde',
       type: 'expense',
       amount: 180,
+      date: '2026-02-10',
     },
   ]
 
@@ -23,7 +29,12 @@ test('busca uma transação e navega para a lista com o termo preenchido', () =>
       <Routes>
         <Route
           path="*"
-          element={<GlobalSearchPalette open onClose={onClose} transactions={transactions} />}
+          element={
+            <>
+              <GlobalSearchPalette onClose={onClose} transactions={transactions} />
+              <LocationProbe />
+            </>
+          }
         />
       </Routes>
     </MemoryRouter>,
@@ -33,15 +44,35 @@ test('busca uma transação e navega para a lista com o termo preenchido', () =>
     target: { value: 'odontologica' },
   })
 
-  fireEvent.click(screen.getByRole('button', { name: /Consulta odontológica/i }))
+  fireEvent.click(screen.getByRole('option', { name: /Consulta odontológica/i }))
 
   expect(onClose).toHaveBeenCalled()
+  expect(decodeURIComponent(screen.getByTestId('location').textContent)).toContain(
+    '/transactions?search=Consulta+odontológica&scope=all',
+  )
+})
+
+test('mostra tipo e contexto do resultado', () => {
+  render(
+    <MemoryRouter>
+      <GlobalSearchPalette
+        onClose={() => {}}
+        creditCards={[{ id: 'nubank', name: 'Nubank', last4: '4582' }]}
+      />
+    </MemoryRouter>,
+  )
+
+  fireEvent.change(screen.getByLabelText('Termo da busca global'), {
+    target: { value: '4582' },
+  })
+
+  expect(screen.getByRole('option', { name: /Nubank Cartão Final 4582/i })).toBeInTheDocument()
 })
 
 test('mostra estado vazio sem criar resultado artificial', () => {
   render(
     <MemoryRouter>
-      <GlobalSearchPalette open onClose={() => {}} />
+      <GlobalSearchPalette onClose={() => {}} />
     </MemoryRouter>,
   )
 
@@ -57,11 +88,32 @@ test('fecha pelo Escape', () => {
 
   render(
     <MemoryRouter>
-      <GlobalSearchPalette open onClose={onClose} />
+      <GlobalSearchPalette onClose={onClose} />
     </MemoryRouter>,
   )
 
   fireEvent.keyDown(screen.getByLabelText('Termo da busca global'), { key: 'Escape' })
 
   expect(onClose).toHaveBeenCalled()
+})
+
+test('navegação por setas circula entre os resultados', () => {
+  render(
+    <MemoryRouter>
+      <GlobalSearchPalette
+        onClose={() => {}}
+        pages={[
+          ['Dashboard', '/dashboard'],
+          ['Relatórios', '/reports'],
+        ]}
+      />
+    </MemoryRouter>,
+  )
+
+  const input = screen.getByLabelText('Termo da busca global')
+  const options = screen.getAllByRole('option')
+
+  expect(options[0]).toHaveAttribute('aria-selected', 'true')
+  fireEvent.keyDown(input, { key: 'ArrowUp' })
+  expect(options[1]).toHaveAttribute('aria-selected', 'true')
 })
