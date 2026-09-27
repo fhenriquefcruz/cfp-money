@@ -8,6 +8,8 @@
 - [x] autorização administrativa baseada em custom claims;
 - [x] camada inicial de domínio e repositório;
 - [ ] concluir decomposição do AppContext por domínio;
+  - [x] extrair Metas para GoalsContext;
+  - [ ] extrair os demais domínios operacionais sem regressão de performance;
 - [ ] migrar operações administrativas para Cloud Functions callable;
 - [ ] testes de integração com Firebase Emulator Suite;
 - [ ] auditoria automatizada de acessibilidade e regressão visual.
