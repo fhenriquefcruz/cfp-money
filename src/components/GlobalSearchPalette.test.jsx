@@ -40,7 +40,7 @@ test('busca uma transação e navega para a lista com o termo e todos os períod
     </MemoryRouter>,
   )
 
-  fireEvent.change(screen.getByLabelText('Termo da busca global'), {
+  fireEvent.change(screen.getByLabelText('Busca global'), {
     target: { value: 'odontologica' },
   })
 
@@ -62,7 +62,7 @@ test('mostra tipo e contexto do resultado', () => {
     </MemoryRouter>,
   )
 
-  fireEvent.change(screen.getByLabelText('Termo da busca global'), {
+  fireEvent.change(screen.getByLabelText('Busca global'), {
     target: { value: '4582' },
   })
 
@@ -76,11 +76,11 @@ test('mostra estado vazio sem criar resultado artificial', () => {
     </MemoryRouter>,
   )
 
-  fireEvent.change(screen.getByLabelText('Termo da busca global'), {
+  fireEvent.change(screen.getByLabelText('Busca global'), {
     target: { value: 'algo inexistente 123' },
   })
 
-  expect(screen.getByText('Nenhum resultado encontrado')).toBeInTheDocument()
+  expect(screen.getByText('Nada encontrado')).toBeInTheDocument()
 })
 
 test('fecha a paleta pelo Escape', () => {
@@ -92,7 +92,7 @@ test('fecha a paleta pelo Escape', () => {
     </MemoryRouter>,
   )
 
-  fireEvent.keyDown(screen.getByLabelText('Termo da busca global'), { key: 'Escape' })
+  fireEvent.keyDown(screen.getByLabelText('Busca global'), { key: 'Escape' })
 
   expect(onClose).toHaveBeenCalled()
 })
@@ -110,7 +110,7 @@ test('navegação por setas circula entre os resultados', () => {
     </MemoryRouter>,
   )
 
-  const input = screen.getByLabelText('Termo da busca global')
+  const input = screen.getByLabelText('Busca global')
   const options = screen.getAllByRole('option')
 
   expect(options[0]).toHaveAttribute('aria-selected', 'true')
@@ -135,7 +135,7 @@ test('oferece favorito apenas para módulos reais', () => {
 
   expect(screen.getByRole('button', { name: 'Favoritar Relatórios' })).toBeInTheDocument()
 
-  fireEvent.change(screen.getByLabelText('Termo da busca global'), {
+  fireEvent.change(screen.getByLabelText('Busca global'), {
     target: { value: 'viagem' },
   })
 
