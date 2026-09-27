@@ -23,4 +23,7 @@
 - [x] testes de integração com Firebase Emulator Suite;
   - [x] integrar Auth, Firestore Rules e Functions callable em projeto demo;
   - [x] executar integração automaticamente no workflow de validação;
-- [ ] auditoria automatizada de acessibilidade e regressão visual.
+- [x] auditoria automatizada de acessibilidade e regressão visual;
+  - [x] executar Axe/WCAG 2.2 AA em desktop, mobile e WebKit;
+  - [x] versionar baselines visuais das 9 telas principais em desktop e mobile;
+  - [x] executar regressão visual automaticamente e publicar relatórios/diffs como artefatos.
