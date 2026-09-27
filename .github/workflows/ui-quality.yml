@@ -83,7 +83,7 @@ jobs:
           if git status --short e2e/visual | grep -q .; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add e2e/visual/**/*-snapshots/*.png
+            git add e2e/visual/visual.spec.js-snapshots/*.png
             git commit -m "test: add visual regression baselines"
             git push origin "HEAD:${HEAD_REF}"
           fi
