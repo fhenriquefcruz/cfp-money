@@ -57,34 +57,34 @@ const GoalsContext = createContext({ goals: [], loading: true })
 export const useGoals = () => useContext(GoalsContext)
 
 export const GoalsProvider = ({ children, notify, userId }) => {
-  const [goals, setGoals] = useState(() => (E2E_MODE ? createE2EAppState().goals : []))
-  const [loading, setLoading] = useState(!E2E_MODE)
+  const [goals, setGoals] = useState(() => (E2E_MODE ? createE2EAppState().goals : null))
 
   useEffect(() => {
     if (E2E_MODE) return undefined
     if (!userId) {
       setGoals([])
-      setLoading(false)
       return undefined
     }
 
-    setLoading(true)
+    setGoals(null)
     getGoals(userId)
       .then(setGoals)
-      .catch((error) => console.error('[Meu Real] metas:', error))
-      .finally(() => setLoading(false))
+      .catch((error) => {
+        console.error('[Meu Real] metas:', error)
+        setGoals([])
+      })
 
     return undefined
   }, [userId])
 
-  const mutateGoal = async (action, message, type = 'success') => {
+  const mutateGoal = async (action, message, type) => {
     if (!userId) return
     try {
       await action()
       setGoals(await getGoals(userId))
       notify?.(message, type)
     } catch (error) {
-      notify?.('Erro ao atualizar meta.', 'error')
+      notify?.('Erro na meta.', 'error')
       throw error
     }
   }
@@ -92,11 +92,10 @@ export const GoalsProvider = ({ children, notify, userId }) => {
   return (
     <GoalsContext.Provider
       value={{
-        goals,
-        loading,
+        goals: goals ?? [],
+        loading: goals === null,
         createGoal: (data) => mutateGoal(() => addGoal(userId, data), 'Meta criada!'),
-        editGoal: (id, data) =>
-          mutateGoal(() => updateGoal(userId, id, data), 'Meta atualizada!'),
+        editGoal: (id, data) => mutateGoal(() => updateGoal(userId, id, data), 'Meta salva!'),
         removeGoal: (id) => mutateGoal(() => deleteGoal(userId, id), 'Meta removida.', 'info'),
       }}
     >
