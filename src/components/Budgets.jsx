@@ -24,14 +24,7 @@ function getBudgetStatus(percent) {
   return { tone, label }
 }
 
-function BudgetCard({
-  category,
-  budget,
-  spent,
-  monthKey,
-  onEdit,
-  onRemove,
-}) {
+function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
   const amount = Number(budget?.amount) || 0
   const percent = amount > 0 ? Math.max(0, (spent / amount) * 100) : 0
   const remaining = Math.max(0, amount - spent)
@@ -42,108 +35,108 @@ function BudgetCard({
 
   return (
     <Card className={isOver ? 'ring-2 ring-[--danger-border]' : ''}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <div
-              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-xl"
-              style={{ background: `${category.color}22` }}
-            >
-              {category.icon}
+    <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-xl"
+            style={{ background: `${category.color}22` }}
+          >
+            {category.icon}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-[--text-primary]">{category.name}</p>
+            <p className="text-xs text-[--text-tertiary]">
+              {budget ? `${formatCurrency(amount)} neste mês` : 'Sem limite neste mês'}
+            </p>
+          </div>
+        </div>
+
+        {budget && (
+          <button
+            type="button"
+            onClick={() => onRemove(category.id, monthKey, budget.id)}
+            className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
+            aria-label={`Remover orçamento de ${category.name}`}
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
+      </div>
+
+      {budget ? (
+        <>
+          <div className="mt-4 flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                Gasto na competência
+              </p>
+              <p
+                className="mt-1 text-2xl font-black tabular-nums"
+                style={{ color: barColor }}
+              >
+                {formatCurrency(spent)}
+              </p>
             </div>
-            <div className="min-w-0">
-              <p className="truncate font-semibold text-[--text-primary]">{category.name}</p>
-              <p className="text-xs text-[--text-tertiary]">
-                {budget ? `${formatCurrency(amount)} neste mês` : 'Sem limite neste mês'}
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                {isOver ? 'Excedido' : 'Disponível'}
+              </p>
+              <p
+                className={`mt-1 text-sm font-black ${
+                  isOver ? 'text-[--danger-text]' : 'text-[--text-primary]'
+                }`}
+              >
+                {formatCurrency(isOver ? excess : remaining)}
               </p>
             </div>
           </div>
 
-          {budget && (
-            <button
-              type="button"
-              onClick={() => onRemove(category.id, monthKey, budget.id)}
-              className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
-              aria-label={`Remover orçamento de ${category.name}`}
-            >
-              <Trash2 size={14} />
-            </button>
-          )}
-        </div>
-
-        {budget ? (
-          <>
-            <div className="mt-4 flex flex-wrap items-end justify-between gap-2">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-                  Gasto na competência
-                </p>
-                <p
-                  className="mt-1 text-2xl font-black tabular-nums"
-                  style={{ color: barColor }}
-                >
-                  {formatCurrency(spent)}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-                  {isOver ? 'Excedido' : 'Disponível'}
-                </p>
-                <p
-                  className={`mt-1 text-sm font-black ${
-                    isOver ? 'text-[--danger-text]' : 'text-[--text-primary]'
-                  }`}
-                >
-                  {formatCurrency(isOver ? excess : remaining)}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[--bg-hover]">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  background: status.barColor,
-                  width: `${Math.min(percent, 100)}%`,
-                }}
-              />
-            </div>
-
+          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[--bg-hover]">
             <div
-              className="mt-3 rounded-xl border px-3 py-2 text-xs font-medium"
+              className="h-full rounded-full"
               style={{
-                background: `var(--${status.tone}-bg)`,
-                borderColor: `var(--${status.tone}-border)`,
-                color: `var(--${status.tone}-text)`,
+                background: barColor,
+                width: `${Math.min(percent, 100)}%`,
               }}
-            >
-              {status.label}
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                onEdit({
-                  categoryId: category.id,
-                  amount,
-                })
-              }
-              className="mt-3 min-h-10 w-full text-center text-xs font-semibold text-[--text-tertiary] transition-colors hover:text-[--text-brand]"
-            >
-              Alterar limite deste mês
-            </button>
-          </>
-        ) : (
-          <div className="mt-4 rounded-2xl border border-dashed border-[--border-default] bg-[--bg-subtle] p-3">
-            <button
-              type="button"
-              onClick={() => onEdit({ categoryId: category.id, amount: '' })}
-              className="mt-2 inline-flex min-h-10 items-center gap-1.5 text-xs font-bold text-[--text-brand]"
-            >
-              <Plus size={12} />
-              Definir limite mensal
-            </button>
+            />
           </div>
-        )}
+
+          <div
+            className="mt-3 rounded-xl border px-3 py-2 text-xs font-medium"
+            style={{
+              background: `var(--${status.tone}-bg)`,
+              borderColor: `var(--${status.tone}-border)`,
+              color: `var(--${status.tone}-text)`,
+            }}
+          >
+            {status.label}
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              onEdit({
+                categoryId: category.id,
+                amount,
+              })
+            }
+            className="mt-3 min-h-10 w-full text-center text-xs font-semibold text-[--text-tertiary] transition-colors hover:text-[--text-brand]"
+          >
+            Alterar limite deste mês
+          </button>
+        </>
+      ) : (
+        <div className="mt-4 rounded-2xl border border-dashed border-[--border-default] bg-[--bg-subtle] p-3">
+          <button
+            type="button"
+            onClick={() => onEdit({ categoryId: category.id, amount: '' })}
+            className="mt-2 inline-flex min-h-10 items-center gap-1.5 text-xs font-bold text-[--text-brand]"
+          >
+            <Plus size={12} />
+            Definir limite mensal
+          </button>
+        </div>
+      )}
     </Card>
   )
 }
