@@ -1,17 +1,52 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { searchGlobal } from '../domain/globalSearch'
+import {
+  prioritizeNavigationPages,
+  readNavigationPreferences,
+  registerRecentNavigation,
+  toggleFavoriteNavigation,
+} from '../domain/navigationPreferences'
 import { Modal } from './ui'
 
 export default function GlobalSearchPalette(props) {
   const navigate = useNavigate()
+  const location = useLocation()
+  const allowedPaths = useMemo(() => (props.pages || []).map(([, to]) => to), [props.pages])
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const results = searchGlobal({ query, ...props })
+  const [preferences, setPreferences] = useState(() =>
+    readNavigationPreferences(props.userId, allowedPaths),
+  )
+
+  useEffect(() => {
+    setPreferences(
+      registerRecentNavigation(props.userId, location.pathname, allowedPaths),
+    )
+  }, [allowedPaths, location.pathname, props.userId])
+
+  const orderedPages = prioritizeNavigationPages(
+    props.pages || [],
+    preferences.favorites,
+    preferences.recents,
+    location.pathname,
+  )
+
+  const results = searchGlobal({
+    query,
+    ...props,
+    pages: orderedPages,
+  })
 
   const open = (item) => {
     props.onClose()
     navigate(item.to)
+  }
+
+  const toggleFavorite = (path) => {
+    setPreferences(
+      toggleFavoriteNavigation(props.userId, path, allowedPaths),
+    )
   }
 
   const onKeyDown = (event) => {
@@ -51,32 +86,58 @@ export default function GlobalSearchPalette(props) {
         className="global-search-input"
       />
 
+      {!query.trim() && (
+        <p className="global-search-hint">Favoritos e áreas recentes aparecem primeiro.</p>
+      )}
+
       <div className="global-search-results" role="listbox">
         {query.trim() && !results.length ? (
           <p className="global-search-empty">Nenhum resultado encontrado</p>
         ) : (
-          results.map((item, index) => (
-            <button
-              key={item.id}
-              type="button"
-              role="option"
-              aria-selected={active === index}
-              onMouseEnter={() => setActive(index)}
-              onClick={() => open(item)}
-              className={`global-search-result ${
-                active === index ? 'global-search-result--active' : ''
-              }`}
-            >
-              <span className="min-w-0">
-                <strong className="block truncate">{item.label}</strong>
-                {item.context && (
-                  <small className="block truncate font-normal text-[--text-tertiary]">
-                    {item.context}
-                  </small>
+          results.map((item, index) => {
+            const isPage = (props.pages || []).some(
+              ([label, to]) => label === item.label && to === item.to,
+            )
+            const favorite = preferences.favorites.includes(item.to)
+
+            return (
+              <div className="global-search-row" key={item.id}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={active === index}
+                  onMouseEnter={() => setActive(index)}
+                  onClick={() => open(item)}
+                  className={`global-search-result ${
+                    active === index ? 'global-search-result--active' : ''
+                  }`}
+                >
+                  <span className="min-w-0">
+                    <strong className="block truncate">{item.label}</strong>
+                    {item.context && (
+                      <small className="block truncate font-normal text-[--text-tertiary]">
+                        {item.context}
+                      </small>
+                    )}
+                  </span>
+                </button>
+
+                {isPage && (
+                  <button
+                    type="button"
+                    onClick={() => toggleFavorite(item.to)}
+                    className="global-search-favorite"
+                    aria-label={`${favorite ? 'Remover' : 'Adicionar'} ${item.label} ${
+                      favorite ? 'dos' : 'aos'
+                    } favoritos`}
+                    aria-pressed={favorite}
+                  >
+                    {favorite ? '★' : '☆'}
+                  </button>
                 )}
-              </span>
-            </button>
-          ))
+              </div>
+            )
+          })
         )}
       </div>
     </Modal>
