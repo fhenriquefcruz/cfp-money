@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePlan } from '../contexts/PlanContext'
-import { useApp, useCategories, useCreditCards, useGoals } from '../contexts/AppContext'
+import { useCategories, useCreditCards, useGoals, useTransactions } from '../contexts/AppContext'
 import { Button } from './ui'
 import ThemeToggle from './ThemeToggle'
 import { clsx } from 'clsx'
@@ -116,7 +116,7 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
 export default function Sidebar() {
   const { user, logout, isAdmin } = useAuth()
   const { status } = usePlan()
-  const { transactions } = useApp()
+  const { transactions } = useTransactions()
   const { creditCards } = useCreditCards()
   const { categories } = useCategories()
   const { goals } = useGoals()
