@@ -24,7 +24,6 @@ export {
   updateGoal,
   deleteGoal,
   setBudget,
-  setBudgetsBatch,
   deleteBudget,
   getMoneySettings,
   onMoneySettingsChange,
