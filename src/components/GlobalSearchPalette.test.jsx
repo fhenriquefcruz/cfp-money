@@ -135,7 +135,7 @@ test('oferece favorito apenas para módulos reais', () => {
   )
 
   expect(
-    screen.getByRole('button', { name: 'Adicionar Relatórios aos favoritos' }),
+    screen.getByRole('button', { name: 'Favoritar Relatórios' }),
   ).toBeInTheDocument()
 
   fireEvent.change(screen.getByLabelText('Termo da busca global'), {
@@ -143,7 +143,7 @@ test('oferece favorito apenas para módulos reais', () => {
   })
 
   expect(screen.getByRole('option', { name: /Viagem/i })).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: /Viagem.*favoritos/i })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /Favoritar Viagem/i })).not.toBeInTheDocument()
 })
 
 test('favoritar um módulo atualiza o estado da paleta', () => {
@@ -161,12 +161,12 @@ test('favoritar um módulo atualiza o estado da paleta', () => {
   )
 
   const favoriteButton = screen.getByRole('button', {
-    name: 'Adicionar Metas aos favoritos',
+    name: 'Favoritar Metas',
   })
 
   fireEvent.click(favoriteButton)
 
   expect(
-    screen.getByRole('button', { name: 'Remover Metas dos favoritos' }),
+    screen.getByRole('button', { name: 'Favoritar Metas' }),
   ).toHaveAttribute('aria-pressed', 'true')
 })
