@@ -10,7 +10,8 @@ const readFavorites = (uid, pages) => {
 
   try {
     const allowed = pages.map(([, to]) => to)
-    return JSON.parse(localStorage.getItem(storageKey(uid)) || '[]')
+    return (localStorage.getItem(storageKey(uid)) || '')
+      .split('|')
       .filter((path) => allowed.includes(path))
       .slice(0, 4)
   } catch {
@@ -58,7 +59,7 @@ export default function GlobalSearchPalette({
       : [path, ...favorites].slice(0, 4)
 
     try {
-      localStorage.setItem(storageKey(userId), JSON.stringify(next))
+      localStorage.setItem(storageKey(userId), next.join('|'))
     } catch {}
 
     setFavorites(next)
