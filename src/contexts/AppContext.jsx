@@ -217,14 +217,64 @@ export const CreditCardsProvider = ({ children, notify, userId }) => {
   )
 }
 
+const InvoiceEventsContext = createContext({ invoiceEvents: [], loading: true })
+export const useInvoiceEvents = () => useContext(InvoiceEventsContext)
+
+export const InvoiceEventsProvider = ({ children, notify, userId }) => {
+  const [invoiceEvents, setInvoiceEvents] = useState(() =>
+    E2E_MODE ? createE2EAppState().invoiceEvents : null,
+  )
+
+  useEffect(() => {
+    if (E2E_MODE) return undefined
+    if (!userId) {
+      setInvoiceEvents([])
+      return undefined
+    }
+
+    setInvoiceEvents(null)
+    return onInvoiceEventsChange(userId, setInvoiceEvents)
+  }, [userId])
+
+  const createInvoiceEvent = async (data) => {
+    if (!userId) throw new Error('Usuário não autenticado.')
+
+    try {
+      const id = await addInvoiceEvent(userId, data)
+      notify?.(
+        data.type === 'payment'
+          ? 'Pagamento registrado na fatura.'
+          : data.type === 'reversal'
+            ? 'Estorno registrado na fatura.'
+            : data.type === 'adjustment'
+              ? 'Ajuste registrado na fatura.'
+              : 'Fatura marcada como fechada.',
+      )
+      return id
+    } catch (error) {
+      notify?.('Não foi possível registrar o evento da fatura.', 'error')
+      throw error
+    }
+  }
+
+  return (
+    <InvoiceEventsContext.Provider
+      value={{
+        invoiceEvents: invoiceEvents ?? [],
+        loading: invoiceEvents === null,
+      }}
+    >
+      {children}
+    </InvoiceEventsContext.Provider>
+  )
+}
+
 const initialState = {
   transactions: [],
   budgets: [],
-  invoiceEvents: [],
   loading: {
     transactions: true,
     budgets: true,
-    invoiceEvents: true,
   },
   notifications: [],
 }
@@ -239,12 +289,6 @@ function reducer(state, action) {
       }
     case 'SET_BUDGETS':
       return { ...state, budgets: action.payload, loading: { ...state.loading, budgets: false } }
-    case 'SET_INVOICE_EVENTS':
-      return {
-        ...state,
-        invoiceEvents: action.payload,
-        loading: { ...state.loading, invoiceEvents: false },
-      }
     case 'E2E_ADD_TRANSACTION':
       return { ...state, transactions: [action.payload, ...state.transactions] }
     case 'E2E_ADD_TRANSACTION_BATCH':
@@ -309,13 +353,6 @@ export const AppProvider = ({ children }) => {
     const unsubTx = onTransactionsChange(uid, (txs) =>
       dispatch({ type: 'SET_TRANSACTIONS', payload: txs }),
     )
-    const unsubInvoiceEvents = onInvoiceEventsChange(uid, (events) =>
-      dispatch({
-        type: 'SET_INVOICE_EVENTS',
-        payload: events,
-      }),
-    )
-
     // Carrega o resto em paralelo
     const load = async () => {
       try {
@@ -328,9 +365,6 @@ export const AppProvider = ({ children }) => {
     load()
     return () => {
       if (typeof unsubTx === 'function') unsubTx()
-      if (typeof unsubInvoiceEvents === 'function') {
-        unsubInvoiceEvents()
-      }
     }
   }, [user?.uid])
 
@@ -618,32 +652,6 @@ export const AppProvider = ({ children }) => {
       } catch (e) {
         showNotification('Erro ao remover transações.', 'error')
         throw e
-      }
-    },
-    [user?.uid, showNotification],
-  )
-
-  const createInvoiceEvent = useCallback(
-    async (data) => {
-      if (!user?.uid) {
-        throw new Error('Usuário não autenticado.')
-      }
-
-      try {
-        const id = await addInvoiceEvent(user.uid, data)
-        showNotification(
-          data.type === 'payment'
-            ? 'Pagamento registrado na fatura.'
-            : data.type === 'reversal'
-              ? 'Estorno registrado na fatura.'
-              : data.type === 'adjustment'
-                ? 'Ajuste registrado na fatura.'
-                : 'Fatura marcada como fechada.',
-        )
-        return id
-      } catch (error) {
-        showNotification('Não foi possível registrar o evento da fatura.', 'error')
-        throw error
       }
     },
     [user?.uid, showNotification],
