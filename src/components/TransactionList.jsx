@@ -21,7 +21,13 @@ import {
   CheckCircle2,
   Clock3,
 } from 'lucide-react'
-import { useApp, useCategories, useCreditCards, useInvoiceEvents } from '../contexts/AppContext'
+import {
+  useApp,
+  useCategories,
+  useCreditCards,
+  useInvoiceEvents,
+  useNotifications,
+} from '../contexts/AppContext'
 import { useAuth } from '../contexts/AuthContext'
 import { Button, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
@@ -395,11 +401,11 @@ export default function TransactionList() {
     removeTransaction,
     removeTransactionBatch,
     importTransactionBatch,
-    showNotification,
     applyTransactionSeriesOperation,
     setTransactionPaymentStatus,
     commitPaymentStatusOperation,
   } = useApp()
+  const { showNotification } = useNotifications()
   const { categories } = useCategories()
   const { creditCards } = useCreditCards()
   const { invoiceEvents } = useInvoiceEvents()
