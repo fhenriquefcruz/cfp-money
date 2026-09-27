@@ -1,18 +1,7 @@
 // src/components/Budgets.jsx
 import React, { useMemo, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
 import { useSearchParams } from 'react-router-dom'
-import {
-  AlertTriangle,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Flame,
-  PieChart,
-  Plus,
-  Trash2,
-  TrendingUp,
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight, PieChart, Plus, Trash2 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Input, Modal } from './ui'
 import InfoTooltip from './InfoTooltip'
@@ -42,7 +31,6 @@ function getBudgetStatus(percent) {
       bgClass: 'bg-[--danger-bg]',
       borderClass: 'border-[--danger-border]',
       barColor: 'var(--danger-icon)',
-      icon: <Flame size={14} className="text-[--danger-text]" />,
       label: `Limite ultrapassado em ${(percent - 100).toFixed(0)}%`,
     }
   }
@@ -53,7 +41,6 @@ function getBudgetStatus(percent) {
       bgClass: 'bg-[--warning-bg]',
       borderClass: 'border-[--warning-border]',
       barColor: 'var(--warning-icon)',
-      icon: <AlertTriangle size={14} className="text-[--warning-icon]" />,
       label: `${percent.toFixed(0)}% do limite utilizado`,
     }
   }
@@ -64,7 +51,6 @@ function getBudgetStatus(percent) {
       bgClass: 'bg-[--warning-bg]',
       borderClass: 'border-[--warning-border]',
       barColor: 'var(--warning-icon)',
-      icon: <TrendingUp size={14} className="text-[--warning-icon]" />,
       label: `${percent.toFixed(0)}% do orçamento utilizado`,
     }
   }
@@ -74,7 +60,6 @@ function getBudgetStatus(percent) {
     bgClass: 'bg-[--success-bg]',
     borderClass: 'border-[--success-border]',
     barColor: 'var(--success-icon)',
-    icon: <CheckCircle size={14} className="text-[--success-icon]" />,
     label: `${percent.toFixed(0)}% utilizado`,
   }
 }
@@ -95,12 +80,7 @@ function BudgetCard({
   const isOver = percent > 100
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.98 }}
-    >
+    <div>
       <Card className={isOver ? 'ring-2 ring-[--danger-border]' : ''}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
@@ -166,19 +146,18 @@ function BudgetCard({
             </div>
 
             <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[--bg-hover]">
-              <motion.div
+              <div
                 className="h-full rounded-full"
-                style={{ background: status.barColor }}
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(percent, 100)}%` }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
+                style={{
+                  background: status.barColor,
+                  width: `${Math.min(percent, 100)}%`,
+                }}
               />
             </div>
 
             <div
               className={`mt-3 flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium ${status.bgClass} ${status.borderClass}`}
             >
-              {status.icon}
               <span style={{ color: status.color }}>{status.label}</span>
             </div>
 
@@ -218,7 +197,7 @@ function BudgetCard({
           </div>
         )}
       </Card>
-    </motion.div>
+    </div>
   )
 }
 
@@ -419,12 +398,8 @@ export default function Budgets() {
           description="Crie categorias de despesa para definir orçamentos."
         />
       ) : (
-        <motion.div
-          layout
-          className="operational-card-grid budgets-card-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
-        >
-          <AnimatePresence>
-            {sortedCategories.map((category) => {
+        <div className="operational-card-grid budgets-card-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {sortedCategories.map((category) => {
               const budget = getBudgetForMonth(
                 budgets,
                 category.id,
@@ -444,9 +419,8 @@ export default function Budgets() {
                   onRemove={handleRemove}
                 />
               )
-            })}
-          </AnimatePresence>
-        </motion.div>
+          })}
+        </div>
       )}
 
       <Modal
