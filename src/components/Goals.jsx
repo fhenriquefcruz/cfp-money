@@ -3,13 +3,11 @@ import React, { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Target,
-  Plus,
   Edit2,
   Trash2,
   TrendingUp,
   AlertCircle,
   CheckCircle,
-  MoreVertical,
 } from 'lucide-react'
 import { useGoals } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
@@ -53,7 +51,7 @@ function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
         className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
         title="Ações"
       >
-        <MoreVertical size={16} />
+        ⋮
       </button>
       {open && (
         <div
@@ -350,7 +348,7 @@ function GoalsContent() {
           </div>
           <p className="text-sm text-[--text-tertiary]">{goals.length} metas definidas</p>
         </div>
-        <Button variant="primary" size="sm" icon={<Plus />} onClick={() => handleOpen()}>
+        <Button variant="primary" size="sm" icon={<span aria-hidden="true">+</span>} onClick={() => handleOpen()}>
           Nova meta
         </Button>
       </div>
@@ -396,7 +394,7 @@ function GoalsContent() {
           title="Nenhuma meta definida"
           description="Crie uma meta financeira, como uma viagem, um carro ou a reserva de emergência."
           action={
-            <Button variant="primary" icon={<Plus />} onClick={() => handleOpen()}>
+            <Button variant="primary" icon={<span aria-hidden="true">+</span>} onClick={() => handleOpen()}>
               Criar primeira meta
             </Button>
           }
