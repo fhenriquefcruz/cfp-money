@@ -66,4 +66,3 @@ export function onMySupportRequests(callback, onError) {
     onError,
   )
 }
-
