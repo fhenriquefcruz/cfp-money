@@ -10,6 +10,7 @@
 - [ ] concluir decomposição do AppContext por domínio;
   - [x] extrair Metas para GoalsContext;
   - [x] extrair Categorias para CategoriesContext;
+  - [x] extrair Cartões para CreditCardsContext;
   - [ ] extrair os demais domínios operacionais sem regressão de performance;
 - [ ] migrar operações administrativas para Cloud Functions callable;
 - [ ] testes de integração com Firebase Emulator Suite;
