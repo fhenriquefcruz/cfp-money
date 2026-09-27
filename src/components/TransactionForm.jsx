@@ -163,13 +163,8 @@ function getEffectiveDate(baseDate, closingDay) {
 }
 
 export default function TransactionForm({ isOpen, onClose, transaction }) {
-  const {
-    creditCards,
-    createTransaction,
-    editTransaction,
-    addTransactionBatch,
-    showNotification,
-  } = useApp()
+  const { creditCards, createTransaction, editTransaction, addTransactionBatch, showNotification } =
+    useApp()
   const { categories } = useCategories()
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
