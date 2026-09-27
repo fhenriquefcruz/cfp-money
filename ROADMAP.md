@@ -16,6 +16,9 @@
   - [x] extrair Orçamentos para BudgetsContext;
   - [x] extrair Transações para TransactionsContext;
   - [x] consolidar cálculos derivados em TransactionsContext e remover AppContext;
-- [ ] migrar operações administrativas para Cloud Functions callable;
+- [x] migrar operações administrativas para Cloud Functions callable;
+  - [x] listar usuários e alterar acessos pelo gateway administrativo;
+  - [x] listar e responder atendimentos pelo gateway administrativo;
+  - [x] preservar fallback Spark sem expor o caminho principal do backend Firebase;
 - [ ] testes de integração com Firebase Emulator Suite;
 - [ ] auditoria automatizada de acessibilidade e regressão visual.
