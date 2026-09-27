@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { CreditCard, Edit2, Info, Plus, ReceiptText, ShieldCheck, Trash2 } from 'lucide-react'
+import { CreditCard, Info, ReceiptText } from 'lucide-react'
 import { useCreditCards } from '../contexts/AppContext'
 import { Button, Card, Input, Modal } from './ui'
 import PremiumGate from './PremiumGate'
@@ -45,7 +45,7 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3 rounded-2xl border border-[--brand-200] bg-[--brand-50] p-3.5">
-        <ShieldCheck size={16} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
+        <span aria-hidden="true" className="mt-0.5 text-[--brand-600]">✓</span>
         <p className="text-xs leading-relaxed text-[--brand-700]">
           Cadastre apenas informações de identificação e calendário. Nunca informe número completo,
           código de segurança ou senha.
@@ -193,7 +193,7 @@ function CreditCardsContent() {
               </div>
             </div>
 
-            <Button variant="primary" size="sm" icon={<Plus size={14} />} onClick={openNew}>
+            <Button variant="primary" size="sm" icon={<span aria-hidden="true">+</span>} onClick={openNew}>
               Adicionar cartão
             </Button>
           </div>
@@ -263,7 +263,7 @@ function CreditCardsContent() {
                       className="flex h-11 w-11 items-center justify-center rounded-xl text-[--text-tertiary] hover:bg-[--bg-hover] hover:text-[--text-brand]"
                       aria-label={`Editar cartão ${card.name}`}
                     >
-                      <Edit2 size={14} />
+                      <span aria-hidden="true">✎</span>
                     </button>
                     <button
                       type="button"
@@ -271,7 +271,7 @@ function CreditCardsContent() {
                       className="flex h-11 w-11 items-center justify-center rounded-xl text-[--text-tertiary] hover:bg-[--danger-bg] hover:text-[--danger-text]"
                       aria-label={`Excluir cartão ${card.name}`}
                     >
-                      <Trash2 size={14} />
+                      <span aria-hidden="true">×</span>
                     </button>
                   </div>
                 </div>
