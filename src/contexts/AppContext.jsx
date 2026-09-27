@@ -27,6 +27,7 @@ import {
   updateGoal,
   deleteGoal,
   setBudget,
+  setBudgetsBatch as fbSetBudgetsBatch,
   deleteBudget,
 } from '../repositories/appRepository'
 import {
@@ -727,6 +728,26 @@ export const AppProvider = ({ children }) => {
     [user?.uid, showNotification, refreshBudgets],
   )
 
+  const copyMonthlyBudgets = useCallback(
+    async (items, monthKey) => {
+      if (!user?.uid) return []
+      if (!Array.isArray(items) || items.length === 0) return []
+
+      try {
+        const ids = await fbSetBudgetsBatch(user.uid, items, monthKey)
+        await refreshBudgets()
+        showNotification(
+          `${ids.length} ${ids.length === 1 ? 'orçamento copiado' : 'orçamentos copiados'}!`,
+        )
+        return ids
+      } catch (e) {
+        showNotification('Erro ao copiar orçamentos mensais.', 'error')
+        throw e
+      }
+    },
+    [user?.uid, showNotification, refreshBudgets],
+  )
+
   const removeBudget = useCallback(
     async (categoryId, monthKey, budgetId = '') => {
       if (!user?.uid) return
@@ -832,6 +853,7 @@ export const AppProvider = ({ children }) => {
         editGoal,
         removeGoal,
         saveBudget,
+        copyMonthlyBudgets,
         removeBudget,
         showNotification,
         dismissNotification,
