@@ -41,19 +41,9 @@ import {
   createPaymentStatusChange,
   ensureTransactionPaymentDefaults,
 } from '../domain/paymentControl'
-import { monthKeyFromDate } from '../domain/creditCardCenter'
 
 const AppContext = createContext({})
 export const useApp = () => useContext(AppContext)
-
-const budgetActivityMonth = (transaction = {}) => {
-  const date =
-    transaction.paymentMethod === 'credit_card' && transaction.isCreditPurchase
-      ? transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date
-      : transaction.dueDate || transaction.date
-
-  return typeof date === 'string' ? date.slice(0, 7) : ''
-}
 
 const initialState = {
   transactions: [],
@@ -203,38 +193,28 @@ export const AppProvider = ({ children }) => {
 
   // ── Alerta de orçamento ──
   const checkBudgetAlert = useCallback(
-    (newTx, replacingId = '') => {
+    async (newTx, replacingId = '') => {
       if (newTx.type !== 'expense' || newTx.isSavings || newTx.paymentStatus === 'cancelled') return
 
+      const {
+        budgetMonthKey,
+        getBudgetForMonth,
+        getBudgetSpent,
+        getBudgetTransactionMonth,
+      } = await import('../domain/budgetPeriods')
       const { budgets, transactions } = stateRef.current
-      const currentMonthKey = monthKeyFromDate()
-      const monthKey = budgetActivityMonth(newTx)
+      const currentMonthKey = budgetMonthKey()
+      const monthKey = getBudgetTransactionMonth(newTx)
 
       if (!monthKey || monthKey !== currentMonthKey) return
 
-      const budget =
-        budgets.find(
-          (item) => item.categoryId === newTx.categoryId && item.monthKey === monthKey,
-        ) ||
-        budgets.find(
-          (item) => item.categoryId === newTx.categoryId && !item.monthKey,
-        )
-
+      const budget = getBudgetForMonth(budgets, newTx.categoryId, monthKey, currentMonthKey)
       if (!budget) return
 
       const baseTransactions = replacingId
         ? transactions.filter((transaction) => transaction.id !== replacingId)
         : transactions
-      const spent = [...baseTransactions, newTx]
-        .filter(
-          (transaction) =>
-            transaction.type === 'expense' &&
-            !transaction.isSavings &&
-            transaction.paymentStatus !== 'cancelled' &&
-            transaction.categoryId === newTx.categoryId &&
-            budgetActivityMonth(transaction) === monthKey,
-        )
-        .reduce((total, transaction) => total + (Number(transaction.amount) || 0), 0)
+      const spent = getBudgetSpent([...baseTransactions, newTx], newTx.categoryId, monthKey)
       const pct = (spent / budget.amount) * 100
 
       let threshold = null
