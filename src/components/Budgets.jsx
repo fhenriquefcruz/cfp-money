@@ -57,7 +57,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
             className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
             aria-label={`Remover orçamento de ${category.name}`}
           >
-            <span aria-hidden="true" className="text-base leading-none">×</span>
+            ×
           </button>
         )}
       </div>
@@ -128,8 +128,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
             onClick={() => onEdit({ categoryId: category.id, amount: '' })}
             className="mt-2 inline-flex min-h-10 items-center gap-1.5 text-xs font-bold text-[--text-brand]"
           >
-            <span aria-hidden="true">+</span>
-            Definir limite
+            + Definir limite
           </button>
         </div>
       )}
@@ -253,7 +252,7 @@ export default function Budgets() {
               className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] text-[--text-secondary] hover:bg-[--bg-hover]"
               aria-label="Mês anterior"
             >
-              <span aria-hidden="true" className="text-xl leading-none">‹</span>
+              ‹
             </button>
             {!isCurrentMonth && (
               <button
@@ -270,7 +269,7 @@ export default function Budgets() {
               className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] text-[--text-secondary] hover:bg-[--bg-hover]"
               aria-label="Próximo mês"
             >
-              <span aria-hidden="true" className="text-xl leading-none">›</span>
+              ›
             </button>
           </div>
         </div>
@@ -313,7 +312,7 @@ export default function Budgets() {
 
       {expenseCategories.length === 0 ? (
         <EmptyState
-          icon={<span aria-hidden="true">◎</span>}
+          icon="◎"
           title="Nenhuma categoria de despesa"
           description="Crie categorias de despesa para definir orçamentos."
         />
