@@ -51,7 +51,8 @@
     "backup:restore": "node functions/tools/sparkRestore.js",
     "test:backup-recovery": "firebase emulators:exec --project demo-cfp-money-backup --only firestore \"node functions/tools/testBackupRecovery.js\"",
     "validate:commercial": "node scripts/validate-commercial-readiness.mjs",
-    "admin:sync-users": "node scripts/backfill-auth-users-firestore.mjs"
+    "admin:sync-users": "node scripts/backfill-auth-users-firestore.mjs",
+    "test:integration:firebase": "firebase emulators:exec --project demo-cfp-money-integration --only auth,firestore,functions \"node --test tests/integration/firebase-emulators.test.mjs\""
   },
   "dependencies": {
     "clsx": "^2.1.0",
