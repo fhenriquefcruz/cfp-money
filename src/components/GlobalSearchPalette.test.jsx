@@ -83,7 +83,7 @@ test('mostra estado vazio sem criar resultado artificial', () => {
   expect(screen.getByText('Nenhum resultado encontrado')).toBeInTheDocument()
 })
 
-test('fecha pelo Escape', () => {
+test('fecha a paleta pelo Escape', () => {
   const onClose = vi.fn()
 
   render(
