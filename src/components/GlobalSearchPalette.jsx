@@ -4,8 +4,6 @@ import { searchGlobal } from '../domain/globalSearch'
 import { Modal } from './ui'
 
 const readFavorites = (uid) => {
-  if (!uid) return []
-
   try {
     return (localStorage.getItem(`mr_nav_${uid}`) || '').split('|')
   } catch {
@@ -46,8 +44,6 @@ export default function GlobalSearchPalette({
   }
 
   const toggleFavorite = (path) => {
-    if (!userId) return
-
     const next = favorites.includes(path)
       ? favorites.filter((item) => item !== path)
       : [path, ...favorites].slice(0, 4)
