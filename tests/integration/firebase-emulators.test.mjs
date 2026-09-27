@@ -180,10 +180,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
 
     const answeredSupport = await getDoc(supportReference)
     assert.equal(answeredSupport.data().status, 'answered')
-    assert.equal(
-      answeredSupport.data().response,
-      'Atendimento validado pelo teste de integração.',
-    )
+    assert.equal(answeredSupport.data().response, 'Atendimento validado pelo teste de integração.')
     assert.equal(answeredSupport.data().responderUid, adminUser.uid)
 
     await signOut(auth)
