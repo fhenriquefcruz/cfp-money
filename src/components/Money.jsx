@@ -18,6 +18,7 @@ import {
 import { Link } from 'react-router-dom'
 import {
   useApp,
+  useBudgets,
   useCategories,
   useCreditCards,
   useGoals,
@@ -195,7 +196,6 @@ function AssistantResponse({
 function MoneyContent() {
   const {
     transactions,
-    budgets,
     loading,
     getSummary,
     createTransaction,
@@ -203,6 +203,7 @@ function MoneyContent() {
     removeTransaction,
     removeTransactionBatch,
   } = useApp()
+  const { budgets, loading: budgetsLoading } = useBudgets()
   const { categories, loading: categoriesLoading } = useCategories()
   const { creditCards, loading: creditCardsLoading } = useCreditCards()
   const { goals, loading: goalsLoading } = useGoals()
@@ -219,7 +220,7 @@ function MoneyContent() {
     loading.transactions ||
     categoriesLoading ||
     goalsLoading ||
-    loading.budgets ||
+    budgetsLoading ||
     creditCardsLoading ||
     invoiceEventsLoading ||
     settingsLoading
