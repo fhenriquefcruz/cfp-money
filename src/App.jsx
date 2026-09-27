@@ -3,7 +3,6 @@ import React, { lazy, Suspense } from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import {
-  AppProvider,
   BudgetsProvider,
   CategoriesProvider,
   CreditCardsProvider,
@@ -103,13 +102,11 @@ export default function App() {
             <NotificationsProvider>
               <BudgetsProvider>
                 <TransactionsProvider>
-                  <AppProvider>
-                    <PlanProvider>
-                      <MoneyProvider>
-                        <AppRoutes />
-                      </MoneyProvider>
-                    </PlanProvider>
-                  </AppProvider>
+                  <PlanProvider>
+                    <MoneyProvider>
+                      <AppRoutes />
+                    </MoneyProvider>
+                  </PlanProvider>
                 </TransactionsProvider>
               </BudgetsProvider>
             </NotificationsProvider>
