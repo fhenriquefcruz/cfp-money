@@ -1,14 +1,18 @@
 import assert from 'node:assert/strict'
+import { createRequire } from 'node:module'
 import test from 'node:test'
 import { deleteApp, initializeApp } from 'firebase/app'
 import {
   connectAuthEmulator,
   createUserWithEmailAndPassword,
   getAuth,
+  getIdTokenResult,
+  signInWithEmailAndPassword,
   signOut,
 } from 'firebase/auth'
 import {
   Timestamp,
+  collection,
   connectFirestoreEmulator,
   doc,
   getDoc,
@@ -20,6 +24,15 @@ import {
   getFunctions,
   httpsCallable,
 } from 'firebase/functions'
+
+const requireFromFunctions = createRequire(
+  new URL('../../functions/package.json', import.meta.url),
+)
+const {
+  deleteApp: deleteAdminApp,
+  initializeApp: initializeAdminApp,
+} = requireFromFunctions('firebase-admin/app')
+const { getAuth: getAdminAuth } = requireFromFunctions('firebase-admin/auth')
 
 const PROJECT_ID = 'demo-cfp-money-integration'
 const REGION = 'southamerica-east1'
@@ -55,10 +68,15 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     },
     'firebase-emulator-integration',
   )
+  const adminApp = initializeAdminApp(
+    { projectId: PROJECT_ID },
+    'firebase-emulator-integration-admin',
+  )
 
   const auth = getAuth(app)
   const database = getFirestore(app)
   const functions = getFunctions(app, REGION)
+  const adminAuth = getAdminAuth(adminApp)
 
   connectAuthEmulator(auth, `http://${authAddress.host}:${authAddress.port}`, {
     disableWarnings: true,
@@ -85,6 +103,20 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
       premiumUntil: null,
       blocked: false,
       createdAt: now,
+    })
+
+    const supportReference = doc(collection(database, 'supportRequests'))
+
+    await setDoc(supportReference, {
+      uid,
+      email: credential.user.email,
+      protocol: supportReference.id,
+      category: 'technical',
+      subject: 'Teste integrado',
+      message: 'Validação completa do fluxo administrativo no emulador.',
+      status: 'open',
+      createdAt: now,
+      updatedAt: now,
     })
 
     const ownProfile = await getDoc(userReference)
@@ -114,6 +146,63 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
       (error) => error?.code === 'functions/permission-denied',
     )
 
+    const adminUser = await adminAuth.createUser({
+      email: 'integration-admin@example.com',
+      password: 'MeuReal-Admin-Integration-123!',
+    })
+    await adminAuth.setCustomUserClaims(adminUser.uid, { admin: true })
+
+    await signOut(auth)
+    const adminCredential = await signInWithEmailAndPassword(
+      auth,
+      'integration-admin@example.com',
+      'MeuReal-Admin-Integration-123!',
+    )
+    const adminToken = await getIdTokenResult(adminCredential.user, true)
+    assert.equal(adminToken.claims.admin, true)
+
+    const usersResult = await adminListUsers()
+    assert.equal(
+      usersResult.data.users.some((user) => user.uid === uid),
+      true,
+    )
+
+    const adminSetUserAccess = httpsCallable(functions, 'adminSetUserAccess')
+    const accessResult = await adminSetUserAccess({
+      targetUid: uid,
+      action: 'activate',
+      months: 1,
+    })
+    assert.equal(accessResult.data.ok, true)
+
+    const premiumProfile = await getDoc(userReference)
+    assert.equal(premiumProfile.data().plan, 'premium')
+    assert.equal(premiumProfile.data().blocked, false)
+    assert.ok(premiumProfile.data().premiumUntil)
+
+    const adminListSupportRequests = httpsCallable(functions, 'adminListSupportRequests')
+    const supportResult = await adminListSupportRequests()
+    assert.equal(
+      supportResult.data.requests.some((request) => request.id === supportReference.id),
+      true,
+    )
+
+    const adminRespondSupportRequest = httpsCallable(functions, 'adminRespondSupportRequest')
+    const responseResult = await adminRespondSupportRequest({
+      requestId: supportReference.id,
+      status: 'answered',
+      response: 'Atendimento validado pelo teste de integração.',
+    })
+    assert.equal(responseResult.data.ok, true)
+
+    const answeredSupport = await getDoc(supportReference)
+    assert.equal(answeredSupport.data().status, 'answered')
+    assert.equal(
+      answeredSupport.data().response,
+      'Atendimento validado pelo teste de integração.',
+    )
+    assert.equal(answeredSupport.data().responderUid, adminUser.uid)
+
     await signOut(auth)
 
     await assert.rejects(
@@ -122,5 +211,6 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     )
   } finally {
     await deleteApp(app)
+    await deleteAdminApp(adminApp)
   }
 })
