@@ -194,20 +194,12 @@ export const AppProvider = ({ children }) => {
   // ── Alerta de orçamento ──
   const checkBudgetAlert = useCallback(
     async (newTx, replacingId = '') => {
-      if (
-        newTx.type !== 'expense' ||
-        newTx.isSavings ||
-        newTx.paymentStatus === 'cancelled'
-      ) {
+      if (newTx.type !== 'expense' || newTx.isSavings || newTx.paymentStatus === 'cancelled') {
         return
       }
 
-      const {
-        budgetMonthKey,
-        getBudgetForMonth,
-        getBudgetSpent,
-        getBudgetTransactionMonth,
-      } = await import('../domain/budgetPeriods')
+      const { budgetMonthKey, getBudgetForMonth, getBudgetSpent, getBudgetTransactionMonth } =
+        await import('../domain/budgetPeriods')
       const { budgets, transactions } = stateRef.current
       const currentMonthKey = budgetMonthKey()
       const monthKey = getBudgetTransactionMonth(newTx)
