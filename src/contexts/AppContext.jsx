@@ -54,6 +54,7 @@ const AppContext = createContext({})
 export const useApp = () => useContext(AppContext)
 
 const NotificationsContext = createContext({
+  notifications: [],
   showNotification: () => {},
   dismissNotification: () => {},
 })
@@ -318,7 +319,6 @@ const initialState = {
     transactions: true,
     budgets: true,
   },
-  notifications: [],
 }
 
 function reducer(state, action) {
