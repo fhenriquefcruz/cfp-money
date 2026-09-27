@@ -162,11 +162,7 @@ function TransactionRow({ transaction }) {
 function CreditCardsCenterContent() {
   const { transactions, loading } = useApp()
   const { creditCards, loading: creditCardsLoading } = useCreditCards()
-  const {
-    invoiceEvents,
-    loading: invoiceEventsLoading,
-    createInvoiceEvent,
-  } = useInvoiceEvents()
+  const { invoiceEvents, loading: invoiceEventsLoading, createInvoiceEvent } = useInvoiceEvents()
   const [selectedMonth, setSelectedMonth] = useState(monthKeyFromDate())
   const [selectedCardId, setSelectedCardId] = useState('all')
   const [managingCardId, setManagingCardId] = useState(null)
