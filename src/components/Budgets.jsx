@@ -13,16 +13,7 @@ import {
   shiftBudgetMonth,
 } from '../domain/budgetPeriods'
 
-function monthLabel(monthKey) {
-  const [year, month] = monthKey.split('-').map(Number)
-  if (!year || !month) return monthKey
-
-  return new Intl.DateTimeFormat('pt-BR', {
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(year, month - 1, 1))
-}
-
+const monthLabel = (monthKey) => `${monthKey.slice(5, 7)}/${monthKey.slice(0, 4)}`
 function getBudgetStatus(percent) {
   const tone = percent > 100 ? 'danger' : percent >= 70 ? 'warning' : 'success'
   const label =
@@ -285,7 +276,7 @@ export default function Budgets() {
             <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
               Competência
             </p>
-            <p className="mt-1 text-lg font-black capitalize text-[--text-primary]">
+            <p className="mt-1 text-lg font-black text-[--text-primary]">
               {selectedLabel}
             </p>
             <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
