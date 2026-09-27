@@ -12,6 +12,10 @@ const appMocks = vi.hoisted(() => ({
 
 vi.mock('../contexts/AppContext', () => ({
   useApp: () => ({
+    creditCards: [],
+    ...appMocks,
+  }),
+  useCategories: () => ({
     categories: [
       {
         id: 'food',
@@ -21,8 +25,6 @@ vi.mock('../contexts/AppContext', () => ({
         color: '#c49d6b',
       },
     ],
-    creditCards: [],
-    ...appMocks,
   }),
 }))
 
