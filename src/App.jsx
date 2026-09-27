@@ -10,6 +10,7 @@ import {
   GoalsProvider,
   InvoiceEventsProvider,
   NotificationsProvider,
+  TransactionsProvider,
 } from './contexts/AppContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { PlanProvider } from './contexts/PlanContext'
@@ -101,13 +102,15 @@ export default function App() {
           <AuthProvider>
             <NotificationsProvider>
               <BudgetsProvider>
-                <AppProvider>
+                <TransactionsProvider>
+                  <AppProvider>
                   <PlanProvider>
                     <MoneyProvider>
                       <AppRoutes />
                     </MoneyProvider>
                   </PlanProvider>
-                </AppProvider>
+                  </AppProvider>
+                </TransactionsProvider>
               </BudgetsProvider>
             </NotificationsProvider>
           </AuthProvider>
