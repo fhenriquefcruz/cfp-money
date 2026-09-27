@@ -408,7 +408,9 @@ export default function TransactionList() {
   const [catFilter, setCatFilter] = useState('all')
   const [payFilter, setPayFilter] = useState('all')
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('all')
-  const [dateRange, setDateRange] = useState(getCurrentMonthRange)
+  const [dateRange, setDateRange] = useState(() =>
+    searchParams.get('scope') === 'all' ? { from: '', to: '' } : getCurrentMonthRange(),
+  )
   const [showFilters, setShowFilters] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTx, setEditingTx] = useState(null)
@@ -508,6 +510,9 @@ export default function TransactionList() {
     if (!routeSearch) return
 
     setSearch(routeSearch)
+    if (searchParams.get('scope') === 'all') {
+      setDateRange({ from: '', to: '' })
+    }
     setPage(1)
   }, [searchParams])
 
