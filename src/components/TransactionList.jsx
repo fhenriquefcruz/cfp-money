@@ -21,7 +21,12 @@ import {
   CheckCircle2,
   Clock3,
 } from 'lucide-react'
-import { useApp, useCategories, useCreditCards } from '../contexts/AppContext'
+import {
+  useApp,
+  useCategories,
+  useCreditCards,
+  useInvoiceEvents,
+} from '../contexts/AppContext'
 import { useAuth } from '../contexts/AuthContext'
 import { Button, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
@@ -392,7 +397,6 @@ export default function TransactionList() {
   const [searchParams] = useSearchParams()
   const {
     transactions,
-    invoiceEvents,
     removeTransaction,
     removeTransactionBatch,
     importTransactionBatch,
@@ -403,6 +407,7 @@ export default function TransactionList() {
   } = useApp()
   const { categories } = useCategories()
   const { creditCards } = useCreditCards()
+  const { invoiceEvents } = useInvoiceEvents()
 
   const [search, setSearch] = useState(() => searchParams.get('search') || '')
   const [typeFilter, setTypeFilter] = useState('all')
