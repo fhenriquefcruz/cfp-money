@@ -3,15 +3,13 @@ import { addGoal, deleteGoal, getGoals, updateGoal } from '../repositories/appRe
 import { createE2EAppState } from '../e2e/fixtures'
 import { E2E_MODE } from '../e2e/runtime'
 import { useAuth } from './AuthContext'
-import { useApp } from './AppContext'
 
 const GoalsContext = createContext({ goals: [], loading: true })
 
 export const useGoals = () => useContext(GoalsContext)
 
-export const GoalsProvider = ({ children }) => {
+export const GoalsProvider = ({ children, notify }) => {
   const { user } = useAuth()
-  const { showNotification } = useApp()
   const [goals, setGoals] = useState(() => (E2E_MODE ? createE2EAppState().goals : []))
   const [loading, setLoading] = useState(!E2E_MODE)
 
@@ -43,13 +41,13 @@ export const GoalsProvider = ({ children }) => {
       try {
         await action()
         await refreshGoals()
-        showNotification(successMessage, type)
+        notify?.(successMessage, type)
       } catch (error) {
-        showNotification('Erro ao atualizar meta.', 'error')
+        notify?.('Erro ao atualizar meta.', 'error')
         throw error
       }
     },
-    [user?.uid, refreshGoals, showNotification],
+    [user?.uid, refreshGoals, notify],
   )
 
   const createGoal = useCallback(
