@@ -604,7 +604,7 @@ export default function TransactionList() {
     const ids = lastImportIds
     setLastImportIds(null)
     try {
-      await removeTransactionBatch(ids, true)
+      await removeTransactionBatch(ids)
     } catch (error) {
       setLastImportIds(ids)
       throw error
