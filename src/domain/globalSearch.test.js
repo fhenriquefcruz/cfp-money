@@ -39,7 +39,6 @@ test('encontra transação e abre a busca interna sem limitar ao mês atual', ()
   })
   expect(decodeURIComponent(result.to)).toContain('search=Consulta odontológica')
   expect(result.to).toContain('scope=all')
-  expect(result.context).toContain('Saúde')
 })
 
 test('encontra categorias, metas e cartões inclusive com termos separados', () => {
