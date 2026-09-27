@@ -41,6 +41,8 @@ import {
   createPaymentStatusChange,
   ensureTransactionPaymentDefaults,
 } from '../domain/paymentControl'
+import { budgetMonthKey, getBudgetForMonth, getBudgetSpent } from '../domain/budgetPeriods'
+import { getTransactionActivityDate } from '../domain/transactionDates'
 
 const AppContext = createContext({})
 export const useApp = () => useContext(AppContext)
@@ -193,30 +195,23 @@ export const AppProvider = ({ children }) => {
 
   // ── Alerta de orçamento ──
   const checkBudgetAlert = useCallback(
-    (newTx) => {
-      if (newTx.type !== 'expense') return
-      const { budgets, transactions } = stateRef.current
-      const budget = budgets.find((b) => b.categoryId === newTx.categoryId)
-      if (!budget) return
-      const now = new Date()
-      const transactionDate = new Date(newTx.date + 'T00:00:00')
-      if (
-        transactionDate.getFullYear() !== now.getFullYear() ||
-        transactionDate.getMonth() !== now.getMonth()
-      ) {
-        return
-      }
+    (newTx, replacingId = '') => {
+      if (newTx.type !== 'expense' || newTx.isSavings || newTx.paymentStatus === 'cancelled') return
 
-      const start = new Date(now.getFullYear(), now.getMonth(), 1)
-      const spent =
-        transactions
-          .filter(
-            (t) =>
-              t.type === 'expense' &&
-              t.categoryId === newTx.categoryId &&
-              new Date(t.date + 'T00:00:00') >= start,
-          )
-          .reduce((s, t) => s + t.amount, 0) + newTx.amount
+      const { budgets, transactions } = stateRef.current
+      const currentMonthKey = budgetMonthKey()
+      const activityDate = getTransactionActivityDate(newTx)
+      const monthKey = budgetMonthKey(activityDate)
+
+      if (!monthKey || monthKey !== currentMonthKey) return
+
+      const budget = getBudgetForMonth(budgets, newTx.categoryId, monthKey, currentMonthKey)
+      if (!budget) return
+
+      const baseTransactions = replacingId
+        ? transactions.filter((transaction) => transaction.id !== replacingId)
+        : transactions
+      const spent = getBudgetSpent([...baseTransactions, newTx], newTx.categoryId, monthKey)
       const pct = (spent / budget.amount) * 100
 
       let threshold = null
@@ -252,7 +247,7 @@ export const AppProvider = ({ children }) => {
           percentage: pct,
           spent,
           limit: budget.amount,
-          monthKey: newTx.date.slice(0, 7),
+          monthKey,
         }).catch((error) => {
           console.error('[Meu Real] Fila de alerta por e-mail:', error)
         })
@@ -376,7 +371,7 @@ export const AppProvider = ({ children }) => {
         } else {
           await updateTransaction(user.uid, id, data)
         }
-        checkBudgetAlert(data)
+        checkBudgetAlert({ ...data, id }, id)
         showNotification('Transação atualizada!')
       } catch (e) {
         showNotification('Erro ao atualizar transação.', 'error')
@@ -717,12 +712,12 @@ export const AppProvider = ({ children }) => {
   }, [user?.uid])
 
   const saveBudget = useCallback(
-    async (categoryId, amount) => {
+    async (categoryId, amount, monthKey) => {
       if (!user?.uid) return
       try {
-        await setBudget(user.uid, categoryId, amount)
+        await setBudget(user.uid, categoryId, amount, monthKey)
         await refreshBudgets()
-        showNotification('Orçamento salvo!')
+        showNotification('Orçamento mensal salvo!')
       } catch (e) {
         showNotification('Erro ao salvar orçamento.', 'error')
         throw e
@@ -732,12 +727,12 @@ export const AppProvider = ({ children }) => {
   )
 
   const removeBudget = useCallback(
-    async (categoryId) => {
+    async (categoryId, monthKey, budgetId = '') => {
       if (!user?.uid) return
       try {
-        await deleteBudget(user.uid, categoryId)
+        await deleteBudget(user.uid, categoryId, monthKey, budgetId)
         await refreshBudgets()
-        showNotification('Orçamento removido.', 'info')
+        showNotification('Orçamento mensal removido.', 'info')
       } catch (e) {
         showNotification('Erro ao remover orçamento.', 'error')
         throw e
