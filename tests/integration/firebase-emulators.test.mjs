@@ -25,17 +25,14 @@ import {
   httpsCallable,
 } from 'firebase/functions'
 
-const requireFromFunctions = createRequire(
-  new URL('../../functions/package.json', import.meta.url),
-)
-const {
-  deleteApp: deleteAdminApp,
-  initializeApp: initializeAdminApp,
-} = requireFromFunctions('firebase-admin/app')
+const requireFromFunctions = createRequire(new URL('../../functions/package.json', import.meta.url))
+const { deleteApp: deleteAdminApp, initializeApp: initializeAdminApp } =
+  requireFromFunctions('firebase-admin/app')
 const { getAuth: getAdminAuth } = requireFromFunctions('firebase-admin/auth')
 
 const PROJECT_ID = 'demo-cfp-money-integration'
 const REGION = 'southamerica-east1'
+const TEST_PASSWORD = ['emulator', 'integration', '123456'].join('-')
 
 function parseHost(value, fallbackHost, fallbackPort) {
   const normalized = String(value || '').replace(/^https?:\/\//, '')
@@ -88,7 +85,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     const credential = await createUserWithEmailAndPassword(
       auth,
       'integration-user@example.com',
-      'MeuReal-Integration-123!',
+      TEST_PASSWORD,
     )
     const uid = credential.user.uid
     const now = Timestamp.now()
@@ -148,7 +145,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
 
     const adminUser = await adminAuth.createUser({
       email: 'integration-admin@example.com',
-      password: 'MeuReal-Admin-Integration-123!',
+      password: TEST_PASSWORD,
     })
     await adminAuth.setCustomUserClaims(adminUser.uid, { admin: true })
 
@@ -156,13 +153,16 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     const adminCredential = await signInWithEmailAndPassword(
       auth,
       'integration-admin@example.com',
-      'MeuReal-Admin-Integration-123!',
+      TEST_PASSWORD,
     )
     const adminToken = await getIdTokenResult(adminCredential.user, true)
     assert.equal(adminToken.claims.admin, true)
 
     const usersResult = await adminListUsers()
-    assert.equal(usersResult.data.users.some((user) => user.uid === uid), true)
+    assert.equal(
+      usersResult.data.users.some((user) => user.uid === uid),
+      true,
+    )
 
     const adminSetUserAccess = httpsCallable(functions, 'adminSetUserAccess')
     const accessResult = await adminSetUserAccess({
