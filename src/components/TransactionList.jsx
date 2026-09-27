@@ -419,7 +419,6 @@ export default function TransactionList() {
   const [seriesAction, setSeriesAction] = useState(null)
   const [importModal, setImportModal] = useState(false)
   const [lastImportIds, setLastImportIds] = useState([])
-  const [undoingImport, setUndoingImport] = useState(false)
   const [savedViews, setSavedViews] = useState([])
   const [page, setPage] = useState(1)
   const [sortAsc, setSortAsc] = useState(false)
@@ -600,14 +599,15 @@ export default function TransactionList() {
   }
 
   const handleUndoImport = async () => {
-    if (!lastImportIds.length || undoingImport) return
+    if (!lastImportIds?.length) return
 
-    setUndoingImport(true)
+    const ids = lastImportIds
+    setLastImportIds(null)
     try {
-      await removeTransactionBatch(lastImportIds, 'Última importação desfeita.')
-      setLastImportIds([])
-    } finally {
-      setUndoingImport(false)
+      await removeTransactionBatch(ids, true)
+    } catch (error) {
+      setLastImportIds(ids)
+      throw error
     }
   }
   const handleClose = () => {
@@ -815,7 +815,7 @@ export default function TransactionList() {
           <p>
             Importadas: {lastImportIds.length} {lastImportIds.length === 1 ? 'transação' : 'transações'}.
           </p>
-          <Button variant="ghost" size="xs" loading={undoingImport} onClick={handleUndoImport}>
+          <Button variant="ghost" size="xs" onClick={handleUndoImport}>
             Desfazer importação
           </Button>
         </div>
