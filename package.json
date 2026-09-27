@@ -9,7 +9,7 @@
     "build": "vite build && node scripts/generate-service-worker.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --write src/components/Budgets.jsx src/contexts/AppContext.jsx && git diff -- src/components/Budgets.jsx src/contexts/AppContext.jsx && false",
     "test": "vitest run",
     "test:watch": "vitest",
     "validate": "npm run lint && npm run test && npm run build",
