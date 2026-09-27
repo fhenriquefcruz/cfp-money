@@ -12,7 +12,12 @@ import {
   PiggyBank,
   ChevronDown,
 } from 'lucide-react'
-import { useCategories, useCreditCards, useNotifications, useTransactions } from '../contexts/AppContext'
+import {
+  useCategories,
+  useCreditCards,
+  useNotifications,
+  useTransactions,
+} from '../contexts/AppContext'
 import { Modal, Button, Input } from './ui'
 import { PAYMENT_METHODS } from '../utils'
 import { format, addMonths } from 'date-fns'
