@@ -246,7 +246,12 @@ export default function Categories() {
           </div>
           <p className="text-sm text-[--text-tertiary] mt-0.5">{categories.length} categorias</p>
         </div>
-        <Button variant="primary" size="sm" icon={<span aria-hidden="true">+</span>} onClick={() => handleOpen()}>
+        <Button
+          variant="primary"
+          size="sm"
+          icon={<span aria-hidden="true">+</span>}
+          onClick={() => handleOpen()}
+        >
           <span className="hidden sm:inline">Nova categoria</span>
           <span className="sm:hidden">Nova</span>
         </Button>
@@ -287,7 +292,11 @@ export default function Categories() {
           <p className="text-sm text-[--text-tertiary] mt-1 mb-4">
             Crie categorias para organizar suas finanças.
           </p>
-          <Button variant="primary" icon={<span aria-hidden="true">+</span>} onClick={() => handleOpen()}>
+          <Button
+            variant="primary"
+            icon={<span aria-hidden="true">+</span>}
+            onClick={() => handleOpen()}
+          >
             Criar primeira categoria
           </Button>
         </div>
