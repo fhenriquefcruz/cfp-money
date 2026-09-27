@@ -48,7 +48,7 @@ export function searchGlobal({
         label,
         to: `/transactions?search=${encodeURIComponent(label)}&scope=all`,
         kind: 'transaction',
-        context: contextParts.join(' · '),
+        context: ['Transação', ...contextParts].join(' · '),
         terms: [item.notes, item.paymentMethod].filter(Boolean).join(' '),
       })
     }),
