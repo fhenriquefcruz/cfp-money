@@ -12,7 +12,7 @@ import {
   PiggyBank,
   ChevronDown,
 } from 'lucide-react'
-import { useApp } from '../contexts/AppContext'
+import { useApp, useCategories } from '../contexts/AppContext'
 import { Modal, Button, Input } from './ui'
 import { PAYMENT_METHODS } from '../utils'
 import { format, addMonths } from 'date-fns'
@@ -164,13 +164,13 @@ function getEffectiveDate(baseDate, closingDay) {
 
 export default function TransactionForm({ isOpen, onClose, transaction }) {
   const {
-    categories,
     creditCards,
     createTransaction,
     editTransaction,
     addTransactionBatch,
     showNotification,
   } = useApp()
+  const { categories } = useCategories()
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
