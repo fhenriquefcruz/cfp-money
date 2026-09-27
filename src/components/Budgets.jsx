@@ -155,9 +155,7 @@ export default function Budgets() {
   const carryoverPlan = expenseCategories.flatMap((category) => {
     const source = getBudgetForMonth(budgets, category.id, sourceMonth, currentMonthKey)
     const target = getBudgetForMonth(budgets, category.id, selectedMonth, currentMonthKey)
-    return source?.monthKey === sourceMonth && !target
-      ? [{ categoryId: category.id, amount: source.amount }]
-      : []
+    return source && !target ? [{ categoryId: category.id, amount: source.amount }] : []
   })
 
   const overview = useMemo(
