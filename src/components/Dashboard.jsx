@@ -30,7 +30,6 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import {
-  useApp,
   useBudgets,
   useCategories,
   useCreditCards,
@@ -208,8 +207,13 @@ function MonthAttentionCard({ items }) {
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const { getSummary, getCategoryTotals, getSpendingForecast } = useApp()
-  const { transactions, loading: transactionsLoading } = useTransactions()
+  const {
+    transactions,
+    loading: transactionsLoading,
+    getSummary,
+    getCategoryTotals,
+    getSpendingForecast,
+  } = useTransactions()
   const { budgets } = useBudgets()
   const { categories } = useCategories()
   const { creditCards } = useCreditCards()
