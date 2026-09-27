@@ -270,10 +270,7 @@ export const AppProvider = ({ children }) => {
     // Carrega o resto em paralelo
     const load = async () => {
       try {
-        const [budgets, creditCards] = await Promise.all([
-          getBudgets(uid),
-          getCreditCards(uid),
-        ])
+        const [budgets, creditCards] = await Promise.all([getBudgets(uid), getCreditCards(uid)])
         dispatch({ type: 'SET_BUDGETS', payload: budgets })
         dispatch({ type: 'SET_CREDIT_CARDS', payload: creditCards })
       } catch (err) {
