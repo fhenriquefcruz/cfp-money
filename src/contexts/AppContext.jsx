@@ -721,9 +721,9 @@ export const AppProvider = ({ children }) => {
           items.map((item) => setBudget(user.uid, item.categoryId, item.amount, monthKey)),
         )
         await refreshBudgets()
-        showNotification('Orçamento atualizado!')
+        showNotification('Orçamento salvo!')
       } catch (e) {
-        showNotification('Erro ao salvar orçamento.', 'error')
+        showNotification('Erro ao salvar.', 'error')
         throw e
       }
     },
