@@ -45,7 +45,9 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3 rounded-2xl border border-[--brand-200] bg-[--brand-50] p-3.5">
-        <span aria-hidden="true" className="mt-0.5 text-[--brand-600]">✓</span>
+        <span aria-hidden="true" className="mt-0.5 text-[--brand-600]">
+          ✓
+        </span>
         <p className="text-xs leading-relaxed text-[--brand-700]">
           Cadastre apenas informações de identificação e calendário. Nunca informe número completo,
           código de segurança ou senha.
@@ -123,7 +125,8 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
 }
 
 function CreditCardsContent() {
-  const { creditCards, createCreditCard, editCreditCard, removeCreditCard, loading } = useCreditCards()
+  const { creditCards, createCreditCard, editCreditCard, removeCreditCard, loading } =
+    useCreditCards()
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
@@ -193,7 +196,12 @@ function CreditCardsContent() {
               </div>
             </div>
 
-            <Button variant="primary" size="sm" icon={<span aria-hidden="true">+</span>} onClick={openNew}>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<span aria-hidden="true">+</span>}
+              onClick={openNew}
+            >
               Adicionar cartão
             </Button>
           </div>
