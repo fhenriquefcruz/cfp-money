@@ -198,8 +198,9 @@ export const AppProvider = ({ children }) => {
         newTx.type !== 'expense' ||
         newTx.isSavings ||
         newTx.paymentStatus === 'cancelled'
-      )
+      ) {
         return
+      }
 
       const {
         budgetMonthKey,
