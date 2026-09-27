@@ -27,14 +27,11 @@ export function searchGlobal({
     ...pages.map(([label, to]) => row(`page:${to}`, label, to, 'page')),
     ...transactions.map((item, index) => {
       const label = item.description || item.categoryName || 'Transação'
-      const context = item.categoryName ? `Transação · ${item.categoryName}` : 'Transação'
-
       return row(
         `transaction:${item.id || index}`,
         label,
         `/transactions?search=${encodeURIComponent(label)}&scope=all`,
         'transaction',
-        context,
       )
     }),
     ...categories.map((item, index) =>
