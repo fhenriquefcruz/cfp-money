@@ -138,14 +138,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
 }
 
 export default function Budgets() {
-  const {
-    budgets,
-    categories,
-    saveBudget,
-    copyMonthlyBudgets,
-    removeBudget,
-    transactions,
-  } = useApp()
+  const { budgets, categories, saveBudget, removeBudget, transactions } = useApp()
   const [searchParams] = useSearchParams()
   const currentMonthKey = budgetMonthKey()
   const requestedMonth = budgetMonthKey(searchParams.get('month') || '')
@@ -153,7 +146,6 @@ export default function Budgets() {
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState({ categoryId: '', amount: '' })
   const [saving, setSaving] = useState(false)
-  const [copying, setCopying] = useState(false)
   const sourceMonth = shiftBudgetMonth(selectedMonth, -1)
 
   const expenseCategories = useMemo(
@@ -161,18 +153,13 @@ export default function Budgets() {
     [categories],
   )
 
-  const carryoverPlan = useMemo(
-    () =>
-      expenseCategories.flatMap((category) => {
-        const source = getBudgetForMonth(budgets, category.id, sourceMonth, currentMonthKey)
-        const target = getBudgetForMonth(budgets, category.id, selectedMonth, currentMonthKey)
-
-        return source?.monthKey === sourceMonth && !target
-          ? [{ categoryId: category.id, amount: source.amount }]
-          : []
-      }),
-    [budgets, expenseCategories, sourceMonth, selectedMonth, currentMonthKey],
-  )
+  const carryoverPlan = expenseCategories.flatMap((category) => {
+    const source = getBudgetForMonth(budgets, category.id, sourceMonth, currentMonthKey)
+    const target = getBudgetForMonth(budgets, category.id, selectedMonth, currentMonthKey)
+    return source?.monthKey === sourceMonth && !target
+      ? [{ categoryId: category.id, amount: source.amount }]
+      : []
+  })
 
   const overview = useMemo(
     () =>
@@ -226,16 +213,6 @@ export default function Budgets() {
     }
   }
 
-  const handleCopyPreviousMonth = async () => {
-    if (!carryoverPlan.length) return
-    setCopying(true)
-    try {
-      await copyMonthlyBudgets(carryoverPlan, selectedMonth)
-    } finally {
-      setCopying(false)
-    }
-  }
-
   const isCurrentMonth = selectedMonth === currentMonthKey
   const selectedLabel = monthLabel(selectedMonth)
 
@@ -262,8 +239,7 @@ export default function Budgets() {
               <Button
                 variant="secondary"
                 size="sm"
-                loading={copying}
-                onClick={handleCopyPreviousMonth}
+                onClick={() => saveBudget(carryoverPlan, null, selectedMonth)}
               >
                 Copiar {monthLabel(sourceMonth)}
               </Button>
