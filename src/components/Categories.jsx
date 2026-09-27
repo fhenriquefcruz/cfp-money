@@ -1,7 +1,6 @@
 // src/components/Categories.jsx
 import React, { useState, useEffect, useRef } from 'react'
-import { Plus, Edit2, Trash2 } from 'lucide-react'
-import { useApp } from '../contexts/AppContext'
+import { useCategories } from '../contexts/AppContext'
 import { Card, Button, Input, Modal } from './ui'
 import InfoTooltip from './InfoTooltip'
 
@@ -112,7 +111,7 @@ const EMOJI_LIST = [
 ]
 
 export default function Categories() {
-  const { categories, createCategory, editCategory, removeCategory } = useApp()
+  const { categories, createCategory, editCategory, removeCategory } = useCategories()
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({
@@ -220,7 +219,7 @@ export default function Categories() {
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
             title={cat.isDefault ? 'Ver detalhes' : 'Editar'}
           >
-            <Edit2 size={14} />
+            <span aria-hidden="true">✎</span>
           </button>
           {!cat.isDefault && (
             <button
@@ -228,7 +227,7 @@ export default function Categories() {
               className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
               title="Excluir"
             >
-              <Trash2 size={14} />
+              <span aria-hidden="true">×</span>
             </button>
           )}
         </div>
@@ -247,7 +246,7 @@ export default function Categories() {
           </div>
           <p className="text-sm text-[--text-tertiary] mt-0.5">{categories.length} categorias</p>
         </div>
-        <Button variant="primary" size="sm" icon={<Plus />} onClick={() => handleOpen()}>
+        <Button variant="primary" size="sm" icon={<span aria-hidden="true">+</span>} onClick={() => handleOpen()}>
           <span className="hidden sm:inline">Nova categoria</span>
           <span className="sm:hidden">Nova</span>
         </Button>
@@ -288,7 +287,7 @@ export default function Categories() {
           <p className="text-sm text-[--text-tertiary] mt-1 mb-4">
             Crie categorias para organizar suas finanças.
           </p>
-          <Button variant="primary" icon={<Plus />} onClick={() => handleOpen()}>
+          <Button variant="primary" icon={<span aria-hidden="true">+</span>} onClick={() => handleOpen()}>
             Criar primeira categoria
           </Button>
         </div>
