@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { MessageSquareText } from 'lucide-react'
-import { adminRespondSupportRequest, onSupportRequestsAdmin } from '../services/support'
+import { adminListSupportRequests, adminRespondSupportRequest } from '../services/adminGateway'
 import { Button, Card } from './ui'
 
 const STATUS_OPTIONS = [
@@ -22,13 +22,21 @@ export default function SupportAdminCard() {
   const [saving, setSaving] = useState(false)
   const [feedback, setFeedback] = useState('')
 
-  useEffect(
-    () =>
-      onSupportRequestsAdmin(setRequests, (error) =>
-        setFeedback(error?.message || 'Não foi possível carregar os atendimentos.'),
-      ),
-    [],
-  )
+  useEffect(() => {
+    let active = true
+
+    adminListSupportRequests()
+      .then((data) => {
+        if (active) setRequests(data)
+      })
+      .catch((error) => {
+        if (active) setFeedback(error?.message || 'Não foi possível carregar os atendimentos.')
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   const selected = requests.find((item) => item.id === selectedId) || null
 
@@ -49,7 +57,12 @@ export default function SupportAdminCard() {
     setSaving(true)
     setFeedback('')
     try {
-      await adminRespondSupportRequest(selected.id, { status, response })
+      await adminRespondSupportRequest({
+        requestId: selected.id,
+        status,
+        response,
+      })
+      setRequests(await adminListSupportRequests())
       setFeedback(`Atendimento ${protocolLabel(selected.protocol || selected.id)} atualizado.`)
     } catch (error) {
       setFeedback(error?.message || 'Não foi possível atualizar o atendimento.')
