@@ -50,9 +50,6 @@ import {
   ensureTransactionPaymentDefaults,
 } from '../domain/paymentControl'
 
-const AppContext = createContext({})
-export const useApp = () => useContext(AppContext)
-
 const NotificationsContext = createContext({
   notifications: [],
   showNotification: () => {},
@@ -790,35 +787,9 @@ export const TransactionsProvider = ({ children }) => {
     [user?.uid, showNotification],
   )
 
-  return (
-    <TransactionsContext.Provider
-      value={{
-        transactions: state.transactions,
-        loading: state.loading.transactions,
-        createTransaction,
-        editTransaction,
-        setTransactionPaymentStatus,
-        commitPaymentStatusOperation,
-        removeTransaction,
-        removeTransactionBatch,
-        addTransactionBatch,
-        importTransactionBatch,
-        applyTransactionSeriesOperation,
-      }}
-    >
-      {children}
-    </TransactionsContext.Provider>
-  )
-}
-
-export const AppProvider = ({ children }) => {
-  const { transactions } = useTransactions()
-  const transactionsRef = useRef(transactions)
-  transactionsRef.current = transactions
-
   // ── CÁLCULOS ──
   const getMonthTransactions = useCallback(
-    (year, month) => transactionsForMonth(transactionsRef.current, year, month),
+    (year, month) => transactionsForMonth(stateRef.current.transactions, year, month),
     [],
   )
 
@@ -863,11 +834,11 @@ export const AppProvider = ({ children }) => {
     return months.length ? months.reduce((s, v) => s + v, 0) / months.length : 0
   }, [getSummary])
 
-  const getTotalBalance = useCallback(() => calculateCurrentBalance(transactionsRef.current), [])
+  const getTotalBalance = useCallback(() => calculateCurrentBalance(stateRef.current.transactions), [])
 
   const filterTransactions = useCallback(
     ({ year, month, categoryId, paymentMethod, type } = {}) =>
-      transactionsRef.current.filter((t) => {
+      stateRef.current.transactions.filter((t) => {
         const d = new Date(t.date + 'T00:00:00')
         if (year && d.getFullYear() !== year) return false
         if (month !== undefined && d.getMonth() !== month) return false
@@ -880,8 +851,19 @@ export const AppProvider = ({ children }) => {
   )
 
   return (
-    <AppContext.Provider
+    <TransactionsContext.Provider
       value={{
+        transactions: state.transactions,
+        loading: state.loading.transactions,
+        createTransaction,
+        editTransaction,
+        setTransactionPaymentStatus,
+        commitPaymentStatusOperation,
+        removeTransaction,
+        removeTransactionBatch,
+        addTransactionBatch,
+        importTransactionBatch,
+        applyTransactionSeriesOperation,
         getMonthTransactions,
         getSummary,
         getCategoryTotals,
@@ -891,6 +873,7 @@ export const AppProvider = ({ children }) => {
       }}
     >
       {children}
-    </AppContext.Provider>
+    </TransactionsContext.Provider>
   )
 }
+
