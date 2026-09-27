@@ -811,18 +811,11 @@ export default function TransactionList() {
       </div>
 
       {lastImportIds.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--brand-200] bg-[--brand-50] px-3 py-2.5">
-          <p className="text-xs text-[--brand-800]">
-            Última importação: {lastImportIds.length}{' '}
-            {lastImportIds.length === 1 ? 'transação adicionada' : 'transações adicionadas'}.
+        <div className="transaction-import-undo">
+          <p>
+            Importadas: {lastImportIds.length} {lastImportIds.length === 1 ? 'transação' : 'transações'}.
           </p>
-          <Button
-            variant="ghost"
-            size="xs"
-            loading={undoingImport}
-            disabled={undoingImport}
-            onClick={handleUndoImport}
-          >
+          <Button variant="ghost" size="xs" loading={undoingImport} onClick={handleUndoImport}>
             Desfazer importação
           </Button>
         </div>
