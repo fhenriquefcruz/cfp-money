@@ -478,7 +478,7 @@ export const AppProvider = ({ children }) => {
   )
 
   const removeTransactionBatch = useCallback(
-    async (ids, successMessage) => {
+    async (ids, imported = false) => {
       if (!user?.uid) return
       try {
         if (E2E_MODE) {
@@ -487,12 +487,15 @@ export const AppProvider = ({ children }) => {
           await fbDeleteBatch(user.uid, ids)
         }
         showNotification(
-          successMessage ||
-            (ids.length > 1 ? 'Compra parcelada removida.' : 'Compra removida.'),
+          imported
+            ? 'Importação desfeita.'
+            : ids.length > 1
+              ? 'Compra parcelada removida.'
+              : 'Compra removida.',
           'info',
         )
       } catch (e) {
-        showNotification('Erro ao desfazer remoção em lote.', 'error')
+        showNotification('Erro ao desfazer compra.', 'error')
         throw e
       }
     },
