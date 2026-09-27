@@ -43,7 +43,6 @@ export function searchGlobal({
         item.name || 'Categoria',
         '/categories',
         'category',
-        'Categoria',
       ),
     ),
     ...goals.map((item, index) =>
@@ -52,7 +51,6 @@ export function searchGlobal({
         item.name || 'Meta',
         '/goals',
         'goal',
-        'Meta financeira',
       ),
     ),
     ...creditCards.map((item, index) =>
