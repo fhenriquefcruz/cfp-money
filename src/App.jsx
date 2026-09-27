@@ -6,6 +6,7 @@ import { AppProvider } from './contexts/AppContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { PlanProvider } from './contexts/PlanContext'
 import { MoneyProvider } from './contexts/MoneyContext'
+import { GoalsProvider } from './contexts/GoalsContext'
 import Sidebar from './components/Sidebar'
 import Login from './components/Login'
 import PlanAlert from './components/PlanAlert'
@@ -81,11 +82,13 @@ export default function App() {
         <ThemeProvider>
           <AuthProvider>
             <AppProvider>
-              <PlanProvider>
-                <MoneyProvider>
-                  <AppRoutes />
-                </MoneyProvider>
-              </PlanProvider>
+              <GoalsProvider>
+                <PlanProvider>
+                  <MoneyProvider>
+                    <AppRoutes />
+                  </MoneyProvider>
+                </PlanProvider>
+              </GoalsProvider>
             </AppProvider>
           </AuthProvider>
         </ThemeProvider>
