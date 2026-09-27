@@ -206,14 +206,8 @@ function MonthAttentionCard({ items }) {
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const {
-    transactions,
-    budgets,
-    loading,
-    getSummary,
-    getCategoryTotals,
-    getSpendingForecast,
-  } = useApp()
+  const { transactions, budgets, loading, getSummary, getCategoryTotals, getSpendingForecast } =
+    useApp()
   const { categories } = useCategories()
   const { creditCards } = useCreditCards()
   const { goals } = useGoals()
