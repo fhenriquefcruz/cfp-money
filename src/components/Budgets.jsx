@@ -1,7 +1,7 @@
 // src/components/Budgets.jsx
 import React, { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useApp, useCategories } from '../contexts/AppContext'
+import { useApp, useBudgets, useCategories } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Input, Modal } from './ui'
 import { formatCurrency } from '../utils'
 import {
@@ -137,7 +137,8 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
 }
 
 export default function Budgets() {
-  const { budgets, saveBudget, removeBudget, transactions } = useApp()
+  const { transactions } = useApp()
+  const { budgets, saveBudget, removeBudget } = useBudgets()
   const { categories } = useCategories()
   const [searchParams] = useSearchParams()
   const currentMonthKey = budgetMonthKey()
