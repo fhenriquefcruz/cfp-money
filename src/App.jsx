@@ -48,30 +48,30 @@ const AppRoutes = () => {
   return (
     <GoalsProvider notify={showNotification}>
       <div className="aurora-app-shell flex h-dvh min-h-0 overflow-hidden bg-[--bg-app]">
-      <Sidebar />
-      <main className="aurora-main min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 sm:px-5 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">
-        <Suspense fallback={<LoadingScreen />}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/money" element={<Money />} />
-            <Route path="/cards" element={<CreditCardsDashboard />} />
-            <Route path="/transactions" element={<TransactionList />} />
-            <Route path="/categories" element={<Categories />} />
-            <Route path="/goals" element={<Goals />} />
-            <Route path="/budgets" element={<Budgets />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/404" replace />} />
-            <Route path="/404" element={<NotFound />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </main>
-      <PlanAlert />
-      <Onboarding />
-      <LegalGate />
-      <NotificationStack />
+        <Sidebar />
+        <main className="aurora-main min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 sm:px-5 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">
+          <Suspense fallback={<LoadingScreen />}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/money" element={<Money />} />
+              <Route path="/cards" element={<CreditCardsDashboard />} />
+              <Route path="/transactions" element={<TransactionList />} />
+              <Route path="/categories" element={<Categories />} />
+              <Route path="/goals" element={<Goals />} />
+              <Route path="/budgets" element={<Budgets />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/404" replace />} />
+              <Route path="/404" element={<NotFound />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </main>
+        <PlanAlert />
+        <Onboarding />
+        <LegalGate />
+        <NotificationStack />
         <PwaUpdateNotice />
       </div>
     </GoalsProvider>
