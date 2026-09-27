@@ -80,7 +80,7 @@ export default function GlobalSearchPalette({
   }
 
   return (
-    <Modal isOpen onClose={onClose} title="Buscar no Meu Real" size="lg">
+    <Modal isOpen onClose={onClose} title="Busca global" size="lg">
       <input
         autoFocus
         value={query}
@@ -89,14 +89,14 @@ export default function GlobalSearchPalette({
           setQuery(event.target.value)
           setActive(0)
         }}
-        placeholder="Transação, meta, cartão ou área..."
-        aria-label="Termo da busca global"
+        placeholder="Buscar..."
+        aria-label="Busca global"
         className="global-search-input"
       />
 
       <div className="global-search-results" role="listbox">
         {query && !results.length ? (
-          <p className="global-search-empty">Nenhum resultado encontrado</p>
+          <p className="global-search-empty">Nada encontrado</p>
         ) : (
           results.map((item, index) => {
             const favorite = favorites.includes(item.to)
@@ -104,7 +104,6 @@ export default function GlobalSearchPalette({
             return (
               <div className="global-search-row" key={item.id}>
                 <button
-                  type="button"
                   role="option"
                   aria-selected={active === index}
                   onClick={() => open(item)}
@@ -124,8 +123,7 @@ export default function GlobalSearchPalette({
 
                 {item.kind === 'page' && (
                   <button
-                    type="button"
-                    onClick={() => toggleFavorite(item.to)}
+                      onClick={() => toggleFavorite(item.to)}
                     className="global-search-favorite"
                     aria-label={`Favoritar ${item.label}`}
                     aria-pressed={favorite}
