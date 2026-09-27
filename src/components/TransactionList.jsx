@@ -396,6 +396,7 @@ export default function TransactionList() {
     creditCards,
     invoiceEvents,
     removeTransaction,
+    removeTransactionBatch,
     importTransactionBatch,
     showNotification,
     applyTransactionSeriesOperation,
@@ -417,6 +418,8 @@ export default function TransactionList() {
   const [deleteId, setDeleteId] = useState(null)
   const [seriesAction, setSeriesAction] = useState(null)
   const [importModal, setImportModal] = useState(false)
+  const [lastImportIds, setLastImportIds] = useState([])
+  const [undoingImport, setUndoingImport] = useState(false)
   const [savedViews, setSavedViews] = useState([])
   const [page, setPage] = useState(1)
   const [sortAsc, setSortAsc] = useState(false)
@@ -588,6 +591,24 @@ export default function TransactionList() {
   const handleNew = () => {
     setEditingTx(null)
     setModalOpen(true)
+  }
+
+  const handleCsvImport = async (items) => {
+    const ids = await importTransactionBatch(items)
+    setLastImportIds(ids || [])
+    return ids
+  }
+
+  const handleUndoImport = async () => {
+    if (!lastImportIds.length || undoingImport) return
+
+    setUndoingImport(true)
+    try {
+      await removeTransactionBatch(lastImportIds, 'Última importação desfeita.')
+      setLastImportIds([])
+    } finally {
+      setUndoingImport(false)
+    }
   }
   const handleClose = () => {
     setModalOpen(false)
@@ -788,6 +809,24 @@ export default function TransactionList() {
           </Button>
         </div>
       </div>
+
+      {lastImportIds.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--brand-200] bg-[--brand-50] px-3 py-2.5">
+          <p className="text-xs text-[--brand-800]">
+            Última importação: {lastImportIds.length}{' '}
+            {lastImportIds.length === 1 ? 'transação adicionada' : 'transações adicionadas'}.
+          </p>
+          <Button
+            variant="ghost"
+            size="xs"
+            loading={undoingImport}
+            disabled={undoingImport}
+            onClick={handleUndoImport}
+          >
+            Desfazer importação
+          </Button>
+        </div>
+      )}
 
       {/* Cards de resumo */}
       <div className="operational-summary-grid grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -1325,7 +1364,7 @@ export default function TransactionList() {
         onClose={() => setImportModal(false)}
         categories={categories}
         existingTransactions={transactions}
-        onImport={importTransactionBatch}
+        onImport={handleCsvImport}
       />
     </div>
   )
