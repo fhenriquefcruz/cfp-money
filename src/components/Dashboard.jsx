@@ -44,6 +44,7 @@ import {
 import { getTransactionDateContext } from '../domain/transactionDates'
 import { buildPaymentControlOverview } from '../domain/paymentControl'
 import { buildFinancialHealth } from '../domain/financialHealth'
+import { budgetMonthKey, buildMonthlyBudgetOverview } from '../domain/budgetPeriods'
 import { format, subMonths, addMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -226,8 +227,6 @@ export default function Dashboard() {
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
   const monthBounds = useMemo(() => getCalendarMonthBounds(viewDate), [year, month])
-  const { start: monthStart, end: monthEnd } = monthBounds
-
   const paymentSummary = useMemo(
     () =>
       buildPaymentControlOverview({
@@ -249,33 +248,37 @@ export default function Dashboard() {
     [transactions],
   )
 
+  const budgetOverview = useMemo(
+    () =>
+      buildMonthlyBudgetOverview({
+        budgets,
+        transactions,
+        monthKey: budgetMonthKey(viewDate),
+        currentMonthKey: budgetMonthKey(),
+      }),
+    [budgets, transactions, viewDate],
+  )
+
   const budgetAlerts = useMemo(
     () =>
-      budgets
-        .map((b) => {
-          const cat = categories.find((c) => c.id === b.categoryId)
-          const spent = transactions
-            .filter(
-              (t) =>
-                t.type === 'expense' &&
-                t.categoryId === b.categoryId &&
-                t.date >= monthStart &&
-                t.date <= monthEnd,
-            )
-            .reduce((s, t) => s + t.amount, 0)
-          return { budget: b, cat, spent, pct: (spent / b.amount) * 100 }
-        })
-        .filter((b) => b.pct >= 70)
-        .sort((a, b) => b.pct - a.pct)
+      budgetOverview.items
+        .map((item) => ({
+          budget: item,
+          cat: categories.find((category) => category.id === item.categoryId),
+          spent: item.spent,
+          pct: item.percent,
+        }))
+        .filter((item) => item.pct >= 70)
+        .sort((first, second) => second.pct - first.pct)
         .slice(0, 3),
-    [budgets, transactions, categories, monthStart, monthEnd],
+    [budgetOverview, categories],
   )
 
   const healthReport = useMemo(() => {
     const savingRate =
       currentSummary.income > 0 ? (currentSummary.savings / currentSummary.income) * 100 : 0
-    const hasBudgets = budgets.length > 0
-    const budgetsOk = hasBudgets && budgetAlerts.filter((budget) => budget.pct > 100).length === 0
+    const hasBudgets = budgetOverview.items.length > 0
+    const budgetsOk = hasBudgets && budgetOverview.items.every((budget) => budget.percent <= 100)
 
     return buildFinancialHealth({
       balance: currentSummary.balance,
@@ -285,7 +288,7 @@ export default function Dashboard() {
       budgetsOk,
       goalsActive: goals.length > 0,
     })
-  }, [currentSummary, budgets, budgetAlerts, goals])
+  }, [currentSummary, budgetOverview, goals])
 
   const monthAttention = useMemo(
     () =>
