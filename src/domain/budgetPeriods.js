@@ -1,31 +1,61 @@
-import {
-  budgetMonthKey,
-  getBudgetForMonth,
-  getBudgetSpent,
-  getBudgetTransactionMonth,
-} from './budgetCore'
+import { getTransactionActivityDate } from './transactionDates'
 
-export {
-  budgetMonthKey,
-  getBudgetForMonth,
-  getBudgetSpent,
-  getBudgetTransactionMonth,
-} from './budgetCore'
+const MONTH = /^\d{4}-\d{2}/
+
+export function budgetMonthKey(value = new Date()) {
+  if (typeof value === 'string') return MONTH.test(value) ? value.slice(0, 7) : ''
+
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+}
+
+export function getBudgetForMonth(
+  budgets = [],
+  categoryId,
+  monthKey,
+  currentMonthKey = budgetMonthKey(),
+) {
+  const exact = budgets.find(
+    (budget) => budget.categoryId === categoryId && budget.monthKey === monthKey,
+  )
+  if (exact) return { ...exact, legacyFallback: false }
+  if (monthKey !== currentMonthKey) return null
+
+  const legacy = budgets.find(
+    (budget) => budget.categoryId === categoryId && !budget.monthKey,
+  )
+  return legacy ? { ...legacy, legacyFallback: true } : null
+}
+
+export const getBudgetTransactionMonth = (transaction = {}) =>
+  getTransactionActivityDate(transaction)?.slice(0, 7) || ''
+
+export function getBudgetSpent(transactions = [], categoryId, monthKey) {
+  if (!MONTH.test(monthKey || '')) return 0
+
+  return transactions.reduce(
+    (total, transaction) =>
+      transaction.type === 'expense' &&
+      !transaction.isSavings &&
+      transaction.paymentStatus !== 'cancelled' &&
+      transaction.categoryId === categoryId &&
+      getBudgetTransactionMonth(transaction) === monthKey
+        ? total + (Number(transaction.amount) || 0)
+        : total,
+    0,
+  )
+}
 
 export function shiftBudgetMonth(monthKey, amount) {
-  if (!/^\d{4}-\d{2}$/.test(monthKey || '')) return ''
+  if (!MONTH.test(monthKey || '')) return ''
   const [year, month] = monthKey.split('-').map(Number)
   return budgetMonthKey(new Date(year, month - 1 + amount, 1))
 }
 
-function getBudgetsForMonth(
-  budgets = [],
-  monthKey,
-  currentMonthKey = budgetMonthKey(),
-) {
-  return [
-    ...new Set(budgets.map((budget) => budget.categoryId).filter(Boolean)),
-  ]
+function getBudgetsForMonth(budgets, monthKey, currentMonthKey) {
+  return [...new Set(budgets.map(({ categoryId }) => categoryId).filter(Boolean))]
     .map((categoryId) => getBudgetForMonth(budgets, categoryId, monthKey, currentMonthKey))
     .filter(Boolean)
 }
@@ -39,7 +69,6 @@ export function buildMonthlyBudgetOverview({
   const items = getBudgetsForMonth(budgets, monthKey, currentMonthKey).map((budget) => {
     const spent = getBudgetSpent(transactions, budget.categoryId, monthKey)
     const amount = Number(budget.amount) || 0
-
     return {
       ...budget,
       spent,
