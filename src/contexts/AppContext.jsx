@@ -438,14 +438,15 @@ function transactionsReducer(state, action) {
 export const TransactionsProvider = ({ children }) => {
   const { user } = useAuth()
   const { budgets } = useBudgets()
-  const [state, dispatch] = useReducer(transactionsReducer, undefined, () =>
-    E2E_MODE
-      ? {
-          transactions: createE2EAppState().transactions,
-          loading: { transactions: false },
-        }
-      : transactionsInitialState,
-  )
+  const [state, dispatch] = useReducer(transactionsReducer, undefined, () => {
+    if (E2E_MODE) {
+      return {
+        transactions: createE2EAppState().transactions,
+        loading: { transactions: false },
+      }
+    }
+    return transactionsInitialState
+  })
   const stateRef = useRef(state)
   stateRef.current = state
 
