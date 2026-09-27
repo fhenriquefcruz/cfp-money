@@ -14,7 +14,7 @@ import {
   WalletCards,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useApp, useCreditCards } from '../contexts/AppContext'
+import { useApp, useCreditCards, useInvoiceEvents } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
@@ -160,8 +160,13 @@ function TransactionRow({ transaction }) {
 }
 
 function CreditCardsCenterContent() {
-  const { transactions, invoiceEvents, loading, createInvoiceEvent } = useApp()
+  const { transactions, loading } = useApp()
   const { creditCards, loading: creditCardsLoading } = useCreditCards()
+  const {
+    invoiceEvents,
+    loading: invoiceEventsLoading,
+    createInvoiceEvent,
+  } = useInvoiceEvents()
   const [selectedMonth, setSelectedMonth] = useState(monthKeyFromDate())
   const [selectedCardId, setSelectedCardId] = useState('all')
   const [managingCardId, setManagingCardId] = useState(null)
@@ -195,7 +200,7 @@ function CreditCardsCenterContent() {
       : center.invoices.find((invoice) => invoice.card.id === selectedCardId)
   const managedInvoice = center.invoices.find((invoice) => invoice.card.id === managingCardId)
 
-  const loadingData = loading.transactions || creditCardsLoading || loading.invoiceEvents
+  const loadingData = loading.transactions || creditCardsLoading || invoiceEventsLoading
 
   return (
     <div className="operational-page credit-cards-premium mx-auto min-w-0 w-full max-w-7xl space-y-5 pb-24 lg:pb-6">
