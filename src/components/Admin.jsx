@@ -175,7 +175,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
               { label: 'Plano', value: u.plan || 'trial' },
               {
                 label: 'Cadastro',
-                value: u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString('pt-BR') : '—',
+                value: formatPlanExpiration({ premiumUntil: u.createdAt }),
               },
               {
                 label: 'Premium até',
