@@ -1,5 +1,6 @@
 import {
   budgetMonthKey,
+  buildBudgetCarryoverPlan,
   buildMonthlyBudgetOverview,
   getBudgetForMonth,
   getBudgetSpent,
@@ -92,4 +93,36 @@ test('resume apenas os limites e gastos da competência escolhida', () => {
     totalSpent: 550,
     overCount: 1,
   })
+})
+
+
+test('planeja cópia do mês anterior sem sobrescrever limites já definidos', () => {
+  const plan = buildBudgetCarryoverPlan({
+    budgets: [
+      { categoryId: 'food', amount: 500, monthKey: '2026-08' },
+      { categoryId: 'car', amount: 300, monthKey: '2026-08' },
+      { categoryId: 'food', amount: 650, monthKey: '2026-09' },
+      { categoryId: 'legacy', amount: 999 },
+    ],
+    sourceMonthKey: '2026-08',
+    targetMonthKey: '2026-09',
+    categoryIds: ['food', 'car'],
+  })
+
+  expect(plan).toEqual([{ categoryId: 'car', amount: 300 }])
+})
+
+test('ignora categorias removidas e orçamento legado ao copiar competência', () => {
+  const plan = buildBudgetCarryoverPlan({
+    budgets: [
+      { categoryId: 'food', amount: 500, monthKey: '2026-08' },
+      { categoryId: 'removed', amount: 200, monthKey: '2026-08' },
+      { categoryId: 'legacy', amount: 900 },
+    ],
+    sourceMonthKey: '2026-08',
+    targetMonthKey: '2026-09',
+    categoryIds: ['food'],
+  })
+
+  expect(plan).toEqual([{ categoryId: 'food', amount: 500 }])
 })
