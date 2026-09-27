@@ -41,8 +41,7 @@ function BudgetCard({
   const barColor = `var(--${status.tone}-icon)`
 
   return (
-    <div>
-      <Card className={isOver ? 'ring-2 ring-[--danger-border]' : ''}>
+    <Card className={isOver ? 'ring-2 ring-[--danger-border]' : ''}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <div
@@ -71,7 +70,6 @@ function BudgetCard({
               }
               className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
               aria-label={`Remover orçamento de ${category.name}`}
-              title="Remover orçamento deste mês"
             >
               <Trash2 size={14} />
             </button>
@@ -142,9 +140,6 @@ function BudgetCard({
           </>
         ) : (
           <div className="mt-4 rounded-2xl border border-dashed border-[--border-default] bg-[--bg-subtle] p-3">
-            <p className="text-xs leading-relaxed text-[--text-tertiary]">
-              Nenhum orçamento foi definido para esta categoria nesta competência.
-            </p>
             <button
               type="button"
               onClick={() => onEdit({ categoryId: category.id, amount: '' })}
@@ -155,8 +150,7 @@ function BudgetCard({
             </button>
           </div>
         )}
-      </Card>
-    </div>
+    </Card>
   )
 }
 
@@ -252,10 +246,6 @@ export default function Budgets() {
       <div className="operational-page__header flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black text-[--text-primary]">Orçamento mensal</h1>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[--text-tertiary]">
-            Defina quanto pretende gastar em cada categoria no mês escolhido. Meses anteriores não
-            são somados ao consumo atual.
-          </p>
         </div>
 
         <Button variant="primary" size="sm" icon={<Plus />} onClick={() => openEditor()}>
@@ -266,9 +256,6 @@ export default function Budgets() {
       <Card className="budget-period-selector shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-              Competência
-            </p>
             <p className="mt-1 text-lg font-black text-[--text-primary]">
               {selectedLabel}
             </p>
