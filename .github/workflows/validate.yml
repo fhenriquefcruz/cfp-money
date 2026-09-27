@@ -40,6 +40,12 @@ jobs:
             functions/package-lock.json
             worker/email-notifications/package-lock.json
 
+      - name: Configure Java for Firebase emulators
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Install frontend dependencies
         run: npm ci
 
@@ -51,6 +57,9 @@ jobs:
 
       - name: Complete validation
         run: npm run validate:all
+
+      - name: Firebase Emulator integration
+        run: npm run test:integration:firebase
 
       - name: Formatting
         run: npm run format:check
