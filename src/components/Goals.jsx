@@ -381,7 +381,8 @@ function GoalsContent() {
             {
               label: 'Prazos vencidos',
               value: String(overview.overdue),
-              helper: overview.overdue > 0 ? 'Metas que pedem revisão' : 'Nenhuma meta atrasada',
+              helper:
+                overview.overdue > 0 ? 'Metas que pedem revisão' : 'Nenhuma meta atrasada',
             },
           ].map((item) => (
             <Card key={item.label} className="py-3">
@@ -580,7 +581,11 @@ function GoalsContent() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="secondary" fullWidth onClick={() => setDeleteCandidate(null)}>
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={() => setDeleteCandidate(null)}
+              >
                 Cancelar
               </Button>
               <Button
