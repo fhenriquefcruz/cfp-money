@@ -22,7 +22,12 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePlan } from '../contexts/PlanContext'
-import { useCategories, useCreditCards, useGoals, useTransactions } from '../contexts/AppContext'
+import {
+  useCategories,
+  useCreditCards,
+  useGoals,
+  useTransactions,
+} from '../contexts/AppContext'
 import { Button } from './ui'
 import ThemeToggle from './ThemeToggle'
 import { clsx } from 'clsx'
