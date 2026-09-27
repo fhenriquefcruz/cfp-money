@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, PieChart, Plus, Trash2 } from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Input, Modal } from './ui'
-import InfoTooltip from './InfoTooltip'
 import { formatCurrency } from '../utils'
 import {
   budgetMonthKey,
@@ -25,45 +24,14 @@ function monthLabel(monthKey) {
 }
 
 function getBudgetStatus(percent) {
-  if (percent > 100) {
-    return {
-      color: 'var(--danger-text)',
-      bgClass: 'bg-[--danger-bg]',
-      borderClass: 'border-[--danger-border]',
-      barColor: 'var(--danger-icon)',
-      label: `Limite ultrapassado em ${(percent - 100).toFixed(0)}%`,
-    }
-  }
+  const tone = percent > 100 ? 'danger' : percent >= 70 ? 'warning' : 'success'
+  const label =
+    percent > 100
+      ? `Limite ultrapassado em ${(percent - 100).toFixed(0)}%`
+      : `${percent.toFixed(0)}% utilizado`
 
-  if (percent >= 90) {
-    return {
-      color: 'var(--warning-text)',
-      bgClass: 'bg-[--warning-bg]',
-      borderClass: 'border-[--warning-border]',
-      barColor: 'var(--warning-icon)',
-      label: `${percent.toFixed(0)}% do limite utilizado`,
-    }
-  }
-
-  if (percent >= 70) {
-    return {
-      color: 'var(--warning-text)',
-      bgClass: 'bg-[--warning-bg]',
-      borderClass: 'border-[--warning-border]',
-      barColor: 'var(--warning-icon)',
-      label: `${percent.toFixed(0)}% do orçamento utilizado`,
-    }
-  }
-
-  return {
-    color: 'var(--success-text)',
-    bgClass: 'bg-[--success-bg]',
-    borderClass: 'border-[--success-border]',
-    barColor: 'var(--success-icon)',
-    label: `${percent.toFixed(0)}% utilizado`,
-  }
+  return { tone, label }
 }
-
 function BudgetCard({
   category,
   budget,
@@ -78,6 +46,7 @@ function BudgetCard({
   const excess = Math.max(0, spent - amount)
   const status = getBudgetStatus(percent)
   const isOver = percent > 100
+  const barColor = `var(--${status.tone}-icon)`
 
   return (
     <div>
@@ -126,7 +95,7 @@ function BudgetCard({
                 </p>
                 <p
                   className="mt-1 text-2xl font-black tabular-nums"
-                  style={{ color: status.barColor }}
+                  style={{ color: barColor }}
                 >
                   {formatCurrency(spent)}
                 </p>
@@ -156,9 +125,14 @@ function BudgetCard({
             </div>
 
             <div
-              className={`mt-3 flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium ${status.bgClass} ${status.borderClass}`}
+              className="mt-3 rounded-xl border px-3 py-2 text-xs font-medium"
+              style={{
+                background: `var(--${status.tone}-bg)`,
+                borderColor: `var(--${status.tone}-border)`,
+                color: `var(--${status.tone}-text)`,
+              }}
             >
-              <span style={{ color: status.color }}>{status.label}</span>
+              {status.label}
             </div>
 
             {budget.legacyFallback && (
