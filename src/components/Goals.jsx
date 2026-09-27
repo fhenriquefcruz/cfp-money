@@ -11,7 +11,7 @@ import {
   CheckCircle,
   MoreVertical,
 } from 'lucide-react'
-import { useApp } from '../contexts/AppContext'
+import { useGoals } from '../contexts/GoalsContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
 import { formatCurrency, formatDate } from '../utils'
 import InfoTooltip from './InfoTooltip'
@@ -213,7 +213,7 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }) {
 }
 
 function GoalsContent() {
-  const { goals, createGoal, editGoal, removeGoal } = useApp()
+  const { goals, createGoal, editGoal, removeGoal } = useGoals()
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({
