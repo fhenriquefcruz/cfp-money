@@ -8,7 +8,7 @@ import {
   CreditCardsProvider,
   GoalsProvider,
   InvoiceEventsProvider,
-  useApp,
+  NotificationsProvider,
 } from './contexts/AppContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { PlanProvider } from './contexts/PlanContext'
@@ -47,15 +47,14 @@ const LoadingScreen = () => (
 
 const AppRoutes = () => {
   const { user, loading, isAdmin } = useAuth()
-  const { showNotification } = useApp()
   if (loading) return <LoadingScreen />
   if (!user) return <Login />
 
   return (
-    <CategoriesProvider notify={showNotification} userId={user.uid}>
-      <CreditCardsProvider notify={showNotification} userId={user.uid}>
-        <InvoiceEventsProvider notify={showNotification} userId={user.uid}>
-          <GoalsProvider notify={showNotification} userId={user.uid}>
+    <CategoriesProvider userId={user.uid}>
+      <CreditCardsProvider userId={user.uid}>
+        <InvoiceEventsProvider userId={user.uid}>
+          <GoalsProvider userId={user.uid}>
             <div className="aurora-app-shell flex h-dvh min-h-0 overflow-hidden bg-[--bg-app]">
               <Sidebar />
               <main className="aurora-main min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 sm:px-5 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">
@@ -99,13 +98,15 @@ export default function App() {
       <HashRouter>
         <ThemeProvider>
           <AuthProvider>
-            <AppProvider>
-              <PlanProvider>
-                <MoneyProvider>
-                  <AppRoutes />
-                </MoneyProvider>
-              </PlanProvider>
-            </AppProvider>
+            <NotificationsProvider>
+              <AppProvider>
+                <PlanProvider>
+                  <MoneyProvider>
+                    <AppRoutes />
+                  </MoneyProvider>
+                </PlanProvider>
+              </AppProvider>
+            </NotificationsProvider>
           </AuthProvider>
         </ThemeProvider>
       </HashRouter>
