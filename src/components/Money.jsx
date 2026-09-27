@@ -16,7 +16,7 @@ import {
   Settings2,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useApp, useCategories, useGoals } from '../contexts/AppContext'
+import { useApp, useCategories, useCreditCards, useGoals } from '../contexts/AppContext'
 import { useMoney } from '../contexts/MoneyContext'
 import { analyzeMoney } from '../domain/money'
 import { analyzeSpendingLeaks } from '../domain/spendingLeaks'
@@ -190,7 +190,6 @@ function MoneyContent() {
   const {
     transactions,
     budgets,
-    creditCards,
     invoiceEvents,
     loading,
     getSummary,
@@ -200,6 +199,7 @@ function MoneyContent() {
     removeTransactionBatch,
   } = useApp()
   const { categories, loading: categoriesLoading } = useCategories()
+  const { creditCards, loading: creditCardsLoading } = useCreditCards()
   const { goals, loading: goalsLoading } = useGoals()
   const { settings, isLoading: settingsLoading } = useMoney()
   const [messages, setMessages] = useState([INITIAL_MESSAGE])
@@ -214,7 +214,7 @@ function MoneyContent() {
     categoriesLoading ||
     goalsLoading ||
     loading.budgets ||
-    loading.creditCards ||
+    creditCardsLoading ||
     loading.invoiceEvents ||
     settingsLoading
 
