@@ -863,10 +863,7 @@ export const AppProvider = ({ children }) => {
     return months.length ? months.reduce((s, v) => s + v, 0) / months.length : 0
   }, [getSummary])
 
-  const getTotalBalance = useCallback(
-    () => calculateCurrentBalance(transactionsRef.current),
-    [],
-  )
+  const getTotalBalance = useCallback(() => calculateCurrentBalance(transactionsRef.current), [])
 
   const filterTransactions = useCallback(
     ({ year, month, categoryId, paymentMethod, type } = {}) =>
