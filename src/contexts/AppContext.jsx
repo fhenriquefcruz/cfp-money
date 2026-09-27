@@ -879,4 +879,3 @@ export const TransactionsProvider = ({ children }) => {
     </TransactionsContext.Provider>
   )
 }
-
