@@ -48,7 +48,7 @@ test('busca uma transação e navega para a lista com o termo e todos os períod
 
   expect(onClose).toHaveBeenCalled()
   expect(decodeURIComponent(screen.getByTestId('location').textContent)).toContain(
-    '/transactions?search=Consulta+odontológica&scope=all',
+    '/transactions?search=Consulta odontológica&scope=all',
   )
 })
 
