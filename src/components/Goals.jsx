@@ -96,10 +96,7 @@ function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
 function GoalCard({ goal, onEdit, onDelete, onContribute }) {
   const plan = buildGoalPlan(goal)
   const isUrgent =
-    plan.daysLeft !== null &&
-    plan.daysLeft >= 0 &&
-    plan.daysLeft <= 30 &&
-    !plan.completed
+    plan.daysLeft !== null && plan.daysLeft >= 0 && plan.daysLeft <= 30 && !plan.completed
 
   return (
     <motion.div
@@ -146,9 +143,7 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }) {
         <div className="mt-4">
           <div className="mb-1.5 flex justify-between text-xs">
             <span className="text-[--text-secondary]">Progresso</span>
-            <span className="font-semibold text-[--text-primary]">
-              {plan.progress.toFixed(0)}%
-            </span>
+            <span className="font-semibold text-[--text-primary]">{plan.progress.toFixed(0)}%</span>
           </div>
           <ProgressBar value={plan.current} max={plan.target} animated />
           <div className="mt-1 flex justify-between text-xs text-[--text-tertiary]">
@@ -381,8 +376,7 @@ function GoalsContent() {
             {
               label: 'Prazos vencidos',
               value: String(overview.overdue),
-              helper:
-                overview.overdue > 0 ? 'Metas que pedem revisão' : 'Nenhuma meta atrasada',
+              helper: overview.overdue > 0 ? 'Metas que pedem revisão' : 'Nenhuma meta atrasada',
             },
           ].map((item) => (
             <Card key={item.label} className="py-3">
@@ -581,11 +575,7 @@ function GoalsContent() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="secondary"
-                fullWidth
-                onClick={() => setDeleteCandidate(null)}
-              >
+              <Button variant="secondary" fullWidth onClick={() => setDeleteCandidate(null)}>
                 Cancelar
               </Button>
               <Button
