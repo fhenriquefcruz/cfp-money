@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { CreditCard, Edit2, Info, Plus, ReceiptText, ShieldCheck, Trash2 } from 'lucide-react'
-import { useApp } from '../contexts/AppContext'
+import { useCreditCards } from '../contexts/AppContext'
 import { Button, Card, Input, Modal } from './ui'
 import PremiumGate from './PremiumGate'
 import { normalizeCreditCard } from '../domain/creditCards'
@@ -123,7 +123,7 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
 }
 
 function CreditCardsContent() {
-  const { creditCards, createCreditCard, editCreditCard, removeCreditCard, loading } = useApp()
+  const { creditCards, createCreditCard, editCreditCard, removeCreditCard, loading } = useCreditCards()
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
@@ -213,7 +213,7 @@ function CreditCardsContent() {
             </div>
           </div>
 
-          {loading.creditCards ? (
+          {loading ? (
             <div className="space-y-3">
               <div className="h-20 animate-pulse rounded-2xl bg-[--bg-hover]" />
               <div className="h-20 animate-pulse rounded-2xl bg-[--bg-hover]" />
