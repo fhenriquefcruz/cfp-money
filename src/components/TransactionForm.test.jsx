@@ -12,8 +12,10 @@ const appMocks = vi.hoisted(() => ({
 
 vi.mock('../contexts/AppContext', () => ({
   useApp: () => ({
-    creditCards: [],
     ...appMocks,
+  }),
+  useCreditCards: () => ({
+    creditCards: [],
   }),
   useCategories: () => ({
     categories: [
