@@ -2,7 +2,7 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, AlertTriangle, XCircle, Info, X } from 'lucide-react'
-import { useApp } from '../contexts/AppContext'
+import { useNotifications } from '../contexts/AppContext'
 
 const ICONS = {
   success: <CheckCircle size={16} className="text-[--success-icon]" />,
@@ -19,7 +19,7 @@ const BG = {
 }
 
 export default function NotificationStack() {
-  const { notifications, dismissNotification } = useApp()
+  const { notifications, dismissNotification } = useNotifications()
 
   return (
     <div className="fixed top-4 right-4 z-[9998] flex flex-col gap-2 pointer-events-none max-w-sm w-full">
