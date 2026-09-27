@@ -35,20 +35,10 @@ export function searchGlobal({
       )
     }),
     ...categories.map((item, index) =>
-      row(
-        `category:${item.id || index}`,
-        item.name || 'Categoria',
-        '/categories',
-        'category',
-      ),
+      row(`category:${item.id || index}`, item.name || 'Categoria', '/categories', 'category'),
     ),
     ...goals.map((item, index) =>
-      row(
-        `goal:${item.id || index}`,
-        item.name || 'Meta',
-        '/goals',
-        'goal',
-      ),
+      row(`goal:${item.id || index}`, item.name || 'Meta', '/goals', 'goal'),
     ),
     ...creditCards.map((item, index) =>
       row(
