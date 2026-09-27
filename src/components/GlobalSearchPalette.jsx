@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { searchGlobal } from '../domain/globalSearch'
 import { Modal } from './ui'
 
-const storageKey = (uid) => `mr_nav_${uid}`
-
 const readFavorites = (uid) => {
   if (!uid) return []
 
   try {
-    return (localStorage.getItem(storageKey(uid)) || '').split('|').filter(Boolean).slice(0, 4)
+    return (localStorage.getItem(`mr_nav_${uid}`) || '').split('|').filter(Boolean).slice(0, 4)
   } catch {
     return []
   }
@@ -55,7 +53,7 @@ export default function GlobalSearchPalette({
       : [path, ...favorites].slice(0, 4)
 
     try {
-      localStorage.setItem(storageKey(userId), next.join('|'))
+      localStorage.setItem(`mr_nav_${userId}`, next.join('|'))
     } catch {}
 
     setFavorites(next)
@@ -63,7 +61,6 @@ export default function GlobalSearchPalette({
 
   const onKeyDown = (event) => {
     if (event.key === 'Escape') {
-      event.preventDefault()
       onClose()
       return
     }
@@ -108,10 +105,8 @@ export default function GlobalSearchPalette({
             return (
               <div className="global-search-row" key={item.id}>
                 <button
-                  type="button"
                   role="option"
                   aria-selected={active === index}
-                  onMouseEnter={() => setActive(index)}
                   onClick={() => open(item)}
                   className={`global-search-result ${
                     active === index ? 'global-search-result--active' : ''
@@ -127,7 +122,6 @@ export default function GlobalSearchPalette({
 
                 {item.kind === 'page' && (
                   <button
-                    type="button"
                     onClick={() => toggleFavorite(item.to)}
                     className="global-search-favorite"
                     aria-label={`Favoritar ${item.label}`}
