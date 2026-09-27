@@ -23,6 +23,7 @@ import {
   useCreditCards,
   useGoals,
   useInvoiceEvents,
+  useTransactions,
 } from '../contexts/AppContext'
 import { useMoney } from '../contexts/MoneyContext'
 import { analyzeMoney } from '../domain/money'
@@ -194,15 +195,15 @@ function AssistantResponse({
 }
 
 function MoneyContent() {
+  const { getSummary } = useApp()
   const {
     transactions,
-    loading,
-    getSummary,
+    loading: transactionsLoading,
     createTransaction,
     addTransactionBatch,
     removeTransaction,
     removeTransactionBatch,
-  } = useApp()
+  } = useTransactions()
   const { budgets, loading: budgetsLoading } = useBudgets()
   const { categories, loading: categoriesLoading } = useCategories()
   const { creditCards, loading: creditCardsLoading } = useCreditCards()
@@ -217,7 +218,7 @@ function MoneyContent() {
   const messagesEndRef = useRef(null)
 
   const isLoading =
-    loading.transactions ||
+    transactionsLoading ||
     categoriesLoading ||
     goalsLoading ||
     budgetsLoading ||
