@@ -1,99 +1,60 @@
-const EMPTY = { favorites: [], recents: [] }
-const FAVORITE_LIMIT = 4
-const RECENT_LIMIT = 4
+const LIMIT = 4
+const key = (uid) => `meu_real_navigation_${uid}`
 
-const keyFor = (uid) => `meu_real_navigation_${uid}`
-const unique = (values) => [...new Set(values)]
+const filter = (items, allowed) =>
+  [...new Set(Array.isArray(items) ? items : [])]
+    .filter((item) => allowed.includes(item))
+    .slice(0, LIMIT)
 
-const validPaths = (values, allowedPaths) => {
-  const allowed = new Set(allowedPaths)
-
-  return unique(Array.isArray(values) ? values : []).filter(
-    (path) => typeof path === 'string' && allowed.has(path),
-  )
-}
-
-export function normalizeNavigationPreferences(value, allowedPaths = []) {
-  return {
-    favorites: validPaths(value?.favorites, allowedPaths).slice(0, FAVORITE_LIMIT),
-    recents: validPaths(value?.recents, allowedPaths).slice(0, RECENT_LIMIT),
-  }
-}
-
-export function readNavigationPreferences(uid, allowedPaths, storage = globalThis.localStorage) {
-  if (!uid || !storage) return EMPTY
+export function readNavigationPreferences(uid, allowed, storage = globalThis.localStorage) {
+  if (!uid || !storage) return { favorites: [], recents: [] }
 
   try {
-    return normalizeNavigationPreferences(
-      JSON.parse(storage.getItem(keyFor(uid)) || '{}'),
-      allowedPaths,
-    )
+    const value = JSON.parse(storage.getItem(key(uid)) || '{}')
+    return {
+      favorites: filter(value.favorites, allowed),
+      recents: filter(value.recents, allowed),
+    }
   } catch {
-    return EMPTY
+    return { favorites: [], recents: [] }
   }
 }
 
-const save = (uid, value, storage) => {
+const write = (uid, value, storage) => {
   try {
-    if (uid && storage) storage.setItem(keyFor(uid), JSON.stringify(value))
+    storage?.setItem(key(uid), JSON.stringify(value))
   } catch {
-    // Preferências locais nunca devem impedir a navegação.
+    // Preferências locais não podem bloquear a navegação.
   }
-
   return value
 }
 
-export function registerRecentNavigation(
-  uid,
-  path,
-  allowedPaths,
-  storage = globalThis.localStorage,
-) {
-  const current = readNavigationPreferences(uid, allowedPaths, storage)
-  if (!allowedPaths.includes(path)) return current
+export function registerRecentNavigation(uid, path, allowed, storage = globalThis.localStorage) {
+  const value = readNavigationPreferences(uid, allowed, storage)
+  if (!uid || !allowed.includes(path)) return value
 
-  return save(
+  return write(
     uid,
-    {
-      ...current,
-      recents: [path, ...current.recents.filter((item) => item !== path)].slice(0, RECENT_LIMIT),
-    },
+    { ...value, recents: [path, ...value.recents.filter((item) => item !== path)].slice(0, LIMIT) },
     storage,
   )
 }
 
-export function toggleFavoriteNavigation(
-  uid,
-  path,
-  allowedPaths,
-  storage = globalThis.localStorage,
-) {
-  const current = readNavigationPreferences(uid, allowedPaths, storage)
-  if (!allowedPaths.includes(path)) return current
+export function toggleFavoriteNavigation(uid, path, allowed, storage = globalThis.localStorage) {
+  const value = readNavigationPreferences(uid, allowed, storage)
+  if (!uid || !allowed.includes(path)) return value
 
-  const exists = current.favorites.includes(path)
+  const favorites = value.favorites.includes(path)
+    ? value.favorites.filter((item) => item !== path)
+    : [path, ...value.favorites].slice(0, LIMIT)
 
-  return save(
-    uid,
-    {
-      ...current,
-      favorites: exists
-        ? current.favorites.filter((item) => item !== path)
-        : [path, ...current.favorites].slice(0, FAVORITE_LIMIT),
-    },
-    storage,
-  )
+  return write(uid, { ...value, favorites }, storage)
 }
 
-export function prioritizeNavigationPages(pages, favorites = [], recents = [], currentPath = '') {
-  const byPath = new Map(pages.map((page) => [page[1], page]))
-  const order = unique([
-    ...favorites,
-    ...recents.filter((path) => path !== currentPath),
-    ...pages.map((page) => page[1]),
-  ])
-
-  return order.map((path) => byPath.get(path)).filter(Boolean)
+export function prioritizeNavigationPages(pages, favorites = [], recents = [], current = '') {
+  const map = new Map(pages.map((page) => [page[1], page]))
+  const paths = [...new Set([...favorites, ...recents.filter((path) => path !== current), ...map.keys()])]
+  return paths.map((path) => map.get(path)).filter(Boolean)
 }
 
-export { FAVORITE_LIMIT, RECENT_LIMIT }
+export const FAVORITE_LIMIT = LIMIT
