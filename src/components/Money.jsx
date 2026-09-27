@@ -17,7 +17,6 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import {
-  useApp,
   useBudgets,
   useCategories,
   useCreditCards,
@@ -195,9 +194,9 @@ function AssistantResponse({
 }
 
 function MoneyContent() {
-  const { getSummary } = useApp()
   const {
     transactions,
+    getSummary,
     loading: transactionsLoading,
     createTransaction,
     addTransactionBatch,
