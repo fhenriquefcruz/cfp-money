@@ -123,7 +123,7 @@ export default function GlobalSearchPalette({
 
                 {item.kind === 'page' && (
                   <button
-                      onClick={() => toggleFavorite(item.to)}
+                    onClick={() => toggleFavorite(item.to)}
                     className="global-search-favorite"
                     aria-label={`Favoritar ${item.label}`}
                     aria-pressed={favorite}
