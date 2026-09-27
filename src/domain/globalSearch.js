@@ -15,7 +15,6 @@ const makeResult = ({ id, label, to, kind, context = '', terms = '' }) => ({
   searchable: clean(`${label} ${context} ${terms}`),
 })
 
-
 export function searchGlobal({
   query = '',
   pages = [],
@@ -80,11 +79,7 @@ export function searchGlobal({
   ]
 
   const normalized = clean(query)
-  if (!normalized) {
-    return rows
-      .filter((item) => item.kind === 'page')
-      .slice(0, 8)
-  }
+  if (!normalized) return rows.filter((item) => item.kind === 'page').slice(0, 8)
 
   const words = normalized.split(/\s+/)
 
