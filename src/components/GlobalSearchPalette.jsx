@@ -1,13 +1,5 @@
 import React, { useState } from 'react'
-import {
-  ArrowLeftRight,
-  BarChart3,
-  CreditCard,
-  LayoutDashboard,
-  Search,
-  Tags,
-  Target,
-} from 'lucide-react'
+import { Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { searchGlobal } from '../domain/globalSearch'
 import { Modal } from './ui'
@@ -18,18 +10,6 @@ const KIND_LABELS = {
   category: 'Categoria',
   goal: 'Meta',
   card: 'Cartão',
-}
-
-const KIND_ICONS = {
-  transaction: ArrowLeftRight,
-  category: Tags,
-  goal: Target,
-  card: CreditCard,
-}
-
-const PAGE_ICONS = {
-  '/dashboard': LayoutDashboard,
-  '/reports': BarChart3,
 }
 
 export default function GlobalSearchPalette({
@@ -108,9 +88,6 @@ export default function GlobalSearchPalette({
           </div>
         ) : (
           results.map((item, position) => {
-            const ResultIcon =
-              item.kind === 'page' ? PAGE_ICONS[item.to] || Search : KIND_ICONS[item.kind] || Search
-
             return (
               <button
                 key={item.id}
@@ -126,7 +103,7 @@ export default function GlobalSearchPalette({
                 }`}
               >
                 <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[--bg-hover] text-[--brand-600]">
-                  <ResultIcon size={15} />
+                  <Search size={15} />
                 </div>
 
                 <div className="min-w-0 flex-1">
