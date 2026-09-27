@@ -18,6 +18,7 @@ import {
 import { Link } from 'react-router-dom'
 import { useApp } from '../contexts/AppContext'
 import { useMoney } from '../contexts/MoneyContext'
+import { useGoals } from '../contexts/GoalsContext'
 import { analyzeMoney } from '../domain/money'
 import { analyzeSpendingLeaks } from '../domain/spendingLeaks'
 import { buildFinancialHealth } from '../domain/financialHealth'
@@ -190,7 +191,6 @@ function MoneyContent() {
   const {
     transactions,
     categories,
-    goals,
     budgets,
     creditCards,
     invoiceEvents,
@@ -201,6 +201,7 @@ function MoneyContent() {
     removeTransaction,
     removeTransactionBatch,
   } = useApp()
+  const { goals, loading: goalsLoading } = useGoals()
   const { settings, isLoading: settingsLoading } = useMoney()
   const [messages, setMessages] = useState([INITIAL_MESSAGE])
   const [input, setInput] = useState('')
@@ -212,7 +213,7 @@ function MoneyContent() {
   const isLoading =
     loading.transactions ||
     loading.categories ||
-    loading.goals ||
+    goalsLoading ||
     loading.budgets ||
     loading.creditCards ||
     loading.invoiceEvents ||
