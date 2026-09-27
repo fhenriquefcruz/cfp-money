@@ -18,7 +18,7 @@ export function shiftBudgetMonth(monthKey, amount) {
   return budgetMonthKey(new Date(year, month - 1 + amount, 1))
 }
 
-export function getBudgetsForMonth(
+function getBudgetsForMonth(
   budgets = [],
   monthKey,
   currentMonthKey = budgetMonthKey(),
@@ -45,9 +45,6 @@ export function buildMonthlyBudgetOverview({
       spent,
       amount,
       percent: amount > 0 ? (spent / amount) * 100 : 0,
-      remaining: Math.max(0, amount - spent),
-      excess: Math.max(0, spent - amount),
-      isOver: amount > 0 && spent > amount,
     }
   })
 
@@ -56,7 +53,6 @@ export function buildMonthlyBudgetOverview({
     items,
     totalBudgeted: items.reduce((total, item) => total + item.amount, 0),
     totalSpent: items.reduce((total, item) => total + item.spent, 0),
-    totalOver: items.reduce((total, item) => total + item.excess, 0),
-    overCount: items.filter((item) => item.isOver).length,
+    overCount: items.filter((item) => item.amount > 0 && item.spent > item.amount).length,
   }
 }
