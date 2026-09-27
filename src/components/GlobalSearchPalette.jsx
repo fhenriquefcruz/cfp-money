@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { searchGlobal } from '../domain/globalSearch'
 import { Modal } from './ui'
@@ -60,10 +59,12 @@ export default function GlobalSearchPalette({
   return (
     <Modal isOpen onClose={onClose} title="Buscar no Meu Real" size="lg">
       <div className="relative">
-        <Search
-          size={16}
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[--text-tertiary]"
-        />
+        <span
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[--text-tertiary]"
+          aria-hidden="true"
+        >
+          ⌕
+        </span>
         <input
           autoFocus
           value={query}
@@ -103,7 +104,9 @@ export default function GlobalSearchPalette({
                 }`}
               >
                 <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[--bg-hover] text-[--brand-600]">
-                  <Search size={15} />
+                  <span className="text-sm" aria-hidden="true">
+                    ⌕
+                  </span>
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -125,10 +128,6 @@ export default function GlobalSearchPalette({
         )}
       </div>
 
-      <div className="mt-3 hidden items-center justify-between border-t border-[--border-subtle] pt-3 text-[10px] text-[--text-tertiary] sm:flex">
-        <span>↑ ↓ navegar · Enter abrir · Esc fechar</span>
-        <span>{results.length} resultado(s)</span>
-      </div>
     </Modal>
   )
 }
