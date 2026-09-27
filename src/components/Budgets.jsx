@@ -1,6 +1,7 @@
 // src/components/Budgets.jsx
 import React, { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle,
   CheckCircle,
@@ -223,8 +224,10 @@ function BudgetCard({
 
 export default function Budgets() {
   const { budgets, categories, saveBudget, removeBudget, transactions } = useApp()
+  const [searchParams] = useSearchParams()
   const currentMonthKey = budgetMonthKey()
-  const [selectedMonth, setSelectedMonth] = useState(currentMonthKey)
+  const requestedMonth = budgetMonthKey(searchParams.get('month') || '')
+  const [selectedMonth, setSelectedMonth] = useState(requestedMonth || currentMonthKey)
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState({ categoryId: '', amount: '' })
   const [saving, setSaving] = useState(false)
