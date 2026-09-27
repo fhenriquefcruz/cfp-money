@@ -1207,3 +1207,21 @@ body {
   font-size: 0.625rem;
   font-weight: 700;
 }
+
+
+.transaction-import-undo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border: 1px solid var(--brand-200);
+  border-radius: 1rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--brand-50);
+}
+
+.transaction-import-undo p {
+  color: var(--brand-800);
+  font-size: 0.75rem;
+}
