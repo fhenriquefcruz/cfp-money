@@ -21,16 +21,6 @@ function requireAuth(request) {
   return request.auth
 }
 
-function requireAdmin(request) {
-  const auth = requireAuth(request)
-
-  if (auth.token?.admin !== true) {
-    throw new HttpsError('permission-denied', 'Ação restrita a administradores.')
-  }
-
-  return auth
-}
-
 function callableOptions(extra = {}) {
   return {
     region: REGION,
