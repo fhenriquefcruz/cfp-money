@@ -20,13 +20,11 @@ export function getBudgetForMonth(
   const exact = budgets.find(
     (budget) => budget.categoryId === categoryId && budget.monthKey === monthKey,
   )
-  if (exact) return { ...exact, legacyFallback: false }
-  if (monthKey !== currentMonthKey) return null
+  if (exact || monthKey !== currentMonthKey) return exact || null
 
-  const legacy = budgets.find(
-    (budget) => budget.categoryId === categoryId && !budget.monthKey,
+  return (
+    budgets.find((budget) => budget.categoryId === categoryId && !budget.monthKey) || null
   )
-  return legacy ? { ...legacy, legacyFallback: true } : null
 }
 
 export const getBudgetTransactionMonth = (transaction = {}) =>
