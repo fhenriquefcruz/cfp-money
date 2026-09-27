@@ -160,15 +160,71 @@ export const CategoriesProvider = ({ children, notify, userId }) => {
   )
 }
 
+
+const CreditCardsContext = createContext({ creditCards: [], loading: true })
+export const useCreditCards = () => useContext(CreditCardsContext)
+
+export const CreditCardsProvider = ({ children, notify, userId }) => {
+  const [creditCards, setCreditCards] = useState(() =>
+    E2E_MODE ? createE2EAppState().creditCards : null,
+  )
+
+  useEffect(() => {
+    if (E2E_MODE) return undefined
+    if (!userId) {
+      setCreditCards([])
+      return undefined
+    }
+
+    setCreditCards(null)
+    getCreditCards(userId)
+      .then(setCreditCards)
+      .catch((error) => {
+        console.error('[Meu Real] cartões:', error)
+        setCreditCards([])
+      })
+
+    return undefined
+  }, [userId])
+
+  const mutateCreditCard = async (action, message, type) => {
+    if (!userId) return undefined
+    try {
+      const result = await action()
+      setCreditCards(await getCreditCards(userId))
+      notify?.(message, type)
+      return result
+    } catch (error) {
+      notify?.('Erro no cartão.', 'error')
+      throw error
+    }
+  }
+
+  return (
+    <CreditCardsContext.Provider
+      value={{
+        creditCards: creditCards ?? [],
+        loading: creditCards === null,
+        createCreditCard: (data) =>
+          mutateCreditCard(() => addCreditCard(userId, data), 'Cartão cadastrado!'),
+        editCreditCard: (id, data) =>
+          mutateCreditCard(() => updateCreditCard(userId, id, data), 'Cartão salvo!'),
+        removeCreditCard: (id) =>
+          mutateCreditCard(() => deleteCreditCard(userId, id), 'Cartão removido.', 'info'),
+      }}
+    >
+      {children}
+    </CreditCardsContext.Provider>
+  )
+}
+
 const initialState = {
   transactions: [],
   budgets: [],
-  creditCards: [],
   invoiceEvents: [],
   loading: {
     transactions: true,
     budgets: true,
-    creditCards: true,
     invoiceEvents: true,
   },
   notifications: [],
@@ -184,12 +240,6 @@ function reducer(state, action) {
       }
     case 'SET_BUDGETS':
       return { ...state, budgets: action.payload, loading: { ...state.loading, budgets: false } }
-    case 'SET_CREDIT_CARDS':
-      return {
-        ...state,
-        creditCards: action.payload,
-        loading: { ...state.loading, creditCards: false },
-      }
     case 'SET_INVOICE_EVENTS':
       return {
         ...state,
@@ -270,9 +320,7 @@ export const AppProvider = ({ children }) => {
     // Carrega o resto em paralelo
     const load = async () => {
       try {
-        const [budgets, creditCards] = await Promise.all([getBudgets(uid), getCreditCards(uid)])
-        dispatch({ type: 'SET_BUDGETS', payload: budgets })
-        dispatch({ type: 'SET_CREDIT_CARDS', payload: creditCards })
+        dispatch({ type: 'SET_BUDGETS', payload: await getBudgets(uid) })
       } catch (err) {
         console.error('[Meu Real] Erro ao carregar dados:', err.code, err.message)
       }
@@ -630,63 +678,6 @@ export const AppProvider = ({ children }) => {
     [user?.uid, showNotification],
   )
 
-  // ── CREDIT CARDS ──
-  const refreshCreditCards = useCallback(async () => {
-    if (!user?.uid) return
-    try {
-      const cards = await getCreditCards(user.uid)
-      dispatch({ type: 'SET_CREDIT_CARDS', payload: cards })
-    } catch (e) {
-      console.error('[Meu Real] refreshCreditCards:', e.code)
-    }
-  }, [user?.uid])
-
-  const createCreditCard = useCallback(
-    async (data) => {
-      if (!user?.uid) return
-      try {
-        const id = await addCreditCard(user.uid, data)
-        await refreshCreditCards()
-        showNotification('Cartão cadastrado!')
-        return id
-      } catch (e) {
-        showNotification('Erro ao cadastrar cartão.', 'error')
-        throw e
-      }
-    },
-    [user?.uid, refreshCreditCards, showNotification],
-  )
-
-  const editCreditCard = useCallback(
-    async (id, data) => {
-      if (!user?.uid) return
-      try {
-        await updateCreditCard(user.uid, id, data)
-        await refreshCreditCards()
-        showNotification('Cartão atualizado!')
-      } catch (e) {
-        showNotification('Erro ao atualizar cartão.', 'error')
-        throw e
-      }
-    },
-    [user?.uid, refreshCreditCards, showNotification],
-  )
-
-  const removeCreditCard = useCallback(
-    async (id) => {
-      if (!user?.uid) return
-      try {
-        await deleteCreditCard(user.uid, id)
-        await refreshCreditCards()
-        showNotification('Cartão removido.', 'info')
-      } catch (e) {
-        showNotification('Erro ao remover cartão.', 'error')
-        throw e
-      }
-    },
-    [user?.uid, refreshCreditCards, showNotification],
-  )
-
   // ── BUDGETS ──
   const refreshBudgets = useCallback(async () => {
     if (!user?.uid) return
@@ -810,9 +801,6 @@ export const AppProvider = ({ children }) => {
         importTransactionBatch,
         createInvoiceEvent,
         applyTransactionSeriesOperation,
-        createCreditCard,
-        editCreditCard,
-        removeCreditCard,
         saveBudget,
         removeBudget,
         showNotification,
