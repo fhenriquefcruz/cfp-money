@@ -117,12 +117,10 @@ export default function GlobalSearchPalette({
                     active === index ? 'global-search-result--active' : ''
                   }`}
                 >
-                  <span className="min-w-0">
-                    <strong className="block truncate">{item.label}</strong>
+                  <span>
+                    <strong>{item.label}</strong>
                     {item.context && (
-                      <small className="block truncate font-normal text-[--text-tertiary]">
-                        {item.context}
-                      </small>
+                      <small>{item.context}</small>
                     )}
                   </span>
                 </button>
