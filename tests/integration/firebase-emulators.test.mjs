@@ -21,7 +21,9 @@ import {
 } from 'firebase/firestore'
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions'
 
-const requireFromFunctions = createRequire(new URL('../../functions/package.json', import.meta.url))
+const requireFromFunctions = createRequire(
+  new URL('../../functions/package.json', import.meta.url),
+)
 const {
   deleteApp: deleteAdminApp,
   initializeApp: initializeAdminApp,
@@ -41,8 +43,16 @@ function parseHost(value, fallbackHost, fallbackPort) {
 }
 
 const authAddress = parseHost(process.env.FIREBASE_AUTH_EMULATOR_HOST, '127.0.0.1', 9099)
-const firestoreAddress = parseHost(process.env.FIRESTORE_EMULATOR_HOST, '127.0.0.1', 8080)
-const functionsAddress = parseHost(process.env.FUNCTIONS_EMULATOR_HOST, '127.0.0.1', 5001)
+const firestoreAddress = parseHost(
+  process.env.FIRESTORE_EMULATOR_HOST,
+  '127.0.0.1',
+  8080,
+)
+const functionsAddress = parseHost(
+  process.env.FUNCTIONS_EMULATOR_HOST,
+  '127.0.0.1',
+  5001,
+)
 
 test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', async () => {
   const app = initializeApp(
@@ -180,7 +190,10 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
 
     const answeredSupport = await getDoc(supportReference)
     assert.equal(answeredSupport.data().status, 'answered')
-    assert.equal(answeredSupport.data().response, 'Atendimento validado pelo teste de integração.')
+    assert.equal(
+      answeredSupport.data().response,
+      'Atendimento validado pelo teste de integração.',
+    )
     assert.equal(answeredSupport.data().responderUid, adminUser.uid)
 
     await signOut(auth)
