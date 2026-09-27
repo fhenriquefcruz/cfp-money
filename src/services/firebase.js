@@ -389,45 +389,6 @@ export const setBudget = async (uid, categoryId, amount, monthKey) => {
   return budgetId
 }
 
-export const setBudgetsBatch = async (uid, items, monthKey) => {
-  if (!/^\d{4}-\d{2}$/.test(monthKey || '')) {
-    throw new Error('Competência mensal inválida.')
-  }
-
-  const normalizedItems = (Array.isArray(items) ? items : [])
-    .map((item) => ({
-      categoryId: String(item?.categoryId || '').trim(),
-      amount: Number(item?.amount),
-    }))
-    .filter((item) => item.categoryId && Number.isFinite(item.amount) && item.amount > 0)
-
-  if (!normalizedItems.length) return []
-  if (normalizedItems.length > 100) {
-    throw new Error('A cópia excede o limite seguro de 100 orçamentos.')
-  }
-
-  const batch = writeBatch(db)
-  const ids = []
-
-  normalizedItems.forEach(({ categoryId, amount }) => {
-    const budgetId = `${monthKey}__${categoryId}`
-    ids.push(budgetId)
-    batch.set(
-      userDoc(uid, 'budgets', budgetId),
-      {
-        categoryId,
-        amount,
-        monthKey,
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true },
-    )
-  })
-
-  await batch.commit()
-  return ids
-}
-
 export const deleteBudget = async (uid, categoryId, monthKey, budgetId = '') => {
   if (budgetId) {
     await deleteDoc(userDoc(uid, 'budgets', budgetId))
