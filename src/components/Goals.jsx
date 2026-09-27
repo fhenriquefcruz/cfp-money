@@ -1,13 +1,6 @@
 // src/components/Goals.jsx
 import React, { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Target,
-  Edit2,
-  Trash2,
-  TrendingUp,
-  AlertCircle,
-} from 'lucide-react'
 import { useGoals } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
 import { formatCurrency, formatDate } from '../utils'
@@ -64,7 +57,7 @@ function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--text-primary] hover:bg-[--bg-hover] transition-colors"
           >
-            <TrendingUp size={14} className="text-[--brand-500]" /> Aportar
+            <span aria-hidden="true">↗</span> Aportar
           </button>
           <button
             onClick={() => {
@@ -73,7 +66,7 @@ function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--text-primary] hover:bg-[--bg-hover] transition-colors"
           >
-            <Edit2 size={14} className="text-[--text-secondary]" /> Editar
+            <span aria-hidden="true">✎</span> Editar
           </button>
           <button
             onClick={() => {
@@ -82,7 +75,7 @@ function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--danger-text] hover:bg-[--danger-bg] transition-colors border-t border-[--border-subtle]"
           >
-            <Trash2 size={14} /> Excluir
+            <span aria-hidden="true">×</span> Excluir
           </button>
         </div>
       )}
@@ -123,12 +116,12 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }) {
                 )}
                 {plan.overdue && (
                   <span className="flex items-center gap-1 font-medium text-[--danger-icon]">
-                    <AlertCircle size={12} /> Prazo vencido
+                    <span aria-hidden="true">!</span> Prazo vencido
                   </span>
                 )}
                 {isUrgent && (
                   <span className="flex items-center gap-1 font-medium text-[--warning-icon]">
-                    <AlertCircle size={12} /> Prazo próximo
+                    <span aria-hidden="true">!</span> Prazo próximo
                   </span>
                 )}
               </div>
@@ -198,7 +191,7 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }) {
             variant="secondary"
             size="sm"
             className="mt-4 w-full"
-            icon={<TrendingUp size={14} />}
+            icon={<span aria-hidden="true">↗</span>}
             onClick={() => onContribute(goal)}
           >
             Registrar aporte
@@ -389,7 +382,7 @@ function GoalsContent() {
 
       {!hasGoals ? (
         <EmptyState
-          icon={<Target />}
+          icon="◎"
           title="Nenhuma meta definida"
           description="Crie uma meta financeira, como uma viagem, um carro ou a reserva de emergência."
           action={
