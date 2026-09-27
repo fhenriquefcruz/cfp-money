@@ -56,44 +56,6 @@ function getBudgetsForMonth(budgets, monthKey, currentMonthKey) {
     .filter(Boolean)
 }
 
-export function buildBudgetCarryoverPlan({
-  budgets = [],
-  sourceMonthKey,
-  targetMonthKey,
-  currentMonthKey = budgetMonthKey(),
-  categoryIds = null,
-} = {}) {
-  if (!MONTH.test(sourceMonthKey || '') || !MONTH.test(targetMonthKey || '')) return []
-
-  const allowedCategories = Array.isArray(categoryIds)
-    ? new Set(categoryIds.filter(Boolean))
-    : null
-  const targetCategories = new Set(
-    budgets
-      .filter(
-        (budget) =>
-          budget.monthKey === targetMonthKey ||
-          (targetMonthKey === currentMonthKey && !budget.monthKey),
-      )
-      .map((budget) => budget.categoryId)
-      .filter(Boolean),
-  )
-
-  return budgets
-    .filter(
-      (budget) =>
-        budget.monthKey === sourceMonthKey &&
-        budget.categoryId &&
-        Number(budget.amount) > 0 &&
-        (allowedCategories === null || allowedCategories.has(budget.categoryId)) &&
-        !targetCategories.has(budget.categoryId),
-    )
-    .map((budget) => ({
-      categoryId: budget.categoryId,
-      amount: Number(budget.amount),
-    }))
-}
-
 export function buildMonthlyBudgetOverview({
   budgets = [],
   transactions = [],
