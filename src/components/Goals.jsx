@@ -7,7 +7,6 @@ import {
   Trash2,
   TrendingUp,
   AlertCircle,
-  CheckCircle,
 } from 'lucide-react'
 import { useGoals } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
@@ -189,7 +188,7 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }) {
 
         {plan.completed && (
           <div className="mt-3 flex items-center gap-2 rounded-xl border border-[--success-border] bg-[--success-bg] p-2 text-xs text-[--success-text]">
-            <CheckCircle size={14} />
+            <span aria-hidden="true">✓</span>
             <span>Meta concluída! 🎉</span>
           </div>
         )}
