@@ -6,7 +6,7 @@ const clean = (value) =>
     .replace(/\s+/g, ' ')
     .trim()
 
-const makeResult = ({ id, label, to, kind, context = '', terms = '' }) => ({
+const row = (id, label, to, kind, context = '', terms = '') => ({
   id,
   label,
   to,
@@ -24,79 +24,71 @@ export function searchGlobal({
   creditCards = [],
 } = {}) {
   const rows = [
-    ...pages.map(([label, to]) =>
-      makeResult({
-        id: `page:${to}`,
-        label,
-        to,
-        kind: 'page',
-      }),
-    ),
+    ...pages.map(([label, to]) => row(`page:${to}`, label, to, 'page')),
     ...transactions.map((item, index) => {
       const label = item.description || item.categoryName || 'Transação'
-      const contextParts = [
+      const context = [
+        'Transação',
         item.categoryName,
         item.date,
-        item.amount != null ? `R$ ${Number(item.amount).toFixed(2).replace('.', ',')}` : '',
-      ].filter(Boolean)
+        item.amount == null ? '' : `R$ ${Number(item.amount).toFixed(2).replace('.', ',')}`,
+      ]
+        .filter(Boolean)
+        .join(' · ')
 
-      return makeResult({
-        id: `transaction:${item.id || index}`,
+      return row(
+        `transaction:${item.id || index}`,
         label,
-        to: `/transactions?search=${encodeURIComponent(label)}&scope=all`,
-        kind: 'transaction',
-        context: ['Transação', ...contextParts].join(' · '),
-        terms: [item.notes, item.paymentMethod].filter(Boolean).join(' '),
-      })
+        `/transactions?search=${encodeURIComponent(label)}&scope=all`,
+        'transaction',
+        context,
+        `${item.notes || ''} ${item.paymentMethod || ''}`,
+      )
     }),
     ...categories.map((item, index) =>
-      makeResult({
-        id: `category:${item.id || index}`,
-        label: item.name || 'Categoria',
-        to: '/categories',
-        kind: 'category',
-        context: item.type === 'income' ? 'Categoria de receita' : 'Categoria de despesa',
-      }),
+      row(
+        `category:${item.id || index}`,
+        item.name || 'Categoria',
+        '/categories',
+        'category',
+        item.type === 'income' ? 'Categoria de receita' : 'Categoria de despesa',
+      ),
     ),
     ...goals.map((item, index) =>
-      makeResult({
-        id: `goal:${item.id || index}`,
-        label: item.name || 'Meta',
-        to: '/goals',
-        kind: 'goal',
-        context: item.deadline ? `Prazo: ${item.deadline}` : 'Meta financeira',
-      }),
+      row(
+        `goal:${item.id || index}`,
+        item.name || 'Meta',
+        '/goals',
+        'goal',
+        item.deadline ? `Prazo: ${item.deadline}` : 'Meta financeira',
+      ),
     ),
     ...creditCards.map((item, index) =>
-      makeResult({
-        id: `card:${item.id || index}`,
-        label: item.name || 'Cartão',
-        to: '/cards',
-        kind: 'card',
-        context: item.last4 ? `Cartão Final ${item.last4}` : 'Cartão',
-      }),
+      row(
+        `card:${item.id || index}`,
+        item.name || 'Cartão',
+        '/cards',
+        'card',
+        item.last4 ? `Cartão Final ${item.last4}` : 'Cartão',
+      ),
     ),
   ]
 
-  const normalized = clean(query)
-  if (!normalized) return rows.filter((item) => item.kind === 'page').slice(0, 8)
+  const queryText = clean(query)
+  if (!queryText) return rows.filter(({ kind }) => kind === 'page').slice(0, 8)
 
-  const words = normalized.split(/\s+/)
+  const words = queryText.split(' ')
 
   return rows
-    .filter((item) => words.every((word) => item.searchable.includes(word)))
+    .filter(({ searchable }) => words.every((word) => searchable.includes(word)))
     .sort((a, b) => {
-      const aLabel = clean(a.label)
-      const bLabel = clean(b.label)
-      const aExact = aLabel === normalized ? 1 : 0
-      const bExact = bLabel === normalized ? 1 : 0
-      if (aExact !== bExact) return bExact - aExact
+      const left = clean(a.label)
+      const right = clean(b.label)
+      const exact = Number(right === queryText) - Number(left === queryText)
+      if (exact) return exact
 
-      const aPrefix = aLabel.startsWith(normalized) ? 1 : 0
-      const bPrefix = bLabel.startsWith(normalized) ? 1 : 0
-      if (aPrefix !== bPrefix) return bPrefix - aPrefix
-
-      return aLabel.localeCompare(bLabel)
+      const prefix = Number(right.startsWith(queryText)) - Number(left.startsWith(queryText))
+      return prefix || left.localeCompare(right)
     })
     .slice(0, 10)
 }
