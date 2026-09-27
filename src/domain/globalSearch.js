@@ -27,14 +27,7 @@ export function searchGlobal({
     ...pages.map(([label, to]) => row(`page:${to}`, label, to, 'page')),
     ...transactions.map((item, index) => {
       const label = item.description || item.categoryName || 'Transação'
-      const context = [
-        'Transação',
-        item.categoryName,
-        item.date,
-        item.amount == null ? '' : `R$ ${Number(item.amount).toFixed(2).replace('.', ',')}`,
-      ]
-        .filter(Boolean)
-        .join(' · ')
+      const context = ['Transação', item.categoryName, item.date].filter(Boolean).join(' · ')
 
       return row(
         `transaction:${item.id || index}`,
@@ -42,7 +35,7 @@ export function searchGlobal({
         `/transactions?search=${encodeURIComponent(label)}&scope=all`,
         'transaction',
         context,
-        `${item.notes || ''} ${item.paymentMethod || ''}`,
+        item.notes || '',
       )
     }),
     ...categories.map((item, index) =>
