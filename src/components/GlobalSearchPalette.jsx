@@ -1,23 +1,36 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { searchGlobal } from '../domain/globalSearch'
-import {
-  prioritizeNavigationPages,
-  readNavigationFavorites,
-  toggleNavigationFavorite,
-} from '../domain/navigationPreferences'
 import { Modal } from './ui'
+
+const FAVORITE_LIMIT = 4
+const favoriteKey = (uid) => `meu_real_navigation_${uid}`
+
+const readFavorites = (uid, allowed) => {
+  if (!uid) return []
+
+  try {
+    const values = JSON.parse(localStorage.getItem(favoriteKey(uid)) || '[]')
+    return [...new Set(Array.isArray(values) ? values : [])]
+      .filter((path) => allowed.includes(path))
+      .slice(0, FAVORITE_LIMIT)
+  } catch {
+    return []
+  }
+}
+
+const orderPages = (pages, favorites) => {
+  const map = new Map(pages.map((page) => [page[1], page]))
+  return [...new Set([...favorites, ...map.keys()])].map((path) => map.get(path)).filter(Boolean)
+}
 
 export default function GlobalSearchPalette(props) {
   const navigate = useNavigate()
   const allowedPaths = (props.pages || []).map(([, to]) => to)
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const [favorites, setFavorites] = useState(() =>
-    readNavigationFavorites(props.userId, allowedPaths),
-  )
-
-  const orderedPages = prioritizeNavigationPages(props.pages || [], favorites)
+  const [favorites, setFavorites] = useState(() => readFavorites(props.userId, allowedPaths))
+  const orderedPages = orderPages(props.pages || [], favorites)
 
   const results = searchGlobal({
     query,
@@ -31,7 +44,19 @@ export default function GlobalSearchPalette(props) {
   }
 
   const toggleFavorite = (path) => {
-    setFavorites(toggleNavigationFavorite(props.userId, path, allowedPaths))
+    if (!props.userId || !allowedPaths.includes(path)) return
+
+    const next = favorites.includes(path)
+      ? favorites.filter((item) => item !== path)
+      : [path, ...favorites].slice(0, FAVORITE_LIMIT)
+
+    try {
+      localStorage.setItem(favoriteKey(props.userId), JSON.stringify(next))
+    } catch {
+      // Favoritos locais não podem bloquear a busca.
+    }
+
+    setFavorites(next)
   }
 
   const onKeyDown = (event) => {
