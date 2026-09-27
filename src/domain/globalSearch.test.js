@@ -61,7 +61,7 @@ test('encontra categorias, metas e cartões inclusive com termos separados', () 
   expect(searchGlobal({ ...data, query: '4582' })[0]).toMatchObject({
     to: '/cards',
     kind: 'card',
-    context: 'Final 4582',
+    context: 'Cartão · Final 4582',
   })
 })
 
