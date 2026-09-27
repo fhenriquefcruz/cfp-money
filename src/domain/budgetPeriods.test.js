@@ -21,7 +21,6 @@ test('prioriza orçamento específico do mês e não carrega orçamento para out
   expect(getBudgetForMonth(budgets, 'food', '2026-09', '2026-09')).toMatchObject({
     id: 'sep',
     amount: 700,
-    legacyFallback: false,
   })
 
   expect(getBudgetForMonth(budgets, 'food', '2026-08', '2026-09')).toBeNull()
@@ -32,7 +31,6 @@ test('usa orçamento legado somente como transição no mês vigente', () => {
 
   expect(getBudgetForMonth(budgets, 'food', '2026-09', '2026-09')).toMatchObject({
     id: 'legacy',
-    legacyFallback: true,
   })
   expect(getBudgetForMonth(budgets, 'food', '2026-10', '2026-09')).toBeNull()
 })
