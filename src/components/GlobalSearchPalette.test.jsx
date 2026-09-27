@@ -118,7 +118,6 @@ test('navegação por setas circula entre os resultados', () => {
   expect(options[1]).toHaveAttribute('aria-selected', 'true')
 })
 
-
 test('oferece favorito apenas para módulos reais', () => {
   render(
     <MemoryRouter initialEntries={['/dashboard']}>
@@ -134,9 +133,7 @@ test('oferece favorito apenas para módulos reais', () => {
     </MemoryRouter>,
   )
 
-  expect(
-    screen.getByRole('button', { name: 'Favoritar Relatórios' }),
-  ).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Favoritar Relatórios' })).toBeInTheDocument()
 
   fireEvent.change(screen.getByLabelText('Termo da busca global'), {
     target: { value: 'viagem' },
@@ -166,7 +163,8 @@ test('favoritar um módulo atualiza o estado da paleta', () => {
 
   fireEvent.click(favoriteButton)
 
-  expect(
-    screen.getByRole('button', { name: 'Favoritar Metas' }),
-  ).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByRole('button', { name: 'Favoritar Metas' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
 })
