@@ -127,13 +127,6 @@ function BudgetCard({
               {status.label}
             </div>
 
-            {budget.legacyFallback && (
-              <p className="mt-2 text-[10px] leading-relaxed text-[--warning-text]">
-                Limite antigo usado somente como transição no mês atual. Ao alterar, ele passa a
-                ficar vinculado exclusivamente a esta competência.
-              </p>
-            )}
-
             <button
               type="button"
               onClick={() =>
@@ -278,9 +271,6 @@ export default function Budgets() {
             </p>
             <p className="mt-1 text-lg font-black text-[--text-primary]">
               {selectedLabel}
-            </p>
-            <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-              O limite e o consumo abaixo pertencem somente a este mês.
             </p>
           </div>
 
@@ -433,11 +423,6 @@ export default function Budgets() {
               }))
             }
           />
-
-          <div className="rounded-xl border border-[--brand-200] bg-[--brand-50] p-3 text-xs leading-relaxed text-[--brand-700]">
-            Este limite vale somente para <strong>{selectedLabel}</strong>. Alterar este valor não
-            muda orçamentos de outros meses.
-          </div>
 
           <Button variant="primary" fullWidth onClick={handleSave} loading={saving}>
             Salvar orçamento mensal
