@@ -20,10 +20,14 @@ export function buildGoalPlan(goal = {}, now = new Date()) {
   const completed = target > 0 && current >= target
   const deadline = parseDeadline(goal.deadline)
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const daysLeft = deadline ? Math.ceil((deadline.getTime() - today.getTime()) / DAY_MS) : null
+  const daysLeft = deadline
+    ? Math.ceil((deadline.getTime() - today.getTime()) / DAY_MS)
+    : null
   const overdue = !completed && daysLeft !== null && daysLeft < 0
   const monthsLeft =
-    !completed && daysLeft !== null && daysLeft >= 0 ? Math.max(1, Math.ceil(daysLeft / 30)) : null
+    !completed && daysLeft !== null && daysLeft >= 0
+      ? Math.max(1, Math.ceil(daysLeft / 30))
+      : null
   const suggestedMonthlyContribution =
     monthsLeft && remaining > 0 ? remaining / monthsLeft : null
 
