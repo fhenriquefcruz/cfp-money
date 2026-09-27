@@ -2,7 +2,7 @@
 import React, { lazy, Suspense } from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { AppProvider, CategoriesProvider, GoalsProvider, useApp } from './contexts/AppContext'
+import { AppProvider, CategoriesProvider, CreditCardsProvider, GoalsProvider, useApp } from './contexts/AppContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { PlanProvider } from './contexts/PlanContext'
 import { MoneyProvider } from './contexts/MoneyContext'
@@ -46,8 +46,9 @@ const AppRoutes = () => {
 
   return (
     <CategoriesProvider notify={showNotification} userId={user.uid}>
-      <GoalsProvider notify={showNotification} userId={user.uid}>
-        <div className="aurora-app-shell flex h-dvh min-h-0 overflow-hidden bg-[--bg-app]">
+      <CreditCardsProvider notify={showNotification} userId={user.uid}>
+        <GoalsProvider notify={showNotification} userId={user.uid}>
+          <div className="aurora-app-shell flex h-dvh min-h-0 overflow-hidden bg-[--bg-app]">
           <Sidebar />
           <main className="aurora-main min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-3 sm:px-5 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">
             <Suspense fallback={<LoadingScreen />}>
@@ -76,8 +77,9 @@ const AppRoutes = () => {
           <LegalGate />
           <NotificationStack />
           <PwaUpdateNotice />
-        </div>
-      </GoalsProvider>
+          </div>
+        </GoalsProvider>
+      </CreditCardsProvider>
     </CategoriesProvider>
   )
 }
