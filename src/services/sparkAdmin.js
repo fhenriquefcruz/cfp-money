@@ -19,7 +19,6 @@ function requireCurrentUser() {
   return user
 }
 
-
 export async function sparkAdminListUsers() {
   requireCurrentUser()
   const snapshot = await getDocs(query(collection(db, 'users'), orderBy('email')))
