@@ -12,7 +12,12 @@ const appMocks = vi.hoisted(() => ({
 
 vi.mock('../contexts/AppContext', () => ({
   useApp: () => ({
-    ...appMocks,
+    createTransaction: appMocks.createTransaction,
+    editTransaction: appMocks.editTransaction,
+    addTransactionBatch: appMocks.addTransactionBatch,
+  }),
+  useNotifications: () => ({
+    showNotification: appMocks.showNotification,
   }),
   useCreditCards: () => ({
     creditCards: [],
