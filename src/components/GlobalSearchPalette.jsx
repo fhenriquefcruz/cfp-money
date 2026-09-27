@@ -13,16 +13,14 @@ export default function GlobalSearchPalette({
   creditCards = [],
 }) {
   const navigate = useNavigate()
-  const storageKey = `mrn:${userId || ''}`
+  const storageKey = `m:${userId}`
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
   const [favorites, setFavorites] = useState(() => {
-    if (!userId) return []
-
     try {
       return (localStorage.getItem(storageKey) || '')
-        .split('|')
-        .filter((path) => path && pages.some(([, to]) => to === path))
+        .split(',')
+        .filter((path) => pages.some(([, to]) => to === path))
         .slice(0, 4)
     } catch {
       return []
@@ -48,14 +46,12 @@ export default function GlobalSearchPalette({
   }
 
   const toggleFavorite = (path) => {
-    if (!userId) return
-
     const next = favorites.includes(path)
       ? favorites.filter((item) => item !== path)
       : [path, ...favorites].slice(0, 4)
 
     try {
-      localStorage.setItem(storageKey, next.join('|'))
+      localStorage.setItem(storageKey, next)
     } catch {}
 
     setFavorites(next)
