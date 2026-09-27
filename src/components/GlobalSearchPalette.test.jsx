@@ -117,3 +117,56 @@ test('navegação por setas circula entre os resultados', () => {
   fireEvent.keyDown(input, { key: 'ArrowUp' })
   expect(options[1]).toHaveAttribute('aria-selected', 'true')
 })
+
+
+test('oferece favorito apenas para módulos reais', () => {
+  render(
+    <MemoryRouter initialEntries={['/dashboard']}>
+      <GlobalSearchPalette
+        onClose={() => {}}
+        userId="user-1"
+        pages={[
+          ['Dashboard', '/dashboard'],
+          ['Relatórios', '/reports'],
+        ]}
+        goals={[{ id: 'g1', name: 'Viagem' }]}
+      />
+    </MemoryRouter>,
+  )
+
+  expect(
+    screen.getByRole('button', { name: 'Adicionar Relatórios aos favoritos' }),
+  ).toBeInTheDocument()
+
+  fireEvent.change(screen.getByLabelText('Termo da busca global'), {
+    target: { value: 'viagem' },
+  })
+
+  expect(screen.getByRole('option', { name: /Viagem/i })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /Viagem.*favoritos/i })).not.toBeInTheDocument()
+})
+
+test('favoritar um módulo atualiza o estado da paleta', () => {
+  render(
+    <MemoryRouter initialEntries={['/dashboard']}>
+      <GlobalSearchPalette
+        onClose={() => {}}
+        userId="user-2"
+        pages={[
+          ['Dashboard', '/dashboard'],
+          ['Metas', '/goals'],
+        ]}
+      />
+    </MemoryRouter>,
+  )
+
+  const favoriteButton = screen.getByRole('button', {
+    name: 'Adicionar Metas aos favoritos',
+  })
+
+  fireEvent.click(favoriteButton)
+
+  expect(
+    screen.getByRole('button', { name: 'Remover Metas dos favoritos' }),
+  ).toHaveAttribute('aria-pressed', 'true')
+})
