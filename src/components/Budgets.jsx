@@ -17,7 +17,7 @@ function getBudgetStatus(percent) {
   const tone = percent > 100 ? 'danger' : percent >= 70 ? 'warning' : 'success'
   const label =
     percent > 100
-      ? `Limite ultrapassado em ${(percent - 100).toFixed(0)}%`
+      ? `Excedido em ${(percent - 100).toFixed(0)}%`
       : `${percent.toFixed(0)}% utilizado`
 
   return { tone, label }
@@ -55,7 +55,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
             type="button"
             onClick={() => onRemove(category.id, monthKey, budget.id)}
             className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
-            aria-label={`Remover orçamento de ${category.name}`}
+            aria-label={`Remover ${category.name}`}
           >
             ×
           </button>
@@ -277,12 +277,12 @@ export default function Budgets() {
         <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             {
-              label: 'Orçado no mês',
+              label: 'Orçado',
               value: formatCurrency(overview.totalBudgeted),
               color: 'text-[--brand-500]',
             },
             {
-              label: 'Gasto no mês',
+              label: 'Gasto',
               value: formatCurrency(overview.totalSpent),
               color:
                 overview.totalSpent > overview.totalBudgeted
@@ -312,7 +312,7 @@ export default function Budgets() {
         <EmptyState
           icon="◎"
           title="Nenhuma categoria de despesa"
-          description="Crie categorias de despesa para definir orçamentos."
+          description="Crie categorias de despesa e defina limites."
         />
       ) : (
         <div className="operational-card-grid budgets-card-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -369,7 +369,7 @@ export default function Budgets() {
           </div>
 
           <Input
-            label="Limite deste mês (R$)"
+            label="Limite mensal (R$)"
             type="number"
             step="0.01"
             min="1"
@@ -384,7 +384,7 @@ export default function Budgets() {
           />
 
           <Button variant="primary" fullWidth onClick={handleSave} loading={saving}>
-            Salvar orçamento mensal
+            Salvar orçamento
           </Button>
         </div>
       </Modal>
