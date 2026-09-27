@@ -49,6 +49,11 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Print integration formatting
+        run: |
+          npx prettier tests/integration/firebase-emulators.test.mjs
+          exit 1
+
       - name: Install Functions dependencies
         run: npm ci --prefix functions
 
