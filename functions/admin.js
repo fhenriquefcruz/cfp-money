@@ -121,10 +121,7 @@ function createAdminFunctions({ db, callableOptions }) {
   const adminListSupportRequests = onCall(callableOptions(), async (request) => {
     requireAdmin(request)
 
-    const snapshot = await db
-      .collection('supportRequests')
-      .orderBy('createdAt', 'desc')
-      .get()
+    const snapshot = await db.collection('supportRequests').orderBy('createdAt', 'desc').get()
 
     return {
       requests: snapshot.docs.map((document) => ({
