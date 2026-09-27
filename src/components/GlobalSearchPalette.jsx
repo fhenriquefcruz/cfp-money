@@ -7,7 +7,7 @@ const readFavorites = (uid) => {
   if (!uid) return []
 
   try {
-    return (localStorage.getItem(`mr_nav_${uid}`) || '').split('|').filter(Boolean).slice(0, 4)
+    return (localStorage.getItem(`mr_nav_${uid}`) || '').split('|')
   } catch {
     return []
   }
