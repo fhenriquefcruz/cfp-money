@@ -53,10 +53,48 @@ import {
 const AppContext = createContext({})
 export const useApp = () => useContext(AppContext)
 
+const NotificationsContext = createContext({
+  showNotification: () => {},
+  dismissNotification: () => {},
+})
+export const useNotifications = () => useContext(NotificationsContext)
+
+export const NotificationsProvider = ({ children }) => {
+  const { user } = useAuth()
+  const [notifications, setNotifications] = useState(() =>
+    E2E_MODE ? createE2EAppState().notifications : [],
+  )
+
+  useEffect(() => {
+    setNotifications([])
+  }, [user?.uid])
+
+  const dismissNotification = useCallback((id) => {
+    setNotifications((current) => current.filter((notification) => notification.id !== id))
+  }, [])
+
+  const showNotification = useCallback((message, type = 'success') => {
+    const id = Date.now() + Math.random()
+    setNotifications((current) => [...current, { id, message, kind: type }])
+    setTimeout(() => {
+      setNotifications((current) => current.filter((notification) => notification.id !== id))
+    }, 4000)
+  }, [])
+
+  return (
+    <NotificationsContext.Provider
+      value={{ notifications, showNotification, dismissNotification }}
+    >
+      {children}
+    </NotificationsContext.Provider>
+  )
+}
+
 const GoalsContext = createContext({ goals: [], loading: true })
 export const useGoals = () => useContext(GoalsContext)
 
-export const GoalsProvider = ({ children, notify, userId }) => {
+export const GoalsProvider = ({ children, userId }) => {
+  const { showNotification } = useNotifications()
   const [goals, setGoals] = useState(() => (E2E_MODE ? createE2EAppState().goals : null))
 
   useEffect(() => {
@@ -82,9 +120,9 @@ export const GoalsProvider = ({ children, notify, userId }) => {
     try {
       await action()
       setGoals(await getGoals(userId))
-      notify?.(message, type)
+      showNotification(message, type)
     } catch (error) {
-      notify?.('Erro na meta.', 'error')
+      showNotification('Erro na meta.', 'error')
       throw error
     }
   }
@@ -107,7 +145,8 @@ export const GoalsProvider = ({ children, notify, userId }) => {
 const CategoriesContext = createContext({ categories: [], loading: true })
 export const useCategories = () => useContext(CategoriesContext)
 
-export const CategoriesProvider = ({ children, notify, userId }) => {
+export const CategoriesProvider = ({ children, userId }) => {
+  const { showNotification } = useNotifications()
   const [categories, setCategories] = useState(() =>
     E2E_MODE ? createE2EAppState().categories : null,
   )
@@ -135,9 +174,9 @@ export const CategoriesProvider = ({ children, notify, userId }) => {
     try {
       await action()
       setCategories(await getCategories(userId))
-      notify?.(message, type)
+      showNotification(message, type)
     } catch (error) {
-      notify?.('Erro na categoria.', 'error')
+      showNotification('Erro na categoria.', 'error')
       throw error
     }
   }
@@ -163,7 +202,8 @@ export const CategoriesProvider = ({ children, notify, userId }) => {
 const CreditCardsContext = createContext({ creditCards: [], loading: true })
 export const useCreditCards = () => useContext(CreditCardsContext)
 
-export const CreditCardsProvider = ({ children, notify, userId }) => {
+export const CreditCardsProvider = ({ children, userId }) => {
+  const { showNotification } = useNotifications()
   const [creditCards, setCreditCards] = useState(() =>
     E2E_MODE ? createE2EAppState().creditCards : null,
   )
@@ -191,10 +231,10 @@ export const CreditCardsProvider = ({ children, notify, userId }) => {
     try {
       const result = await action()
       setCreditCards(await getCreditCards(userId))
-      notify?.(message, type)
+      showNotification(message, type)
       return result
     } catch (error) {
-      notify?.('Erro no cartão.', 'error')
+      showNotification('Erro no cartão.', 'error')
       throw error
     }
   }
@@ -220,7 +260,8 @@ export const CreditCardsProvider = ({ children, notify, userId }) => {
 const InvoiceEventsContext = createContext({ invoiceEvents: [], loading: true })
 export const useInvoiceEvents = () => useContext(InvoiceEventsContext)
 
-export const InvoiceEventsProvider = ({ children, notify, userId }) => {
+export const InvoiceEventsProvider = ({ children, userId }) => {
+  const { showNotification } = useNotifications()
   const [invoiceEvents, setInvoiceEvents] = useState(() =>
     E2E_MODE ? createE2EAppState().invoiceEvents : null,
   )
@@ -241,7 +282,7 @@ export const InvoiceEventsProvider = ({ children, notify, userId }) => {
 
     try {
       const id = await addInvoiceEvent(userId, data)
-      notify?.(
+      showNotification(
         data.type === 'payment'
           ? 'Pagamento registrado na fatura.'
           : data.type === 'reversal'
@@ -252,7 +293,7 @@ export const InvoiceEventsProvider = ({ children, notify, userId }) => {
       )
       return id
     } catch (error) {
-      notify?.('Não foi possível registrar o evento da fatura.', 'error')
+      showNotification('Não foi possível registrar o evento da fatura.', 'error')
       throw error
     }
   }
@@ -308,10 +349,6 @@ function reducer(state, action) {
         ...state,
         transactions: state.transactions.filter((transaction) => transaction.id !== action.payload),
       }
-    case 'ADD_NOTIFICATION':
-      return { ...state, notifications: [...state.notifications, action.payload] }
-    case 'REMOVE_NOTIFICATION':
-      return { ...state, notifications: state.notifications.filter((n) => n.id !== action.payload) }
     case 'RESET':
       return { ...initialState }
     default:
@@ -327,16 +364,7 @@ export const AppProvider = ({ children }) => {
   const stateRef = useRef(state)
   stateRef.current = state
 
-  const showNotification = useCallback((message, type = 'success') => {
-    const id = Date.now() + Math.random()
-    dispatch({ type: 'ADD_NOTIFICATION', payload: { id, message, kind: type } })
-    setTimeout(() => dispatch({ type: 'REMOVE_NOTIFICATION', payload: id }), 4000)
-  }, [])
-
-  const dismissNotification = useCallback(
-    (id) => dispatch({ type: 'REMOVE_NOTIFICATION', payload: id }),
-    [],
-  )
+  const { showNotification } = useNotifications()
 
   // ── Carrega dados ao logar ──
   useEffect(() => {
@@ -810,8 +838,6 @@ export const AppProvider = ({ children }) => {
         applyTransactionSeriesOperation,
         saveBudget,
         removeBudget,
-        showNotification,
-        dismissNotification,
         getMonthTransactions,
         getSummary,
         getCategoryTotals,
