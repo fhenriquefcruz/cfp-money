@@ -167,18 +167,8 @@ export default function Budgets() {
   const sortedCategories = useMemo(
     () =>
       [...expenseCategories].sort((first, second) => {
-        const firstBudget = getBudgetForMonth(
-          budgets,
-          first.id,
-          selectedMonth,
-          currentMonthKey,
-        )
-        const secondBudget = getBudgetForMonth(
-          budgets,
-          second.id,
-          selectedMonth,
-          currentMonthKey,
-        )
+        const firstBudget = getBudgetForMonth(budgets, first.id, selectedMonth, currentMonthKey)
+        const secondBudget = getBudgetForMonth(budgets, second.id, selectedMonth, currentMonthKey)
 
         if (!firstBudget && !secondBudget) return first.name.localeCompare(second.name, 'pt-BR')
         if (!firstBudget) return 1
@@ -285,18 +275,13 @@ export default function Budgets() {
             },
             {
               label: 'Disponível',
-              value: formatCurrency(
-                Math.max(0, overview.totalBudgeted - overview.totalSpent),
-              ),
+              value: formatCurrency(Math.max(0, overview.totalBudgeted - overview.totalSpent)),
               color: 'text-[--success-icon]',
             },
             {
               label: 'Excedidos',
               value: `${overview.overCount} categoria${overview.overCount === 1 ? '' : 's'}`,
-              color:
-                overview.overCount > 0
-                  ? 'text-[--danger-icon]'
-                  : 'text-[--success-icon]',
+              color: overview.overCount > 0 ? 'text-[--danger-icon]' : 'text-[--success-icon]',
             },
           ].map((item) => (
             <Card key={item.label} className="py-3 text-center">
@@ -316,12 +301,7 @@ export default function Budgets() {
       ) : (
         <div className="operational-card-grid budgets-card-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {sortedCategories.map((category) => {
-            const budget = getBudgetForMonth(
-              budgets,
-              category.id,
-              selectedMonth,
-              currentMonthKey,
-            )
+            const budget = getBudgetForMonth(budgets, category.id, selectedMonth, currentMonthKey)
             const spent = getBudgetSpent(transactions, category.id, selectedMonth)
 
             return (
