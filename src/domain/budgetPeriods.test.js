@@ -95,7 +95,6 @@ test('resume apenas os limites e gastos da competência escolhida', () => {
   })
 })
 
-
 test('planeja cópia do mês anterior sem sobrescrever limites já definidos', () => {
   const plan = buildBudgetCarryoverPlan({
     budgets: [
@@ -127,13 +126,28 @@ test('ignora categorias removidas e orçamento legado ao copiar competência', (
   expect(plan).toEqual([{ categoryId: 'food', amount: 500 }])
 })
 
-
 test('não copia orçamento quando nenhuma categoria de despesa é válida', () => {
   const plan = buildBudgetCarryoverPlan({
     budgets: [{ categoryId: 'food', amount: 500, monthKey: '2026-08' }],
     sourceMonthKey: '2026-08',
     targetMonthKey: '2026-09',
     categoryIds: [],
+  })
+
+  expect(plan).toEqual([])
+})
+
+
+test('preserva orçamento legado que ainda vale no mês atual', () => {
+  const plan = buildBudgetCarryoverPlan({
+    budgets: [
+      { categoryId: 'food', amount: 450, monthKey: '2026-08' },
+      { categoryId: 'food', amount: 500 },
+    ],
+    sourceMonthKey: '2026-08',
+    targetMonthKey: '2026-09',
+    currentMonthKey: '2026-09',
+    categoryIds: ['food'],
   })
 
   expect(plan).toEqual([])
