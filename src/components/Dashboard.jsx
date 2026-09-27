@@ -29,8 +29,7 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { useApp } from '../contexts/AppContext'
-import { useGoals } from '../contexts/GoalsContext'
+import { useApp, useGoals } from '../contexts/AppContext'
 import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
