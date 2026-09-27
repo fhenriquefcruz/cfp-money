@@ -15,7 +15,6 @@ const makeResult = ({ id, label, to, kind, context = '', terms = '' }) => ({
   searchable: clean(`${label} ${context} ${terms}`),
 })
 
-const result = ({ searchable, ...item }) => item
 
 export function searchGlobal({
   query = '',
@@ -32,7 +31,6 @@ export function searchGlobal({
         label,
         to,
         kind: 'page',
-        context: 'Área do Meu Real',
       }),
     ),
     ...transactions.map((item, index) => {
@@ -77,7 +75,6 @@ export function searchGlobal({
         to: '/cards',
         kind: 'card',
         context: item.last4 ? `Cartão Final ${item.last4}` : 'Cartão',
-        terms: item.last4,
       }),
     ),
   ]
@@ -87,7 +84,6 @@ export function searchGlobal({
     return rows
       .filter((item) => item.kind === 'page')
       .slice(0, 8)
-      .map(result)
   }
 
   const words = normalized.split(/\s+/)
@@ -105,10 +101,9 @@ export function searchGlobal({
       const bPrefix = bLabel.startsWith(normalized) ? 1 : 0
       if (aPrefix !== bPrefix) return bPrefix - aPrefix
 
-      return aLabel.localeCompare(bLabel, 'pt-BR')
+      return aLabel.localeCompare(bLabel)
     })
     .slice(0, 10)
-    .map(result)
 }
 
 export { clean as normalizeGlobalSearchText }
