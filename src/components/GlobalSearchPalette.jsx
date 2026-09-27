@@ -3,19 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { searchGlobal } from '../domain/globalSearch'
 import { Modal } from './ui'
 
-const readFavorites = (uid) => {
-  try {
-    return (localStorage.getItem(`mr_nav_${uid}`) || '').split('|')
-  } catch {
-    return []
-  }
-}
-
-const orderPages = (pages, favorites) => [
-  ...favorites.map((path) => pages.find(([, to]) => to === path)).filter(Boolean),
-  ...pages.filter(([, to]) => !favorites.includes(to)),
-]
-
 export default function GlobalSearchPalette({
   onClose,
   userId,
@@ -26,12 +13,27 @@ export default function GlobalSearchPalette({
   creditCards = [],
 }) {
   const navigate = useNavigate()
+  const storageKey = `m:${userId}`
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
-  const [favorites, setFavorites] = useState(() => readFavorites(userId))
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      return (localStorage.getItem(storageKey) || '')
+        .split(',')
+        .filter((path) => pages.some(([, to]) => to === path))
+        .slice(0, 4)
+    } catch {
+      return []
+    }
+  })
+
+  const orderedPages = [
+    ...favorites.map((path) => pages.find(([, to]) => to === path)).filter(Boolean),
+    ...pages.filter(([, to]) => !favorites.includes(to)),
+  ]
   const results = searchGlobal({
     query,
-    pages: orderPages(pages, favorites),
+    pages: orderedPages,
     transactions,
     categories,
     goals,
@@ -49,7 +51,7 @@ export default function GlobalSearchPalette({
       : [path, ...favorites].slice(0, 4)
 
     try {
-      localStorage.setItem(`mr_nav_${userId}`, next.join('|'))
+      localStorage.setItem(storageKey, next)
     } catch {}
 
     setFavorites(next)
@@ -57,6 +59,7 @@ export default function GlobalSearchPalette({
 
   const onKeyDown = (event) => {
     if (event.key === 'Escape') {
+      event.preventDefault()
       onClose()
       return
     }
@@ -77,7 +80,7 @@ export default function GlobalSearchPalette({
   }
 
   return (
-    <Modal isOpen onClose={onClose} title="Buscar no Meu Real" size="lg">
+    <Modal isOpen onClose={onClose} title="Busca global" size="lg">
       <input
         autoFocus
         value={query}
@@ -86,14 +89,14 @@ export default function GlobalSearchPalette({
           setQuery(event.target.value)
           setActive(0)
         }}
-        placeholder="Transação, meta, cartão ou área..."
-        aria-label="Termo da busca global"
+        placeholder="Buscar..."
+        aria-label="Pesquisar"
         className="global-search-input"
       />
 
       <div className="global-search-results" role="listbox">
-        {query.trim() && !results.length ? (
-          <p className="global-search-empty">Nenhum resultado encontrado</p>
+        {query && !results.length ? (
+          <p className="global-search-empty">Nada encontrado</p>
         ) : (
           results.map((item, index) => {
             const favorite = favorites.includes(item.to)
@@ -108,9 +111,13 @@ export default function GlobalSearchPalette({
                     active === index ? 'global-search-result--active' : ''
                   }`}
                 >
-                  <span>
-                    <strong>{item.label}</strong>
-                    {item.context && <small>{item.context}</small>}
+                  <span className="min-w-0">
+                    <strong className="block truncate">{item.label}</strong>
+                    {item.context && (
+                      <small className="block truncate font-normal text-[--text-tertiary]">
+                        {item.context}
+                      </small>
+                    )}
                   </span>
                 </button>
 
@@ -121,7 +128,7 @@ export default function GlobalSearchPalette({
                     aria-label={`Favoritar ${item.label}`}
                     aria-pressed={favorite}
                   >
-                    ★
+                    {favorite ? '★' : '☆'}
                   </button>
                 )}
               </div>
