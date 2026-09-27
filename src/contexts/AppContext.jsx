@@ -162,6 +162,8 @@ export const BudgetsProvider = ({ children }) => {
       value={{
         budgets: budgets ?? [],
         loading: budgets === null,
+        saveBudget,
+        removeBudget,
       }}
     >
       {children}
@@ -858,8 +860,6 @@ export const AppProvider = ({ children }) => {
         addTransactionBatch,
         importTransactionBatch,
         applyTransactionSeriesOperation,
-        saveBudget,
-        removeBudget,
         getMonthTransactions,
         getSummary,
         getCategoryTotals,
