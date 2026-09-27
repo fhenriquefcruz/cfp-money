@@ -104,11 +104,11 @@ export default function App() {
               <BudgetsProvider>
                 <TransactionsProvider>
                   <AppProvider>
-                  <PlanProvider>
-                    <MoneyProvider>
-                      <AppRoutes />
-                    </MoneyProvider>
-                  </PlanProvider>
+                    <PlanProvider>
+                      <MoneyProvider>
+                        <AppRoutes />
+                      </MoneyProvider>
+                    </PlanProvider>
                   </AppProvider>
                 </TransactionsProvider>
               </BudgetsProvider>
