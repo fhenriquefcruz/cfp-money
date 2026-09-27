@@ -21,12 +21,7 @@ import {
   CheckCircle2,
   Clock3,
 } from 'lucide-react'
-import {
-  useApp,
-  useCategories,
-  useCreditCards,
-  useInvoiceEvents,
-} from '../contexts/AppContext'
+import { useApp, useCategories, useCreditCards, useInvoiceEvents } from '../contexts/AppContext'
 import { useAuth } from '../contexts/AuthContext'
 import { Button, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
