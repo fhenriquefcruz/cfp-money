@@ -89,6 +89,86 @@ export const NotificationsProvider = ({ children }) => {
   )
 }
 
+const BudgetsContext = createContext({ budgets: [], loading: true })
+export const useBudgets = () => useContext(BudgetsContext)
+
+export const BudgetsProvider = ({ children }) => {
+  const { user } = useAuth()
+  const { showNotification } = useNotifications()
+  const [budgets, setBudgets] = useState(() => (E2E_MODE ? createE2EAppState().budgets : null))
+
+  useEffect(() => {
+    if (E2E_MODE) return undefined
+    if (!user?.uid) {
+      setBudgets([])
+      return undefined
+    }
+
+    setBudgets(null)
+    getBudgets(user.uid)
+      .then(setBudgets)
+      .catch((error) => {
+        console.error('[Meu Real] orçamentos:', error)
+        setBudgets([])
+      })
+
+    return undefined
+  }, [user?.uid])
+
+  const refreshBudgets = useCallback(async () => {
+    if (!user?.uid) return
+    try {
+      setBudgets(await getBudgets(user.uid))
+    } catch (error) {
+      console.error('[Meu Real] refreshBudgets:', error.code)
+    }
+  }, [user?.uid])
+
+  const saveBudget = useCallback(
+    async (categoryId, amount, monthKey) => {
+      if (!user?.uid) return
+      try {
+        const items = Array.isArray(categoryId) ? categoryId : [{ categoryId, amount }]
+        await Promise.all(
+          items.map((item) => setBudget(user.uid, item.categoryId, item.amount, monthKey)),
+        )
+        await refreshBudgets()
+        showNotification('Orçamento salvo!')
+      } catch (error) {
+        showNotification('Erro ao salvar.', 'error')
+        throw error
+      }
+    },
+    [user?.uid, showNotification, refreshBudgets],
+  )
+
+  const removeBudget = useCallback(
+    async (categoryId, monthKey, budgetId = '') => {
+      if (!user?.uid) return
+      try {
+        await deleteBudget(user.uid, categoryId, monthKey, budgetId)
+        await refreshBudgets()
+        showNotification('Orçamento mensal removido.', 'info')
+      } catch (error) {
+        showNotification('Erro ao remover orçamento.', 'error')
+        throw error
+      }
+    },
+    [user?.uid, showNotification, refreshBudgets],
+  )
+
+  return (
+    <BudgetsContext.Provider
+      value={{
+        budgets: budgets ?? [],
+        loading: budgets === null,
+      }}
+    >
+      {children}
+    </BudgetsContext.Provider>
+  )
+}
+
 const GoalsContext = createContext({ goals: [], loading: true })
 export const useGoals = () => useContext(GoalsContext)
 
@@ -312,10 +392,8 @@ export const InvoiceEventsProvider = ({ children, userId }) => {
 
 const initialState = {
   transactions: [],
-  budgets: [],
   loading: {
     transactions: true,
-    budgets: true,
   },
 }
 
@@ -327,8 +405,6 @@ function reducer(state, action) {
         transactions: action.payload,
         loading: { ...state.loading, transactions: false },
       }
-    case 'SET_BUDGETS':
-      return { ...state, budgets: action.payload, loading: { ...state.loading, budgets: false } }
     case 'E2E_ADD_TRANSACTION':
       return { ...state, transactions: [action.payload, ...state.transactions] }
     case 'E2E_ADD_TRANSACTION_BATCH':
@@ -356,6 +432,7 @@ function reducer(state, action) {
 
 export const AppProvider = ({ children }) => {
   const { user } = useAuth()
+  const { budgets } = useBudgets()
   const [state, dispatch] = useReducer(reducer, undefined, () =>
     E2E_MODE ? createE2EAppState() : initialState,
   )
@@ -380,16 +457,6 @@ export const AppProvider = ({ children }) => {
     const unsubTx = onTransactionsChange(uid, (txs) =>
       dispatch({ type: 'SET_TRANSACTIONS', payload: txs }),
     )
-    // Carrega o resto em paralelo
-    const load = async () => {
-      try {
-        dispatch({ type: 'SET_BUDGETS', payload: await getBudgets(uid) })
-      } catch (err) {
-        console.error('[Meu Real] Erro ao carregar dados:', err.code, err.message)
-      }
-    }
-
-    load()
     return () => {
       if (typeof unsubTx === 'function') unsubTx()
     }
@@ -404,7 +471,7 @@ export const AppProvider = ({ children }) => {
 
       const { budgetMonthKey, getBudgetForMonth, getBudgetSpent, getBudgetTransactionMonth } =
         await import('../domain/budgetPeriods')
-      const { budgets, transactions } = stateRef.current
+      const { transactions } = stateRef.current
       const currentMonthKey = budgetMonthKey()
       const monthKey = getBudgetTransactionMonth(newTx)
 
@@ -458,7 +525,7 @@ export const AppProvider = ({ children }) => {
         })
       }
     },
-    [showNotification, user?.uid],
+    [budgets, showNotification, user?.uid],
   )
 
   // ── TRANSACTIONS ──
@@ -710,49 +777,6 @@ export const AppProvider = ({ children }) => {
       }
     },
     [user?.uid, showNotification],
-  )
-
-  // ── BUDGETS ──
-  const refreshBudgets = useCallback(async () => {
-    if (!user?.uid) return
-    try {
-      dispatch({ type: 'SET_BUDGETS', payload: await getBudgets(user.uid) })
-    } catch (e) {
-      console.error('[Meu Real] refreshBudgets:', e.code)
-    }
-  }, [user?.uid])
-
-  const saveBudget = useCallback(
-    async (categoryId, amount, monthKey) => {
-      if (!user?.uid) return
-      try {
-        const items = Array.isArray(categoryId) ? categoryId : [{ categoryId, amount }]
-        await Promise.all(
-          items.map((item) => setBudget(user.uid, item.categoryId, item.amount, monthKey)),
-        )
-        await refreshBudgets()
-        showNotification('Orçamento salvo!')
-      } catch (e) {
-        showNotification('Erro ao salvar.', 'error')
-        throw e
-      }
-    },
-    [user?.uid, showNotification, refreshBudgets],
-  )
-
-  const removeBudget = useCallback(
-    async (categoryId, monthKey, budgetId = '') => {
-      if (!user?.uid) return
-      try {
-        await deleteBudget(user.uid, categoryId, monthKey, budgetId)
-        await refreshBudgets()
-        showNotification('Orçamento mensal removido.', 'info')
-      } catch (e) {
-        showNotification('Erro ao remover orçamento.', 'error')
-        throw e
-      }
-    },
-    [user?.uid, showNotification, refreshBudgets],
   )
 
   // ── CÁLCULOS ──
