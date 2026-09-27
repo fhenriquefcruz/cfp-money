@@ -262,6 +262,7 @@ export const InvoiceEventsProvider = ({ children, notify, userId }) => {
       value={{
         invoiceEvents: invoiceEvents ?? [],
         loading: invoiceEvents === null,
+        createInvoiceEvent,
       }}
     >
       {children}
@@ -806,7 +807,6 @@ export const AppProvider = ({ children }) => {
         removeTransactionBatch,
         addTransactionBatch,
         importTransactionBatch,
-        createInvoiceEvent,
         applyTransactionSeriesOperation,
         saveBudget,
         removeBudget,
