@@ -160,7 +160,6 @@ export const CategoriesProvider = ({ children, notify, userId }) => {
   )
 }
 
-
 const CreditCardsContext = createContext({ creditCards: [], loading: true })
 export const useCreditCards = () => useContext(CreditCardsContext)
 
