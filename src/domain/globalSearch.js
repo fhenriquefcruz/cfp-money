@@ -3,7 +3,6 @@ const clean = (value) =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(/\s+/g, ' ')
     .trim()
 
 const row = (id, label, to, kind, context = '') => ({
