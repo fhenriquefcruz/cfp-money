@@ -1,105 +1,135 @@
 // src/components/Budgets.jsx
-import React, { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { PieChart, Plus, Trash2, AlertTriangle, TrendingUp, CheckCircle, Flame } from 'lucide-react'
+import React, { useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  AlertTriangle,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Flame,
+  PieChart,
+  Plus,
+  Trash2,
+  TrendingUp,
+} from 'lucide-react'
 import { useApp } from '../contexts/AppContext'
-import { Card, Button, Input, Modal, EmptyState } from './ui'
+import { Button, Card, EmptyState, Input, Modal } from './ui'
 import InfoTooltip from './InfoTooltip'
 import { formatCurrency } from '../utils'
+import {
+  budgetMonthKey,
+  buildMonthlyBudgetOverview,
+  getBudgetForMonth,
+  getBudgetSpent,
+  shiftBudgetMonth,
+} from '../domain/budgetPeriods'
 
-// ── Status do orçamento com cores e mensagens ──
-function getBudgetStatus(pct) {
-  if (pct > 100)
+function monthLabel(monthKey) {
+  const [year, month] = monthKey.split('-').map(Number)
+  if (!year || !month) return monthKey
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(year, month - 1, 1))
+}
+
+function getBudgetStatus(percent) {
+  if (percent > 100) {
     return {
-      level: 'over',
       color: 'var(--danger-text)',
       bgClass: 'bg-[--danger-bg]',
       borderClass: 'border-[--danger-border]',
       barColor: 'var(--danger-icon)',
       icon: <Flame size={14} className="text-[--danger-text]" />,
-      label: (pct) => `🚨 Limite ultrapassado! (${pct.toFixed(0)}% do orçamento)`,
+      label: `Limite ultrapassado em ${(percent - 100).toFixed(0)}%`,
     }
-  if (pct === 100)
+  }
+
+  if (percent >= 90) {
     return {
-      level: 'exact',
       color: 'var(--warning-text)',
       bgClass: 'bg-[--warning-bg]',
       borderClass: 'border-[--warning-border]',
       barColor: 'var(--warning-icon)',
       icon: <AlertTriangle size={14} className="text-[--warning-icon]" />,
-      label: () => `⛔ Limite atingido! Orçamento esgotado.`,
+      label: `${percent.toFixed(0)}% do limite utilizado`,
     }
-  if (pct >= 90)
+  }
+
+  if (percent >= 70) {
     return {
-      level: 'critical',
-      color: 'var(--warning-text)',
-      bgClass: 'bg-[--warning-bg]',
-      borderClass: 'border-[--warning-border]',
-      barColor: 'var(--warning-icon)',
-      icon: <AlertTriangle size={14} className="text-[--warning-icon]" />,
-      label: (pct) => `⚠️ Atenção: ${pct.toFixed(0)}% do limite utilizado.`,
-    }
-  if (pct >= 70)
-    return {
-      level: 'warning',
       color: 'var(--warning-text)',
       bgClass: 'bg-[--warning-bg]',
       borderClass: 'border-[--warning-border]',
       barColor: 'var(--warning-icon)',
       icon: <TrendingUp size={14} className="text-[--warning-icon]" />,
-      label: (pct) => `${pct.toFixed(0)}% do orçamento utilizado — fique atento.`,
+      label: `${percent.toFixed(0)}% do orçamento utilizado`,
     }
+  }
+
   return {
-    level: 'ok',
     color: 'var(--success-text)',
-    bgClass: '',
-    borderClass: '',
+    bgClass: 'bg-[--success-bg]',
+    borderClass: 'border-[--success-border]',
     barColor: 'var(--success-icon)',
     icon: <CheckCircle size={14} className="text-[--success-icon]" />,
-    label: (pct) => `${pct.toFixed(0)}% utilizado — dentro do limite.`,
+    label: `${percent.toFixed(0)}% utilizado`,
   }
 }
 
-function BudgetCard({ cat, budget, spent, onEdit, onRemove }) {
-  const pct = budget ? Math.max(0, (spent / budget.amount) * 100) : 0
-  const remaining = budget ? Math.max(0, budget.amount - spent) : 0
-  const status = getBudgetStatus(pct)
-  const isOver = pct > 100
-  const excess = budget ? Math.max(0, spent - budget.amount) : 0
+function BudgetCard({
+  category,
+  budget,
+  spent,
+  monthKey,
+  onEdit,
+  onRemove,
+}) {
+  const amount = Number(budget?.amount) || 0
+  const percent = amount > 0 ? Math.max(0, (spent / amount) * 100) : 0
+  const remaining = Math.max(0, amount - spent)
+  const excess = Math.max(0, spent - amount)
+  const status = getBudgetStatus(percent)
+  const isOver = percent > 100
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      exit={{ opacity: 0, scale: 0.98 }}
     >
-      <Card
-        className={`transition-all ${isOver ? 'ring-2 ring-[--danger-border] ring-offset-2 ring-offset-[--bg-app]' : ''}`}
-      >
-        {/* Cabeçalho */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2.5">
+      <Card className={isOver ? 'ring-2 ring-[--danger-border]' : ''}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-              style={{ background: cat.color + '22' }}
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-xl"
+              style={{ background: `${category.color}22` }}
             >
-              {cat.icon}
+              {category.icon}
             </div>
-            <div>
-              <p className="font-semibold text-[--text-primary]">{cat.name}</p>
-              {budget && (
-                <p className="text-xs text-[--text-tertiary]">
-                  Orçado: {formatCurrency(budget.amount)}/mês
-                </p>
-              )}
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-[--text-primary]">{category.name}</p>
+              <p className="text-xs text-[--text-tertiary]">
+                {budget ? `${formatCurrency(amount)} neste mês` : 'Sem limite neste mês'}
+              </p>
             </div>
           </div>
+
           {budget && (
             <button
-              onClick={() => onRemove(cat.id)}
-              className="p-1.5 rounded-lg hover:bg-[--danger-bg] text-[--text-tertiary] hover:text-[--danger-text] transition-colors"
-              title="Remover orçamento"
+              type="button"
+              onClick={() =>
+                onRemove({
+                  categoryId: category.id,
+                  monthKey,
+                  budgetId: budget.id,
+                })
+              }
+              className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
+              aria-label={`Remover orçamento de ${category.name}`}
+              title="Remover orçamento deste mês"
             >
               <Trash2 size={14} />
             </button>
@@ -108,89 +138,81 @@ function BudgetCard({ cat, budget, spent, onEdit, onRemove }) {
 
         {budget ? (
           <>
-            {/* Valores */}
-            <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+            <div className="mt-4 flex flex-wrap items-end justify-between gap-2">
               <div>
-                <span
-                  className="text-2xl font-black tabular-nums"
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                  Gasto na competência
+                </p>
+                <p
+                  className="mt-1 text-2xl font-black tabular-nums"
                   style={{ color: status.barColor }}
                 >
                   {formatCurrency(spent)}
-                </span>
-                <span className="text-xs text-[--text-tertiary] ml-1">gasto</span>
+                </p>
               </div>
               <div className="text-right">
-                {isOver ? (
-                  <p className="text-sm font-bold text-[--danger-text]">
-                    +{formatCurrency(excess)} excedido
-                  </p>
-                ) : (
-                  <p className="text-sm text-[--text-secondary]">
-                    {formatCurrency(remaining)} restante
-                  </p>
-                )}
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                  {isOver ? 'Excedido' : 'Disponível'}
+                </p>
+                <p
+                  className={`mt-1 text-sm font-black ${
+                    isOver ? 'text-[--danger-text]' : 'text-[--text-primary]'
+                  }`}
+                >
+                  {formatCurrency(isOver ? excess : remaining)}
+                </p>
               </div>
             </div>
 
-            {/* Barra de progresso */}
-            <div className="h-2.5 bg-[--bg-hover] rounded-full overflow-hidden mb-2.5">
+            <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[--bg-hover]">
               <motion.div
                 className="h-full rounded-full"
                 style={{ background: status.barColor }}
                 initial={{ width: 0 }}
-                animate={{ width: `${Math.min(pct, 100)}%` }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
+                animate={{ width: `${Math.min(percent, 100)}%` }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
               />
-              {/* Indicador de excesso */}
-              {isOver && (
-                <motion.div
-                  className="h-full rounded-full bg-[--danger-text] opacity-40"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(pct - 100, 50)}%` }}
-                  transition={{ duration: 0.4, delay: 0.6 }}
-                />
-              )}
             </div>
 
-            {/* Mensagem de status */}
-            <AnimatePresence>
-              {pct >= 70 && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium ${status.bgClass} ${status.borderClass}`}
-                >
-                  {status.icon}
-                  <span style={{ color: status.color }}>{status.label(pct)}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Botão editar */}
-            <button
-              onClick={() =>
-                onEdit({ categoryId: cat.id, amount: budget.amount, budgetId: budget.id })
-              }
-              className="mt-2.5 w-full text-xs text-[--text-tertiary] hover:text-[--text-brand] transition-colors text-center"
+            <div
+              className={`mt-3 flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium ${status.bgClass} ${status.borderClass}`}
             >
-              Alterar limite
+              {status.icon}
+              <span style={{ color: status.color }}>{status.label}</span>
+            </div>
+
+            {budget.legacyFallback && (
+              <p className="mt-2 text-[10px] leading-relaxed text-[--warning-text]">
+                Limite antigo usado somente como transição no mês atual. Ao alterar, ele passa a
+                ficar vinculado exclusivamente a esta competência.
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={() =>
+                onEdit({
+                  categoryId: category.id,
+                  amount,
+                })
+              }
+              className="mt-3 min-h-10 w-full text-center text-xs font-semibold text-[--text-tertiary] transition-colors hover:text-[--text-brand]"
+            >
+              Alterar limite deste mês
             </button>
           </>
         ) : (
-          <div className="space-y-2">
-            <div className="flex justify-between items-baseline">
-              <span className="text-lg font-black text-[--text-tertiary] tabular-nums">
-                R$ 0,00
-              </span>
-              <span className="text-xs text-[--text-tertiary]">sem limite</span>
-            </div>
-            <div className="h-2 bg-[--bg-hover] rounded-full" />
+          <div className="mt-4 rounded-2xl border border-dashed border-[--border-default] bg-[--bg-subtle] p-3">
+            <p className="text-xs leading-relaxed text-[--text-tertiary]">
+              Nenhum orçamento foi definido para esta categoria nesta competência.
+            </p>
             <button
-              onClick={() => onEdit({ categoryId: cat.id, amount: '' })}
-              className="flex items-center gap-1.5 text-xs text-[--text-tertiary] hover:text-[--brand-500] transition-colors mt-1"
+              type="button"
+              onClick={() => onEdit({ categoryId: category.id, amount: '' })}
+              className="mt-2 inline-flex min-h-10 items-center gap-1.5 text-xs font-bold text-[--text-brand]"
             >
-              <Plus size={12} /> Definir limite
+              <Plus size={12} />
+              Definir limite mensal
             </button>
           </div>
         )}
@@ -201,128 +223,192 @@ function BudgetCard({ cat, budget, spent, onEdit, onRemove }) {
 
 export default function Budgets() {
   const { budgets, categories, saveBudget, removeBudget, transactions } = useApp()
+  const currentMonthKey = budgetMonthKey()
+  const [selectedMonth, setSelectedMonth] = useState(currentMonthKey)
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState({ categoryId: '', amount: '' })
   const [saving, setSaving] = useState(false)
 
-  const expenseCategories = categories.filter((c) => c.type === 'expense')
-  const currentMonth = new Date().toLocaleDateString('en-CA').slice(0, 7)
+  const expenseCategories = useMemo(
+    () => categories.filter((category) => category.type === 'expense'),
+    [categories],
+  )
 
-  const getSpent = (categoryId) =>
-    transactions
-      .filter(
-        (t) =>
-          t.type === 'expense' && t.categoryId === categoryId && t.date.startsWith(currentMonth),
-      )
-      .reduce((s, t) => s + t.amount, 0)
+  const overview = useMemo(
+    () =>
+      buildMonthlyBudgetOverview({
+        budgets,
+        transactions,
+        monthKey: selectedMonth,
+        currentMonthKey,
+      }),
+    [budgets, transactions, selectedMonth, currentMonthKey],
+  )
 
-  // Resumo geral do mês
-  const summary = useMemo(() => {
-    const withBudget = budgets.map((b) => {
-      const spent = getSpent(b.categoryId)
-      return { spent, budget: b.amount, over: Math.max(0, spent - b.amount) }
+  const sortedCategories = useMemo(
+    () =>
+      [...expenseCategories].sort((first, second) => {
+        const firstBudget = getBudgetForMonth(
+          budgets,
+          first.id,
+          selectedMonth,
+          currentMonthKey,
+        )
+        const secondBudget = getBudgetForMonth(
+          budgets,
+          second.id,
+          selectedMonth,
+          currentMonthKey,
+        )
+
+        if (!firstBudget && !secondBudget) return first.name.localeCompare(second.name, 'pt-BR')
+        if (!firstBudget) return 1
+        if (!secondBudget) return -1
+
+        const firstSpent = getBudgetSpent(transactions, first.id, selectedMonth)
+        const secondSpent = getBudgetSpent(transactions, second.id, selectedMonth)
+        const firstPercent = firstBudget.amount > 0 ? firstSpent / firstBudget.amount : 0
+        const secondPercent = secondBudget.amount > 0 ? secondSpent / secondBudget.amount : 0
+
+        return secondPercent - firstPercent
+      }),
+    [expenseCategories, budgets, transactions, selectedMonth, currentMonthKey],
+  )
+
+  const openEditor = ({ categoryId = '', amount = '' } = {}) => {
+    setForm({
+      categoryId,
+      amount: amount === '' ? '' : String(amount),
     })
-    return {
-      totalBudgeted: withBudget.reduce((s, b) => s + b.budget, 0),
-      totalSpent: withBudget.reduce((s, b) => s + b.spent, 0),
-      totalOver: withBudget.reduce((s, b) => s + b.over, 0),
-      overCount: withBudget.filter((b) => b.spent > b.budget).length,
-    }
-  }, [budgets, transactions])
-
-  // Ordena: excedidos → críticos → normais → sem orçamento
-  const sortedCategories = useMemo(() => {
-    return [...expenseCategories].sort((a, b) => {
-      const budA = budgets.find((bud) => bud.categoryId === a.id)
-      const budB = budgets.find((bud) => bud.categoryId === b.id)
-      if (!budA && !budB) return 0
-      if (!budA) return 1
-      if (!budB) return -1
-      const pctA = getSpent(a.id) / budA.amount
-      const pctB = getSpent(b.id) / budB.amount
-      return pctB - pctA // mais crítico primeiro
-    })
-  }, [expenseCategories, budgets, transactions])
-
-  const handleEdit = ({ categoryId, amount }) => {
-    setForm({ categoryId, amount: amount || '' })
     setModalOpen(true)
   }
 
   const handleSave = async () => {
-    if (!form.categoryId || !form.amount || parseFloat(form.amount) <= 0) return
+    const amount = Number(form.amount)
+    if (!form.categoryId || !Number.isFinite(amount) || amount <= 0) return
+
     setSaving(true)
     try {
-      await saveBudget(form.categoryId, parseFloat(form.amount))
+      await saveBudget(form.categoryId, amount, selectedMonth)
       setModalOpen(false)
     } finally {
       setSaving(false)
     }
   }
 
+  const handleRemove = async ({ categoryId, monthKey, budgetId }) => {
+    await removeBudget(categoryId, monthKey, budgetId)
+  }
+
+  const isCurrentMonth = selectedMonth === currentMonthKey
+  const selectedLabel = monthLabel(selectedMonth)
+
   return (
     <div
       data-tour="budgets"
       className="operational-page budgets-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6"
     >
-      {/* Header */}
-      <div className="operational-page__header flex flex-wrap items-center justify-between gap-3">
+      <div className="operational-page__header flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-[--text-primary]">Orçamentos mensais</h1>
-            <InfoTooltip text="Defina um limite de gasto por categoria. Você será alertado ao atingir 70%, 90% e 100% do limite." />
+            <h1 className="text-2xl font-black text-[--text-primary]">Orçamento mensal</h1>
+            <InfoTooltip text="Cada competência possui seus próprios limites. Compras no cartão entram no orçamento pela data da compra, não pelo vencimento da fatura." />
           </div>
-          <p className="text-sm text-[--text-tertiary]">
-            {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[--text-tertiary]">
+            Defina quanto pretende gastar em cada categoria no mês escolhido. Meses anteriores não
+            são somados ao consumo atual.
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          icon={<Plus />}
-          onClick={() => handleEdit({ categoryId: '', amount: '' })}
-        >
+
+        <Button variant="primary" size="sm" icon={<Plus />} onClick={() => openEditor()}>
           Definir orçamento
         </Button>
       </div>
 
-      {/* Resumo geral */}
-      {budgets.length > 0 && (
+      <Card className="budget-period-selector shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+              Competência
+            </p>
+            <p className="mt-1 text-lg font-black capitalize text-[--text-primary]">
+              {selectedLabel}
+            </p>
+            <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+              O limite e o consumo abaixo pertencem somente a este mês.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setSelectedMonth((month) => shiftBudgetMonth(month, -1))}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] text-[--text-secondary] hover:bg-[--bg-hover]"
+              aria-label="Mês anterior"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            {!isCurrentMonth && (
+              <button
+                type="button"
+                onClick={() => setSelectedMonth(currentMonthKey)}
+                className="min-h-11 rounded-xl px-3 text-xs font-bold text-[--text-brand] hover:bg-[--brand-50]"
+              >
+                Mês atual
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setSelectedMonth((month) => shiftBudgetMonth(month, 1))}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] text-[--text-secondary] hover:bg-[--bg-hover]"
+              aria-label="Próximo mês"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      </Card>
+
+      {overview.items.length > 0 && (
         <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             {
-              label: 'Total orçado',
-              value: formatCurrency(summary.totalBudgeted),
+              label: 'Orçado no mês',
+              value: formatCurrency(overview.totalBudgeted),
               color: 'text-[--brand-500]',
             },
             {
-              label: 'Total gasto',
-              value: formatCurrency(summary.totalSpent),
+              label: 'Gasto no mês',
+              value: formatCurrency(overview.totalSpent),
               color:
-                summary.totalSpent > summary.totalBudgeted
+                overview.totalSpent > overview.totalBudgeted
                   ? 'text-[--danger-icon]'
                   : 'text-[--text-primary]',
             },
             {
               label: 'Disponível',
-              value: formatCurrency(Math.max(0, summary.totalBudgeted - summary.totalSpent)),
+              value: formatCurrency(
+                Math.max(0, overview.totalBudgeted - overview.totalSpent),
+              ),
               color: 'text-[--success-icon]',
             },
             {
               label: 'Excedidos',
-              value: `${summary.overCount} categoria${summary.overCount !== 1 ? 's' : ''}`,
-              color: summary.overCount > 0 ? 'text-[--danger-icon]' : 'text-[--success-icon]',
+              value: `${overview.overCount} categoria${overview.overCount === 1 ? '' : 's'}`,
+              color:
+                overview.overCount > 0
+                  ? 'text-[--danger-icon]'
+                  : 'text-[--success-icon]',
             },
-          ].map((s) => (
-            <Card key={s.label} className="text-center py-3">
-              <p className={`text-lg font-black ${s.color}`}>{s.value}</p>
-              <p className="text-xs text-[--text-tertiary] mt-0.5">{s.label}</p>
+          ].map((item) => (
+            <Card key={item.label} className="py-3 text-center">
+              <p className={`text-lg font-black ${item.color}`}>{item.value}</p>
+              <p className="mt-0.5 text-xs text-[--text-tertiary]">{item.label}</p>
             </Card>
           ))}
         </div>
       )}
 
-      {/* Grade de categorias */}
       {expenseCategories.length === 0 ? (
         <EmptyState
           icon={<PieChart />}
@@ -335,56 +421,86 @@ export default function Budgets() {
           className="operational-card-grid budgets-card-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
         >
           <AnimatePresence>
-            {sortedCategories.map((cat) => (
-              <BudgetCard
-                key={cat.id}
-                cat={cat}
-                budget={budgets.find((b) => b.categoryId === cat.id)}
-                spent={getSpent(cat.id)}
-                onEdit={handleEdit}
-                onRemove={removeBudget}
-              />
-            ))}
+            {sortedCategories.map((category) => {
+              const budget = getBudgetForMonth(
+                budgets,
+                category.id,
+                selectedMonth,
+                currentMonthKey,
+              )
+              const spent = getBudgetSpent(transactions, category.id, selectedMonth)
+
+              return (
+                <BudgetCard
+                  key={category.id}
+                  category={category}
+                  budget={budget}
+                  spent={spent}
+                  monthKey={selectedMonth}
+                  onEdit={openEditor}
+                  onRemove={handleRemove}
+                />
+              )
+            })}
           </AnimatePresence>
         </motion.div>
       )}
 
-      {/* Modal */}
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Definir orçamento">
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={`Orçamento de ${selectedLabel}`}
+      >
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-[--text-secondary] block mb-1">
+            <label
+              htmlFor="budget-category"
+              className="mb-1 block text-sm font-medium text-[--text-secondary]"
+            >
               Categoria
             </label>
             <select
+              id="budget-category"
               value={form.categoryId}
-              onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}
-              className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-4 py-2.5 text-[--text-primary] focus:outline-none focus:border-[--brand-500]"
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  categoryId: event.target.value,
+                }))
+              }
+              className="w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-4 py-2.5 text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
             >
               <option value="">Selecione uma categoria</option>
-              {expenseCategories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.icon} {c.name}
+              {expenseCategories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.icon} {category.name}
                 </option>
               ))}
             </select>
           </div>
+
           <Input
-            label="Limite mensal (R$)"
+            label="Limite deste mês (R$)"
             type="number"
             step="0.01"
             min="1"
             placeholder="Ex: 500,00"
             value={form.amount}
-            onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                amount: event.target.value,
+              }))
+            }
           />
-          {form.categoryId && form.amount && (
-            <div className="p-3 rounded-xl bg-[--brand-50] border border-[--brand-200] text-xs text-[--brand-700]">
-              💡 Você será alertado quando atingir 70%, 90% e 100% deste limite.
-            </div>
-          )}
+
+          <div className="rounded-xl border border-[--brand-200] bg-[--brand-50] p-3 text-xs leading-relaxed text-[--brand-700]">
+            Este limite vale somente para <strong>{selectedLabel}</strong>. Alterar este valor não
+            muda orçamentos de outros meses.
+          </div>
+
           <Button variant="primary" fullWidth onClick={handleSave} loading={saving}>
-            Salvar orçamento
+            Salvar orçamento mensal
           </Button>
         </div>
       </Modal>
