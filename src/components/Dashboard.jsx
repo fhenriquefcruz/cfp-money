@@ -36,6 +36,7 @@ import {
   useCreditCards,
   useGoals,
   useInvoiceEvents,
+  useTransactions,
 } from '../contexts/AppContext'
 import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
@@ -207,7 +208,8 @@ function MonthAttentionCard({ items }) {
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const { transactions, loading, getSummary, getCategoryTotals, getSpendingForecast } = useApp()
+  const { getSummary, getCategoryTotals, getSpendingForecast } = useApp()
+  const { transactions, loading: transactionsLoading } = useTransactions()
   const { budgets } = useBudgets()
   const { categories } = useCategories()
   const { creditCards } = useCreditCards()
@@ -363,7 +365,7 @@ export default function Dashboard() {
     const h = new Date().getHours()
     return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'
   }
-  const isLoading = loading.transactions
+  const isLoading = transactionsLoading
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
