@@ -280,7 +280,7 @@ export default function Dashboard() {
     const hasBudgets = budgetOverview.items.length > 0
     const budgetsOk = hasBudgets && budgetOverview.items.every((budget) => budget.percent <= 100)
 
-    return buildFinancialHealth({
+    const report = buildFinancialHealth({
       balance: currentSummary.balance,
       income: currentSummary.income,
       savingRate,
@@ -288,6 +288,16 @@ export default function Dashboard() {
       budgetsOk,
       goalsActive: goals.length > 0,
     })
+
+    if (report.nextAction?.to !== '/budgets') return report
+
+    return {
+      ...report,
+      nextAction: {
+        ...report.nextAction,
+        to: `/budgets?month=${budgetOverview.monthKey}`,
+      },
+    }
   }, [currentSummary, budgetOverview, goals])
 
   const monthAttention = useMemo(
@@ -330,7 +340,7 @@ export default function Dashboard() {
             detail: signal.isOver
               ? `${formatCurrency(signal.excess)} acima do limite mensal.`
               : `${signal.pct.toFixed(0)}% do limite mensal já foi utilizado.`,
-            to: '/budgets',
+            to: `/budgets?month=${budgetOverview.monthKey}`,
             tone: signal.pct >= 100 ? 'danger' : 'warning',
             icon: Target,
           }
@@ -345,7 +355,7 @@ export default function Dashboard() {
           icon: Wallet,
         }
       }),
-    [paymentSummary, budgetAlerts, currentSummary.balance],
+    [paymentSummary, budgetAlerts, currentSummary.balance, budgetOverview.monthKey],
   )
 
   const greeting = () => {
