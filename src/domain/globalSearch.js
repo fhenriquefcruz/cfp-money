@@ -27,7 +27,7 @@ export function searchGlobal({
     ...pages.map(([label, to]) => row(`page:${to}`, label, to, 'page')),
     ...transactions.map((item, index) => {
       const label = item.description || item.categoryName || 'Transação'
-      const context = ['Transação', item.categoryName, item.date].filter(Boolean).join(' · ')
+      const context = item.categoryName ? `Transação · ${item.categoryName}` : 'Transação'
 
       return row(
         `transaction:${item.id || index}`,
@@ -44,7 +44,7 @@ export function searchGlobal({
         item.name || 'Categoria',
         '/categories',
         'category',
-        item.type === 'income' ? 'Categoria de receita' : 'Categoria de despesa',
+        'Categoria',
       ),
     ),
     ...goals.map((item, index) =>
@@ -53,7 +53,7 @@ export function searchGlobal({
         item.name || 'Meta',
         '/goals',
         'goal',
-        item.deadline ? `Prazo: ${item.deadline}` : 'Meta financeira',
+        'Meta financeira',
       ),
     ),
     ...creditCards.map((item, index) =>
