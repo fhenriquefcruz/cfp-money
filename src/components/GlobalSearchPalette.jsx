@@ -99,7 +99,7 @@ export default function GlobalSearchPalette({
       />
 
       <div className="global-search-results" role="listbox">
-        {query.trim() && !results.length ? (
+        {query && !results.length ? (
           <p className="global-search-empty">Nenhum resultado encontrado</p>
         ) : (
           results.map((item, index) => {
@@ -111,7 +111,6 @@ export default function GlobalSearchPalette({
                   type="button"
                   role="option"
                   aria-selected={active === index}
-                  onMouseEnter={() => setActive(index)}
                   onClick={() => open(item)}
                   className={`global-search-result ${
                     active === index ? 'global-search-result--active' : ''
