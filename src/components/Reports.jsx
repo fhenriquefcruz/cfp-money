@@ -24,7 +24,7 @@ import {
   PiggyBank,
   ArrowLeftRight,
 } from 'lucide-react'
-import { useApp, useTransactions } from '../contexts/AppContext'
+import { useTransactions } from '../contexts/AppContext'
 import { Card, Button } from './ui'
 import { formatCurrency, getMonthlyData, exportToCSV, exportToPDF } from '../utils'
 import PremiumGate from './PremiumGate'
@@ -110,8 +110,7 @@ function SavingRateBadge({ rate }) {
 }
 
 function ReportsContent() {
-  const { getSummary } = useApp()
-  const { transactions } = useTransactions()
+  const { transactions, getSummary } = useTransactions()
   const [searchParams] = useSearchParams()
   const requestedMonth = searchParams.get('month')
   const initialMonth = /^\d{4}-\d{2}$/.test(requestedMonth || '')
