@@ -11,7 +11,7 @@ const appMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('../contexts/AppContext', () => ({
-  useApp: () => ({
+  useTransactions: () => ({
     createTransaction: appMocks.createTransaction,
     editTransaction: appMocks.editTransaction,
     addTransactionBatch: appMocks.addTransactionBatch,
