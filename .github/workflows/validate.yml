@@ -59,8 +59,6 @@ jobs:
         run: npm run validate:all
 
       - name: Firebase Emulator integration
-        env:
-          ENFORCE_APP_CHECK: 'false'
         run: npm run test:integration:firebase
 
       - name: Formatting
