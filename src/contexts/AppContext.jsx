@@ -111,13 +111,6 @@ function reducer(state, action) {
         ...state,
         transactions: state.transactions.filter((transaction) => transaction.id !== action.payload),
       }
-    case 'E2E_REMOVE_TRANSACTION_BATCH':
-      return {
-        ...state,
-        transactions: state.transactions.filter(
-          (transaction) => !action.payload.includes(transaction.id),
-        ),
-      }
     case 'ADD_NOTIFICATION':
       return { ...state, notifications: [...state.notifications, action.payload] }
     case 'REMOVE_NOTIFICATION':
@@ -481,11 +474,7 @@ export const AppProvider = ({ children }) => {
     async (ids) => {
       if (!user?.uid) return
       try {
-        if (E2E_MODE) {
-          dispatch({ type: 'E2E_REMOVE_TRANSACTION_BATCH', payload: ids })
-        } else {
-          await fbDeleteBatch(user.uid, ids)
-        }
+        await fbDeleteBatch(user.uid, ids)
         showNotification(ids.length > 1 ? 'Transações removidas.' : 'Transação removida.', 'info')
       } catch (e) {
         showNotification('Erro ao remover transações.', 'error')
