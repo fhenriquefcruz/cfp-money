@@ -60,6 +60,7 @@ export function buildBudgetCarryoverPlan({
   budgets = [],
   sourceMonthKey,
   targetMonthKey,
+  currentMonthKey = budgetMonthKey(),
   categoryIds = null,
 } = {}) {
   if (!MONTH.test(sourceMonthKey || '') || !MONTH.test(targetMonthKey || '')) return []
@@ -69,7 +70,11 @@ export function buildBudgetCarryoverPlan({
     : null
   const targetCategories = new Set(
     budgets
-      .filter((budget) => budget.monthKey === targetMonthKey)
+      .filter(
+        (budget) =>
+          budget.monthKey === targetMonthKey ||
+          (targetMonthKey === currentMonthKey && !budget.monthKey),
+      )
       .map((budget) => budget.categoryId)
       .filter(Boolean),
   )
