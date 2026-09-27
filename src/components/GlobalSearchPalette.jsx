@@ -123,7 +123,7 @@ export default function GlobalSearchPalette({
                     aria-label={`Favoritar ${item.label}`}
                     aria-pressed={favorite}
                   >
-                    {favorite ? '★' : '☆'}
+                    ★
                   </button>
                 )}
               </div>
