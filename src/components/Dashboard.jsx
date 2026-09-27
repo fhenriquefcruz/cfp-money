@@ -29,7 +29,7 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { useApp, useCategories, useGoals } from '../contexts/AppContext'
+import { useApp, useCategories, useCreditCards, useGoals } from '../contexts/AppContext'
 import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
@@ -203,7 +203,6 @@ export default function Dashboard() {
   const {
     transactions,
     budgets,
-    creditCards,
     invoiceEvents,
     loading,
     getSummary,
@@ -211,6 +210,7 @@ export default function Dashboard() {
     getSpendingForecast,
   } = useApp()
   const { categories } = useCategories()
+  const { creditCards } = useCreditCards()
   const { goals } = useGoals()
 
   const [viewDate, setViewDate] = useState(new Date())
