@@ -473,7 +473,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-white/55 text-[11px] mb-0.5 flex items-center gap-1">
-                <PiggyBank size={10} /> Poupança
+                <PiggyBank size={10} /> Poupança acumulada
               </p>
               <p className="text-sm font-bold text-yellow-300">{formatCurrency(savingsBalance)}</p>
             </div>
@@ -503,7 +503,7 @@ export default function Dashboard() {
               <div>
                 <div className="mb-1 flex items-center gap-1.5">
                   <Zap size={14} className="text-[--brand-600]" />
-                  <p className="text-xs font-semibold text-[--text-tertiary]">Previsão de gastos</p>
+                  <p className="text-xs font-semibold text-[--text-tertiary]">Média de gastos · 3 meses</p>
                   <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
                 </div>
                 {isLoading ? (
@@ -514,7 +514,7 @@ export default function Dashboard() {
                   </p>
                 )}
                 <p className="dashboard-forecast-helper mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
-                  Referência média para apoiar o planejamento do mês.
+                  Média dos 3 meses anteriores para apoiar o planejamento.
                 </p>
               </div>
               <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
