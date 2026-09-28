@@ -112,7 +112,6 @@ describe('adminBackfill', () => {
   })
 })
 
-
 describe('validateOrphanDeletion', () => {
   const authUsers = [{ uid: 'active-uid', email: 'owner@example.com' }]
   const firestoreOnly = [{ uid: 'legacy-uid', email: 'owner@example.com' }]
