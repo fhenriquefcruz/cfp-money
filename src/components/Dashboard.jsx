@@ -223,6 +223,8 @@ export default function Dashboard() {
   const [viewDate, setViewDate] = useState(new Date())
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
+  const rawMonthLabel = format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })
+  const monthLabel = rawMonthLabel.charAt(0).toUpperCase() + rawMonthLabel.slice(1)
   const isCurrentMonth = year === new Date().getFullYear() && month === new Date().getMonth()
 
   const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
@@ -392,8 +394,8 @@ export default function Dashboard() {
             >
               <ChevronLeft size={16} />
             </button>
-            <h1 className="min-w-0 truncate text-base font-black capitalize text-[--text-primary] min-[390px]:text-lg sm:text-2xl">
-              {format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })}
+            <h1 className="min-w-0 truncate text-base font-black text-[--text-primary] min-[390px]:text-lg sm:text-2xl">
+              {monthLabel}
             </h1>
             <button
               onClick={() => setViewDate((d) => addMonths(d, 1))}
@@ -473,7 +475,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-white/55 text-[11px] mb-0.5 flex items-center gap-1">
-                <PiggyBank size={10} /> Poupança
+                <PiggyBank size={10} /> Poupança total
               </p>
               <p className="text-sm font-bold text-yellow-300">{formatCurrency(savingsBalance)}</p>
             </div>
@@ -503,7 +505,9 @@ export default function Dashboard() {
               <div>
                 <div className="mb-1 flex items-center gap-1.5">
                   <Zap size={14} className="text-[--brand-600]" />
-                  <p className="text-xs font-semibold text-[--text-tertiary]">Previsão de gastos</p>
+                  <p className="text-xs font-semibold text-[--text-tertiary]">
+                    Média de gastos · 3 meses
+                  </p>
                   <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
                 </div>
                 {isLoading ? (
@@ -514,7 +518,7 @@ export default function Dashboard() {
                   </p>
                 )}
                 <p className="dashboard-forecast-helper mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
-                  Referência média para apoiar o planejamento do mês.
+                  Média dos 3 meses anteriores para apoiar o planejamento.
                 </p>
               </div>
               <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">

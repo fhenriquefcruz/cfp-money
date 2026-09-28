@@ -38,7 +38,7 @@ export function buildFinancialHealth({
     }),
     withMissingPoints({
       id: 'saving',
-      label: 'Poupança',
+      label: 'Poupança mensal',
       points: savingPoints,
       maxPoints: 25,
       detail:
