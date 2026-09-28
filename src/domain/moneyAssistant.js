@@ -319,14 +319,13 @@ export function buildMoneyAssistantResponse({
     return {
       type: 'largest_expenses',
       title: 'Maiores despesas',
-      text: expenses.length
-        ? expenses
-            .map(
-              (transaction) =>
-                `${transaction.description || 'Despesa'}: ${currencyFormatter.format(transaction.amount)}`,
-            )
-            .join(' · ')
-        : 'Sem despesas.',
+      text:
+        expenses
+          .map(
+            (transaction) =>
+              `${transaction.description || transaction.categoryName}: ${currencyFormatter.format(transaction.amount)}`,
+          )
+          .join(' · ') || 'Sem despesas.',
     }
   }
 
