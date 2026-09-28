@@ -312,7 +312,7 @@ function MoneyContent() {
     () =>
       isLoading
         ? 'Carregando seus dados com segurança...'
-        : `${transactions.length} lançamento${transactions.length === 1 ? '' : 's'} ${transactions.length === 1 ? 'disponível' : 'disponíveis'} para consulta`,
+        : `${transactions.length} lançamento${transactions.length === 1 ? '' : 's'} disponível${transactions.length === 1 ? '' : 'is'} para consulta`,
     [isLoading, transactions.length],
   )
 
