@@ -114,7 +114,6 @@ export function buildFirestoreUserDocument(user) {
   }
 }
 
-
 function normalizeEmail(value) {
   return String(value || '')
     .trim()
