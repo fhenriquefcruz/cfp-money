@@ -256,12 +256,6 @@ export function buildMoneyAssistantResponse({
       type: 'help',
       title: intent.type === 'unknown' ? 'Ainda não entendi esse pedido' : 'Como posso ajudar',
       text: 'Nesta fase, posso consultar seus dados sem alterar nenhum lançamento. Peça um relatório mensal, uma análise do período atual ou o total gasto em uma categoria.',
-      suggestions: [
-        'Como estão minhas finanças?',
-        'Quero o relatório do mês atual',
-        'Quero o relatório de abril',
-        'Quanto gastei com alimentação este mês?',
-      ],
     }
   }
 
