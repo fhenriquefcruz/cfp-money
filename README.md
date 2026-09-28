@@ -36,6 +36,35 @@ npm run format:check
 
 A validação completa cobre o frontend, o código versionado das Cloud Functions e o arquivo de índices do Firestore. A validação das Functions não implica sua implantação no modo Spark.
 
+## Sincronização administrativa de usuários
+
+O diagnóstico Auth × Firestore usa credencial administrativa do Google e, por padrão, consulta os usuários do Firebase Authentication ao vivo. A operação é sempre `dry-run` enquanto `--apply` não for informado.
+
+```bash
+gcloud auth application-default login
+npm run admin:sync-users
+```
+
+Depois de revisar o diagnóstico, aplique somente os perfis Auth ausentes no Firestore:
+
+```bash
+npm run admin:sync-users -- --apply
+```
+
+Para limitar a correção a UIDs específicos:
+
+```bash
+npm run admin:sync-users -- --uids uid-1,uid-2 --apply
+```
+
+O modo baseado em export continua disponível como fallback:
+
+```bash
+npm run admin:sync-users -- --auth-export cfp-auth-users.json
+```
+
+O backfill não remove documentos órfãos, não sobrescreve perfis existentes e preserva a data original de criação da conta para `createdAt` e `trialStart`.
+
 ## Implantação
 
 A produção atual é publicada no GitHub Pages pelo workflow `Deploy to GitHub Pages` após merge/push em `main`.
