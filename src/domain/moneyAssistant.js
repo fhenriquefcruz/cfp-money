@@ -269,7 +269,7 @@ export function buildMoneyAssistantResponse({
     return {
       type: 'priorities',
       title: 'Prioridade',
-      text: priority || 'Sem prioridade agora.',
+      text: priority || 'Sem prioridade.',
     }
   }
 
@@ -326,7 +326,7 @@ export function buildMoneyAssistantResponse({
                 `${transaction.description || 'Despesa'}: ${currencyFormatter.format(transaction.amount)}`,
             )
             .join(' · ')
-        : 'Sem despesas no período.',
+        : 'Sem despesas.',
     }
   }
 
