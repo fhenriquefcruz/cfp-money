@@ -124,3 +124,71 @@ test('responde com ajuda para pedidos não reconhecidos', () => {
   expect(response.type).toBe('help')
   expect(response.text).toContain('sem alterar')
 })
+
+
+test('responde quanto foi gasto no mês atual', () => {
+  const response = buildMoneyAssistantResponse({
+    message: 'Quanto gastei este mês?',
+    transactions,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+
+  expect(response.type).toBe('monthly_spending')
+  expect(response.metrics[0]).toEqual({ label: 'Despesas', value: 250 })
+  expect(response.reportMonth).toBe('2026-07')
+})
+
+test('lista as maiores despesas sem criar lançamento', () => {
+  const response = buildMoneyAssistantResponse({
+    message: 'Quais são minhas maiores despesas?',
+    transactions,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+
+  expect(response.type).toBe('largest_expenses')
+  expect(response.metrics[0]).toMatchObject({ value: 250 })
+})
+
+test('responde comparação com o período anterior', () => {
+  const response = buildMoneyAssistantResponse({
+    message: 'Como estou comparado ao período anterior?',
+    transactions,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+
+  expect(response.type).toBe('cycle_comparison')
+  expect(response.title).toBe('Comparação com o período anterior')
+  expect(response.metrics.some((metric) => metric.label === 'Despesas')).toBe(true)
+})
+
+test('responde o que merece atenção usando as prioridades já calculadas', () => {
+  const response = buildMoneyAssistantResponse({
+    message: 'O que merece minha atenção agora?',
+    transactions,
+    categories,
+    now,
+    analyze: analyzeMoney,
+    priorityReport: {
+      priorities: [
+        {
+          title: 'Combustível ultrapassou o orçamento',
+          detail: 'R$ 100,00 acima do limite.',
+        },
+        {
+          title: 'Fortaleça: Poupança mensal',
+          detail: 'Este fator pode melhorar sua saúde financeira.',
+        },
+      ],
+    },
+  })
+
+  expect(response.type).toBe('priorities')
+  expect(response.text).toContain('Combustível ultrapassou o orçamento')
+  expect(response.text).toContain('Poupança mensal')
+})
