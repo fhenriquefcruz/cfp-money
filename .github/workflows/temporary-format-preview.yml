@@ -20,5 +20,5 @@ jobs:
       - run: npm ci
       - name: Format target
         run: npx prettier --write scripts/backfill-auth-users-firestore.mjs
-      - name: Print formatted target
-        run: cat scripts/backfill-auth-users-firestore.mjs
+      - name: Print formatting diff
+        run: git diff --no-color -- scripts/backfill-auth-users-firestore.mjs
