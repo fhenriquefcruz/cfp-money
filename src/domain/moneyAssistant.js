@@ -54,7 +54,7 @@ function resolveMonthFromMessage(normalizedMessage, now) {
     normalizedMessage.includes('desse mes') ||
     normalizedMessage.includes('deste mes')
   ) {
-    return { year: currentYear, month: currentMonth, source: 'current' }
+    return { year: currentYear, month: currentMonth }
   }
 
   if (
@@ -63,7 +63,7 @@ function resolveMonthFromMessage(normalizedMessage, now) {
     normalizedMessage.includes('mes anterior')
   ) {
     const date = new Date(currentYear, currentMonth - 1, 1)
-    return { year: date.getFullYear(), month: date.getMonth(), source: 'previous' }
+    return { year: date.getFullYear(), month: date.getMonth() }
   }
 
   const explicitMonth = MONTHS.find((candidate) =>
@@ -83,7 +83,7 @@ function resolveMonthFromMessage(normalizedMessage, now) {
     year = currentYear - 1
   }
 
-  return { year, month: explicitMonth.index, source: 'explicit' }
+  return { year, month: explicitMonth.index }
 }
 
 function getCalendarMonthPeriod(year, month) {
@@ -178,7 +178,6 @@ export function parseMoneyAssistantIntent(
   const defaultMonth = {
     year: now.getFullYear(),
     month: now.getMonth(),
-    source: 'default',
   }
 
   if (!normalizedMessage) return { type: 'empty' }
@@ -204,21 +203,18 @@ export function parseMoneyAssistantIntent(
     }
   }
 
-  if (/(maiores despesas|maiores gastos|onde mais gastei|em que mais gastei)/.test(normalizedMessage)) {
+  if (normalizedMessage.includes('maiores despesas')) {
     return { type: 'largest_expenses', requestedMonth: requestedMonth || defaultMonth }
   }
 
-  if (/(merece (?:minha )?atencao|minhas? prioridades?|precisa da minha atencao)/.test(normalizedMessage)) {
-    return { type: 'priorities' }
-  }
+  if (normalizedMessage.includes('merece minha atencao')) return { type: 'priorities' }
 
   const asksMonthlyReport =
     normalizedMessage.includes('relatorio') ||
     normalizedMessage.includes('fechamento') ||
     normalizedMessage.includes('resumo de') ||
     normalizedMessage.includes('resumo do') ||
-    /quanto (?:eu )?gastei (?:este|neste|no) mes/.test(normalizedMessage) ||
-    /total de (?:despesas|gastos) deste mes/.test(normalizedMessage)
+    normalizedMessage.includes('quanto gastei este mes')
 
   if (asksMonthlyReport) {
     return {
@@ -233,9 +229,7 @@ export function parseMoneyAssistantIntent(
     normalizedMessage.includes('situacao financeira') ||
     normalizedMessage.includes('analise financeira') ||
     normalizedMessage.includes('analise do money') ||
-    /comparad[oa] ao periodo anterior|comparacao com o periodo anterior|comparar com o periodo anterior/.test(
-      normalizedMessage,
-    )
+    normalizedMessage.includes('comparado ao periodo anterior')
 
   if (asksFinancialStatus) return { type: 'cycle_summary' }
 
@@ -275,9 +269,7 @@ export function buildMoneyAssistantResponse({
     return {
       type: 'priorities',
       title: 'Prioridade de agora',
-      text: priority
-        ? `${priority.title}${priority.detail ? `: ${priority.detail}` : ''}`
-        : 'Nenhuma prioridade financeira relevante agora.',
+      text: priority ? [priority.title, priority.detail].filter(Boolean).join(': ') : 'Sem prioridade relevante agora.',
     }
   }
 
@@ -330,11 +322,11 @@ export function buildMoneyAssistantResponse({
       text: expenses.length
         ? expenses
             .map(
-              (transaction, index) =>
-                `${index + 1}. ${transaction.description || transaction.categoryName || 'Despesa'}: ${currencyFormatter.format(Number(transaction.amount) || 0)}`,
+              (transaction) =>
+                `${transaction.description || transaction.categoryName || 'Despesa'}: ${currencyFormatter.format(Number(transaction.amount) || 0)}`,
             )
             .join(' · ')
-        : 'Nenhuma despesa encontrada no período.',
+        : 'Nenhuma despesa no período.',
     }
   }
 
