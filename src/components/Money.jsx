@@ -64,27 +64,27 @@ const MONEY_CAPABILITIES = [
   {
     icon: CreditCard,
     title: 'Cartões e parcelas',
-    description: 'Calcula a primeira fatura e distribui parcelas pelos vencimentos.',
+    description: 'Calcula faturas e parcelas por vencimento.',
   },
   {
     icon: ShieldCheck,
     title: 'Registro com confirmação',
-    description: 'Prepara um rascunho editável e só salva depois da sua autorização.',
+    description: 'Só salva após sua confirmação.',
   },
   {
     icon: BarChart3,
     title: 'Análise financeira',
-    description: 'Compara períodos equivalentes e apresenta projeções de fechamento.',
+    description: 'Compara períodos e projeta o fechamento.',
   },
   {
     icon: FileText,
     title: 'Relatórios por conversa',
-    description: 'Abre o mês solicitado diretamente na área de relatórios.',
+    description: 'Abre relatórios pelo mês solicitado.',
   },
   {
     icon: Tags,
     title: 'Consulta por categoria',
-    description: 'Responde quanto foi gasto em alimentação, transporte e outras categorias.',
+    description: 'Consulta gastos por categoria.',
   },
 ]
 
