@@ -223,6 +223,8 @@ export default function Dashboard() {
   const [viewDate, setViewDate] = useState(new Date())
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
+  const rawMonthLabel = format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })
+  const monthLabel = rawMonthLabel.charAt(0).toUpperCase() + rawMonthLabel.slice(1)
   const isCurrentMonth = year === new Date().getFullYear() && month === new Date().getMonth()
 
   const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
@@ -393,9 +395,7 @@ export default function Dashboard() {
               <ChevronLeft size={16} />
             </button>
             <h1 className="min-w-0 truncate text-base font-black text-[--text-primary] min-[390px]:text-lg sm:text-2xl">
-              {format(viewDate, "MMMM 'de' yyyy", { locale: ptBR }).replace(/^./, (letter) =>
-                letter.toUpperCase(),
-              )}
+              {monthLabel}
             </h1>
             <button
               onClick={() => setViewDate((d) => addMonths(d, 1))}
