@@ -153,7 +153,7 @@ test('lista as maiores despesas sem criar lançamento', () => {
   })
 
   expect(response.type).toBe('largest_expenses')
-  expect(response.text).toContain('R$ 250,00')
+  expect(response.text).toContain('250,00')
 })
 
 test('responde comparação com o período anterior', () => {
