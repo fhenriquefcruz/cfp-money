@@ -311,14 +311,14 @@ export function buildMoneyAssistantResponse({
 
     return {
       type: intent.type,
-      title: 'Maiores despesas',
+      title: 'Despesas',
       text:
         expenses
           .map(
             (transaction) =>
               `${transaction.description || transaction.categoryName}: ${currencyFormatter.format(transaction.amount)}`,
           )
-          .join(' · ') || 'Sem despesas.',
+          .join(' · ') || 'Nenhuma.',
     }
   }
 
