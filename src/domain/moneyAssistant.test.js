@@ -177,10 +177,7 @@ test('responde o que merece atenção usando as prioridades já calculadas', () 
     categories,
     now,
     analyze: analyzeMoney,
-    priority: {
-      title: 'Combustível ultrapassou o orçamento',
-      detail: 'R$ 100,00 acima do limite.',
-    },
+    priority: 'Combustível ultrapassou o orçamento',
   })
 
   expect(response.type).toBe('priorities')
