@@ -289,11 +289,7 @@ async function countRootReference(projectId, accessToken, uid, queryDefinition) 
 
 async function auditFirestoreOrphan(projectId, orphan, token) {
   const uid = orphan.uid
-  const document = await getFirestoreDocument(
-    projectId,
-    `users/${encodeURIComponent(uid)}`,
-    token,
-  )
+  const document = await getFirestoreDocument(projectId, `users/${encodeURIComponent(uid)}`, token)
   const fields = document?.fields || {}
   const subcollectionIds = await listSubcollectionIds(projectId, uid, token)
   const subcollections = []
