@@ -475,7 +475,7 @@ function MoneyContent() {
         settings,
         now: new Date(),
         analyze: analyzeMoney,
-        priority: priorityReport.priorities?.[0] || null,
+        priority: priorityReport.priorities?.[0]?.title || '',
       })
 
     const timestamp = Date.now()
