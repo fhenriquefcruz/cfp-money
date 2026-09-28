@@ -850,7 +850,7 @@ export default function TransactionList() {
             icon: <ArrowLeftRight size={13} />,
           },
           {
-            label: 'Poupança',
+            label: 'Poupança no período',
             value: summary.savings,
             color: '#6366f1',
             icon: <PiggyBank size={13} />,
@@ -1151,7 +1151,7 @@ export default function TransactionList() {
             <div>
               <p className="text-xs font-bold text-[--text-primary]">Ações de pagamento em massa</p>
               <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                Selecione despesas manuais. Cartões continuam sendo controlados pela fatura.
+                Selecione despesas manuais. Compras vinculadas a cartões continuam sendo controladas pela fatura.
               </p>
             </div>
 
