@@ -16,7 +16,7 @@ test('produção pública carrega login e PWA sem erro crítico', async ({ page,
   await expect(page).toHaveTitle(/Meu Real/)
   await expect(page.getByRole('heading', { name: 'Continue com clareza.' })).toBeVisible()
   await expect(page.getByLabel('E-mail')).toBeVisible()
-  await expect(page.getByLabel('Senha')).toBeVisible()
+  await expect(page.getByRole('textbox', { name: 'Senha', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Entrar no Meu Real' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Continuar com Google' })).toBeVisible()
 
