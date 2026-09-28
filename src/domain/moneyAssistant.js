@@ -175,6 +175,11 @@ export function parseMoneyAssistantIntent(
   const normalizedMessage = normalizeText(message)
   const category = findCategory(normalizedMessage, categories, transactions)
   const requestedMonth = resolveMonthFromMessage(normalizedMessage, now)
+  const defaultMonth = {
+    year: now.getFullYear(),
+    month: now.getMonth(),
+    source: 'default',
+  }
 
   if (!normalizedMessage) return { type: 'empty' }
 
@@ -197,12 +202,6 @@ export function parseMoneyAssistantIntent(
       category,
       requestedMonth: requestedMonth || defaultMonth,
     }
-  }
-
-  const defaultMonth = {
-    year: now.getFullYear(),
-    month: now.getMonth(),
-    source: 'default',
   }
 
   const asksMonthlySpending =
@@ -260,11 +259,7 @@ export function parseMoneyAssistantIntent(
   if (asksMonthlyReport) {
     return {
       type: 'monthly_report',
-      requestedMonth: requestedMonth || {
-        year: now.getFullYear(),
-        month: now.getMonth(),
-        source: 'default',
-      },
+      requestedMonth: requestedMonth || defaultMonth,
     }
   }
 
