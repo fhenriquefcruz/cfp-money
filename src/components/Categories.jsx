@@ -218,7 +218,6 @@ export default function Categories() {
             onClick={() => handleOpen(cat)}
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
             title={cat.isDefault ? 'Ver detalhes' : 'Editar'}
-            aria-label={cat.isDefault ? `Ver detalhes de ${cat.name}` : `Editar ${cat.name}`}
           >
             <span aria-hidden="true">✎</span>
           </button>
@@ -227,7 +226,6 @@ export default function Categories() {
               onClick={() => handleDelete(cat.id)}
               className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
               title="Excluir"
-              aria-label={`Excluir ${cat.name}`}
             >
               <span aria-hidden="true">×</span>
             </button>
@@ -345,8 +343,6 @@ export default function Categories() {
                       key={emoji}
                       type="button"
                       onClick={() => selectEmoji(emoji)}
-                      aria-label={`Selecionar emoji ${emoji}`}
-                      aria-pressed={form.icon === emoji}
                       className={`flex aspect-square w-full min-w-0 items-center justify-center rounded-lg text-xl transition-colors hover:bg-[--bg-hover] ${
                         form.icon === emoji ? 'bg-[--brand-100] ring-2 ring-[--brand-500]' : ''
                       }`}
