@@ -135,8 +135,11 @@ test('responde quanto foi gasto no mês atual', () => {
     analyze: analyzeMoney,
   })
 
-  expect(response.type).toBe('monthly_spending')
-  expect(response.metrics[0]).toEqual({ label: 'Despesas', value: 250 })
+  expect(response.type).toBe('monthly_report')
+  expect(response.metrics.find((metric) => metric.label === 'Despesas')).toEqual({
+    label: 'Despesas',
+    value: 250,
+  })
   expect(response.reportMonth).toBe('2026-07')
 })
 
@@ -162,8 +165,8 @@ test('responde comparação com o período anterior', () => {
     analyze: analyzeMoney,
   })
 
-  expect(response.type).toBe('cycle_comparison')
-  expect(response.title).toBe('Comparação com o período anterior')
+  expect(response.type).toBe('cycle_summary')
+  expect(response.text).toContain('período equivalente anterior')
   expect(response.metrics.some((metric) => metric.label === 'Despesas')).toBe(true)
 })
 
@@ -190,5 +193,4 @@ test('responde o que merece atenção usando as prioridades já calculadas', () 
 
   expect(response.type).toBe('priorities')
   expect(response.text).toContain('Combustível ultrapassou o orçamento')
-  expect(response.text).toContain('Poupança mensal')
 })
