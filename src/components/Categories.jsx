@@ -19,6 +19,21 @@ const DEFAULT_COLORS = [
   '#0ea5e9',
 ]
 
+const COLOR_LABELS = {
+  '#f97316': 'laranja',
+  '#3b82f6': 'azul',
+  '#8b5cf6': 'violeta',
+  '#10b981': 'verde esmeralda',
+  '#06b6d4': 'ciano',
+  '#f59e0b': 'âmbar',
+  '#6366f1': 'índigo',
+  '#ec4899': 'rosa',
+  '#6b7280': 'cinza',
+  '#22c55e': 'verde',
+  '#ef4444': 'vermelho',
+  '#0ea5e9': 'azul claro',
+}
+
 const EMOJI_LIST = [
   '🍔',
   '🍕',
@@ -218,6 +233,7 @@ export default function Categories() {
             onClick={() => handleOpen(cat)}
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
             title={cat.isDefault ? 'Ver detalhes' : 'Editar'}
+            aria-label={cat.isDefault ? `Ver detalhes de ${cat.name}` : `Editar ${cat.name}`}
           >
             <span aria-hidden="true">✎</span>
           </button>
@@ -226,6 +242,7 @@ export default function Categories() {
               onClick={() => handleDelete(cat.id)}
               className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
               title="Excluir"
+              aria-label={`Excluir ${cat.name}`}
             >
               <span aria-hidden="true">×</span>
             </button>
@@ -343,6 +360,8 @@ export default function Categories() {
                       key={emoji}
                       type="button"
                       onClick={() => selectEmoji(emoji)}
+                      aria-label={`Selecionar emoji ${emoji}`}
+                      aria-pressed={form.icon === emoji}
                       className={`flex aspect-square w-full min-w-0 items-center justify-center rounded-lg text-xl transition-colors hover:bg-[--bg-hover] ${
                         form.icon === emoji ? 'bg-[--brand-100] ring-2 ring-[--brand-500]' : ''
                       }`}
@@ -364,6 +383,8 @@ export default function Categories() {
                   key={c}
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, color: c }))}
+                  aria-label={`Selecionar cor ${COLOR_LABELS[c] || c}`}
+                  aria-pressed={form.color === c}
                   className={`h-11 w-11 rounded-full border-2 transition-all ${
                     form.color === c
                       ? 'border-white ring-2 ring-[--brand-500] scale-110'
