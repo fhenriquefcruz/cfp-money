@@ -103,7 +103,7 @@ function SavingRateBadge({ rate }) {
         </p>
       </div>
       <p className="text-2xl font-black" style={{ color }}>
-        {rate.toFixed(1).replace('.', ',')}%
+        {rate.toFixed(1)}%
       </p>
     </div>
   )
@@ -599,7 +599,7 @@ function ReportsContent() {
                         <span className="text-[--text-secondary]">Poupado vs Receita total</span>
                         <span className="font-bold text-[--text-primary]">
                           {periodTotals.income > 0
-                            ? ((periodTotals.savings / periodTotals.income) * 100).toFixed(1).replace('.', ',')
+                            ? ((periodTotals.savings / periodTotals.income) * 100).toFixed(1)
                             : 0}
                           %
                         </span>
