@@ -475,7 +475,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-white/55 text-[11px] mb-0.5 flex items-center gap-1">
-                <PiggyBank size={10} /> Poupança acumulada
+                <PiggyBank size={10} /> Poupança total
               </p>
               <p className="text-sm font-bold text-yellow-300">{formatCurrency(savingsBalance)}</p>
             </div>
