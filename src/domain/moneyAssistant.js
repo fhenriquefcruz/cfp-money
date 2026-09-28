@@ -243,7 +243,7 @@ export function buildMoneyAssistantResponse({
   settings = {},
   now = new Date(),
   analyze,
-  priority = '',
+  priority,
 }) {
   const intent = parseMoneyAssistantIntent(message, categories, transactions, now)
 
@@ -268,8 +268,8 @@ export function buildMoneyAssistantResponse({
   if (intent.type === 'priorities') {
     return {
       type: 'priorities',
-      title: 'Prioridade de agora',
-      text: priority || 'Sem prioridade relevante agora.',
+      title: 'Prioridade',
+      text: priority || 'Sem prioridade agora.',
     }
   }
 
@@ -318,12 +318,12 @@ export function buildMoneyAssistantResponse({
 
     return {
       type: 'largest_expenses',
-      title: `Maiores despesas de ${period.label}`,
+      title: 'Maiores despesas',
       text: expenses.length
         ? expenses
             .map(
               (transaction) =>
-                `${transaction.description || 'Despesa'}: ${currencyFormatter.format(transaction.amount || 0)}`,
+                `${transaction.description || 'Despesa'}: ${currencyFormatter.format(transaction.amount)}`,
             )
             .join(' · ')
         : 'Sem despesas no período.',
