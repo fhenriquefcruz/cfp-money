@@ -505,7 +505,9 @@ export default function Dashboard() {
               <div>
                 <div className="mb-1 flex items-center gap-1.5">
                   <Zap size={14} className="text-[--brand-600]" />
-                  <p className="text-xs font-semibold text-[--text-tertiary]">Média de gastos · 3 meses</p>
+                  <p className="text-xs font-semibold text-[--text-tertiary]">
+                    Média de gastos · 3 meses
+                  </p>
                   <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
                 </div>
                 {isLoading ? (
