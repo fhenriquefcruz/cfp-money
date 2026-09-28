@@ -180,20 +180,10 @@ function hasAdvancedCardFlow(normalizedMessage) {
   )
 }
 
-export function isMoneyQuestion(value = '') {
-  const normalizedMessage = normalizeMoneyCommand(value).replace(/^money\s+/, '')
-
-  return (
-    /^(quanto|qual|quais|como|onde|quando|por que|porque|o que)\b/.test(normalizedMessage) ||
-    normalizedMessage.startsWith('me mostre ') ||
-    normalizedMessage.startsWith('mostre ') ||
-    normalizedMessage.startsWith('liste ') ||
-    normalizedMessage.includes('relatorio') ||
-    normalizedMessage.includes('resumo dos meus gastos') ||
-    normalizedMessage.includes('resumo das minhas despesas') ||
-    normalizedMessage.includes('merece minha atencao') ||
-    normalizedMessage.includes('periodo anterior')
-  )
+function isQuestionInsteadOfCreation(message) {
+  return /^(?:money )?(?:quanto|qual|quais|como|onde|quando|por que|porque|o que|me mostre|mostre|liste)\b/.test(
+    message,
+  ) || message.includes('relatorio')
 }
 
 function detectDuplicate(draft, transactions) {
@@ -219,7 +209,7 @@ export function buildMoneyTransactionDraft({
 }) {
   const normalizedMessage = normalizeMoneyCommand(message)
 
-  if (!normalizedMessage || isMoneyQuestion(normalizedMessage)) return null
+  if (!normalizedMessage || isQuestionInsteadOfCreation(normalizedMessage)) return null
 
   const type = detectType(normalizedMessage)
   if (!type) return null
