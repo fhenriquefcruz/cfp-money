@@ -553,7 +553,6 @@ export default function TransactionList() {
     payFilter !== 'all',
     paymentStatusFilter !== 'all',
     hasCustomDateRange,
-    !!search,
   ].filter(Boolean).length
   const savableFilterCount = [
     typeFilter !== 'all',
