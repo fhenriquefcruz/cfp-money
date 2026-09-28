@@ -1,0 +1,24 @@
+name: Temporary format preview
+
+on:
+  push:
+    branches:
+      - ops/audit-orphan-user-phase-28
+
+permissions:
+  contents: read
+
+jobs:
+  format-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format target
+        run: npx prettier --write scripts/backfill-auth-users-firestore.mjs
+      - name: Print formatted target
+        run: cat scripts/backfill-auth-users-firestore.mjs
