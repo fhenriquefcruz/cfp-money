@@ -125,7 +125,6 @@ test('responde com ajuda para pedidos não reconhecidos', () => {
   expect(response.text).toContain('sem alterar')
 })
 
-
 test('responde quanto foi gasto no mês atual', () => {
   const response = buildMoneyAssistantResponse({
     message: 'Quanto gastei este mês?',
