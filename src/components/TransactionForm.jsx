@@ -10,8 +10,14 @@ import {
   RefreshCw,
   Layers,
   PiggyBank,
+  ChevronDown,
 } from 'lucide-react'
-import { useApp } from '../contexts/AppContext'
+import {
+  useCategories,
+  useCreditCards,
+  useNotifications,
+  useTransactions,
+} from '../contexts/AppContext'
 import { Modal, Button, Input } from './ui'
 import { PAYMENT_METHODS } from '../utils'
 import { format, addMonths } from 'date-fns'
@@ -162,11 +168,14 @@ function getEffectiveDate(baseDate, closingDay) {
 }
 
 export default function TransactionForm({ isOpen, onClose, transaction }) {
-  const { categories, creditCards, createTransaction, editTransaction, addTransactionBatch } =
-    useApp()
+  const { createTransaction, editTransaction, addTransactionBatch } = useTransactions()
+  const { showNotification } = useNotifications()
+  const { categories } = useCategories()
+  const { creditCards } = useCreditCards()
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const isEditing = !!transaction
 
   useEffect(() => {
@@ -186,8 +195,10 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         notes: transaction.notes || '',
         isRecurring: transaction.isRecurring || false,
       })
+      setShowAdvanced(Boolean(transaction.dueDate || transaction.notes || transaction.isRecurring))
     } else {
       setForm(EMPTY_FORM)
+      setShowAdvanced(false)
     }
     setErrors({})
   }, [transaction, isOpen])
@@ -249,7 +260,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
       description: form.description.trim() || (isSavings ? 'Depósito em Poupança' : ''),
       categoryId: isSavings ? '_savings' : form.categoryId,
       categoryName: isSavings ? 'Poupança' : cat?.name || '',
-      categoryColor: isSavings ? '#6366f1' : cat?.color || '',
+      categoryColor: isSavings ? '#c49d6b' : cat?.color || '',
       categoryIcon: isSavings ? '🐷' : cat?.icon || '',
       paymentMethod: form.paymentMethod,
       notes: form.notes.trim(),
@@ -345,7 +356,12 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         }
       }
       onClose()
-    } catch {
+    } catch (error) {
+      console.error('Erro ao salvar transação:', error)
+      showNotification(
+        'Não foi possível salvar a transação. Seus dados foram preservados. Tente novamente.',
+        'error',
+      )
     } finally {
       setLoading(false)
     }
@@ -521,16 +537,6 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           )}
         </div>
 
-        {isExpense && !showCreditFields && (
-          <Input
-            label="Vencimento (opcional)"
-            type="date"
-            value={form.dueDate}
-            onChange={update('dueDate')}
-            icon={<Calendar size={15} />}
-          />
-        )}
-
         {/* Campos de cartão de crédito */}
         <AnimatePresence>
           {showCreditFields && (
@@ -651,91 +657,130 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           )}
         </AnimatePresence>
 
-        {/* Recorrente — receita OU despesa */}
-        <AnimatePresence>
-          {showRecurringField && (
+        <button
+          type="button"
+          onClick={() => setShowAdvanced((current) => !current)}
+          aria-expanded={showAdvanced}
+          className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-[--border-default] bg-[--bg-subtle] px-3 py-2.5 text-left transition-colors hover:border-[--border-strong] hover:bg-[--bg-hover]"
+        >
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[--text-primary]">Mais opções</p>
+            <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+              {isSavings
+                ? 'Observações adicionais'
+                : isExpense
+                  ? 'Vencimento, recorrência e observações'
+                  : 'Recorrência e observações'}
+            </p>
+          </div>
+          <ChevronDown
+            size={16}
+            className={`flex-shrink-0 text-[--text-tertiary] transition-transform ${
+              showAdvanced ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
+
+        <AnimatePresence initial={false}>
+          {showAdvanced && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div
-                className={`p-3 rounded-xl border space-y-3 ${
-                  isIncome
-                    ? 'bg-[--success-bg] border-[--success-border]'
-                    : 'bg-[--warning-bg] border-[--warning-border]'
-                }`}
-              >
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.isRecurring}
-                    onChange={(e) => update('isRecurring')(e.target.checked)}
-                    className={`w-4 h-4 rounded ${isIncome ? 'accent-green-600' : 'accent-orange-500'}`}
+              <div className="space-y-4 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
+                {isExpense && !showCreditFields && (
+                  <Input
+                    label="Vencimento (opcional)"
+                    type="date"
+                    value={form.dueDate}
+                    onChange={update('dueDate')}
+                    icon={<Calendar size={15} />}
                   />
-                  <RefreshCw
-                    size={13}
-                    className={isIncome ? 'text-[--success-icon]' : 'text-orange-500'}
-                  />
-                  <span
-                    className={`text-sm font-medium ${isIncome ? 'text-[--success-text]' : 'text-orange-700'}`}
+                )}
+
+                {showRecurringField && (
+                  <div
+                    className={`rounded-xl border p-3 ${
+                      isIncome
+                        ? 'border-[--success-border] bg-[--success-bg]'
+                        : 'border-[--warning-border] bg-[--warning-bg]'
+                    }`}
                   >
-                    {isIncome
-                      ? 'Receita fixa — repetir mensalmente'
-                      : 'Despesa fixa — repetir mensalmente'}
-                  </span>
-                </label>
-                <AnimatePresence>
-                  {form.isRecurring && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden space-y-2"
-                    >
-                      <Input
-                        label="Repetir por quantos meses"
-                        type="number"
-                        min="2"
-                        max="120"
-                        placeholder="Ex: 12"
-                        value={form.recurringMonths}
-                        onChange={update('recurringMonths')}
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={form.isRecurring}
+                        onChange={(e) => update('isRecurring')(e.target.checked)}
+                        className="h-4 w-4 rounded accent-[--brand-600]"
                       />
-                      <p
-                        className={`text-xs ${isIncome ? 'text-[--success-text]' : 'text-orange-600'}`}
+                      <RefreshCw
+                        size={13}
+                        className={isIncome ? 'text-[--success-icon]' : 'text-[--warning-icon]'}
+                      />
+                      <span
+                        className={`text-sm font-medium ${
+                          isIncome ? 'text-[--success-text]' : 'text-[--warning-text]'
+                        }`}
                       >
-                        {form.recurringMonths || 0} lançamentos serão criados automaticamente.
-                        {isExpense && ' Ex: aluguel, academia, streaming.'}
-                      </p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                        {isIncome
+                          ? 'Receita fixa — repetir mensalmente'
+                          : 'Despesa fixa — repetir mensalmente'}
+                      </span>
+                    </label>
+
+                    <AnimatePresence initial={false}>
+                      {form.isRecurring && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-3 space-y-2 overflow-hidden"
+                        >
+                          <Input
+                            label="Repetir por quantos meses"
+                            type="number"
+                            min="2"
+                            max="120"
+                            placeholder="Ex: 12"
+                            value={form.recurringMonths}
+                            onChange={update('recurringMonths')}
+                          />
+                          <p
+                            className={`text-xs ${
+                              isIncome ? 'text-[--success-text]' : 'text-[--warning-text]'
+                            }`}
+                          >
+                            {form.recurringMonths || 0} lançamentos serão criados automaticamente.
+                            {isExpense && ' Ex: aluguel, academia, streaming.'}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+
+                <div>
+                  <label
+                    htmlFor="transaction-notes"
+                    className="mb-1.5 block text-sm font-medium text-[--text-secondary]"
+                  >
+                    Observações
+                  </label>
+                  <textarea
+                    id="transaction-notes"
+                    placeholder="Notas adicionais (opcional)..."
+                    value={form.notes}
+                    onChange={update('notes')}
+                    rows={2}
+                    className="w-full resize-none rounded-xl border border-[--border-default] bg-[--bg-surface] px-4 py-2.5 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] transition-all hover:border-[--border-strong] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+                  />
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Notas */}
-        <div>
-          <label
-            htmlFor="transaction-notes"
-            className="text-sm font-medium text-[--text-secondary] block mb-1.5"
-          >
-            Observações
-          </label>
-          <textarea
-            id="transaction-notes"
-            placeholder="Notas adicionais (opcional)..."
-            value={form.notes}
-            onChange={update('notes')}
-            rows={2}
-            className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-4 py-2.5
-              text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none
-              focus:ring-2 focus:ring-[--brand-500] resize-none hover:border-[--border-strong] transition-all"
-          />
-        </div>
       </div>
     </Modal>
   )

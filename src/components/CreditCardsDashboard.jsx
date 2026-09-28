@@ -14,7 +14,7 @@ import {
   WalletCards,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useApp } from '../contexts/AppContext'
+import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
@@ -71,7 +71,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
       aria-pressed={selected}
     >
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[--brand-600] to-violet-600 text-white shadow-sm">
+        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[--brand-700] to-[--brand-500] text-white shadow-sm">
           <CreditCard size={18} />
         </div>
 
@@ -160,7 +160,9 @@ function TransactionRow({ transaction }) {
 }
 
 function CreditCardsCenterContent() {
-  const { transactions, creditCards, invoiceEvents, loading, createInvoiceEvent } = useApp()
+  const { transactions, loading: transactionsLoading } = useTransactions()
+  const { creditCards, loading: creditCardsLoading } = useCreditCards()
+  const { invoiceEvents, loading: invoiceEventsLoading, createInvoiceEvent } = useInvoiceEvents()
   const [selectedMonth, setSelectedMonth] = useState(monthKeyFromDate())
   const [selectedCardId, setSelectedCardId] = useState('all')
   const [managingCardId, setManagingCardId] = useState(null)
@@ -194,14 +196,14 @@ function CreditCardsCenterContent() {
       : center.invoices.find((invoice) => invoice.card.id === selectedCardId)
   const managedInvoice = center.invoices.find((invoice) => invoice.card.id === managingCardId)
 
-  const loadingData = loading.transactions || loading.creditCards || loading.invoiceEvents
+  const loadingData = transactionsLoading || creditCardsLoading || invoiceEventsLoading
 
   return (
     <div className="operational-page credit-cards-premium mx-auto min-w-0 w-full max-w-7xl space-y-5 pb-24 lg:pb-6">
-      <header className="operational-hero credit-cards-premium__hero overflow-hidden rounded-3xl border border-[--brand-200] bg-gradient-to-br from-slate-950 via-indigo-950 to-[--brand-700] p-5 text-white shadow-xl sm:p-6">
+      <header className="operational-hero credit-cards-premium__hero overflow-hidden rounded-3xl border border-[--brand-200] bg-gradient-to-br from-[#050607] via-[#151819] to-[#3c3328] p-5 text-white shadow-xl sm:p-6">
         <div className="operational-hero__layout flex flex-wrap items-start justify-between gap-5">
           <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/10 text-cyan-100 ring-1 ring-white/20 backdrop-blur">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/10 text-[#e8d4b8] ring-1 ring-white/20 backdrop-blur">
               <WalletCards size={22} />
             </div>
             <div>
@@ -209,7 +211,7 @@ function CreditCardsCenterContent() {
                 <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
                   Cartões e faturas
                 </h1>
-                <span className="rounded-full bg-cyan-300/20 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-cyan-100 ring-1 ring-cyan-200/20">
+                <span className="rounded-full bg-[#c49d6b]/20 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-[#e8d4b8] ring-1 ring-[#d9bb91]/20">
                   Premium
                 </span>
               </div>
@@ -223,7 +225,7 @@ function CreditCardsCenterContent() {
           <div className="operational-hero__actions flex flex-wrap gap-2">
             <Link
               to="/transactions"
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-xs font-bold text-indigo-900 shadow-sm transition-transform hover:-translate-y-0.5"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-xs font-bold text-[#3d2b1d] shadow-sm transition-transform hover:-translate-y-0.5"
             >
               <Plus size={14} />
               Nova compra
@@ -398,7 +400,7 @@ function CreditCardsCenterContent() {
                       >
                         <div className="flex h-16 items-end justify-center">
                           <span
-                            className="w-5 rounded-t-lg bg-gradient-to-t from-[--brand-600] to-cyan-400"
+                            className="w-5 rounded-t-lg bg-gradient-to-t from-[--brand-600] to-[--brand-300]"
                             style={{ height }}
                           />
                         </div>

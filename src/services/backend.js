@@ -38,8 +38,23 @@ export async function getAccountEntitlement() {
   return result.data
 }
 
+export async function adminListUsers() {
+  const result = await callable('adminListUsers')()
+  return result.data.users
+}
+
 export async function adminSetUserAccess(command) {
   const result = await callable('adminSetUserAccess')(command)
+  return result.data
+}
+
+export async function adminListSupportRequests() {
+  const result = await callable('adminListSupportRequests')()
+  return result.data.requests
+}
+
+export async function adminRespondSupportRequest(command) {
+  const result = await callable('adminRespondSupportRequest')(command)
   return result.data
 }
 

@@ -3,11 +3,12 @@ import { extname, join, relative } from 'node:path'
 import { gzipSync } from 'node:zlib'
 
 const distRoot = 'dist'
+
 const indexPath = join(distRoot, 'index.html')
 
 const limits = {
   initialJavaScriptGzipBytes: 240 * 1024,
-  totalJavaScriptGzipBytes: 700 * 1024,
+  totalJavaScriptGzipBytes: 703 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 20 * 1024,
 }

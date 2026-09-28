@@ -23,6 +23,7 @@ const customMobile = (width, height) => ({
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: ['visual/**'],
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,

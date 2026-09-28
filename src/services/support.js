@@ -5,7 +5,6 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  updateDoc,
   where,
 } from 'firebase/firestore'
 import { auth, db } from './firebase'
@@ -66,21 +65,4 @@ export function onMySupportRequests(callback, onError) {
     (snapshot) => callback(normalize(snapshot)),
     onError,
   )
-}
-
-export function onSupportRequestsAdmin(callback, onError) {
-  return onSnapshot(supportCollection(), (snapshot) => callback(normalize(snapshot)), onError)
-}
-
-export async function adminRespondSupportRequest(requestId, { status, response }) {
-  const user = auth.currentUser
-  if (!user?.uid) throw new Error('Sessão administrativa indisponível.')
-
-  await updateDoc(doc(db, 'supportRequests', requestId), {
-    status,
-    response: response.trim(),
-    respondedAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    responderUid: user.uid,
-  })
 }

@@ -1,7 +1,7 @@
 // src/components/TransactionList.jsx
 import React, { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   Plus,
   Search,
@@ -21,16 +21,24 @@ import {
   CheckCircle2,
   Clock3,
 } from 'lucide-react'
-import { useApp } from '../contexts/AppContext'
+import {
+  useCategories,
+  useCreditCards,
+  useInvoiceEvents,
+  useNotifications,
+  useTransactions,
+} from '../contexts/AppContext'
+import { useAuth } from '../contexts/AuthContext'
 import { Button, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
 import TransactionSeriesModal from './TransactionSeriesModal'
+import TransactionCsvImportModal from './TransactionCsvImportModal'
+import TransactionSavedViews from './TransactionSavedViews'
 import {
   formatCurrency,
   getPaymentLabel,
   exportToCSV,
   exportToPDF,
-  parseCSVImport,
   PAYMENT_METHODS,
 } from '../utils'
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
@@ -49,9 +57,16 @@ import {
   isStructuredCreditTransaction,
   isTransactionPaid,
 } from '../domain/paymentControl'
+import {
+  createSavedTransactionView,
+  readSavedTransactionViews,
+  removeSavedTransactionView,
+  writeSavedTransactionViews,
+} from '../domain/transactionViews'
 
 const DATE_PRESETS = [
   {
+    id: 'current_month',
     label: 'Este mês',
     getRange: () => ({
       from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
@@ -59,6 +74,7 @@ const DATE_PRESETS = [
     }),
   },
   {
+    id: 'previous_month',
     label: 'Mês passado',
     getRange: () => ({
       from: format(startOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd'),
@@ -66,6 +82,7 @@ const DATE_PRESETS = [
     }),
   },
   {
+    id: 'next_month',
     label: 'Próximo mês',
     getRange: () => {
       const nextMonth = addMonths(new Date(), 1)
@@ -76,6 +93,7 @@ const DATE_PRESETS = [
     },
   },
   {
+    id: 'last_3_months',
     label: 'Últimos 3 meses',
     getRange: () => ({
       from: format(subMonths(new Date(), 3), 'yyyy-MM-dd'),
@@ -83,13 +101,14 @@ const DATE_PRESETS = [
     }),
   },
   {
+    id: 'current_year',
     label: 'Este ano',
     getRange: () => ({
       from: `${new Date().getFullYear()}-01-01`,
       to: format(new Date(), 'yyyy-MM-dd'),
     }),
   },
-  { label: 'Todos', getRange: () => ({ from: '', to: '' }) },
+  { id: 'all', label: 'Todos', getRange: () => ({ from: '', to: '' }) },
 ]
 
 function getCurrentMonthRange() {
@@ -375,32 +394,38 @@ function TxRow({
 }
 
 export default function TransactionList() {
+  const { user } = useAuth()
+  const [searchParams] = useSearchParams()
   const {
     transactions,
-    categories,
-    creditCards,
-    invoiceEvents,
     removeTransaction,
-    createTransaction,
-    showNotification,
+    removeTransactionBatch,
+    importTransactionBatch,
     applyTransactionSeriesOperation,
     setTransactionPaymentStatus,
     commitPaymentStatusOperation,
-  } = useApp()
+  } = useTransactions()
+  const { showNotification } = useNotifications()
+  const { categories } = useCategories()
+  const { creditCards } = useCreditCards()
+  const { invoiceEvents } = useInvoiceEvents()
 
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(() => searchParams.get('search') || '')
   const [typeFilter, setTypeFilter] = useState('all')
   const [catFilter, setCatFilter] = useState('all')
   const [payFilter, setPayFilter] = useState('all')
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('all')
-  const [dateRange, setDateRange] = useState(getCurrentMonthRange)
+  const [dateRange, setDateRange] = useState(() =>
+    searchParams.get('scope') === 'all' ? { from: '', to: '' } : getCurrentMonthRange(),
+  )
   const [showFilters, setShowFilters] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTx, setEditingTx] = useState(null)
   const [deleteId, setDeleteId] = useState(null)
   const [seriesAction, setSeriesAction] = useState(null)
   const [importModal, setImportModal] = useState(false)
-  const [importText, setImportText] = useState('')
+  const [lastImportIds, setLastImportIds] = useState([])
+  const [savedViews, setSavedViews] = useState([])
   const [page, setPage] = useState(1)
   const [sortAsc, setSortAsc] = useState(false)
   const [paymentUpdatingIds, setPaymentUpdatingIds] = useState(() => new Set())
@@ -488,6 +513,26 @@ export default function TransactionList() {
     setSelectedPaymentIds(new Set())
   }, [typeFilter, catFilter, payFilter, paymentStatusFilter, dateRange.from, dateRange.to, search])
 
+  useEffect(() => {
+    const routeSearch = searchParams.get('search') || ''
+    if (!routeSearch) return
+
+    setSearch(routeSearch)
+    if (searchParams.get('scope') === 'all') {
+      setDateRange({ from: '', to: '' })
+    }
+    setPage(1)
+  }, [searchParams])
+
+  useEffect(() => {
+    if (!user?.uid || typeof window === 'undefined') {
+      setSavedViews([])
+      return
+    }
+
+    setSavedViews(readSavedTransactionViews(user.uid, window.localStorage))
+  }, [user?.uid])
+
   const summary = useMemo(() => {
     const income = filtered
       .filter((t) => t.type === 'income' && !t.isSavings)
@@ -510,6 +555,18 @@ export default function TransactionList() {
     hasCustomDateRange,
     !!search,
   ].filter(Boolean).length
+  const savableFilterCount = [
+    typeFilter !== 'all',
+    catFilter !== 'all',
+    payFilter !== 'all',
+    paymentStatusFilter !== 'all',
+    hasCustomDateRange,
+  ].filter(Boolean).length
+  const currentDatePreset =
+    DATE_PRESETS.find((preset) => {
+      const range = preset.getRange()
+      return dateRange.from === range.from && dateRange.to === range.to
+    })?.id || ''
 
   const handleEdit = (tx) => {
     if (isTransactionSeries(tx)) {
@@ -539,6 +596,25 @@ export default function TransactionList() {
   const handleNew = () => {
     setEditingTx(null)
     setModalOpen(true)
+  }
+
+  const handleCsvImport = async (items) => {
+    const ids = await importTransactionBatch(items)
+    setLastImportIds(ids || [])
+    return ids
+  }
+
+  const handleUndoImport = async () => {
+    if (!lastImportIds?.length) return
+
+    const ids = lastImportIds
+    setLastImportIds(null)
+    try {
+      await removeTransactionBatch(ids)
+    } catch (error) {
+      setLastImportIds(ids)
+      throw error
+    }
   }
   const handleClose = () => {
     setModalOpen(false)
@@ -625,25 +701,63 @@ export default function TransactionList() {
     setPage(1)
   }
 
-  const handleImport = async () => {
-    const txs = parseCSVImport(importText)
-    if (!txs.length) {
-      showNotification('Nenhuma transação no CSV.', 'warning')
-      return
+  const persistSavedViews = (nextViews) => {
+    if (!user?.uid || typeof window === 'undefined') return false
+    const persisted = writeSavedTransactionViews(user.uid, nextViews, window.localStorage)
+    setSavedViews(persisted)
+    return true
+  }
+
+  const saveCurrentView = (name) => {
+    try {
+      const view = createSavedTransactionView(
+        name,
+        {
+          typeFilter,
+          catFilter,
+          payFilter,
+          paymentStatusFilter,
+          datePreset: currentDatePreset,
+          dateRange,
+        },
+        savedViews,
+      )
+      persistSavedViews([...savedViews, view])
+      showNotification('Visão salva para reutilizar depois.')
+      return true
+    } catch (error) {
+      showNotification(error.message || 'Não foi possível salvar a visão.', 'warning')
+      return false
     }
-    for (const tx of txs) {
-      const cat = categories.find((c) => c.name.toLowerCase() === tx.categoryName?.toLowerCase())
-      await createTransaction({
-        ...tx,
-        categoryId: cat?.id || '',
-        categoryName: cat?.name || tx.categoryName || '',
-        categoryColor: cat?.color || '',
-        categoryIcon: cat?.icon || '',
-      })
+  }
+
+  const applySavedView = (view) => {
+    const filters = view?.filters || {}
+    const preset = DATE_PRESETS.find((item) => item.id === filters.datePreset)
+    const categoryStillExists =
+      filters.catFilter === 'all' ||
+      categories.some((category) => category.id === filters.catFilter)
+
+    setTypeFilter(filters.typeFilter || 'all')
+    setCatFilter(categoryStillExists ? filters.catFilter || 'all' : 'all')
+    setPayFilter(filters.payFilter || 'all')
+    setPaymentStatusFilter(filters.paymentStatusFilter || 'all')
+    setDateRange(preset ? preset.getRange() : filters.dateRange || { from: '', to: '' })
+    setSearch('')
+    setPage(1)
+    setShowFilters(true)
+
+    if (!categoryStillExists) {
+      showNotification(
+        'A categoria salva não existe mais; os outros filtros foram aplicados.',
+        'info',
+      )
     }
-    setImportModal(false)
-    setImportText('')
-    showNotification(`${txs.length} transações importadas!`)
+  }
+
+  const deleteSavedView = (viewId) => {
+    const nextViews = removeSavedTransactionView(savedViews, viewId)
+    persistSavedViews(nextViews)
   }
 
   const dateLabel = (dateStr) => {
@@ -658,7 +772,10 @@ export default function TransactionList() {
   }
 
   return (
-    <div className="operational-page transactions-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-28 lg:pb-6">
+    <div
+      data-tour="transactions"
+      className="operational-page transactions-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-28 lg:pb-6"
+    >
       {/* Header */}
       <div className="operational-page__header flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -698,6 +815,18 @@ export default function TransactionList() {
           </Button>
         </div>
       </div>
+
+      {lastImportIds.length > 0 && (
+        <div className="transaction-import-undo">
+          <p>
+            Importadas: {lastImportIds.length}{' '}
+            {lastImportIds.length === 1 ? 'transação' : 'transações'}.
+          </p>
+          <Button variant="ghost" size="xs" onClick={handleUndoImport}>
+            Desfazer importação
+          </Button>
+        </div>
+      )}
 
       {/* Cards de resumo */}
       <div className="operational-summary-grid grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -838,6 +967,14 @@ export default function TransactionList() {
             })(),
           )}
         </div>
+
+        <TransactionSavedViews
+          views={savedViews}
+          canSave={savableFilterCount > 0}
+          onApply={applySavedView}
+          onSave={saveCurrentView}
+          onDelete={deleteSavedView}
+        />
 
         {/* Filtros expandíveis */}
         <AnimatePresence>
@@ -1222,55 +1359,13 @@ export default function TransactionList() {
         </p>
       </Modal>
 
-      {/* Modal importar */}
-      <Modal
+      <TransactionCsvImportModal
         isOpen={importModal}
         onClose={() => setImportModal(false)}
-        title="Importar CSV"
-        size="md"
-        footer={
-          <div className="flex gap-3">
-            <Button variant="secondary" fullWidth onClick={() => setImportModal(false)}>
-              Cancelar
-            </Button>
-            <Button variant="primary" fullWidth onClick={handleImport}>
-              Importar
-            </Button>
-          </div>
-        }
-      >
-        <div className="space-y-3">
-          <p className="text-sm text-[--text-secondary]">
-            Formato:{' '}
-            <code className="text-xs bg-[--bg-hover] px-2 py-0.5 rounded font-mono">
-              Data;Tipo;Descrição;Categoria;Valor;Pagamento
-            </code>
-          </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              const csv =
-                'Data;Tipo;Descrição;Categoria;Valor;Pagamento\n01/01/2025;Despesa;Almoço;Alimentação;25,90;pix\n05/01/2025;Receita;Salário;Salário;5000,00;transfer'
-              const a = document.createElement('a')
-              a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
-              a.download = 'template.csv'
-              a.click()
-            }}
-          >
-            Baixar template
-          </Button>
-          <textarea
-            value={importText}
-            onChange={(e) => setImportText(e.target.value)}
-            rows={8}
-            placeholder="Cole o conteúdo do CSV aqui..."
-            className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl p-3 text-sm
-              font-mono text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none
-              focus:ring-2 focus:ring-[--brand-500] resize-none"
-          />
-        </div>
-      </Modal>
+        categories={categories}
+        existingTransactions={transactions}
+        onImport={handleCsvImport}
+      />
     </div>
   )
 }

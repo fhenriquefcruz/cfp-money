@@ -9,9 +9,10 @@ import {
   CalendarRange,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useApp } from '../contexts/AppContext'
+import { useTransactions } from '../contexts/AppContext'
 import { useMoney } from '../contexts/MoneyContext'
 import { analyzeMoney } from '../domain/money'
+import { analyzeSpendingLeaks } from '../domain/spendingLeaks'
 import {
   formatMoneyPeriodLabel,
   getMoneyInsightHeadline,
@@ -20,6 +21,7 @@ import {
 import { formatCurrency } from '../utils'
 import { Card } from './ui'
 import PremiumGate from './PremiumGate'
+import SpendingLeakDiagnostic from './SpendingLeakDiagnostic'
 
 const TONE_STYLES = {
   positive: {
@@ -68,12 +70,17 @@ function MoneyMetric({ label, value, detail }) {
 }
 
 function MoneyInsightContent({ referenceDate }) {
-  const { transactions, loading } = useApp()
+  const { transactions, loading: transactionsLoading } = useTransactions()
   const { settings, isLoading: settingsLoading } = useMoney()
 
+  const analysisDate = useMemo(() => resolveAnalysisDate(referenceDate), [referenceDate])
   const analysis = useMemo(
-    () => analyzeMoney(transactions, settings, resolveAnalysisDate(referenceDate)),
-    [transactions, settings, referenceDate],
+    () => analyzeMoney(transactions, settings, analysisDate),
+    [transactions, settings, analysisDate],
+  )
+  const spendingLeakReport = useMemo(
+    () => analyzeSpendingLeaks(transactions, settings, analysisDate),
+    [transactions, settings, analysisDate],
   )
 
   const tone = getMoneyInsightTone(analysis)
@@ -81,7 +88,7 @@ function MoneyInsightContent({ referenceDate }) {
   const ToneIcon = toneStyle.icon
   const primaryInsight = analysis.insights[0]?.message
   const categoryInsight = analysis.insights.find((insight) => insight.type === 'category_increase')
-  const isLoading = loading.transactions || settingsLoading
+  const isLoading = transactionsLoading || settingsLoading
 
   return (
     <Card className="money-insight-card h-full overflow-hidden shadow-sm" padding={false}>
@@ -208,6 +215,8 @@ function MoneyInsightContent({ referenceDate }) {
                 </p>
               </div>
             )}
+
+            <SpendingLeakDiagnostic report={spendingLeakReport} />
           </>
         )}
       </div>

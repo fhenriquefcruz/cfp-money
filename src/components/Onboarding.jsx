@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 const STORAGE_KEY = (uid) => `cfp_onboarding_done_${uid}`
@@ -19,6 +20,7 @@ const STEPS = [
     description:
       'Aqui você vê um resumo completo das suas finanças: saldo, receitas, despesas e gráficos do mês atual.',
     highlight: '[data-tour="dashboard"]',
+    route: '/dashboard',
     position: 'right',
   },
   {
@@ -26,6 +28,7 @@ const STEPS = [
     description:
       'Registre entradas e saídas, filtre por mês, categoria e método de pagamento. Suporta parcelamento e receita fixa recorrente.',
     highlight: '[data-tour="transactions"]',
+    route: '/transactions',
     position: 'right',
   },
   {
@@ -33,6 +36,7 @@ const STEPS = [
     description:
       'Defina objetivos financeiros e acompanhe seu progresso. Quanto falta para a viagem, o carro ou a reserva de emergência?',
     highlight: '[data-tour="goals"]',
+    route: '/goals',
     position: 'right',
   },
   {
@@ -40,6 +44,7 @@ const STEPS = [
     description:
       'Limite seus gastos por categoria. O sistema avisa quando você está se aproximando ou ultrapassando o limite mensal.',
     highlight: '[data-tour="budgets"]',
+    route: '/budgets',
     position: 'right',
   },
   {
@@ -47,6 +52,7 @@ const STEPS = [
     description:
       'Análises detalhadas com gráficos de evolução, distribuição por categoria e exportação CSV. Disponível no plano Premium.',
     highlight: '[data-tour="reports"]',
+    route: '/reports',
     position: 'right',
   },
   {
@@ -60,8 +66,10 @@ const STEPS = [
 
 export default function Onboarding() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [visible, setVisible] = useState(false)
   const [step, setStep] = useState(0)
+  const [highlightRect, setHighlightRect] = useState(null)
 
   useEffect(() => {
     if (!user?.uid) return
@@ -80,11 +88,51 @@ export default function Onboarding() {
   }
   const prev = () => setStep((s) => Math.max(0, s - 1))
 
-  if (!visible) return null
-
   const current = STEPS[step]
   const isFirst = step === 0
   const isLast = step === STEPS.length - 1
+
+  useEffect(() => {
+    if (!visible || !current?.route || !current?.highlight) {
+      setHighlightRect(null)
+      return undefined
+    }
+
+    navigate(current.route)
+
+    const updateHighlight = () => {
+      const candidates = Array.from(document.querySelectorAll(current.highlight))
+      const target = candidates.find((element) => element.getClientRects().length > 0)
+
+      if (!target) {
+        setHighlightRect(null)
+        return
+      }
+
+      const rect = target.getBoundingClientRect()
+      setHighlightRect({
+        top: Math.max(8, rect.top - 6),
+        left: Math.max(8, rect.left - 6),
+        width: Math.min(window.innerWidth - 16, rect.width + 12),
+        height: Math.min(window.innerHeight - 16, rect.height + 12),
+      })
+
+      target.scrollIntoView({
+        block: 'center',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      })
+    }
+
+    const timer = window.setTimeout(updateHighlight, 180)
+    window.addEventListener('resize', updateHighlight)
+
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('resize', updateHighlight)
+    }
+  }, [current, navigate, visible])
+
+  if (!visible) return null
 
   return (
     <AnimatePresence>
@@ -94,8 +142,28 @@ export default function Onboarding() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
       >
-        {/* Backdrop escuro com blur */}
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={finish} />
+        {/* Backdrop: no passo contextual, o próprio spotlight cria o escurecimento. */}
+        <div
+          className={`absolute inset-0 ${
+            highlightRect ? 'bg-transparent' : 'bg-black/70 backdrop-blur-sm'
+          }`}
+          onClick={finish}
+        />
+
+        {highlightRect && (
+          <motion.div
+            className="pointer-events-none fixed z-[1] rounded-[22px] border-2 border-white/90 shadow-[0_0_0_9999px_rgba(2,6,23,0.72),0_0_40px_rgba(99,102,241,0.45)]"
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: 1,
+              top: highlightRect.top,
+              left: highlightRect.left,
+              width: highlightRect.width,
+              height: highlightRect.height,
+            }}
+            transition={{ duration: 0.22 }}
+          />
+        )}
 
         {/* Card do tour - fundo sólido e legível */}
         <motion.div

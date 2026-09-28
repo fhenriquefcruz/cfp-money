@@ -1,13 +1,8 @@
 const { initializeApp } = require('firebase-admin/app')
-const { FieldValue, Timestamp, getFirestore } = require('firebase-admin/firestore')
+const { getFirestore } = require('firebase-admin/firestore')
 const { HttpsError, onCall } = require('firebase-functions/v2/https')
 const { defineBoolean } = require('firebase-functions/params')
-const {
-  buildAccessUpdate,
-  calculateEntitlement,
-  normalizeAdminAction,
-  publicAccessSnapshot,
-} = require('./lib/access')
+const { calculateEntitlement } = require('./lib/access')
 
 initializeApp()
 
@@ -24,16 +19,6 @@ function requireAuth(request) {
   }
 
   return request.auth
-}
-
-function requireAdmin(request) {
-  const auth = requireAuth(request)
-
-  if (auth.token?.admin !== true) {
-    throw new HttpsError('permission-denied', 'Ação restrita a administradores.')
-  }
-
-  return auth
 }
 
 function callableOptions(extra = {}) {
@@ -88,61 +73,17 @@ exports.getAccountEntitlement = onCall(callableOptions(), async (request) => {
   return serializeEntitlement(status)
 })
 
-exports.adminSetUserAccess = onCall(callableOptions(), async (request) => {
-  const actor = requireAdmin(request)
+const { createAdminFunctions } = require('./admin')
 
-  let command
-  try {
-    command = normalizeAdminAction(request.data)
-  } catch (error) {
-    throw new HttpsError('invalid-argument', error.message)
-  }
-
-  const targetRef = db.collection('users').doc(command.targetUid)
-  const auditRef = db.collection('adminAudit').doc()
-
-  await db.runTransaction(async (transaction) => {
-    const targetSnapshot = await transaction.get(targetRef)
-
-    if (!targetSnapshot.exists) {
-      throw new HttpsError('not-found', 'Usuário de destino não encontrado.')
-    }
-
-    const before = targetSnapshot.data()
-    const update = buildAccessUpdate(before, command, new Date())
-    const firestoreUpdate = {
-      ...update,
-      updatedAt: FieldValue.serverTimestamp(),
-      accessUpdatedAt: FieldValue.serverTimestamp(),
-      accessUpdatedBy: actor.uid,
-    }
-
-    if (update.premiumUntil instanceof Date) {
-      firestoreUpdate.premiumUntil = Timestamp.fromDate(update.premiumUntil)
-    }
-
-    transaction.update(targetRef, firestoreUpdate)
-    transaction.set(auditRef, {
-      actorUid: actor.uid,
-      actorEmail: actor.token?.email || '',
-      targetUid: command.targetUid,
-      action: command.action,
-      months: command.months || null,
-      before: publicAccessSnapshot(before),
-      requestedUpdate: publicAccessSnapshot({
-        ...before,
-        ...update,
-      }),
-      createdAt: FieldValue.serverTimestamp(),
-    })
-  })
-
-  return {
-    ok: true,
-    targetUid: command.targetUid,
-    action: command.action,
-  }
+const adminFunctions = createAdminFunctions({
+  db,
+  callableOptions,
 })
+
+exports.adminListUsers = adminFunctions.adminListUsers
+exports.adminSetUserAccess = adminFunctions.adminSetUserAccess
+exports.adminListSupportRequests = adminFunctions.adminListSupportRequests
+exports.adminRespondSupportRequest = adminFunctions.adminRespondSupportRequest
 
 const { createPrivacyFunctions } = require('./privacy')
 

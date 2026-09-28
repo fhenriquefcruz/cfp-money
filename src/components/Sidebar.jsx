@@ -22,9 +22,12 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePlan } from '../contexts/PlanContext'
+import { useCategories, useCreditCards, useGoals, useTransactions } from '../contexts/AppContext'
 import { Button } from './ui'
 import ThemeToggle from './ThemeToggle'
 import { clsx } from 'clsx'
+
+const GlobalSearchPalette = React.lazy(() => import('./GlobalSearchPalette'))
 
 const NAV_ITEMS = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -37,6 +40,8 @@ const NAV_ITEMS = [
   { to: '/reports', icon: BarChart3, label: 'Relatórios' },
   { to: '/profile', icon: User, label: 'Perfil' },
 ]
+
+const MOBILE_PRIMARY_PATHS = ['/dashboard', '/transactions', '/cards', '/money']
 
 const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
   const location = useLocation()
@@ -111,18 +116,38 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
 export default function Sidebar() {
   const { user, logout, isAdmin } = useAuth()
   const { status } = usePlan()
+  const { transactions } = useTransactions()
+  const { creditCards } = useCreditCards()
+  const { categories } = useCategories()
+  const { goals } = useGoals()
   const location = useLocation()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const mobileTriggerRef = React.useRef(null)
   const mobileDrawerRef = React.useRef(null)
   const allItems = isAdmin
     ? [...NAV_ITEMS, { to: '/admin', icon: Shield, label: 'Admin' }]
     : NAV_ITEMS
-
+  const mobilePrimaryItems = MOBILE_PRIMARY_PATHS.map((path) =>
+    allItems.find((item) => item.to === path),
+  ).filter(Boolean)
+  const mobileMoreItems = allItems.filter((item) => !MOBILE_PRIMARY_PATHS.includes(item.to))
   useEffect(() => {
     setMobileOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    const handleGlobalSearchShortcut = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+
+    document.addEventListener('keydown', handleGlobalSearchShortcut)
+    return () => document.removeEventListener('keydown', handleGlobalSearchShortcut)
+  }, [])
 
   useEffect(() => {
     if (!mobileOpen) return undefined
@@ -260,6 +285,33 @@ export default function Sidebar() {
         )}
       </AnimatePresence>
 
+      <div className={clsx('px-3 pb-2', collapsed && 'flex justify-center')}>
+        <button
+          type="button"
+          onClick={() => setSearchOpen(true)}
+          className={clsx(
+            'group flex min-h-11 items-center rounded-xl border border-[--border-default] bg-[--bg-surface] text-[--text-secondary] transition-colors hover:border-[--brand-300] hover:text-[--text-primary]',
+            collapsed ? 'w-11 justify-center px-0' : 'w-full gap-3 px-3',
+          )}
+          aria-label="Abrir busca global"
+        >
+          <span
+            className="w-[17px] flex-shrink-0 text-center text-lg leading-none"
+            aria-hidden="true"
+          >
+            ⌕
+          </span>
+          {!collapsed && (
+            <>
+              <span className="min-w-0 flex-1 text-left text-xs font-semibold">Buscar</span>
+              <kbd className="rounded-md bg-[--bg-hover] px-1.5 py-0.5 text-[9px] font-bold text-[--text-tertiary]">
+                Ctrl K
+              </kbd>
+            </>
+          )}
+        </button>
+      </div>
+
       <nav className="flex-1 space-y-1 overflow-y-auto px-3">
         {allItems.map((item) => (
           <NavItem key={item.to} {...item} collapsed={collapsed} />
@@ -302,10 +354,10 @@ export default function Sidebar() {
       </motion.aside>
 
       <nav
-        className="aurora-bottom-nav fixed bottom-0 left-0 right-0 z-[70] grid grid-cols-6 items-stretch overflow-x-clip border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
+        className="aurora-bottom-nav fixed bottom-0 left-0 right-0 z-[70] grid grid-cols-5 items-stretch overflow-x-clip border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
       >
-        {allItems.slice(0, 5).map(({ to, icon: Icon, label, premium }) => (
+        {mobilePrimaryItems.map(({ to, icon: Icon, label, premium }) => (
           <NavLink
             key={to}
             to={to}
@@ -351,6 +403,20 @@ export default function Sidebar() {
         </button>
       </nav>
 
+      {searchOpen && (
+        <React.Suspense fallback={null}>
+          <GlobalSearchPalette
+            onClose={() => setSearchOpen(false)}
+            userId={user?.uid}
+            pages={allItems.map(({ label, to }) => [label, to])}
+            transactions={transactions}
+            categories={categories}
+            goals={goals}
+            creditCards={creditCards}
+          />
+        </React.Suspense>
+      )}
+
       {mobileOpen && (
         <>
           <motion.div
@@ -393,8 +459,22 @@ export default function Sidebar() {
               </button>
             </div>
 
+            <div className="px-3 pb-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false)
+                  setSearchOpen(true)
+                }}
+                className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-[--text-secondary] hover:bg-[--bg-hover]"
+              >
+                <span aria-hidden="true">⌕</span>
+                Buscar no Meu Real
+              </button>
+            </div>
+
             <nav className="flex-1 space-y-1 overflow-y-auto px-3">
-              {allItems.map((item) => (
+              {mobileMoreItems.map((item) => (
                 <NavItem
                   key={item.to}
                   {...item}

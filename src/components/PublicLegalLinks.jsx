@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { LifeBuoy } from 'lucide-react'
 import { SUPPORT_POLICY } from '../content/commercial'
-import { LEGAL_IDENTITY } from '../content/legal'
 import LegalDocument from './LegalDocument'
 import { Modal } from './ui'
 
@@ -50,16 +49,10 @@ export default function PublicLegalLinks() {
       <Modal
         isOpen={documentType === 'support'}
         onClose={() => setDocumentType(null)}
-        title="Fornecedor e suporte"
+        title="Suporte"
         size="md"
       >
         <div className="space-y-4 text-sm text-[--text-secondary]">
-          <div className="rounded-2xl border border-[--border-default] bg-[--bg-subtle] p-4">
-            <p className="font-black text-[--text-primary]">{LEGAL_IDENTITY.controller}</p>
-            <p className="mt-1">{LEGAL_IDENTITY.registration}</p>
-            <p>{LEGAL_IDENTITY.address}</p>
-          </div>
-
           <div>
             <p className="font-black text-[--text-primary]">Canal eletrônico</p>
             <a

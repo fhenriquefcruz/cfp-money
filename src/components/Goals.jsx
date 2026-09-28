@@ -1,20 +1,11 @@
 // src/components/Goals.jsx
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Target,
-  Plus,
-  Edit2,
-  Trash2,
-  TrendingUp,
-  AlertCircle,
-  CheckCircle,
-  MoreVertical,
-} from 'lucide-react'
-import { useApp } from '../contexts/AppContext'
+import { useGoals } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
 import { formatCurrency, formatDate } from '../utils'
 import InfoTooltip from './InfoTooltip'
+import { buildGoalPlan, buildGoalsOverview } from '../domain/goalPlanning'
 
 const EMOJI_LIST = [
   '🏠',
@@ -52,7 +43,7 @@ function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
         className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
         title="Ações"
       >
-        <MoreVertical size={16} />
+        ⋮
       </button>
       {open && (
         <div
@@ -66,7 +57,7 @@ function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--text-primary] hover:bg-[--bg-hover] transition-colors"
           >
-            <TrendingUp size={14} className="text-[--brand-500]" /> Aportar
+            <span aria-hidden="true">↗</span> Aportar
           </button>
           <button
             onClick={() => {
@@ -75,16 +66,16 @@ function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--text-primary] hover:bg-[--bg-hover] transition-colors"
           >
-            <Edit2 size={14} className="text-[--text-secondary]" /> Editar
+            <span aria-hidden="true">✎</span> Editar
           </button>
           <button
             onClick={() => {
-              onDelete(goal.id)
+              onDelete(goal)
               setOpen(false)
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--danger-text] hover:bg-[--danger-bg] transition-colors border-t border-[--border-subtle]"
           >
-            <Trash2 size={14} /> Excluir
+            <span aria-hidden="true">×</span> Excluir
           </button>
         </div>
       )}
@@ -93,14 +84,9 @@ function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
 }
 
 function GoalCard({ goal, onEdit, onDelete, onContribute }) {
-  const progress =
-    goal.targetAmount > 0 ? Math.min(100, ((goal.currentAmount || 0) / goal.targetAmount) * 100) : 0
-
-  const isCompleted = progress >= 100
-  const daysLeft = goal.deadline
-    ? Math.ceil((new Date(goal.deadline) - new Date()) / (1000 * 60 * 60 * 24))
-    : null
-  const isUrgent = daysLeft !== null && daysLeft <= 30 && !isCompleted
+  const plan = buildGoalPlan(goal)
+  const isUrgent =
+    plan.daysLeft !== null && plan.daysLeft >= 0 && plan.daysLeft <= 30 && !plan.completed
 
   return (
     <motion.div
@@ -111,26 +97,31 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }) {
     >
       <Card>
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[--brand-100] flex items-center justify-center text-xl flex-shrink-0">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-100] text-xl">
               {goal.emoji || '🎯'}
             </div>
-            <div>
-              <p className="font-semibold text-[--text-primary]">{goal.name}</p>
-              <div className="flex items-center gap-2 text-xs text-[--text-tertiary] mt-0.5">
-                <span>Meta: {formatCurrency(goal.targetAmount)}</span>
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-[--text-primary]">{goal.name}</p>
+              <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-[--text-tertiary]">
+                <span>Meta: {formatCurrency(plan.target)}</span>
                 {goal.deadline && (
                   <>
                     <span>·</span>
                     <span>Até {formatDate(goal.deadline)}</span>
                   </>
                 )}
-                {isCompleted && (
-                  <span className="text-[--success-icon] font-medium">✓ Concluída</span>
+                {plan.completed && (
+                  <span className="font-medium text-[--success-icon]">✓ Concluída</span>
+                )}
+                {plan.overdue && (
+                  <span className="flex items-center gap-1 font-medium text-[--danger-icon]">
+                    <span aria-hidden="true">!</span> Prazo vencido
+                  </span>
                 )}
                 {isUrgent && (
-                  <span className="text-[--danger-icon] font-medium flex items-center gap-1">
-                    <AlertCircle size={12} /> Urgente
+                  <span className="flex items-center gap-1 font-medium text-[--warning-icon]">
+                    <span aria-hidden="true">!</span> Prazo próximo
                   </span>
                 )}
               </div>
@@ -139,30 +130,72 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }) {
           <GoalMenu goal={goal} onContribute={onContribute} onEdit={onEdit} onDelete={onDelete} />
         </div>
 
-        <div className="mt-3">
-          <div className="flex justify-between text-xs mb-1.5">
+        <div className="mt-4">
+          <div className="mb-1.5 flex justify-between text-xs">
             <span className="text-[--text-secondary]">Progresso</span>
-            <span className="font-semibold text-[--text-primary]">{progress.toFixed(0)}%</span>
+            <span className="font-semibold text-[--text-primary]">{plan.progress.toFixed(0)}%</span>
           </div>
-          <ProgressBar value={goal.currentAmount || 0} max={goal.targetAmount} animated />
-          <div className="flex justify-between text-xs mt-1 text-[--text-tertiary]">
-            <span>{formatCurrency(goal.currentAmount || 0)}</span>
-            <span>{formatCurrency(goal.targetAmount)}</span>
+          <ProgressBar value={plan.current} max={plan.target} animated />
+          <div className="mt-1 flex justify-between text-xs text-[--text-tertiary]">
+            <span>{formatCurrency(plan.current)}</span>
+            <span>{formatCurrency(plan.target)}</span>
           </div>
         </div>
 
-        {isCompleted && (
-          <div className="mt-3 p-2 rounded-xl bg-[--success-bg] border border-[--success-border] text-[--success-text] text-xs flex items-center gap-2">
-            <CheckCircle size={14} />
+        {!plan.completed && (
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="rounded-xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                Falta alcançar
+              </p>
+              <p className="mt-1 text-sm font-black text-[--text-primary]">
+                {formatCurrency(plan.remaining)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                {plan.suggestedMonthlyContribution ? 'Ritmo sugerido' : 'Prazo'}
+              </p>
+              <p className="mt-1 text-sm font-black text-[--text-primary]">
+                {plan.suggestedMonthlyContribution
+                  ? `${formatCurrency(plan.suggestedMonthlyContribution)}/mês`
+                  : plan.daysLeft === null
+                    ? 'Sem prazo'
+                    : plan.overdue
+                      ? 'Vencido'
+                      : `${plan.daysLeft} dias`}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {plan.suggestedMonthlyContribution && !plan.completed && (
+          <p className="mt-2 text-[10px] leading-relaxed text-[--text-tertiary]">
+            Para chegar ao valor alvo até o prazo, seria necessário aportar aproximadamente{' '}
+            <strong className="text-[--text-secondary]">
+              {formatCurrency(plan.suggestedMonthlyContribution)} por mês
+            </strong>
+            .
+          </p>
+        )}
+
+        {plan.completed && (
+          <div className="mt-3 flex items-center gap-2 rounded-xl border border-[--success-border] bg-[--success-bg] p-2 text-xs text-[--success-text]">
+            <span aria-hidden="true">✓</span>
             <span>Meta concluída! 🎉</span>
           </div>
         )}
 
-        {daysLeft !== null && !isCompleted && daysLeft <= 7 && (
-          <div className="mt-3 p-2 rounded-xl bg-[--danger-bg] border border-[--danger-border] text-[--danger-text] text-xs flex items-center gap-2">
-            <AlertCircle size={14} />
-            <span>Prazo final se aproxima! Faltam {daysLeft} dias.</span>
-          </div>
+        {!plan.completed && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="mt-4 w-full"
+            icon={<span aria-hidden="true">↗</span>}
+            onClick={() => onContribute(goal)}
+          >
+            Registrar aporte
+          </Button>
         )}
       </Card>
     </motion.div>
@@ -170,7 +203,7 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }) {
 }
 
 function GoalsContent() {
-  const { goals, createGoal, editGoal, removeGoal } = useApp()
+  const { goals, createGoal, editGoal, removeGoal } = useGoals()
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({
@@ -181,6 +214,13 @@ function GoalsContent() {
     emoji: '🎯',
   })
   const [loading, setLoading] = useState(false)
+  const [contributing, setContributing] = useState(null)
+  const [contributionAmount, setContributionAmount] = useState('')
+  const [contributionLoading, setContributionLoading] = useState(false)
+  const [deleteCandidate, setDeleteCandidate] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const overview = useMemo(() => buildGoalsOverview(goals), [goals])
 
   const handleOpen = (goal = null) => {
     if (goal) {
@@ -235,17 +275,41 @@ function GoalsContent() {
   }
 
   const handleContribute = (goal) => {
-    const amount = window.prompt(`Quanto você quer aportar na meta "${goal.name}"?`, '0')
-    if (amount === null) return
-    const value = parseFloat(amount.replace(',', '.'))
-    if (isNaN(value) || value <= 0) return
-    const newAmount = (goal.currentAmount || 0) + value
-    editGoal(goal.id, { ...goal, currentAmount: newAmount })
+    setContributing(goal)
+    setContributionAmount('')
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Excluir esta meta?')) {
-      await removeGoal(id)
+  const handleContributionSave = async () => {
+    if (!contributing) return
+
+    const value = Number(String(contributionAmount).replace(',', '.'))
+    if (!Number.isFinite(value) || value <= 0) return
+
+    setContributionLoading(true)
+    try {
+      await editGoal(contributing.id, {
+        currentAmount: (Number(contributing.currentAmount) || 0) + value,
+      })
+      setContributing(null)
+      setContributionAmount('')
+    } finally {
+      setContributionLoading(false)
+    }
+  }
+
+  const handleDelete = (goal) => {
+    setDeleteCandidate(goal)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteCandidate) return
+
+    setDeleteLoading(true)
+    try {
+      await removeGoal(deleteCandidate.id)
+      setDeleteCandidate(null)
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -264,7 +328,10 @@ function GoalsContent() {
   const hasGoals = goals.length > 0
 
   return (
-    <div className="operational-page goals-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6">
+    <div
+      data-tour="goals"
+      className="operational-page goals-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6"
+    >
       <div className="operational-page__header flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
@@ -273,24 +340,68 @@ function GoalsContent() {
           </div>
           <p className="text-sm text-[--text-tertiary]">{goals.length} metas definidas</p>
         </div>
-        <Button variant="primary" size="sm" icon={<Plus />} onClick={() => handleOpen()}>
+        <Button
+          variant="primary"
+          size="sm"
+          icon={<span aria-hidden="true">+</span>}
+          onClick={() => handleOpen()}
+        >
           Nova meta
         </Button>
       </div>
 
+      {hasGoals && (
+        <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            {
+              label: 'Metas ativas',
+              value: String(overview.active),
+              helper: `${overview.completed} concluída${overview.completed === 1 ? '' : 's'}`,
+            },
+            {
+              label: 'Já acumulado',
+              value: formatCurrency(overview.totalCurrent),
+              helper: 'Somando todas as metas',
+            },
+            {
+              label: 'Falta alcançar',
+              value: formatCurrency(overview.totalRemaining),
+              helper: 'Valor restante das metas ativas',
+            },
+            {
+              label: 'Prazos vencidos',
+              value: String(overview.overdue),
+              helper: overview.overdue > 0 ? 'Metas que pedem revisão' : 'Nenhuma meta atrasada',
+            },
+          ].map((item) => (
+            <Card key={item.label} className="py-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                {item.label}
+              </p>
+              <p className="mt-1 text-lg font-black text-[--text-primary]">{item.value}</p>
+              <p className="mt-1 text-[10px] text-[--text-tertiary]">{item.helper}</p>
+            </Card>
+          ))}
+        </div>
+      )}
+
       {!hasGoals ? (
         <EmptyState
-          icon={<Target />}
+          icon="◎"
           title="Nenhuma meta definida"
           description="Crie uma meta financeira, como uma viagem, um carro ou a reserva de emergência."
           action={
-            <Button variant="primary" icon={<Plus />} onClick={() => handleOpen()}>
+            <Button
+              variant="primary"
+              icon={<span aria-hidden="true">+</span>}
+              onClick={() => handleOpen()}
+            >
               Criar primeira meta
             </Button>
           }
         />
       ) : (
-        <div className="operational-card-grid grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="operational-card-grid goals-card-grid grid grid-cols-1 gap-4 md:grid-cols-2">
           <AnimatePresence>
             {sortedGoals.map((goal) => (
               <GoalCard
@@ -379,6 +490,105 @@ function GoalsContent() {
             {editing ? 'Salvar alterações' : 'Criar meta'}
           </Button>
         </div>
+      </Modal>
+
+      <Modal
+        isOpen={Boolean(contributing)}
+        onClose={() => {
+          setContributing(null)
+          setContributionAmount('')
+        }}
+        title={contributing ? `Aporte em ${contributing.name}` : 'Registrar aporte'}
+      >
+        {contributing && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-4">
+              <p className="text-xs text-[--text-tertiary]">Situação atual</p>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                    Acumulado
+                  </p>
+                  <p className="mt-1 text-sm font-black text-[--text-primary]">
+                    {formatCurrency(buildGoalPlan(contributing).current)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                    Falta
+                  </p>
+                  <p className="mt-1 text-sm font-black text-[--text-primary]">
+                    {formatCurrency(buildGoalPlan(contributing).remaining)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Input
+              label="Valor do aporte (R$)"
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="Ex: 500,00"
+              value={contributionAmount}
+              onChange={(event) => setContributionAmount(event.target.value)}
+            />
+
+            {Number(contributionAmount) > 0 && (
+              <div className="rounded-xl border border-[--brand-200] bg-[--brand-50] p-3 text-xs text-[--brand-700]">
+                Novo acumulado:{' '}
+                <strong>
+                  {formatCurrency(
+                    (Number(contributing.currentAmount) || 0) + Number(contributionAmount),
+                  )}
+                </strong>
+              </div>
+            )}
+
+            <Button
+              variant="primary"
+              fullWidth
+              onClick={handleContributionSave}
+              loading={contributionLoading}
+            >
+              Confirmar aporte
+            </Button>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={Boolean(deleteCandidate)}
+        onClose={() => setDeleteCandidate(null)}
+        title="Excluir meta"
+      >
+        {deleteCandidate && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-[--danger-border] bg-[--danger-bg] p-4">
+              <p className="text-sm font-bold text-[--danger-text]">
+                Excluir “{deleteCandidate.name}”?
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-[--danger-text]">
+                O progresso desta meta será removido. Nenhuma transação financeira será alterada.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button variant="secondary" fullWidth onClick={() => setDeleteCandidate(null)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                fullWidth
+                className="bg-[--danger-icon] hover:opacity-90"
+                onClick={confirmDelete}
+                loading={deleteLoading}
+              >
+                Excluir meta
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   )

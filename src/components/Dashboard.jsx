@@ -25,29 +25,45 @@ import {
   ChevronLeft,
   ChevronRight,
   PiggyBank,
+  Clock3,
+  CheckCircle2,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { useApp } from '../contexts/AppContext'
+import {
+  useBudgets,
+  useCategories,
+  useCreditCards,
+  useGoals,
+  useInvoiceEvents,
+  useTransactions,
+} from '../contexts/AppContext'
 import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
 import PaymentControlCard from './PaymentControlCard'
+import FinancialHealthScore from './FinancialHealthScore'
 import { formatCurrency, formatRelativeDate, getMonthlyData } from '../utils'
-import { getCalendarMonthBounds, getRecentDashboardTransactions } from '../domain/dashboard'
+import {
+  buildMonthAttentionSignals,
+  getCalendarMonthBounds,
+  getRecentDashboardTransactions,
+} from '../domain/dashboard'
 import { getTransactionDateContext } from '../domain/transactionDates'
 import { buildPaymentControlOverview } from '../domain/paymentControl'
+import { buildFinancialHealth } from '../domain/financialHealth'
+import { budgetMonthKey, buildMonthlyBudgetOverview } from '../domain/budgetPeriods'
 import { format, subMonths, addMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 const PIE_COLORS = [
-  '#6366f1',
-  '#10b981',
-  '#f59e0b',
-  '#ef4444',
-  '#8b5cf6',
-  '#ec4899',
-  '#14b8a6',
-  '#f97316',
+  '#c49d6b',
+  '#4e8066',
+  '#a7804e',
+  '#b64c43',
+  '#786c8d',
+  '#9a6671',
+  '#5f8587',
+  '#b87645',
 ]
 
 const ChartTooltip = ({ active, payload, label }) => {
@@ -74,7 +90,7 @@ const TxItem = ({ tx, categories }) => {
     <div className="flex items-center gap-3 py-3 border-b border-[--border-subtle] last:border-0">
       <div
         className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
-        style={{ background: tx.isSavings ? '#6366f115' : (cat?.color || '#6366f1') + '18' }}
+        style={{ background: tx.isSavings ? '#c49d6b15' : (cat?.color || '#c49d6b') + '18' }}
       >
         {tx.isSavings ? '🐷' : cat?.icon || (isIncome ? '💰' : '💸')}
       </div>
@@ -104,63 +120,88 @@ const TxItem = ({ tx, categories }) => {
   )
 }
 
-function calcHealthScore({ balance, income, budgetsOk, goalsActive, savingRate }) {
-  let s = 0
-  if (balance >= 0) s += 30
-  if (savingRate >= 20) s += 25
-  else if (savingRate >= 10) s += 12
-  else if (savingRate >= 0) s += 5
-  if (budgetsOk) s += 20
-  if (goalsActive) s += 15
-  if (income > 0) s += 10
-  return Math.min(100, s)
-}
+function MonthAttentionCard({ items }) {
+  const toneClasses = {
+    danger: {
+      icon: 'bg-[--danger-bg] text-[--danger-icon] border-[--danger-border]',
+      link: 'hover:border-[--danger-border]',
+    },
+    warning: {
+      icon: 'bg-[--warning-bg] text-[--warning-icon] border-[--warning-border]',
+      link: 'hover:border-[--warning-border]',
+    },
+    brand: {
+      icon: 'bg-[--brand-50] text-[--brand-700] border-[--brand-200]',
+      link: 'hover:border-[--brand-300]',
+    },
+  }
 
-function HealthScore({ score }) {
-  const color = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444'
-  const label = score >= 75 ? 'Ótima' : score >= 50 ? 'Regular' : 'Atenção'
-  const emoji = score >= 75 ? '💚' : score >= 50 ? '💛' : '❤️'
-  const r = 28,
-    circ = 2 * Math.PI * r
   return (
-    <div className="dashboard-health-score flex min-w-0 items-center gap-2 sm:gap-3">
-      <div className="dashboard-health-ring relative h-16 w-16 flex-shrink-0">
-        <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
-          <circle cx="32" cy="32" r={r} fill="none" stroke="var(--bg-hover)" strokeWidth="6" />
-          <circle
-            cx="32"
-            cy="32"
-            r={r}
-            fill="none"
-            stroke={color}
-            strokeWidth="6"
-            strokeDasharray={`${(score / 100) * circ} ${circ}`}
-            strokeLinecap="round"
-            style={{ transition: 'stroke-dasharray 0.8s ease' }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xs font-black" style={{ color }}>
-            {score}
-          </span>
-        </div>
-      </div>
-      <div className="dashboard-health-copy min-w-0">
-        <div className="flex items-center gap-1">
-          <p className="text-sm font-bold text-[--text-primary]">
-            Saúde {label} {emoji}
+    <Card variant="elevated" className="dashboard-attention-card overflow-hidden">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <div className="flex items-center gap-2">
+            <Zap size={15} className="text-[--brand-600]" />
+            <h2 className="text-sm font-black text-[--text-primary]">Central do mês</h2>
+          </div>
+          <p className="mt-1 text-xs text-[--text-tertiary]">
+            O que merece atenção agora, sem precisar procurar em várias telas.
           </p>
-          <InfoTooltip text="Calculado com saldo, poupança, orçamentos e metas. Meta: acima de 75." />
         </div>
-        <p className="text-xs text-[--text-tertiary] mt-0.5">
-          {score >= 75
-            ? 'Finanças equilibradas.'
-            : score >= 50
-              ? 'Há pontos a melhorar.'
-              : 'Revise seus gastos.'}
-        </p>
+        {items.length > 0 && (
+          <span className="rounded-full border border-[--border-default] bg-[--bg-subtle] px-2.5 py-1 text-[10px] font-bold text-[--text-secondary]">
+            {items.length} {items.length === 1 ? 'ponto' : 'pontos'}
+          </span>
+        )}
       </div>
-    </div>
+
+      {items.length === 0 ? (
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-[--success-border] bg-[--success-bg] p-3">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[--success-border] text-[--success-icon]">
+            <CheckCircle2 size={17} />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-[--success-text]">Nada crítico por agora</p>
+            <p className="mt-0.5 text-[10px] leading-relaxed text-[--success-text]">
+              Pagamentos e orçamentos não apresentam alertas relevantes neste mês.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
+          {items.map(({ id, title, detail, to, tone, icon: Icon }) => {
+            const classes = toneClasses[tone] || toneClasses.brand
+
+            return (
+              <Link
+                key={id}
+                to={to}
+                className={`group flex min-w-0 items-start gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 transition-colors hover:bg-[--bg-hover] ${classes.link}`}
+              >
+                <div
+                  className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border ${classes.icon}`}
+                >
+                  <Icon size={16} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-black text-[--text-primary]">{title}</p>
+                  <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
+                    {detail}
+                  </p>
+                  <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand]">
+                    Ver detalhes
+                    <ChevronRight
+                      size={11}
+                      className="transition-transform group-hover:translate-x-0.5"
+                    />
+                  </span>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </Card>
   )
 }
 
@@ -168,16 +209,16 @@ export default function Dashboard() {
   const { user } = useAuth()
   const {
     transactions,
-    categories,
-    goals,
-    budgets,
-    creditCards,
-    invoiceEvents,
-    loading,
+    loading: transactionsLoading,
     getSummary,
     getCategoryTotals,
     getSpendingForecast,
-  } = useApp()
+  } = useTransactions()
+  const { budgets } = useBudgets()
+  const { categories } = useCategories()
+  const { creditCards } = useCreditCards()
+  const { goals } = useGoals()
+  const { invoiceEvents } = useInvoiceEvents()
 
   const [viewDate, setViewDate] = useState(new Date())
   const year = viewDate.getFullYear()
@@ -193,8 +234,6 @@ export default function Dashboard() {
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
   const monthBounds = useMemo(() => getCalendarMonthBounds(viewDate), [year, month])
-  const { start: monthStart, end: monthEnd } = monthBounds
-
   const paymentSummary = useMemo(
     () =>
       buildPaymentControlOverview({
@@ -216,49 +255,128 @@ export default function Dashboard() {
     [transactions],
   )
 
-  const budgetAlerts = useMemo(
+  const budgetOverview = useMemo(
     () =>
-      budgets
-        .map((b) => {
-          const cat = categories.find((c) => c.id === b.categoryId)
-          const spent = transactions
-            .filter(
-              (t) =>
-                t.type === 'expense' &&
-                t.categoryId === b.categoryId &&
-                t.date >= monthStart &&
-                t.date <= monthEnd,
-            )
-            .reduce((s, t) => s + t.amount, 0)
-          return { budget: b, cat, spent, pct: (spent / b.amount) * 100 }
-        })
-        .filter((b) => b.pct >= 70)
-        .sort((a, b) => b.pct - a.pct)
-        .slice(0, 3),
-    [budgets, transactions, categories, monthStart, monthEnd],
+      buildMonthlyBudgetOverview({
+        budgets,
+        transactions,
+        monthKey: budgetMonthKey(viewDate),
+        currentMonthKey: budgetMonthKey(),
+      }),
+    [budgets, transactions, viewDate],
   )
 
-  const healthScore = useMemo(() => {
+  const budgetAlerts = useMemo(
+    () =>
+      budgetOverview.items
+        .map((item) => ({
+          budget: item,
+          cat: categories.find((category) => category.id === item.categoryId),
+          spent: item.spent,
+          pct: item.percent,
+        }))
+        .filter((item) => item.pct >= 70)
+        .sort((first, second) => second.pct - first.pct)
+        .slice(0, 3),
+    [budgetOverview, categories],
+  )
+
+  const healthReport = useMemo(() => {
     const savingRate =
       currentSummary.income > 0 ? (currentSummary.savings / currentSummary.income) * 100 : 0
-    return calcHealthScore({
+    const hasBudgets = budgetOverview.items.length > 0
+    const budgetsOk = hasBudgets && budgetOverview.items.every((budget) => budget.percent <= 100)
+
+    const report = buildFinancialHealth({
       balance: currentSummary.balance,
       income: currentSummary.income,
-      budgetsOk: budgets.length > 0 && budgetAlerts.filter((b) => b.pct > 100).length === 0,
-      goalsActive: goals.length > 0,
       savingRate,
+      hasBudgets,
+      budgetsOk,
+      goalsActive: goals.length > 0,
     })
-  }, [currentSummary, budgets, budgetAlerts, goals])
+
+    if (report.nextAction?.to !== '/budgets') return report
+
+    return {
+      ...report,
+      nextAction: {
+        ...report.nextAction,
+        to: `/budgets?month=${budgetOverview.monthKey}`,
+      },
+    }
+  }, [currentSummary, budgetOverview, goals])
+
+  const monthAttention = useMemo(
+    () =>
+      buildMonthAttentionSignals({
+        paymentSummary,
+        budgetAlerts,
+        balance: currentSummary.balance,
+      }).map((signal) => {
+        if (signal.type === 'overdue') {
+          return {
+            id: 'overdue',
+            title: `${signal.count} ${
+              signal.count === 1 ? 'pagamento atrasado' : 'pagamentos atrasados'
+            }`,
+            detail: `${formatCurrency(signal.amount)} aguardando regularização.`,
+            to: '/transactions',
+            tone: 'danger',
+            icon: AlertTriangle,
+          }
+        }
+
+        if (signal.type === 'due-soon') {
+          return {
+            id: 'due-soon',
+            title: `${signal.count} ${
+              signal.count === 1 ? 'vencimento próximo' : 'vencimentos próximos'
+            }`,
+            detail: `${formatCurrency(signal.amount)} vencem nos próximos 7 dias.`,
+            to: '/transactions',
+            tone: 'warning',
+            icon: Clock3,
+          }
+        }
+
+        if (signal.type === 'budget') {
+          return {
+            id: `budget-${signal.budgetId}`,
+            title: `${signal.categoryName} em atenção`,
+            detail: signal.isOver
+              ? `${formatCurrency(signal.excess)} acima do limite mensal.`
+              : `${signal.pct.toFixed(0)}% do limite mensal já foi utilizado.`,
+            to: `/budgets?month=${budgetOverview.monthKey}`,
+            tone: signal.pct >= 100 ? 'danger' : 'warning',
+            icon: Target,
+          }
+        }
+
+        return {
+          id: 'negative-balance',
+          title: 'Saldo do mês negativo',
+          detail: `${formatCurrency(signal.amount)} acima das receitas do período.`,
+          to: '/transactions',
+          tone: 'danger',
+          icon: Wallet,
+        }
+      }),
+    [paymentSummary, budgetAlerts, currentSummary.balance, budgetOverview.monthKey],
+  )
 
   const greeting = () => {
     const h = new Date().getHours()
     return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'
   }
-  const isLoading = loading.transactions
+  const isLoading = transactionsLoading
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
-    <div className="dashboard-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-24 sm:space-y-5 lg:pb-6">
+    <div
+      data-tour="dashboard"
+      className="dashboard-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-24 sm:space-y-5 lg:pb-6"
+    >
       {/* Header — mês com destaque, saudação secundária */}
       <motion.div
         className="dashboard-premium__toolbar flex flex-wrap items-start justify-between gap-3"
@@ -313,7 +431,7 @@ export default function Dashboard() {
 
       {/* Hero — saldo do mês como principal, sem duplicar nos cards abaixo */}
       <motion.div
-        className="aurora-balance-hero relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[--brand-700] via-[--brand-600] to-[--brand-500] p-3 text-white sm:p-6"
+        className="aurora-balance-hero aurora-card--hero relative overflow-hidden rounded-[28px] p-3 text-white sm:p-6"
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.05 }}
@@ -363,6 +481,10 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
+      <motion.div {...fade} transition={{ delay: 0.075 }}>
+        <MonthAttentionCard items={monthAttention} />
+      </motion.div>
+
       {/* Controle mensal sem alterar os cálculos financeiros existentes */}
       <motion.div {...fade} transition={{ delay: 0.08 }}>
         <PaymentControlCard summary={paymentSummary} loading={isLoading} />
@@ -380,7 +502,7 @@ export default function Dashboard() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="mb-1 flex items-center gap-1.5">
-                  <Zap size={14} className="text-[#f59e0b]" />
+                  <Zap size={14} className="text-[--brand-600]" />
                   <p className="text-xs font-semibold text-[--text-tertiary]">Previsão de gastos</p>
                   <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
                 </div>
@@ -395,7 +517,7 @@ export default function Dashboard() {
                   Referência média para apoiar o planejamento do mês.
                 </p>
               </div>
-              <div className="rounded-xl bg-amber-100 p-2 text-amber-700">
+              <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
                 <Zap size={16} />
               </div>
             </div>
@@ -406,10 +528,10 @@ export default function Dashboard() {
               <div className="flex items-center gap-1.5">
                 <Heart size={14} className="text-[--danger-icon]" />
                 <p className="text-xs font-semibold text-[--text-tertiary]">Saúde financeira</p>
-                <InfoTooltip text="Indicador sintético baseado no equilíbrio entre receitas, despesas, orçamento e poupança registrados." />
+                <InfoTooltip text="Pontuação de 0 a 100 baseada em saldo, poupança, orçamentos, metas e receitas. Abra o cálculo para ver a contribuição de cada fator." />
               </div>
             </div>
-            <HealthScore score={healthScore} />
+            <FinancialHealthScore report={healthReport} />
           </Card>
         </div>
 

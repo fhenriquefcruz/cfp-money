@@ -65,9 +65,7 @@ const ensureUserDocument = async (user) => {
 
   if (snapshot.exists()) return
 
-  const authCreationDate = user.metadata?.creationTime
-    ? new Date(user.metadata.creationTime)
-    : null
+  const authCreationDate = user.metadata?.creationTime ? new Date(user.metadata.creationTime) : null
 
   const createdAt =
     authCreationDate && !Number.isNaN(authCreationDate.getTime())
@@ -371,36 +369,37 @@ export const getBudgets = async (uid) => {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
 }
 
-export const setBudget = async (uid, categoryId, amount) => {
-  const snap = await getDocs(query(userCol(uid, 'budgets'), where('categoryId', '==', categoryId)))
-  if (!snap.empty) {
-    await updateDoc(snap.docs[0].ref, { categoryId, amount })
-  } else {
-    await addDoc(userCol(uid, 'budgets'), { categoryId, amount })
+export const setBudget = async (uid, categoryId, amount, monthKey) => {
+  if (!/^\d{4}-\d{2}$/.test(monthKey || '')) {
+    throw new Error('Competência mensal inválida.')
   }
-}
 
-export const deleteBudget = async (uid, categoryId) => {
-  const snap = await getDocs(query(userCol(uid, 'budgets'), where('categoryId', '==', categoryId)))
-  if (!snap.empty) await deleteDoc(snap.docs[0].ref)
-}
-
-// ── ADMIN ──
-// Listener em tempo real para todos os usuários (apenas admin)
-export const onAllUsersChange = (callback, onError) => {
-  const q = query(collection(db, 'users'), orderBy('email'))
-  const unsubscribe = onSnapshot(
-    q,
-    (snapshot) => {
-      const users = snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }))
-      callback(users)
+  const budgetId = `${monthKey}__${categoryId}`
+  await setDoc(
+    userDoc(uid, 'budgets', budgetId),
+    {
+      categoryId,
+      amount,
+      monthKey,
+      updatedAt: serverTimestamp(),
     },
-    (error) => {
-      console.error('[Meu Real] Erro no listener de usuários:', error)
-      if (onError) onError(error)
-    },
+    { merge: true },
   )
-  return unsubscribe
+
+  return budgetId
+}
+
+export const deleteBudget = async (uid, categoryId, monthKey, budgetId = '') => {
+  if (budgetId) {
+    await deleteDoc(userDoc(uid, 'budgets', budgetId))
+    return
+  }
+
+  if (!/^\d{4}-\d{2}$/.test(monthKey || '')) {
+    throw new Error('Competência mensal inválida.')
+  }
+
+  await deleteDoc(userDoc(uid, 'budgets', `${monthKey}__${categoryId}`))
 }
 
 // ══════════════════════════════════════════════════════════════

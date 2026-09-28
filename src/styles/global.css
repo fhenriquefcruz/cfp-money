@@ -47,140 +47,137 @@
 ═══════════════════════════════════════ */
 :root[data-theme='light'] {
   /* Backgrounds */
-  --bg-app: #f8fafc;
-  --bg-surface: #ffffff;
+  --bg-app: #f3f2ee;
+  --bg-surface: #fbfaf7;
   --bg-elevated: #ffffff;
-  --bg-overlay: rgba(255, 255, 255, 0.9);
-  --bg-sidebar: #ffffff;
-  --bg-hover: #f1f5f9;
-  --bg-active: #e8f0fe;
-  --bg-subtle: #f8fafc;
+  --bg-overlay: rgba(251, 250, 247, 0.94);
+  --bg-sidebar: #eeece6;
+  --bg-hover: #e8e5de;
+  --bg-active: #dfd8ca;
+  --bg-subtle: #efede7;
 
   /* Text */
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #5b6b82;
+  --text-primary: #171918;
+  --text-secondary: #555a56;
+  --text-tertiary: #626660;
   --text-inverse: #ffffff;
-  --text-brand: #4f46e5;
+  --text-brand: #7d5b37;
 
   /* Borders */
-  --border-default: #e2e8f0;
-  --border-subtle: #f1f5f9;
-  --border-strong: #cbd5e1;
+  --border-default: #d9d6cf;
+  --border-subtle: #e7e4dd;
+  --border-strong: #bdb9af;
 
-  /* Brand Colors */
-  --brand-50: #eef2ff;
-  --brand-100: #e0e7ff;
-  --brand-200: #c7d2fe;
-  --brand-300: #a5b4fc;
-  --brand-400: #818cf8;
-  --brand-500: #6366f1;
-  --brand-600: #4f46e5;
-  --brand-700: #4338ca;
-  --brand-800: #3730a3;
-  --brand-900: #312e81;
+  /* Brand Colors — mineral / sand / bronze */
+  --brand-50: #fbf7f0;
+  --brand-100: #f4eadb;
+  --brand-200: #e8d4b8;
+  --brand-300: #d9bb91;
+  --brand-400: #cda672;
+  --brand-500: #c49d6b;
+  --brand-600: #855e36;
+  --brand-700: #7d5b37;
+  --brand-800: #5d422a;
+  --brand-900: #3d2b1d;
 
   /* Status Colors */
-  --success-bg: #f0fdf4;
-  --success-text: #166534;
-  --success-border: #bbf7d0;
-  --success-icon: #15803d;
+  --success-bg: #edf7f0;
+  --success-text: #245b3b;
+  --success-border: #bddcc8;
+  --success-icon: #2f7a4d;
 
-  --warning-bg: #fffbeb;
-  --warning-text: #92400e;
-  --warning-border: #fde68a;
-  --warning-icon: #d97706;
+  --warning-bg: #fff8e8;
+  --warning-text: #7a5421;
+  --warning-border: #ead4a9;
+  --warning-icon: #ad792b;
 
-  --danger-bg: #fef2f2;
-  --danger-text: #991b1b;
-  --danger-border: #fecaca;
-  --danger-icon: #dc2626;
+  --danger-bg: #fbefed;
+  --danger-text: #7f3832;
+  --danger-border: #e6c0bb;
+  --danger-icon: #b0473f;
 
-  --info-bg: #eff6ff;
-  --info-text: #1e40af;
-  --info-border: #bfdbfe;
-  --info-icon: #2563eb;
+  --info-bg: #eef3f4;
+  --info-text: #38565e;
+  --info-border: #c5d4d7;
+  --info-icon: #527985;
 
   /* Category Colors */
-  --cat-food: #f97316;
-  --cat-transport: #3b82f6;
-  --cat-leisure: #8b5cf6;
-  --cat-health: #10b981;
-  --cat-education: #06b6d4;
-  --cat-housing: #f59e0b;
-  --cat-investments: #6366f1;
-  --cat-other: #6b7280;
+  --cat-food: #b87645;
+  --cat-transport: #587b8b;
+  --cat-leisure: #786c8d;
+  --cat-health: #4e8066;
+  --cat-education: #5f8587;
+  --cat-housing: #a7804e;
+  --cat-investments: #8f6c43;
+  --cat-other: #6f7470;
 
   /* Chart Colors */
-  --chart-1: #6366f1;
-  --chart-2: #10b981;
-  --chart-3: #f97316;
-  --chart-4: #3b82f6;
-  --chart-5: #8b5cf6;
-  --chart-6: #ec4899;
+  --chart-1: #c49d6b;
+  --chart-2: #4e8066;
+  --chart-3: #b87645;
+  --chart-4: #587b8b;
+  --chart-5: #786c8d;
+  --chart-6: #9a6671;
 
   /* Sidebar width */
   --sidebar-width: 260px;
   --topbar-height: 64px;
 }
 
-/* ═══════════════════════════════════════
-   DARK MODE TOKENS
-═══════════════════════════════════════ */
 :root[data-theme='dark'] {
-  --bg-app: #0a0f1e;
-  --bg-surface: #111827;
-  --bg-elevated: #1a2236;
-  --bg-overlay: rgba(17, 24, 39, 0.95);
-  --bg-sidebar: #0d1424;
-  --bg-hover: #1e2a3f;
-  --bg-active: #1e2a4a;
-  --bg-subtle: #131d2e;
+  --bg-app: #050607;
+  --bg-surface: #0d0f10;
+  --bg-elevated: #151819;
+  --bg-overlay: rgba(13, 15, 16, 0.96);
+  --bg-sidebar: #080a0a;
+  --bg-hover: #181c1d;
+  --bg-active: #24211d;
+  --bg-subtle: #101313;
 
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-tertiary: #475569;
-  --text-inverse: #0f172a;
-  --text-brand: #818cf8;
+  --text-primary: #e0e4e4;
+  --text-secondary: #c7c3b2;
+  --text-tertiary: #8b8b80;
+  --text-inverse: #050607;
+  --text-brand: #d9bb91;
 
-  --border-default: #1e293b;
-  --border-subtle: #0f172a;
-  --border-strong: #334155;
+  --border-default: #292d2e;
+  --border-subtle: #171a1b;
+  --border-strong: #3c4346;
 
-  --brand-50: #1e1b4b;
-  --brand-100: #312e81;
-  --brand-200: #3730a3;
-  --brand-300: #4338ca;
-  --brand-400: #4f46e5;
-  --brand-500: #6366f1;
-  --brand-600: #818cf8;
-  --brand-700: #a5b4fc;
-  --brand-800: #c7d2fe;
-  --brand-900: #e0e7ff;
+  --brand-50: #1d1813;
+  --brand-100: #292118;
+  --brand-200: #3c2f22;
+  --brand-300: #5d442d;
+  --brand-400: #8b673f;
+  --brand-500: #b78d5b;
+  --brand-600: #c49d6b;
+  --brand-700: #d9bb91;
+  --brand-800: #e8d4b8;
+  --brand-900: #f4eadb;
 
-  --success-bg: #052e16;
-  --success-text: #86efac;
-  --success-border: #166534;
-  --success-icon: #4ade80;
+  --success-bg: #0d1c14;
+  --success-text: #93c5a4;
+  --success-border: #294e36;
+  --success-icon: #6ca982;
 
-  --warning-bg: #1c1108;
-  --warning-text: #fde68a;
-  --warning-border: #92400e;
-  --warning-icon: #fbbf24;
+  --warning-bg: #21180d;
+  --warning-text: #e5c58e;
+  --warning-border: #60451f;
+  --warning-icon: #c89443;
 
-  --danger-bg: #1c0505;
-  --danger-text: #fca5a5;
-  --danger-border: #991b1b;
-  --danger-icon: #f87171;
+  --danger-bg: #21100f;
+  --danger-text: #e0a19b;
+  --danger-border: #67322e;
+  --danger-icon: #cf6b62;
 
-  --info-bg: #082044;
-  --info-text: #93c5fd;
-  --info-border: #1e40af;
-  --info-icon: #60a5fa;
+  --info-bg: #101a1d;
+  --info-text: #a5c1c8;
+  --info-border: #38535a;
+  --info-icon: #77a1aa;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.42), 0 1px 2px rgba(0, 0, 0, 0.32);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.34), 0 2px 7px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 22px 58px rgba(0, 0, 0, 0.44), 0 6px 18px rgba(0, 0, 0, 0.34);
 
   --sidebar-width: 260px;
   --topbar-height: 64px;

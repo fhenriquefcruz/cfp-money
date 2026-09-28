@@ -1,35 +1,36 @@
 /* ═══════════════════════════════════════════════════════════════
-   MEU REAL — AURORA FINANCIAL INTERFACE
-   Fundação visual global da Fase 20
+   MEU REAL — PREMIUM FINANCIAL INTERFACE
+   Linguagem visual: graphite + mineral + bronze
 ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  --aurora-indigo: #6366f1;
-  --aurora-cyan: #22d3ee;
-  --aurora-violet: #8b5cf6;
-  --aurora-emerald: #10b981;
+  --aurora-graphite: #3c4346;
+  --aurora-sand: #c7c3b2;
+  --aurora-gold: #c49d6b;
+  --aurora-mist: #e0e4e4;
+  --aurora-olive: #7c7d71;
 
-  --aurora-border: color-mix(in srgb, var(--border-default) 76%, var(--brand-300) 24%);
-
-  --aurora-surface: color-mix(in srgb, var(--bg-surface) 92%, transparent);
-
-  --aurora-surface-elevated: color-mix(in srgb, var(--bg-elevated) 94%, transparent);
+  --aurora-border: color-mix(in srgb, var(--border-default) 86%, var(--brand-400) 14%);
+  --aurora-surface: color-mix(in srgb, var(--bg-surface) 97%, transparent);
+  --aurora-surface-elevated: color-mix(in srgb, var(--bg-elevated) 98%, transparent);
 
   --aurora-shadow:
-    0 20px 60px rgba(15, 23, 42, 0.08), 0 4px 18px rgba(79, 70, 229, 0.055),
-    inset 0 1px rgba(255, 255, 255, 0.48);
+    0 18px 48px rgba(23, 25, 24, 0.07), 0 3px 10px rgba(93, 66, 42, 0.045),
+    inset 0 1px rgba(255, 255, 255, 0.58);
+
+  --aurora-shadow-soft: 0 12px 32px rgba(23, 25, 24, 0.055), 0 2px 8px rgba(93, 66, 42, 0.035);
 }
 
 :root[data-theme='dark'] {
-  --aurora-border: color-mix(in srgb, var(--border-default) 74%, var(--brand-400) 26%);
-
-  --aurora-surface: color-mix(in srgb, var(--bg-surface) 88%, transparent);
-
-  --aurora-surface-elevated: color-mix(in srgb, var(--bg-elevated) 90%, transparent);
+  --aurora-border: color-mix(in srgb, var(--border-default) 82%, var(--brand-500) 18%);
+  --aurora-surface: color-mix(in srgb, var(--bg-surface) 95%, transparent);
+  --aurora-surface-elevated: color-mix(in srgb, var(--bg-elevated) 96%, transparent);
 
   --aurora-shadow:
-    0 24px 72px rgba(0, 0, 0, 0.26), 0 6px 24px rgba(99, 102, 241, 0.08),
-    inset 0 1px rgba(255, 255, 255, 0.035);
+    0 24px 66px rgba(0, 0, 0, 0.34), 0 7px 24px rgba(196, 157, 107, 0.035),
+    inset 0 1px rgba(255, 255, 255, 0.025);
+
+  --aurora-shadow-soft: 0 16px 42px rgba(0, 0, 0, 0.24), 0 4px 14px rgba(196, 157, 107, 0.025);
 }
 
 /* ── Estrutura global ─────────────────────────────────────── */
@@ -38,16 +39,14 @@
   position: relative;
   isolation: isolate;
   background:
-    radial-gradient(circle at 86% -8%, rgba(99, 102, 241, 0.13), transparent 31%),
-    radial-gradient(circle at 3% 88%, rgba(34, 211, 238, 0.075), transparent 30%),
-    radial-gradient(circle at 62% 102%, rgba(139, 92, 246, 0.07), transparent 32%), var(--bg-app);
+    radial-gradient(circle at 88% -10%, rgba(196, 157, 107, 0.08), transparent 32%),
+    radial-gradient(circle at 2% 92%, rgba(124, 125, 113, 0.04), transparent 31%), var(--bg-app);
 }
 
 :root[data-theme='dark'] .aurora-app-shell {
   background:
-    radial-gradient(circle at 86% -8%, rgba(99, 102, 241, 0.17), transparent 32%),
-    radial-gradient(circle at 3% 88%, rgba(34, 211, 238, 0.075), transparent 31%),
-    radial-gradient(circle at 62% 102%, rgba(139, 92, 246, 0.09), transparent 34%), var(--bg-app);
+    radial-gradient(circle at 88% -10%, rgba(196, 157, 107, 0.105), transparent 32%),
+    radial-gradient(circle at 2% 92%, rgba(124, 125, 113, 0.045), transparent 31%), var(--bg-app);
 }
 
 .aurora-app-shell::before {
@@ -56,16 +55,16 @@
   z-index: 0;
   content: '';
   pointer-events: none;
-  opacity: 0.23;
+  opacity: 0.12;
   background-image:
-    linear-gradient(rgba(99, 102, 241, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.055) 1px, transparent 1px);
-  background-size: 52px 52px;
-  mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.55) 52%, transparent 96%);
+    linear-gradient(rgba(60, 67, 70, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(60, 67, 70, 0.06) 1px, transparent 1px);
+  background-size: 58px 58px;
+  mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.42) 48%, transparent 92%);
 }
 
 :root[data-theme='dark'] .aurora-app-shell::before {
-  opacity: 0.32;
+  opacity: 0.17;
 }
 
 .aurora-app-shell > * {
@@ -83,18 +82,14 @@
 .aurora-card {
   position: relative;
   border: 1px solid var(--aurora-border);
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--aurora-surface) 98%, white 2%),
-    var(--aurora-surface)
-  );
+  background: var(--aurora-surface);
   box-shadow: var(--aurora-shadow);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(12px);
   transition:
-    transform 220ms var(--ease-out),
-    border-color 220ms var(--ease-out),
-    box-shadow 220ms var(--ease-out),
-    background-color 220ms var(--ease-out);
+    transform 180ms var(--ease-out),
+    border-color 180ms var(--ease-out),
+    box-shadow 180ms var(--ease-out),
+    background-color 180ms var(--ease-out);
 }
 
 .aurora-card::before {
@@ -105,11 +100,11 @@
   content: '';
   pointer-events: none;
   background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.07),
-    transparent 26%,
-    transparent 76%,
-    rgba(99, 102, 241, 0.025)
+    145deg,
+    rgba(255, 255, 255, 0.045),
+    transparent 24%,
+    transparent 80%,
+    rgba(196, 157, 107, 0.018)
   );
 }
 
@@ -121,108 +116,108 @@
 .aurora-card--elevated {
   background: var(--aurora-surface-elevated);
   box-shadow:
-    0 26px 72px rgba(15, 23, 42, 0.11),
-    0 8px 28px rgba(79, 70, 229, 0.07),
-    inset 0 1px rgba(255, 255, 255, 0.5);
+    0 22px 58px rgba(23, 25, 24, 0.095),
+    0 5px 18px rgba(93, 66, 42, 0.05),
+    inset 0 1px rgba(255, 255, 255, 0.6);
 }
 
 :root[data-theme='dark'] .aurora-card--elevated {
   box-shadow:
-    0 28px 80px rgba(0, 0, 0, 0.32),
-    0 8px 30px rgba(99, 102, 241, 0.1),
-    inset 0 1px rgba(255, 255, 255, 0.04);
+    0 28px 74px rgba(0, 0, 0, 0.38),
+    0 7px 24px rgba(196, 157, 107, 0.035),
+    inset 0 1px rgba(255, 255, 255, 0.03);
 }
 
 .aurora-card--glass {
   background:
-    linear-gradient(145deg, rgba(99, 102, 241, 0.06), rgba(34, 211, 238, 0.025)),
-    var(--aurora-surface);
+    linear-gradient(145deg, rgba(196, 157, 107, 0.035), transparent 48%), var(--aurora-surface);
 }
 
 .aurora-card--hero {
-  border-color: rgba(165, 180, 252, 0.22);
+  border-color: rgba(196, 157, 107, 0.2);
   background:
-    radial-gradient(circle at 88% 6%, rgba(34, 211, 238, 0.14), transparent 30%),
-    radial-gradient(circle at 8% 100%, rgba(139, 92, 246, 0.14), transparent 34%),
-    linear-gradient(145deg, #07111f 0%, #10133a 50%, #10284a 100%);
-  color: white;
+    radial-gradient(circle at 88% 4%, rgba(196, 157, 107, 0.13), transparent 31%),
+    radial-gradient(circle at 5% 105%, rgba(124, 125, 113, 0.1), transparent 34%),
+    linear-gradient(145deg, #090a0a 0%, #141717 52%, #1d1b18 100%);
+  color: #f2f1ec;
   box-shadow:
-    0 28px 80px rgba(15, 23, 42, 0.24),
-    0 8px 28px rgba(79, 70, 229, 0.14),
-    inset 0 1px rgba(255, 255, 255, 0.07);
+    0 30px 84px rgba(0, 0, 0, 0.28),
+    0 8px 28px rgba(196, 157, 107, 0.065),
+    inset 0 1px rgba(255, 255, 255, 0.045);
 }
 
 .aurora-card--interactive:hover {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--brand-400) 38%, var(--border-default));
+  border-color: color-mix(in srgb, var(--brand-500) 34%, var(--border-default));
   box-shadow:
-    0 28px 72px rgba(15, 23, 42, 0.12),
-    0 8px 28px rgba(79, 70, 229, 0.09);
+    0 24px 58px rgba(23, 25, 24, 0.1),
+    0 6px 20px rgba(93, 66, 42, 0.055);
 }
 
 /* ── Navegação ────────────────────────────────────────────── */
 
 .aurora-sidebar {
-  border-color: color-mix(in srgb, var(--border-subtle) 75%, var(--brand-400) 25%);
+  border-color: color-mix(in srgb, var(--border-subtle) 84%, var(--brand-400) 16%);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--bg-sidebar) 94%, var(--brand-50) 6%),
-    color-mix(in srgb, var(--bg-sidebar) 98%, transparent)
+    color-mix(in srgb, var(--bg-sidebar) 97%, var(--brand-50) 3%),
+    var(--bg-sidebar)
   );
   box-shadow:
-    12px 0 46px rgba(15, 23, 42, 0.035),
-    inset -1px 0 rgba(99, 102, 241, 0.025);
-  backdrop-filter: blur(22px);
+    12px 0 40px rgba(23, 25, 24, 0.035),
+    inset -1px 0 rgba(196, 157, 107, 0.025);
+  backdrop-filter: blur(18px);
 }
 
 :root[data-theme='dark'] .aurora-sidebar {
   background:
-    radial-gradient(circle at 50% -10%, rgba(99, 102, 241, 0.13), transparent 28%),
-    linear-gradient(180deg, rgba(13, 20, 36, 0.98), rgba(10, 15, 30, 0.98));
+    radial-gradient(circle at 50% -12%, rgba(196, 157, 107, 0.075), transparent 29%),
+    linear-gradient(180deg, rgba(8, 10, 10, 0.99), rgba(5, 6, 7, 0.99));
   box-shadow:
-    14px 0 54px rgba(0, 0, 0, 0.17),
-    inset -1px 0 rgba(129, 140, 248, 0.045);
+    14px 0 48px rgba(0, 0, 0, 0.2),
+    inset -1px 0 rgba(196, 157, 107, 0.035);
 }
 
 .aurora-sidebar a[aria-current='page'] {
-  border: 1px solid rgba(165, 180, 252, 0.2);
-  background: linear-gradient(105deg, #4f46e5 0%, #635bdb 50%, #0e7490 115%) !important;
+  border: 1px solid rgba(196, 157, 107, 0.26);
+  background: linear-gradient(105deg, #272a29 0%, #3c3934 52%, #5c4934 115%) !important;
   box-shadow:
-    0 12px 28px rgba(79, 70, 229, 0.2),
-    inset 0 1px rgba(255, 255, 255, 0.16);
+    0 12px 26px rgba(23, 25, 24, 0.2),
+    inset 0 1px rgba(255, 255, 255, 0.07);
 }
 
 .aurora-brand-mark {
-  border: 1px solid rgba(165, 243, 252, 0.16);
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 46%, #0e7490 100%) !important;
+  border: 1px solid rgba(196, 157, 107, 0.28);
+  background: linear-gradient(135deg, #252827 0%, #3c4346 52%, #806141 100%) !important;
   box-shadow:
-    0 10px 24px rgba(79, 70, 229, 0.2),
-    inset 0 1px rgba(255, 255, 255, 0.2);
+    0 10px 22px rgba(23, 25, 24, 0.18),
+    inset 0 1px rgba(255, 255, 255, 0.09);
 }
 
 .aurora-bottom-nav {
-  border-color: color-mix(in srgb, var(--border-subtle) 76%, var(--brand-300) 24%);
-  background: color-mix(in srgb, var(--bg-surface) 88%, transparent) !important;
-  box-shadow: 0 -14px 42px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(24px);
+  border-color: color-mix(in srgb, var(--border-subtle) 84%, var(--brand-400) 16%);
+  background: color-mix(in srgb, var(--bg-surface) 94%, transparent) !important;
+  box-shadow: 0 -12px 34px rgba(23, 25, 24, 0.075);
+  backdrop-filter: blur(20px);
 }
 
 .aurora-mobile-drawer {
   background:
-    radial-gradient(circle at 20% 0%, rgba(99, 102, 241, 0.12), transparent 28%), var(--bg-sidebar) !important;
-  box-shadow: 22px 0 64px rgba(15, 23, 42, 0.18);
+    radial-gradient(circle at 18% 0%, rgba(196, 157, 107, 0.075), transparent 30%),
+    var(--bg-sidebar) !important;
+  box-shadow: 22px 0 60px rgba(0, 0, 0, 0.2);
 }
 
 /* ── Acessibilidade ───────────────────────────────────────── */
 
 @media (max-width: 767px) {
   .aurora-app-shell::before {
-    opacity: 0.15;
-    background-size: 38px 38px;
+    opacity: 0.075;
+    background-size: 42px 42px;
   }
 
   .aurora-card {
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(9px);
   }
 }
 

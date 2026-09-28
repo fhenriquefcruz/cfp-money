@@ -121,7 +121,7 @@ export async function expectNavigationControlsInsideViewport(navigation) {
   await expect(navigation).toBeVisible()
 
   const controls = navigation.locator(':scope > a, :scope > button')
-  await expect(controls).toHaveCount(6)
+  await expect(controls).toHaveCount(5)
 
   const geometries = await controls.evaluateAll((elements) => {
     const visualViewport = window.visualViewport
