@@ -152,7 +152,7 @@ test('lista as maiores despesas sem criar lançamento', () => {
     analyze: analyzeMoney,
   })
 
-  expect(response.type).toBe('largest_expenses')
+  expect(response.type).toBe('top')
   expect(response.text).toContain('250,00')
 })
 
@@ -180,6 +180,6 @@ test('responde o que merece atenção usando as prioridades já calculadas', () 
     priority: 'Combustível ultrapassou o orçamento',
   })
 
-  expect(response.type).toBe('priorities')
+  expect(response.type).toBe('priority')
   expect(response.text).toContain('Combustível ultrapassou o orçamento')
 })
