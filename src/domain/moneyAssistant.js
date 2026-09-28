@@ -67,9 +67,7 @@ function resolveMonthFromMessage(normalizedMessage, now) {
   }
 
   const explicitMonth = MONTHS.findIndex((aliases) =>
-    aliases.some((alias) =>
-      new RegExp(`(^|\\s)${alias}(?=\\s|$)`).test(normalizedMessage),
-    ),
+    aliases.some((alias) => new RegExp(`(^|\\s)${alias}(?=\\s|$)`).test(normalizedMessage)),
   )
 
   if (explicitMonth < 0) return null
