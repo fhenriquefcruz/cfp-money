@@ -13,7 +13,7 @@ const DEFAULT_PROJECT = 'cfp-money'
 function parseArgs(argv) {
   const args = {
     project: DEFAULT_PROJECT,
-    authExport: process.env.FIREBASE_AUTH_EXPORT || 'cfp-auth-users.json',
+    authExport: process.env.FIREBASE_AUTH_EXPORT?.trim() || null,
     apply: false,
     uids: null,
   }
@@ -77,6 +77,25 @@ function firestoreBase(projectId) {
   )}/databases/(default)/documents`
 }
 
+function identityToolkitBase(projectId) {
+  return `https://identitytoolkit.googleapis.com/v1/projects/${encodeURIComponent(projectId)}`
+}
+
+async function parseResponse(response) {
+  let body = null
+  const text = await response.text()
+
+  if (text) {
+    try {
+      body = JSON.parse(text)
+    } catch {
+      body = text
+    }
+  }
+
+  return body
+}
+
 async function requestJson(url, token, projectId, options = {}) {
   const response = await fetch(url, {
     ...options,
@@ -92,15 +111,7 @@ async function requestJson(url, token, projectId, options = {}) {
     return { status: 404, body: null }
   }
 
-  let body = null
-  const text = await response.text()
-  if (text) {
-    try {
-      body = JSON.parse(text)
-    } catch {
-      body = text
-    }
-  }
+  const body = await parseResponse(response)
 
   if (!response.ok) {
     const detail =
@@ -109,6 +120,47 @@ async function requestJson(url, token, projectId, options = {}) {
   }
 
   return { status: response.status, body }
+}
+
+async function requestIdentityJson(url, token, projectId) {
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'x-goog-user-project': projectId,
+    },
+  })
+
+  const body = await parseResponse(response)
+
+  if (!response.ok) {
+    const detail =
+      typeof body === 'object' && body?.error?.message ? body.error.message : String(body || '')
+    throw new Error(`Identity Toolkit REST ${response.status}: ${detail || response.statusText}`)
+  }
+
+  return body
+}
+
+async function listAuthUsers(projectId, token) {
+  const users = []
+  let nextPageToken = ''
+
+  do {
+    const url = new URL(`${identityToolkitBase(projectId)}/accounts:batchGet`)
+    url.searchParams.set('maxResults', '1000')
+    if (nextPageToken) url.searchParams.set('nextPageToken', nextPageToken)
+
+    const body = await requestIdentityJson(url, token, projectId)
+    users.push(...(body?.users || []))
+    nextPageToken = body?.nextPageToken || ''
+  } while (nextPageToken)
+
+  return normalizeAuthExport(users)
+}
+
+function loadAuthExport(authExport) {
+  const payload = JSON.parse(fs.readFileSync(authExport, 'utf8'))
+  return normalizeAuthExport(payload)
 }
 
 async function listFirestoreUsers(projectId, token) {
@@ -186,12 +238,18 @@ function printReport(report) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
-  const payload = JSON.parse(fs.readFileSync(args.authExport, 'utf8'))
-  const authUsers = normalizeAuthExport(payload)
   const token = getAccessToken()
+  const authUsers = args.authExport
+    ? loadAuthExport(args.authExport)
+    : await listAuthUsers(args.project, token)
   const firestoreUsers = await listFirestoreUsers(args.project, token)
   const initialReport = buildParityReport(authUsers, firestoreUsers)
 
+  console.log(
+    `Fonte do Authentication: ${
+      args.authExport ? `arquivo ${args.authExport}` : 'consulta administrativa ao vivo'
+    }`,
+  )
   printReport(initialReport)
 
   const targets = initialReport.authOnly.filter((user) => !args.uids || args.uids.has(user.uid))
@@ -202,7 +260,7 @@ async function main() {
     )
     if (missingRequestedUids.length > 0) {
       throw new Error(
-        `UID(s) solicitado(s) não encontrados no export do Authentication: ${missingRequestedUids.join(
+        `UID(s) solicitado(s) não encontrados no Authentication: ${missingRequestedUids.join(
           ', ',
         )}`,
       )

@@ -36,6 +36,26 @@ describe('adminBackfill', () => {
     ])
   })
 
+  it('normalizes the live Identity Toolkit users array', () => {
+    expect(
+      normalizeAuthExport([
+        {
+          localId: 'uid-live-1',
+          email: 'live@example.com',
+          displayName: 'Live User',
+          createdAt: '1735689600000',
+        },
+      ]),
+    ).toEqual([
+      {
+        uid: 'uid-live-1',
+        email: 'live@example.com',
+        displayName: 'Live User',
+        creationTime: '2025-01-01T00:00:00.000Z',
+      },
+    ])
+  })
+
   it('reports Auth-only, Firestore-only and duplicate Firestore emails without deleting anything', () => {
     const report = buildParityReport(
       [
