@@ -1,0 +1,50 @@
+name: Production smoke
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  production-smoke:
+    name: Public production health
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PRODUCTION_BASE_URL: https://fhenriquefcruz.github.io/cfp-money/
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Smoke test current production
+        run: npm run test:production:smoke
+
+      - name: Upload production smoke report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: production-smoke-report
+          path: |
+            playwright-production-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 14
