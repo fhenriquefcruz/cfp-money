@@ -267,8 +267,7 @@ export function buildMoneyAssistantResponse({
 
   if (intent.type === 'priorities') {
     return {
-      type: 'priorities',
-      title: 'Prioridade',
+      type: intent.type,
       text: priority || 'Sem prioridade.',
     }
   }
@@ -317,7 +316,7 @@ export function buildMoneyAssistantResponse({
       .slice(0, 5)
 
     return {
-      type: 'largest_expenses',
+      type: intent.type,
       title: 'Maiores despesas',
       text:
         expenses
