@@ -55,7 +55,9 @@
     "test:integration:firebase": "firebase emulators:exec --project demo-cfp-money-integration --only auth,firestore,functions \"node --test tests/integration/firebase-emulators.test.mjs\"",
     "test:visual": "playwright test --config=playwright.visual.config.js",
     "test:visual:update": "playwright test --config=playwright.visual.config.js --update-snapshots",
-    "test:visual:report": "playwright show-report playwright-visual-report"
+    "test:visual:report": "playwright show-report playwright-visual-report",
+    "test:production:smoke": "playwright test --config=playwright.production.config.js",
+    "test:production:report": "playwright show-report playwright-production-report"
   },
   "dependencies": {
     "clsx": "^2.1.0",
