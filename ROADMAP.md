@@ -27,3 +27,10 @@
   - [x] executar Axe/WCAG 2.2 AA em desktop, mobile e WebKit;
   - [x] versionar baselines visuais das 9 telas principais em desktop e mobile;
   - [x] executar regressão visual automaticamente e publicar relatórios/diffs como artefatos.
+
+## Operação pós-release
+
+- [x] smoke test automatizado após deploy em produção;
+  - [x] validar shell público de login em desktop e mobile;
+  - [x] validar manifest, service worker e metadados do precache;
+  - [x] publicar relatório de falha como artefato do GitHub Actions;

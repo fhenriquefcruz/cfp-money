@@ -86,6 +86,8 @@ jobs:
   deploy:
     needs: build
     if: github.event_name != 'pull_request'
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     permissions:
       contents: read
       pages: write
@@ -98,3 +100,43 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+  smoke:
+    needs: deploy
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      PRODUCTION_BASE_URL: ${{ needs.deploy.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Smoke test deployed production
+        run: npm run test:production:smoke
+
+      - name: Upload production smoke report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: production-smoke-report
+          path: |
+            playwright-production-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 14
