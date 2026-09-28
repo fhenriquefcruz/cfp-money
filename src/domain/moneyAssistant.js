@@ -204,19 +204,8 @@ export function parseMoneyAssistantIntent(
     }
   }
 
-  if (
-    /quanto (?:eu )?gastei (?:este|neste|no) mes/.test(normalizedMessage) ||
-    /total de (?:despesas|gastos) deste mes/.test(normalizedMessage)
-  ) {
-    return { type: 'monthly_report', requestedMonth: requestedMonth || defaultMonth }
-  }
-
   if (/(maiores despesas|maiores gastos|onde mais gastei|em que mais gastei)/.test(normalizedMessage)) {
     return { type: 'largest_expenses', requestedMonth: requestedMonth || defaultMonth }
-  }
-
-  if (/(comparad[oa] ao periodo anterior|comparacao com o periodo anterior|comparar com o periodo anterior)/.test(normalizedMessage)) {
-    return { type: 'cycle_summary' }
   }
 
   if (/(merece (?:minha )?atencao|minhas? prioridades?|precisa da minha atencao)/.test(normalizedMessage)) {
@@ -227,7 +216,9 @@ export function parseMoneyAssistantIntent(
     normalizedMessage.includes('relatorio') ||
     normalizedMessage.includes('fechamento') ||
     normalizedMessage.includes('resumo de') ||
-    normalizedMessage.includes('resumo do')
+    normalizedMessage.includes('resumo do') ||
+    /quanto (?:eu )?gastei (?:este|neste|no) mes/.test(normalizedMessage) ||
+    /total de (?:despesas|gastos) deste mes/.test(normalizedMessage)
 
   if (asksMonthlyReport) {
     return {
@@ -241,7 +232,10 @@ export function parseMoneyAssistantIntent(
     normalizedMessage.includes('como estao meus gastos') ||
     normalizedMessage.includes('situacao financeira') ||
     normalizedMessage.includes('analise financeira') ||
-    normalizedMessage.includes('analise do money')
+    normalizedMessage.includes('analise do money') ||
+    /comparad[oa] ao periodo anterior|comparacao com o periodo anterior|comparar com o periodo anterior/.test(
+      normalizedMessage,
+    )
 
   if (asksFinancialStatus) return { type: 'cycle_summary' }
 
@@ -255,7 +249,7 @@ export function buildMoneyAssistantResponse({
   settings = {},
   now = new Date(),
   analyze,
-  priorityReport = null,
+  priority = null,
 }) {
   const intent = parseMoneyAssistantIntent(message, categories, transactions, now)
 
@@ -278,13 +272,12 @@ export function buildMoneyAssistantResponse({
   }
 
   if (intent.type === 'priorities') {
-    const priority = priorityReport?.priorities?.[0]
     return {
       type: 'priorities',
-      title: priority ? 'Prioridade de agora' : 'Nada urgente por enquanto',
+      title: 'Prioridade de agora',
       text: priority
         ? `${priority.title}${priority.detail ? `: ${priority.detail}` : ''}`
-        : 'Não encontrei prioridades financeiras relevantes com os dados atuais.',
+        : 'Nenhuma prioridade financeira relevante agora.',
     }
   }
 
@@ -328,22 +321,20 @@ export function buildMoneyAssistantResponse({
   if (intent.type === 'largest_expenses') {
     const expenses = periodTransactions
       .filter((transaction) => transaction.type === 'expense')
-      .sort((first, second) => (Number(second.amount) || 0) - (Number(first.amount) || 0))
+      .sort((a, b) => Number(b.amount) - Number(a.amount))
       .slice(0, 5)
 
     return {
       type: 'largest_expenses',
       title: `Maiores despesas de ${period.label}`,
-      text:
-        expenses.length > 0
-          ? 'Estas são as maiores despesas individuais encontradas no período.'
-          : `Não encontrei despesas em ${period.label}.`,
-      metrics: expenses.map((transaction, index) => ({
-        label: `${index + 1}. ${transaction.description || transaction.categoryName || 'Despesa'}`,
-        value: Number(transaction.amount) || 0,
-      })),
-      reportMonth: period.monthKey,
-      periodLabel: capitalize(period.label),
+      text: expenses.length
+        ? expenses
+            .map(
+              (transaction, index) =>
+                `${index + 1}. ${transaction.description || transaction.categoryName || 'Despesa'}: ${currencyFormatter.format(Number(transaction.amount) || 0)}`,
+            )
+            .join(' · ')
+        : 'Nenhuma despesa encontrada no período.',
     }
   }
 
