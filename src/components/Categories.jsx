@@ -19,21 +19,6 @@ const DEFAULT_COLORS = [
   '#0ea5e9',
 ]
 
-const COLOR_LABELS = {
-  '#f97316': 'laranja',
-  '#3b82f6': 'azul',
-  '#8b5cf6': 'violeta',
-  '#10b981': 'verde esmeralda',
-  '#06b6d4': 'ciano',
-  '#f59e0b': 'âmbar',
-  '#6366f1': 'índigo',
-  '#ec4899': 'rosa',
-  '#6b7280': 'cinza',
-  '#22c55e': 'verde',
-  '#ef4444': 'vermelho',
-  '#0ea5e9': 'azul claro',
-}
-
 const EMOJI_LIST = [
   '🍔',
   '🍕',
@@ -383,7 +368,7 @@ export default function Categories() {
                   key={c}
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, color: c }))}
-                  aria-label={`Selecionar cor ${COLOR_LABELS[c] || c}`}
+                  aria-label={`Selecionar cor ${c}`}
                   aria-pressed={form.color === c}
                   className={`h-11 w-11 rounded-full border-2 transition-all ${
                     form.color === c
