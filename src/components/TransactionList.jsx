@@ -1151,7 +1151,8 @@ export default function TransactionList() {
             <div>
               <p className="text-xs font-bold text-[--text-primary]">Ações de pagamento em massa</p>
               <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                Selecione despesas manuais. Compras vinculadas a cartões continuam sendo controladas pela fatura.
+                Selecione despesas manuais. Compras vinculadas a cartões continuam sendo controladas
+                pela fatura.
               </p>
             </div>
 
