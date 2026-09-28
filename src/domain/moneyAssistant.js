@@ -1,16 +1,16 @@
 const MONTHS = [
-  { index: 0, name: 'janeiro', aliases: ['janeiro', 'jan'] },
-  { index: 1, name: 'fevereiro', aliases: ['fevereiro', 'fev'] },
-  { index: 2, name: 'março', aliases: ['marco', 'mar'] },
-  { index: 3, name: 'abril', aliases: ['abril', 'abr'] },
-  { index: 4, name: 'maio', aliases: ['maio', 'mai'] },
-  { index: 5, name: 'junho', aliases: ['junho', 'jun'] },
-  { index: 6, name: 'julho', aliases: ['julho', 'jul'] },
-  { index: 7, name: 'agosto', aliases: ['agosto', 'ago'] },
-  { index: 8, name: 'setembro', aliases: ['setembro', 'set'] },
-  { index: 9, name: 'outubro', aliases: ['outubro', 'out'] },
-  { index: 10, name: 'novembro', aliases: ['novembro', 'nov'] },
-  { index: 11, name: 'dezembro', aliases: ['dezembro', 'dez'] },
+  ['janeiro', 'jan'],
+  ['fevereiro', 'fev'],
+  ['março', 'marco', 'mar'],
+  ['abril', 'abr'],
+  ['maio', 'mai'],
+  ['junho', 'jun'],
+  ['julho', 'jul'],
+  ['agosto', 'ago'],
+  ['setembro', 'set'],
+  ['outubro', 'out'],
+  ['novembro', 'nov'],
+  ['dezembro', 'dez'],
 ]
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
@@ -66,24 +66,24 @@ function resolveMonthFromMessage(normalizedMessage, now) {
     return { year: date.getFullYear(), month: date.getMonth() }
   }
 
-  const explicitMonth = MONTHS.find((candidate) =>
-    candidate.aliases.some((alias) =>
-      new RegExp(`(^|\\s)${alias}(?=\\s|$)`).test(normalizedMessage),
+  const explicitMonth = MONTHS.findIndex((aliases) =>
+    aliases.some((alias) =>
+      new RegExp(`(^|\\s)${normalizeText(alias)}(?=\\s|$)`).test(normalizedMessage),
     ),
   )
 
-  if (!explicitMonth) return null
+  if (explicitMonth < 0) return null
 
   const explicitYear = normalizedMessage.match(/\b(20\d{2})\b/)
   let year = explicitYear ? Number(explicitYear[1]) : currentYear
 
   if (!explicitYear && normalizedMessage.includes('ano passado')) {
     year = currentYear - 1
-  } else if (!explicitYear && explicitMonth.index > currentMonth) {
+  } else if (!explicitYear && explicitMonth > currentMonth) {
     year = currentYear - 1
   }
 
-  return { year, month: explicitMonth.index }
+  return { year, month: explicitMonth }
 }
 
 function getCalendarMonthPeriod(year, month) {
@@ -94,7 +94,7 @@ function getCalendarMonthPeriod(year, month) {
     start: toIsoDate(start),
     end: toIsoDate(end),
     monthKey: getMonthKey(year, month),
-    label: `${MONTHS[month].name} de ${year}`,
+    label: `${MONTHS[month][0]} de ${year}`,
   }
 }
 
