@@ -186,15 +186,17 @@ export const Modal = ({
       if (viewportFrame) window.cancelAnimationFrame(viewportFrame)
 
       viewportFrame = window.requestAnimationFrame(() => {
-        const dialog = dialogRef.current
-        const active = document.activeElement
+        viewportFrame = window.requestAnimationFrame(() => {
+          const dialog = dialogRef.current
+          const active = document.activeElement
 
-        if (!dialog || !active || !dialog.contains(active)) return
+          if (!dialog || !active || !dialog.contains(active)) return
 
-        active.scrollIntoView({
-          block: 'nearest',
-          inline: 'nearest',
-          behavior: 'auto',
+          active.scrollIntoView({
+            block: 'center',
+            inline: 'nearest',
+            behavior: 'auto',
+          })
         })
       })
     }
