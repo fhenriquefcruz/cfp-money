@@ -1,8 +1,4 @@
-import {
-  buildMoneyTransactionDraft,
-  isMoneyQuestion,
-  normalizeMoneyCommand,
-} from './moneyTransactionDraft'
+import { buildMoneyTransactionDraft, normalizeMoneyCommand } from './moneyTransactionDraft'
 import { calculateInvoiceSchedule, splitInstallmentAmounts } from './creditCards'
 
 function parseInstallments(normalizedMessage) {
@@ -84,11 +80,7 @@ export function buildMoneyCreditDraft({
   const normalizedMessage = normalizeMoneyCommand(message)
   const activeCards = creditCards.filter((card) => card.active !== false)
 
-  if (
-    !normalizedMessage ||
-    isMoneyQuestion(normalizedMessage) ||
-    !hasCreditIntent(normalizedMessage, activeCards)
-  ) {
+  if (!normalizedMessage || !hasCreditIntent(normalizedMessage, activeCards)) {
     return null
   }
 
