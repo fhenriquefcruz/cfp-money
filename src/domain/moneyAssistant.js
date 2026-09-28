@@ -195,13 +195,61 @@ export function parseMoneyAssistantIntent(
     return {
       type: 'category_report',
       category,
-      requestedMonth: requestedMonth || {
-        year: now.getFullYear(),
-        month: now.getMonth(),
-        source: 'default',
-      },
+      requestedMonth: requestedMonth || defaultMonth,
     }
   }
+
+  const defaultMonth = {
+    year: now.getFullYear(),
+    month: now.getMonth(),
+    source: 'default',
+  }
+
+  const asksMonthlySpending =
+    normalizedMessage.includes('quanto gastei este mes') ||
+    normalizedMessage.includes('quanto eu gastei este mes') ||
+    normalizedMessage.includes('quanto gastei no mes') ||
+    normalizedMessage.includes('quanto gastei neste mes') ||
+    normalizedMessage.includes('total de despesas deste mes') ||
+    normalizedMessage.includes('total de gastos deste mes')
+
+  if (asksMonthlySpending) {
+    return {
+      type: 'monthly_spending',
+      requestedMonth: requestedMonth || defaultMonth,
+    }
+  }
+
+  const asksLargestExpenses =
+    normalizedMessage.includes('maiores despesas') ||
+    normalizedMessage.includes('maiores gastos') ||
+    normalizedMessage.includes('onde mais gastei') ||
+    normalizedMessage.includes('em que mais gastei')
+
+  if (asksLargestExpenses) {
+    return {
+      type: 'largest_expenses',
+      requestedMonth: requestedMonth || defaultMonth,
+    }
+  }
+
+  const asksComparison =
+    normalizedMessage.includes('comparado ao periodo anterior') ||
+    normalizedMessage.includes('comparada ao periodo anterior') ||
+    normalizedMessage.includes('comparacao com o periodo anterior') ||
+    normalizedMessage.includes('comparar com o periodo anterior') ||
+    normalizedMessage.includes('comparacao do periodo anterior')
+
+  if (asksComparison) return { type: 'cycle_comparison' }
+
+  const asksPriorities =
+    normalizedMessage.includes('merece minha atencao') ||
+    normalizedMessage.includes('merece atencao') ||
+    normalizedMessage.includes('minhas prioridades') ||
+    normalizedMessage.includes('minha prioridade') ||
+    normalizedMessage.includes('precisa da minha atencao')
+
+  if (asksPriorities) return { type: 'priorities' }
 
   const asksMonthlyReport =
     normalizedMessage.includes('relatorio') ||
@@ -239,6 +287,7 @@ export function buildMoneyAssistantResponse({
   settings = {},
   now = new Date(),
   analyze,
+  priorityReport = null,
 }) {
   const intent = parseMoneyAssistantIntent(message, categories, transactions, now)
 
@@ -260,21 +309,45 @@ export function buildMoneyAssistantResponse({
     }
   }
 
-  if (intent.type === 'cycle_summary') {
+  if (intent.type === 'priorities') {
+    const priorities = priorityReport?.priorities || []
+
+    if (!priorities.length) {
+      return {
+        type: 'priorities',
+        title: 'Nada urgente por enquanto',
+        text: 'Não encontrei prioridades financeiras relevantes com os dados atuais.',
+      }
+    }
+
+    return {
+      type: 'priorities',
+      title: 'O que merece sua atenção agora',
+      text: priorities
+        .map(
+          (item, index) =>
+            `${index + 1}. ${item.title}${item.detail ? `: ${item.detail}` : ''}`,
+        )
+        .join(' '),
+      suggestions: ['Como estão minhas finanças?', 'Quanto gastei este mês?'],
+    }
+  }
+
+  if (intent.type === 'cycle_summary' || intent.type === 'cycle_comparison') {
     const analysis = analyze(transactions, settings, now)
     const variation = formatVariation(analysis.comparison.expenseChangePercent)
 
     if (analysis.current.transactionCount === 0 && analysis.previous.transactionCount === 0) {
       return {
-        type: 'cycle_summary',
+        type: intent.type,
         title: 'Ainda não há histórico suficiente',
         text: 'Registre receitas e despesas para o Money começar a comparar seu ciclo financeiro.',
       }
     }
 
     return {
-      type: 'cycle_summary',
-      title: 'Análise do período atual',
+      type: intent.type,
+      title: intent.type === 'cycle_comparison' ? 'Comparação com o período anterior' : 'Análise do período atual',
       text: variation
         ? `Suas despesas estão ${variation} do período equivalente anterior.`
         : 'Ainda não existe um período anterior com despesas para calcular a variação percentual.',
@@ -296,6 +369,51 @@ export function buildMoneyAssistantResponse({
     period,
     settings.excludeSavings !== false,
   )
+
+  if (intent.type === 'monthly_spending') {
+    const expenses = periodTransactions.filter((transaction) => transaction.type === 'expense')
+    const total = expenses.reduce((sum, transaction) => sum + (Number(transaction.amount) || 0), 0)
+
+    return {
+      type: 'monthly_spending',
+      title: `Gastos de ${period.label}`,
+      text:
+        expenses.length > 0
+          ? `Você gastou ${currencyFormatter.format(total)} em ${expenses.length} despesa${expenses.length === 1 ? '' : 's'} no período.`
+          : `Não encontrei despesas em ${period.label}.`,
+      metrics:
+        expenses.length > 0
+          ? [
+              { label: 'Despesas', value: total },
+              { label: 'Lançamentos', rawValue: String(expenses.length) },
+            ]
+          : [],
+      reportMonth: period.monthKey,
+      periodLabel: capitalize(period.label),
+    }
+  }
+
+  if (intent.type === 'largest_expenses') {
+    const expenses = periodTransactions
+      .filter((transaction) => transaction.type === 'expense')
+      .sort((first, second) => (Number(second.amount) || 0) - (Number(first.amount) || 0))
+      .slice(0, 5)
+
+    return {
+      type: 'largest_expenses',
+      title: `Maiores despesas de ${period.label}`,
+      text:
+        expenses.length > 0
+          ? 'Estas são as maiores despesas individuais encontradas no período.'
+          : `Não encontrei despesas em ${period.label}.`,
+      metrics: expenses.map((transaction, index) => ({
+        label: `${index + 1}. ${transaction.description || transaction.categoryName || 'Despesa'}`,
+        value: Number(transaction.amount) || 0,
+      })),
+      reportMonth: period.monthKey,
+      periodLabel: capitalize(period.label),
+    }
+  }
 
   if (intent.type === 'category_report') {
     periodTransactions = periodTransactions.filter((transaction) => {
