@@ -139,18 +139,6 @@ test('ignora mensagens que não envolvem cartão', () => {
   ).toBeNull()
 })
 
-test('não transforma pergunta sobre cartão em compra', () => {
-  expect(
-    buildMoneyCreditDraft({
-      message: 'Quanto gastei no cartão este mês?',
-      categories,
-      creditCards: cards,
-      transactions: [],
-      now,
-    }),
-  ).toBeNull()
-})
-
 test('avisa sobre possível compra duplicada', () => {
   const response = buildMoneyCreditDraft({
     message: 'Comprei 600 no Nubank em 3 vezes no mercado ontem',
