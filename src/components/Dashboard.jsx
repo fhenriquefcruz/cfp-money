@@ -392,8 +392,10 @@ export default function Dashboard() {
             >
               <ChevronLeft size={16} />
             </button>
-            <h1 className="min-w-0 truncate text-base font-black capitalize text-[--text-primary] min-[390px]:text-lg sm:text-2xl">
-              {format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })}
+            <h1 className="min-w-0 truncate text-base font-black text-[--text-primary] min-[390px]:text-lg sm:text-2xl">
+              {format(viewDate, "MMMM 'de' yyyy", { locale: ptBR }).replace(/^./, (letter) =>
+                letter.toUpperCase(),
+              )}
             </h1>
             <button
               onClick={() => setViewDate((d) => addMonths(d, 1))}
