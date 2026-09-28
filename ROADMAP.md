@@ -30,7 +30,7 @@
 
 ## Operação pós-release
 
-- [ ] smoke test automatizado após deploy em produção;
+- [x] smoke test automatizado após deploy em produção;
   - [x] validar shell público de login em desktop e mobile;
   - [x] validar manifest, service worker e metadados do precache;
   - [x] publicar relatório de falha como artefato do GitHub Actions;
