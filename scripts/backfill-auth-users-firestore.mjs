@@ -135,9 +135,7 @@ async function requestIdentityJson(url, token, projectId) {
   if (!response.ok) {
     const detail =
       typeof body === 'object' && body?.error?.message ? body.error.message : String(body || '')
-    throw new Error(
-      `Identity Toolkit REST ${response.status}: ${detail || response.statusText}`,
-    )
+    throw new Error(`Identity Toolkit REST ${response.status}: ${detail || response.statusText}`)
   }
 
   return body
@@ -248,7 +246,9 @@ async function main() {
   const initialReport = buildParityReport(authUsers, firestoreUsers)
 
   console.log(
-    `Fonte do Authentication: ${args.authExport ? `arquivo ${args.authExport}` : 'consulta administrativa ao vivo'}`,
+    `Fonte do Authentication: ${
+      args.authExport ? `arquivo ${args.authExport}` : 'consulta administrativa ao vivo'
+    }`,
   )
   printReport(initialReport)
 
