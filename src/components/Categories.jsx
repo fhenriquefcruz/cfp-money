@@ -365,7 +365,6 @@ export default function Categories() {
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, color: c }))}
                   aria-label={c}
-                  aria-pressed={form.color === c}
                   className={`h-11 w-11 rounded-full border-2 transition-all ${
                     form.color === c
                       ? 'border-white ring-2 ring-[--brand-500] scale-110'
