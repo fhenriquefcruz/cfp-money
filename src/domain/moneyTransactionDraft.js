@@ -181,9 +181,7 @@ function hasAdvancedCardFlow(normalizedMessage) {
 }
 
 function isQuestionInsteadOfCreation(message) {
-  return /^(?:money )?(?:quanto|qual|quais|como|onde|quando|por que|porque|o que|me mostre|mostre|liste)\b/.test(
-    message,
-  ) || message.includes('relatorio')
+  return /^(?:money )?(?:quanto|quais?|como|o que)\b/.test(message) || message.includes('relatorio')
 }
 
 function detectDuplicate(draft, transactions) {
