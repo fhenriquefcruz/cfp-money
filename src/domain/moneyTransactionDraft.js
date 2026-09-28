@@ -180,12 +180,19 @@ function hasAdvancedCardFlow(normalizedMessage) {
   )
 }
 
-function isQuestionInsteadOfCreation(normalizedMessage) {
+export function isMoneyQuestion(value = '') {
+  const normalizedMessage = normalizeMoneyCommand(value).replace(/^money\s+/, '')
+
   return (
-    normalizedMessage.includes('quanto gastei') ||
-    normalizedMessage.includes('quanto recebi') ||
+    /^(quanto|qual|quais|como|onde|quando|por que|porque|o que)\b/.test(normalizedMessage) ||
+    normalizedMessage.startsWith('me mostre ') ||
+    normalizedMessage.startsWith('mostre ') ||
+    normalizedMessage.startsWith('liste ') ||
     normalizedMessage.includes('relatorio') ||
-    normalizedMessage.includes('como estao')
+    normalizedMessage.includes('resumo dos meus gastos') ||
+    normalizedMessage.includes('resumo das minhas despesas') ||
+    normalizedMessage.includes('merece minha atencao') ||
+    normalizedMessage.includes('periodo anterior')
   )
 }
 
@@ -212,7 +219,7 @@ export function buildMoneyTransactionDraft({
 }) {
   const normalizedMessage = normalizeMoneyCommand(message)
 
-  if (!normalizedMessage || isQuestionInsteadOfCreation(normalizedMessage)) return null
+  if (!normalizedMessage || isMoneyQuestion(normalizedMessage)) return null
 
   const type = detectType(normalizedMessage)
   if (!type) return null
