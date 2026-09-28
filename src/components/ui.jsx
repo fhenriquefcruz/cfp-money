@@ -182,37 +182,18 @@ export const Modal = ({
     }
 
     let viewportFrame = null
-    let settleFrame = null
-
     const keepFocusedControlVisible = () => {
       if (viewportFrame) window.cancelAnimationFrame(viewportFrame)
-      if (settleFrame) window.cancelAnimationFrame(settleFrame)
 
       viewportFrame = window.requestAnimationFrame(() => {
-        settleFrame = window.requestAnimationFrame(() => {
+        viewportFrame = window.requestAnimationFrame(() => {
           const dialog = dialogRef.current
           const active = document.activeElement
 
           if (!dialog || !active || !dialog.contains(active)) return
 
-          const scrollRegion = active.closest('[data-modal-scroll-region="true"]')
-
-          if (scrollRegion && dialog.contains(scrollRegion)) {
-            const controlRect = active.getBoundingClientRect()
-            const regionRect = scrollRegion.getBoundingClientRect()
-            const padding = 12
-
-            if (controlRect.bottom > regionRect.bottom - padding) {
-              scrollRegion.scrollTop += controlRect.bottom - regionRect.bottom + padding
-            } else if (controlRect.top < regionRect.top + padding) {
-              scrollRegion.scrollTop -= regionRect.top - controlRect.top + padding
-            }
-
-            return
-          }
-
           active.scrollIntoView({
-            block: 'nearest',
+            block: 'center',
             inline: 'nearest',
             behavior: 'auto',
           })
@@ -222,10 +203,8 @@ export const Modal = ({
 
     document.body.style.overflow = 'hidden'
     document.addEventListener('keydown', handleKeyDown, true)
-    document.addEventListener('focusin', keepFocusedControlVisible, true)
     window.addEventListener('resize', keepFocusedControlVisible)
     window.visualViewport?.addEventListener('resize', keepFocusedControlVisible)
-    window.visualViewport?.addEventListener('scroll', keepFocusedControlVisible)
 
     const focusTimer = window.setTimeout(() => {
       const firstFocusable = getFocusableElements()[0]
@@ -235,13 +214,10 @@ export const Modal = ({
     return () => {
       window.clearTimeout(focusTimer)
       if (viewportFrame) window.cancelAnimationFrame(viewportFrame)
-      if (settleFrame) window.cancelAnimationFrame(settleFrame)
       document.body.style.overflow = previousOverflow
       document.removeEventListener('keydown', handleKeyDown, true)
-      document.removeEventListener('focusin', keepFocusedControlVisible, true)
       window.removeEventListener('resize', keepFocusedControlVisible)
       window.visualViewport?.removeEventListener('resize', keepFocusedControlVisible)
-      window.visualViewport?.removeEventListener('scroll', keepFocusedControlVisible)
       previouslyFocused?.focus?.()
     }
   }, [closeOnEscape, isOpen])
@@ -292,12 +268,7 @@ export const Modal = ({
             </button>
           </div>
         )}
-        <div
-          data-modal-scroll-region="true"
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4"
-        >
-          {children}
-        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">{children}</div>
         {footer && (
           <div className="flex-shrink-0 border-t border-[--border-subtle] bg-[--bg-surface] px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] pt-3 sm:p-4">
             {footer}
