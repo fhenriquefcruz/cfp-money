@@ -204,10 +204,10 @@ export function parseMoneyAssistantIntent(
   }
 
   if (normalizedMessage.includes('maiores despesas')) {
-    return { type: 'largest_expenses', requestedMonth: requestedMonth || defaultMonth }
+    return { type: 'top', requestedMonth: requestedMonth || defaultMonth }
   }
 
-  if (normalizedMessage.includes('merece minha atencao')) return { type: 'priorities' }
+  if (normalizedMessage.includes('merece minha atencao')) return { type: 'priority' }
 
   const asksMonthlyReport =
     normalizedMessage.includes('relatorio') ||
@@ -265,7 +265,7 @@ export function buildMoneyAssistantResponse({
     }
   }
 
-  if (intent.type === 'priorities') {
+  if (intent.type === 'priority') {
     return {
       type: intent.type,
       text: priority || 'Sem prioridade.',
@@ -309,7 +309,7 @@ export function buildMoneyAssistantResponse({
     settings.excludeSavings !== false,
   )
 
-  if (intent.type === 'largest_expenses') {
+  if (intent.type === 'top') {
     const expenses = periodTransactions
       .filter((transaction) => transaction.type === 'expense')
       .sort((a, b) => b.amount - a.amount)
