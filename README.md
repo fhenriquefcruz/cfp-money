@@ -65,6 +65,14 @@ npm run admin:sync-users -- --auth-export cfp-auth-users.json
 
 O backfill não remove documentos órfãos, não sobrescreve perfis existentes e preserva a data original de criação da conta para `createdAt` e `trialStart`.
 
+Quando o diagnóstico apontar perfis presentes apenas no Firestore, audite-os antes de qualquer limpeza:
+
+```bash
+npm run admin:sync-users -- --audit-orphans
+```
+
+A auditoria é somente leitura. Ela lista metadados do perfil, subcoleções e quantidades de vínculos conhecidos em coleções globais. Nenhum documento é alterado ou excluído.
+
 ## Implantação
 
 A produção atual é publicada no GitHub Pages pelo workflow `Deploy to GitHub Pages` após merge/push em `main`.
