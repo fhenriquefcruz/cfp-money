@@ -153,7 +153,7 @@ test('lista as maiores despesas sem criar lançamento', () => {
   })
 
   expect(response.type).toBe('largest_expenses')
-  expect(response.metrics[0]).toMatchObject({ value: 250 })
+  expect(response.text).toContain('R$ 250,00')
 })
 
 test('responde comparação com o período anterior', () => {
@@ -177,17 +177,9 @@ test('responde o que merece atenção usando as prioridades já calculadas', () 
     categories,
     now,
     analyze: analyzeMoney,
-    priorityReport: {
-      priorities: [
-        {
-          title: 'Combustível ultrapassou o orçamento',
-          detail: 'R$ 100,00 acima do limite.',
-        },
-        {
-          title: 'Fortaleça: Poupança mensal',
-          detail: 'Este fator pode melhorar sua saúde financeira.',
-        },
-      ],
+    priority: {
+      title: 'Combustível ultrapassou o orçamento',
+      detail: 'R$ 100,00 acima do limite.',
     },
   })
 
