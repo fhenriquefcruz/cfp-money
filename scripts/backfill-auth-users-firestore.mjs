@@ -6,6 +6,7 @@ import {
   buildParityReport,
   firestoreDocumentToUser,
   normalizeAuthExport,
+  validateOrphanDeletion,
 } from '../src/domain/adminBackfill.js'
 
 const DEFAULT_PROJECT = 'cfp-money'
@@ -16,6 +17,8 @@ function parseArgs(argv) {
     authExport: process.env.FIREBASE_AUTH_EXPORT?.trim() || null,
     apply: false,
     auditOrphans: false,
+    deleteOrphan: null,
+    confirmEmail: null,
     uids: null,
   }
 
@@ -32,7 +35,13 @@ function parseArgs(argv) {
       continue
     }
 
-    if (arg === '--project' || arg === '--auth-export' || arg === '--uids') {
+    if (
+      arg === '--project' ||
+      arg === '--auth-export' ||
+      arg === '--uids' ||
+      arg === '--delete-orphan' ||
+      arg === '--confirm-email'
+    ) {
       const value = argv[index + 1]
       if (!value || value.startsWith('--')) {
         throw new Error(`Valor ausente para ${arg}.`)
@@ -42,6 +51,8 @@ function parseArgs(argv) {
 
       if (arg === '--project') args.project = value
       if (arg === '--auth-export') args.authExport = value
+      if (arg === '--delete-orphan') args.deleteOrphan = value
+      if (arg === '--confirm-email') args.confirmEmail = value
       if (arg === '--uids') {
         args.uids = new Set(
           value
@@ -381,6 +392,19 @@ async function documentExists(projectId, uid, token) {
   return status !== 404
 }
 
+async function deleteOrphanUserDocument(projectId, uid, token) {
+  const { status } = await requestJson(
+    `${firestoreBase(projectId)}/users/${encodeURIComponent(uid)}`,
+    token,
+    projectId,
+    { method: 'DELETE' },
+  )
+
+  if (status === 404) {
+    throw new Error(`O perfil órfão ${uid} já não existe no Firestore.`)
+  }
+}
+
 async function createUserDocument(projectId, user, token) {
   if (await documentExists(projectId, user.uid, token)) {
     return 'SKIP'
@@ -443,6 +467,51 @@ async function main() {
     }`,
   )
   printReport(initialReport)
+
+  if (args.apply && args.deleteOrphan) {
+    throw new Error('Não combine --apply com --delete-orphan na mesma execução.')
+  }
+
+  if (args.deleteOrphan) {
+    if (!args.confirmEmail) {
+      throw new Error('Use --confirm-email junto com --delete-orphan.')
+    }
+
+    const orphan = initialReport.firestoreOnly.find((user) => user.uid === args.deleteOrphan)
+    if (!orphan) {
+      throw new Error(
+        `O UID ${args.deleteOrphan} não está classificado como Firestore sem Auth nesta execução.`,
+      )
+    }
+
+    const audit = await auditFirestoreOrphan(args.project, orphan, token)
+    printOrphanAudit(audit)
+
+    const deletion = validateOrphanDeletion({
+      uid: args.deleteOrphan,
+      confirmEmail: args.confirmEmail,
+      authUsers,
+      firestoreOnly: initialReport.firestoreOnly,
+      audit,
+    })
+
+    console.log(
+      `\nProteções validadas: o perfil ${deletion.uid} está vazio e o Auth ativo correspondente é ${deletion.replacementAuthUid}.`,
+    )
+    await deleteOrphanUserDocument(args.project, deletion.uid, token)
+    console.log(`Perfil órfão removido do Firestore: ${deletion.uid}`)
+
+    const finalFirestoreUsers = await listFirestoreUsers(args.project, token)
+    const finalReport = buildParityReport(authUsers, finalFirestoreUsers)
+    console.log('\n=== DIAGNÓSTICO APÓS LIMPEZA DO ÓRFÃO ===')
+    printReport(finalReport)
+
+    if (finalReport.firestoreOnly.some((user) => user.uid === deletion.uid)) {
+      throw new Error('A validação final ainda encontrou o UID órfão removido.')
+    }
+
+    return
+  }
 
   if (args.auditOrphans) {
     if (!initialReport.firestoreOnly.length) {
