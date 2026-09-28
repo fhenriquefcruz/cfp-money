@@ -113,3 +113,59 @@ export function buildFirestoreUserDocument(user) {
     },
   }
 }
+
+function normalizeEmail(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+}
+
+export function validateOrphanDeletion({
+  uid,
+  confirmEmail,
+  authUsers = [],
+  firestoreOnly = [],
+  audit,
+}) {
+  if (!uid) {
+    throw new Error('Informe o UID órfão que será removido.')
+  }
+
+  const orphan = firestoreOnly.find((user) => user.uid === uid)
+  if (!orphan) {
+    throw new Error(`O UID ${uid} não está classificado como Firestore sem Auth.`)
+  }
+
+  if (!audit || audit.uid !== uid) {
+    throw new Error('Auditoria do UID órfão ausente ou inconsistente.')
+  }
+
+  if (audit.relatedDocumentCount !== 0) {
+    throw new Error(
+      `Exclusão bloqueada: o UID ${uid} ainda possui ${audit.relatedDocumentCount} documento(s) relacionado(s).`,
+    )
+  }
+
+  const profileEmail = normalizeEmail(audit.profile?.email || orphan.email)
+  const confirmedEmail = normalizeEmail(confirmEmail)
+
+  if (!profileEmail || confirmedEmail !== profileEmail) {
+    throw new Error('E-mail de confirmação não corresponde ao perfil órfão.')
+  }
+
+  const replacementAuthUser = authUsers.find(
+    (user) => user.uid !== uid && normalizeEmail(user.email) === profileEmail,
+  )
+
+  if (!replacementAuthUser) {
+    throw new Error(
+      'Exclusão bloqueada: não existe outra identidade ativa no Authentication com o mesmo e-mail.',
+    )
+  }
+
+  return {
+    uid,
+    email: profileEmail,
+    replacementAuthUid: replacementAuthUser.uid,
+  }
+}

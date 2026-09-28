@@ -73,6 +73,14 @@ npm run admin:sync-users -- --audit-orphans
 
 A auditoria é somente leitura. Ela lista metadados do perfil, subcoleções e quantidades de vínculos conhecidos em coleções globais. Nenhum documento é alterado ou excluído.
 
+Se a auditoria confirmar que um UID existe apenas no Firestore, possui zero documentos relacionados e há outra identidade ativa no Authentication com o mesmo e-mail, a limpeza protegida pode ser executada explicitamente:
+
+```bash
+npm run admin:sync-users -- --delete-orphan <UID> --confirm-email <EMAIL>
+```
+
+A exclusão é recusada se o UID não estiver classificado como órfão naquela execução, se houver qualquer documento relacionado, se o e-mail de confirmação não coincidir ou se não existir outra identidade ativa com o mesmo e-mail. O comando remove somente o documento `users/{uid}` órfão e executa um novo diagnóstico ao final.
+
 ## Implantação
 
 A produção atual é publicada no GitHub Pages pelo workflow `Deploy to GitHub Pages` após merge/push em `main`.

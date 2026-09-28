@@ -4,6 +4,7 @@ import {
   buildParityReport,
   normalizeAuthExport,
   parseCreationTime,
+  validateOrphanDeletion,
 } from './adminBackfill'
 
 describe('adminBackfill', () => {
@@ -108,5 +109,67 @@ describe('adminBackfill', () => {
         creationTime: null,
       }),
     ).toThrow(/sem data original de criação/)
+  })
+})
+
+describe('validateOrphanDeletion', () => {
+  const authUsers = [{ uid: 'active-uid', email: 'owner@example.com' }]
+  const firestoreOnly = [{ uid: 'legacy-uid', email: 'owner@example.com' }]
+  const safeAudit = {
+    uid: 'legacy-uid',
+    profile: { email: 'owner@example.com' },
+    relatedDocumentCount: 0,
+  }
+
+  it('allows deleting only a verified empty Firestore orphan with a replacement Auth identity', () => {
+    expect(
+      validateOrphanDeletion({
+        uid: 'legacy-uid',
+        confirmEmail: 'OWNER@example.com',
+        authUsers,
+        firestoreOnly,
+        audit: safeAudit,
+      }),
+    ).toEqual({
+      uid: 'legacy-uid',
+      email: 'owner@example.com',
+      replacementAuthUid: 'active-uid',
+    })
+  })
+
+  it('blocks deletion when related documents still exist', () => {
+    expect(() =>
+      validateOrphanDeletion({
+        uid: 'legacy-uid',
+        confirmEmail: 'owner@example.com',
+        authUsers,
+        firestoreOnly,
+        audit: { ...safeAudit, relatedDocumentCount: 2 },
+      }),
+    ).toThrow(/ainda possui 2 documento/)
+  })
+
+  it('blocks deletion when the confirmation e-mail is different', () => {
+    expect(() =>
+      validateOrphanDeletion({
+        uid: 'legacy-uid',
+        confirmEmail: 'other@example.com',
+        authUsers,
+        firestoreOnly,
+        audit: safeAudit,
+      }),
+    ).toThrow(/E-mail de confirmação/)
+  })
+
+  it('blocks deletion when no replacement Auth identity exists', () => {
+    expect(() =>
+      validateOrphanDeletion({
+        uid: 'legacy-uid',
+        confirmEmail: 'owner@example.com',
+        authUsers: [],
+        firestoreOnly,
+        audit: safeAudit,
+      }),
+    ).toThrow(/não existe outra identidade ativa/)
   })
 })
