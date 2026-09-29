@@ -1,0 +1,80 @@
+name: Debug Worker tooling audit
+
+on:
+  push:
+    branches:
+      - phase-40c-worker-tooling-security
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Audit current Worker tooling
+        working-directory: worker/email-notifications
+        shell: bash
+        run: |
+          npm ci
+          npm audit --json > current-audit.json || true
+          node - <<'NODE'
+          const fs = require('fs')
+          const report = JSON.parse(fs.readFileSync('current-audit.json', 'utf8'))
+          console.log('CURRENT', JSON.stringify(report.metadata?.vulnerabilities || {}))
+          for (const [name, item] of Object.entries(report.vulnerabilities || {})) {
+            console.log('CURRENT_ITEM', JSON.stringify({
+              name,
+              severity: item.severity,
+              isDirect: item.isDirect,
+              via: Array.isArray(item.via)
+                ? item.via.map((v) => typeof v === 'string' ? v : {
+                    name: v.name,
+                    title: v.title,
+                    severity: v.severity,
+                    range: v.range,
+                  })
+                : item.via,
+              range: item.range,
+              fixAvailable: item.fixAvailable,
+            }))
+          }
+          NODE
+
+      - name: Audit latest Wrangler without modifying repository
+        working-directory: worker/email-notifications
+        shell: bash
+        run: |
+          npm install --no-save wrangler@4.142.0
+          npm audit --json > latest-audit.json || true
+          node - <<'NODE'
+          const fs = require('fs')
+          const report = JSON.parse(fs.readFileSync('latest-audit.json', 'utf8'))
+          console.log('LATEST', JSON.stringify(report.metadata?.vulnerabilities || {}))
+          for (const [name, item] of Object.entries(report.vulnerabilities || {})) {
+            console.log('LATEST_ITEM', JSON.stringify({
+              name,
+              severity: item.severity,
+              isDirect: item.isDirect,
+              via: Array.isArray(item.via)
+                ? item.via.map((v) => typeof v === 'string' ? v : {
+                    name: v.name,
+                    title: v.title,
+                    severity: v.severity,
+                    range: v.range,
+                  })
+                : item.via,
+              range: item.range,
+              fixAvailable: item.fixAvailable,
+            }))
+          }
+          NODE
