@@ -4,6 +4,9 @@ const REQUIRED_ACTIVATION_KEYS = [
   'EMAIL_NOTIFICATIONS_TEST_UID',
 ]
 
+const HEALTH_MAX_ATTEMPTS = 8
+const HEALTH_RETRY_DELAY_MS = 1500
+
 function text(value) {
   return String(value || '').trim()
 }
@@ -23,6 +26,10 @@ async function parseJson(response, label) {
   } catch {
     throw new Error(`${label} retornou uma resposta inválida.`)
   }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export function validateActivationEnvironment(env = {}) {
@@ -49,24 +56,72 @@ export function validateActivationEnvironment(env = {}) {
   }
 }
 
-export async function runEmailNotificationActivationCheck({ env = {}, fetchImpl = fetch } = {}) {
+async function waitForReadyHealth({
+  workerUrl,
+  fetchImpl,
+  sleepImpl,
+  maxAttempts = HEALTH_MAX_ATTEMPTS,
+  retryDelayMs = HEALTH_RETRY_DELAY_MS,
+}) {
+  let lastStatus = 0
+  let lastConfiguration = 'desconhecida'
+  let lastError = null
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const response = await fetchImpl(`${workerUrl}/health`, {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          'cache-control': 'no-cache',
+        },
+      })
+      const health = await parseJson(response, '/health')
+
+      lastStatus = response.status
+      lastConfiguration = String(health?.configuration || 'desconhecida')
+
+      if (response.status === 200 && health?.ok === true && health?.configuration === 'ready') {
+        return {
+          response,
+          health,
+          attempts: attempt,
+        }
+      }
+    } catch (error) {
+      lastError = error
+    }
+
+    if (attempt < maxAttempts) {
+      await sleepImpl(retryDelayMs)
+    }
+  }
+
+  if (lastError && lastStatus === 0) {
+    throw lastError
+  }
+
+  throw new Error(
+    `Worker não está pronto após ${maxAttempts} tentativa(s): /health retornou HTTP ${lastStatus} e configuração ${lastConfiguration}.`,
+  )
+}
+
+export async function runEmailNotificationActivationCheck({
+  env = {},
+  fetchImpl = fetch,
+  sleepImpl = sleep,
+  healthMaxAttempts = HEALTH_MAX_ATTEMPTS,
+  healthRetryDelayMs = HEALTH_RETRY_DELAY_MS,
+} = {}) {
   const config = validateActivationEnvironment(env)
 
-  const healthResponse = await fetchImpl(`${config.workerUrl}/health`, {
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-    },
+  await waitForReadyHealth({
+    workerUrl: config.workerUrl,
+    fetchImpl,
+    sleepImpl,
+    maxAttempts: healthMaxAttempts,
+    retryDelayMs: healthRetryDelayMs,
   })
-  const health = await parseJson(healthResponse, '/health')
-
-  if (healthResponse.status !== 200 || health?.ok !== true || health?.configuration !== 'ready') {
-    throw new Error(
-      `Worker não está pronto: /health retornou HTTP ${healthResponse.status} e configuração ${String(
-        health?.configuration || 'desconhecida',
-      )}.`,
-    )
-  }
 
   const testResponse = await fetchImpl(`${config.workerUrl}/activation-test`, {
     method: 'POST',
