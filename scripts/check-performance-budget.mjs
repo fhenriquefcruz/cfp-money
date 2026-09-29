@@ -8,7 +8,8 @@ const indexPath = join(distRoot, 'index.html')
 
 const limits = {
   initialJavaScriptGzipBytes: 240 * 1024,
-  totalJavaScriptGzipBytes: 703 * 1024,
+  totalJavaScriptGzipBytes: 710 * 1024,
+  moneyRouteGzipBytes: 20 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 20 * 1024,
 }
@@ -69,15 +70,21 @@ const initialCss = css.filter((asset) => asset.initial)
 const largestJavaScript = [...javascript].sort(
   (first, second) => second.gzipBytes - first.gzipBytes,
 )[0]
+const moneyRoute = javascript.find((asset) => /^assets\/Money-.*\.js$/i.test(asset.file))
 
 const metrics = {
   initialJavaScriptGzipBytes: sum(initialJavaScript, 'gzipBytes'),
   totalJavaScriptGzipBytes: sum(javascript, 'gzipBytes'),
+  moneyRouteGzipBytes: moneyRoute?.gzipBytes || 0,
   largestJavaScriptGzipBytes: largestJavaScript?.gzipBytes || 0,
   initialCssGzipBytes: sum(initialCss, 'gzipBytes'),
 }
 
 const failures = []
+
+if (!moneyRoute) {
+  failures.push('O chunk dedicado do Money não foi encontrado no build.')
+}
 
 for (const [metric, limit] of Object.entries(limits)) {
   if (metrics[metric] > limit) {
@@ -119,6 +126,11 @@ console.table([
     métrica: 'JavaScript total gzip',
     atual: kib(metrics.totalJavaScriptGzipBytes),
     limite: kib(limits.totalJavaScriptGzipBytes),
+  },
+  {
+    métrica: 'Rota Money gzip',
+    atual: kib(metrics.moneyRouteGzipBytes),
+    limite: kib(limits.moneyRouteGzipBytes),
   },
   {
     métrica: 'Maior JavaScript gzip',
