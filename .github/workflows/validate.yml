@@ -80,5 +80,9 @@ jobs:
             exit 1
           }
 
+      - name: Bash bootstrap syntax
+        shell: bash
+        run: bash -n scripts/configure-email-notifications-secrets.sh
+
       - name: Whitespace validation
         run: git diff --check
