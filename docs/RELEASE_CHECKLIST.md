@@ -34,7 +34,8 @@
 ## Comercial
 
 - [x] identidade jurídica preenchida;
-- [x] Termos e Política revisados;
+- [x] Termos e Política publicados e versionados;
+- [ ] revisão jurídica final concluída conforme `docs/LEGAL_REVIEW_CHECKLIST.md`;
 - [x] preço e escopo aprovados;
 - [x] SLA definido;
 - [x] suporte e contato publicados;
@@ -42,7 +43,8 @@
 
 ## Evidências de homologação
 
-- Homologação técnica e funcional concluída em 09/08/2026.
+- Homologação técnica e funcional original concluída em 09/08/2026; rodada ampliada de homologação e
+  correções pós-homologação concluída em 29/09/2026.
 - PR #22: `fix: enable secure admin access management on Spark`.
 - Merge em `main`: `0b6eaf7ee37d1e645cdea1ae6634d52b3b685712`.
 - CI do PR #22: 5 workflows aprovados.
@@ -51,3 +53,9 @@
 - Produção mantida em modo Spark, com Cloud Functions não implantadas.
 - Smoke tests em produção aprovados: Money, exportação JSON, solicitação/cancelamento de exclusão e painel Admin.
 - Painel Admin validado em produção para ativar Premium, remover Premium, bloquear e desbloquear usuário.
+
+## Pendência humana de lançamento
+
+A aplicação está tecnicamente homologada e com CI verde, mas o lançamento comercial definitivo depende da
+conclusão documentada de `docs/LEGAL_REVIEW_CHECKLIST.md`. Enquanto esse checklist permanecer aberto, não
+trate a revisão jurídica como concluída.
