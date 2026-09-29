@@ -1,3 +1,5 @@
+import { getMoneyPersonalizationSummary } from './moneyPersonalization'
+
 const MONTHS = [
   ['janeiro', 'jan'],
   ['fevereiro', 'fev'],
@@ -205,6 +207,16 @@ export function parseMoneyAssistantIntent(
     return { type: 'top', requestedMonth: requestedMonth || defaultMonth }
   }
 
+  if (
+    normalizedMessage.includes('o que voce aprendeu') ||
+    normalizedMessage.includes('meu perfil financeiro') ||
+    normalizedMessage.includes('meus habitos') ||
+    normalizedMessage.includes('como eu costumo gastar') ||
+    normalizedMessage.includes('personalizacao')
+  ) {
+    return { type: 'personalization_profile' }
+  }
+
   if (normalizedMessage.includes('merece minha atencao')) return { type: 'priority' }
 
   const asksMonthlyReport =
@@ -242,6 +254,7 @@ export function buildMoneyAssistantResponse({
   now = new Date(),
   analyze,
   priority,
+  personalizationProfile,
 }) {
   const intent = parseMoneyAssistantIntent(message, categories, transactions, now)
 
@@ -254,6 +267,66 @@ export function buildMoneyAssistantResponse({
       type: 'help',
       title: intent.type === 'unknown' ? 'Ainda não entendi esse pedido' : 'Como posso ajudar',
       text: 'Nesta fase, posso consultar seus dados sem alterar nenhum lançamento. Peça um relatório mensal, uma análise do período atual ou o total gasto em uma categoria.',
+    }
+  }
+
+  if (intent.type === 'personalization_profile') {
+    if (settings.personalizationEnabled !== true) {
+      return {
+        type: 'personalization_profile',
+        title: 'Personalização desativada',
+        text: 'Ative “Personalizar o Money com meu histórico” nas Preferências do Money para eu identificar padrões agregados dos seus próprios lançamentos.',
+        suggestions: ['Abrir preferências do Money'],
+      }
+    }
+
+    const summary = getMoneyPersonalizationSummary(personalizationProfile)
+    if (!summary.ready) {
+      return {
+        type: 'personalization_profile',
+        title: 'Ainda estou formando seu perfil',
+        text: summary.text,
+        secondaryText:
+          'O Money precisa de pelo menos quatro despesas recentes para começar e aumenta a confiança conforme o histórico cresce.',
+        metrics: [
+          {
+            label: 'Amostra',
+            rawValue: `${Number(personalizationProfile?.sampleSize || 0)} despesas`,
+          },
+        ],
+      }
+    }
+
+    const topCategory = personalizationProfile?.topCategories?.[0]
+    const payment = personalizationProfile?.preferredPaymentMethod
+    const recurring = personalizationProfile?.recurringDescriptions?.[0]
+
+    return {
+      type: 'personalization_profile',
+      title: 'O que aprendi com seu histórico',
+      text: summary.text,
+      secondaryText:
+        'Esse perfil é recalculado localmente a partir dos seus próprios lançamentos recentes. A conversa não é armazenada no Firestore.',
+      metrics: [
+        {
+          label: 'Amostra',
+          rawValue: `${personalizationProfile.sampleSize} despesas`,
+        },
+        ...(topCategory
+          ? [
+              {
+                label: 'Categoria principal',
+                rawValue: `${topCategory.name} · ${Math.round(topCategory.share * 100)}%`,
+              },
+            ]
+          : []),
+        ...(payment
+          ? [{ label: 'Mais usado', rawValue: payment.id }]
+          : []),
+        ...(recurring
+          ? [{ label: 'Padrão repetido', rawValue: `${recurring.label} · ${recurring.count}x` }]
+          : []),
+      ],
     }
   }
 
