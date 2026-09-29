@@ -25,6 +25,7 @@ if (packageJson.overrides?.undici !== '6.28.1') {
 
 const deployWorkflow = readFileSync('.github/workflows/deploy.yml', 'utf8')
 const readme = readFileSync('README.md', 'utf8')
+const operationsRunbook = readFileSync('docs/OPERATIONS_RUNBOOK.md', 'utf8')
 
 const requiredDeploySettings = [
   "VITE_BACKEND_MODE: 'disabled'",
@@ -41,8 +42,13 @@ for (const setting of requiredDeploySettings) {
   }
 }
 
-if (readme.includes('VITE_ENFORCE_LEGAL_GATE=false')) {
-  fail('README não pode recomendar VITE_ENFORCE_LEGAL_GATE=false para o modo Spark atual.')
+for (const [documentName, contents] of [
+  ['README', readme],
+  ['OPERATIONS_RUNBOOK', operationsRunbook],
+]) {
+  if (contents.includes('VITE_ENFORCE_LEGAL_GATE=false')) {
+    fail(`${documentName} não pode recomendar VITE_ENFORCE_LEGAL_GATE=false para o modo Spark atual.`)
+  }
 }
 
 const privacyGatewaySource = readFileSync('src/services/privacyGateway.js', 'utf8')
