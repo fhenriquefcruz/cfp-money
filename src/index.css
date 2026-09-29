@@ -311,6 +311,55 @@ body {
   min-width: 0;
 }
 
+.aurora-bottom-nav__label {
+  max-width: 100%;
+  white-space: nowrap;
+  font-size: 0.5625rem;
+  font-weight: 500;
+}
+
+.saved-view-name {
+  min-height: 2.5rem;
+  max-width: 11rem;
+  padding: 0.5rem 0.75rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-secondary);
+}
+
+.saved-view-name:hover {
+  color: var(--text-brand);
+}
+
+.report-kpi__value {
+  white-space: nowrap;
+  font-size: 1rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+@media (min-width: 390px) {
+  .aurora-bottom-nav__label {
+    font-size: 0.625rem;
+  }
+
+  .report-kpi__value {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .saved-view-name {
+    max-width: none;
+    white-space: nowrap;
+  }
+}
+
 @media (max-width: 639px) {
   .dashboard-premium__toolbar {
     display: grid;
@@ -586,6 +635,19 @@ body {
 
   .credit-cards-period > :last-child {
     grid-column: 1 / -1;
+  }
+
+  .credit-cards-period label,
+  .credit-cards-period input[type='month'] {
+    min-width: 10.5rem;
+  }
+
+  .credit-cards-period label {
+    width: 100%;
+  }
+
+  .credit-cards-period input[type='month'] {
+    width: 100%;
   }
 
   .credit-card-transaction > p {
