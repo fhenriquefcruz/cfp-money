@@ -290,7 +290,7 @@ export function analyzeMoney(transactions = [], settings = {}, referenceDate = n
       message:
         direction === 'igual'
           ? 'As despesas estão no mesmo nível do período equivalente anterior.'
-          : `As despesas estão ${Math.abs(expenseChangePercent).toFixed(1)}% ${direction} do período equivalente anterior.`,
+          : `As despesas estão ${Math.abs(expenseChangePercent).toFixed(1).replace('.', ',')}% ${direction} do período equivalente anterior.`,
     })
   }
 
