@@ -4,6 +4,39 @@ Todas as mudanças relevantes deste projeto são documentadas aqui.
 
 ## [Unreleased]
 
+### Added
+
+- sincronização administrativa protegida entre Firebase Authentication e Firestore, com dry-run, backfill controlado, auditoria de órfãos e exclusão protegida;
+- cobertura ampliada de homologação com matriz mobile, acessibilidade, regressão visual, smoke de produção e integração via Firebase Emulator Suite;
+- fallback `sparkPrivacy` para persistência do aceite jurídico no Firestore durante a operação no plano Spark.
+
+### Changed
+
+- painel Admin homologado para busca, expansão, Premium, bloqueio e desbloqueio de usuários;
+- Dashboard e Transações refinados para maior clareza de métricas, filtros, visões salvas e estados financeiros;
+- Money refinado para responder perguntas financeiras sem interpretar consultas como criação de lançamentos;
+- experiência mobile e textos de interface refinados após a rodada ampla de homologação;
+- documentação de operação, release e LegalGate alinhada ao modo Firebase Spark.
+
+### Fixed
+
+- inconsistências identificadas na homologação ampla de 61 verificações;
+- acessibilidade do seletor de cores em Categorias;
+- textos, pluralização, percentuais pt-BR e ajustes responsivos apontados durante a homologação.
+
+### Security
+
+- `undici` fixado em 6.28.1 para correção do advisory de produção;
+- auditoria automatizada passou a rejeitar divergências na configuração de produção do LegalGate.
+
+### Operation
+
+- paridade final validada em 13 usuários no Authentication e 13 perfis no Firestore, sem divergências ou duplicidades;
+- produção permanece em Firebase Spark, sem Cloud Functions implantadas;
+- LegalGate permanece ativo em produção com aceite persistido via Firestore;
+- homologação técnica e funcional registrada como concluída;
+- lançamento comercial definitivo permanece condicionado à revisão jurídica humana em `docs/LEGAL_REVIEW_CHECKLIST.md`.
+
 ## [1.0.0] - 2026-08-09
 
 ### Added
