@@ -27,10 +27,12 @@ Todas as mudanças relevantes deste projeto são documentadas aqui.
 ### Security
 
 - `undici` fixado em 6.28.1 para correção do advisory de produção;
-- auditoria automatizada passou a rejeitar divergências na configuração de produção do LegalGate.
+- auditoria automatizada passou a rejeitar divergências na configuração de produção do LegalGate;
+- Worker de notificações Premium passa a falhar fechado quando a configuração obrigatória ou o segredo administrativo estiver ausente/inválido.
 
 ### Operation
 
+- preflight do Worker de notificações passa a diferenciar configuração pronta/incompleta no endpoint `/health`, sem expor secrets;
 - paridade final validada em 13 usuários no Authentication e 13 perfis no Firestore, sem divergências ou duplicidades;
 - produção permanece em Firebase Spark, sem Cloud Functions implantadas;
 - LegalGate permanece ativo em produção com aceite persistido via Firestore;
