@@ -28,6 +28,22 @@ Opcionalmente, para rerodar somente o gate sem novo deploy, também pode ser cad
 
 Nunca coloque valores de secrets em arquivos, logs, issues ou pull requests.
 
+### Bootstrap seguro no Codespaces / Linux
+
+Na raiz do repositório:
+
+```bash
+bash ./scripts/configure-email-notifications-secrets.sh
+```
+
+No GitHub Codespaces, `gh` normalmente já está instalado e autenticado. O script solicita os valores sensíveis sem exibi-los no terminal, lê o JSON da conta de serviço Google localmente, gera o segredo administrativo e dispara o workflow de deploy.
+
+Use `SKIP_DEPLOY=true` se quiser apenas cadastrar/verificar os secrets:
+
+```bash
+SKIP_DEPLOY=true bash ./scripts/configure-email-notifications-secrets.sh
+```
+
 ### Bootstrap seguro no Windows
 
 Com o GitHub CLI autenticado, execute na raiz do repositório:
