@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import worker, { getEnvironmentReadiness } from '../src/index.js'
+import worker, { getEnvironmentReadiness, runActivationTest } from '../src/index.js'
 
 function readyEnvironment(overrides = {}) {
   return {
@@ -11,6 +11,7 @@ function readyEnvironment(overrides = {}) {
     GOOGLE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\nTESTE\n-----END PRIVATE KEY-----',
     BREVO_API_KEY: 'brevo-test-key',
     ADMIN_TRIGGER_SECRET: 'a'.repeat(64),
+    ACTIVATION_TEST_UID: 'test-user',
     ...overrides,
   }
 }
@@ -100,4 +101,63 @@ test('/run exige bearer exato quando serviço está pronto', async () => {
     ok: false,
     error: 'forbidden',
   })
+})
+
+
+test('preflight exige UID fixo para o teste operacional', () => {
+  const readiness = getEnvironmentReadiness(
+    readyEnvironment({
+      ACTIVATION_TEST_UID: undefined,
+    }),
+  )
+
+  assert.equal(readiness.ready, false)
+  assert.deepEqual(readiness.missing, ['ACTIVATION_TEST_UID'])
+})
+
+test('teste operacional falha quando a conta configurada não existe', async () => {
+  const result = await runActivationTest(readyEnvironment(), {
+    getDocumentImpl: async () => null,
+    sendEmailImpl: async () => {
+      throw new Error('não deveria enviar')
+    },
+  })
+
+  assert.deepEqual(result, {
+    ok: false,
+    status: 'user-not-found',
+    uid: 'test-user',
+  })
+})
+
+test('teste operacional envia somente para o e-mail da conta fixa', async () => {
+  const calls = []
+  const result = await runActivationTest(readyEnvironment(), {
+    getDocumentImpl: async (_env, path) => {
+      assert.equal(path, 'users/test-user')
+      return {
+        id: 'test-user',
+        email: 'teste@example.com',
+        displayName: 'Conta de Teste',
+      }
+    },
+    sendEmailImpl: async (_env, payload) => {
+      calls.push(payload)
+      return {
+        messageId: 'provider-message-1',
+      }
+    },
+  })
+
+  assert.deepEqual(result, {
+    ok: true,
+    status: 'sent',
+    uid: 'test-user',
+    providerMessageId: 'provider-message-1',
+  })
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0].to, 'teste@example.com')
+  assert.deepEqual(calls[0].tags, ['activation-test'])
+  assert.match(calls[0].subject, /Teste operacional/)
+  assert.doesNotMatch(calls[0].html, /R\$|Receitas|Despesas|Saldo do período/)
 })
