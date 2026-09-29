@@ -87,11 +87,7 @@ export default function TransactionSavedViews({ views, canSave, onApply, onSave,
               key={view.id}
               className="inline-flex min-h-10 flex-shrink-0 items-center rounded-xl border border-[--border-default] bg-[--bg-surface]"
             >
-              <button
-                type="button"
-                className="saved-view-name"
-                onClick={() => onApply(view)}
-              >
+              <button type="button" className="saved-view-name" onClick={() => onApply(view)}>
                 {view.name}
               </button>
               <button
