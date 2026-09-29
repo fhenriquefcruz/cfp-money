@@ -152,4 +152,4 @@ npm run notifications:activation:test
 npm run notifications:activation:check
 ```
 
-A ativação de produção segue o gate descrito em `docs/EMAIL_NOTIFICATIONS_ACTIVATION.md`. A feature flag permanece desabilitada até health, processamento do relatório de teste e entrega real serem confirmados.
+A ativação de produção segue o gate descrito em `docs/EMAIL_NOTIFICATIONS_ACTIVATION.md`. O workflow `Deploy Premium email worker` publica o Worker e executa um teste operacional protegido sem dados financeiros. A feature flag permanece desabilitada até health, gate e entrega real serem confirmados.
