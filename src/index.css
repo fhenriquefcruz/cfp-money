@@ -645,7 +645,7 @@ body {
 
   .credit-cards-period label,
   .credit-cards-period input[type='month'] {
-    min-width: 10.5rem;
+    min-width: 0;
   }
 
   .credit-cards-period label {
