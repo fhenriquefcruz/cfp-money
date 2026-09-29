@@ -29,7 +29,7 @@ set_repository_secret() {
   local name="$1"
   local value="$2"
 
-  if ! printf '%s' "$value" | gh secret set "$name" --repo "$REPOSITORY" >/dev/null; then
+  if ! printf '%s' "$value" | gh_personal secret set "$name" --repo "$REPOSITORY" >/dev/null; then
     echo "Falha ao cadastrar $name." >&2
     exit 1
   fi
@@ -40,8 +40,40 @@ set_repository_secret() {
 require_command gh
 require_command node
 
-echo "Validando autenticação do GitHub CLI..."
-gh auth status >/dev/null
+gh_personal() {
+  env -u GH_TOKEN -u GITHUB_TOKEN gh "$@"
+}
+
+echo "Validando autenticação pessoal do GitHub CLI..."
+if ! gh_personal auth status >/dev/null 2>&1; then
+  cat >&2 <<'EOF'
+Nenhuma autenticação pessoal utilizável foi encontrada no GitHub CLI.
+
+Execute:
+  env -u GH_TOKEN -u GITHUB_TOKEN gh auth login --hostname github.com --web --scopes "repo,workflow"
+
+Depois rode este bootstrap novamente.
+EOF
+  exit 1
+fi
+
+echo "Validando permissão para administrar GitHub Actions Secrets..."
+if ! gh_personal api "repos/$REPOSITORY/actions/secrets/public-key" >/dev/null 2>&1; then
+  cat >&2 <<'EOF'
+A autenticação atual do GitHub CLI não pode administrar Actions Secrets deste repositório.
+
+Em GitHub Codespaces, execute no mesmo terminal:
+  unset GH_TOKEN GITHUB_TOKEN
+  gh auth login --hostname github.com --web --scopes "repo,workflow"
+
+Depois confirme:
+  gh auth status
+
+E execute este bootstrap novamente.
+EOF
+  exit 1
+fi
+echo "✓ Permissão para Actions Secrets confirmada."
 
 if [[ -z "$SERVICE_ACCOUNT_JSON" ]]; then
   read -r -p "Caminho do JSON da conta de serviço Google: " SERVICE_ACCOUNT_JSON
@@ -116,7 +148,7 @@ set_repository_secret "EMAIL_NOTIFICATIONS_SENDER_EMAIL" "$EMAIL_NOTIFICATIONS_S
 echo
 echo "Verificando presença dos secrets..."
 
-mapfile -t EXISTING_NAMES < <(gh secret list --repo "$REPOSITORY" --json name --jq '.[].name')
+mapfile -t EXISTING_NAMES < <(gh_personal secret list --repo "$REPOSITORY" --json name --jq '.[].name')
 
 REQUIRED_NAMES=(
   CLOUDFLARE_API_TOKEN
@@ -152,10 +184,10 @@ echo "✓ Todos os 7 secrets estão presentes."
 if [[ "$SKIP_DEPLOY" != "true" ]]; then
   echo
   echo "Disparando o workflow de deploy do Worker..."
-  gh workflow run deploy-email-notifications-worker.yml --repo "$REPOSITORY" --ref main
+  gh_personal workflow run deploy-email-notifications-worker.yml --repo "$REPOSITORY" --ref main
   echo "✓ Workflow disparado."
   echo "Acompanhe com:"
-  echo "  gh run list --repo $REPOSITORY --workflow deploy-email-notifications-worker.yml --limit 1"
+  echo "  env -u GH_TOKEN -u GITHUB_TOKEN gh run list --repo $REPOSITORY --workflow deploy-email-notifications-worker.yml --limit 1"
 fi
 
 unset CLOUDFLARE_API_TOKEN
