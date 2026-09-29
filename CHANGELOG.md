@@ -6,6 +6,7 @@ Todas as mudanças relevantes deste projeto são documentadas aqui.
 
 ### Added
 
+- personalização opcional do Money baseada em agregados dos próprios lançamentos, com perfil derivado localmente e pergunta conversacional sobre hábitos de gasto;
 - sincronização administrativa protegida entre Firebase Authentication e Firestore, com dry-run, backfill controlado, auditoria de órfãos e exclusão protegida;
 - cobertura ampliada de homologação com matriz mobile, acessibilidade, regressão visual, smoke de produção e integração via Firebase Emulator Suite;
 - fallback `sparkPrivacy` para persistência do aceite jurídico no Firestore durante a operação no plano Spark.
@@ -26,6 +27,7 @@ Todas as mudanças relevantes deste projeto são documentadas aqui.
 
 ### Security
 
+- personalização do Money permanece desativada por padrão, não persiste perfil comportamental separado e não armazena a conversa;
 - `undici` fixado em 6.28.1 para correção do advisory de produção;
 - auditoria automatizada passou a rejeitar divergências na configuração de produção do LegalGate;
 - Worker de notificações Premium passa a falhar fechado quando a configuração obrigatória ou o segredo administrativo estiver ausente/inválido.
