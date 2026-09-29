@@ -1,9 +1,9 @@
 name: Phase 40E refresh Worker lockfile
 
 on:
-  push:
+  pull_request:
     branches:
-      - phase-40e-gh-secret-permission-preflight
+      - main
     paths:
       - worker/email-notifications/package.json
 
