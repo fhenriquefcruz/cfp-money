@@ -85,11 +85,11 @@ export default function TransactionSavedViews({ views, canSave, onApply, onSave,
           {views.map((view) => (
             <div
               key={view.id}
-              className="inline-flex min-h-10 max-w-[80vw] flex-shrink-0 items-center rounded-xl border border-[--border-default] bg-[--bg-surface] sm:max-w-none"
+              className="saved-view-chip inline-flex min-h-10 flex-shrink-0 items-center rounded-xl border border-[--border-default] bg-[--bg-surface]"
             >
               <button
                 type="button"
-                className="min-h-10 min-w-0 break-words px-3 py-2 text-left text-xs font-bold leading-snug text-[--text-secondary] hover:text-[--text-brand]"
+                className="saved-view-name min-h-10 px-3 text-xs font-bold text-[--text-secondary] hover:text-[--text-brand]"
                 onClick={() => onApply(view)}
                 title={view.name}
               >
