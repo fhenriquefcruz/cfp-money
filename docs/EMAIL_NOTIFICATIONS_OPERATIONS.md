@@ -25,9 +25,20 @@ Interpretação:
 - HTTP `200` + `"configuration":"ready"`: configuração estática mínima aprovada;
 - HTTP `503` + `"configuration":"incomplete"`: Worker não deve processar agendamento nem execução manual;
 - o endpoint nunca retorna os valores dos secrets;
-- um health verde não comprova conectividade ponta a ponta com Google/Firestore/Brevo; mantenha o envio de teste como gate de ativação.
+- um health verde não comprova conectividade ponta a ponta com Google/Firestore/Brevo; use o endpoint protegido `/activation-test` como gate antes de ligar a feature.
+
+Teste operacional protegido:
+
+```bash
+curl -X POST \
+  -H "Authorization: Bearer SEU_SEGREDO" \
+  https://SEU-WORKER.workers.dev/activation-test
+```
+
+O endpoint usa somente o `ACTIVATION_TEST_UID` configurado no Worker. A mensagem confirma a integração Google/Firestore/Brevo sem incluir dados financeiros.
 
 Execução manual protegida:
+
 
 O endpoint `/run` falha fechado com HTTP `503` se o preflight não estiver pronto e exige um `ADMIN_TRIGGER_SECRET` configurado com pelo menos 32 caracteres. Isso impede autenticação acidental por valores vazios/ausentes.
 
