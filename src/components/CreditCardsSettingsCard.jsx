@@ -137,6 +137,10 @@ function CreditCardsContent() {
     () => creditCards.filter((card) => card.active !== false),
     [creditCards],
   )
+  const activeCardsLabel =
+    activeCards.length === 1
+      ? '1 cartão ativo para novos lançamentos.'
+      : `${activeCards.length} cartões ativos para novos lançamentos.`
 
   const openNew = () => {
     setEditingCard(null)
@@ -285,10 +289,7 @@ function CreditCardsContent() {
                 </div>
               ))}
 
-              <p className="text-[10px] text-[--text-tertiary]">
-                {activeCards.length} cartão{activeCards.length === 1 ? '' : 'ões'} ativo
-                {activeCards.length === 1 ? '' : 's'} para novos lançamentos.
-              </p>
+              <p className="text-[10px] text-[--text-tertiary]">{activeCardsLabel}</p>
             </div>
           )}
         </div>

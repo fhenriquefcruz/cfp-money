@@ -73,9 +73,7 @@ function KPI({ label, value, sub, color, icon, tooltip }) {
           <p className="text-xs text-[--text-tertiary]">{label}</p>
           {tooltip && <InfoTooltip text={tooltip} size={11} />}
         </div>
-        <p className="break-words text-base font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere] min-[390px]:text-lg">
-          {value}
-        </p>
+        <p className="report-kpi__value">{value}</p>
         {sub && <p className="text-[10px] text-[--text-tertiary]">{sub}</p>}
       </div>
     </div>
@@ -103,7 +101,7 @@ function SavingRateBadge({ rate }) {
         </p>
       </div>
       <p className="text-2xl font-black" style={{ color }}>
-        {rate.toFixed(1)}%
+        {rate.toFixed(1).replace('.', ',')}%
       </p>
     </div>
   )
@@ -599,7 +597,9 @@ function ReportsContent() {
                         <span className="text-[--text-secondary]">Poupado vs Receita total</span>
                         <span className="font-bold text-[--text-primary]">
                           {periodTotals.income > 0
-                            ? ((periodTotals.savings / periodTotals.income) * 100).toFixed(1)
+                            ? ((periodTotals.savings / periodTotals.income) * 100)
+                                .toFixed(1)
+                                .replace('.', ',')
                             : 0}
                           %
                         </span>

@@ -779,7 +779,9 @@ export default function TransactionList() {
       <div className="operational-page__header flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black text-[--text-primary]">Transações</h1>
-          <p className="text-xs text-[--text-tertiary] mt-0.5">{filtered.length} encontradas</p>
+          <p className="text-xs text-[--text-tertiary] mt-0.5">
+            {filtered.length} {filtered.length === 1 ? 'encontrada' : 'encontradas'}
+          </p>
         </div>
         {/* Ações — mobile: só botão Nova */}
         <div className="flex items-center gap-2">
