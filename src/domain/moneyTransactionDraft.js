@@ -180,13 +180,8 @@ function hasAdvancedCardFlow(normalizedMessage) {
   )
 }
 
-function isQuestionInsteadOfCreation(normalizedMessage) {
-  return (
-    normalizedMessage.includes('quanto gastei') ||
-    normalizedMessage.includes('quanto recebi') ||
-    normalizedMessage.includes('relatorio') ||
-    normalizedMessage.includes('como estao')
-  )
+function isQuestionInsteadOfCreation(message) {
+  return /^(?:money )?(?:quanto|quais?|como|o que)\b/.test(message) || message.includes('relatorio')
 }
 
 function detectDuplicate(draft, transactions) {

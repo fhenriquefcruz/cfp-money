@@ -1,16 +1,16 @@
 const MONTHS = [
-  { index: 0, name: 'janeiro', aliases: ['janeiro', 'jan'] },
-  { index: 1, name: 'fevereiro', aliases: ['fevereiro', 'fev'] },
-  { index: 2, name: 'março', aliases: ['marco', 'mar'] },
-  { index: 3, name: 'abril', aliases: ['abril', 'abr'] },
-  { index: 4, name: 'maio', aliases: ['maio', 'mai'] },
-  { index: 5, name: 'junho', aliases: ['junho', 'jun'] },
-  { index: 6, name: 'julho', aliases: ['julho', 'jul'] },
-  { index: 7, name: 'agosto', aliases: ['agosto', 'ago'] },
-  { index: 8, name: 'setembro', aliases: ['setembro', 'set'] },
-  { index: 9, name: 'outubro', aliases: ['outubro', 'out'] },
-  { index: 10, name: 'novembro', aliases: ['novembro', 'nov'] },
-  { index: 11, name: 'dezembro', aliases: ['dezembro', 'dez'] },
+  ['janeiro', 'jan'],
+  ['fevereiro', 'fev'],
+  ['março', 'marco', 'mar'],
+  ['abril', 'abr'],
+  ['maio', 'mai'],
+  ['junho', 'jun'],
+  ['julho', 'jul'],
+  ['agosto', 'ago'],
+  ['setembro', 'set'],
+  ['outubro', 'out'],
+  ['novembro', 'nov'],
+  ['dezembro', 'dez'],
 ]
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
@@ -54,7 +54,7 @@ function resolveMonthFromMessage(normalizedMessage, now) {
     normalizedMessage.includes('desse mes') ||
     normalizedMessage.includes('deste mes')
   ) {
-    return { year: currentYear, month: currentMonth, source: 'current' }
+    return { year: currentYear, month: currentMonth }
   }
 
   if (
@@ -63,27 +63,25 @@ function resolveMonthFromMessage(normalizedMessage, now) {
     normalizedMessage.includes('mes anterior')
   ) {
     const date = new Date(currentYear, currentMonth - 1, 1)
-    return { year: date.getFullYear(), month: date.getMonth(), source: 'previous' }
+    return { year: date.getFullYear(), month: date.getMonth() }
   }
 
-  const explicitMonth = MONTHS.find((candidate) =>
-    candidate.aliases.some((alias) =>
-      new RegExp(`(^|\\s)${alias}(?=\\s|$)`).test(normalizedMessage),
-    ),
+  const explicitMonth = MONTHS.findIndex((aliases) =>
+    aliases.some((alias) => new RegExp(`(^|\\s)${alias}(?=\\s|$)`).test(normalizedMessage)),
   )
 
-  if (!explicitMonth) return null
+  if (explicitMonth < 0) return null
 
   const explicitYear = normalizedMessage.match(/\b(20\d{2})\b/)
   let year = explicitYear ? Number(explicitYear[1]) : currentYear
 
   if (!explicitYear && normalizedMessage.includes('ano passado')) {
     year = currentYear - 1
-  } else if (!explicitYear && explicitMonth.index > currentMonth) {
+  } else if (!explicitYear && explicitMonth > currentMonth) {
     year = currentYear - 1
   }
 
-  return { year, month: explicitMonth.index, source: 'explicit' }
+  return { year, month: explicitMonth }
 }
 
 function getCalendarMonthPeriod(year, month) {
@@ -94,7 +92,7 @@ function getCalendarMonthPeriod(year, month) {
     start: toIsoDate(start),
     end: toIsoDate(end),
     monthKey: getMonthKey(year, month),
-    label: `${MONTHS[month].name} de ${year}`,
+    label: `${MONTHS[month][0]} de ${year}`,
   }
 }
 
@@ -175,6 +173,10 @@ export function parseMoneyAssistantIntent(
   const normalizedMessage = normalizeText(message)
   const category = findCategory(normalizedMessage, categories, transactions)
   const requestedMonth = resolveMonthFromMessage(normalizedMessage, now)
+  const defaultMonth = {
+    year: now.getFullYear(),
+    month: now.getMonth(),
+  }
 
   if (!normalizedMessage) return { type: 'empty' }
 
@@ -195,28 +197,27 @@ export function parseMoneyAssistantIntent(
     return {
       type: 'category_report',
       category,
-      requestedMonth: requestedMonth || {
-        year: now.getFullYear(),
-        month: now.getMonth(),
-        source: 'default',
-      },
+      requestedMonth: requestedMonth || defaultMonth,
     }
   }
+
+  if (normalizedMessage.includes('maiores despesas')) {
+    return { type: 'top', requestedMonth: requestedMonth || defaultMonth }
+  }
+
+  if (normalizedMessage.includes('merece minha atencao')) return { type: 'priority' }
 
   const asksMonthlyReport =
     normalizedMessage.includes('relatorio') ||
     normalizedMessage.includes('fechamento') ||
     normalizedMessage.includes('resumo de') ||
-    normalizedMessage.includes('resumo do')
+    normalizedMessage.includes('resumo do') ||
+    normalizedMessage.includes('quanto gastei este mes')
 
   if (asksMonthlyReport) {
     return {
       type: 'monthly_report',
-      requestedMonth: requestedMonth || {
-        year: now.getFullYear(),
-        month: now.getMonth(),
-        source: 'default',
-      },
+      requestedMonth: requestedMonth || defaultMonth,
     }
   }
 
@@ -225,7 +226,8 @@ export function parseMoneyAssistantIntent(
     normalizedMessage.includes('como estao meus gastos') ||
     normalizedMessage.includes('situacao financeira') ||
     normalizedMessage.includes('analise financeira') ||
-    normalizedMessage.includes('analise do money')
+    normalizedMessage.includes('analise do money') ||
+    normalizedMessage.includes('comparado ao periodo anterior')
 
   if (asksFinancialStatus) return { type: 'cycle_summary' }
 
@@ -239,6 +241,7 @@ export function buildMoneyAssistantResponse({
   settings = {},
   now = new Date(),
   analyze,
+  priority,
 }) {
   const intent = parseMoneyAssistantIntent(message, categories, transactions, now)
 
@@ -251,12 +254,13 @@ export function buildMoneyAssistantResponse({
       type: 'help',
       title: intent.type === 'unknown' ? 'Ainda não entendi esse pedido' : 'Como posso ajudar',
       text: 'Nesta fase, posso consultar seus dados sem alterar nenhum lançamento. Peça um relatório mensal, uma análise do período atual ou o total gasto em uma categoria.',
-      suggestions: [
-        'Como estão minhas finanças?',
-        'Quero o relatório do mês atual',
-        'Quero o relatório de abril',
-        'Quanto gastei com alimentação este mês?',
-      ],
+    }
+  }
+
+  if (intent.type === 'priority') {
+    return {
+      type: intent.type,
+      text: priority || 'Sem prioridade.',
     }
   }
 
@@ -296,6 +300,25 @@ export function buildMoneyAssistantResponse({
     period,
     settings.excludeSavings !== false,
   )
+
+  if (intent.type === 'top') {
+    const expenses = periodTransactions
+      .filter((transaction) => transaction.type === 'expense')
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5)
+
+    return {
+      type: intent.type,
+      title: 'Despesas',
+      text:
+        expenses
+          .map(
+            (transaction) =>
+              `${transaction.description || transaction.categoryName}: ${currencyFormatter.format(transaction.amount)}`,
+          )
+          .join(' · ') || 'Nenhuma.',
+    }
+  }
 
   if (intent.type === 'category_report') {
     periodTransactions = periodTransactions.filter((transaction) => {

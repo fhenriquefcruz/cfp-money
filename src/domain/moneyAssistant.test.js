@@ -124,3 +124,61 @@ test('responde com ajuda para pedidos não reconhecidos', () => {
   expect(response.type).toBe('help')
   expect(response.text).toContain('sem alterar')
 })
+
+test('responde quanto foi gasto no mês atual', () => {
+  const response = buildMoneyAssistantResponse({
+    message: 'Quanto gastei este mês?',
+    transactions,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+
+  expect(response.type).toBe('monthly_report')
+  expect(response.metrics.find((metric) => metric.label === 'Despesas')).toEqual({
+    label: 'Despesas',
+    value: 250,
+  })
+  expect(response.reportMonth).toBe('2026-07')
+})
+
+test('lista as maiores despesas sem criar lançamento', () => {
+  const response = buildMoneyAssistantResponse({
+    message: 'Quais são minhas maiores despesas?',
+    transactions,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+
+  expect(response.type).toBe('top')
+  expect(response.text).toContain('250,00')
+})
+
+test('responde comparação com o período anterior', () => {
+  const response = buildMoneyAssistantResponse({
+    message: 'Como estou comparado ao período anterior?',
+    transactions,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+
+  expect(response.type).toBe('cycle_summary')
+  expect(response.text).toContain('período equivalente anterior')
+  expect(response.metrics.some((metric) => metric.label === 'Despesas')).toBe(true)
+})
+
+test('responde o que merece atenção usando as prioridades já calculadas', () => {
+  const response = buildMoneyAssistantResponse({
+    message: 'O que merece minha atenção agora?',
+    transactions,
+    categories,
+    now,
+    analyze: analyzeMoney,
+    priority: 'Combustível ultrapassou o orçamento',
+  })
+
+  expect(response.type).toBe('priority')
+  expect(response.text).toContain('Combustível ultrapassou o orçamento')
+})

@@ -82,6 +82,28 @@ test('não trata consulta como criação de transação', () => {
   ).toBeNull()
 })
 
+test('não transforma pergunta sobre maiores despesas em lançamento', () => {
+  expect(
+    buildMoneyTransactionDraft({
+      message: 'Quais são minhas maiores despesas?',
+      categories,
+      transactions: [],
+      now,
+    }),
+  ).toBeNull()
+})
+
+test('não transforma pergunta sobre prioridades em lançamento', () => {
+  expect(
+    buildMoneyTransactionDraft({
+      message: 'O que merece minha atenção agora?',
+      categories,
+      transactions: [],
+      now,
+    }),
+  ).toBeNull()
+})
+
 test('bloqueia simplificação indevida de cartão e parcelas', () => {
   const response = buildMoneyTransactionDraft({
     message: 'Comprei 600 no cartão de crédito em 3 vezes',
