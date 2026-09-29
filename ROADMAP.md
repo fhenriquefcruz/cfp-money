@@ -42,8 +42,7 @@
   - [x] backfill protegido de perfis ausentes;
   - [x] auditoria somente leitura de órfãos;
   - [x] exclusão protegida do único órfão confirmado;
-  - [x] estado final validado em 13 Auth / 13 Firestore / 0 divergências / 0
-    duplicidades;
+  - [x] estado final validado em 13 Auth / 13 Firestore / 0 divergências / 0 duplicidades;
 - [x] homologação do painel Admin em produção;
   - [x] busca e expansão de usuário;
   - [x] ativar e remover Premium;
@@ -72,8 +71,7 @@
   - [x] pluralização de resultados e cartões;
   - [x] texto correto de lançamentos disponíveis;
   - [x] percentuais em pt-BR;
-  - [x] ajustes responsivos em Relatórios, navegação inferior, visões salvas e período de
-    fatura;
+  - [x] ajustes responsivos em Relatórios, navegação inferior, visões salvas e período de fatura;
 - [x] coerência de produção no modo Firebase Spark;
   - [x] LegalGate ativo com persistência via `sparkPrivacy`;
   - [x] README e Operations Runbook alinhados ao deploy;
