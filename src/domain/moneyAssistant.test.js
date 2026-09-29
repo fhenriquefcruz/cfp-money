@@ -221,22 +221,14 @@ test('apresenta perfil individual com evidências agregadas', () => {
     personalizationProfile: {
       sampleSize: 12,
       confidence: 'medium',
-      topCategories: [
-        {
-          name: 'Alimentação',
-          share: 0.45,
-        },
-      ],
+      topCategory: {
+        name: 'Alimentação',
+        share: 0.45,
+      },
       preferredPaymentMethod: {
         id: 'pix',
         count: 8,
       },
-      recurringDescriptions: [
-        {
-          label: 'iFood',
-          count: 4,
-        },
-      ],
     },
   })
 
@@ -251,7 +243,6 @@ test('apresenta perfil individual com evidências agregadas', () => {
       { label: 'Amostra', rawValue: '12 despesas' },
       { label: 'Categoria principal', rawValue: 'Alimentação · 45%' },
       { label: 'Mais usado', rawValue: 'pix' },
-      { label: 'Padrão repetido', rawValue: 'iFood · 4x' },
     ]),
   )
 })
