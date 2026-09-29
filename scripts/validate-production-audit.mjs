@@ -19,8 +19,8 @@ if (packageJson.dependencies?.firebase !== '10.14.1') {
   fail('firebase deve permanecer fixado em 10.14.1.')
 }
 
-if (packageJson.overrides?.undici !== '6.28.0') {
-  fail('undici deve permanecer sobrescrito para 6.28.0.')
+if (packageJson.overrides?.undici !== '6.28.1') {
+  fail('undici deve permanecer sobrescrito para 6.28.1.')
 }
 
 const appSource = readFileSync('src/App.jsx', 'utf8')
