@@ -3,7 +3,7 @@
 ## Recursos principais
 
 - receitas, despesas, cartões, faturas, metas e orçamentos;
-- assistente financeiro com confirmação antes de gravar;
+- assistente financeiro com confirmação antes de gravar e personalização individual opcional;
 - administração de acessos Premium;
 - exportação de dados, consentimento versionado e exclusão de conta;
 - métricas operacionais agregadas para administradores;
@@ -125,7 +125,8 @@ Antes do lançamento:
 - `docs/SALE_DATA_ROOM_INDEX.md`;
 - `docs/PUBLIC_SECTOR_PROPOSAL_TEMPLATE.md`;
 - `docs/RELEASE_CHECKLIST.md`;
-- `docs/EMAIL_NOTIFICATIONS_ACTIVATION.md`.
+- `docs/EMAIL_NOTIFICATIONS_ACTIVATION.md`;
+- `docs/MONEY_PHASE_41.md`.
 
 A publicação em GitHub Pages é temporária durante a transição de marca e infraestrutura.
 
