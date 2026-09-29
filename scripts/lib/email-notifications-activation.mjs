@@ -49,10 +49,7 @@ export function validateActivationEnvironment(env = {}) {
   }
 }
 
-export async function runEmailNotificationActivationCheck({
-  env = {},
-  fetchImpl = fetch,
-} = {}) {
+export async function runEmailNotificationActivationCheck({ env = {}, fetchImpl = fetch } = {}) {
   const config = validateActivationEnvironment(env)
 
   const healthResponse = await fetchImpl(`${config.workerUrl}/health`, {
@@ -63,11 +60,7 @@ export async function runEmailNotificationActivationCheck({
   })
   const health = await parseJson(healthResponse, '/health')
 
-  if (
-    healthResponse.status !== 200 ||
-    health?.ok !== true ||
-    health?.configuration !== 'ready'
-  ) {
+  if (healthResponse.status !== 200 || health?.ok !== true || health?.configuration !== 'ready') {
     throw new Error(
       `Worker não está pronto: /health retornou HTTP ${healthResponse.status} e configuração ${String(
         health?.configuration || 'desconhecida',
