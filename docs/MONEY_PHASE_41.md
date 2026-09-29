@@ -19,10 +19,8 @@ A janela padrão considera até 120 dias e deriva apenas agregados:
 - quantidade de despesas analisadas;
 - categorias com maior participação;
 - forma de pagamento mais frequente;
-- descrições não recorrentes que aparecem repetidamente.
 
-Poupança não entra como consumo. Descrições de parcelas e lançamentos marcados como recorrentes não são usadas para inferir repetição comportamental.
-
+Poupança não entra como consumo. 
 ## Confiança
 
 O Money explicita a quantidade de dados usada:
@@ -49,7 +47,7 @@ Com a personalização ativada, perguntas como:
 
 - “O que você aprendeu sobre meus gastos?”
 - “Como eu costumo gastar?”
-- “Quais são meus hábitos?”
+- “Quais categorias mais pesam no meu histórico?”
 
 retornam as evidências agregadas usadas pelo Money.
 
