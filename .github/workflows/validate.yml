@@ -62,10 +62,7 @@ jobs:
         run: npm run test:integration:firebase
 
       - name: Formatting
-        run: |
-          npx prettier --write ROADMAP.md
-          git diff -- ROADMAP.md
-          git diff --exit-code -- ROADMAP.md
+        run: npm run format:check
 
       - name: Whitespace validation
         run: git diff --check
