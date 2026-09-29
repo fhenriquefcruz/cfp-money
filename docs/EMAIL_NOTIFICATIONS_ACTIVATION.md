@@ -28,6 +28,26 @@ Opcionalmente, para rerodar somente o gate sem novo deploy, também pode ser cad
 
 Nunca coloque valores de secrets em arquivos, logs, issues ou pull requests.
 
+### Bootstrap seguro no Windows
+
+Com o GitHub CLI autenticado, execute na raiz do repositório:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\configure-email-notifications-secrets.ps1
+```
+
+O script:
+
+1. lê `client_email` e `private_key` diretamente do JSON da conta de serviço;
+2. solicita Cloudflare e Brevo em prompts ocultos;
+3. gera automaticamente um `EMAIL_NOTIFICATIONS_ADMIN_SECRET` criptograficamente aleatório;
+4. solicita apenas o UID da conta de teste e o remetente validado;
+5. envia os valores ao GitHub CLI por stdin, sem colocá-los nos argumentos do processo;
+6. confirma a presença dos 7 secrets;
+7. dispara o workflow **Deploy Premium email worker**.
+
+Use `-SkipDeploy` se quiser apenas cadastrar/verificar os secrets.
+
 ## Teste operacional protegido
 
 Com `VITE_EMAIL_NOTIFICATIONS_ENABLED=false`, execute o workflow **Deploy Premium email worker**.
