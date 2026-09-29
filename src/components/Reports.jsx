@@ -599,7 +599,9 @@ function ReportsContent() {
                         <span className="text-[--text-secondary]">Poupado vs Receita total</span>
                         <span className="font-bold text-[--text-primary]">
                           {periodTotals.income > 0
-                            ? ((periodTotals.savings / periodTotals.income) * 100).toFixed(1).replace('.', ',')
+                            ? ((periodTotals.savings / periodTotals.income) * 100)
+                                .toFixed(1)
+                                .replace('.', ',')
                             : 0}
                           %
                         </span>
