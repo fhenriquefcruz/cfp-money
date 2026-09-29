@@ -17,10 +17,20 @@ npm run tail
 Saúde:
 
 ```bash
-curl https://SEU-WORKER.workers.dev/health
+curl -i https://SEU-WORKER.workers.dev/health
 ```
 
+Interpretação:
+
+- HTTP `200` + `"configuration":"ready"`: configuração estática mínima aprovada;
+- HTTP `503` + `"configuration":"incomplete"`: Worker não deve processar agendamento nem execução manual;
+- o endpoint nunca retorna os valores dos secrets;
+- um health verde não comprova conectividade ponta a ponta com Google/Firestore/Brevo; mantenha o envio de teste como gate de ativação.
+
 Execução manual protegida:
+
+O endpoint `/run` falha fechado com HTTP `503` se o preflight não estiver pronto e exige um `ADMIN_TRIGGER_SECRET` configurado com pelo menos 32 caracteres. Isso impede autenticação acidental por valores vazios/ausentes.
+
 
 ```bash
 curl -X POST   -H "Authorization: Bearer SEU_SEGREDO"   -H "Content-Type: application/json"   -d '{"uid":"UID_OPCIONAL"}'   https://SEU-WORKER.workers.dev/run
