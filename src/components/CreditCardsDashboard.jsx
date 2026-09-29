@@ -260,7 +260,7 @@ function CreditCardsCenterContent() {
             </h2>
           </div>
 
-          <div className="credit-cards-period grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:w-auto sm:flex-wrap">
+          <div className="credit-cards-period flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setSelectedMonth((month) => shiftMonthKey(month, -1))}
@@ -270,7 +270,7 @@ function CreditCardsCenterContent() {
               <ChevronLeft size={17} />
             </button>
 
-            <label className="relative min-w-0">
+            <label className="relative">
               <span className="sr-only">Selecionar mês da fatura</span>
               <CalendarDays
                 size={15}
@@ -302,7 +302,7 @@ function CreditCardsCenterContent() {
                 setSelectedMonth(monthKeyFromDate())
                 setSelectedCardId('all')
               }}
-              className="col-span-3 min-h-11 rounded-xl border border-[--brand-200] bg-[--brand-50] px-3 text-xs font-bold text-[--brand-700] sm:col-auto"
+              className="min-h-11 rounded-xl border border-[--brand-200] bg-[--brand-50] px-3 text-xs font-bold text-[--brand-700]"
             >
               Mês atual
             </button>
