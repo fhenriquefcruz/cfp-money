@@ -1,5 +1,3 @@
-import { getMoneyPersonalizationSummary } from './moneyPersonalization'
-
 const MONTHS = [
   ['janeiro', 'jan'],
   ['fevereiro', 'fev'],
@@ -279,38 +277,39 @@ export function buildMoneyAssistantResponse({
       }
     }
 
-    const summary = getMoneyPersonalizationSummary(personalizationProfile)
-    if (!summary.ready) {
+    const sampleSize = Number(personalizationProfile?.sampleSize || 0)
+    if (personalizationProfile?.confidence === 'insufficient') {
       return {
         type: 'personalization_profile',
         title: 'Ainda estou formando seu perfil',
-        text: summary.text,
+        text: 'Ainda não há histórico suficiente para formar um perfil individual de gastos.',
         secondaryText:
           'O Money precisa de pelo menos quatro despesas recentes para começar e aumenta a confiança conforme o histórico cresce.',
-        metrics: [
-          {
-            label: 'Amostra',
-            rawValue: `${Number(personalizationProfile?.sampleSize || 0)} despesas`,
-          },
-        ],
+        metrics: [{ label: 'Amostra', rawValue: `${sampleSize} despesas` }],
       }
     }
 
-    const topCategory = personalizationProfile?.topCategories?.[0]
+    const topCategory = personalizationProfile?.topCategory
     const payment = personalizationProfile?.preferredPaymentMethod
-    const recurring = personalizationProfile?.recurringDescriptions?.[0]
+    const evidence = [
+      topCategory
+        ? `${topCategory.name} representa ${Math.round((topCategory.share || 0) * 100)}% das despesas analisadas`
+        : '',
+      payment
+        ? `${payment.id} aparece em ${payment.count} lançamento${payment.count === 1 ? '' : 's'}`
+        : '',
+    ].filter(Boolean)
 
     return {
       type: 'personalization_profile',
       title: 'O que aprendi com seu histórico',
-      text: summary.text,
+      text: evidence.length
+        ? `Com base no seu próprio histórico, ${evidence.join('; ')}.`
+        : 'O histórico já permite personalização, mas ainda não existe um padrão dominante confiável.',
       secondaryText:
         'Esse perfil é recalculado localmente a partir dos seus próprios lançamentos recentes. A conversa não é armazenada no Firestore.',
       metrics: [
-        {
-          label: 'Amostra',
-          rawValue: `${personalizationProfile.sampleSize} despesas`,
-        },
+        { label: 'Amostra', rawValue: `${sampleSize} despesas` },
         ...(topCategory
           ? [
               {
@@ -319,12 +318,7 @@ export function buildMoneyAssistantResponse({
               },
             ]
           : []),
-        ...(payment
-          ? [{ label: 'Mais usado', rawValue: payment.id }]
-          : []),
-        ...(recurring
-          ? [{ label: 'Padrão repetido', rawValue: `${recurring.label} · ${recurring.count}x` }]
-          : []),
+        ...(payment ? [{ label: 'Mais usado', rawValue: payment.id }] : []),
       ],
     }
   }
