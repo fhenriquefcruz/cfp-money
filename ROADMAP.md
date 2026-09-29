@@ -99,7 +99,7 @@
 
 - [x] preferência de personalização com opt-in explícito;
 - [x] perfil derivado localmente dos próprios lançamentos;
-- [x] categorias predominantes, forma de pagamento frequente e descrições repetidas;
+- [x] categoria predominante e forma de pagamento frequente;
 - [x] níveis de confiança baseados no tamanho da amostra;
 - [x] pergunta conversacional sobre o que o Money aprendeu;
 - [x] perfil derivado não persistido e conversa não armazenada;
