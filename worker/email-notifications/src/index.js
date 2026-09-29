@@ -19,6 +19,67 @@ import { alertsEmail, currency, reportEmail, sendEmail } from './mailer.js'
 const CONSENT_VERSION = '1.0.0'
 const DEFAULT_TIME_ZONE = 'America/Campo_Grande'
 
+const REQUIRED_ENVIRONMENT_KEYS = [
+  'FIREBASE_PROJECT_ID',
+  'APP_URL',
+  'SENDER_EMAIL',
+  'GOOGLE_CLIENT_EMAIL',
+  'GOOGLE_PRIVATE_KEY',
+  'BREVO_API_KEY',
+  'ADMIN_TRIGGER_SECRET',
+]
+
+function nonEmpty(value) {
+  return Boolean(String(value || '').trim())
+}
+
+function validEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim())
+}
+
+function validAppUrl(value) {
+  try {
+    const url = new URL(String(value || '').trim())
+    return url.protocol === 'https:' || (url.protocol === 'http:' && url.hostname === 'localhost')
+  } catch {
+    return false
+  }
+}
+
+export function getEnvironmentReadiness(env = {}) {
+  const missing = REQUIRED_ENVIRONMENT_KEYS.filter((key) => !nonEmpty(env[key]))
+  const invalid = []
+
+  if (nonEmpty(env.APP_URL) && !validAppUrl(env.APP_URL)) {
+    invalid.push('APP_URL')
+  }
+
+  if (nonEmpty(env.SENDER_EMAIL) && !validEmail(env.SENDER_EMAIL)) {
+    invalid.push('SENDER_EMAIL')
+  }
+
+  if (nonEmpty(env.GOOGLE_CLIENT_EMAIL) && !validEmail(env.GOOGLE_CLIENT_EMAIL)) {
+    invalid.push('GOOGLE_CLIENT_EMAIL')
+  }
+
+  if (
+    nonEmpty(env.GOOGLE_PRIVATE_KEY) &&
+    !String(env.GOOGLE_PRIVATE_KEY).includes('-----BEGIN PRIVATE KEY-----')
+  ) {
+    invalid.push('GOOGLE_PRIVATE_KEY')
+  }
+
+  if (nonEmpty(env.ADMIN_TRIGGER_SECRET) && String(env.ADMIN_TRIGGER_SECRET).trim().length < 32) {
+    invalid.push('ADMIN_TRIGGER_SECRET')
+  }
+
+  return {
+    ready: missing.length === 0 && invalid.length === 0,
+    missing,
+    invalid,
+  }
+}
+
 function settingsDefaults(value = {}) {
   return {
     enabled: false,
@@ -457,6 +518,15 @@ function json(data, status = 200) {
 
 export default {
   async scheduled(controller, env, ctx) {
+    const readiness = getEnvironmentReadiness(env)
+    if (!readiness.ready) {
+      console.error('[Meu Real] Worker de notificações não está pronto.', {
+        missing: readiness.missing,
+        invalid: readiness.invalid,
+      })
+      return
+    }
+
     ctx.waitUntil(
       processAll(env, {
         now: new Date(controller.scheduledTime),
@@ -466,18 +536,28 @@ export default {
 
   async fetch(request, env) {
     const url = new URL(request.url)
+    const readiness = getEnvironmentReadiness(env)
 
     if (request.method === 'GET' && url.pathname === '/health') {
-      return json({
-        ok: true,
-        service: 'meu-real-email-notifications',
-        version: '19.0.0',
-      })
+      return json(
+        {
+          ok: readiness.ready,
+          service: 'meu-real-email-notifications',
+          version: '19.0.0',
+          configuration: readiness.ready ? 'ready' : 'incomplete',
+        },
+        readiness.ready ? 200 : 503,
+      )
     }
 
     if (request.method === 'POST' && url.pathname === '/run') {
+      if (!readiness.ready) {
+        return json({ ok: false, error: 'service-unavailable' }, 503)
+      }
+
+      const expectedSecret = String(env.ADMIN_TRIGGER_SECRET || '').trim()
       const authorization = request.headers.get('authorization')
-      if (authorization !== `Bearer ${env.ADMIN_TRIGGER_SECRET}`) {
+      if (!expectedSecret || authorization !== `Bearer ${expectedSecret}`) {
         return json({ ok: false, error: 'forbidden' }, 403)
       }
 

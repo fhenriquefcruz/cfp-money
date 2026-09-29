@@ -66,6 +66,16 @@ npm run deploy
 
 O Cron Trigger executa a cada quinze minutos.
 
+Após implantar, valide o preflight:
+
+```bash
+curl -i https://SEU-WORKER.workers.dev/health
+```
+
+O Worker só retorna HTTP `200` com `"configuration":"ready"` quando as variáveis e secrets essenciais passam no preflight local. Configuração ausente ou inválida retorna HTTP `503`. O endpoint não expõe valores de secrets.
+
+O `/health` valida configuração estática; ele não substitui o envio de um relatório de teste para confirmar Google OAuth, Firestore e Brevo ponta a ponta.
+
 ## 6. Frontend
 
 Durante a configuração, mantenha:
@@ -75,7 +85,7 @@ VITE_BACKEND_MODE=disabled
 VITE_EMAIL_NOTIFICATIONS_ENABLED=false
 ```
 
-Depois que `/health` responder com sucesso e um relatório de teste for entregue, altere para:
+Somente depois que `/health` responder HTTP `200` com `"configuration":"ready"` **e** um relatório de teste real for entregue, altere para:
 
 ```env
 VITE_EMAIL_NOTIFICATIONS_ENABLED=true
