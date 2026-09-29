@@ -80,7 +80,7 @@
   - [x] homologação técnica registrada como concluída;
   - [x] revisão jurídica final separada corretamente como dependência humana.
 
-## Ativação controlada das notificações Premium — Fases 40 e 40B
+## Ativação controlada das notificações Premium — Fases 40, 40B e 40C
 
 - [x] preflight fail-closed do Worker;
 - [x] gate executável para health + teste operacional autenticado sem dados financeiros;
@@ -90,6 +90,8 @@
 - [x] teste protegido independente da feature flag do frontend;
 - [x] remetente e UID de teste removidos da configuração versionada e movidos para secrets;
 - [x] checklist de ativação e rollback;
+- [x] Wrangler atualizado para 4.143.0, removendo vulnerabilidades high do tooling;
+- [x] `npm audit --audit-level=high` incorporado à validação do Worker;
 - [ ] implantar/configurar Worker e provedor de e-mail no ambiente externo;
 - [ ] executar gate contra produção;
 - [ ] confirmar entrega real do e-mail operacional de ativação;
