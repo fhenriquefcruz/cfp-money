@@ -183,10 +183,14 @@ test('responde o que merece atenção usando as prioridades já calculadas', () 
   expect(response.text).toContain('Combustível ultrapassou o orçamento')
 })
 
-
 test('reconhece pergunta sobre aprendizado individual do Money', () => {
   expect(
-    parseMoneyAssistantIntent('O que você aprendeu sobre meus gastos?', categories, transactions, now),
+    parseMoneyAssistantIntent(
+      'O que você aprendeu sobre meus gastos?',
+      categories,
+      transactions,
+      now,
+    ),
   ).toMatchObject({
     type: 'personalization_profile',
   })
