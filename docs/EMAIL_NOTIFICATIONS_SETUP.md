@@ -22,6 +22,12 @@ Não coloque o JSON ou a chave no Git.
 
 ## 3. Secrets do GitHub
 
+No Codespaces/Linux, use:
+
+```bash
+bash ./scripts/configure-email-notifications-secrets.sh
+```
+
 No Windows, a forma recomendada é usar o bootstrap seguro:
 
 ```powershell

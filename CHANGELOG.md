@@ -36,6 +36,7 @@ Todas as mudanças relevantes deste projeto são documentadas aqui.
 - adicionado gate executável e workflow manual para ativação controlada das notificações Premium, exigindo health pronto e teste operacional protegido antes da liberação da feature flag;
 - adicionado deploy automatizado do Worker pela GitHub Actions, com secrets temporários e teste ponta a ponta sem dados financeiros;
 - adicionado bootstrap PowerShell seguro para cadastrar os 7 GitHub Secrets via GitHub CLI, gerar o segredo administrativo e disparar o deploy sem versionar credenciais;
+- adicionado bootstrap Bash equivalente para GitHub Codespaces/Linux, com validação sintática no CI;
 - preflight do Worker de notificações passa a diferenciar configuração pronta/incompleta no endpoint `/health`, sem expor secrets;
 - paridade final validada em 13 usuários no Authentication e 13 perfis no Firestore, sem divergências ou duplicidades;
 - produção permanece em Firebase Spark, sem Cloud Functions implantadas;
