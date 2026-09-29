@@ -80,7 +80,9 @@ test('normaliza configurações sem permitir dias de ciclo inseguros', () => {
 test('mantém personalização desativada por padrão e exige opt-in explícito', () => {
   expect(normalizeMoneySettings({}).personalizationEnabled).toBe(false)
   expect(normalizeMoneySettings({ personalizationEnabled: true }).personalizationEnabled).toBe(true)
-  expect(normalizeMoneySettings({ personalizationEnabled: 'true' }).personalizationEnabled).toBe(false)
+  expect(normalizeMoneySettings({ personalizationEnabled: 'true' }).personalizationEnabled).toBe(
+    false,
+  )
 })
 
 test('usa mês civil como padrão', () => {
