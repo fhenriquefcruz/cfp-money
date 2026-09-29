@@ -22,7 +22,24 @@ Não coloque o JSON ou a chave no Git.
 
 ## 3. Secrets do GitHub
 
-Para o deploy automatizado, cadastre no repositório:
+No Windows, a forma recomendada é usar o bootstrap seguro:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\configure-email-notifications-secrets.ps1
+```
+
+Pré-requisitos do script:
+
+- GitHub CLI (`gh`) instalado e autenticado;
+- JSON da conta de serviço Google disponível somente na máquina local;
+- API token da Cloudflare;
+- chave da API do Brevo;
+- UID da conta de teste;
+- remetente já validado no Brevo.
+
+O script não grava os valores dos secrets no repositório. Ele envia cada valor ao `gh secret set` por entrada padrão e gera o segredo administrativo automaticamente.
+
+Para o deploy automatizado, os seguintes secrets precisam existir no repositório:
 
 - `CLOUDFLARE_API_TOKEN`;
 - `GOOGLE_CLIENT_EMAIL`;
