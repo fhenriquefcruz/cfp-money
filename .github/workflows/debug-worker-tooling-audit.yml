@@ -21,40 +21,27 @@ jobs:
         with:
           node-version: 24
 
-      - name: Audit current Worker tooling
+      - name: Audit current locked Worker tooling
         working-directory: worker/email-notifications
         shell: bash
         run: |
           npm ci
+          node -p "'CURRENT_VERSION ' + require('./node_modules/wrangler/package.json').version"
           npm audit --json > current-audit.json || true
           node - <<'NODE'
           const fs = require('fs')
           const report = JSON.parse(fs.readFileSync('current-audit.json', 'utf8'))
           console.log('CURRENT', JSON.stringify(report.metadata?.vulnerabilities || {}))
-          for (const [name, item] of Object.entries(report.vulnerabilities || {})) {
-            console.log('CURRENT_ITEM', JSON.stringify({
-              name,
-              severity: item.severity,
-              isDirect: item.isDirect,
-              via: Array.isArray(item.via)
-                ? item.via.map((v) => typeof v === 'string' ? v : {
-                    name: v.name,
-                    title: v.title,
-                    severity: v.severity,
-                    range: v.range,
-                  })
-                : item.via,
-              range: item.range,
-              fixAvailable: item.fixAvailable,
-            }))
-          }
           NODE
 
-      - name: Audit latest Wrangler without modifying repository
-        working-directory: worker/email-notifications
+      - name: Audit Wrangler 4.142.0 in clean temporary project
         shell: bash
         run: |
-          npm install --no-save wrangler@4.142.0
+          mkdir -p "$RUNNER_TEMP/wrangler-audit"
+          cd "$RUNNER_TEMP/wrangler-audit"
+          npm init -y >/dev/null
+          npm install --save-dev wrangler@4.142.0
+          node -p "'LATEST_VERSION ' + require('./node_modules/wrangler/package.json').version"
           npm audit --json > latest-audit.json || true
           node - <<'NODE'
           const fs = require('fs')
@@ -65,14 +52,6 @@ jobs:
               name,
               severity: item.severity,
               isDirect: item.isDirect,
-              via: Array.isArray(item.via)
-                ? item.via.map((v) => typeof v === 'string' ? v : {
-                    name: v.name,
-                    title: v.title,
-                    severity: v.severity,
-                    range: v.range,
-                  })
-                : item.via,
               range: item.range,
               fixAvailable: item.fixAvailable,
             }))
