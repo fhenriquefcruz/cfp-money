@@ -80,7 +80,7 @@
   - [x] homologação técnica registrada como concluída;
   - [x] revisão jurídica final separada corretamente como dependência humana.
 
-## Ativação controlada das notificações Premium — Fases 40, 40B e 40C
+## Ativação controlada das notificações Premium — Fases 40, 40B, 40C e 40D
 
 - [x] preflight fail-closed do Worker;
 - [x] gate executável para health + teste operacional autenticado sem dados financeiros;
@@ -92,6 +92,8 @@
 - [x] checklist de ativação e rollback;
 - [x] Wrangler atualizado para 4.143.0, removendo vulnerabilidades high do tooling;
 - [x] `npm audit --audit-level=high` incorporado à validação do Worker;
+- [x] bootstrap PowerShell seguro para cadastrar os 7 GitHub Secrets e disparar o deploy;
+- [x] sintaxe do bootstrap validada automaticamente no CI;
 - [ ] implantar/configurar Worker e provedor de e-mail no ambiente externo;
 - [ ] executar gate contra produção;
 - [ ] confirmar entrega real do e-mail operacional de ativação;
