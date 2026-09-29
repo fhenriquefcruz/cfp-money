@@ -73,7 +73,7 @@ function KPI({ label, value, sub, color, icon, tooltip }) {
           <p className="text-xs text-[--text-tertiary]">{label}</p>
           {tooltip && <InfoTooltip text={tooltip} size={11} />}
         </div>
-        <p className="break-words text-base font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere] min-[390px]:text-lg">
+        <p className="whitespace-nowrap text-sm font-black tabular-nums tracking-tight text-[--text-primary] min-[480px]:text-lg">
           {value}
         </p>
         {sub && <p className="text-[10px] text-[--text-tertiary]">{sub}</p>}
@@ -103,7 +103,7 @@ function SavingRateBadge({ rate }) {
         </p>
       </div>
       <p className="text-2xl font-black" style={{ color }}>
-        {rate.toFixed(1)}%
+        {rate.toFixed(1).replace('.', ',')}%
       </p>
     </div>
   )
@@ -424,7 +424,7 @@ function ReportsContent() {
                     Gasto médio mensal{' '}
                     <InfoTooltip text="Média de despesas por mês no período." size={11} />
                   </p>
-                  <p className="text-xl font-black text-[--danger-icon]">
+                  <p className="whitespace-nowrap text-lg font-black text-[--danger-icon] min-[390px]:text-xl">
                     {formatCurrency(periodTotals.avg)}
                   </p>
                   <p className="text-[10px] text-[--text-tertiary] mt-0.5">por mês</p>
@@ -434,7 +434,7 @@ function ReportsContent() {
                     Poupado por mês{' '}
                     <InfoTooltip text="Média de depósitos em poupança por mês." size={11} />
                   </p>
-                  <p className="text-xl font-black text-[--brand-500]">
+                  <p className="whitespace-nowrap text-lg font-black text-[--brand-500] min-[390px]:text-xl">
                     {formatCurrency(periodTotals.savings / period)}
                   </p>
                   <p className="text-[10px] text-[--text-tertiary] mt-0.5">em média</p>
@@ -581,7 +581,7 @@ function ReportsContent() {
                     <div className="mt-4 grid min-w-0 grid-cols-1 gap-3 min-[390px]:grid-cols-2">
                       <div className="text-center p-3 bg-[--brand-50] rounded-xl border border-[--brand-200]">
                         <p className="text-xs text-[--brand-600] mb-0.5">Total poupado</p>
-                        <p className="text-xl font-black text-[--brand-700]">
+                        <p className="whitespace-nowrap text-lg font-black text-[--brand-700] min-[390px]:text-xl">
                           {formatCurrency(periodTotals.savings)}
                         </p>
                       </div>
@@ -599,7 +599,7 @@ function ReportsContent() {
                         <span className="text-[--text-secondary]">Poupado vs Receita total</span>
                         <span className="font-bold text-[--text-primary]">
                           {periodTotals.income > 0
-                            ? ((periodTotals.savings / periodTotals.income) * 100).toFixed(1)
+                            ? ((periodTotals.savings / periodTotals.income) * 100).toFixed(1).replace('.', ',')
                             : 0}
                           %
                         </span>
