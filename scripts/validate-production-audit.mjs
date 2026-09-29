@@ -47,7 +47,9 @@ for (const [documentName, contents] of [
   ['OPERATIONS_RUNBOOK', operationsRunbook],
 ]) {
   if (contents.includes('VITE_ENFORCE_LEGAL_GATE=false')) {
-    fail(`${documentName} não pode recomendar VITE_ENFORCE_LEGAL_GATE=false para o modo Spark atual.`)
+    fail(
+      `${documentName} não pode recomendar VITE_ENFORCE_LEGAL_GATE=false para o modo Spark atual.`,
+    )
   }
 }
 
