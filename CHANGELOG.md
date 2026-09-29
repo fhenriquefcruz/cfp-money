@@ -28,7 +28,8 @@ Todas as mudanças relevantes deste projeto são documentadas aqui.
 
 - `undici` fixado em 6.28.1 para correção do advisory de produção;
 - auditoria automatizada passou a rejeitar divergências na configuração de produção do LegalGate;
-- Worker de notificações Premium passa a falhar fechado quando a configuração obrigatória ou o segredo administrativo estiver ausente/inválido.
+- Worker de notificações Premium passa a falhar fechado quando a configuração obrigatória ou o segredo administrativo estiver ausente/inválido;
+- Wrangler do Worker atualizado de 4.86.0 para 4.143.0, eliminando vulnerabilidades high do tooling; a validação passa a rejeitar novamente qualquer advisory high ou critical.
 
 ### Operation
 
