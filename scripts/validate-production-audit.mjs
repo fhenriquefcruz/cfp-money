@@ -29,7 +29,7 @@ const operationsRunbook = readFileSync('docs/OPERATIONS_RUNBOOK.md', 'utf8')
 
 const requiredDeploySettings = [
   "VITE_BACKEND_MODE: 'disabled'",
-  "VITE_EMAIL_NOTIFICATIONS_ENABLED: 'false'",
+  "VITE_EMAIL_NOTIFICATIONS_ENABLED: 'true'",
   "VITE_APP_CHECK_ENABLED: 'true'",
   "VITE_REQUIRE_APP_CHECK: 'true'",
   "VITE_APP_CHECK_DEBUG: 'false'",
