@@ -23,7 +23,6 @@ if (packageJson.overrides?.undici !== '6.28.1') {
   fail('undici deve permanecer sobrescrito para 6.28.1.')
 }
 
-
 const deployWorkflow = readFileSync('.github/workflows/deploy.yml', 'utf8')
 const readme = readFileSync('README.md', 'utf8')
 
