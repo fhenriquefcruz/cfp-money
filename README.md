@@ -124,7 +124,8 @@ Antes do lançamento:
 - `docs/TRANSFER_CHECKLIST.md`;
 - `docs/SALE_DATA_ROOM_INDEX.md`;
 - `docs/PUBLIC_SECTOR_PROPOSAL_TEMPLATE.md`;
-- `docs/RELEASE_CHECKLIST.md`.
+- `docs/RELEASE_CHECKLIST.md`;
+- `docs/EMAIL_NOTIFICATIONS_ACTIVATION.md`.
 
 A publicação em GitHub Pages é temporária durante a transição de marca e infraestrutura.
 
@@ -147,4 +148,8 @@ O frontend permanece no Firebase Spark. O consentimento jurídico continua funci
 npm run notifications:validate
 npm run notifications:install
 npm run notifications:deploy
+npm run notifications:activation:test
+npm run notifications:activation:check
 ```
+
+A ativação de produção segue o gate descrito em `docs/EMAIL_NOTIFICATIONS_ACTIVATION.md`. A feature flag permanece desabilitada até health, processamento do relatório de teste e entrega real serem confirmados.

@@ -1,0 +1,33 @@
+name: Premium email activation gate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  activation-gate:
+    name: Validate deployed email worker and test report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EMAIL_NOTIFICATIONS_WORKER_URL: ${{ secrets.EMAIL_NOTIFICATIONS_WORKER_URL }}
+      EMAIL_NOTIFICATIONS_ADMIN_SECRET: ${{ secrets.EMAIL_NOTIFICATIONS_ADMIN_SECRET }}
+      EMAIL_NOTIFICATIONS_TEST_UID: ${{ secrets.EMAIL_NOTIFICATIONS_TEST_UID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Premium email activation gate
+        run: npm run notifications:activation:check

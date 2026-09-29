@@ -91,8 +91,4 @@ Somente depois que `/health` responder HTTP `200` com `"configuration":"ready"` 
 VITE_EMAIL_NOTIFICATIONS_ENABLED=true
 ```
 
-Depois publique:
-
-```bash
-npm run deploy
-```
+Antes de alterar a flag, execute o gate descrito em `docs/EMAIL_NOTIFICATIONS_ACTIVATION.md`. Depois da aprovação do gate e da confirmação real de entrega, faça a alteração em PR separado e publique o frontend.
