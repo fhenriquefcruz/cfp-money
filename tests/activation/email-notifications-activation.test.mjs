@@ -39,9 +39,49 @@ test('recusa worker sem health pronto', async () => {
       runEmailNotificationActivationCheck({
         env: env(),
         fetchImpl: async () => response(503, { ok: false, configuration: 'incomplete' }),
+        sleepImpl: async () => {},
+        healthMaxAttempts: 2,
+        healthRetryDelayMs: 0,
       }),
     /Worker não está pronto/,
   )
+})
+
+test('aguarda propagação do health antes do teste operacional', async () => {
+  let calls = 0
+  let sleeps = 0
+
+  const result = await runEmailNotificationActivationCheck({
+    env: env(),
+    fetchImpl: async (url) => {
+      calls += 1
+
+      if (url.endsWith('/health') && calls === 1) {
+        return response(200, { ok: true })
+      }
+
+      if (url.endsWith('/health')) {
+        return response(200, { ok: true, configuration: 'ready' })
+      }
+
+      return response(200, {
+        ok: true,
+        status: 'sent',
+        uid: 'test-user',
+        providerMessageId: 'provider-message-retry',
+      })
+    },
+    sleepImpl: async () => {
+      sleeps += 1
+    },
+    healthMaxAttempts: 3,
+    healthRetryDelayMs: 0,
+  })
+
+  assert.equal(calls, 3)
+  assert.equal(sleeps, 1)
+  assert.equal(result.activationTest, 'sent')
+  assert.equal(result.uid, 'test-user')
 })
 
 test('recusa ativação quando o teste operacional não é enviado', async () => {
