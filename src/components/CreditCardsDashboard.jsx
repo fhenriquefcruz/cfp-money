@@ -270,7 +270,7 @@ function CreditCardsCenterContent() {
               <ChevronLeft size={17} />
             </button>
 
-            <label className="relative min-w-[10.5rem] flex-1 sm:flex-none">
+            <label className="relative">
               <span className="sr-only">Selecionar mês da fatura</span>
               <CalendarDays
                 size={15}
@@ -283,7 +283,7 @@ function CreditCardsCenterContent() {
                   setSelectedMonth(event.target.value)
                   setSelectedCardId('all')
                 }}
-                className="min-h-11 w-full min-w-[10.5rem] rounded-xl border border-[--border-default] bg-[--bg-surface] pl-9 pr-3 text-xs font-semibold text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] sm:w-auto"
+                className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-surface] pl-9 pr-3 text-xs font-semibold text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] sm:w-auto"
               />
             </label>
 
