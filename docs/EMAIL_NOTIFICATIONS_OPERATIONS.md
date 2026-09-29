@@ -31,7 +31,6 @@ Execução manual protegida:
 
 O endpoint `/run` falha fechado com HTTP `503` se o preflight não estiver pronto e exige um `ADMIN_TRIGGER_SECRET` configurado com pelo menos 32 caracteres. Isso impede autenticação acidental por valores vazios/ausentes.
 
-
 ```bash
 curl -X POST   -H "Authorization: Bearer SEU_SEGREDO"   -H "Content-Type: application/json"   -d '{"uid":"UID_OPCIONAL"}'   https://SEU-WORKER.workers.dev/run
 ```
