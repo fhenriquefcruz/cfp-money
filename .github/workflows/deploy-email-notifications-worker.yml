@@ -2,9 +2,6 @@ name: Deploy Premium email worker
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - ops-run-email-worker-deploy-20260929
 
 permissions:
   contents: read
