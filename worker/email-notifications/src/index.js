@@ -69,10 +69,7 @@ export function getEnvironmentReadiness(env = {}) {
     invalid.push('GOOGLE_PRIVATE_KEY')
   }
 
-  if (
-    nonEmpty(env.ADMIN_TRIGGER_SECRET) &&
-    String(env.ADMIN_TRIGGER_SECRET).trim().length < 32
-  ) {
+  if (nonEmpty(env.ADMIN_TRIGGER_SECRET) && String(env.ADMIN_TRIGGER_SECRET).trim().length < 32) {
     invalid.push('ADMIN_TRIGGER_SECRET')
   }
 
