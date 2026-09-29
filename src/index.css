@@ -311,6 +311,20 @@ body {
   min-width: 0;
 }
 
+.saved-view-name {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+  line-height: 1.25;
+}
+
+@media (max-width: 639px) {
+  .saved-view-chip {
+    max-width: 80vw;
+  }
+}
+
 @media (max-width: 639px) {
   .dashboard-premium__toolbar {
     display: grid;
@@ -358,6 +372,13 @@ body {
     min-height: 6rem;
     align-items: flex-start;
     padding: 0.875rem;
+  }
+
+  .report-kpi > div:last-child > p:nth-child(2) {
+    white-space: nowrap;
+    overflow-wrap: normal;
+    font-size: clamp(0.8rem, 3.5vw, 1rem);
+    letter-spacing: -0.015em;
   }
 
   .reports-saving-rate {
@@ -931,12 +952,12 @@ body {
   }
 
   .credit-cards-period {
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 0.35rem;
   }
 
   .credit-cards-period > :last-child {
-    grid-column: auto;
+    grid-column: 1 / -1;
     padding-inline: 0.55rem;
     font-size: 0.62rem;
   }
