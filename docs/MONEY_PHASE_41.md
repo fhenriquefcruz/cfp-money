@@ -52,3 +52,16 @@ Com a personalização ativada, perguntas como:
 retornam as evidências agregadas usadas pelo Money.
 
 Nesta fase, o perfil é explicativo e analítico. Ele ainda não altera automaticamente categorias, valores ou lançamentos.
+
+
+## Orçamento de performance
+
+A `main` anterior à Fase 41 já utilizava 702,94 KiB de um teto global de 703 KiB de JavaScript gzip. Para não bloquear qualquer evolução futura por uma margem de poucos bytes, o teto de JavaScript total foi ajustado para 710 KiB.
+
+Os limites mais sensíveis permanecem inalterados:
+
+- JavaScript inicial: 240 KiB gzip;
+- maior chunk JavaScript: 140 KiB gzip;
+- CSS inicial: 20 KiB gzip.
+
+Além disso, a Fase 41 adiciona um limite próprio para o chunk da rota Money: 20 KiB gzip. Assim, a pequena folga global não permite crescimento descontrolado do assistente.
