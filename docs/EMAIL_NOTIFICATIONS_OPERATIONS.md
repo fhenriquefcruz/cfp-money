@@ -39,7 +39,6 @@ O endpoint usa somente o `ACTIVATION_TEST_UID` configurado no Worker. A mensagem
 
 Execução manual protegida:
 
-
 O endpoint `/run` falha fechado com HTTP `503` se o preflight não estiver pronto e exige um `ADMIN_TRIGGER_SECRET` configurado com pelo menos 32 caracteres. Isso impede autenticação acidental por valores vazios/ausentes.
 
 ```bash
