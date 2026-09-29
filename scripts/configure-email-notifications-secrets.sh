@@ -43,6 +43,24 @@ require_command node
 echo "Validando autenticação do GitHub CLI..."
 gh auth status >/dev/null
 
+echo "Validando permissão para administrar GitHub Actions Secrets..."
+if ! gh api "repos/$REPOSITORY/actions/secrets/public-key" >/dev/null 2>&1; then
+  cat >&2 <<'EOF'
+A autenticação atual do GitHub CLI não pode administrar Actions Secrets deste repositório.
+
+Em GitHub Codespaces, execute no mesmo terminal:
+  unset GH_TOKEN GITHUB_TOKEN
+  gh auth login --hostname github.com --web --scopes "repo,workflow"
+
+Depois confirme:
+  gh auth status
+
+E execute este bootstrap novamente.
+EOF
+  exit 1
+fi
+echo "✓ Permissão para Actions Secrets confirmada."
+
 if [[ -z "$SERVICE_ACCOUNT_JSON" ]]; then
   read -r -p "Caminho do JSON da conta de serviço Google: " SERVICE_ACCOUNT_JSON
 fi
