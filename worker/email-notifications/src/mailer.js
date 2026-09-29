@@ -14,7 +14,13 @@ export function currency(value) {
   }).format(Number(value || 0))
 }
 
-function layout({ title, preheader, content, appUrl }) {
+function layout({
+  title,
+  preheader,
+  content,
+  appUrl,
+  footerText = 'Este é um e-mail transacional solicitado nas preferências do Meu Real.',
+}) {
   return `<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -33,8 +39,8 @@ function layout({ title, preheader, content, appUrl }) {
 </td></tr>
 <tr><td style="padding:24px">${content}</td></tr>
 <tr><td style="padding:20px 24px;border-top:1px solid #e5e7eb;font-size:12px;line-height:1.6;color:#667085">
-Este é um e-mail transacional solicitado nas preferências do Meu Real.
-<a href="${escapeHtml(appUrl)}" style="color:#155eef">Abra o Perfil</a> para alterar a frequência ou desativar os envios.
+${escapeHtml(footerText)}
+<a href="${escapeHtml(appUrl)}" style="color:#155eef">Abra o Perfil</a> para acessar o Meu Real.
 </td></tr>
 </table>
 </td></tr>
@@ -112,6 +118,25 @@ export function alertsEmail({ name, alerts, appUrl }) {
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6">Olá, ${escapeHtml(name || 'usuário')}.</p>
 <p style="margin:0 0 18px;font-size:14px;color:#475467">Identificamos novos pontos que merecem sua atenção:</p>
 <ul style="list-style:none;padding:0;margin:0">${items}</ul>`,
+    }),
+  }
+}
+
+export function activationTestEmail({ name, appUrl }) {
+  return {
+    subject: 'Teste operacional de notificações do Meu Real',
+    html: layout({
+      title: 'Teste operacional concluído',
+      preheader: 'A infraestrutura de notificações do Meu Real respondeu corretamente.',
+      appUrl,
+      footerText:
+        'Este é um teste operacional protegido. Nenhum valor financeiro foi incluído nesta mensagem.',
+      content: `
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6">Olá, ${escapeHtml(name || 'usuário')}.</p>
+<p style="margin:0;font-size:14px;line-height:1.6;color:#475467">
+O Worker conseguiu autenticar no Google, localizar a conta de teste no Firestore e enviar esta mensagem pelo provedor de e-mail.
+Nenhuma receita, despesa, saldo, meta ou orçamento foi incluído neste teste.
+</p>`,
     }),
   }
 }
