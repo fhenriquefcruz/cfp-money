@@ -182,3 +182,76 @@ test('responde o que merece atenção usando as prioridades já calculadas', () 
   expect(response.type).toBe('priority')
   expect(response.text).toContain('Combustível ultrapassou o orçamento')
 })
+
+
+test('reconhece pergunta sobre aprendizado individual do Money', () => {
+  expect(
+    parseMoneyAssistantIntent('O que você aprendeu sobre meus gastos?', categories, transactions, now),
+  ).toMatchObject({
+    type: 'personalization_profile',
+  })
+})
+
+test('explica quando a personalização está desativada', () => {
+  const response = buildMoneyAssistantResponse({
+    message: 'O que você aprendeu sobre meus gastos?',
+    transactions,
+    categories,
+    settings: { personalizationEnabled: false },
+    now,
+    analyze: analyzeMoney,
+    personalizationProfile: null,
+  })
+
+  expect(response).toMatchObject({
+    type: 'personalization_profile',
+    title: 'Personalização desativada',
+  })
+  expect(response.text).toContain('Preferências do Money')
+})
+
+test('apresenta perfil individual com evidências agregadas', () => {
+  const response = buildMoneyAssistantResponse({
+    message: 'Como eu costumo gastar?',
+    transactions,
+    categories,
+    settings: { personalizationEnabled: true },
+    now,
+    analyze: analyzeMoney,
+    personalizationProfile: {
+      sampleSize: 12,
+      confidence: 'medium',
+      topCategories: [
+        {
+          name: 'Alimentação',
+          share: 0.45,
+        },
+      ],
+      preferredPaymentMethod: {
+        id: 'pix',
+        count: 8,
+      },
+      recurringDescriptions: [
+        {
+          label: 'iFood',
+          count: 4,
+        },
+      ],
+    },
+  })
+
+  expect(response).toMatchObject({
+    type: 'personalization_profile',
+    title: 'O que aprendi com seu histórico',
+  })
+  expect(response.text).toContain('Alimentação')
+  expect(response.text).toContain('pix')
+  expect(response.metrics).toEqual(
+    expect.arrayContaining([
+      { label: 'Amostra', rawValue: '12 despesas' },
+      { label: 'Categoria principal', rawValue: 'Alimentação · 45%' },
+      { label: 'Mais usado', rawValue: 'pix' },
+      { label: 'Padrão repetido', rawValue: 'iFood · 4x' },
+    ]),
+  )
+})
