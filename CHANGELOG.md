@@ -34,6 +34,7 @@ Todas as mudanças relevantes deste projeto são documentadas aqui.
 
 ### Operation
 
+- orçamento de performance passa a controlar também o chunk da rota Money em 20 KiB gzip; o teto global de JavaScript lazy foi ajustado de 703 para 710 KiB porque a main anterior já consumia 702,94 KiB;
 - adicionado gate executável e workflow manual para ativação controlada das notificações Premium, exigindo health pronto e teste operacional protegido antes da liberação da feature flag;
 - adicionado deploy automatizado do Worker pela GitHub Actions, com secrets temporários e teste ponta a ponta sem dados financeiros;
 - preflight do Worker de notificações passa a diferenciar configuração pronta/incompleta no endpoint `/health`, sem expor secrets;
