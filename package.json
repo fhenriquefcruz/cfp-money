@@ -16,7 +16,7 @@
     "functions:install": "npm install --prefix functions",
     "functions:test": "npm run test --prefix functions",
     "functions:validate": "npm run validate --prefix functions",
-    "validate:all": "npm run validate && npm run functions:validate && npm run validate:indexes && npm run notifications:validate && npm run validate:pwa && npm run validate:responsive && npm run check:performance",
+    "validate:all": "npm run validate && npm run functions:validate && npm run validate:indexes && npm run notifications:validate && npm run notifications:activation:test && npm run validate:pwa && npm run validate:responsive && npm run check:performance",
     "emulators": "firebase emulators:start",
     "deploy:backend": "firebase deploy --only functions",
     "deploy:firebase": "firebase deploy --only firestore,functions",
@@ -57,7 +57,9 @@
     "test:visual:update": "playwright test --config=playwright.visual.config.js --update-snapshots",
     "test:visual:report": "playwright show-report playwright-visual-report",
     "test:production:smoke": "playwright test --config=playwright.production.config.js",
-    "test:production:report": "playwright show-report playwright-production-report"
+    "test:production:report": "playwright show-report playwright-production-report",
+    "notifications:activation:test": "node --test tests/activation/email-notifications-activation.test.mjs",
+    "notifications:activation:check": "node scripts/validate-email-notifications-activation.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.0",
