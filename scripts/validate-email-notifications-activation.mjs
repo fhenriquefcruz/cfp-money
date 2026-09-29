@@ -6,7 +6,7 @@ try {
   })
 
   console.log(
-    `Gate de ativação aprovado: health=${result.health}, relatório(s)=${result.reports}, alerta(s)=${result.alerts}.`,
+    `Gate de ativação aprovado: health=${result.health}, teste=${result.activationTest}, uid=${result.uid}.`,
   )
 } catch (error) {
   console.error(`Gate de ativação reprovado: ${error?.message || error}`)
