@@ -8,8 +8,7 @@ function readyEnvironment(overrides = {}) {
     APP_URL: 'https://example.com/#/profile',
     SENDER_EMAIL: 'sender@example.com',
     GOOGLE_CLIENT_EMAIL: 'service-account@example.iam.gserviceaccount.com',
-    GOOGLE_PRIVATE_KEY:
-      '-----BEGIN PRIVATE KEY-----\nTESTE\n-----END PRIVATE KEY-----',
+    GOOGLE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\nTESTE\n-----END PRIVATE KEY-----',
     BREVO_API_KEY: 'brevo-test-key',
     ADMIN_TRIGGER_SECRET: 'a'.repeat(64),
     ...overrides,
