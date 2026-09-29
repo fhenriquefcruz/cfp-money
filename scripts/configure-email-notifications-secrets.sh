@@ -187,7 +187,7 @@ if [[ "$SKIP_DEPLOY" != "true" ]]; then
   gh_personal workflow run deploy-email-notifications-worker.yml --repo "$REPOSITORY" --ref main
   echo "✓ Workflow disparado."
   echo "Acompanhe com:"
-  echo "  gh_personal run list --repo $REPOSITORY --workflow deploy-email-notifications-worker.yml --limit 1"
+  echo "  env -u GH_TOKEN -u GITHUB_TOKEN gh run list --repo $REPOSITORY --workflow deploy-email-notifications-worker.yml --limit 1"
 fi
 
 unset CLOUDFLARE_API_TOKEN
