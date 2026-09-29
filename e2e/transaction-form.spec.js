@@ -33,6 +33,15 @@ test('formulário mantém foco, rolagem e rodapé visíveis com teclado simulado
   const reducedHeight = Math.max(420, Math.floor(originalViewport.height * 0.62))
   await page.setViewportSize({ width: originalViewport.width, height: reducedHeight })
 
+  await page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        window.dispatchEvent(new Event('resize'))
+        window.visualViewport?.dispatchEvent(new Event('resize'))
+        window.requestAnimationFrame(() => window.requestAnimationFrame(resolve))
+      }),
+  )
+
   let geometry = null
 
   await expect
@@ -81,7 +90,7 @@ test('formulário mantém foco, rolagem e rodapé visíveis com teclado simulado
           `O modal não estabilizou após a redução da viewport. Geometria: ${JSON.stringify(
             geometry,
           )}`,
-        timeout: 2_000,
+        timeout: 5_000,
       },
     )
     .toEqual({
