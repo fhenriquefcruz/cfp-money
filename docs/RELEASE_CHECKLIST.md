@@ -58,7 +58,9 @@
 - O advisory de produção do `undici` foi corrigido para a versão 6.28.1 na PR #74 — **Phase 33B: patch undici production advisory**.
 - Os warnings objetivos de UX/mobile foram tratados na PR #75 — **Phase 34: homologation UX and mobile refinements**.
 - A configuração do LegalGate em produção foi alinhada ao modo Spark na PR #77 — **Phase 35: align production legal gate configuration**.
-- Release candidate atual em `main`: `13e26dbc568cb54cf849e9fa1764122567f12642`.
+- A Fase 36B foi consolidada pela PR #80 e a Fase 37 pela PR #81.
+- Fechamento da Fase 37 em `main`: commit `410cb12a154e04573fdea9af43e91f45d47e8a6a`.
+- Checks pós-merge da Fase 37 aprovados: segurança #177, validação #484, performance/PWA #182, deploy #396, acessibilidade/regressão visual #132 e mobile #466.
 - Produção permanece em modo Spark, com Cloud Functions não implantadas.
 - O LegalGate permanece ativo em produção e registra o aceite jurídico no Firestore pelo fallback Spark.
 - O painel Admin e os fluxos financeiros principais foram homologados em produção.
