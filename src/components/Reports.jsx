@@ -73,7 +73,7 @@ function KPI({ label, value, sub, color, icon, tooltip }) {
           <p className="text-xs text-[--text-tertiary]">{label}</p>
           {tooltip && <InfoTooltip text={tooltip} size={11} />}
         </div>
-        <p className="whitespace-nowrap text-base font-black tabular-nums text-[--text-primary] min-[390px]:text-lg">
+        <p className="report-kpi__value">
           {value}
         </p>
         {sub && <p className="text-[10px] text-[--text-tertiary]">{sub}</p>}
