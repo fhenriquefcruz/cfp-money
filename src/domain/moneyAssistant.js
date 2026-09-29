@@ -276,7 +276,6 @@ export function buildMoneyAssistantResponse({
         type: 'personalization_profile',
         title: 'Personalização desativada',
         text: 'Ative “Personalizar o Money com meu histórico” nas Preferências do Money para eu identificar padrões agregados dos seus próprios lançamentos.',
-        suggestions: ['Abrir preferências do Money'],
       }
     }
 
