@@ -20,7 +20,7 @@ Para publicação manual apenas do frontend:
 npm run deploy
 ```
 
-Enquanto a produção permanecer no modo Spark, não implante Cloud Functions.
+Enquanto a produção permanecer no modo Spark, não implante Cloud Functions. O LegalGate continua funcional nesse modo porque a aceitação é persistida diretamente no Firestore pelo fallback `sparkPrivacy`.
 
 ## Segredos obrigatórios
 
@@ -29,7 +29,7 @@ Enquanto a produção permanecer no modo Spark, não implante Cloud Functions.
 - variáveis `VITE_FIREBASE_*`;
 - `VITE_BACKEND_MODE=disabled`;
 - `VITE_EMAIL_NOTIFICATIONS_ENABLED=false`;
-- `VITE_ENFORCE_LEGAL_GATE=false`;
+- `VITE_ENFORCE_LEGAL_GATE=true`;
 - `VITE_APP_CHECK_ENABLED=true`;
 - `VITE_REQUIRE_APP_CHECK=true`;
 - `VITE_APP_CHECK_DEBUG=false`;
