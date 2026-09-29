@@ -1,5 +1,11 @@
 # Checklist de release
 
+## Status atual
+
+- **Prontidão técnica:** concluída para a release candidate atual.
+- **Lançamento comercial:** condicionado à conclusão da revisão jurídica formal em `docs/LEGAL_REVIEW_CHECKLIST.md`.
+- Produção mantida em **Firebase Spark**, sem Cloud Functions implantadas.
+
 ## Código
 
 - [x] `npm run validate:all`;
@@ -17,9 +23,11 @@
 - [x] `VITE_APP_CHECK_ENABLED=true`;
 - [x] `VITE_REQUIRE_APP_CHECK=true`;
 - [x] `VITE_APP_CHECK_DEBUG=false`;
+- [x] `VITE_ENFORCE_LEGAL_GATE=true`;
 - [x] App Check testado em produção;
 - [x] enforcement do App Check validado no Firestore e Authentication;
-- [x] Cloud Functions permanecem não implantadas enquanto a produção estiver no modo Spark;
+- [x] aceite jurídico persistido pelo fallback Spark no Firestore;
+- [x] Cloud Functions permanecem não implantadas enquanto a produção estiver no modo Spark.
 
 ## Produto
 
@@ -31,31 +39,37 @@
 - [x] solicitação e cancelamento de exclusão;
 - [x] painel Admin.
 
-## Comercial
+## Comercial / configuração
 
-- [x] identidade jurídica preenchida;
+- [x] identidade jurídica configurada no produto;
 - [x] Termos e Política publicados e versionados;
-- [ ] revisão jurídica final concluída conforme `docs/LEGAL_REVIEW_CHECKLIST.md`;
-- [x] preço e escopo aprovados;
-- [x] SLA definido;
+- [x] preço e escopo definidos;
+- [x] SLA operacional definido;
 - [x] suporte e contato publicados;
-- [x] backup e recuperação testados.
+- [x] backup e recuperação testados;
+- [ ] revisão jurídica formal concluída — ver `docs/LEGAL_REVIEW_CHECKLIST.md`.
 
-## Evidências de homologação
+> Os itens acima confirmam configuração e prontidão operacional. Eles não substituem a validação jurídica formal dos documentos e obrigações aplicáveis.
 
-- Homologação técnica e funcional original concluída em 09/08/2026; rodada ampliada de homologação e
-  correções pós-homologação concluída em 29/09/2026.
-- PR #22: `fix: enable secure admin access management on Spark`.
-- Merge em `main`: `0b6eaf7ee37d1e645cdea1ae6634d52b3b685712`.
-- CI do PR #22: 5 workflows aprovados.
-- Deploy GitHub Pages pós-merge: run `31342019330` aprovado.
-- Regras do Firestore compiladas e publicadas com sucesso no projeto `cfp-money`.
-- Produção mantida em modo Spark, com Cloud Functions não implantadas.
-- Smoke tests em produção aprovados: Money, exportação JSON, solicitação/cancelamento de exclusão e painel Admin.
-- Painel Admin validado em produção para ativar Premium, remover Premium, bloquear e desbloquear usuário.
+## Evidências de homologação atual
+
+- Homologação ampla executada em 28/09/2026: 61 verificações, com 49 PASS, 5 FAIL e 7 WARNING na primeira rodada.
+- Os 5 FAIL foram tratados na PR #72 — **Phase 33: fix homologation findings**.
+- O advisory de produção do `undici` foi corrigido para a versão 6.28.1 na PR #74 — **Phase 33B: patch undici production advisory**.
+- Os warnings objetivos de UX/mobile foram tratados na PR #75 — **Phase 34: homologation UX and mobile refinements**.
+- A configuração do LegalGate em produção foi alinhada ao modo Spark na PR #77 — **Phase 35: align production legal gate configuration**.
+- Release candidate atual em `main`: `481ba48eefda89bde3d0bf172469e26095ae0343`.
+- Checks pós-merge aprovados na release candidate:
+  - Phase 21 security — run #162;
+  - Phase 20 performance and PWA — run #167;
+  - Validate application — run #469;
+  - Deploy to GitHub Pages — run #381;
+  - Accessibility and visual regression — run #117;
+  - Mobile definitive tests — run #451.
+- Produção permanece em modo Spark, com Cloud Functions não implantadas.
+- O LegalGate permanece ativo em produção e registra o aceite jurídico no Firestore pelo fallback Spark.
+- O painel Admin e os fluxos financeiros principais foram homologados em produção.
 
 ## Pendência humana de lançamento
 
-A aplicação está tecnicamente homologada e com CI verde, mas o lançamento comercial definitivo depende da
-conclusão documentada de `docs/LEGAL_REVIEW_CHECKLIST.md`. Enquanto esse checklist permanecer aberto, não
-trate a revisão jurídica como concluída.
+A aplicação está tecnicamente homologada e com CI verde, mas o lançamento comercial definitivo depende da conclusão documentada de `docs/LEGAL_REVIEW_CHECKLIST.md`. Enquanto esse checklist permanecer aberto, não trate a revisão jurídica como concluída.
