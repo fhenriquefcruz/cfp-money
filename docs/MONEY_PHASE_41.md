@@ -20,7 +20,8 @@ A janela padrão considera até 120 dias e deriva apenas agregados:
 - categorias com maior participação;
 - forma de pagamento mais frequente;
 
-Poupança não entra como consumo. 
+Poupança não entra como consumo.
+
 ## Confiança
 
 O Money explicita a quantidade de dados usada:
@@ -52,7 +53,6 @@ Com a personalização ativada, perguntas como:
 retornam as evidências agregadas usadas pelo Money.
 
 Nesta fase, o perfil é explicativo e analítico. Ele ainda não altera automaticamente categorias, valores ou lançamentos.
-
 
 ## Orçamento de performance
 
