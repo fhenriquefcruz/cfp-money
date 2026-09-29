@@ -80,6 +80,18 @@
   - [x] homologação técnica registrada como concluída;
   - [x] revisão jurídica final separada corretamente como dependência humana.
 
+## Ativação controlada das notificações Premium — Fase 40
+
+- [x] preflight fail-closed do Worker;
+- [x] gate executável para health + execução autenticada + relatório de teste processado;
+- [x] testes automatizados do gate;
+- [x] workflow manual de ativação sem exposição de secrets;
+- [x] checklist de ativação e rollback;
+- [ ] implantar/configurar Worker e provedor de e-mail no ambiente externo;
+- [ ] executar gate contra produção;
+- [ ] confirmar entrega real do relatório de teste;
+- [ ] habilitar `VITE_EMAIL_NOTIFICATIONS_ENABLED=true` em PR separado.
+
 ## Estado atual
 
 - [x] `main` com CI, segurança, performance/PWA, mobile, acessibilidade, regressão visual e
