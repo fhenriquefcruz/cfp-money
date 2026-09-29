@@ -286,8 +286,7 @@ function CreditCardsContent() {
               ))}
 
               <p className="text-[10px] text-[--text-tertiary]">
-                {activeCards.length} cart{activeCards.length === 1 ? 'ão' : 'ões'} ativo
-                {activeCards.length === 1 ? '' : 's'} para novos lançamentos.
+                Cartões ativos para novos lançamentos: {activeCards.length}.
               </p>
             </div>
           )}
