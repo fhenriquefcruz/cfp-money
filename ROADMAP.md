@@ -95,6 +95,17 @@
 - [ ] confirmar entrega real do e-mail operacional de ativação;
 - [ ] habilitar `VITE_EMAIL_NOTIFICATIONS_ENABLED=true` em PR separado.
 
+## Personalização transparente do Money — Fase 41
+
+- [x] preferência de personalização com opt-in explícito;
+- [x] perfil derivado localmente dos próprios lançamentos;
+- [x] categorias predominantes, forma de pagamento frequente e descrições repetidas;
+- [x] níveis de confiança baseados no tamanho da amostra;
+- [x] pergunta conversacional sobre o que o Money aprendeu;
+- [x] perfil derivado não persistido e conversa não armazenada;
+- [x] testes de domínio e do assistente para personalização;
+- [ ] usar o perfil, em fase futura, para sugerir categoria em rascunhos sem remover a confirmação humana.
+
 ## Estado atual
 
 - [x] `main` com CI, segurança, performance/PWA, mobile, acessibilidade, regressão visual e
