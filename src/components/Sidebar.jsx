@@ -381,7 +381,7 @@ export default function Sidebar() {
                     <Crown size={9} className="absolute -right-0.5 -top-0.5 text-yellow-500" />
                   )}
                 </div>
-                <span className="max-w-full whitespace-nowrap text-center text-[9px] font-medium leading-tight min-[390px]:text-[10px]">{label}</span>
+                <span className="whitespace-nowrap text-[10px] font-medium">{label}</span>
               </>
             )}
           </NavLink>
