@@ -29,7 +29,6 @@ Contém cadastro, plano, preferências do Money, versões jurídicas aceitas e m
 
 A rotina remove dados do usuário, categorias próprias, integrações, rascunhos, consentimentos identificáveis e a identidade no Firebase Authentication. O registro final utiliza hash do UID.
 
-
 ## Personalização do Money
 
 Quando autorizada pelo usuário, a personalização é calculada em tempo de execução a partir das transações da própria conta. Categoria predominante, forma de pagamento frequente e nível de confiança não criam uma nova coleção nem um documento de perfil persistente.
