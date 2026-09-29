@@ -89,7 +89,7 @@ export default function TransactionSavedViews({ views, canSave, onApply, onSave,
             >
               <button
                 type="button"
-                className="min-h-10 max-w-[11rem] whitespace-normal break-words px-3 py-2 text-left text-xs font-bold leading-tight text-[--text-secondary] hover:text-[--text-brand] sm:max-w-none sm:whitespace-nowrap"
+                className="saved-view-name"
                 onClick={() => onApply(view)}
               >
                 {view.name}
