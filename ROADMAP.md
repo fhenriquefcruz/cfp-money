@@ -83,9 +83,9 @@
 ## Estado atual
 
 - [x] `main` com CI, segurança, performance/PWA, mobile, acessibilidade, regressão visual e
-  deploy aprovados;
+      deploy aprovados;
 - [x] produção mantida em Firebase Spark, sem Cloud Functions implantadas;
 - [x] App Check habilitado e obrigatório;
 - [x] homologação técnica e funcional concluída;
 - [ ] concluir `docs/LEGAL_REVIEW_CHECKLIST.md` com revisão jurídica humana antes do lançamento
-  comercial definitivo.
+      comercial definitivo.
