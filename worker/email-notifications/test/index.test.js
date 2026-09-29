@@ -103,7 +103,6 @@ test('/run exige bearer exato quando serviço está pronto', async () => {
   })
 })
 
-
 test('preflight exige UID fixo para o teste operacional', () => {
   const readiness = getEnvironmentReadiness(
     readyEnvironment({
