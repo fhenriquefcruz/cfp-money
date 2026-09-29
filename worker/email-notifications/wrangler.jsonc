@@ -11,8 +11,6 @@
     "FIREBASE_PROJECT_ID": "cfp-money",
     "APP_URL": "https://fhenriquefcruz.github.io/cfp-money/#/profile",
     "SENDER_NAME": "Meu Real",
-    "SENDER_EMAIL": "fhenriquefcruz@gmail.com",
-    "REPLY_TO_EMAIL": "fhenriquefcruz@gmail.com",
     "MAX_USERS_PER_RUN": "100",
   },
   "secrets": {
@@ -21,6 +19,8 @@
       "GOOGLE_PRIVATE_KEY",
       "BREVO_API_KEY",
       "ADMIN_TRIGGER_SECRET",
+      "ACTIVATION_TEST_UID",
+      "SENDER_EMAIL",
     ],
   },
 }
