@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Bot,
+  Brain,
   Send,
   ShieldCheck,
   Sparkles,
@@ -33,6 +34,7 @@ import { getCalendarMonthBounds } from '../domain/dashboard'
 import { buildMoneyPriorities } from '../domain/moneyPriorities'
 import { budgetMonthKey, buildMonthlyBudgetOverview } from '../domain/budgetPeriods'
 import { buildMoneyAssistantResponse } from '../domain/moneyAssistant'
+import { buildMoneyPersonalizationProfile } from '../domain/moneyPersonalization'
 import { buildMoneyTransactionDraft } from '../domain/moneyTransactionDraft'
 import { buildMoneyCreditDraft } from '../domain/moneyCreditDraft'
 import { buildCreditTransaction, buildInstallmentTransactions } from '../domain/creditCards'
@@ -55,7 +57,7 @@ const INITIAL_MESSAGE = {
       'Comprei 600 no Nubank em 3 vezes no mercado',
       'Paguei 180 no dentista por Pix ontem',
       'Como estão minhas finanças?',
-      'Quero o relatório do mês atual',
+      'O que você aprendeu sobre meus gastos?',
     ],
   },
 }
@@ -85,6 +87,11 @@ const MONEY_CAPABILITIES = [
     icon: Tags,
     title: 'Consulta por categoria',
     description: 'Responde quanto foi gasto em alimentação, transporte e outras categorias.',
+  },
+  {
+    icon: Brain,
+    title: 'Personalização transparente',
+    description: 'Quando autorizada, identifica padrões agregados do seu próprio histórico.',
   },
 ]
 
@@ -287,6 +294,19 @@ function MoneyContent() {
     () => analyzeSpendingLeaks(transactions, settings, now),
     [transactions, settings, now.getFullYear(), now.getMonth(), now.getDate()],
   )
+  const personalizationProfile = useMemo(
+    () =>
+      settings.personalizationEnabled
+        ? buildMoneyPersonalizationProfile(transactions, { now })
+        : null,
+    [
+      transactions,
+      settings.personalizationEnabled,
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    ],
+  )
   const priorityReport = useMemo(
     () =>
       buildMoneyPriorities({
@@ -476,6 +496,7 @@ function MoneyContent() {
         now: new Date(),
         analyze: analyzeMoney,
         priority: priorityReport.priorities?.[0]?.title,
+        personalizationProfile,
       })
 
     const timestamp = Date.now()
@@ -610,7 +631,8 @@ function MoneyContent() {
                 </p>
               </div>
               <p className="text-[10px] text-[--text-tertiary]">
-                Conversa não armazenada no Firestore
+                Conversa não armazenada no Firestore · personalização{' '}
+                {settings.personalizationEnabled ? 'ativa' : 'desativada'}
               </p>
             </div>
           </div>
