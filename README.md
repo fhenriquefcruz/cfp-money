@@ -102,7 +102,7 @@ Antes do lançamento:
 3. preencha `VITE_LEGAL_CONTROLLER_NAME` e `VITE_LEGAL_CONTACT_EMAIL`;
 4. mantenha App Check habilitado e obrigatório no build de produção;
 5. mantenha o enforcement do App Check ativo no Firestore e Authentication;
-6. mantenha `VITE_ENFORCE_LEGAL_GATE=false` enquanto o backend jurídico não estiver implantado e validado;
+6. mantenha `VITE_ENFORCE_LEGAL_GATE=true` em produção após validar as regras do Firestore e os documentos jurídicos; no modo Spark, a aceitação é persistida diretamente em `users/{uid}/privacyPreferences/legal`;
 7. não implante Cloud Functions enquanto a produção permanecer no modo Spark;
 8. execute o checklist de release e restauração.
 
@@ -135,13 +135,13 @@ Sem Cloud Functions implantadas, use:
 ```env
 VITE_BACKEND_MODE=disabled
 VITE_EMAIL_NOTIFICATIONS_ENABLED=false
-VITE_ENFORCE_LEGAL_GATE=false
+VITE_ENFORCE_LEGAL_GATE=true
 VITE_APP_CHECK_ENABLED=true
 VITE_REQUIRE_APP_CHECK=true
 VITE_APP_CHECK_DEBUG=false
 ```
 
-O frontend permanece no Firebase Spark. Relatórios e alertas Premium por e-mail poderão ser processados pelo Worker em `worker/email-notifications` depois que ele for implantado e validado. A configuração está descrita em `docs/EMAIL_NOTIFICATIONS_SETUP.md`.
+O frontend permanece no Firebase Spark. O consentimento jurídico continua funcional sem Cloud Functions porque o `privacyGateway` usa o fallback `sparkPrivacy` para ler e registrar a aceitação no Firestore. Relatórios e alertas Premium por e-mail poderão ser processados pelo Worker em `worker/email-notifications` depois que ele for implantado e validado. A configuração está descrita em `docs/EMAIL_NOTIFICATIONS_SETUP.md`.
 
 ```bash
 npm run notifications:validate

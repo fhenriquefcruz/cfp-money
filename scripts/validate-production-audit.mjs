@@ -23,6 +23,38 @@ if (packageJson.overrides?.undici !== '6.28.1') {
   fail('undici deve permanecer sobrescrito para 6.28.1.')
 }
 
+const deployWorkflow = readFileSync('.github/workflows/deploy.yml', 'utf8')
+const readme = readFileSync('README.md', 'utf8')
+
+const requiredDeploySettings = [
+  "VITE_BACKEND_MODE: 'disabled'",
+  "VITE_EMAIL_NOTIFICATIONS_ENABLED: 'false'",
+  "VITE_APP_CHECK_ENABLED: 'true'",
+  "VITE_REQUIRE_APP_CHECK: 'true'",
+  "VITE_APP_CHECK_DEBUG: 'false'",
+  "VITE_ENFORCE_LEGAL_GATE: 'true'",
+]
+
+for (const setting of requiredDeploySettings) {
+  if (!deployWorkflow.includes(setting)) {
+    fail(`configuração de produção ausente ou divergente em deploy.yml: ${setting}`)
+  }
+}
+
+if (readme.includes('VITE_ENFORCE_LEGAL_GATE=false')) {
+  fail('README não pode recomendar VITE_ENFORCE_LEGAL_GATE=false para o modo Spark atual.')
+}
+
+const privacyGatewaySource = readFileSync('src/services/privacyGateway.js', 'utf8')
+const sparkPrivacySource = readFileSync('src/services/sparkPrivacy.js', 'utf8')
+
+if (
+  !privacyGatewaySource.includes('recordSparkLegalAcceptance') ||
+  !sparkPrivacySource.includes('export async function recordSparkLegalAcceptance')
+) {
+  fail('o legal gate em modo Spark exige fallback de persistência jurídica no Firestore.')
+}
+
 const appSource = readFileSync('src/App.jsx', 'utf8')
 
 if (!appSource.includes('HashRouter') || !appSource.includes('react-router-dom')) {
