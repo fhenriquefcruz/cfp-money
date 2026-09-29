@@ -53,16 +53,13 @@ export function buildMoneyPersonalizationProfile(
     }
   })
 
-  const topCategory =
-    [...categories.values()]
-      .sort((a, b) => b.amount - a.amount)[0] || null
+  const topCategory = [...categories.values()].sort((a, b) => b.amount - a.amount)[0] || null
 
   if (topCategory) {
     topCategory.share = totalExpenses > 0 ? topCategory.amount / totalExpenses : 0
   }
 
-  const preferredPaymentMethod =
-    [...payments.values()].sort((a, b) => b.count - a.count)[0] || null
+  const preferredPaymentMethod = [...payments.values()].sort((a, b) => b.count - a.count)[0] || null
 
   return {
     windowDays: days,
