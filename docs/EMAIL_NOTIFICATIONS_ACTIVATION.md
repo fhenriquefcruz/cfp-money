@@ -6,37 +6,44 @@ A infraestrutura de código está pronta para ativação controlada, mas a featu
 
 ## Pré-requisitos externos
 
-- [ ] Worker implantado na Cloudflare;
+- [ ] conta Cloudflare com API token para Workers;
 - [ ] remetente validado no provedor de e-mail;
-- [ ] `GOOGLE_CLIENT_EMAIL` configurado no Worker;
-- [ ] `GOOGLE_PRIVATE_KEY` configurado no Worker;
-- [ ] `BREVO_API_KEY` configurado no Worker;
-- [ ] `ADMIN_TRIGGER_SECRET` configurado no Worker;
-- [ ] `/health` retorna HTTP 200 com `"configuration":"ready"`.
+- [ ] conta de serviço Google dedicada ao Worker;
+- [ ] conta de teste existente no Firestore;
+- [ ] secrets de deploy cadastrados no GitHub.
 
-## Gate do GitHub
+## Secrets do GitHub
 
-Cadastre estes secrets no repositório:
+Cadastre:
 
-- `EMAIL_NOTIFICATIONS_WORKER_URL`;
+- `CLOUDFLARE_API_TOKEN`;
+- `GOOGLE_CLIENT_EMAIL`;
+- `GOOGLE_PRIVATE_KEY`;
+- `BREVO_API_KEY`;
 - `EMAIL_NOTIFICATIONS_ADMIN_SECRET`;
-- `EMAIL_NOTIFICATIONS_TEST_UID`.
+- `EMAIL_NOTIFICATIONS_TEST_UID`;
+- `EMAIL_NOTIFICATIONS_SENDER_EMAIL`.
 
-O segredo administrativo deve ser o mesmo `ADMIN_TRIGGER_SECRET` do Worker. Nunca coloque seu valor em arquivos, logs, issues ou pull requests.
+Opcionalmente, para rerodar somente o gate sem novo deploy, também pode ser cadastrado `EMAIL_NOTIFICATIONS_WORKER_URL`.
 
-## Teste ponta a ponta
+Nunca coloque valores de secrets em arquivos, logs, issues ou pull requests.
 
-1. mantenha `VITE_EMAIL_NOTIFICATIONS_ENABLED=false`;
-2. no Perfil da conta Premium de teste, salve as preferências de e-mail e solicite **Enviar teste**;
-3. execute manualmente o workflow **Premium email activation gate**;
-4. o gate exige:
-   - `/health` pronto;
-   - `/run` autenticado;
-   - usuário de teste processado;
-   - pelo menos 1 relatório de teste processado pelo Worker;
-5. confirme no provedor e na caixa de entrada que o e-mail foi realmente entregue.
+## Teste operacional protegido
 
-Também é possível executar localmente:
+Com `VITE_EMAIL_NOTIFICATIONS_ENABLED=false`, execute o workflow **Deploy Premium email worker**.
+
+Depois do deploy, o workflow:
+
+1. exige `/health` pronto;
+2. chama `POST /activation-test` com autenticação administrativa;
+3. usa exclusivamente o `ACTIVATION_TEST_UID` configurado no Worker;
+4. lê a conta de teste no Firestore;
+5. envia uma mensagem operacional pelo provedor;
+6. não inclui dados financeiros.
+
+Esse fluxo evita depender do botão **Enviar teste** da interface antes da feature estar habilitada.
+
+Para rerodar apenas o gate, use o workflow **Premium email activation gate** ou o comando local:
 
 ```bash
 EMAIL_NOTIFICATIONS_WORKER_URL=https://SEU-WORKER.workers.dev \
@@ -47,12 +54,14 @@ npm run notifications:activation:check
 
 ## Liberação da feature
 
-Somente depois do gate aprovado **e** da entrega real confirmada:
+Somente depois do gate aprovado **e** da entrega real do e-mail operacional confirmada:
 
-- [ ] criar PR separado para alterar `VITE_EMAIL_NOTIFICATIONS_ENABLED=true` no workflow de produção;
-- [ ] publicar;
+- [ ] criar PR separado para alterar `VITE_EMAIL_NOTIFICATIONS_ENABLED=true`;
+- [ ] publicar o frontend;
 - [ ] executar smoke de produção;
 - [ ] validar a interface no Perfil de uma conta Premium;
+- [ ] salvar preferências com consentimento;
+- [ ] solicitar o primeiro relatório de teste pela interface;
 - [ ] acompanhar a primeira execução agendada e os logs do provedor.
 
 ## Rollback
@@ -61,8 +70,6 @@ Se houver falha após a ativação:
 
 1. voltar `VITE_EMAIL_NOTIFICATIONS_ENABLED=false`;
 2. publicar novamente o frontend;
-3. manter o Worker disponível apenas para diagnóstico ou suspender o cron;
+3. suspender o cron do Worker se o problema estiver no processamento;
 4. preservar logs e `notificationDeliveries`;
 5. corrigir a causa antes de nova ativação.
-
-A desativação da feature no frontend impede novas solicitações pela interface, mas não substitui a suspensão do Worker quando o problema estiver no processamento agendado.

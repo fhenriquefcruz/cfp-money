@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   activation-gate:
-    name: Validate deployed email worker and test report
+    name: Validate deployed email worker and operational test
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:

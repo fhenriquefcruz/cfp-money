@@ -44,7 +44,31 @@ test('recusa worker sem health pronto', async () => {
   )
 })
 
-test('recusa ativação quando nenhum relatório de teste foi processado', async () => {
+test('recusa ativação quando o teste operacional não é enviado', async () => {
+  let calls = 0
+
+  await assert.rejects(
+    () =>
+      runEmailNotificationActivationCheck({
+        env: env(),
+        fetchImpl: async () => {
+          calls += 1
+          if (calls === 1) {
+            return response(200, { ok: true, configuration: 'ready' })
+          }
+
+          return response(409, {
+            ok: false,
+            status: 'missing-email',
+            uid: 'test-user',
+          })
+        },
+      }),
+    /Teste operacional falhou/,
+  )
+})
+
+test('recusa resposta para UID diferente da conta de teste', async () => {
   let calls = 0
 
   await assert.rejects(
@@ -58,22 +82,18 @@ test('recusa ativação quando nenhum relatório de teste foi processado', async
           }
 
           return response(200, {
-            results: [
-              {
-                uid: 'test-user',
-                status: 'processed',
-                reports: 0,
-                alerts: 0,
-              },
-            ],
+            ok: true,
+            status: 'sent',
+            uid: 'outro-usuario',
+            providerMessageId: 'msg-1',
           })
         },
       }),
-    /Nenhum relatório de teste foi processado/,
+    /UID diferente/,
   )
 })
 
-test('aprova somente health pronto e relatório de teste processado', async () => {
+test('aprova somente health pronto e teste operacional enviado', async () => {
   const requests = []
 
   const result = await runEmailNotificationActivationCheck({
@@ -86,25 +106,22 @@ test('aprova somente health pronto e relatório de teste processado', async () =
       }
 
       return response(200, {
-        results: [
-          {
-            uid: 'test-user',
-            status: 'processed',
-            reports: 1,
-            alerts: 2,
-          },
-        ],
+        ok: true,
+        status: 'sent',
+        uid: 'test-user',
+        providerMessageId: 'provider-message-1',
       })
     },
   })
 
   assert.deepEqual(result, {
     health: 'ready',
-    processed: true,
-    reports: 1,
-    alerts: 2,
+    activationTest: 'sent',
+    uid: 'test-user',
+    providerMessageId: 'provider-message-1',
   })
   assert.equal(requests.length, 2)
+  assert.equal(requests[1].url, 'https://worker.example/activation-test')
   assert.equal(requests[1].options.authorization, undefined)
   assert.match(requests[1].options.headers.authorization, /^Bearer /)
 })

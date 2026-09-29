@@ -68,46 +68,35 @@ export async function runEmailNotificationActivationCheck({ env = {}, fetchImpl 
     )
   }
 
-  const runResponse = await fetchImpl(`${config.workerUrl}/run`, {
+  const testResponse = await fetchImpl(`${config.workerUrl}/activation-test`, {
     method: 'POST',
     headers: {
       accept: 'application/json',
       authorization: `Bearer ${config.adminSecret}`,
-      'content-type': 'application/json',
     },
-    body: JSON.stringify({
-      uid: config.testUid,
-    }),
   })
-  const run = await parseJson(runResponse, '/run')
+  const activationTest = await parseJson(testResponse, '/activation-test')
 
-  if (runResponse.status !== 200) {
-    throw new Error(`Execução de teste falhou com HTTP ${runResponse.status}.`)
-  }
-
-  const result = Array.isArray(run?.results)
-    ? run.results.find((item) => item?.uid === config.testUid)
-    : null
-
-  if (!result) {
-    throw new Error('O Worker não retornou resultado para o usuário de teste configurado.')
-  }
-
-  if (result.status !== 'processed') {
-    throw new Error(`Usuário de teste não foi processado: status ${String(result.status)}.`)
-  }
-
-  const reports = Number(result.reports || 0)
-  if (reports < 1) {
+  if (
+    testResponse.status !== 200 ||
+    activationTest?.ok !== true ||
+    activationTest?.status !== 'sent'
+  ) {
     throw new Error(
-      'Nenhum relatório de teste foi processado. Solicite um teste no Perfil antes de executar o gate.',
+      `Teste operacional falhou com HTTP ${testResponse.status} e status ${String(
+        activationTest?.status || 'desconhecido',
+      )}.`,
     )
+  }
+
+  if (activationTest.uid !== config.testUid) {
+    throw new Error('O Worker respondeu com um UID diferente da conta de teste configurada.')
   }
 
   return {
     health: 'ready',
-    processed: true,
-    reports,
-    alerts: Number(result.alerts || 0),
+    activationTest: 'sent',
+    uid: activationTest.uid,
+    providerMessageId: String(activationTest.providerMessageId || ''),
   }
 }

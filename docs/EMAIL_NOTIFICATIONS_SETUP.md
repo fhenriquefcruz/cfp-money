@@ -20,34 +20,42 @@ Gere uma chave JSON e extraia somente:
 
 Não coloque o JSON ou a chave no Git.
 
-## 3. Cloudflare
+## 3. Secrets do GitHub
+
+Para o deploy automatizado, cadastre no repositório:
+
+- `CLOUDFLARE_API_TOKEN`;
+- `GOOGLE_CLIENT_EMAIL`;
+- `GOOGLE_PRIVATE_KEY`;
+- `BREVO_API_KEY`;
+- `EMAIL_NOTIFICATIONS_ADMIN_SECRET`;
+- `EMAIL_NOTIFICATIONS_TEST_UID`;
+- `EMAIL_NOTIFICATIONS_SENDER_EMAIL`.
+
+`EMAIL_NOTIFICATIONS_ADMIN_SECRET` deve ter pelo menos 32 caracteres. `EMAIL_NOTIFICATIONS_TEST_UID` deve apontar para uma conta real criada exclusivamente para homologação do serviço. O remetente deve estar validado no provedor de e-mail.
+
+## 4. Deploy automatizado
+
+Execute manualmente no GitHub Actions o workflow **Deploy Premium email worker**.
+
+Ele:
+
+1. valida os secrets obrigatórios;
+2. valida o Worker;
+3. injeta os secrets no Cloudflare durante o deploy;
+4. publica o Worker;
+5. resolve a URL `workers.dev`;
+6. executa o gate protegido `/activation-test`.
+
+O teste operacional lê apenas a conta de teste no Firestore e envia um e-mail sem receitas, despesas, saldos, metas ou orçamentos. Isso valida Google OAuth, Firestore e Brevo sem depender da feature flag do frontend.
+
+## 5. Validação local
+
+Copie `.dev.vars.example` para `.dev.vars` e preencha os secrets locais.
 
 ```bash
 cd worker/email-notifications
 npm install
-npx wrangler login
-```
-
-Edite `wrangler.jsonc` e substitua `SENDER_EMAIL`.
-
-Cadastre os secrets:
-
-```bash
-npx wrangler secret put GOOGLE_CLIENT_EMAIL
-npx wrangler secret put GOOGLE_PRIVATE_KEY
-npx wrangler secret put BREVO_API_KEY
-npx wrangler secret put ADMIN_TRIGGER_SECRET
-```
-
-Para `ADMIN_TRIGGER_SECRET`, use:
-
-```bash
-openssl rand -hex 32
-```
-
-## 4. Validar
-
-```bash
 npm run validate
 npm run dev
 ```
@@ -58,37 +66,37 @@ Teste o agendamento local:
 curl "http://localhost:8787/__scheduled?cron=*/15+*+*+*+*"
 ```
 
-## 5. Implantar
+## 6. Validação de produção
 
-```bash
-npm run deploy
-```
-
-O Cron Trigger executa a cada quinze minutos.
-
-Após implantar, valide o preflight:
+Após o deploy:
 
 ```bash
 curl -i https://SEU-WORKER.workers.dev/health
 ```
 
-O Worker só retorna HTTP `200` com `"configuration":"ready"` quando as variáveis e secrets essenciais passam no preflight local. Configuração ausente ou inválida retorna HTTP `503`. O endpoint não expõe valores de secrets.
+O Worker só retorna HTTP `200` com `"configuration":"ready"` quando as variáveis e secrets essenciais passam no preflight. Configuração ausente ou inválida retorna HTTP `503`. O endpoint não expõe valores de secrets.
 
-O `/health` valida configuração estática; ele não substitui o envio de um relatório de teste para confirmar Google OAuth, Firestore e Brevo ponta a ponta.
+O gate de ativação chama `/activation-test`, autenticado pelo segredo administrativo, e exige confirmação de envio para a conta de teste configurada.
 
-## 6. Frontend
+## 7. Frontend
 
-Durante a configuração, mantenha:
+Durante toda a configuração, mantenha:
 
 ```env
 VITE_BACKEND_MODE=disabled
 VITE_EMAIL_NOTIFICATIONS_ENABLED=false
 ```
 
-Somente depois que `/health` responder HTTP `200` com `"configuration":"ready"` **e** um relatório de teste real for entregue, altere para:
+Somente depois de:
+
+- `/health` pronto;
+- workflow **Deploy Premium email worker** aprovado;
+- teste operacional entregue na caixa da conta de teste;
+
+abra um PR separado para:
 
 ```env
 VITE_EMAIL_NOTIFICATIONS_ENABLED=true
 ```
 
-Antes de alterar a flag, execute o gate descrito em `docs/EMAIL_NOTIFICATIONS_ACTIVATION.md`. Depois da aprovação do gate e da confirmação real de entrega, faça a alteração em PR separado e publique o frontend.
+Depois publique o frontend e execute o smoke de produção.

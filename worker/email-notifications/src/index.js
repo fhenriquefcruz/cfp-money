@@ -14,7 +14,7 @@ import {
   listCollection,
   patchDocument,
 } from './firestore.js'
-import { alertsEmail, currency, reportEmail, sendEmail } from './mailer.js'
+import { activationTestEmail, alertsEmail, currency, reportEmail, sendEmail } from './mailer.js'
 
 const CONSENT_VERSION = '1.0.0'
 const DEFAULT_TIME_ZONE = 'America/Campo_Grande'
@@ -27,6 +27,7 @@ const REQUIRED_ENVIRONMENT_KEYS = [
   'GOOGLE_PRIVATE_KEY',
   'BREVO_API_KEY',
   'ADMIN_TRIGGER_SECRET',
+  'ACTIVATION_TEST_UID',
 ]
 
 function nonEmpty(value) {
@@ -454,6 +455,54 @@ async function processUser({ env, user, now }) {
   }
 }
 
+async function runActivationTest(
+  env,
+  { getDocumentImpl = getDocument, sendEmailImpl = sendEmail } = {},
+) {
+  const uid = String(env.ACTIVATION_TEST_UID || '').trim()
+  if (!uid) {
+    return {
+      ok: false,
+      status: 'missing-test-uid',
+    }
+  }
+
+  const user = await getDocumentImpl(env, `users/${uid}`)
+  if (!user) {
+    return {
+      ok: false,
+      status: 'user-not-found',
+      uid,
+    }
+  }
+
+  if (!user.email) {
+    return {
+      ok: false,
+      status: 'missing-email',
+      uid,
+    }
+  }
+
+  const email = activationTestEmail({
+    name: user.displayName,
+    appUrl: env.APP_URL,
+  })
+  const response = await sendEmailImpl(env, {
+    to: user.email,
+    name: user.displayName,
+    ...email,
+    tags: ['activation-test'],
+  })
+
+  return {
+    ok: true,
+    status: 'sent',
+    uid,
+    providerMessageId: response.messageId || '',
+  }
+}
+
 async function resolveUsers(env, onlyUid) {
   if (onlyUid) {
     const user = await getDocument(env, `users/${onlyUid}`)
@@ -550,6 +599,28 @@ export default {
       )
     }
 
+    if (request.method === 'POST' && url.pathname === '/activation-test') {
+      if (!readiness.ready) {
+        return json({ ok: false, error: 'service-unavailable' }, 503)
+      }
+
+      const expectedSecret = String(env.ADMIN_TRIGGER_SECRET || '').trim()
+      const authorization = request.headers.get('authorization')
+      if (!expectedSecret || authorization !== `Bearer ${expectedSecret}`) {
+        return json({ ok: false, error: 'forbidden' }, 403)
+      }
+
+      const result = await runActivationTest(env)
+      const status =
+        result.status === 'user-not-found'
+          ? 404
+          : result.status === 'missing-email' || result.status === 'missing-test-uid'
+            ? 409
+            : 200
+
+      return json(result, status)
+    }
+
     if (request.method === 'POST' && url.pathname === '/run') {
       if (!readiness.ready) {
         return json({ ok: false, error: 'service-unavailable' }, 503)
@@ -573,4 +644,4 @@ export default {
   },
 }
 
-export { processAll }
+export { processAll, runActivationTest }

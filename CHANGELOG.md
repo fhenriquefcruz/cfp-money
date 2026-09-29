@@ -32,7 +32,8 @@ Todas as mudanças relevantes deste projeto são documentadas aqui.
 
 ### Operation
 
-- adicionado gate executável e workflow manual para ativação controlada das notificações Premium, exigindo health pronto e relatório de teste processado antes da liberação da feature flag;
+- adicionado gate executável e workflow manual para ativação controlada das notificações Premium, exigindo health pronto e teste operacional protegido antes da liberação da feature flag;
+- adicionado deploy automatizado do Worker pela GitHub Actions, com secrets temporários e teste ponta a ponta sem dados financeiros;
 - preflight do Worker de notificações passa a diferenciar configuração pronta/incompleta no endpoint `/health`, sem expor secrets;
 - paridade final validada em 13 usuários no Authentication e 13 perfis no Firestore, sem divergências ou duplicidades;
 - produção permanece em Firebase Spark, sem Cloud Functions implantadas;

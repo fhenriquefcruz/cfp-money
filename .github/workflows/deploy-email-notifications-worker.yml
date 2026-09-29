@@ -1,0 +1,126 @@
+name: Deploy Premium email worker
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-worker:
+    name: Deploy and validate Premium email worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: '985715fac917490c0a3102d4e261bfc7'
+      GOOGLE_CLIENT_EMAIL: ${{ secrets.GOOGLE_CLIENT_EMAIL }}
+      GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+      BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+      EMAIL_NOTIFICATIONS_ADMIN_SECRET: ${{ secrets.EMAIL_NOTIFICATIONS_ADMIN_SECRET }}
+      EMAIL_NOTIFICATIONS_TEST_UID: ${{ secrets.EMAIL_NOTIFICATIONS_TEST_UID }}
+      EMAIL_NOTIFICATIONS_SENDER_EMAIL: ${{ secrets.EMAIL_NOTIFICATIONS_SENDER_EMAIL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            worker/email-notifications/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm ci --prefix worker/email-notifications
+
+      - name: Validate required deployment secrets
+        shell: bash
+        run: |
+          node <<'NODE'
+          const required = [
+            'CLOUDFLARE_API_TOKEN',
+            'GOOGLE_CLIENT_EMAIL',
+            'GOOGLE_PRIVATE_KEY',
+            'BREVO_API_KEY',
+            'EMAIL_NOTIFICATIONS_ADMIN_SECRET',
+            'EMAIL_NOTIFICATIONS_TEST_UID',
+            'EMAIL_NOTIFICATIONS_SENDER_EMAIL',
+          ]
+
+          const missing = required.filter((key) => !String(process.env[key] || '').trim())
+          if (missing.length) {
+            console.error(`Secrets ausentes: ${missing.join(', ')}`)
+            process.exit(1)
+          }
+
+          if (String(process.env.EMAIL_NOTIFICATIONS_ADMIN_SECRET).trim().length < 32) {
+            console.error('EMAIL_NOTIFICATIONS_ADMIN_SECRET deve ter pelo menos 32 caracteres.')
+            process.exit(1)
+          }
+
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(process.env.EMAIL_NOTIFICATIONS_SENDER_EMAIL)) {
+            console.error('EMAIL_NOTIFICATIONS_SENDER_EMAIL inválido.')
+            process.exit(1)
+          }
+          NODE
+
+      - name: Build temporary Worker secrets file
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs')
+          const path = require('path')
+
+          const target = path.join(process.env.RUNNER_TEMP, 'meu-real-worker-secrets.json')
+          const payload = {
+            GOOGLE_CLIENT_EMAIL: process.env.GOOGLE_CLIENT_EMAIL,
+            GOOGLE_PRIVATE_KEY: process.env.GOOGLE_PRIVATE_KEY,
+            BREVO_API_KEY: process.env.BREVO_API_KEY,
+            ADMIN_TRIGGER_SECRET: process.env.EMAIL_NOTIFICATIONS_ADMIN_SECRET,
+            ACTIVATION_TEST_UID: process.env.EMAIL_NOTIFICATIONS_TEST_UID,
+            SENDER_EMAIL: process.env.EMAIL_NOTIFICATIONS_SENDER_EMAIL,
+          }
+
+          fs.writeFileSync(target, JSON.stringify(payload), { mode: 0o600 })
+          NODE
+
+      - name: Validate Worker
+        run: npm run notifications:validate
+
+      - name: Deploy Worker with secrets
+        working-directory: worker/email-notifications
+        run: npx wrangler deploy --secrets-file "$RUNNER_TEMP/meu-real-worker-secrets.json"
+
+      - name: Resolve workers.dev URL
+        id: worker-url
+        shell: bash
+        run: |
+          SUBDOMAIN="$(
+            curl --fail-with-body --silent --show-error               -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"               "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain"               | node -e '
+                let body = ""
+                process.stdin.on("data", (chunk) => { body += chunk })
+                process.stdin.on("end", () => {
+                  const data = JSON.parse(body)
+                  if (!data.success || !data.result?.subdomain) process.exit(1)
+                  process.stdout.write(data.result.subdomain)
+                })
+              '
+          )"
+
+          WORKER_URL="https://meu-real-email-notifications.${SUBDOMAIN}.workers.dev"
+          echo "EMAIL_NOTIFICATIONS_WORKER_URL=${WORKER_URL}" >> "$GITHUB_ENV"
+          echo "worker_url=${WORKER_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Run protected activation gate
+        run: npm run notifications:activation:check
+
+      - name: Clean temporary secrets file
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/meu-real-worker-secrets.json"
