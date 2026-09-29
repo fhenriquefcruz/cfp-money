@@ -1,0 +1,39 @@
+name: Phase 40E refresh Worker lockfile
+
+on:
+  push:
+    branches:
+      - phase-40e-gh-secret-permission-preflight
+    paths:
+      - worker/email-notifications/package.json
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: phase-40e-gh-secret-permission-preflight
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Refresh Worker lockfile
+        run: npm install --package-lock-only --prefix worker/email-notifications
+      - name: Validate high severity audit
+        run: |
+          npm ci --prefix worker/email-notifications
+          npm audit --audit-level=high --prefix worker/email-notifications
+      - name: Commit lockfile
+        run: |
+          if git diff --quiet -- worker/email-notifications/package-lock.json; then
+            echo "Lockfile already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add worker/email-notifications/package-lock.json
+          git commit -m "Phase 40E: refresh Worker lockfile"
+          git push origin HEAD:phase-40e-gh-secret-permission-preflight
