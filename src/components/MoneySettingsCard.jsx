@@ -1,5 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Brain, CalendarRange, Save, Info, ShieldCheck, GitCompareArrows, PiggyBank } from 'lucide-react'
+import {
+  Brain,
+  CalendarRange,
+  Save,
+  Info,
+  ShieldCheck,
+  GitCompareArrows,
+  PiggyBank,
+} from 'lucide-react'
 import { useMoney } from '../contexts/MoneyContext'
 import { Card, Button, Select, Input } from './ui'
 import PremiumGate from './PremiumGate'
@@ -188,8 +196,8 @@ function MoneySettingsContent() {
                   </span>
                   <span className="mt-1 block text-[11px] leading-relaxed text-[--text-tertiary]">
                     Quando ativado, o Money identifica padrões agregados dos seus próprios
-                    lançamentos, como categorias predominantes e formas de pagamento frequentes.
-                    A conversa continua sem ser salva e nenhum dado é compartilhado entre contas.
+                    lançamentos, como categorias predominantes e formas de pagamento frequentes. A
+                    conversa continua sem ser salva e nenhum dado é compartilhado entre contas.
                   </span>
                 </span>
               </label>
