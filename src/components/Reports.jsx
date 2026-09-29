@@ -73,9 +73,7 @@ function KPI({ label, value, sub, color, icon, tooltip }) {
           <p className="text-xs text-[--text-tertiary]">{label}</p>
           {tooltip && <InfoTooltip text={tooltip} size={11} />}
         </div>
-        <p className="report-kpi__value">
-          {value}
-        </p>
+        <p className="report-kpi__value">{value}</p>
         {sub && <p className="text-[10px] text-[--text-tertiary]">{sub}</p>}
       </div>
     </div>
@@ -599,7 +597,9 @@ function ReportsContent() {
                         <span className="text-[--text-secondary]">Poupado vs Receita total</span>
                         <span className="font-bold text-[--text-primary]">
                           {periodTotals.income > 0
-                            ? ((periodTotals.savings / periodTotals.income) * 100).toFixed(1).replace('.', ',')
+                            ? ((periodTotals.savings / periodTotals.income) * 100)
+                                .toFixed(1)
+                                .replace('.', ',')
                             : 0}
                           %
                         </span>
