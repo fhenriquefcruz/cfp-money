@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { CalendarRange, Save, Info, ShieldCheck, GitCompareArrows, PiggyBank } from 'lucide-react'
+import { Brain, CalendarRange, Save, Info, ShieldCheck, GitCompareArrows, PiggyBank } from 'lucide-react'
 import { useMoney } from '../contexts/MoneyContext'
 import { Card, Button, Select, Input } from './ui'
 import PremiumGate from './PremiumGate'
@@ -172,6 +172,33 @@ function MoneySettingsContent() {
               <label className="flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
+                  checked={form.personalizationEnabled === true}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      personalizationEnabled: event.target.checked,
+                    }))
+                  }
+                  className="mt-1 h-4 w-4 accent-[--brand-600]"
+                />
+                <span>
+                  <span className="flex items-center gap-2 text-sm font-bold text-[--text-primary]">
+                    <Brain size={15} className="text-[--brand-600]" />
+                    Personalizar o Money com meu histórico
+                  </span>
+                  <span className="mt-1 block text-[11px] leading-relaxed text-[--text-tertiary]">
+                    Quando ativado, o Money identifica padrões agregados dos seus próprios
+                    lançamentos, como categorias predominantes e formas de pagamento frequentes.
+                    A conversa continua sem ser salva e nenhum dado é compartilhado entre contas.
+                  </span>
+                </span>
+              </label>
+            </section>
+
+            <section className="rounded-2xl border border-[--border-default] p-4">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
                   checked={form.excludeSavings}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -194,7 +221,7 @@ function MoneySettingsContent() {
               </label>
             </section>
 
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2">
               <FieldGuide icon={CalendarRange} title="Ciclo">
                 Determina onde começa e termina o período financeiro analisado.
               </FieldGuide>
@@ -203,6 +230,10 @@ function MoneySettingsContent() {
               </FieldGuide>
               <FieldGuide icon={ShieldCheck} title="Preservação">
                 Nenhuma escolha modifica transações, categorias ou saldos.
+              </FieldGuide>
+              <FieldGuide icon={Brain} title="Personalização">
+                O perfil é recalculado a partir do seu histórico e pode ser desativado a qualquer
+                momento.
               </FieldGuide>
             </div>
 
