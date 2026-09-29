@@ -77,7 +77,11 @@ export async function runEmailNotificationActivationCheck({ env = {}, fetchImpl 
   })
   const activationTest = await parseJson(testResponse, '/activation-test')
 
-  if (testResponse.status !== 200 || activationTest?.ok !== true || activationTest?.status !== 'sent') {
+  if (
+    testResponse.status !== 200 ||
+    activationTest?.ok !== true ||
+    activationTest?.status !== 'sent'
+  ) {
     throw new Error(
       `Teste operacional falhou com HTTP ${testResponse.status} e status ${String(
         activationTest?.status || 'desconhecido',
