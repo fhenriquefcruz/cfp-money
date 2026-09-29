@@ -457,10 +457,7 @@ async function processUser({ env, user, now }) {
 
 async function runActivationTest(
   env,
-  {
-    getDocumentImpl = getDocument,
-    sendEmailImpl = sendEmail,
-  } = {},
+  { getDocumentImpl = getDocument, sendEmailImpl = sendEmail } = {},
 ) {
   const uid = String(env.ACTIVATION_TEST_UID || '').trim()
   if (!uid) {
