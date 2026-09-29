@@ -337,7 +337,8 @@ body {
 
 .report-kpi__value {
   white-space: nowrap;
-  font-size: 1rem;
+  font-size: 0.875rem;
+  letter-spacing: -0.02em;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
@@ -349,11 +350,16 @@ body {
   }
 
   .report-kpi__value {
-    font-size: 1.125rem;
+    font-size: 0.875rem;
   }
 }
 
 @media (min-width: 640px) {
+  .report-kpi__value {
+    font-size: 1.125rem;
+    letter-spacing: normal;
+  }
+
   .saved-view-name {
     max-width: none;
     white-space: nowrap;
