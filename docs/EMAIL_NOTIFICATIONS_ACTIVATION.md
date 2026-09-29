@@ -6,11 +6,11 @@ A infraestrutura de código está pronta para ativação controlada, mas a featu
 
 ## Pré-requisitos externos
 
-- [ ] conta Cloudflare com API token para Workers;
-- [ ] remetente validado no provedor de e-mail;
-- [ ] conta de serviço Google dedicada ao Worker;
-- [ ] conta de teste existente no Firestore;
-- [ ] secrets de deploy cadastrados no GitHub.
+- [x] conta Cloudflare com API token para Workers;
+- [x] remetente validado no provedor de e-mail;
+- [x] conta de serviço Google dedicada ao Worker;
+- [x] conta de teste existente no Firestore;
+- [x] secrets de deploy cadastrados no GitHub.
 
 ## Secrets do GitHub
 
@@ -90,7 +90,7 @@ npm run notifications:activation:check
 
 ## Liberação da feature
 
-Somente depois do gate aprovado **e** da entrega real do e-mail operacional confirmada:
+Gate protegido aprovado e entrega real do e-mail operacional confirmada em 29/09/2026. A partir deste ponto:
 
 - [ ] criar PR separado para alterar `VITE_EMAIL_NOTIFICATIONS_ENABLED=true`;
 - [ ] publicar o frontend;
