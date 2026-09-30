@@ -3,11 +3,8 @@ import React, { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
-  AreaChart,
-  Area,
-  PieChart,
-  Pie,
-  Cell,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -45,8 +42,10 @@ import FinancialHealthScore from './FinancialHealthScore'
 import { formatCurrency, formatRelativeDate } from '../utils'
 import { getMonthlyFinancialData } from '../domain/monthlyFinance'
 import {
+  buildCategoryBreakdown,
   buildMonthAttentionSignals,
   getCalendarMonthBounds,
+  getLargestMonthlyExpenseChange,
   getRecentDashboardTransactions,
 } from '../domain/dashboard'
 import { getTransactionActivityDate, getTransactionDateContext } from '../domain/transactionDates'
@@ -57,16 +56,19 @@ import { budgetMonthKey, buildMonthlyBudgetOverview } from '../domain/budgetPeri
 import { format, subMonths, addMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
-const PIE_COLORS = [
-  '#c49d6b',
-  '#4e8066',
-  '#a7804e',
-  '#b64c43',
-  '#786c8d',
-  '#9a6671',
-  '#5f8587',
-  '#b87645',
-]
+const formatAxisCurrency = (value) =>
+  `R$ ${new Intl.NumberFormat('pt-BR', {
+    notation: 'compact',
+    compactDisplay: 'long',
+    maximumFractionDigits: 1,
+  }).format(Number(value) || 0)}`
+
+const formatVariation = (value) => {
+  if (value === null || value === undefined) return 'sem base anterior'
+  const formatted = Math.abs(value).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
+  if (value === 0) return 'sem variação'
+  return `${formatted}% ${value > 0 ? 'acima' : 'abaixo'} do mês anterior`
+}
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -223,6 +225,8 @@ export default function Dashboard() {
   const { invoiceEvents } = useInvoiceEvents()
 
   const [viewDate, setViewDate] = useState(new Date())
+  const [trendMonths, setTrendMonths] = useState(6)
+  const [selectedMonthKey, setSelectedMonthKey] = useState('')
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
   const rawMonthLabel = format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })
@@ -231,10 +235,31 @@ export default function Dashboard() {
 
   const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
   const categoryTotals = useMemo(() => getCategoryTotals(year, month), [year, month, transactions])
-  const monthlyData = useMemo(
-    () => getMonthlyFinancialData(transactions, 6, viewDate),
-    [transactions, viewDate],
+  const previousViewDate = useMemo(() => subMonths(viewDate, 1), [year, month])
+  const previousCategoryTotals = useMemo(
+    () => getCategoryTotals(previousViewDate.getFullYear(), previousViewDate.getMonth()),
+    [previousViewDate, transactions],
   )
+  const categoryBreakdown = useMemo(
+    () => buildCategoryBreakdown(categoryTotals, previousCategoryTotals),
+    [categoryTotals, previousCategoryTotals],
+  )
+  const availableMonthCount = useMemo(
+    () =>
+      new Set(
+        transactions
+          .map((transaction) => getTransactionActivityDate(transaction)?.slice(0, 7))
+          .filter(Boolean),
+      ).size,
+    [transactions],
+  )
+  const monthlyData = useMemo(
+    () => getMonthlyFinancialData(transactions, trendMonths, viewDate),
+    [transactions, trendMonths, viewDate],
+  )
+  const trendHighlight = useMemo(() => getLargestMonthlyExpenseChange(monthlyData), [monthlyData])
+  const selectedTrend =
+    monthlyData.find((item) => item.monthKey === selectedMonthKey) || monthlyData.at(-1) || null
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
   const monthBounds = useMemo(() => getCalendarMonthBounds(viewDate), [year, month])
