@@ -275,17 +275,6 @@ export default function Dashboard() {
     () => getMonthlyFinancialData(transactions, activeTrendMonths, viewDate),
     [transactions, activeTrendMonths, viewDate],
   )
-  const forecast = useMemo(() => {
-    const values = [1, 2, 3]
-      .map((offset) => {
-        const reference = subMonths(viewDate, offset)
-        return getSummary(reference.getFullYear(), reference.getMonth()).expenses
-      })
-      .filter((value) => value > 0)
-
-    return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0
-  }, [viewDate, transactions])
-
   const monthBounds = useMemo(() => getCalendarMonthBounds(viewDate), [year, month])
   const paymentSummary = useMemo(
     () =>
@@ -1015,7 +1004,7 @@ export default function Dashboard() {
 
       <DashboardSectionHeading
         title="Análises e planejamento"
-        description="Referências e diagnósticos para aprofundar a leitura; não substituem os números do período."
+        description="Diagnósticos para aprofundar a leitura; não substituem os números do período."
       />
 
       <motion.div
@@ -1024,32 +1013,7 @@ export default function Dashboard() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.28 }}
       >
-        <div className="dashboard-compact-kpis grid min-w-0 gap-4 md:grid-cols-2 xl:col-span-5 xl:grid-cols-1">
-          <Card variant="elevated" className="dashboard-forecast-card h-full">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="mb-1 flex items-center gap-1.5">
-                  <Clock3 size={14} className="text-[--brand-600]" />
-                  <p className="text-xs font-semibold text-[--text-tertiary]">
-                    Referência de gastos · 3 meses anteriores
-                  </p>
-                  <InfoTooltip text="Média das despesas dos três meses anteriores ao período visualizado. É uma referência de planejamento, não uma previsão garantida." />
-                </div>
-                {isLoading ? (
-                  <div className="h-7 w-28 animate-pulse rounded bg-[--bg-hover]" />
-                ) : (
-                  <p className="text-2xl font-black tabular-nums text-[--text-primary]">
-                    {formatCurrency(forecast)}
-                  </p>
-                )}
-                <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
-                  Média anterior a {monthLabel}; não altera o resultado do período.
-                </p>
-              </div>
-
-            </div>
-          </Card>
-
+        <div className="dashboard-compact-kpis min-w-0 xl:col-span-5">
           <Card variant="elevated" className="dashboard-health-card h-full">
             <div className="mb-2 flex items-center gap-1.5">
               <Gauge size={14} className="text-[--brand-600]" />
