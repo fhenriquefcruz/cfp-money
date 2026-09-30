@@ -1,5 +1,4 @@
 import { getTransactionActivityDate } from './transactionDates'
-import { isFinanciallyEffectiveTransaction } from './finance'
 import { buildCategoryReviewQueue } from './categoryReview'
 
 const DEFAULT_SETTINGS = Object.freeze({
@@ -11,6 +10,10 @@ const DEFAULT_SETTINGS = Object.freeze({
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const MIN_PROJECTION_ELAPSED_DAYS = 7
+const isEffective = (transaction) =>
+  transaction.paymentStatus !== 'cancelled' &&
+  transaction.flowType !== 'transfer' &&
+  transaction.kind !== 'transfer'
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
@@ -181,7 +184,7 @@ export function filterTransactionsForPeriod(transactions = [], period, settings 
   const normalized = normalizeMoneySettings(settings)
 
   return transactions.filter((transaction) => {
-    if (!isFinanciallyEffectiveTransaction(transaction)) return false
+    if (!isEffective(transaction)) return false
     const activityDate = getTransactionActivityDate(transaction)
     if (!activityDate || !isWithin(activityDate, period.start, period.end)) return false
     if (normalized.excludeSavings && transaction.isSavings) return false
