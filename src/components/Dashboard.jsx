@@ -67,7 +67,7 @@ const formatSignedPercent = (value) => {
   return `${prefix}${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`
 }
 
-function DashboardSectionHeading({ title, description, action }) {
+function DashboardSectionHeading({ title, description }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-2 px-1">
       <div>
@@ -76,7 +76,6 @@ function DashboardSectionHeading({ title, description, action }) {
           <p className="mt-0.5 text-xs leading-relaxed text-[--text-tertiary]">{description}</p>
         )}
       </div>
-      {action}
     </div>
   )
 }
