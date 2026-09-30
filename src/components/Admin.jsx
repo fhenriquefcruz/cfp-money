@@ -9,7 +9,6 @@ import {
   Clock,
   AlertTriangle,
   ChevronDown,
-  ChevronUp,
   X,
   Star,
   Search,
@@ -39,8 +38,7 @@ function StatusBadge({ u }) {
 function UserRow({ u, onAccess }) {
   const [expanded, setExpanded] = useState(false)
   const [months, setMonths] = useState(1)
-  const planInfo = getPlanPresentation(u)
-  const isPremiumActive = planInfo.key === 'premium'
+  const isPremiumActive = getPlanPresentation(u).key === 'premium'
   const activity = getUserActivityState(u)
 
   return (
@@ -62,11 +60,11 @@ function UserRow({ u, onAccess }) {
             </p>
             <p className="admin-user-email">{u.email}</p>
           </div>
-          {expanded ? (
-            <ChevronUp size={12} className="text-[--text-tertiary] flex-shrink-0 ml-1" />
-          ) : (
-            <ChevronDown size={12} className="text-[--text-tertiary] flex-shrink-0 ml-1" />
-          )}
+          <ChevronDown
+            size={12}
+            className="admin-user-chevron"
+            data-expanded={expanded}
+          />
         </button>
 
         {/* Coluna 2: badge de status (oculto em mobile muito pequeno) */}
@@ -360,8 +358,7 @@ export default function Admin() {
         </div>
 
         <div className="admin-activity-note">
-          “Online agora” significa atividade registrada nos últimos 5 minutos. É uma presença aproximada,
-          não uma confirmação de sessão aberta em tempo real.
+          “Online agora” = atividade nos últimos 5 minutos; não confirma sessão em tempo real.
         </div>
 
         {/* Header de colunas */}
