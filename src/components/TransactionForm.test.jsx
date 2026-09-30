@@ -124,7 +124,9 @@ describe('TransactionForm category review', () => {
     const suggestion = screen.getByRole('button', {
       name: /Aplicar sugestão: Transporte por aplicativo/i,
     })
-    const rideCategory = screen.getByRole('button', { name: /Transporte por aplicativo/i })
+    const rideCategory = screen
+      .getAllByRole('button', { name: /Transporte por aplicativo/i })
+      .find((button) => button.hasAttribute('aria-pressed'))
 
     expect(rideCategory).toHaveAttribute('aria-pressed', 'false')
     fireEvent.click(suggestion)
