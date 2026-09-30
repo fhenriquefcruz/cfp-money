@@ -1,3 +1,6 @@
+import { getTransactionActivityDate } from './transactionDates'
+import { isFinanciallyEffectiveTransaction } from './finance'
+
 const DEFAULT_SETTINGS = Object.freeze({
   cycleType: 'calendar_month',
   cycleStartDay: 1,
@@ -77,13 +80,13 @@ function safePercentChange(current, previous) {
 
 function sumExpenses(transactions) {
   return transactions
-    .filter((transaction) => transaction.type === 'expense')
+    .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
     .reduce((total, transaction) => total + toAmount(transaction.amount), 0)
 }
 
 function sumIncome(transactions) {
   return transactions
-    .filter((transaction) => transaction.type === 'income')
+    .filter((transaction) => transaction.type === 'income' && !transaction.isSavings)
     .reduce((total, transaction) => total + toAmount(transaction.amount), 0)
 }
 
@@ -177,7 +180,9 @@ export function filterTransactionsForPeriod(transactions = [], period, settings 
   const normalized = normalizeMoneySettings(settings)
 
   return transactions.filter((transaction) => {
-    if (!transaction?.date || !isWithin(transaction.date, period.start, period.end)) return false
+    if (!isFinanciallyEffectiveTransaction(transaction)) return false
+    const activityDate = getTransactionActivityDate(transaction)
+    if (!activityDate || !isWithin(activityDate, period.start, period.end)) return false
     if (normalized.excludeSavings && transaction.isSavings) return false
     return true
   })
