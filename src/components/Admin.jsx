@@ -374,7 +374,7 @@ export default function Admin() {
             label: 'Online agora',
             value: stats.online,
             icon: <Users size={15} />,
-            style: STATUS_STYLES.premium,
+            tone: 'premium',
           },
           {
             label: 'Ativos em 7 dias',
@@ -386,7 +386,7 @@ export default function Admin() {
             label: 'Inativos 30+ dias',
             value: stats.inactive30,
             icon: <Clock size={15} />,
-            style: STATUS_STYLES.blocked,
+            tone: 'blocked',
           },
         ].map((s) => (
           <Card key={s.label} className="!p-4">
