@@ -1,8 +1,16 @@
+import { getTransactionActivityDate } from './transactionDates'
+
 const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
+
+export const isFinanciallyEffectiveTransaction = (transaction = {}) =>
+  transaction.paymentStatus !== 'cancelled' &&
+  transaction.flowType !== 'transfer' &&
+  transaction.kind !== 'transfer'
 
 export function summarizeTransactions(transactions = []) {
   return transactions.reduce(
     (summary, transaction) => {
+      if (!isFinanciallyEffectiveTransaction(transaction)) return summary
       const amount = asAmount(transaction.amount)
 
       if (transaction.isSavings) {
@@ -33,8 +41,10 @@ export function calculateCurrentBalance(transactions = []) {
 
 export function transactionsForMonth(transactions = [], year, month) {
   return transactions.filter((transaction) => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(transaction.date || '')) return false
-    const date = new Date(transaction.date + 'T00:00:00')
+    if (!isFinanciallyEffectiveTransaction(transaction)) return false
+    const activityDate = getTransactionActivityDate(transaction)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(activityDate || '')) return false
+    const date = new Date(activityDate + 'T00:00:00')
     return date.getFullYear() === year && date.getMonth() === month
   })
 }
@@ -61,10 +71,12 @@ export function calculateBudgetUsage(transactions = [], budget, referenceDate = 
 
   const spent = transactions
     .filter((transaction) => {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(transaction.date || '')) return false
-      const date = new Date(transaction.date + 'T00:00:00')
+      const activityDate = getTransactionActivityDate(transaction)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(activityDate || '')) return false
+      const date = new Date(activityDate + 'T00:00:00')
 
       return (
+        isFinanciallyEffectiveTransaction(transaction) &&
         transaction.type === 'expense' &&
         !transaction.isSavings &&
         transaction.categoryId === budget.categoryId &&
