@@ -1,8 +1,6 @@
 // src/utils/index.jsx
-import { differenceInCalendarDays, format, subMonths, parseISO } from 'date-fns'
+import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { getTransactionActivityDate } from '../domain/transactionDates'
-import { isFinanciallyEffectiveTransaction } from '../domain/finance'
 
 // ── CAPITALIZE ──
 export const capitalize = (str) => {
@@ -61,51 +59,6 @@ export const hexToRgba = (hex, alpha = 1) => {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   if (!r) return `rgba(99,102,241,${alpha})`
   return `rgba(${parseInt(r[1], 16)},${parseInt(r[2], 16)},${parseInt(r[3], 16)},${alpha})`
-}
-
-// ── TRANSACTION HELPERS ──
-export const groupByMonth = (transactions) => {
-  const groups = {}
-  transactions.filter(isFinanciallyEffectiveTransaction).forEach((tx) => {
-    const activityDate = getTransactionActivityDate(tx)
-    if (!activityDate) return
-    const key = activityDate.slice(0, 7)
-    if (!groups[key]) groups[key] = []
-    groups[key].push(tx)
-  })
-  return groups
-}
-
-export const getMonthlyData = (transactions, months = 6, baseDate = new Date()) => {
-  const result = []
-  for (let i = months - 1; i >= 0; i--) {
-    const date = subMonths(baseDate, i)
-    const year = date.getFullYear()
-    const month = date.getMonth()
-    const txs = transactions.filter((t) => {
-      if (!isFinanciallyEffectiveTransaction(t)) return false
-      const activityDate = getTransactionActivityDate(t)
-      if (!activityDate) return false
-      const d = new Date(activityDate + 'T00:00:00')
-      return d.getFullYear() === year && d.getMonth() === month
-    })
-    const income = txs
-      .filter((t) => t.type === 'income' && !t.isSavings)
-      .reduce((s, t) => s + t.amount, 0)
-    const expenses = txs
-      .filter((t) => t.type === 'expense' && !t.isSavings)
-      .reduce((s, t) => s + t.amount, 0)
-    const savings = txs.filter((t) => t.isSavings).reduce((s, t) => s + t.amount, 0)
-    result.push({
-      month: capitalize(format(date, 'MMM', { locale: ptBR })),
-      fullMonth: format(date, "MMMM 'de' yyyy", { locale: ptBR }),
-      income,
-      expenses,
-      savings,
-      balance: income - expenses,
-    })
-  }
-  return result
 }
 
 // ── PAYMENT METHODS ──
