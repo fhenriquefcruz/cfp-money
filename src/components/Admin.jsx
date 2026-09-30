@@ -22,37 +22,11 @@ import {
   buildActivitySummary,
   formatActivityDate,
   formatRelativeActivity,
-  getUserActivityReference,
   getUserActivityState,
   matchesActivityFilter,
 } from '../domain/userActivity'
 import CommercialOverviewRouter from './CommercialOverviewRouter'
 import SupportAdminCard from './SupportAdminCard'
-
-const ACTIVITY_META = {
-  online: ['Online agora', 'premium'],
-  today: ['Ativo hoje', 'trial_active'],
-  week: ['Ativo na semana', 'trial_active'],
-  inactive: ['Inativo', 'premium_expired'],
-  inactive30: ['Inativo há 30+ dias', 'blocked'],
-  untracked: ['Sem registro', 'free'],
-}
-
-function ActivityBadge({ u }) {
-  const state = getUserActivityState(u)
-  const [label, tone] = ACTIVITY_META[state.key] || ACTIVITY_META.untracked
-
-  return (
-    <span
-      className="admin-status-badge admin-tone"
-      data-tone={tone}
-      title={state.key === 'online' ? 'Atividade registrada nos últimos 5 minutos.' : label}
-    >
-      <span className="admin-status-dot" />
-      {label}
-    </span>
-  )
-}
 
 function StatusBadge({ u }) {
   const info = getPlanPresentation(u)
@@ -70,6 +44,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
   const [months, setMonths] = useState(1)
   const planInfo = getPlanPresentation(u)
   const isPremiumActive = planInfo.key === 'premium'
+  const activity = getUserActivityState(u)
 
   return (
     <>
@@ -104,10 +79,10 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
 
         {/* Coluna 3: atividade recente */}
         <div className="admin-activity-cell">
-          <ActivityBadge u={u} />
-          <p className="admin-activity-age">
-            {formatRelativeActivity(getUserActivityReference(u))}
+          <p className="admin-activity-state" data-online={activity.key === 'online'}>
+            {activity.key === 'online' ? 'Online agora' : 'Offline'}
           </p>
+          <p className="admin-activity-age">{formatRelativeActivity(activity.reference)}</p>
         </div>
 
         {/* Coluna 4: ações agrupadas */}
@@ -173,7 +148,6 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
         <div className="admin-user-expanded">
           <div className="admin-mobile-badges">
             <StatusBadge u={u} />
-            <ActivityBadge u={u} />
           </div>
           <div className="admin-user-details">
             {[
@@ -194,12 +168,12 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
               {
                 label: 'Última atividade',
                 value: `${formatActivityDate(u.lastSeenAt)} · ${formatRelativeActivity(
-                  getUserActivityReference(u),
+                  activity.reference,
                 )}`,
               },
               {
                 label: 'Presença',
-                value: ACTIVITY_META[getUserActivityState(u).key]?.[0] || 'Sem registro',
+                value: activity.key === 'online' ? 'Online agora' : 'Offline',
               },
             ].map((r) => (
               <div key={r.label}>
@@ -320,11 +294,11 @@ export default function Admin() {
           u.displayName?.toLowerCase().includes(normalizedSearch)) &&
         matchesActivityFilter(u, activityFilter, now),
     )
-    .sort((a, b) => {
-      const aTime = getUserActivityReference(a)?.getTime() || 0
-      const bTime = getUserActivityReference(b)?.getTime() || 0
-      return bTime - aTime
-    })
+    .sort(
+      (a, b) =>
+        (getUserActivityState(b, now).reference?.getTime() || 0) -
+        (getUserActivityState(a, now).reference?.getTime() || 0),
+    )
 
   const activitySummary = buildActivitySummary(users, now)
   const stats = {
