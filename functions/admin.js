@@ -29,6 +29,8 @@ function publicAdminUserSnapshot(document) {
     premiumUntil: serializeFirestoreValue(data.premiumUntil),
     blocked: Boolean(data.blocked),
     createdAt: serializeFirestoreValue(data.createdAt),
+    lastSignInAt: serializeFirestoreValue(data.lastSignInAt),
+    lastSeenAt: serializeFirestoreValue(data.lastSeenAt),
   }
 }
 
