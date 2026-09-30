@@ -42,6 +42,7 @@ import {
   summarizeTransactions,
   transactionsForMonth,
 } from '../domain/finance'
+import { getTransactionActivityDate } from '../domain/transactionDates'
 import { enqueueBudgetNotification } from '../services/notificationService'
 import { E2E_MODE } from '../e2e/runtime'
 import { createE2EAppState } from '../e2e/fixtures'
@@ -842,7 +843,9 @@ export const TransactionsProvider = ({ children }) => {
   const filterTransactions = useCallback(
     ({ year, month, categoryId, paymentMethod, type } = {}) =>
       stateRef.current.transactions.filter((transaction) => {
-        const date = new Date(transaction.date + 'T00:00:00')
+        const activityDate = getTransactionActivityDate(transaction)
+        if (!activityDate) return false
+        const date = new Date(activityDate + 'T00:00:00')
         if (year && date.getFullYear() !== year) return false
         if (month !== undefined && date.getMonth() !== month) return false
         if (categoryId && transaction.categoryId !== categoryId) return false
