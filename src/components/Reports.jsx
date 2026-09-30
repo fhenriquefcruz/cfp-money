@@ -32,8 +32,7 @@ import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
 import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { getTransactionActivityDate } from '../domain/transactionDates'
-import { isFinanciallyEffectiveTransaction } from '../domain/finance'
+import { getFinancialActivityDate, isFinanciallyEffectiveTransaction } from '../domain/finance'
 
 const COLORS = [
   '#c49d6b',
@@ -129,7 +128,7 @@ function ReportsContent() {
     () =>
       transactions.filter((transaction) => {
         if (!isFinanciallyEffectiveTransaction(transaction)) return false
-        const activityDate = getTransactionActivityDate(transaction)
+        const activityDate = getFinancialActivityDate(transaction)
         return activityDate >= periodStart && activityDate <= periodEnd
       }),
     [transactions, periodStart, periodEnd],
