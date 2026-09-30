@@ -35,9 +35,3 @@ export function formatRelativeActivity(value, now = new Date()) {
   return hours < 24 ? `há ${hours}h` : `há ${Math.floor(hours / 24)}d`
 }
 
-export function formatActivityDate(value) {
-  const date = toActivityDate(value)
-  return date
-    ? date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
-    : 'Sem registro'
-}
