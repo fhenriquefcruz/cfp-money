@@ -389,63 +389,91 @@ export default function Dashboard() {
     }
   }, [currentSummary, budgetOverview, paymentSummary.overdueCount, categoryReviewCount])
 
-  const monthAttention = useMemo(
-    () =>
-      buildMonthAttentionSignals({
-        paymentSummary,
-        budgetAlerts,
-        balance: currentSummary.balance,
-      }).map((signal) => {
-        if (signal.type === 'overdue') {
-          return {
-            id: 'overdue',
-            title: `${signal.count} ${
-              signal.count === 1 ? 'pagamento atrasado' : 'pagamentos atrasados'
-            }`,
-            detail: `${formatCurrency(signal.amount)} aguardando regularização.`,
-            to: '/transactions',
-            tone: 'danger',
-            icon: AlertTriangle,
-          }
-        }
-
-        if (signal.type === 'due-soon') {
-          return {
-            id: 'due-soon',
-            title: `${signal.count} ${
-              signal.count === 1 ? 'vencimento próximo' : 'vencimentos próximos'
-            }`,
-            detail: `${formatCurrency(signal.amount)} vencem nos próximos 7 dias.`,
-            to: '/transactions',
-            tone: 'warning',
-            icon: Clock3,
-          }
-        }
-
-        if (signal.type === 'budget') {
-          return {
-            id: `budget-${signal.budgetId}`,
-            title: `${signal.categoryName} em atenção`,
-            detail: signal.isOver
-              ? `${formatCurrency(signal.excess)} acima do limite mensal.`
-              : `${signal.pct.toFixed(0)}% do limite mensal já foi utilizado.`,
-            to: `/budgets?month=${budgetOverview.monthKey}`,
-            tone: signal.pct >= 100 ? 'danger' : 'warning',
-            icon: Target,
-          }
-        }
-
+  const monthAttention = useMemo(() => {
+    const mapped = buildMonthAttentionSignals({
+      paymentSummary,
+      budgetAlerts,
+      balance: currentSummary.balance,
+    }).map((signal) => {
+      if (signal.type === 'overdue') {
         return {
-          id: 'negative-balance',
-          title: 'Saldo do mês negativo',
-          detail: `${formatCurrency(signal.amount)} acima das receitas do período.`,
+          id: 'overdue',
+          title: `${signal.count} ${
+            signal.count === 1 ? 'pagamento atrasado' : 'pagamentos atrasados'
+          }`,
+          detail: `${formatCurrency(signal.amount)} aguardando regularização.`,
+          actionLabel: 'Regularizar pagamentos',
           to: '/transactions',
           tone: 'danger',
-          icon: Wallet,
+          icon: AlertTriangle,
         }
-      }),
-    [paymentSummary, budgetAlerts, currentSummary.balance, budgetOverview.monthKey],
-  )
+      }
+
+      if (signal.type === 'due-soon') {
+        return {
+          id: 'due-soon',
+          title: `${signal.count} ${
+            signal.count === 1 ? 'vencimento próximo' : 'vencimentos próximos'
+          }`,
+          detail: `${formatCurrency(signal.amount)} vencem nos próximos 7 dias.`,
+          actionLabel: 'Revisar vencimentos',
+          to: '/transactions',
+          tone: 'warning',
+          icon: Clock3,
+        }
+      }
+
+      if (signal.type === 'budget') {
+        return {
+          id: `budget-${signal.budgetId}`,
+          title: `${signal.categoryName} em atenção`,
+          detail: signal.isOver
+            ? `${formatCurrency(signal.excess)} acima do limite mensal.`
+            : `${signal.pct.toFixed(0)}% do limite mensal já foi utilizado.`,
+          actionLabel: 'Revisar orçamento',
+          to: `/budgets?month=${budgetOverview.monthKey}`,
+          tone: signal.pct >= 100 ? 'danger' : 'warning',
+          icon: Target,
+        }
+      }
+
+      return {
+        id: 'negative-balance',
+        title: 'Resultado do período negativo',
+        detail: `${formatCurrency(signal.amount)} acima das receitas registradas no período.`,
+        actionLabel: 'Revisar movimentações',
+        to: '/transactions',
+        tone: 'danger',
+        icon: Wallet,
+      }
+    })
+
+    const review =
+      categoryReviewCount > 0
+        ? {
+            id: 'category-review',
+            title: `${categoryReviewCount} ${
+              categoryReviewCount === 1 ? 'classificação para revisar' : 'classificações para revisar'
+            }`,
+            detail:
+              'Categorias suspeitas podem distorcer orçamento, composição dos gastos e indicador financeiro.',
+            actionLabel: 'Revisar classificações',
+            to: '/transactions?review=categories&scope=all',
+            tone: 'warning',
+            icon: AlertTriangle,
+          }
+        : null
+
+    const critical = mapped.filter((item) => item.tone === 'danger')
+    const remaining = mapped.filter((item) => item.tone !== 'danger')
+    return [...critical, ...(review ? [review] : []), ...remaining].slice(0, 3)
+  }, [
+    paymentSummary,
+    budgetAlerts,
+    currentSummary.balance,
+    budgetOverview.monthKey,
+    categoryReviewCount,
+  ])
 
   const greeting = () => {
     const h = new Date().getHours()
