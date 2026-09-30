@@ -237,6 +237,7 @@ export default function Dashboard() {
   const { invoiceEvents } = useInvoiceEvents()
 
   const [viewDate, setViewDate] = useState(new Date())
+  const [trendMonths, setTrendMonths] = useState(6)
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
   const rawMonthLabel = format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })
@@ -245,9 +246,28 @@ export default function Dashboard() {
 
   const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
   const categoryTotals = useMemo(() => getCategoryTotals(year, month), [year, month, transactions])
+  const previousCategoryTotals = useMemo(() => {
+    const previous = subMonths(viewDate, 1)
+    return getCategoryTotals(previous.getFullYear(), previous.getMonth())
+  }, [viewDate, transactions])
+
+  const historySpanMonths = useMemo(() => {
+    const dates = transactions
+      .map((transaction) => getTransactionActivityDate(transaction))
+      .filter(Boolean)
+      .sort()
+
+    if (dates.length === 0) return 0
+    const [firstYear, firstMonth] = dates[0].slice(0, 7).split('-').map(Number)
+    const span = (year - firstYear) * 12 + (month - (firstMonth - 1)) + 1
+    return Math.max(0, span)
+  }, [transactions, year, month])
+
+  const canShow12Months = historySpanMonths >= 12
+  const activeTrendMonths = trendMonths === 12 && canShow12Months ? 12 : 6
   const monthlyData = useMemo(
-    () => getMonthlyFinancialData(transactions, 6, viewDate),
-    [transactions, viewDate],
+    () => getMonthlyFinancialData(transactions, activeTrendMonths, viewDate),
+    [transactions, activeTrendMonths, viewDate],
   )
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
@@ -280,10 +300,40 @@ export default function Dashboard() {
     [transactions, monthBounds],
   )
 
-  const savingsBalance = useMemo(
-    () => transactions.filter((t) => t.isSavings).reduce((s, t) => s + t.amount, 0),
-    [transactions],
-  )
+  const categoryRows = useMemo(() => {
+    const total = categoryTotals.reduce((sum, item) => sum + item.total, 0)
+    const previous = new Map(
+      previousCategoryTotals.map((item) => [item.categoryId || item.categoryName, item.total]),
+    )
+
+    return [...categoryTotals]
+      .sort((first, second) => second.total - first.total)
+      .map((item) => {
+        const key = item.categoryId || item.categoryName
+        const previousTotal = previous.get(key) || 0
+        return {
+          ...item,
+          share: total > 0 ? (item.total / total) * 100 : 0,
+          change:
+            previousTotal > 0 ? ((item.total - previousTotal) / previousTotal) * 100 : null,
+        }
+      })
+  }, [categoryTotals, previousCategoryTotals])
+
+  const trendInsight = useMemo(() => {
+    if (monthlyData.length < 2) return null
+    const current = monthlyData.at(-1)
+    const previous = monthlyData.at(-2)
+    const difference = current.expenses - previous.expenses
+    const percent = previous.expenses > 0 ? (difference / previous.expenses) * 100 : null
+
+    return {
+      difference,
+      percent,
+      current,
+      previous,
+    }
+  }, [monthlyData])
 
   const budgetOverview = useMemo(
     () =>
