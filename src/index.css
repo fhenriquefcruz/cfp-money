@@ -1764,3 +1764,15 @@ body {
 .admin-activity-state[data-online='true'] {
   color: var(--success-text);
 }
+
+
+.admin-user-chevron {
+  flex: 0 0 auto;
+  margin-left: 0.25rem;
+  color: var(--text-tertiary);
+  transition: transform 150ms ease;
+}
+
+.admin-user-chevron[data-expanded='true'] {
+  transform: rotate(180deg);
+}
