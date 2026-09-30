@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { formatRelativeDate } from './index'
+import { formatRelativeDate, getMonthlyData, groupByMonth } from './index'
 
 describe('formatRelativeDate', () => {
   beforeEach(() => {
@@ -21,5 +21,66 @@ describe('formatRelativeDate', () => {
     expect(formatRelativeDate('2026-07-24')).toBe('Amanhã')
     expect(formatRelativeDate('2026-07-25')).toBe('Daqui a 2 dias')
     expect(formatRelativeDate('2026-08-01')).toBe('01/08/2026')
+  })
+})
+
+
+describe('agregações mensais', () => {
+  test('usa data da movimentação e ignora cancelamentos', () => {
+    const transactions = [
+      {
+        id: 'manual-july',
+        type: 'expense',
+        amount: 200,
+        date: '2026-07-20',
+        dueDate: '2026-08-05',
+      },
+      {
+        id: 'cancelled',
+        type: 'expense',
+        amount: 900,
+        date: '2026-07-21',
+        paymentStatus: 'cancelled',
+      },
+      {
+        id: 'income',
+        type: 'income',
+        amount: 1000,
+        date: '2026-07-05',
+      },
+    ]
+
+    expect(groupByMonth(transactions)['2026-07'].map((item) => item.id)).toEqual([
+      'manual-july',
+      'income',
+    ])
+
+    const data = getMonthlyData(transactions, 1, new Date(2026, 6, 15))
+    expect(data[0]).toMatchObject({
+      income: 1000,
+      expenses: 200,
+      balance: 800,
+    })
+  })
+
+  test('usa purchaseDate para compra estruturada no cartão', () => {
+    const data = getMonthlyData(
+      [
+        {
+          id: 'card',
+          type: 'expense',
+          amount: 300,
+          paymentMethod: 'credit_card',
+          isCreditPurchase: true,
+          purchaseDate: '2026-07-28',
+          date: '2026-08-10',
+          dueDate: '2026-08-10',
+        },
+      ],
+      1,
+      new Date(2026, 6, 15),
+    )
+
+    expect(data[0].expenses).toBe(300)
   })
 })
