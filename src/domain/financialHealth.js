@@ -16,12 +16,14 @@ export function buildFinancialHealth({
   hasBudgets = false,
   budgetsOk = false,
   overdueCount = 0,
+  categoryReviewCount = 0,
 } = {}) {
   const safeBalance = toFiniteNumber(balance)
   const safeIncome = toFiniteNumber(income)
   const safeExpenses = toFiniteNumber(expenses)
   const safeSavingRate = toFiniteNumber(savingRate)
   const safeOverdueCount = Math.max(0, Math.floor(toFiniteNumber(overdueCount)))
+  const safeCategoryReviewCount = Math.max(0, Math.floor(toFiniteNumber(categoryReviewCount)))
   const expenseRatio = safeIncome > 0 ? (safeExpenses / safeIncome) * 100 : null
 
   const savingPoints =
@@ -99,6 +101,27 @@ export function buildFinancialHealth({
     factors.reduce((total, factor) => total + factor.points, 0),
   )
 
+  if (safeCategoryReviewCount > 0) {
+    return {
+      methodologyVersion: 2,
+      score: null,
+      label: 'Em revisão',
+      summary: `Revise ${safeCategoryReviewCount} ${safeCategoryReviewCount === 1 ? 'classificação suspeita' : 'classificações suspeitas'} antes de interpretar este indicador.`,
+      factors,
+      nextAction: {
+        id: 'data_quality',
+        label: 'Revisar classificações',
+        missingPoints: 0,
+        actionLabel: 'Revisar categorias',
+        to: '/transactions?review=categories&scope=all',
+      },
+      dataQuality: {
+        scoreAvailable: false,
+        categoryReviewCount: safeCategoryReviewCount,
+      },
+    }
+  }
+
   const label = score >= 75 ? 'Sólido' : score >= 50 ? 'Em atenção' : 'Crítico'
   const summary =
     score >= 75
@@ -119,5 +142,9 @@ export function buildFinancialHealth({
     summary,
     factors,
     nextAction,
+    dataQuality: {
+      scoreAvailable: true,
+      categoryReviewCount: 0,
+    },
   }
 }
