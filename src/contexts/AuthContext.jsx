@@ -50,16 +50,15 @@ export const AuthProvider = ({ children }) => {
       'auth/invalid-email': 'E-mail inválido.',
       'auth/too-many-requests': 'Muitas tentativas. Aguarde e tente novamente.',
       'auth/network-request-failed': 'Sem conexão com a internet.',
-      'auth/configuration-not-found': 'Configuração do Firebase inválida. Verifique o .env.',
-      'auth/operation-not-allowed': 'O login com Google ainda não foi ativado no Firebase.',
-      'auth/popup-blocked':
-        'O navegador bloqueou a janela do Google. Permita pop-ups e tente novamente.',
+      'auth/configuration-not-found': 'Configuração do Firebase inválida.',
+      'auth/operation-not-allowed': 'Login com Google não ativado no Firebase.',
+      'auth/popup-blocked': 'Pop-up do Google bloqueado. Permita pop-ups e tente novamente.',
       'auth/popup-closed-by-user': 'O login com Google foi cancelado.',
       'auth/cancelled-popup-request': 'Já existe uma janela de login em andamento.',
       'auth/unauthorized-domain':
         'Este endereço ainda não foi autorizado no Firebase Authentication.',
       'auth/account-exists-with-different-credential':
-        'Este e-mail já possui uma conta. Entre com e-mail e senha para vinculá-lo ao Google sem perder seus dados.',
+        'Este e-mail já possui uma conta. Entre com e-mail e senha para vinculá-la ao Google.',
       'auth/credential-already-in-use': 'Esta Conta do Google já está vinculada a outro usuário.',
     }
     setError(messages[err.code] || err.message || 'Erro desconhecido.')
