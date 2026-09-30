@@ -48,7 +48,8 @@ import {
   getCalendarMonthBounds,
   getRecentDashboardTransactions,
 } from '../domain/dashboard'
-import { getTransactionDateContext } from '../domain/transactionDates'
+import { getTransactionActivityDate, getTransactionDateContext } from '../domain/transactionDates'
+import { buildCategoryReviewQueue } from '../domain/categoryReview'
 import { buildPaymentControlOverview } from '../domain/paymentControl'
 import { buildFinancialHealth } from '../domain/financialHealth'
 import { budgetMonthKey, buildMonthlyBudgetOverview } from '../domain/budgetPeriods'
@@ -247,6 +248,18 @@ export default function Dashboard() {
     [transactions, creditCards, invoiceEvents, monthBounds],
   )
 
+  const categoryReviewCount = useMemo(
+    () =>
+      buildCategoryReviewQueue(
+        transactions.filter((transaction) => {
+          const activityDate = getTransactionActivityDate(transaction)
+          return activityDate >= monthBounds.start && activityDate <= monthBounds.end
+        }),
+        categories,
+      ).length,
+    [transactions, categories, monthBounds],
+  )
+
   const monthTx = useMemo(
     () => getRecentDashboardTransactions(transactions, monthBounds),
     [transactions, monthBounds],
@@ -297,6 +310,7 @@ export default function Dashboard() {
       hasBudgets,
       budgetsOk,
       overdueCount: paymentSummary.overdueCount,
+      categoryReviewCount,
     })
 
     if (report.nextAction?.to !== '/budgets') return report
@@ -308,7 +322,7 @@ export default function Dashboard() {
         to: `/budgets?month=${budgetOverview.monthKey}`,
       },
     }
-  }, [currentSummary, budgetOverview, paymentSummary.overdueCount])
+  }, [currentSummary, budgetOverview, paymentSummary.overdueCount, categoryReviewCount])
 
   const monthAttention = useMemo(
     () =>
