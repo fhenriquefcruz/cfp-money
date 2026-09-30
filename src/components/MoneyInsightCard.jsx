@@ -87,7 +87,10 @@ function MoneyInsightContent({ referenceDate }) {
   const toneStyle = TONE_STYLES[tone]
   const ToneIcon = toneStyle.icon
   const primaryInsight = analysis.insights[0]?.message
-  const categoryInsight = analysis.insights.find((insight) => insight.type === 'category_increase')
+  const categoryInsightsReliable = analysis.dataQuality?.categoryInsightsReliable !== false
+  const categoryInsight = categoryInsightsReliable
+    ? analysis.insights.find((insight) => insight.type === 'category_increase')
+    : null
   const isLoading = transactionsLoading || settingsLoading
 
   return (
@@ -175,6 +178,16 @@ function MoneyInsightContent({ referenceDate }) {
               </div>
             </div>
 
+            {!categoryInsightsReliable && (
+              <Link
+                to="/transactions?review=categories&scope=all"
+                className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-xs font-bold text-[--warning-text]"
+              >
+                Revisar classificações
+                <ArrowRight size={12} />
+              </Link>
+            )}
+
             <div className="money-insight-card__metrics grid grid-cols-3 gap-2 sm:gap-3">
               <MoneyMetric
                 label="Despesas"
@@ -216,7 +229,7 @@ function MoneyInsightContent({ referenceDate }) {
               </div>
             )}
 
-            <SpendingLeakDiagnostic report={spendingLeakReport} />
+            {categoryInsightsReliable && <SpendingLeakDiagnostic report={spendingLeakReport} />}
           </>
         )}
       </div>
