@@ -84,9 +84,10 @@ function DashboardSectionHeading({ title, description, action }) {
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
+  const displayLabel = payload[0]?.payload?.fullMonth || label
   return (
-    <div className="bg-[--bg-elevated] border border-[--border-default] rounded-xl p-3 shadow-lg">
-      <p className="text-xs font-semibold text-[--text-secondary] mb-2">{label}</p>
+    <div className="rounded-xl border border-[--border-default] bg-[--bg-elevated] p-3 shadow-lg">
+      <p className="mb-2 text-xs font-semibold text-[--text-secondary]">{displayLabel}</p>
       {payload.map((e, i) => (
         <div key={i} className="flex items-center gap-2 text-sm">
           <div className="w-2 h-2 rounded-full" style={{ background: e.color }} />
@@ -105,10 +106,20 @@ const TxItem = ({ tx, categories }) => {
   return (
     <div className="flex items-center gap-3 py-3 border-b border-[--border-subtle] last:border-0">
       <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-lg"
         style={{ background: tx.isSavings ? '#c49d6b15' : (cat?.color || '#c49d6b') + '18' }}
       >
-        {tx.isSavings ? '🐷' : cat?.icon || (isIncome ? '💰' : '💸')}
+        {tx.isSavings ? (
+          <PiggyBank size={17} className="text-[--brand-600]" aria-hidden="true" />
+        ) : cat?.icon ? (
+          <span aria-hidden="true">{cat.icon}</span>
+        ) : (
+          <Wallet
+            size={17}
+            className={isIncome ? 'text-[--success-icon]' : 'text-[--text-secondary]'}
+            aria-hidden="true"
+          />
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-[--text-primary] truncate">
@@ -129,7 +140,7 @@ const TxItem = ({ tx, categories }) => {
               : 'text-[--danger-icon]'
         }`}
       >
-        {tx.isSavings ? '🐷' : isIncome ? '+' : '−'}
+        {tx.isSavings ? '' : isIncome ? '+' : '−'}
         {formatCurrency(tx.amount)}
       </span>
     </div>
@@ -158,10 +169,10 @@ function MonthAttentionCard({ items }) {
         <div>
           <div className="flex items-center gap-2">
             <Zap size={15} className="text-[--brand-600]" />
-            <h2 className="text-sm font-black text-[--text-primary]">Central do mês</h2>
+            <h2 className="text-sm font-black text-[--text-primary]">Prioridades do período</h2>
           </div>
           <p className="mt-1 text-xs text-[--text-tertiary]">
-            O que merece atenção agora, sem precisar procurar em várias telas.
+            Causa, impacto e próxima ação concentrados em um só lugar.
           </p>
         </div>
         {items.length > 0 && (
