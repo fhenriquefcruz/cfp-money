@@ -55,7 +55,9 @@ service cloud.firestore {
           'email',
           'updatedAt',
           'moneySettings',
-          'moneySettingsUpdatedAt'
+          'moneySettingsUpdatedAt',
+          'lastSignInAt',
+          'lastSeenAt'
         ])
         && request.resource.data.email is string
         && request.resource.data.email.size() <= 320
@@ -69,7 +71,23 @@ service cloud.firestore {
         && request.resource.data.get(
           'moneySettingsUpdatedAt',
           request.time
-        ) is timestamp;
+        ) is timestamp
+        && request.resource.data.get(
+          'lastSignInAt',
+          request.time
+        ) is timestamp
+        && request.resource.data.get(
+          'lastSeenAt',
+          request.time
+        ) is timestamp
+        && (
+          !changed.hasAny(['lastSignInAt'])
+          || request.resource.data.lastSignInAt <= request.time
+        )
+        && (
+          !changed.hasAny(['lastSeenAt'])
+          || request.resource.data.lastSeenAt == request.time
+        );
     }
 
     function validAdminAccessUpdate() {

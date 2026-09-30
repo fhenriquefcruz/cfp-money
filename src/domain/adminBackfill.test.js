@@ -4,6 +4,7 @@ import {
   buildParityReport,
   normalizeAuthExport,
   parseCreationTime,
+  parseLastSignInTime,
   validateOrphanDeletion,
 } from './adminBackfill'
 
@@ -12,6 +13,15 @@ describe('adminBackfill', () => {
     expect(parseCreationTime({ createdAt: '1704067200000' })).toBe('2024-01-01T00:00:00.000Z')
     expect(parseCreationTime({ metadata: { creationTime: '2025-02-03T10:20:30.000Z' } })).toBe(
       '2025-02-03T10:20:30.000Z',
+    )
+  })
+
+  it('normalizes the last Authentication sign-in time', () => {
+    expect(parseLastSignInTime({ lastLoginAt: '1760000000000' })).toBe(
+      new Date(1760000000000).toISOString(),
+    )
+    expect(parseLastSignInTime({ metadata: { lastSignInTime: '2026-09-29T21:50:12.000Z' } })).toBe(
+      '2026-09-29T21:50:12.000Z',
     )
   })
 
@@ -24,6 +34,7 @@ describe('adminBackfill', () => {
             email: 'user@example.com',
             displayName: 'User',
             createdAt: '1704067200000',
+            lastLoginAt: '1760000000000',
           },
         ],
       }),
@@ -33,6 +44,7 @@ describe('adminBackfill', () => {
         email: 'user@example.com',
         displayName: 'User',
         creationTime: '2024-01-01T00:00:00.000Z',
+        lastSignInTime: new Date(1760000000000).toISOString(),
       },
     ])
   })
@@ -45,6 +57,7 @@ describe('adminBackfill', () => {
           email: 'live@example.com',
           displayName: 'Live User',
           createdAt: '1735689600000',
+          lastLoginAt: '1760000000000',
         },
       ]),
     ).toEqual([
@@ -53,6 +66,7 @@ describe('adminBackfill', () => {
         email: 'live@example.com',
         displayName: 'Live User',
         creationTime: '2025-01-01T00:00:00.000Z',
+        lastSignInTime: new Date(1760000000000).toISOString(),
       },
     ])
   })
