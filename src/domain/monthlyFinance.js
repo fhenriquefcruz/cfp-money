@@ -12,7 +12,7 @@ const isEffective = (transaction) =>
 export function groupTransactionsByActivityMonth(transactions = []) {
   const groups = {}
 
-  transactions.filter(isFinanciallyEffectiveTransaction).forEach((transaction) => {
+  transactions.filter(isEffective).forEach((transaction) => {
     const activityDate = getTransactionActivityDate(transaction)
     if (!activityDate) return
     const key = activityDate.slice(0, 7)
