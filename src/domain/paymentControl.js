@@ -3,7 +3,6 @@ import {
   isStructuredCreditTransaction,
   monthKeyFromDate,
 } from './creditCardCenter'
-import { getTransactionAccountingDate } from './transactionDates'
 
 export { isStructuredCreditTransaction }
 
@@ -174,7 +173,7 @@ export function summarizePaymentControl(transactions = [], bounds = {}, now = ne
   const expenses = transactions.filter((transaction) => {
     if (!isPayableExpense(transaction)) return false
     if (getTransactionPaymentStatus(transaction, now) === PAYMENT_STATUS.CANCELLED) return false
-    const commitmentDate = getTransactionAccountingDate(transaction)
+    const commitmentDate = (transaction.dueDate || transaction.date || '')
     if ((bounds.start || bounds.end) && !commitmentDate) return false
     if (bounds.start && commitmentDate < bounds.start) return false
     if (bounds.end && commitmentDate > bounds.end) return false
@@ -406,7 +405,7 @@ export function buildPaymentControlOverview({
 } = {}) {
   const monthlyExpenses = transactions.filter((transaction) => {
     if (!isPayableExpense(transaction)) return false
-    const commitmentDate = getTransactionAccountingDate(transaction)
+    const commitmentDate = (transaction.dueDate || transaction.date || '')
     if (!/^\d{4}-\d{2}-\d{2}$/.test(commitmentDate || '')) return false
     if (bounds.start && commitmentDate < bounds.start) return false
     if (bounds.end && commitmentDate > bounds.end) return false
@@ -544,7 +543,7 @@ export function buildPaymentControlOverview({
   const previousManualTransactions = transactions.filter((transaction) => {
     if (!isPayableExpense(transaction)) return false
     if (isStructuredCreditTransaction(transaction)) return false
-    const commitmentDate = getTransactionAccountingDate(transaction)
+    const commitmentDate = (transaction.dueDate || transaction.date || '')
     if (!/^\d{4}-\d{2}-\d{2}$/.test(commitmentDate || '')) return false
     if (commitmentDate < previousBounds.start) return false
     if (commitmentDate > previousBounds.end) return false
