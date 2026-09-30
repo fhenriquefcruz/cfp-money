@@ -1,6 +1,8 @@
 // src/utils/index.jsx
 import { differenceInCalendarDays, format, subMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { getTransactionActivityDate } from '../domain/transactionDates'
+import { isFinanciallyEffectiveTransaction } from '../domain/finance'
 
 // ── CAPITALIZE ──
 export const capitalize = (str) => {
@@ -64,8 +66,10 @@ export const hexToRgba = (hex, alpha = 1) => {
 // ── TRANSACTION HELPERS ──
 export const groupByMonth = (transactions) => {
   const groups = {}
-  transactions.forEach((tx) => {
-    const key = format(new Date(tx.date + 'T00:00:00'), 'yyyy-MM')
+  transactions.filter(isFinanciallyEffectiveTransaction).forEach((tx) => {
+    const activityDate = getTransactionActivityDate(tx)
+    if (!activityDate) return
+    const key = activityDate.slice(0, 7)
     if (!groups[key]) groups[key] = []
     groups[key].push(tx)
   })
@@ -79,13 +83,18 @@ export const getMonthlyData = (transactions, months = 6, baseDate = new Date()) 
     const year = date.getFullYear()
     const month = date.getMonth()
     const txs = transactions.filter((t) => {
-      const d = new Date(t.date + 'T00:00:00')
+      if (!isFinanciallyEffectiveTransaction(t)) return false
+      const activityDate = getTransactionActivityDate(t)
+      if (!activityDate) return false
+      const d = new Date(activityDate + 'T00:00:00')
       return d.getFullYear() === year && d.getMonth() === month
     })
     const income = txs
       .filter((t) => t.type === 'income' && !t.isSavings)
       .reduce((s, t) => s + t.amount, 0)
-    const expenses = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+    const expenses = txs
+      .filter((t) => t.type === 'expense' && !t.isSavings)
+      .reduce((s, t) => s + t.amount, 0)
     const savings = txs.filter((t) => t.isSavings).reduce((s, t) => s + t.amount, 0)
     result.push({
       month: capitalize(format(date, 'MMM', { locale: ptBR })),
@@ -261,9 +270,7 @@ export const exportToPDF = async (transactions, summaryOrCategories = {}, legacy
 
   // ── Taxa de poupança ──
   const savingRate =
-    (summary.income || 0) > 0
-      ? (((summary.income || 0) - (summary.expenses || 0)) / (summary.income || 0)) * 100
-      : 0
+    (summary.income || 0) > 0 ? ((summary.savings || 0) / (summary.income || 0)) * 100 : 0
   const rateColor =
     savingRate >= 20 ? [16, 185, 129] : savingRate >= 10 ? [245, 158, 11] : [239, 68, 68]
   doc.setFontSize(8)
