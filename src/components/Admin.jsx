@@ -20,7 +20,6 @@ import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
 import { adminListUsers, adminSetUserAccess } from '../services/adminGateway'
 import {
   ACTIVITY_DAY_MS,
-  formatActivityDate,
   formatRelativeActivity,
   getUserActivityState,
 } from '../domain/userActivity'
@@ -154,11 +153,8 @@ function UserRow({ u, onAccess }) {
               ['Cadastro', formatPlanExpiration({ premiumUntil: u.createdAt })],
               ['Premium até', formatPlanExpiration(u)],
               ['Status', u.blocked ? 'Bloqueado' : 'Ativo'],
-              ['Último login', formatActivityDate(u.lastSignInAt)],
-              [
-                'Última atividade',
-                `${formatActivityDate(u.lastSeenAt)} · ${formatRelativeActivity(activity.reference)}`,
-              ],
+              ['Último login', formatRelativeActivity(u.lastSignInAt)],
+              ['Última atividade', formatRelativeActivity(activity.reference)],
             ].map(([label, value]) => (
               <div key={label}>
                 <span className="admin-detail-label">{label}: </span>
@@ -271,7 +267,6 @@ export default function Admin() {
     premium: users.filter((u) => getPlanPresentation(u).key === 'premium').length,
     blocked: users.filter((u) => u.blocked).length,
     online: withActivity.filter(({ activity }) => activity.online).length,
-    active7d: withActivity.filter(({ activity }) => activity.ageMs !== null && activity.ageMs <= week).length,
     inactive30: withActivity.filter(({ activity }) => activity.ageMs >= month).length,
   }
 
@@ -314,12 +309,6 @@ export default function Admin() {
             value: stats.online,
             icon: <Users size={15} />,
             tone: 'premium',
-          },
-          {
-            label: 'Ativos em 7 dias',
-            value: stats.active7d,
-            icon: <Clock size={15} />,
-            tone: 'trial_active',
           },
           {
             label: 'Inativos 30+ dias',
