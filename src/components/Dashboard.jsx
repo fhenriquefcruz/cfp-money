@@ -523,7 +523,7 @@ export default function Dashboard() {
           </div>
           {/* Saudação secundária */}
           <p className="dashboard-greeting text-xs text-[--text-tertiary]">
-            {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'} 👋
+            {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'}
           </p>
         </div>
         <Link to="/transactions" className="dashboard-quick-add w-auto flex-shrink-0">
@@ -539,57 +539,67 @@ export default function Dashboard() {
         </Link>
       </motion.div>
 
-      {/* Hero — saldo do mês como principal, sem duplicar nos cards abaixo */}
-      <motion.div
-        className="aurora-balance-hero aurora-card--hero relative overflow-hidden rounded-[28px] p-3 text-white sm:p-6"
-        initial={{ opacity: 0, scale: 0.97 }}
+      <motion.section
+        className="dashboard-decision-hero overflow-hidden rounded-[26px] border border-[--border-default] bg-[--bg-elevated] p-4 sm:p-6"
+        initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.05 }}
+        aria-labelledby="dashboard-period-result"
       >
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-8 -right-8 w-48 h-48 rounded-full bg-white/5" />
-          <div className="absolute -bottom-12 -left-8 w-40 h-40 rounded-full bg-white/5" />
-        </div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-1">
-            <p className="text-white/70 text-sm">Saldo do mês</p>
-            <InfoTooltip
-              text="Receitas menos despesas do mês visualizado. Não inclui outros meses."
-              className="text-white/60 hover:text-white"
-            />
-          </div>
-          {isLoading ? (
-            <div className="h-12 w-44 rounded-xl bg-white/20 animate-pulse mb-4" />
-          ) : (
-            <p
-              className={`mb-3 break-words text-[clamp(1.7rem,8.5vw,3.75rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${currentSummary.balance >= 0 ? 'text-white' : 'text-red-300'}`}
-            >
-              {formatCurrency(currentSummary.balance)}
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p
+                id="dashboard-period-result"
+                className="text-xs font-bold uppercase tracking-[0.12em] text-[--text-tertiary]"
+              >
+                Resultado do período
+              </p>
+              <InfoTooltip text="Receitas menos despesas registradas no período visualizado. Este valor não representa o saldo da sua conta bancária." />
+            </div>
+            {isLoading ? (
+              <div className="mt-2 h-12 w-44 animate-pulse rounded-xl bg-[--bg-hover]" />
+            ) : (
+              <p
+                className={`mt-2 break-words text-[clamp(2rem,8vw,3.8rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${
+                  currentSummary.balance >= 0 ? 'text-[--text-primary]' : 'text-[--danger-text]'
+                }`}
+              >
+                {formatCurrency(currentSummary.balance)}
+              </p>
+            )}
+            <p className="mt-2 max-w-2xl text-xs leading-relaxed text-[--text-tertiary]">
+              {monthLabel}. Resultado calculado com as movimentações registradas neste período.
             </p>
-          )}
-          {/* Receitas / Despesas / Poupança — linha secundária */}
-          <div className="dashboard-balance-breakdown grid grid-cols-3 gap-1.5 border-t border-white/15 pt-3 min-[560px]:gap-3 min-[560px]:pt-4">
-            <div>
-              <p className="text-white/55 text-[11px] mb-0.5">↑ Receitas</p>
-              <p className="text-sm font-bold text-green-300">
-                {formatCurrency(currentSummary.income)}
-              </p>
-            </div>
-            <div>
-              <p className="text-white/55 text-[11px] mb-0.5">↓ Despesas</p>
-              <p className="text-sm font-bold text-red-300">
-                {formatCurrency(currentSummary.expenses)}
-              </p>
-            </div>
-            <div>
-              <p className="text-white/55 text-[11px] mb-0.5 flex items-center gap-1">
-                <PiggyBank size={10} /> Poupança total
-              </p>
-              <p className="text-sm font-bold text-yellow-300">{formatCurrency(savingsBalance)}</p>
-            </div>
           </div>
+          <Link
+            to={`/transactions?from=${monthBounds.start}&to=${monthBounds.end}`}
+            className="inline-flex min-h-10 items-center gap-1 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-brand] transition-colors hover:bg-[--bg-hover]"
+          >
+            Ver lançamentos
+            <ArrowRight size={12} aria-hidden="true" />
+          </Link>
         </div>
-      </motion.div>
+
+        <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-[--border-subtle] bg-[--border-subtle] lg:grid-cols-4">
+          {[
+            ['Receitas', currentSummary.income, 'Entradas do período'],
+            ['Despesas', currentSummary.expenses, 'Saídas do período'],
+            ['Comprometido', paymentSummary.committedAmount, 'Obrigações com vencimento no período'],
+            ['Reserva no período', currentSummary.savings, 'Valores marcados como reserva'],
+          ].map(([label, value, detail]) => (
+            <div key={label} className="min-w-0 bg-[--bg-surface] p-3.5 sm:p-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                {label}
+              </p>
+              <p className="mt-1 break-words text-base font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere] sm:text-lg">
+                {formatCurrency(value)}
+              </p>
+              <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">{detail}</p>
+            </div>
+          ))}
+        </div>
+      </motion.section>
 
       <motion.div {...fade} transition={{ delay: 0.075 }}>
         <MonthAttentionCard items={monthAttention} />
