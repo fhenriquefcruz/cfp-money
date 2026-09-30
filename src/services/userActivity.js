@@ -23,13 +23,12 @@ export function startUserActivityTracking(user) {
     ).catch(() => {})
   }
 
-  const onVisibility = () => document.visibilityState === 'visible' && pulse()
   pulse()
   const intervalId = setInterval(pulse, INTERVAL)
-  document.addEventListener('visibilitychange', onVisibility)
+  document.addEventListener('visibilitychange', pulse)
 
   return () => {
     clearInterval(intervalId)
-    document.removeEventListener('visibilitychange', onVisibility)
+    document.removeEventListener('visibilitychange', pulse)
   }
 }
