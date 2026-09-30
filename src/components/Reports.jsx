@@ -26,7 +26,8 @@ import {
 } from 'lucide-react'
 import { useTransactions } from '../contexts/AppContext'
 import { Card, Button } from './ui'
-import { formatCurrency, getMonthlyData, exportToCSV, exportToPDF } from '../utils'
+import { formatCurrency, exportToCSV, exportToPDF } from '../utils'
+import { getMonthlyFinancialData } from '../domain/monthlyFinance'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
 import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
@@ -156,7 +157,7 @@ function ReportsContent() {
   }, [reportTransactions, period, getSummary, referenceDate])
 
   const monthlyData = useMemo(
-    () => getMonthlyData(transactions, period, referenceDate),
+    () => getMonthlyFinancialData(transactions, period, referenceDate),
     [transactions, period, referenceDate],
   )
 
