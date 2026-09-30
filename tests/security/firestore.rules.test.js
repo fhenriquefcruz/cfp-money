@@ -5,7 +5,7 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing'
-import { Timestamp, deleteDoc, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { Timestamp, deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 
 const PROJECT_ID = 'demo-cfp-money-security'
 
@@ -170,6 +170,31 @@ test('permite alterações comuns do perfil', async () => {
         preferredLanguage: 'pt-BR',
       },
       moneySettingsUpdatedAt: Timestamp.now(),
+    }),
+  )
+})
+
+test('permite telemetria própria de atividade sem liberar campos administrativos', async () => {
+  const aliceDatabase = environment.authenticatedContext('alice').firestore()
+  const userReference = doc(aliceDatabase, 'users', 'alice')
+
+  await assertSucceeds(
+    updateDoc(userReference, {
+      lastSignInAt: Timestamp.fromDate(new Date('2026-09-30T11:00:00.000Z')),
+      lastSeenAt: serverTimestamp(),
+    }),
+  )
+
+  await assertFails(
+    updateDoc(userReference, {
+      lastSeenAt: Timestamp.fromDate(new Date('2030-01-01T00:00:00.000Z')),
+    }),
+  )
+
+  await assertFails(
+    updateDoc(userReference, {
+      lastSignInAt: Timestamp.fromDate(new Date('2030-01-01T00:00:00.000Z')),
+      lastSeenAt: serverTimestamp(),
     }),
   )
 })
