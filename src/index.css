@@ -1753,3 +1753,14 @@ body {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
+
+
+.admin-activity-state {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.admin-activity-state[data-online='true'] {
+  color: var(--success-text);
+}
