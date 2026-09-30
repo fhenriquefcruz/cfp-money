@@ -232,3 +232,38 @@ test('Money usa a data da movimentação e ignora cancelamentos', () => {
   expect(result.current.expenses).toBe(400)
   expect(result.current.balance).toBe(2600)
 })
+
+
+test('Money sinaliza revisão de categoria antes de interpretar destaques', () => {
+  const result = analyzeMoney(
+    [
+      {
+        id: 'uber-wrong-category',
+        type: 'expense',
+        amount: 80,
+        date: '2026-07-10',
+        description: 'Uber centro',
+        categoryName: 'Combustível',
+      },
+      {
+        id: 'salary',
+        type: 'income',
+        amount: 3000,
+        date: '2026-07-05',
+        categoryName: 'Salário',
+      },
+    ],
+    {},
+    '2026-07-15',
+  )
+
+  expect(result.dataQuality).toEqual({
+    categoryReviewCount: 1,
+    categoryInsightsReliable: false,
+  })
+  expect(result.insights[0]).toMatchObject({
+    type: 'data_quality_review',
+    severity: 'warning',
+    count: 1,
+  })
+})
