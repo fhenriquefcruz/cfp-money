@@ -601,6 +601,11 @@ export default function Dashboard() {
         </div>
       </motion.section>
 
+      <DashboardSectionHeading
+        title="O que exige sua atenção"
+        description="Prioridades ordenadas por impacto e urgência no período."
+      />
+
       <motion.div {...fade} transition={{ delay: 0.075 }}>
         <MonthAttentionCard items={monthAttention} />
       </motion.div>
