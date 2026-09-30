@@ -48,6 +48,7 @@ export function getMonthlyFinancialData(transactions = [], months = 6, baseDate 
       .reduce((total, transaction) => total + transaction.amount, 0)
 
     result.push({
+      monthKey: format(date, 'yyyy-MM'),
       month: capitalizeMonth(format(date, 'MMM', { locale: ptBR })),
       fullMonth: format(date, "MMMM 'de' yyyy", { locale: ptBR }),
       income,
