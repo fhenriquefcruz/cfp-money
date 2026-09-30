@@ -31,6 +31,8 @@ import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
 import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { getTransactionActivityDate } from '../domain/transactionDates'
+import { isFinanciallyEffectiveTransaction } from '../domain/finance'
 
 const COLORS = [
   '#c49d6b',
@@ -124,9 +126,11 @@ function ReportsContent() {
   const periodEnd = format(endOfMonth(referenceDate), 'yyyy-MM-dd')
   const reportTransactions = useMemo(
     () =>
-      transactions.filter(
-        (transaction) => transaction.date >= periodStart && transaction.date <= periodEnd,
-      ),
+      transactions.filter((transaction) => {
+        if (!isFinanciallyEffectiveTransaction(transaction)) return false
+        const activityDate = getTransactionActivityDate(transaction)
+        return activityDate >= periodStart && activityDate <= periodEnd
+      }),
     [transactions, periodStart, periodEnd],
   )
 
@@ -164,7 +168,11 @@ function ReportsContent() {
       const from = format(d, 'yyyy-MM-01')
       const to = format(new Date(d.getFullYear(), d.getMonth() + 1, 0), 'yyyy-MM-dd')
       const value = transactions
-        .filter((t) => t.isSavings && t.date >= from && t.date <= to)
+        .filter((t) => {
+          if (!t.isSavings || !isFinanciallyEffectiveTransaction(t)) return false
+          const activityDate = getTransactionActivityDate(t)
+          return activityDate >= from && activityDate <= to
+        })
         .reduce((s, t) => s + t.amount, 0)
       return { month: label, value }
     })
