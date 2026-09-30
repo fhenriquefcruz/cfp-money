@@ -3,8 +3,8 @@ import React, { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -713,7 +713,7 @@ export default function Dashboard() {
               aria-label={`Gráfico de receitas e despesas dos últimos ${activeTrendMonths} meses`}
             >
               <ResponsiveContainer width="100%" height={250}>
-                <LineChart
+                <AreaChart
                   data={monthlyData}
                   margin={{ top: 10, right: 8, left: 0, bottom: 5 }}
                   accessibilityLayer
@@ -740,25 +740,29 @@ export default function Dashboard() {
                     tickFormatter={formatAxisCurrency}
                   />
                   <Tooltip content={<ChartTooltip />} />
-                  <Line
+                  <Area
                     type="linear"
                     dataKey="income"
                     name="Receitas"
                     stroke="var(--success-icon)"
                     strokeWidth={2}
+                    fill="transparent"
+                    fillOpacity={0}
                     dot={{ r: 3, strokeWidth: 2, fill: 'var(--bg-surface)' }}
                     activeDot={{ r: 5 }}
                   />
-                  <Line
+                  <Area
                     type="linear"
                     dataKey="expenses"
                     name="Despesas"
                     stroke="var(--danger-icon)"
                     strokeWidth={2}
+                    fill="transparent"
+                    fillOpacity={0}
                     dot={{ r: 3, strokeWidth: 2, fill: 'var(--bg-surface)' }}
                     activeDot={{ r: 5 }}
                   />
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
 
