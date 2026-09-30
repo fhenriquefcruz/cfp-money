@@ -311,8 +311,7 @@ export default function Dashboard() {
         return {
           ...item,
           share: total > 0 ? (item.total / total) * 100 : 0,
-          change:
-            previousTotal > 0 ? ((item.total - previousTotal) / previousTotal) * 100 : null,
+          change: previousTotal > 0 ? ((item.total - previousTotal) / previousTotal) * 100 : null,
         }
       })
   }, [categoryTotals, previousCategoryTotals])
@@ -450,7 +449,9 @@ export default function Dashboard() {
         ? {
             id: 'category-review',
             title: `${categoryReviewCount} ${
-              categoryReviewCount === 1 ? 'classificação para revisar' : 'classificações para revisar'
+              categoryReviewCount === 1
+                ? 'classificação para revisar'
+                : 'classificações para revisar'
             }`,
             detail:
               'Categorias suspeitas podem distorcer orçamento, composição dos gastos e indicador financeiro.',
@@ -582,7 +583,11 @@ export default function Dashboard() {
           {[
             ['Receitas', currentSummary.income, 'Entradas do período'],
             ['Despesas', currentSummary.expenses, 'Saídas do período'],
-            ['Comprometido', paymentSummary.committedAmount, 'Obrigações com vencimento no período'],
+            [
+              'Comprometido',
+              paymentSummary.committedAmount,
+              'Obrigações com vencimento no período',
+            ],
             ['Reserva no período', currentSummary.savings, 'Valores marcados como reserva'],
           ].map(([label, value, detail]) => (
             <div key={label} className="min-w-0 bg-[--bg-surface] p-3.5 sm:p-4">
@@ -645,7 +650,9 @@ export default function Dashboard() {
                       disabled={disabled}
                       onClick={() => setTrendMonths(period)}
                       aria-pressed={selected}
-                      title={disabled ? 'Disponível quando houver 12 meses de histórico' : undefined}
+                      title={
+                        disabled ? 'Disponível quando houver 12 meses de histórico' : undefined
+                      }
                       className={`min-h-9 rounded-lg px-3 text-xs font-bold transition-colors ${
                         selected
                           ? 'bg-[--bg-elevated] text-[--text-primary] shadow-sm'

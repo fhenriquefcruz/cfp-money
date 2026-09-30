@@ -10,7 +10,9 @@ test('Dashboard abre a origem de uma categoria com filtros aplicados', async ({ 
   await categoryLink.click()
 
   await expect(page.locator('.transactions-premium')).toBeVisible()
-  await expect(page).toHaveURL(/#\/transactions\?category=cat-home&from=\d{4}-\d{2}-01&to=\d{4}-\d{2}-\d{2}/)
+  await expect(page).toHaveURL(
+    /#\/transactions\?category=cat-home&from=\d{4}-\d{2}-01&to=\d{4}-\d{2}-\d{2}/,
+  )
   await expect(page.getByText('Aluguel', { exact: true })).toBeVisible()
   await expect(page.getByText('Compras do mercado', { exact: true })).toHaveCount(0)
 })
