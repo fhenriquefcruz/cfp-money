@@ -173,6 +173,12 @@ O indicador não é diagnóstico financeiro. Ele resume cinco sinais objetivos d
 
 Metas cadastradas e mera existência de receita não geram mais pontos por si só.
 
+### Qualidade dos dados e suspensão da pontuação
+
+Se houver classificação de categoria suspeita no período, o indicador fica **Em revisão** e não exibe uma pontuação numérica até a revisão ser concluída.
+
+Isso evita que um gasto possivelmente classificado na categoria errada altere o orçamento e, por consequência, produza uma pontuação financeira enganosa.
+
 ## Revisão de categorias
 
 A aplicação pode sinalizar uma classificação como suspeita quando a descrição apresenta indícios fortes de uma família diferente da categoria atual.
@@ -191,3 +197,5 @@ A revisão é não destrutiva:
 - o usuário abre a edição e decide se confirma ou não a alteração.
 
 As regras são heurísticas de apoio, não uma fonte de verdade.
+
+O Money também sinaliza a existência de classificações suspeitas antes de destacar aumentos por categoria. Enquanto houver revisão pendente, diagnósticos que dependem da categoria são ocultados.
