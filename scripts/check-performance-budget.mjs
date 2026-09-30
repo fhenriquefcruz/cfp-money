@@ -6,9 +6,12 @@ const distRoot = 'dist'
 
 const indexPath = join(distRoot, 'index.html')
 
+// Budget v2: recalibrado após a correção de segurança do DOMPurify e a
+// introdução da semântica financeira auditável da Phase 42A. O ajuste
+// permanece abaixo de 1% e não altera os limites de chunk individual ou CSS.
 const limits = {
-  initialJavaScriptGzipBytes: 240 * 1024,
-  totalJavaScriptGzipBytes: 703 * 1024,
+  initialJavaScriptGzipBytes: 242 * 1024,
+  totalJavaScriptGzipBytes: 707 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 20 * 1024,
 }
