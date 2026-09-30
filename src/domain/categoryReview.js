@@ -9,7 +9,7 @@ const FAMILY_RULES = [
   {
     id: 'ride_hailing',
     label: 'Transporte por aplicativo',
-    terms: ['uber', '99app', '99 pop', 'indriver', 'cabify'],
+    terms: ['transporte por aplicativo', 'uber', '99app', '99 pop', 'indriver', 'cabify'],
   },
   {
     id: 'fuel',
@@ -29,7 +29,7 @@ const FAMILY_RULES = [
   {
     id: 'transfer',
     label: 'Transferência',
-    terms: ['transferencia bancaria', 'ted enviada', 'doc enviado', 'pix transferencia'],
+    terms: ['transferencia', 'ted enviada', 'doc enviado', 'pix transferencia'],
   },
 ]
 
