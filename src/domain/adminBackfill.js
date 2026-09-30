@@ -1,11 +1,4 @@
-export function parseCreationTime(rawUser) {
-  const value =
-    rawUser?.metadata?.creationTime ??
-    rawUser?.creationTime ??
-    rawUser?.createdAt ??
-    rawUser?.created_at ??
-    null
-
+function parseAuthTimestamp(value) {
   if (value === null || value === undefined || value === '') {
     return null
   }
@@ -16,6 +9,28 @@ export function parseCreationTime(rawUser) {
       : new Date(value)
 
   return Number.isNaN(date.getTime()) ? null : date.toISOString()
+}
+
+export function parseCreationTime(rawUser) {
+  const value =
+    rawUser?.metadata?.creationTime ??
+    rawUser?.creationTime ??
+    rawUser?.createdAt ??
+    rawUser?.created_at ??
+    null
+
+  return parseAuthTimestamp(value)
+}
+
+export function parseLastSignInTime(rawUser) {
+  const value =
+    rawUser?.metadata?.lastSignInTime ??
+    rawUser?.lastSignInTime ??
+    rawUser?.lastLoginAt ??
+    rawUser?.lastLoginTime ??
+    null
+
+  return parseAuthTimestamp(value)
 }
 
 export function normalizeAuthUser(rawUser) {
@@ -29,6 +44,7 @@ export function normalizeAuthUser(rawUser) {
     email: rawUser?.email || '',
     displayName: rawUser?.displayName || '',
     creationTime: parseCreationTime(rawUser),
+    lastSignInTime: parseLastSignInTime(rawUser),
   }
 }
 
