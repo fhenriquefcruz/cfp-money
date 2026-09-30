@@ -199,3 +199,17 @@ A revisão é não destrutiva:
 As regras são heurísticas de apoio, não uma fonte de verdade.
 
 O Money também sinaliza a existência de classificações suspeitas antes de destacar aumentos por categoria. Enquanto houver revisão pendente, diagnósticos que dependem da categoria são ocultados.
+
+
+## Orçamento de performance da Phase 42A
+
+A base anterior operava praticamente no limite técnico: 239,96 KiB de JavaScript inicial para um teto de 240 KiB e 702,85 KiB totais para um teto de 703 KiB.
+
+A Phase 42A também incorporou uma atualização obrigatória do DOMPurify para uma versão fora da faixa vulnerável. Após remover dependências compartilhadas desnecessárias e restaurar o grafo de carregamento inicial, o orçamento foi recalibrado de forma controlada:
+
+- JavaScript inicial gzip: 242 KiB;
+- JavaScript total gzip: 707 KiB;
+- maior chunk JavaScript: permanece em 140 KiB;
+- CSS inicial gzip: permanece em 20 KiB.
+
+A mudança é inferior a 1% e cria uma pequena margem operacional sem liberar gráficos ou bibliotecas de PDF no carregamento inicial.
