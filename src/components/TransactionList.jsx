@@ -44,7 +44,8 @@ import {
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { defaultDateRangeEnd } from '../domain/finance'
-import { getTransactionDateContext } from '../domain/transactionDates'
+import { getTransactionActivityDate, getTransactionDateContext } from '../domain/transactionDates'
+import { buildCategoryReviewQueue } from '../domain/categoryReview'
 import { isTransactionSeries } from '../domain/transactionSeries'
 import {
   PAYMENT_STATUS,
@@ -122,8 +123,9 @@ function getCurrentMonthRange() {
 function groupByDate(txs) {
   const groups = {}
   txs.forEach((tx) => {
-    if (!groups[tx.date]) groups[tx.date] = []
-    groups[tx.date].push(tx)
+    const activityDate = getTransactionActivityDate(tx) || tx.date || ''
+    if (!groups[activityDate]) groups[activityDate] = []
+    groups[activityDate].push(tx)
   })
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
 }
@@ -201,6 +203,7 @@ function TxRow({
   paymentState,
   paymentSelected,
   onPaymentSelect,
+  categoryReview,
 }) {
   const isIncome = tx.type === 'income' && !tx.isSavings
   const isSavings = tx.isSavings
@@ -284,6 +287,16 @@ function TxRow({
             >
               Compra: {dateContext.purchaseLabel} · fatura: {dateContext.accountingLabel}
             </span>
+          )}
+          {categoryReview && (
+            <button
+              type="button"
+              onClick={() => onEdit(tx)}
+              className="inline-flex min-h-8 items-center rounded-full border border-[--warning-border] bg-[--warning-bg] px-2 text-[10px] font-bold text-[--warning-text]"
+              title={categoryReview.reason}
+            >
+              Revisar categoria · sugestão: {categoryReview.suggestedCategoryName}
+            </button>
           )}
           {protectedGroup && (
             <span className="text-[10px] text-[--warning-text]">Série gerenciável</span>
@@ -415,6 +428,9 @@ export default function TransactionList() {
   const [catFilter, setCatFilter] = useState('all')
   const [payFilter, setPayFilter] = useState('all')
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('all')
+  const [categoryReviewOnly, setCategoryReviewOnly] = useState(
+    () => searchParams.get('review') === 'categories',
+  )
   const [dateRange, setDateRange] = useState(() =>
     searchParams.get('scope') === 'all' ? { from: '', to: '' } : getCurrentMonthRange(),
   )
@@ -438,6 +454,14 @@ export default function TransactionList() {
     () => buildPaymentStatusIndex({ transactions, creditCards, invoiceEvents }),
     [transactions, creditCards, invoiceEvents],
   )
+  const categoryReviewQueue = useMemo(
+    () => buildCategoryReviewQueue(transactions, categories),
+    [transactions, categories],
+  )
+  const categoryReviewIndex = useMemo(
+    () => new Map(categoryReviewQueue.map((item) => [item.transactionId, item])),
+    [categoryReviewQueue],
+  )
 
   const filtered = useMemo(() => {
     let txs = transactions.filter((tx) => {
@@ -446,6 +470,7 @@ export default function TransactionList() {
       if (typeFilter === 'expense' && tx.type !== 'expense') return false
       if (catFilter !== 'all' && tx.categoryId !== catFilter) return false
       if (payFilter !== 'all' && tx.paymentMethod !== payFilter) return false
+      if (categoryReviewOnly && !categoryReviewIndex.has(tx.id)) return false
 
       if (paymentStatusFilter !== 'all') {
         if (!isPayableExpense(tx)) return false
@@ -465,8 +490,9 @@ export default function TransactionList() {
         }
       }
 
-      if (dateRange.from && tx.date < dateRange.from) return false
-      if (dateRange.to && tx.date > dateRange.to) return false
+      const activityDate = getTransactionActivityDate(tx)
+      if (dateRange.from && activityDate < dateRange.from) return false
+      if (dateRange.to && activityDate > dateRange.to) return false
       if (search) {
         const q = search.toLowerCase()
         if (
@@ -478,7 +504,11 @@ export default function TransactionList() {
       }
       return true
     })
-    txs.sort((a, b) => (sortAsc ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date)))
+    txs.sort((a, b) => {
+      const firstDate = getTransactionActivityDate(a)
+      const secondDate = getTransactionActivityDate(b)
+      return sortAsc ? firstDate.localeCompare(secondDate) : secondDate.localeCompare(firstDate)
+    })
     return txs
   }, [
     transactions,
@@ -487,6 +517,8 @@ export default function TransactionList() {
     payFilter,
     paymentStatusFilter,
     paymentStatusIndex,
+    categoryReviewOnly,
+    categoryReviewIndex,
     dateRange,
     search,
     sortAsc,
@@ -511,7 +543,16 @@ export default function TransactionList() {
 
   useEffect(() => {
     setSelectedPaymentIds(new Set())
-  }, [typeFilter, catFilter, payFilter, paymentStatusFilter, dateRange.from, dateRange.to, search])
+  }, [
+    typeFilter,
+    catFilter,
+    payFilter,
+    paymentStatusFilter,
+    categoryReviewOnly,
+    dateRange.from,
+    dateRange.to,
+    search,
+  ])
 
   useEffect(() => {
     const routeSearch = searchParams.get('search') || ''
@@ -521,6 +562,7 @@ export default function TransactionList() {
     if (searchParams.get('scope') === 'all') {
       setDateRange({ from: '', to: '' })
     }
+    setCategoryReviewOnly(searchParams.get('review') === 'categories')
     setPage(1)
   }, [searchParams])
 
@@ -552,6 +594,7 @@ export default function TransactionList() {
     catFilter !== 'all',
     payFilter !== 'all',
     paymentStatusFilter !== 'all',
+    categoryReviewOnly,
     hasCustomDateRange,
   ].filter(Boolean).length
   const savableFilterCount = [
@@ -695,6 +738,7 @@ export default function TransactionList() {
     setCatFilter('all')
     setPayFilter('all')
     setPaymentStatusFilter('all')
+    setCategoryReviewOnly(false)
     setDateRange({ from: '', to: '' })
     setSearch('')
     setPage(1)
