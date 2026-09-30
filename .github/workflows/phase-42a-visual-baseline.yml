@@ -1,0 +1,46 @@
+name: Phase 42A transactions visual baseline
+
+on:
+  push:
+    branches:
+      - phase-42a-financial-semantics
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    env:
+      VITE_E2E_MODE: 'true'
+      VITE_FIREBASE_API_KEY: test-api-key
+      VITE_FIREBASE_AUTH_DOMAIN: test-project.firebaseapp.com
+      VITE_FIREBASE_PROJECT_ID: test-project
+      VITE_FIREBASE_STORAGE_BUCKET: test-project.firebasestorage.app
+      VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+      VITE_FIREBASE_APP_ID: '1:123456789:web:test'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: phase-42a-financial-semantics
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Update transactions snapshots only
+        run: |
+          npx playwright test             --config=playwright.visual.config.js             e2e/visual/visual.spec.js             --grep "transactions mantém baseline visual"             --update-snapshots
+      - name: Commit updated baselines
+        run: |
+          if git diff --quiet e2e/visual/visual.spec.js-snapshots; then
+            echo "No baseline changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             e2e/visual/visual.spec.js-snapshots/transactions-visual-desktop-chromium-linux.png             e2e/visual/visual.spec.js-snapshots/transactions-visual-mobile-chromium-linux.png
+          git commit -m "Phase 42A: update transactions visual baselines"
+          git push origin HEAD:phase-42a-financial-semantics
