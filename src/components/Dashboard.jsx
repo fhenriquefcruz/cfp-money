@@ -61,20 +61,14 @@ const formatAxisCurrency = (value) =>
     maximumFractionDigits: 1,
   }).format(value)
 
-const formatSignedPercent = (value) => {
-  if (!Number.isFinite(value)) return 'sem base anterior'
-  const prefix = value > 0 ? '+' : ''
-  return `${prefix}${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`
-}
+const formatSignedPercent = (value) => `${value > 0 ? '+' : ''}${Math.round(value)}%`
 
 function DashboardSectionHeading({ title, description }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-2 px-1">
       <div>
         <h2 className="text-sm font-black text-[--text-primary] sm:text-base">{title}</h2>
-        {description && (
-          <p className="mt-0.5 text-xs leading-relaxed text-[--text-tertiary]">{description}</p>
-        )}
+        <p className="mt-0.5 text-xs leading-relaxed text-[--text-tertiary]">{description}</p>
       </div>
     </div>
   )
