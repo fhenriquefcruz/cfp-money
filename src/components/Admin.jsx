@@ -38,7 +38,7 @@ function StatusBadge({ u }) {
   )
 }
 
-function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
+function UserRow({ u, onAccess }) {
   const [expanded, setExpanded] = useState(false)
   const [months, setMonths] = useState(1)
   const planInfo = getPlanPresentation(u)
@@ -101,7 +101,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
               ))}
             </select>
             <button
-              onClick={() => onActivate(u.uid, months)}
+              onClick={() => onAccess(u.uid, 'activate', months)}
               className="admin-activate-button"
               aria-label={`Ativar ${months} ${months === 1 ? 'mês' : 'meses'} para ${u.displayName || u.email}`}
             >
@@ -111,7 +111,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
 
           {isPremiumActive && (
             <button
-              onClick={() => onRemovePremium(u.uid)}
+              onClick={() => onAccess(u.uid, 'remove')}
               className="admin-icon-action" data-action="remove"
               title="Remover Premium"
               aria-label={`Remover Premium de ${u.displayName || u.email}`}
@@ -122,7 +122,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
 
           {u.blocked ? (
             <button
-              onClick={() => onUnblock(u.uid)}
+              onClick={() => onAccess(u.uid, 'unblock')}
               className="admin-icon-action" data-action="unblock"
               title="Desbloquear"
               aria-label={`Desbloquear ${u.displayName || u.email}`}
@@ -131,7 +131,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
             </button>
           ) : (
             <button
-              onClick={() => onBlock(u.uid)}
+              onClick={() => onAccess(u.uid, 'block')}
               className="admin-icon-action" data-action="block"
               title="Bloquear"
               aria-label={`Bloquear ${u.displayName || u.email}`}
@@ -159,7 +159,6 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
                 'Última atividade',
                 `${formatActivityDate(u.lastSeenAt)} · ${formatRelativeActivity(activity.reference)}`,
               ],
-              ['Presença', activity.online ? 'Online agora' : 'Offline'],
             ].map(([label, value]) => (
               <div key={label}>
                 <span className="admin-detail-label">{label}: </span>
@@ -214,41 +213,16 @@ export default function Admin() {
     }
   }
 
-  const handleActivate = (uid, m) =>
+  const handleAccess = (uid, action, months) =>
     runAccessAction(
-      {
-        targetUid: uid,
-        action: 'activate',
-        months: m,
-      },
-      `✓ Premium ativado por ${m} mês(es)`,
-    )
-
-  const handleRemovePremium = (uid) =>
-    runAccessAction(
-      {
-        targetUid: uid,
-        action: 'remove',
-      },
-      'Premium removido.',
-    )
-
-  const handleBlock = (uid) =>
-    runAccessAction(
-      {
-        targetUid: uid,
-        action: 'block',
-      },
-      'Usuário bloqueado.',
-    )
-
-  const handleUnblock = (uid) =>
-    runAccessAction(
-      {
-        targetUid: uid,
-        action: 'unblock',
-      },
-      'Usuário desbloqueado.',
+      { targetUid: uid, action, ...(months ? { months } : {}) },
+      action === 'activate'
+        ? `✓ Premium ativado por ${months} mês(es)`
+        : {
+            remove: 'Premium removido.',
+            block: 'Usuário bloqueado.',
+            unblock: 'Usuário desbloqueado.',
+          }[action],
     )
 
   if (!isAdmin)
@@ -453,10 +427,7 @@ export default function Admin() {
             <UserRow
               key={u.uid}
               u={u}
-              onActivate={handleActivate}
-              onRemovePremium={handleRemovePremium}
-              onBlock={handleBlock}
-              onUnblock={handleUnblock}
+              onAccess={handleAccess}
             />
           ))
         )}
