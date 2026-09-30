@@ -1,6 +1,7 @@
 // src/contexts/AuthContext.jsx
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { E2E_MODE } from '../e2e/runtime'
+import { startUserActivityTracking } from '../services/userActivity'
 import { e2eUser } from '../e2e/fixtures'
 import {
   onAuthChange,
@@ -38,18 +39,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (E2E_MODE || !user?.uid) return undefined
-
-    let stop = () => {}
-    let active = true
-
-    import('../services/userActivity').then(({ startUserActivityTracking }) => {
-      if (active) stop = startUserActivityTracking(user)
-    })
-
-    return () => {
-      active = false
-      stop()
-    }
+    return startUserActivityTracking(user)
   }, [user?.uid])
 
   const clearError = () => setError(null)
