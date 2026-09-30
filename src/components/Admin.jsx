@@ -13,11 +13,21 @@ import {
   X,
   Star,
   Search,
+  Activity,
+  History,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { Card } from './ui'
 import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
 import { adminListUsers, adminSetUserAccess } from '../services/adminGateway'
+import {
+  buildActivitySummary,
+  formatActivityDate,
+  formatRelativeActivity,
+  getUserActivityReference,
+  getUserActivityState,
+  matchesActivityFilter,
+} from '../domain/userActivity'
 import CommercialOverviewRouter from './CommercialOverviewRouter'
 import SupportAdminCard from './SupportAdminCard'
 
@@ -55,6 +65,55 @@ const STATUS_STYLES = {
   },
 }
 
+
+const ACTIVITY_STYLES = {
+  online: {
+    bg: 'bg-emerald-100 dark:bg-emerald-900/40',
+    text: 'text-emerald-700 dark:text-emerald-400',
+    dot: 'bg-emerald-500',
+  },
+  today: {
+    bg: 'bg-blue-100 dark:bg-blue-900/40',
+    text: 'text-blue-700 dark:text-blue-400',
+    dot: 'bg-blue-500',
+  },
+  week: {
+    bg: 'bg-sky-100 dark:bg-sky-900/40',
+    text: 'text-sky-700 dark:text-sky-400',
+    dot: 'bg-sky-500',
+  },
+  inactive: {
+    bg: 'bg-amber-100 dark:bg-amber-900/40',
+    text: 'text-amber-700 dark:text-amber-400',
+    dot: 'bg-amber-500',
+  },
+  inactive30: {
+    bg: 'bg-red-100 dark:bg-red-900/40',
+    text: 'text-red-700 dark:text-red-400',
+    dot: 'bg-red-500',
+  },
+  untracked: {
+    bg: 'bg-gray-100 dark:bg-gray-800',
+    text: 'text-gray-500 dark:text-gray-400',
+    dot: 'bg-gray-400',
+  },
+}
+
+function ActivityBadge({ u }) {
+  const state = getUserActivityState(u)
+  const style = ACTIVITY_STYLES[state.key] || ACTIVITY_STYLES.untracked
+
+  return (
+    <span
+      className={`inline-flex max-w-full items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold ${style.bg} ${style.text}`}
+      title={state.online ? 'Presença aproximada por atividade nos últimos 5 minutos.' : state.detail}
+    >
+      <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${style.dot}`} />
+      {state.label}
+    </span>
+  )
+}
+
 function StatusBadge({ u }) {
   const info = getPlanPresentation(u)
   const style = STATUS_STYLES[info.key]
@@ -78,7 +137,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
   return (
     <>
       {/* Linha principal — grid fixo */}
-      <div className="admin-user-row grid grid-cols-1 items-stretch gap-3 border-b border-[--border-subtle] px-4 py-3 transition-colors last:border-0 hover:bg-[--bg-hover] sm:grid-cols-[2fr_1fr_auto] sm:items-center">
+      <div className="admin-user-row grid grid-cols-1 items-stretch gap-3 border-b border-[--border-subtle] px-4 py-3 transition-colors last:border-0 hover:bg-[--bg-hover] sm:grid-cols-[2fr_0.9fr_1.15fr_auto] sm:items-center">
         {/* Coluna 1: usuário */}
         <button
           className="flex min-h-11 w-full items-center gap-2.5 min-w-0 text-left"
@@ -106,7 +165,15 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
           <StatusBadge u={u} />
         </div>
 
-        {/* Coluna 3: ações agrupadas */}
+        {/* Coluna 3: atividade recente */}
+        <div className="hidden min-w-0 sm:block">
+          <ActivityBadge u={u} />
+          <p className="mt-1 text-[10px] text-[--text-tertiary]">
+            {formatRelativeActivity(getUserActivityReference(u))}
+          </p>
+        </div>
+
+        {/* Coluna 4: ações agrupadas */}
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:flex-shrink-0">
           {/* Select + Ativar colados */}
           <div className="flex min-w-0 flex-1 sm:flex-none items-center rounded-xl border border-[--border-default] overflow-hidden">
@@ -181,7 +248,21 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
                 label: 'Premium até',
                 value: formatPlanExpiration(u),
               },
-              { label: 'Status', value: u.blocked ? '🔴 Bloqueado' : '🟢 Ativo' },
+              { label: 'Status', value: u.blocked ? 'Bloqueado' : 'Ativo' },
+              {
+                label: 'Último login',
+                value: formatActivityDate(u.lastSignInAt),
+              },
+              {
+                label: 'Última atividade',
+                value: `${formatActivityDate(u.lastSeenAt)} · ${formatRelativeActivity(
+                  getUserActivityReference(u),
+                )}`,
+              },
+              {
+                label: 'Presença',
+                value: getUserActivityState(u).label,
+              },
             ].map((r) => (
               <div key={r.label}>
                 <span className="text-[--text-tertiary]">{r.label}: </span>
@@ -199,6 +280,7 @@ export default function Admin() {
   const { isAdmin } = useAuth()
   const [users, setUsers] = useState([])
   const [search, setSearch] = useState('')
+  const [activityFilter, setActivityFilter] = useState('all')
   const [toast, setToast] = useState('')
   const [error, setError] = useState('')
 
@@ -290,17 +372,30 @@ export default function Admin() {
       </div>
     )
 
-  const filtered = users.filter(
-    (u) =>
-      u.email?.toLowerCase().includes(search.toLowerCase()) ||
-      u.displayName?.toLowerCase().includes(search.toLowerCase()),
-  )
+  const now = new Date()
+  const normalizedSearch = search.trim().toLowerCase()
+  const filtered = users
+    .filter(
+      (u) =>
+        (!normalizedSearch ||
+          u.email?.toLowerCase().includes(normalizedSearch) ||
+          u.displayName?.toLowerCase().includes(normalizedSearch)) &&
+        matchesActivityFilter(u, activityFilter, now),
+    )
+    .sort((a, b) => {
+      const aTime = getUserActivityReference(a)?.getTime() || 0
+      const bTime = getUserActivityReference(b)?.getTime() || 0
+      return bTime - aTime
+    })
 
+  const activitySummary = buildActivitySummary(users, now)
   const stats = {
     total: users.length,
     premium: users.filter((u) => getPlanPresentation(u).key === 'premium').length,
-    trial: users.filter((u) => getPlanPresentation(u).key === 'trial_active').length,
     blocked: users.filter((u) => u.blocked).length,
+    online: activitySummary.online,
+    active7d: activitySummary.active7d,
+    inactive30: activitySummary.inactive30,
   }
 
   return (
@@ -317,7 +412,7 @@ export default function Admin() {
       )}
 
       {/* Stats */}
-      <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
         {[
           {
             label: 'Total',
@@ -332,16 +427,28 @@ export default function Admin() {
             style: STATUS_STYLES.premium,
           },
           {
-            label: 'Trial',
-            value: stats.trial,
-            icon: <Clock size={15} />,
-            style: STATUS_STYLES.trial_active,
-          },
-          {
             label: 'Bloqueados',
             value: stats.blocked,
             icon: <Lock size={15} />,
             style: STATUS_STYLES.blocked,
+          },
+          {
+            label: 'Online agora',
+            value: stats.online,
+            icon: <Activity size={15} />,
+            style: ACTIVITY_STYLES.online,
+          },
+          {
+            label: 'Ativos em 7 dias',
+            value: stats.active7d,
+            icon: <History size={15} />,
+            style: ACTIVITY_STYLES.week,
+          },
+          {
+            label: 'Inativos 30+ dias',
+            value: stats.inactive30,
+            icon: <Clock size={15} />,
+            style: ACTIVITY_STYLES.inactive30,
           },
         ].map((s) => (
           <Card key={s.label} className="!p-4">
@@ -381,27 +488,50 @@ export default function Admin() {
           <h2 className="text-sm font-bold text-[--text-primary]">
             Usuários <span className="text-[--text-tertiary] font-normal">({filtered.length})</span>
           </h2>
-          <div className="relative w-full sm:w-auto">
-            <Search
-              size={13}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[--text-tertiary]"
-            />
-            <input
-              placeholder="Buscar..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-elevated] py-1.5 pl-7 pr-3 text-xs text-[--text-primary] focus:border-[--brand-500] focus:outline-none sm:w-44"
-            />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <select
+              value={activityFilter}
+              onChange={(event) => setActivityFilter(event.target.value)}
+              className="min-h-11 rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 text-xs text-[--text-primary] focus:border-[--brand-500] focus:outline-none"
+              aria-label="Filtrar usuários por atividade"
+            >
+              <option value="all">Toda atividade</option>
+              <option value="online">Online agora</option>
+              <option value="24h">Últimas 24h</option>
+              <option value="7d">Últimos 7 dias</option>
+              <option value="30d+">Sem acesso há 30+ dias</option>
+              <option value="untracked">Sem registro ainda</option>
+            </select>
+            <div className="relative w-full sm:w-auto">
+              <Search
+                size={13}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[--text-tertiary]"
+              />
+              <input
+                placeholder="Buscar..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-elevated] py-1.5 pl-7 pr-3 text-xs text-[--text-primary] focus:border-[--brand-500] focus:outline-none sm:w-44"
+              />
+            </div>
           </div>
         </div>
 
+        <div className="border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2 text-[10px] leading-relaxed text-[--text-tertiary]">
+          “Online agora” significa atividade registrada nos últimos 5 minutos. É uma presença aproximada,
+          não uma confirmação de sessão aberta em tempo real.
+        </div>
+
         {/* Header de colunas */}
-        <div className="grid grid-cols-[1fr_auto] border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2 sm:grid-cols-[2fr_1fr_auto]">
+        <div className="grid grid-cols-[1fr_auto] border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2 sm:grid-cols-[2fr_0.9fr_1.15fr_auto]">
           <span className="text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider">
             Usuário
           </span>
           <span className="hidden sm:block text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider">
             Status
+          </span>
+          <span className="hidden sm:block text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider">
+            Atividade
           </span>
           <span className="text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider text-right">
             Ações
