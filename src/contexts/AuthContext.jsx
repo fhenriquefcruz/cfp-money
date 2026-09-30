@@ -14,11 +14,7 @@ import {
 
 const AuthContext = createContext({})
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
-}
+export const useAuth = () => useContext(AuthContext)
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(E2E_MODE ? e2eUser : null)
