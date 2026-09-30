@@ -239,7 +239,6 @@ export default function Dashboard() {
     loading: transactionsLoading,
     getSummary,
     getCategoryTotals,
-    getSpendingForecast,
   } = useTransactions()
   const { budgets } = useBudgets()
   const { categories } = useCategories()
@@ -280,7 +279,16 @@ export default function Dashboard() {
     () => getMonthlyFinancialData(transactions, activeTrendMonths, viewDate),
     [transactions, activeTrendMonths, viewDate],
   )
-  const forecast = useMemo(() => getSpendingForecast(), [transactions])
+  const forecast = useMemo(() => {
+    const values = [1, 2, 3]
+      .map((offset) => {
+        const reference = subMonths(viewDate, offset)
+        return getSummary(reference.getFullYear(), reference.getMonth()).expenses
+      })
+      .filter((value) => value > 0)
+
+    return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0
+  }, [viewDate, transactions])
 
   const monthBounds = useMemo(() => getCalendarMonthBounds(viewDate), [year, month])
   const paymentSummary = useMemo(
@@ -1023,9 +1031,9 @@ export default function Dashboard() {
                 <div className="mb-1 flex items-center gap-1.5">
                   <Zap size={14} className="text-[--brand-600]" />
                   <p className="text-xs font-semibold text-[--text-tertiary]">
-                    Referência de gastos · 3 meses
+                    Referência de gastos · 3 meses anteriores
                   </p>
-                  <InfoTooltip text="Média das despesas dos três meses anteriores. É uma referência de planejamento, não uma previsão garantida." />
+                  <InfoTooltip text="Média das despesas dos três meses anteriores ao período visualizado. É uma referência de planejamento, não uma previsão garantida." />
                 </div>
                 {isLoading ? (
                   <div className="h-7 w-28 animate-pulse rounded bg-[--bg-hover]" />
@@ -1035,7 +1043,7 @@ export default function Dashboard() {
                   </p>
                 )}
                 <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
-                  Média histórica para comparação; não altera o resultado do período.
+                  Média anterior a {monthLabel}; não altera o resultado do período.
                 </p>
               </div>
               <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
