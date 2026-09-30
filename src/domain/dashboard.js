@@ -94,3 +94,49 @@ export function buildMonthAttentionSignals({
 
   return signals.slice(0, safeLimit)
 }
+
+
+export function buildCategoryBreakdown(current = [], previous = []) {
+  const previousByCategory = new Map(
+    previous.map((item) => [item.categoryId || item.categoryName, Number(item.total) || 0]),
+  )
+  const total = current.reduce((sum, item) => sum + (Number(item.total) || 0), 0)
+
+  return current
+    .map((item) => {
+      const amount = Number(item.total) || 0
+      const previousAmount =
+        previousByCategory.get(item.categoryId || item.categoryName) || 0
+      return {
+        ...item,
+        total: amount,
+        sharePercent: total > 0 ? (amount / total) * 100 : 0,
+        changePercent:
+          previousAmount > 0 ? ((amount - previousAmount) / previousAmount) * 100 : null,
+      }
+    })
+    .sort((first, second) => second.total - first.total)
+}
+
+export function getLargestMonthlyExpenseChange(monthlyData = []) {
+  let result = null
+
+  for (let index = 1; index < monthlyData.length; index += 1) {
+    const previous = monthlyData[index - 1]
+    const current = monthlyData[index]
+    const delta = (Number(current.expenses) || 0) - (Number(previous.expenses) || 0)
+
+    if (!result || Math.abs(delta) > Math.abs(result.delta)) {
+      result = {
+        month: current.fullMonth || current.month,
+        monthKey: current.monthKey,
+        previousMonth: previous.fullMonth || previous.month,
+        delta,
+        percent:
+          Number(previous.expenses) > 0 ? (delta / Number(previous.expenses)) * 100 : null,
+      }
+    }
+  }
+
+  return result
+}
