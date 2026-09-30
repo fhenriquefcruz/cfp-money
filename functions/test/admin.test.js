@@ -52,6 +52,8 @@ test('expõe somente campos necessários do usuário no painel admin', () => {
       premiumUntil: new Date('2026-10-01T12:00:00.000Z'),
       blocked: false,
       createdAt: new Date('2026-08-01T12:00:00.000Z'),
+      lastSignInAt: new Date('2026-09-29T21:50:12.000Z'),
+      lastSeenAt: new Date('2026-09-30T12:00:00.000Z'),
       moneySettings: { hidden: true },
     }),
   }
@@ -65,5 +67,7 @@ test('expõe somente campos necessários do usuário no painel admin', () => {
     premiumUntil: '2026-10-01T12:00:00.000Z',
     blocked: false,
     createdAt: '2026-08-01T12:00:00.000Z',
+    lastSignInAt: '2026-09-29T21:50:12.000Z',
+    lastSeenAt: '2026-09-30T12:00:00.000Z',
   })
 })
