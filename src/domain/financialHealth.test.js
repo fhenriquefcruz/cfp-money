@@ -88,3 +88,28 @@ test('prioriza como próxima ação o fator com maior quantidade de pontos falta
   expect(report.nextAction?.id).toBe('balance')
   expect(report.nextAction?.missingPoints).toBe(30)
 })
+
+
+test('suspende a pontuação quando há classificações suspeitas', () => {
+  const report = buildFinancialHealth({
+    balance: 1200,
+    income: 5000,
+    expenses: 3000,
+    savingRate: 20,
+    hasBudgets: true,
+    budgetsOk: true,
+    overdueCount: 0,
+    categoryReviewCount: 2,
+  })
+
+  expect(report.score).toBeNull()
+  expect(report.label).toBe('Em revisão')
+  expect(report.dataQuality).toEqual({
+    scoreAvailable: false,
+    categoryReviewCount: 2,
+  })
+  expect(report.nextAction).toMatchObject({
+    id: 'data_quality',
+    to: '/transactions?review=categories&scope=all',
+  })
+})
