@@ -1,43 +1,60 @@
 import { buildFinancialHealth } from './financialHealth'
 
-test('preserva a fórmula atual e chega a 100 pontos no melhor cenário', () => {
+test('chega a 100 pontos somente com sinais financeiros favoráveis', () => {
   const report = buildFinancialHealth({
     balance: 1200,
     income: 5000,
+    expenses: 3000,
     savingRate: 20,
     hasBudgets: true,
     budgetsOk: true,
-    goalsActive: true,
+    overdueCount: 0,
   })
 
+  expect(report.methodologyVersion).toBe(2)
   expect(report.score).toBe(100)
-  expect(report.label).toBe('Ótima')
+  expect(report.label).toBe('Sólido')
   expect(report.factors.map((factor) => factor.points)).toEqual([30, 25, 20, 15, 10])
   expect(report.nextAction).toBeNull()
 })
 
-test('mantém as faixas intermediária e inicial da poupança', () => {
-  expect(
-    buildFinancialHealth({
-      balance: -1,
-      income: 3000,
-      savingRate: 10,
-      hasBudgets: false,
-      budgetsOk: false,
-      goalsActive: false,
-    }).score,
-  ).toBe(22)
+test('não concede pontos apenas por existir receita ou meta cadastrada', () => {
+  const report = buildFinancialHealth({
+    balance: -1,
+    income: 3000,
+    expenses: 3200,
+    savingRate: 0,
+    hasBudgets: false,
+    budgetsOk: false,
+    overdueCount: 2,
+  })
 
-  expect(
-    buildFinancialHealth({
-      balance: -1,
-      income: 0,
-      savingRate: 0,
-      hasBudgets: false,
-      budgetsOk: false,
-      goalsActive: false,
-    }).score,
-  ).toBe(5)
+  expect(report.score).toBe(0)
+  expect(report.factors.map((factor) => factor.id)).toEqual([
+    'balance',
+    'saving',
+    'budgets',
+    'payments',
+    'expense_ratio',
+  ])
+})
+
+test('mantém faixa intermediária de reserva e pontualidade parcial', () => {
+  const report = buildFinancialHealth({
+    balance: 300,
+    income: 3000,
+    expenses: 2400,
+    savingRate: 10,
+    hasBudgets: true,
+    budgetsOk: false,
+    overdueCount: 1,
+  })
+
+  expect(report.score).toBe(55)
+  expect(report.label).toBe('Em atenção')
+  expect(report.factors.find((factor) => factor.id === 'saving')?.points).toBe(12)
+  expect(report.factors.find((factor) => factor.id === 'payments')?.points).toBe(8)
+  expect(report.factors.find((factor) => factor.id === 'expense_ratio')?.points).toBe(5)
 })
 
 test('explica ausência de orçamento sem confundir com orçamento estourado', () => {
@@ -61,13 +78,13 @@ test('prioriza como próxima ação o fator com maior quantidade de pontos falta
   const report = buildFinancialHealth({
     balance: -500,
     income: 4000,
+    expenses: 3600,
     savingRate: 10,
     hasBudgets: true,
     budgetsOk: false,
-    goalsActive: false,
+    overdueCount: 1,
   })
 
-  expect(report.score).toBe(22)
   expect(report.nextAction?.id).toBe('balance')
   expect(report.nextAction?.missingPoints).toBe(30)
 })
