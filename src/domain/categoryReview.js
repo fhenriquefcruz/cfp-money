@@ -9,7 +9,7 @@ const FAMILY_RULES = [
   {
     id: 'ride_hailing',
     label: 'Transporte por aplicativo',
-    terms: ['transporte por aplicativo', 'uber', '99app', '99 pop', 'indriver', 'cabify'],
+    terms: ['transporte por aplicativo', 'uber', '99app', '99 app', '99 pop', 'indriver', 'cabify'],
   },
   {
     id: 'fuel',
