@@ -31,6 +31,9 @@ test('usa data da movimentação e ignora cancelamentos', () => {
 
   const data = getMonthlyFinancialData(transactions, 1, new Date(2026, 6, 15))
   expect(data[0]).toMatchObject({
+    monthKey: '2026-07',
+    start: '2026-07-01',
+    end: '2026-07-31',
     income: 1000,
     expenses: 200,
     balance: 800,
