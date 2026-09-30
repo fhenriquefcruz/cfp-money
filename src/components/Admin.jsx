@@ -19,7 +19,6 @@ import { Card } from './ui'
 import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
 import { adminListUsers, adminSetUserAccess } from '../services/adminGateway'
 import {
-  ACTIVITY_DAY_MS,
   formatRelativeActivity,
   getUserActivityState,
 } from '../domain/userActivity'
@@ -80,7 +79,7 @@ function UserRow({ u, onAccess }) {
           <p className="admin-activity-state" data-online={activity.online}>
             {activity.online ? 'Online agora' : 'Offline'}
           </p>
-          <p className="admin-activity-age">{formatRelativeActivity(activity.reference)}</p>
+          <p className="admin-activity-age">{formatRelativeActivity(activity.date)}</p>
         </div>
 
         {/* Coluna 4: ações agrupadas */}
@@ -154,7 +153,7 @@ function UserRow({ u, onAccess }) {
               ['Premium até', formatPlanExpiration(u)],
               ['Status', u.blocked ? 'Bloqueado' : 'Ativo'],
               ['Último login', formatRelativeActivity(u.lastSignInAt)],
-              ['Última atividade', formatRelativeActivity(activity.reference)],
+              ['Última atividade', formatRelativeActivity(activity.date)],
             ].map(([label, value]) => (
               <div key={label}>
                 <span className="admin-detail-label">{label}: </span>
@@ -241,8 +240,9 @@ export default function Admin() {
 
   const now = new Date()
   const query = search.trim().toLowerCase()
-  const week = 7 * ACTIVITY_DAY_MS
-  const month = 30 * ACTIVITY_DAY_MS
+  const day = 86_400_000
+  const week = 7 * day
+  const month = 30 * day
   const withActivity = users.map((u) => ({ u, activity: getUserActivityState(u, now) }))
   const filtered = withActivity
     .filter(({ u, activity }) => {
@@ -253,13 +253,13 @@ export default function Admin() {
       const matchesActivity =
         activityFilter === 'all' ||
         (activityFilter === 'online' && activity.online) ||
-        (activityFilter === '24h' && activity.ageMs !== null && activity.ageMs <= ACTIVITY_DAY_MS) ||
-        (activityFilter === '7d' && activity.ageMs !== null && activity.ageMs <= week) ||
-        (activityFilter === '30d+' && activity.ageMs >= month) ||
-        (activityFilter === 'untracked' && activity.ageMs === null)
+        (activityFilter === '24h' && activity.age !== null && activity.age <= day) ||
+        (activityFilter === '7d' && activity.age !== null && activity.age <= week) ||
+        (activityFilter === '30d+' && activity.age >= month) ||
+        (activityFilter === 'untracked' && activity.age === null)
       return matchesSearch && matchesActivity
     })
-    .sort((a, b) => (b.activity.reference?.getTime() || 0) - (a.activity.reference?.getTime() || 0))
+    .sort((a, b) => (b.activity.date?.getTime() || 0) - (a.activity.date?.getTime() || 0))
     .map(({ u }) => u)
 
   const stats = {
@@ -267,7 +267,7 @@ export default function Admin() {
     premium: users.filter((u) => getPlanPresentation(u).key === 'premium').length,
     blocked: users.filter((u) => u.blocked).length,
     online: withActivity.filter(({ activity }) => activity.online).length,
-    inactive30: withActivity.filter(({ activity }) => activity.ageMs >= month).length,
+    inactive30: withActivity.filter(({ activity }) => activity.age >= month).length,
   }
 
   return (
@@ -286,43 +286,18 @@ export default function Admin() {
       {/* Stats */}
       <div className="operational-summary-grid admin-summary-grid">
         {[
-          {
-            label: 'Total',
-            value: stats.total,
-            icon: <Users size={15} />,
-            tone: 'free',
-          },
-          {
-            label: 'Premium',
-            value: stats.premium,
-            icon: <Star size={15} />,
-            tone: 'premium',
-          },
-          {
-            label: 'Bloqueados',
-            value: stats.blocked,
-            icon: <Lock size={15} />,
-            tone: 'blocked',
-          },
-          {
-            label: 'Online agora',
-            value: stats.online,
-            icon: <Users size={15} />,
-            tone: 'premium',
-          },
-          {
-            label: 'Inativos 30+ dias',
-            value: stats.inactive30,
-            icon: <Clock size={15} />,
-            tone: 'blocked',
-          },
-        ].map((s) => (
-          <Card key={s.label} className="!p-4">
-            <div className="admin-stat-icon admin-tone" data-tone={s.tone}>
-              {s.icon}
+          ['Total', stats.total, <Users size={15} />, 'free'],
+          ['Premium', stats.premium, <Star size={15} />, 'premium'],
+          ['Bloqueados', stats.blocked, <Lock size={15} />, 'blocked'],
+          ['Online agora', stats.online, <Users size={15} />, 'premium'],
+          ['Inativos 30+ dias', stats.inactive30, <Clock size={15} />, 'blocked'],
+        ].map(([label, value, icon, tone]) => (
+          <Card key={label} className="!p-4">
+            <div className="admin-stat-icon admin-tone" data-tone={tone}>
+              {icon}
             </div>
-            <p className="text-2xl font-black text-[--text-primary]">{s.value}</p>
-            <p className="text-xs text-[--text-tertiary]">{s.label}</p>
+            <p className="text-2xl font-black text-[--text-primary]">{value}</p>
+            <p className="text-xs text-[--text-tertiary]">{label}</p>
           </Card>
         ))}
       </div>
