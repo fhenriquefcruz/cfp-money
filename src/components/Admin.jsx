@@ -243,32 +243,41 @@ export default function Admin() {
   const day = 86_400_000
   const week = 7 * day
   const month = 30 * day
-  const withActivity = users.map((u) => ({ u, activity: getUserActivityState(u, now) }))
-  const filtered = withActivity
-    .filter(({ u, activity }) => {
-      const matchesSearch =
-        !query ||
-        u.email?.toLowerCase().includes(query) ||
-        u.displayName?.toLowerCase().includes(query)
-      const matchesActivity =
-        activityFilter === 'all' ||
-        (activityFilter === 'online' && activity.online) ||
-        (activityFilter === '24h' && activity.age !== null && activity.age <= day) ||
-        (activityFilter === '7d' && activity.age !== null && activity.age <= week) ||
-        (activityFilter === '30d+' && activity.age >= month) ||
-        (activityFilter === 'untracked' && activity.age === null)
-      return matchesSearch && matchesActivity
+  const state = (u) => getUserActivityState(u, now)
+  const filtered = users
+    .filter((u) => {
+      const activity = state(u)
+      return (
+        (!query ||
+          u.email?.toLowerCase().includes(query) ||
+          u.displayName?.toLowerCase().includes(query)) &&
+        (activityFilter === 'all' ||
+          (activityFilter === 'online' && activity.online) ||
+          (activityFilter === '24h' && activity.age !== null && activity.age <= day) ||
+          (activityFilter === '7d' && activity.age !== null && activity.age <= week) ||
+          (activityFilter === '30d+' && activity.age >= month) ||
+          (activityFilter === 'untracked' && activity.age === null))
+      )
     })
-    .sort((a, b) => (b.activity.date?.getTime() || 0) - (a.activity.date?.getTime() || 0))
-    .map(({ u }) => u)
+    .sort((a, b) => (state(b).date?.getTime() || 0) - (state(a).date?.getTime() || 0))
 
-  const stats = {
-    total: users.length,
-    premium: users.filter((u) => getPlanPresentation(u).key === 'premium').length,
-    blocked: users.filter((u) => u.blocked).length,
-    online: withActivity.filter(({ activity }) => activity.online).length,
-    inactive30: withActivity.filter(({ activity }) => activity.age >= month).length,
-  }
+  const stats = [
+    ['Total', users.length, <Users size={15} />, 'free'],
+    [
+      'Premium',
+      users.filter((u) => getPlanPresentation(u).key === 'premium').length,
+      <Star size={15} />,
+      'premium',
+    ],
+    ['Bloqueados', users.filter((u) => u.blocked).length, <Lock size={15} />, 'blocked'],
+    ['Online agora', users.filter((u) => state(u).online).length, <Users size={15} />, 'premium'],
+    [
+      'Inativos 30+ dias',
+      users.filter((u) => state(u).age >= month).length,
+      <Clock size={15} />,
+      'blocked',
+    ],
+  ]
 
   return (
     <div className="operational-page admin-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6">
@@ -285,13 +294,7 @@ export default function Admin() {
 
       {/* Stats */}
       <div className="operational-summary-grid admin-summary-grid">
-        {[
-          ['Total', stats.total, <Users size={15} />, 'free'],
-          ['Premium', stats.premium, <Star size={15} />, 'premium'],
-          ['Bloqueados', stats.blocked, <Lock size={15} />, 'blocked'],
-          ['Online agora', stats.online, <Users size={15} />, 'premium'],
-          ['Inativos 30+ dias', stats.inactive30, <Clock size={15} />, 'blocked'],
-        ].map(([label, value, icon, tone]) => (
+        {stats.map(([label, value, icon, tone]) => (
           <Card key={label} className="!p-4">
             <div className="admin-stat-icon admin-tone" data-tone={tone}>
               {icon}
