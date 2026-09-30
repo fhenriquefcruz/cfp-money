@@ -35,3 +35,30 @@ test('mantém o detalhamento oculto até o usuário pedir para entender o score'
     '/transactions',
   )
 })
+
+
+test('não exibe pontuação enquanto classificações suspeitas aguardam revisão', () => {
+  const report = buildFinancialHealth({
+    balance: 1000,
+    income: 5000,
+    expenses: 3000,
+    savingRate: 20,
+    hasBudgets: true,
+    budgetsOk: true,
+    overdueCount: 0,
+    categoryReviewCount: 1,
+  })
+
+  render(
+    <MemoryRouter>
+      <FinancialHealthScore report={report} />
+    </MemoryRouter>,
+  )
+
+  expect(screen.getByText('Indicador financeiro · Em revisão')).toBeInTheDocument()
+  expect(screen.getByText(/Ação necessária: Revisar classificações/i)).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /Revisar categorias/i })).toHaveAttribute(
+    'href',
+    '/transactions?review=categories&scope=all',
+  )
+})
