@@ -1,5 +1,4 @@
 export const ONLINE_ACTIVITY_WINDOW_MS = 5 * 60 * 1000
-export const ACTIVITY_DAY_MS = 24 * 60 * 60 * 1000
 
 export function toActivityDate(value) {
   if (!value) return null
@@ -16,13 +15,9 @@ export function toActivityDate(value) {
 
 export function getUserActivityState(user = {}, now = new Date()) {
   const seen = toActivityDate(user.lastSeenAt)
-  const reference = seen || toActivityDate(user.lastSignInAt)
-  const ageMs = reference ? Math.max(0, now.getTime() - reference.getTime()) : null
-  return {
-    reference,
-    ageMs,
-    online: Boolean(seen && ageMs <= ONLINE_ACTIVITY_WINDOW_MS),
-  }
+  const date = seen || toActivityDate(user.lastSignInAt)
+  const age = date ? Math.max(0, now - date) : null
+  return { date, age, online: Boolean(seen && age <= ONLINE_ACTIVITY_WINDOW_MS) }
 }
 
 export function formatRelativeActivity(value, now = new Date()) {
