@@ -234,8 +234,9 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
       {/* Expansão: badge mobile + detalhes */}
       {expanded && (
         <div className="px-4 pb-3 bg-[--bg-subtle] border-b border-[--border-subtle]">
-          <div className="flex items-center gap-2 mb-2 pt-2 sm:hidden">
+          <div className="flex flex-wrap items-center gap-2 mb-2 pt-2 sm:hidden">
             <StatusBadge u={u} />
+            <ActivityBadge u={u} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs">
             {[
@@ -542,7 +543,9 @@ export default function Admin() {
           <div className="text-center py-12">
             <Users size={28} className="text-[--text-tertiary] mx-auto mb-2" />
             <p className="text-sm text-[--text-tertiary]">
-              {search ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}
+              {search || activityFilter !== 'all'
+                ? 'Nenhum usuário corresponde aos filtros.'
+                : 'Nenhum usuário cadastrado.'}
             </p>
           </div>
         ) : (
