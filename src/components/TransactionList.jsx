@@ -119,6 +119,21 @@ function getCurrentMonthRange() {
   }
 }
 
+const ISO_DATE_PARAM = /^\d{4}-\d{2}-\d{2}$/
+
+function getDateRangeFromParams(searchParams) {
+  const from = searchParams.get('from') || ''
+  const to = searchParams.get('to') || ''
+  if (ISO_DATE_PARAM.test(from) || ISO_DATE_PARAM.test(to)) {
+    return {
+      from: ISO_DATE_PARAM.test(from) ? from : '',
+      to: ISO_DATE_PARAM.test(to) ? to : '',
+    }
+  }
+
+  return searchParams.get('scope') === 'all' ? { from: '', to: '' } : getCurrentMonthRange()
+}
+
 // Agrupa transações por data
 function groupByDate(txs) {
   const groups = {}
@@ -425,15 +440,13 @@ export default function TransactionList() {
 
   const [search, setSearch] = useState(() => searchParams.get('search') || '')
   const [typeFilter, setTypeFilter] = useState('all')
-  const [catFilter, setCatFilter] = useState('all')
+  const [catFilter, setCatFilter] = useState(() => searchParams.get('category') || 'all')
   const [payFilter, setPayFilter] = useState('all')
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('all')
   const [categoryReviewOnly, setCategoryReviewOnly] = useState(
     () => searchParams.get('review') === 'categories',
   )
-  const [dateRange, setDateRange] = useState(() =>
-    searchParams.get('scope') === 'all' ? { from: '', to: '' } : getCurrentMonthRange(),
-  )
+  const [dateRange, setDateRange] = useState(() => getDateRangeFromParams(searchParams))
   const [showFilters, setShowFilters] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTx, setEditingTx] = useState(null)
@@ -555,13 +568,9 @@ export default function TransactionList() {
   ])
 
   useEffect(() => {
-    const routeSearch = searchParams.get('search') || ''
-    if (!routeSearch) return
-
-    setSearch(routeSearch)
-    if (searchParams.get('scope') === 'all') {
-      setDateRange({ from: '', to: '' })
-    }
+    setSearch(searchParams.get('search') || '')
+    setCatFilter(searchParams.get('category') || 'all')
+    setDateRange(getDateRangeFromParams(searchParams))
     setCategoryReviewOnly(searchParams.get('review') === 'categories')
     setPage(1)
   }, [searchParams])
