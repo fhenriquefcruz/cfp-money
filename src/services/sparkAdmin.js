@@ -34,6 +34,8 @@ export async function sparkAdminListUsers() {
       premiumUntil: data.premiumUntil || null,
       blocked: Boolean(data.blocked),
       createdAt: data.createdAt || null,
+      lastSignInAt: data.lastSignInAt || null,
+      lastSeenAt: data.lastSeenAt || null,
     }
   })
 }
