@@ -1,0 +1,37 @@
+name: Phase 41 format
+
+on:
+  push:
+    branches:
+      - phase-41-admin-user-activity
+
+permissions:
+  contents: write
+
+jobs:
+  prettier:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: phase-41-admin-user-activity
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format Phase 41 files
+        run: |
+          npx prettier --write             scripts/backfill-user-activity.mjs             src/components/Admin.jsx             src/contexts/AuthContext.jsx             src/domain/adminBackfill.test.js             src/domain/userActivity.js             src/index.css             src/services/userActivity.js             tests/security/firestore.rules.test.js
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             scripts/backfill-user-activity.mjs             src/components/Admin.jsx             src/contexts/AuthContext.jsx             src/domain/adminBackfill.test.js             src/domain/userActivity.js             src/index.css             src/services/userActivity.js             tests/security/firestore.rules.test.js
+          git commit -m "Phase 41: apply project formatting"
+          git push origin HEAD:phase-41-admin-user-activity
