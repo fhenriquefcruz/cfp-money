@@ -17,8 +17,7 @@ import {
   ArrowRight,
   Target,
   AlertTriangle,
-  Zap,
-  Heart,
+  Gauge,
   ChevronLeft,
   ChevronRight,
   PiggyBank,
@@ -167,10 +166,7 @@ function MonthAttentionCard({ items }) {
     <Card variant="elevated" className="dashboard-attention-card overflow-hidden">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <div className="flex items-center gap-2">
-            <Zap size={15} className="text-[--brand-600]" />
-            <h2 className="text-sm font-black text-[--text-primary]">Prioridades do período</h2>
-          </div>
+          <h2 className="text-sm font-black text-[--text-primary]">Prioridades do período</h2>
           <p className="mt-1 text-xs text-[--text-tertiary]">
             Causa, impacto e próxima ação concentrados em um só lugar.
           </p>
@@ -1029,7 +1025,7 @@ export default function Dashboard() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="mb-1 flex items-center gap-1.5">
-                  <Zap size={14} className="text-[--brand-600]" />
+                  <Clock3 size={14} className="text-[--brand-600]" />
                   <p className="text-xs font-semibold text-[--text-tertiary]">
                     Referência de gastos · 3 meses anteriores
                   </p>
@@ -1046,15 +1042,13 @@ export default function Dashboard() {
                   Média anterior a {monthLabel}; não altera o resultado do período.
                 </p>
               </div>
-              <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
-                <Zap size={16} />
-              </div>
+
             </div>
           </Card>
 
           <Card variant="elevated" className="dashboard-health-card h-full">
             <div className="mb-2 flex items-center gap-1.5">
-              <Heart size={14} className="text-[--danger-icon]" />
+              <Gauge size={14} className="text-[--brand-600]" />
               <p className="text-xs font-semibold text-[--text-tertiary]">Indicador financeiro</p>
               <InfoTooltip text="Indicador de 0 a 100 baseado em equilíbrio do período, reserva, aderência a orçamentos, atrasos e relação despesas/receitas. Não representa diagnóstico financeiro completo." />
             </div>
