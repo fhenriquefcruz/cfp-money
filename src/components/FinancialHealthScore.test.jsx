@@ -36,7 +36,6 @@ test('mantém o detalhamento oculto até o usuário pedir para entender o score'
   )
 })
 
-
 test('não exibe pontuação enquanto classificações suspeitas aguardam revisão', () => {
   const report = buildFinancialHealth({
     balance: 1000,

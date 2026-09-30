@@ -24,9 +24,10 @@ test('usa data da movimentação e ignora cancelamentos', () => {
     },
   ]
 
-  expect(
-    groupTransactionsByActivityMonth(transactions)['2026-07'].map((item) => item.id),
-  ).toEqual(['manual-july', 'income'])
+  expect(groupTransactionsByActivityMonth(transactions)['2026-07'].map((item) => item.id)).toEqual([
+    'manual-july',
+    'income',
+  ])
 
   const data = getMonthlyFinancialData(transactions, 1, new Date(2026, 6, 15))
   expect(data[0]).toMatchObject({

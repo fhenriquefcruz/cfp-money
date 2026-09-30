@@ -89,7 +89,6 @@ test('prioriza como próxima ação o fator com maior quantidade de pontos falta
   expect(report.nextAction?.missingPoints).toBe(30)
 })
 
-
 test('suspende a pontuação quando há classificações suspeitas', () => {
   const report = buildFinancialHealth({
     balance: 1200,

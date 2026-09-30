@@ -1304,7 +1304,8 @@ export default function TransactionList() {
       )}
 
       <p className="px-1 text-[10px] text-[--text-tertiary]">
-        Lista agrupada pela data da movimentação. Vencimento e pagamento aparecem separadamente quando informados.
+        Lista agrupada pela data da movimentação. Vencimento e pagamento aparecem separadamente
+        quando informados.
       </p>
 
       {/* Lista agrupada por data */}

@@ -2,8 +2,7 @@ import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { getTransactionActivityDate } from './transactionDates'
 
-const capitalizeMonth = (value) =>
-  value ? value.charAt(0).toUpperCase() + value.slice(1) : ''
+const capitalizeMonth = (value) => (value ? value.charAt(0).toUpperCase() + value.slice(1) : '')
 const isEffective = (transaction) =>
   transaction.paymentStatus !== 'cancelled' &&
   transaction.flowType !== 'transfer' &&

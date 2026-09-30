@@ -486,7 +486,9 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
             </legend>
             {categoryReview && (
               <div className="mb-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] p-3">
-                <p className="text-xs font-bold text-[--warning-text]">Classificação para revisar</p>
+                <p className="text-xs font-bold text-[--warning-text]">
+                  Classificação para revisar
+                </p>
                 <p className="mt-1 text-[10px] leading-relaxed text-[--warning-text]">
                   {categoryReview.reason}
                 </p>

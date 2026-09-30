@@ -23,4 +23,3 @@ describe('formatRelativeDate', () => {
     expect(formatRelativeDate('2026-08-01')).toBe('01/08/2026')
   })
 })
-

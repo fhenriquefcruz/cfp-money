@@ -22,7 +22,6 @@ test('classifica redução relevante como positiva', () => {
   expect(getMoneyInsightTone(analysis)).toBe('positive')
 })
 
-
 test('prioriza aviso de qualidade quando há classificação a revisar', () => {
   const analysis = {
     dataQuality: { categoryReviewCount: 2 },

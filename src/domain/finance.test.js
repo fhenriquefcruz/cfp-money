@@ -75,7 +75,6 @@ test('sugere o fim do período 30 dias após a data inicial', () => {
   expect(defaultDateRangeEnd('')).toBe('')
 })
 
-
 test('usa a data da movimentação para o mês e não o vencimento', () => {
   const item = {
     type: 'expense',

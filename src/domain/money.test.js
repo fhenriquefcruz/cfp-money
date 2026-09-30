@@ -198,7 +198,6 @@ test('libera a projeção com confiança explícita após o período mínimo', (
   expect(result.projection.expenses).toBeCloseTo(3100, 5)
 })
 
-
 test('Money usa a data da movimentação e ignora cancelamentos', () => {
   const result = analyzeMoney(
     [
@@ -232,7 +231,6 @@ test('Money usa a data da movimentação e ignora cancelamentos', () => {
   expect(result.current.expenses).toBe(400)
   expect(result.current.balance).toBe(2600)
 })
-
 
 test('Money sinaliza revisão de categoria antes de interpretar destaques', () => {
   const result = analyzeMoney(

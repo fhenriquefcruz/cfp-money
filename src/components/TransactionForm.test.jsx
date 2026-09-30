@@ -101,7 +101,6 @@ describe('TransactionForm progressive disclosure', () => {
   })
 })
 
-
 describe('TransactionForm category review', () => {
   it('permite aplicar uma sugestão somente com confirmação do usuário', () => {
     render(

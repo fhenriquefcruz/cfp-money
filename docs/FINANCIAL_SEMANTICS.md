@@ -15,6 +15,7 @@ Este documento define as fórmulas e as datas usadas pelos cálculos financeiros
 - fallback legado: `dueDate` somente quando `date` não estiver disponível.
 
 Usos:
+
 - resumo mensal de receitas e despesas;
 - gastos por categoria;
 - orçamento;
@@ -30,6 +31,7 @@ Usos:
 - fallback: `date`.
 
 Usos:
+
 - comprometido;
 - a pagar;
 - atrasados;
@@ -134,13 +136,13 @@ O antigo rótulo “Saúde financeira” foi substituído por “Indicador finan
 
 O indicador não é diagnóstico financeiro. Ele resume cinco sinais objetivos do período:
 
-| Fator | Peso |
-| --- | ---: |
-| Equilíbrio do período | 30 |
-| Reserva no período | 25 |
-| Aderência aos orçamentos | 20 |
-| Pontualidade dos pagamentos | 15 |
-| Relação despesas / receitas | 10 |
+| Fator                       | Peso |
+| --------------------------- | ---: |
+| Equilíbrio do período       |   30 |
+| Reserva no período          |   25 |
+| Aderência aos orçamentos    |   20 |
+| Pontualidade dos pagamentos |   15 |
+| Relação despesas / receitas |   10 |
 
 ### Equilíbrio do período
 
@@ -149,8 +151,8 @@ O indicador não é diagnóstico financeiro. Ele resume cinco sinais objetivos d
 
 ### Reserva no período
 
-- >= 20% das receitas: 25;
-- >= 10%: 12;
+- > = 20% das receitas: 25;
+- > = 10%: 12;
 - > 0%: 5;
 - 0% ou sem base de receita: 0.
 
@@ -184,6 +186,7 @@ Isso evita que um gasto possivelmente classificado na categoria errada altere o 
 A aplicação pode sinalizar uma classificação como suspeita quando a descrição apresenta indícios fortes de uma família diferente da categoria atual.
 
 Famílias iniciais:
+
 - combustível;
 - transporte por aplicativo;
 - consórcio / financiamento;
@@ -199,7 +202,6 @@ A revisão é não destrutiva:
 As regras são heurísticas de apoio, não uma fonte de verdade.
 
 O Money também sinaliza a existência de classificações suspeitas antes de destacar aumentos por categoria. Enquanto houver revisão pendente, diagnósticos que dependem da categoria são ocultados.
-
 
 ## Orçamento de performance da Phase 42A
 

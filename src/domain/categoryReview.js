@@ -50,7 +50,9 @@ export function reviewTransactionCategory(transaction = {}, categories = []) {
   if (transaction.paymentStatus === 'cancelled') return null
 
   const inferred = detectFamily(
-    [transaction.description, transaction.notes, transaction.merchantName].filter(Boolean).join(' '),
+    [transaction.description, transaction.notes, transaction.merchantName]
+      .filter(Boolean)
+      .join(' '),
   )
   if (!inferred) return null
 
@@ -60,8 +62,9 @@ export function reviewTransactionCategory(transaction = {}, categories = []) {
   if (currentFamily?.id === inferred.id) return null
 
   const suggestedCategory =
-    categories.find((category) => category.type === 'expense' && categoryFamily(category)?.id === inferred.id) ||
-    null
+    categories.find(
+      (category) => category.type === 'expense' && categoryFamily(category)?.id === inferred.id,
+    ) || null
 
   return {
     transactionId: transaction.id,

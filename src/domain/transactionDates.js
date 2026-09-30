@@ -31,7 +31,9 @@ export function getTransactionAccountingDate(transaction = {}) {
 
 export function getTransactionActivityDate(transaction = {}) {
   if (isStructuredCreditPurchase(transaction)) return getTransactionPurchaseDate(transaction)
-  return validIsoDate(transaction.date) ? transaction.date : getTransactionAccountingDate(transaction)
+  return validIsoDate(transaction.date)
+    ? transaction.date
+    : getTransactionAccountingDate(transaction)
 }
 
 export function getTransactionDateContext(transaction = {}) {
