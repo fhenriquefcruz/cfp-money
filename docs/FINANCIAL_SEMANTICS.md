@@ -215,3 +215,54 @@ A Phase 42A também incorporou uma atualização obrigatória do DOMPurify para 
 - CSS inicial gzip: permanece em 20 KiB.
 
 A mudança é inferior a 1% e cria uma pequena margem operacional sem liberar gráficos ou bibliotecas de PDF no carregamento inicial.
+
+
+## Mapeamento do Dashboard · Phase 42B
+
+### Resultado do período
+
+O valor principal do Dashboard usa a mesma fórmula de saldo do período:
+
+```
+resultado_do_periodo = receitas - despesas
+```
+
+A interface informa explicitamente que esse valor não representa saldo bancário.
+
+### Resumo principal
+
+A primeira área do Dashboard apresenta, para o período selecionado:
+
+- receitas registradas;
+- despesas registradas;
+- comprometido, vindo do controle de obrigações pela data de compromisso;
+- reserva no período, usando somente lançamentos marcados como reserva dentro do período.
+
+Poupança ou reserva acumulada de outros meses não é exibida como se pertencesse ao mês atual.
+
+### Evolução financeira
+
+O gráfico de evolução usa a data da movimentação definida neste documento.
+
+- compra estruturada no cartão: data da compra;
+- demais transações: data da movimentação;
+- cancelamentos e transferências explícitas não participam dos totais;
+- a linha é linear entre os pontos mensais e não sugere valores intermediários suavizados;
+- cada linha da tabela acessível possui o intervalo exato e abre as transações que formam aquele mês.
+
+A comparação exibida junto ao gráfico usa o mês anterior como referência. Quando o período visualizado é o mês atual, a interface informa que o mês corrente contém os lançamentos registrados enquanto os meses anteriores aparecem completos.
+
+### Gastos por categoria
+
+As barras por categoria usam somente despesas efetivas do período e exibem:
+
+- valor;
+- participação percentual no total de despesas;
+- variação contra o mês anterior;
+- acesso direto às transações da categoria e do período.
+
+Se existirem classificações suspeitas, o Dashboard avisa que os percentuais podem mudar e oferece acesso direto à revisão.
+
+### Prioridades
+
+O bloco de prioridades limita a quantidade de itens apresentados e ordena primeiro situações com maior impacto imediato, como atrasos e resultado negativo. Problemas de qualidade de classificação entram antes de alertas menos críticos, porque podem alterar orçamento, composição dos gastos e indicador financeiro.
