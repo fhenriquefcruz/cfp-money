@@ -156,45 +156,16 @@ body {
   letter-spacing: 0.01em;
 }
 
-.dashboard-balance-breakdown > div {
-  min-width: 0;
-  padding-inline: clamp(0.15rem, 1.2vw, 0.8rem);
-}
-
-.dashboard-balance-breakdown > div + div {
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dashboard-balance-breakdown > div:first-child {
-  padding-left: 0;
-}
-
-.dashboard-balance-breakdown > div:last-child {
-  padding-right: 0;
-}
-
-.aurora-balance-hero {
-  isolation: isolate;
-  border: 1px solid rgba(196, 157, 107, 0.24);
+.dashboard-decision-hero {
   box-shadow:
-    0 30px 85px rgba(23, 25, 24, 0.28),
-    0 10px 30px rgba(196, 157, 107, 0.08),
-    inset 0 1px rgba(255, 255, 255, 0.14);
+    0 14px 36px rgba(15, 23, 42, 0.055),
+    inset 0 1px rgba(255, 255, 255, 0.38);
 }
 
-.aurora-balance-hero::after {
-  position: absolute;
-  right: -12%;
-  bottom: -45%;
-  width: min(22rem, 72vw);
-  aspect-ratio: 1;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  content: '';
-  pointer-events: none;
+:root[data-theme='dark'] .dashboard-decision-hero {
   box-shadow:
-    0 0 0 2.5rem rgba(255, 255, 255, 0.025),
-    0 0 0 5rem rgba(255, 255, 255, 0.018);
+    0 18px 42px rgba(0, 0, 0, 0.24),
+    inset 0 1px rgba(255, 255, 255, 0.025);
 }
 
 .dashboard-bento-grid,
@@ -213,17 +184,7 @@ body {
 .dashboard-forecast-card,
 .dashboard-health-card {
   border-radius: 22px;
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--bg-elevated) 96%, var(--brand-50) 4%),
-    var(--bg-elevated)
-  );
-}
-
-:root[data-theme='dark'] .dashboard-forecast-card,
-:root[data-theme='dark'] .dashboard-health-card {
-  background:
-    linear-gradient(145deg, rgba(196, 157, 107, 0.035), transparent 44%), var(--bg-elevated);
+  background: var(--bg-elevated);
 }
 
 .dashboard-premium .recharts-responsive-container,
