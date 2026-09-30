@@ -8,7 +8,6 @@ export default function FinancialHealthScore({ report }) {
   const score = Number(report?.score || 0)
   const color =
     score >= 75 ? 'var(--success-icon)' : score >= 50 ? 'var(--warning-icon)' : 'var(--danger-icon)'
-  const emoji = score >= 75 ? '💚' : score >= 50 ? '💛' : '❤️'
   const r = 28
   const circ = 2 * Math.PI * r
 
@@ -39,7 +38,7 @@ export default function FinancialHealthScore({ report }) {
 
         <div className="dashboard-health-copy min-w-0 flex-1">
           <p className="text-sm font-bold text-[--text-primary]">
-            Saúde {report?.label || 'Atenção'} {emoji}
+            Indicador financeiro · {report?.label || 'Em atenção'}
           </p>
           <p className="mt-0.5 text-xs text-[--text-tertiary]">
             {report?.summary || 'Revise os fatores do indicador.'}
@@ -58,7 +57,7 @@ export default function FinancialHealthScore({ report }) {
         onClick={() => setExpanded((value) => !value)}
         aria-expanded={expanded}
       >
-        <span>{expanded ? 'Ocultar cálculo' : 'Entender meu score'}</span>
+        <span>{expanded ? 'Ocultar cálculo' : 'Entender indicador'}</span>
         <ChevronDown
           size={14}
           className={`transition-transform ${expanded ? 'rotate-180' : ''}`}
