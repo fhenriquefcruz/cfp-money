@@ -30,13 +30,13 @@ export function getTransactionAccountingDate(transaction = {}) {
 }
 
 export function getTransactionActivityDate(transaction = {}) {
-  return isStructuredCreditPurchase(transaction)
-    ? getTransactionPurchaseDate(transaction)
-    : getTransactionAccountingDate(transaction)
+  if (isStructuredCreditPurchase(transaction)) return getTransactionPurchaseDate(transaction)
+  return validIsoDate(transaction.date) ? transaction.date : getTransactionAccountingDate(transaction)
 }
 
 export function getTransactionDateContext(transaction = {}) {
   const purchaseDate = getTransactionPurchaseDate(transaction)
+  const transactionDate = validIsoDate(transaction.date) ? transaction.date : ''
   const accountingDate = getTransactionAccountingDate(transaction)
   const structuredCredit = isStructuredCreditPurchase(transaction)
   const hasSeparateAccountingDate = Boolean(
@@ -46,9 +46,11 @@ export function getTransactionDateContext(transaction = {}) {
   return {
     structuredCredit,
     purchaseDate,
+    transactionDate,
     accountingDate,
-    activityDate: structuredCredit ? purchaseDate : accountingDate,
+    activityDate: getTransactionActivityDate(transaction),
     purchaseLabel: formatTransactionIsoDate(purchaseDate),
+    transactionLabel: formatTransactionIsoDate(transactionDate),
     accountingLabel: formatTransactionIsoDate(accountingDate),
     hasSeparateAccountingDate,
   }
