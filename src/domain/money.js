@@ -1,3 +1,6 @@
+import { getTransactionActivityDate } from './transactionDates'
+import { buildCategoryReviewQueue } from './categoryReview'
+
 const DEFAULT_SETTINGS = Object.freeze({
   cycleType: 'calendar_month',
   cycleStartDay: 1,
@@ -7,6 +10,10 @@ const DEFAULT_SETTINGS = Object.freeze({
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const MIN_PROJECTION_ELAPSED_DAYS = 7
+const isEffective = (transaction) =>
+  transaction.paymentStatus !== 'cancelled' &&
+  transaction.flowType !== 'transfer' &&
+  transaction.kind !== 'transfer'
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
@@ -77,13 +84,13 @@ function safePercentChange(current, previous) {
 
 function sumExpenses(transactions) {
   return transactions
-    .filter((transaction) => transaction.type === 'expense')
+    .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
     .reduce((total, transaction) => total + toAmount(transaction.amount), 0)
 }
 
 function sumIncome(transactions) {
   return transactions
-    .filter((transaction) => transaction.type === 'income')
+    .filter((transaction) => transaction.type === 'income' && !transaction.isSavings)
     .reduce((total, transaction) => total + toAmount(transaction.amount), 0)
 }
 
@@ -177,7 +184,9 @@ export function filterTransactionsForPeriod(transactions = [], period, settings 
   const normalized = normalizeMoneySettings(settings)
 
   return transactions.filter((transaction) => {
-    if (!transaction?.date || !isWithin(transaction.date, period.start, period.end)) return false
+    if (!isEffective(transaction)) return false
+    const activityDate = getTransactionActivityDate(transaction)
+    if (!activityDate || !isWithin(activityDate, period.start, period.end)) return false
     if (normalized.excludeSavings && transaction.isSavings) return false
     return true
   })
@@ -261,11 +270,22 @@ export function analyzeMoney(transactions = [], settings = {}, referenceDate = n
         ? 'medium'
         : 'low'
 
+  const categoryReviewCount = buildCategoryReviewQueue(currentTransactions, []).length
   const categoryChanges = calculateCategoryChanges(currentTransactions, previousTransactions)
   const largestIncrease = categoryChanges.find((category) => category.difference > 0) || null
   const largestDecrease = categoryChanges.find((category) => category.difference < 0) || null
 
   const insights = []
+
+  if (categoryReviewCount > 0) {
+    insights.push({
+      type: 'data_quality_review',
+      severity: 'warning',
+      count: categoryReviewCount,
+      message: `${categoryReviewCount} ${categoryReviewCount === 1 ? 'classificação pode precisar' : 'classificações podem precisar'} de revisão antes de interpretar os destaques por categoria.`,
+      to: '/transactions?review=categories&scope=all',
+    })
+  }
 
   if (expenseChangePercent === null) {
     insights.push({
@@ -350,6 +370,10 @@ export function analyzeMoney(transactions = [], settings = {}, referenceDate = n
       changes: categoryChanges,
       largestIncrease,
       largestDecrease,
+    },
+    dataQuality: {
+      categoryReviewCount,
+      categoryInsightsReliable: categoryReviewCount === 0,
     },
     insights,
   }

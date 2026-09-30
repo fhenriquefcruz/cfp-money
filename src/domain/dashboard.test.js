@@ -26,6 +26,13 @@ test('exclui o mês seguinte e ordena as transações recentes por atividade', (
       type: 'expense',
       amount: 50,
     },
+    {
+      id: 'manual-different-due',
+      date: '2026-08-28',
+      dueDate: '2026-09-05',
+      type: 'expense',
+      amount: 70,
+    },
     { id: 'newer', date: '2026-08-25', type: 'expense', amount: 60 },
   ]
 
@@ -34,7 +41,7 @@ test('exclui o mês seguinte e ordena as transações recentes por atividade', (
       start: '2026-08-01',
       end: '2026-08-31',
     }).map((transaction) => transaction.id),
-  ).toEqual(['newer', 'credit-purchase', 'older'])
+  ).toEqual(['manual-different-due', 'newer', 'credit-purchase', 'older'])
 })
 
 test('prioriza atrasos, vencimentos e orçamento antes do saldo negativo', () => {

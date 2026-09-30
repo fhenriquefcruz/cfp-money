@@ -21,3 +21,13 @@ test('classifica redução relevante como positiva', () => {
   expect(getMoneyInsightHeadline(analysis)).toBe('Seus gastos desaceleraram')
   expect(getMoneyInsightTone(analysis)).toBe('positive')
 })
+
+test('prioriza aviso de qualidade quando há classificação a revisar', () => {
+  const analysis = {
+    dataQuality: { categoryReviewCount: 2 },
+    comparison: { expenseChangePercent: -20 },
+  }
+
+  expect(getMoneyInsightHeadline(analysis)).toBe('Revise algumas classificações')
+  expect(getMoneyInsightTone(analysis)).toBe('warning')
+})

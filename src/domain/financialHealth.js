@@ -11,75 +11,87 @@ const withMissingPoints = (factor) => ({
 export function buildFinancialHealth({
   balance = 0,
   income = 0,
+  expenses = 0,
   savingRate = 0,
   hasBudgets = false,
   budgetsOk = false,
-  goalsActive = false,
+  overdueCount = 0,
+  categoryReviewCount = 0,
 } = {}) {
   const safeBalance = toFiniteNumber(balance)
   const safeIncome = toFiniteNumber(income)
+  const safeExpenses = toFiniteNumber(expenses)
   const safeSavingRate = toFiniteNumber(savingRate)
+  const safeOverdueCount = Math.max(0, Math.floor(toFiniteNumber(overdueCount)))
+  const safeCategoryReviewCount = Math.max(0, Math.floor(toFiniteNumber(categoryReviewCount)))
+  const expenseRatio = safeIncome > 0 ? (safeExpenses / safeIncome) * 100 : null
 
   const savingPoints =
-    safeSavingRate >= 20 ? 25 : safeSavingRate >= 10 ? 12 : safeSavingRate >= 0 ? 5 : 0
+    safeSavingRate >= 20 ? 25 : safeSavingRate >= 10 ? 12 : safeSavingRate > 0 ? 5 : 0
+  const paymentPoints = safeOverdueCount === 0 ? 15 : safeOverdueCount === 1 ? 8 : 0
+  const expenseRatioPoints =
+    expenseRatio === null ? 0 : expenseRatio <= 70 ? 10 : expenseRatio <= 90 ? 5 : 0
 
   const factors = [
     withMissingPoints({
       id: 'balance',
-      label: 'Equilíbrio do mês',
+      label: 'Equilíbrio do período',
       points: safeBalance >= 0 ? 30 : 0,
       maxPoints: 30,
       detail:
         safeBalance >= 0
-          ? 'O saldo do mês está positivo ou zerado.'
-          : 'O saldo do mês está negativo.',
+          ? 'Receitas cobrem as despesas consideradas no período.'
+          : 'As despesas consideradas superam as receitas do período.',
       actionLabel: 'Revisar transações',
       to: '/transactions',
     }),
     withMissingPoints({
       id: 'saving',
-      label: 'Poupança mensal',
+      label: 'Reserva no período',
       points: savingPoints,
       maxPoints: 25,
       detail:
         safeIncome > 0
-          ? `Taxa de poupança do mês: ${safeSavingRate.toFixed(0)}% da renda.`
-          : 'Sem receitas registradas no mês; a taxa considerada é 0%.',
+          ? `Reserva registrada: ${safeSavingRate.toFixed(0)}% das receitas do período.`
+          : 'Sem receitas no período; não há base suficiente para medir a taxa de reserva.',
       actionLabel: 'Revisar movimentações',
       to: '/transactions',
     }),
     withMissingPoints({
       id: 'budgets',
-      label: 'Orçamentos',
+      label: 'Aderência aos orçamentos',
       points: hasBudgets && budgetsOk ? 20 : 0,
       maxPoints: 20,
       detail: !hasBudgets
         ? 'Nenhum orçamento mensal está configurado.'
         : budgetsOk
-          ? 'Os orçamentos cadastrados estão dentro dos limites.'
+          ? 'Todos os orçamentos configurados estão dentro dos limites.'
           : 'Existe orçamento acima do limite mensal.',
       actionLabel: !hasBudgets ? 'Criar orçamento' : 'Revisar orçamentos',
       to: '/budgets',
     }),
     withMissingPoints({
-      id: 'goals',
-      label: 'Metas',
-      points: goalsActive ? 15 : 0,
+      id: 'payments',
+      label: 'Pontualidade dos pagamentos',
+      points: paymentPoints,
       maxPoints: 15,
-      detail: goalsActive ? 'Há pelo menos uma meta cadastrada.' : 'Nenhuma meta está cadastrada.',
-      actionLabel: goalsActive ? 'Ver metas' : 'Criar meta',
-      to: '/goals',
+      detail:
+        safeOverdueCount === 0
+          ? 'Nenhum pagamento atrasado foi identificado.'
+          : `${safeOverdueCount} ${safeOverdueCount === 1 ? 'pagamento atrasado' : 'pagamentos atrasados'} identificado${safeOverdueCount === 1 ? '' : 's'}.`,
+      actionLabel: 'Revisar pagamentos',
+      to: '/transactions',
     }),
     withMissingPoints({
-      id: 'income',
-      label: 'Receitas',
-      points: safeIncome > 0 ? 10 : 0,
+      id: 'expense_ratio',
+      label: 'Relação despesas / receitas',
+      points: expenseRatioPoints,
       maxPoints: 10,
       detail:
-        safeIncome > 0
-          ? 'Há receitas registradas no mês.'
-          : 'Nenhuma receita está registrada no mês.',
-      actionLabel: 'Registrar receita',
+        expenseRatio === null
+          ? 'Sem receitas no período; a relação despesas/receitas não pode ser calculada.'
+          : `As despesas representam ${expenseRatio.toFixed(0)}% das receitas do período.`,
+      actionLabel: 'Revisar gastos',
       to: '/transactions',
     }),
   ]
@@ -89,13 +101,34 @@ export function buildFinancialHealth({
     factors.reduce((total, factor) => total + factor.points, 0),
   )
 
-  const label = score >= 75 ? 'Ótima' : score >= 50 ? 'Regular' : 'Atenção'
+  if (safeCategoryReviewCount > 0) {
+    return {
+      methodologyVersion: 2,
+      score: null,
+      label: 'Em revisão',
+      summary: `Revise ${safeCategoryReviewCount} ${safeCategoryReviewCount === 1 ? 'classificação suspeita' : 'classificações suspeitas'} antes de interpretar este indicador.`,
+      factors,
+      nextAction: {
+        id: 'data_quality',
+        label: 'Revisar classificações',
+        missingPoints: 0,
+        actionLabel: 'Revisar categorias',
+        to: '/transactions?review=categories&scope=all',
+      },
+      dataQuality: {
+        scoreAvailable: false,
+        categoryReviewCount: safeCategoryReviewCount,
+      },
+    }
+  }
+
+  const label = score >= 75 ? 'Sólido' : score >= 50 ? 'Em atenção' : 'Crítico'
   const summary =
     score >= 75
-      ? 'Finanças equilibradas.'
+      ? 'Os principais sinais do período estão controlados.'
       : score >= 50
-        ? 'Há pontos a melhorar.'
-        : 'Revise os fatores com maior impacto.'
+        ? 'Há fatores relevantes que merecem revisão.'
+        : 'Existem fatores com impacto material no período.'
 
   const nextAction =
     factors
@@ -103,10 +136,15 @@ export function buildFinancialHealth({
       .sort((a, b) => b.missingPoints - a.missingPoints)[0] || null
 
   return {
+    methodologyVersion: 2,
     score,
     label,
     summary,
     factors,
     nextAction,
+    dataQuality: {
+      scoreAvailable: true,
+      categoryReviewCount: 0,
+    },
   }
 }

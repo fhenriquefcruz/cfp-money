@@ -5,10 +5,15 @@ import { ProgressBar } from './ui'
 
 export default function FinancialHealthScore({ report }) {
   const [expanded, setExpanded] = useState(false)
-  const score = Number(report?.score || 0)
-  const color =
-    score >= 75 ? 'var(--success-icon)' : score >= 50 ? 'var(--warning-icon)' : 'var(--danger-icon)'
-  const emoji = score >= 75 ? '💚' : score >= 50 ? '💛' : '❤️'
+  const scoreAvailable = report?.score !== null && Number.isFinite(Number(report?.score))
+  const score = scoreAvailable ? Number(report.score) : 0
+  const color = !scoreAvailable
+    ? 'var(--warning-icon)'
+    : score >= 75
+      ? 'var(--success-icon)'
+      : score >= 50
+        ? 'var(--warning-icon)'
+        : 'var(--danger-icon)'
   const r = 28
   const circ = 2 * Math.PI * r
 
@@ -32,25 +37,37 @@ export default function FinancialHealthScore({ report }) {
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-xs font-black" style={{ color }}>
-              {score}
+              {scoreAvailable ? score : '—'}
             </span>
           </div>
         </div>
 
         <div className="dashboard-health-copy min-w-0 flex-1">
           <p className="text-sm font-bold text-[--text-primary]">
-            Saúde {report?.label || 'Atenção'} {emoji}
+            Indicador financeiro · {report?.label || 'Em atenção'}
           </p>
           <p className="mt-0.5 text-xs text-[--text-tertiary]">
             {report?.summary || 'Revise os fatores do indicador.'}
           </p>
           {report?.nextAction && (
             <p className="mt-1 text-[10px] font-semibold text-[--text-secondary]">
-              Maior oportunidade: {report.nextAction.label} (+{report.nextAction.missingPoints} pts)
+              {scoreAvailable
+                ? `Maior oportunidade: ${report.nextAction.label} (+${report.nextAction.missingPoints} pts)`
+                : `Ação necessária: ${report.nextAction.label}`}
             </p>
           )}
         </div>
       </div>
+
+      {!scoreAvailable && report?.nextAction?.to && (
+        <Link
+          to={report.nextAction.to}
+          className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-1 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-xs font-bold text-[--warning-text]"
+        >
+          {report.nextAction.actionLabel}
+          <ArrowRight size={12} aria-hidden="true" />
+        </Link>
+      )}
 
       <button
         type="button"
@@ -58,7 +75,7 @@ export default function FinancialHealthScore({ report }) {
         onClick={() => setExpanded((value) => !value)}
         aria-expanded={expanded}
       >
-        <span>{expanded ? 'Ocultar cálculo' : 'Entender meu score'}</span>
+        <span>{expanded ? 'Ocultar cálculo' : 'Entender indicador'}</span>
         <ChevronDown
           size={14}
           className={`transition-transform ${expanded ? 'rotate-180' : ''}`}

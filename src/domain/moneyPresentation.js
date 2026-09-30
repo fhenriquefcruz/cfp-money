@@ -8,6 +8,7 @@ export function formatMoneyPeriodLabel(period) {
 }
 
 export function getMoneyInsightHeadline(analysis) {
+  if (analysis?.dataQuality?.categoryReviewCount > 0) return 'Revise algumas classificações'
   const change = analysis?.comparison?.expenseChangePercent
   if (change === null || change === undefined) return 'Construindo seu histórico financeiro'
   if (change <= -10) return 'Seus gastos desaceleraram'
@@ -18,6 +19,7 @@ export function getMoneyInsightHeadline(analysis) {
 }
 
 export function getMoneyInsightTone(analysis) {
+  if (analysis?.dataQuality?.categoryReviewCount > 0) return 'warning'
   const change = analysis?.comparison?.expenseChangePercent
   if (change === null || change === undefined) return 'neutral'
   if (change >= 15) return 'warning'

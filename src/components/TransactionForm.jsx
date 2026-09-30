@@ -1,5 +1,6 @@
 // src/components/TransactionForm.jsx
 import React, { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileText,
@@ -27,6 +28,7 @@ import {
   calculateInvoiceSchedule,
   splitInstallmentAmounts,
 } from '../domain/creditCards'
+import { reviewTransactionCategory } from '../domain/categoryReview'
 
 // ── Máscara monetária ──
 function maskCurrency(raw) {
@@ -233,6 +235,20 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
   const filteredCategories = isSavings
     ? []
     : categories.filter((c) => c.type === form.txType || c.type === 'both')
+  const selectedFormCategory = categories.find((category) => category.id === form.categoryId)
+  const categoryReview =
+    isEditing && !isSavings
+      ? reviewTransactionCategory(
+          {
+            ...transaction,
+            description: form.description,
+            notes: form.notes,
+            categoryId: form.categoryId,
+            categoryName: selectedFormCategory?.name || transaction?.categoryName,
+          },
+          categories,
+        )
+      : null
 
   const validate = () => {
     const errs = {}
@@ -468,6 +484,32 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
             <legend className="text-sm font-medium text-[--text-secondary] block mb-1.5">
               Categoria <span className="text-[--danger-text]">*</span>
             </legend>
+            {categoryReview && (
+              <div className="mb-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] p-3">
+                <p className="text-xs font-bold text-[--warning-text]">
+                  Classificação para revisar
+                </p>
+                <p className="mt-1 text-[10px] leading-relaxed text-[--warning-text]">
+                  {categoryReview.reason}
+                </p>
+                {categoryReview.suggestedCategoryId ? (
+                  <button
+                    type="button"
+                    onClick={() => update('categoryId')(categoryReview.suggestedCategoryId)}
+                    className="mt-2 min-h-9 rounded-lg border border-[--warning-border] px-2.5 text-[10px] font-bold text-[--warning-text]"
+                  >
+                    Aplicar sugestão: {categoryReview.suggestedCategoryName}
+                  </button>
+                ) : (
+                  <Link
+                    to="/categories"
+                    className="mt-2 inline-flex min-h-9 items-center rounded-lg border border-[--warning-border] px-2.5 text-[10px] font-bold text-[--warning-text]"
+                  >
+                    Criar categoria: {categoryReview.suggestedCategoryName}
+                  </Link>
+                )}
+              </div>
+            )}
             {errors.categoryId && (
               <p id="transaction-category-error" className="text-xs text-[--danger-text] mb-1">
                 {errors.categoryId}

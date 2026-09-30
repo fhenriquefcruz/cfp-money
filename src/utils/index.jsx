@@ -1,5 +1,5 @@
 // src/utils/index.jsx
-import { differenceInCalendarDays, format, subMonths, parseISO } from 'date-fns'
+import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 // ── CAPITALIZE ──
@@ -59,44 +59,6 @@ export const hexToRgba = (hex, alpha = 1) => {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   if (!r) return `rgba(99,102,241,${alpha})`
   return `rgba(${parseInt(r[1], 16)},${parseInt(r[2], 16)},${parseInt(r[3], 16)},${alpha})`
-}
-
-// ── TRANSACTION HELPERS ──
-export const groupByMonth = (transactions) => {
-  const groups = {}
-  transactions.forEach((tx) => {
-    const key = format(new Date(tx.date + 'T00:00:00'), 'yyyy-MM')
-    if (!groups[key]) groups[key] = []
-    groups[key].push(tx)
-  })
-  return groups
-}
-
-export const getMonthlyData = (transactions, months = 6, baseDate = new Date()) => {
-  const result = []
-  for (let i = months - 1; i >= 0; i--) {
-    const date = subMonths(baseDate, i)
-    const year = date.getFullYear()
-    const month = date.getMonth()
-    const txs = transactions.filter((t) => {
-      const d = new Date(t.date + 'T00:00:00')
-      return d.getFullYear() === year && d.getMonth() === month
-    })
-    const income = txs
-      .filter((t) => t.type === 'income' && !t.isSavings)
-      .reduce((s, t) => s + t.amount, 0)
-    const expenses = txs.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-    const savings = txs.filter((t) => t.isSavings).reduce((s, t) => s + t.amount, 0)
-    result.push({
-      month: capitalize(format(date, 'MMM', { locale: ptBR })),
-      fullMonth: format(date, "MMMM 'de' yyyy", { locale: ptBR }),
-      income,
-      expenses,
-      savings,
-      balance: income - expenses,
-    })
-  }
-  return result
 }
 
 // ── PAYMENT METHODS ──
@@ -261,9 +223,7 @@ export const exportToPDF = async (transactions, summaryOrCategories = {}, legacy
 
   // ── Taxa de poupança ──
   const savingRate =
-    (summary.income || 0) > 0
-      ? (((summary.income || 0) - (summary.expenses || 0)) / (summary.income || 0)) * 100
-      : 0
+    (summary.income || 0) > 0 ? ((summary.savings || 0) / (summary.income || 0)) * 100 : 0
   const rateColor =
     savingRate >= 20 ? [16, 185, 129] : savingRate >= 10 ? [245, 158, 11] : [239, 68, 68]
   doc.setFontSize(8)

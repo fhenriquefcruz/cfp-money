@@ -74,3 +74,42 @@ test('sugere o fim do período 30 dias após a data inicial', () => {
   expect(defaultDateRangeEnd('2026-01-31')).toBe('2026-03-02')
   expect(defaultDateRangeEnd('')).toBe('')
 })
+
+test('usa a data da movimentação para o mês e não o vencimento', () => {
+  const item = {
+    type: 'expense',
+    amount: 90,
+    date: '2026-07-13',
+    dueDate: '2026-08-01',
+    categoryId: 'food',
+  }
+
+  expect(transactionsForMonth([item], 2026, 6)).toHaveLength(1)
+  expect(transactionsForMonth([item], 2026, 7)).toHaveLength(0)
+})
+
+test('ignora cancelamentos e transferências explícitas nos totais', () => {
+  const result = summarizeTransactions([
+    ...transactions,
+    {
+      type: 'expense',
+      amount: 500,
+      date: '2026-07-20',
+      paymentStatus: 'cancelled',
+    },
+    {
+      type: 'expense',
+      amount: 800,
+      date: '2026-07-21',
+      flowType: 'transfer',
+    },
+  ])
+
+  expect(result).toEqual({
+    income: 1000,
+    expenses: 250,
+    savings: 0,
+    balance: 750,
+    count: 2,
+  })
+})

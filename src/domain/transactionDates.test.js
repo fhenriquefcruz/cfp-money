@@ -31,26 +31,32 @@ test('expõe contexto de compra e fatura sem mudar a competência', () => {
   expect(getTransactionDateContext(creditPurchase)).toEqual({
     structuredCredit: true,
     purchaseDate: '2026-07-25',
+    transactionDate: '2026-09-01',
     accountingDate: '2026-09-01',
     activityDate: '2026-07-25',
     purchaseLabel: '25/07/2026',
+    transactionLabel: '01/09/2026',
     accountingLabel: '01/09/2026',
     hasSeparateAccountingDate: true,
   })
 })
 
-test('transação comum usa a mesma data para atividade e competência', () => {
+test('transação comum usa a data da movimentação como atividade', () => {
   const transaction = {
     type: 'expense',
     paymentMethod: 'pix',
-    date: '2026-07-10',
+    date: '2026-07-13',
+    dueDate: '2026-07-11',
   }
 
   expect(getTransactionDateContext(transaction)).toMatchObject({
     structuredCredit: false,
-    purchaseDate: '2026-07-10',
-    accountingDate: '2026-07-10',
-    activityDate: '2026-07-10',
+    purchaseDate: '2026-07-13',
+    transactionDate: '2026-07-13',
+    accountingDate: '2026-07-11',
+    activityDate: '2026-07-13',
+    transactionLabel: '13/07/2026',
+    accountingLabel: '11/07/2026',
     hasSeparateAccountingDate: false,
   })
 })

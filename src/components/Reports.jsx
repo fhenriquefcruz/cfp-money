@@ -26,11 +26,18 @@ import {
 } from 'lucide-react'
 import { useTransactions } from '../contexts/AppContext'
 import { Card, Button } from './ui'
-import { formatCurrency, getMonthlyData, exportToCSV, exportToPDF } from '../utils'
+import { formatCurrency, exportToCSV, exportToPDF } from '../utils'
+import { getMonthlyFinancialData } from '../domain/monthlyFinance'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
 import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { getTransactionActivityDate } from '../domain/transactionDates'
+
+const isEffective = (transaction) =>
+  transaction.paymentStatus !== 'cancelled' &&
+  transaction.flowType !== 'transfer' &&
+  transaction.kind !== 'transfer'
 
 const COLORS = [
   '#c49d6b',
@@ -124,9 +131,11 @@ function ReportsContent() {
   const periodEnd = format(endOfMonth(referenceDate), 'yyyy-MM-dd')
   const reportTransactions = useMemo(
     () =>
-      transactions.filter(
-        (transaction) => transaction.date >= periodStart && transaction.date <= periodEnd,
-      ),
+      transactions.filter((transaction) => {
+        if (!isEffective(transaction)) return false
+        const activityDate = getTransactionActivityDate(transaction)
+        return activityDate >= periodStart && activityDate <= periodEnd
+      }),
     [transactions, periodStart, periodEnd],
   )
 
@@ -152,7 +161,7 @@ function ReportsContent() {
   }, [reportTransactions, period, getSummary, referenceDate])
 
   const monthlyData = useMemo(
-    () => getMonthlyData(transactions, period, referenceDate),
+    () => getMonthlyFinancialData(transactions, period, referenceDate),
     [transactions, period, referenceDate],
   )
 
@@ -164,7 +173,11 @@ function ReportsContent() {
       const from = format(d, 'yyyy-MM-01')
       const to = format(new Date(d.getFullYear(), d.getMonth() + 1, 0), 'yyyy-MM-dd')
       const value = transactions
-        .filter((t) => t.isSavings && t.date >= from && t.date <= to)
+        .filter((t) => {
+          if (!t.isSavings || !isEffective(t)) return false
+          const activityDate = getTransactionActivityDate(t)
+          return activityDate >= from && activityDate <= to
+        })
         .reduce((s, t) => s + t.amount, 0)
       return { month: label, value }
     })
