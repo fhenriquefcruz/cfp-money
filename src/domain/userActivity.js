@@ -16,9 +16,6 @@ export function toActivityDate(value) {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
-export const getUserActivityReference = (user = {}) =>
-  toActivityDate(user.lastSeenAt) || toActivityDate(user.lastSignInAt)
-
 export function getUserActivityState(user = {}, now = new Date()) {
   const seen = toActivityDate(user.lastSeenAt)
   const reference = seen || toActivityDate(user.lastSignInAt)
