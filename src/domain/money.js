@@ -1,5 +1,6 @@
 import { getTransactionActivityDate } from './transactionDates'
 import { isFinanciallyEffectiveTransaction } from './finance'
+import { buildCategoryReviewQueue } from './categoryReview'
 
 const DEFAULT_SETTINGS = Object.freeze({
   cycleType: 'calendar_month',
@@ -266,11 +267,22 @@ export function analyzeMoney(transactions = [], settings = {}, referenceDate = n
         ? 'medium'
         : 'low'
 
+  const categoryReviewCount = buildCategoryReviewQueue(currentTransactions, []).length
   const categoryChanges = calculateCategoryChanges(currentTransactions, previousTransactions)
   const largestIncrease = categoryChanges.find((category) => category.difference > 0) || null
   const largestDecrease = categoryChanges.find((category) => category.difference < 0) || null
 
   const insights = []
+
+  if (categoryReviewCount > 0) {
+    insights.push({
+      type: 'data_quality_review',
+      severity: 'warning',
+      count: categoryReviewCount,
+      message: `${categoryReviewCount} ${categoryReviewCount === 1 ? 'classificação pode precisar' : 'classificações podem precisar'} de revisão antes de interpretar os destaques por categoria.`,
+      to: '/transactions?review=categories&scope=all',
+    })
+  }
 
   if (expenseChangePercent === null) {
     insights.push({
@@ -355,6 +367,10 @@ export function analyzeMoney(transactions = [], settings = {}, referenceDate = n
       changes: categoryChanges,
       largestIncrease,
       largestDecrease,
+    },
+    dataQuality: {
+      categoryReviewCount,
+      categoryInsightsReliable: categoryReviewCount === 0,
     },
     insights,
   }
