@@ -1,15 +1,19 @@
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { getFinancialActivityDate, isFinanciallyEffectiveTransaction } from './finance'
+import { getTransactionActivityDate } from './transactionDates'
 
 const capitalizeMonth = (value) =>
   value ? value.charAt(0).toUpperCase() + value.slice(1) : ''
+const isEffective = (transaction) =>
+  transaction.paymentStatus !== 'cancelled' &&
+  transaction.flowType !== 'transfer' &&
+  transaction.kind !== 'transfer'
 
 export function groupTransactionsByActivityMonth(transactions = []) {
   const groups = {}
 
   transactions.filter(isFinanciallyEffectiveTransaction).forEach((transaction) => {
-    const activityDate = getFinancialActivityDate(transaction)
+    const activityDate = getTransactionActivityDate(transaction)
     if (!activityDate) return
     const key = activityDate.slice(0, 7)
     if (!groups[key]) groups[key] = []
@@ -27,8 +31,8 @@ export function getMonthlyFinancialData(transactions = [], months = 6, baseDate 
     const year = date.getFullYear()
     const month = date.getMonth()
     const periodTransactions = transactions.filter((transaction) => {
-      if (!isFinanciallyEffectiveTransaction(transaction)) return false
-      const activityDate = getFinancialActivityDate(transaction)
+      if (!isEffective(transaction)) return false
+      const activityDate = getTransactionActivityDate(transaction)
       if (!activityDate) return false
       const parsed = new Date(activityDate + 'T00:00:00')
       return parsed.getFullYear() === year && parsed.getMonth() === month
