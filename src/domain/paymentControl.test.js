@@ -245,6 +245,39 @@ describe('controle de pagamentos', () => {
     })
   })
 
+  test('overview usa vencimento como data do compromisso mensal', () => {
+    const july = buildPaymentControlOverview({
+      transactions: [
+        expense({
+          id: 'commitment-august',
+          amount: 250,
+          date: '2026-07-20',
+          dueDate: '2026-08-05',
+          paymentStatus: 'pending',
+        }),
+      ],
+      bounds: { start: '2026-07-01', end: '2026-07-31' },
+      now: new Date(2026, 6, 20),
+    })
+
+    const august = buildPaymentControlOverview({
+      transactions: [
+        expense({
+          id: 'commitment-august',
+          amount: 250,
+          date: '2026-07-20',
+          dueDate: '2026-08-05',
+          paymentStatus: 'pending',
+        }),
+      ],
+      bounds: { start: '2026-08-01', end: '2026-08-31' },
+      now: new Date(2026, 6, 20),
+    })
+
+    expect(july.committedAmount).toBe(0)
+    expect(august.committedAmount).toBe(250)
+  })
+
   test('overview respeita o now informado para atraso manual', () => {
     const summary = buildPaymentControlOverview({
       transactions: [
