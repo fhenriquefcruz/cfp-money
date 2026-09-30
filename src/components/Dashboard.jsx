@@ -292,10 +292,11 @@ export default function Dashboard() {
     const report = buildFinancialHealth({
       balance: currentSummary.balance,
       income: currentSummary.income,
+      expenses: currentSummary.expenses,
       savingRate,
       hasBudgets,
       budgetsOk,
-      goalsActive: goals.length > 0,
+      overdueCount: paymentSummary.overdueCount,
     })
 
     if (report.nextAction?.to !== '/budgets') return report
@@ -307,7 +308,7 @@ export default function Dashboard() {
         to: `/budgets?month=${budgetOverview.monthKey}`,
       },
     }
-  }, [currentSummary, budgetOverview, goals])
+  }, [currentSummary, budgetOverview, paymentSummary.overdueCount])
 
   const monthAttention = useMemo(
     () =>
@@ -531,8 +532,8 @@ export default function Dashboard() {
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="flex items-center gap-1.5">
                 <Heart size={14} className="text-[--danger-icon]" />
-                <p className="text-xs font-semibold text-[--text-tertiary]">Saúde financeira</p>
-                <InfoTooltip text="Pontuação de 0 a 100 baseada em saldo, poupança, orçamentos, metas e receitas. Abra o cálculo para ver a contribuição de cada fator." />
+                <p className="text-xs font-semibold text-[--text-tertiary]">Indicador financeiro</p>
+                <InfoTooltip text="Indicador de 0 a 100 baseado em equilíbrio do período, reserva, aderência a orçamentos, atrasos e relação despesas/receitas. Não representa diagnóstico financeiro completo." />
               </div>
             </div>
             <FinancialHealthScore report={healthReport} />
