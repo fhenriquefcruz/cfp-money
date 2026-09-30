@@ -13,8 +13,6 @@ import {
   X,
   Star,
   Search,
-  Activity,
-  History,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { Card } from './ui'
@@ -66,50 +64,27 @@ const STATUS_STYLES = {
 }
 
 
-const ACTIVITY_STYLES = {
-  online: {
-    bg: 'bg-emerald-100 dark:bg-emerald-900/40',
-    text: 'text-emerald-700 dark:text-emerald-400',
-    dot: 'bg-emerald-500',
-  },
-  today: {
-    bg: 'bg-blue-100 dark:bg-blue-900/40',
-    text: 'text-blue-700 dark:text-blue-400',
-    dot: 'bg-blue-500',
-  },
-  week: {
-    bg: 'bg-sky-100 dark:bg-sky-900/40',
-    text: 'text-sky-700 dark:text-sky-400',
-    dot: 'bg-sky-500',
-  },
-  inactive: {
-    bg: 'bg-amber-100 dark:bg-amber-900/40',
-    text: 'text-amber-700 dark:text-amber-400',
-    dot: 'bg-amber-500',
-  },
-  inactive30: {
-    bg: 'bg-red-100 dark:bg-red-900/40',
-    text: 'text-red-700 dark:text-red-400',
-    dot: 'bg-red-500',
-  },
-  untracked: {
-    bg: 'bg-gray-100 dark:bg-gray-800',
-    text: 'text-gray-500 dark:text-gray-400',
-    dot: 'bg-gray-400',
-  },
+const ACTIVITY_META = {
+  online: ['Online agora', 'premium'],
+  today: ['Ativo hoje', 'trial_active'],
+  week: ['Ativo na semana', 'trial_active'],
+  inactive: ['Inativo', 'premium_expired'],
+  inactive30: ['Inativo há 30+ dias', 'blocked'],
+  untracked: ['Sem registro', 'free'],
 }
 
 function ActivityBadge({ u }) {
   const state = getUserActivityState(u)
-  const style = ACTIVITY_STYLES[state.key] || ACTIVITY_STYLES.untracked
+  const [label, styleKey] = ACTIVITY_META[state.key] || ACTIVITY_META.untracked
+  const style = STATUS_STYLES[styleKey]
 
   return (
     <span
       className={`inline-flex max-w-full items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold ${style.bg} ${style.text}`}
-      title={state.online ? 'Presença aproximada por atividade nos últimos 5 minutos.' : state.detail}
+      title={state.key === 'online' ? 'Atividade registrada nos últimos 5 minutos.' : label}
     >
       <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${style.dot}`} />
-      {state.label}
+      {label}
     </span>
   )
 }
@@ -262,7 +237,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
               },
               {
                 label: 'Presença',
-                value: getUserActivityState(u).label,
+                value: ACTIVITY_META[getUserActivityState(u).key]?.[0] || 'Sem registro',
               },
             ].map((r) => (
               <div key={r.label}>
@@ -436,20 +411,20 @@ export default function Admin() {
           {
             label: 'Online agora',
             value: stats.online,
-            icon: <Activity size={15} />,
-            style: ACTIVITY_STYLES.online,
+            icon: <Users size={15} />,
+            style: STATUS_STYLES.premium,
           },
           {
             label: 'Ativos em 7 dias',
             value: stats.active7d,
-            icon: <History size={15} />,
-            style: ACTIVITY_STYLES.week,
+            icon: <Clock size={15} />,
+            style: STATUS_STYLES.trial_active,
           },
           {
             label: 'Inativos 30+ dias',
             value: stats.inactive30,
             icon: <Clock size={15} />,
-            style: ACTIVITY_STYLES.inactive30,
+            style: STATUS_STYLES.blocked,
           },
         ].map((s) => (
           <Card key={s.label} className="!p-4">
