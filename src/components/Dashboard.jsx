@@ -3,11 +3,8 @@ import React, { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
-  AreaChart,
-  Area,
-  PieChart,
-  Pie,
-  Cell,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -57,16 +54,33 @@ import { budgetMonthKey, buildMonthlyBudgetOverview } from '../domain/budgetPeri
 import { format, subMonths, addMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
-const PIE_COLORS = [
-  '#c49d6b',
-  '#4e8066',
-  '#a7804e',
-  '#b64c43',
-  '#786c8d',
-  '#9a6671',
-  '#5f8587',
-  '#b87645',
-]
+const formatAxisCurrency = (value) =>
+  new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value)
+
+const formatSignedPercent = (value) => {
+  if (!Number.isFinite(value)) return 'sem base anterior'
+  const prefix = value > 0 ? '+' : ''
+  return `${prefix}${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`
+}
+
+function DashboardSectionHeading({ title, description, action }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-2 px-1">
+      <div>
+        <h2 className="text-sm font-black text-[--text-primary] sm:text-base">{title}</h2>
+        {description && (
+          <p className="mt-0.5 text-xs leading-relaxed text-[--text-tertiary]">{description}</p>
+        )}
+      </div>
+      {action}
+    </div>
+  )
+}
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -171,7 +185,7 @@ function MonthAttentionCard({ items }) {
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
-          {items.map(({ id, title, detail, to, tone, icon: Icon }) => {
+          {items.map(({ id, title, detail, to, tone, icon: Icon, actionLabel }) => {
             const classes = toneClasses[tone] || toneClasses.brand
 
             return (
@@ -191,7 +205,7 @@ function MonthAttentionCard({ items }) {
                     {detail}
                   </p>
                   <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand]">
-                    Ver detalhes
+                    {actionLabel || 'Ver detalhes'}
                     <ChevronRight
                       size={11}
                       className="transition-transform group-hover:translate-x-0.5"
