@@ -924,6 +924,33 @@ export default function TransactionList() {
         ))}
       </div>
 
+      {categoryReviewQueue.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--warning-border] bg-[--warning-bg] px-3 py-2.5">
+          <div>
+            <p className="text-xs font-bold text-[--warning-text]">
+              {categoryReviewQueue.length}{' '}
+              {categoryReviewQueue.length === 1
+                ? 'classificação pode precisar de revisão'
+                : 'classificações podem precisar de revisão'}
+            </p>
+            <p className="mt-0.5 text-[10px] text-[--warning-text]">
+              Nenhuma categoria será alterada automaticamente.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setCategoryReviewOnly((value) => !value)
+              setPage(1)
+            }}
+            aria-pressed={categoryReviewOnly}
+            className="min-h-10 rounded-xl border border-[--warning-border] px-3 text-xs font-bold text-[--warning-text] hover:bg-[--bg-hover]"
+          >
+            {categoryReviewOnly ? 'Mostrar todas' : 'Revisar agora'}
+          </button>
+        </div>
+      )}
+
       {/* Busca + filtros */}
       <div className="transaction-tools space-y-2">
         <div className="flex gap-2">
@@ -1276,6 +1303,10 @@ export default function TransactionList() {
         </div>
       )}
 
+      <p className="px-1 text-[10px] text-[--text-tertiary]">
+        Lista agrupada pela data da movimentação. Vencimento e pagamento aparecem separadamente quando informados.
+      </p>
+
       {/* Lista agrupada por data */}
       <div className="transaction-list-surface overflow-hidden rounded-2xl border border-[--border-default] bg-[--bg-surface]">
         {filtered.length === 0 ? (
@@ -1338,6 +1369,7 @@ export default function TransactionList() {
                         paymentState={getTransactionPaymentState(tx, paymentStatusIndex)}
                         paymentSelected={selectedPaymentIds.has(tx.id)}
                         onPaymentSelect={togglePaymentSelection}
+                        categoryReview={categoryReviewIndex.get(tx.id)}
                       />
                     ))}
                   </div>
