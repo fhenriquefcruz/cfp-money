@@ -31,6 +31,20 @@ vi.mock('../contexts/AppContext', () => ({
         icon: '🍽️',
         color: '#c49d6b',
       },
+      {
+        id: 'fuel',
+        name: 'Combustível',
+        type: 'expense',
+        icon: '⛽',
+        color: '#f59e0b',
+      },
+      {
+        id: 'ride',
+        name: 'Transporte por aplicativo',
+        type: 'expense',
+        icon: '🚕',
+        color: '#3b82f6',
+      },
     ],
   }),
 }))
@@ -84,5 +98,37 @@ describe('TransactionForm progressive disclosure', () => {
     )
     expect(screen.getByLabelText('Vencimento (opcional)')).toHaveValue('2026-09-30')
     expect(screen.getByLabelText('Observações')).toHaveValue('Conferir comprovante')
+  })
+})
+
+
+describe('TransactionForm category review', () => {
+  it('permite aplicar uma sugestão somente com confirmação do usuário', () => {
+    render(
+      <TransactionForm
+        isOpen
+        onClose={vi.fn()}
+        transaction={{
+          id: 'tx-uber',
+          type: 'expense',
+          amount: 45,
+          description: 'Uber centro',
+          categoryId: 'fuel',
+          categoryName: 'Combustível',
+          date: '2026-09-25',
+          paymentMethod: 'pix',
+        }}
+      />,
+    )
+
+    const suggestion = screen.getByRole('button', {
+      name: /Aplicar sugestão: Transporte por aplicativo/i,
+    })
+    const rideCategory = screen.getByRole('button', { name: /Transporte por aplicativo/i })
+
+    expect(rideCategory).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(suggestion)
+    expect(rideCategory).toHaveAttribute('aria-pressed', 'true')
+    expect(appMocks.editTransaction).not.toHaveBeenCalled()
   })
 })
