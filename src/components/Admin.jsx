@@ -19,11 +19,10 @@ import { Card } from './ui'
 import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
 import { adminListUsers, adminSetUserAccess } from '../services/adminGateway'
 import {
-  buildActivitySummary,
+  ACTIVITY_DAY_MS,
   formatActivityDate,
   formatRelativeActivity,
   getUserActivityState,
-  matchesActivityFilter,
 } from '../domain/userActivity'
 import CommercialOverviewRouter from './CommercialOverviewRouter'
 import SupportAdminCard from './SupportAdminCard'
@@ -79,8 +78,8 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
 
         {/* Coluna 3: atividade recente */}
         <div className="admin-activity-cell">
-          <p className="admin-activity-state" data-online={activity.key === 'online'}>
-            {activity.key === 'online' ? 'Online agora' : 'Offline'}
+          <p className="admin-activity-state" data-online={activity.online}>
+            {activity.online ? 'Online agora' : 'Offline'}
           </p>
           <p className="admin-activity-age">{formatRelativeActivity(activity.reference)}</p>
         </div>
@@ -151,34 +150,20 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
           </div>
           <div className="admin-user-details">
             {[
-              { label: 'Plano', value: u.plan || 'trial' },
-              {
-                label: 'Cadastro',
-                value: formatPlanExpiration({ premiumUntil: u.createdAt }),
-              },
-              {
-                label: 'Premium até',
-                value: formatPlanExpiration(u),
-              },
-              { label: 'Status', value: u.blocked ? 'Bloqueado' : 'Ativo' },
-              {
-                label: 'Último login',
-                value: formatActivityDate(u.lastSignInAt),
-              },
-              {
-                label: 'Última atividade',
-                value: `${formatActivityDate(u.lastSeenAt)} · ${formatRelativeActivity(
-                  activity.reference,
-                )}`,
-              },
-              {
-                label: 'Presença',
-                value: activity.key === 'online' ? 'Online agora' : 'Offline',
-              },
-            ].map((r) => (
-              <div key={r.label}>
-                <span className="admin-detail-label">{r.label}: </span>
-                <span className="admin-detail-value">{r.value}</span>
+              ['Plano', u.plan || 'trial'],
+              ['Cadastro', formatPlanExpiration({ premiumUntil: u.createdAt })],
+              ['Premium até', formatPlanExpiration(u)],
+              ['Status', u.blocked ? 'Bloqueado' : 'Ativo'],
+              ['Último login', formatActivityDate(u.lastSignInAt)],
+              [
+                'Última atividade',
+                `${formatActivityDate(u.lastSeenAt)} · ${formatRelativeActivity(activity.reference)}`,
+              ],
+              ['Presença', activity.online ? 'Online agora' : 'Offline'],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <span className="admin-detail-label">{label}: </span>
+                <span className="admin-detail-value">{value}</span>
               </div>
             ))}
           </div>
@@ -285,29 +270,35 @@ export default function Admin() {
     )
 
   const now = new Date()
-  const normalizedSearch = search.trim().toLowerCase()
-  const filtered = users
-    .filter(
-      (u) =>
-        (!normalizedSearch ||
-          u.email?.toLowerCase().includes(normalizedSearch) ||
-          u.displayName?.toLowerCase().includes(normalizedSearch)) &&
-        matchesActivityFilter(u, activityFilter, now),
-    )
-    .sort(
-      (a, b) =>
-        (getUserActivityState(b, now).reference?.getTime() || 0) -
-        (getUserActivityState(a, now).reference?.getTime() || 0),
-    )
+  const query = search.trim().toLowerCase()
+  const week = 7 * ACTIVITY_DAY_MS
+  const month = 30 * ACTIVITY_DAY_MS
+  const withActivity = users.map((u) => ({ u, activity: getUserActivityState(u, now) }))
+  const filtered = withActivity
+    .filter(({ u, activity }) => {
+      const matchesSearch =
+        !query ||
+        u.email?.toLowerCase().includes(query) ||
+        u.displayName?.toLowerCase().includes(query)
+      const matchesActivity =
+        activityFilter === 'all' ||
+        (activityFilter === 'online' && activity.online) ||
+        (activityFilter === '24h' && activity.ageMs !== null && activity.ageMs <= ACTIVITY_DAY_MS) ||
+        (activityFilter === '7d' && activity.ageMs !== null && activity.ageMs <= week) ||
+        (activityFilter === '30d+' && activity.ageMs >= month) ||
+        (activityFilter === 'untracked' && activity.ageMs === null)
+      return matchesSearch && matchesActivity
+    })
+    .sort((a, b) => (b.activity.reference?.getTime() || 0) - (a.activity.reference?.getTime() || 0))
+    .map(({ u }) => u)
 
-  const activitySummary = buildActivitySummary(users, now)
   const stats = {
     total: users.length,
     premium: users.filter((u) => getPlanPresentation(u).key === 'premium').length,
     blocked: users.filter((u) => u.blocked).length,
-    online: activitySummary.online,
-    active7d: activitySummary.active7d,
-    inactive30: activitySummary.inactive30,
+    online: withActivity.filter(({ activity }) => activity.online).length,
+    active7d: withActivity.filter(({ activity }) => activity.ageMs !== null && activity.ageMs <= week).length,
+    inactive30: withActivity.filter(({ activity }) => activity.ageMs >= month).length,
   }
 
   return (
