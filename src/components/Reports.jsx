@@ -170,7 +170,7 @@ function ReportsContent() {
       const value = transactions
         .filter((t) => {
           if (!t.isSavings || !isFinanciallyEffectiveTransaction(t)) return false
-          const activityDate = getTransactionActivityDate(t)
+          const activityDate = getFinancialActivityDate(t)
           return activityDate >= from && activityDate <= to
         })
         .reduce((s, t) => s + t.amount, 0)
