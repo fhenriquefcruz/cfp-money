@@ -20,9 +20,9 @@ describe('adminBackfill', () => {
     expect(parseLastSignInTime({ lastLoginAt: '1760000000000' })).toBe(
       new Date(1760000000000).toISOString(),
     )
-    expect(
-      parseLastSignInTime({ metadata: { lastSignInTime: '2026-09-29T21:50:12.000Z' } }),
-    ).toBe('2026-09-29T21:50:12.000Z')
+    expect(parseLastSignInTime({ metadata: { lastSignInTime: '2026-09-29T21:50:12.000Z' } })).toBe(
+      '2026-09-29T21:50:12.000Z',
+    )
   })
 
   it('normalizes Firebase Authentication exports by UID', () => {

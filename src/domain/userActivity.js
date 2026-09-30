@@ -29,4 +29,3 @@ export function formatRelativeActivity(value, now = new Date()) {
   const hours = Math.floor(minutes / 60)
   return hours < 24 ? `há ${hours}h` : `há ${Math.floor(hours / 24)}d`
 }
-

@@ -1343,7 +1343,6 @@ body {
   font-size: 0.75rem;
 }
 
-
 /* Painel Admin · apresentação fora do bundle JavaScript */
 .admin-tone {
   background: var(--bg-subtle);
@@ -1754,7 +1753,6 @@ body {
   }
 }
 
-
 .admin-activity-state {
   color: var(--text-tertiary);
   font-size: 0.75rem;
@@ -1764,7 +1762,6 @@ body {
 .admin-activity-state[data-online='true'] {
   color: var(--success-text);
 }
-
 
 .admin-user-chevron {
   flex: 0 0 auto;

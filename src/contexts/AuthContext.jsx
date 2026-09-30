@@ -33,10 +33,7 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe
   }, [])
 
-  useEffect(
-    () => (E2E_MODE || !user ? undefined : startUserActivityTracking(user)),
-    [user],
-  )
+  useEffect(() => (E2E_MODE || !user ? undefined : startUserActivityTracking(user)), [user])
 
   const clearError = () => setError(null)
 

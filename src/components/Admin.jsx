@@ -17,10 +17,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Card } from './ui'
 import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
 import { adminListUsers, adminSetUserAccess } from '../services/adminGateway'
-import {
-  formatRelativeActivity,
-  getUserActivityState,
-} from '../domain/userActivity'
+import { formatRelativeActivity, getUserActivityState } from '../domain/userActivity'
 import CommercialOverviewRouter from './CommercialOverviewRouter'
 import SupportAdminCard from './SupportAdminCard'
 
@@ -55,16 +52,10 @@ function UserRow({ u, onAccess }) {
             {(u.displayName || u.email || 'U')[0].toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="admin-user-name">
-              {u.displayName || '—'}
-            </p>
+            <p className="admin-user-name">{u.displayName || '—'}</p>
             <p className="admin-user-email">{u.email}</p>
           </div>
-          <ChevronDown
-            size={12}
-            className="admin-user-chevron"
-            data-expanded={expanded}
-          />
+          <ChevronDown size={12} className="admin-user-chevron" data-expanded={expanded} />
         </button>
 
         {/* Coluna 2: badge de status (oculto em mobile muito pequeno) */}
@@ -108,7 +99,8 @@ function UserRow({ u, onAccess }) {
           {isPremiumActive && (
             <button
               onClick={() => onAccess(u.uid, 'remove')}
-              className="admin-icon-action" data-action="remove"
+              className="admin-icon-action"
+              data-action="remove"
               title="Remover Premium"
               aria-label={`Remover Premium de ${u.displayName || u.email}`}
             >
@@ -119,7 +111,8 @@ function UserRow({ u, onAccess }) {
           {u.blocked ? (
             <button
               onClick={() => onAccess(u.uid, 'unblock')}
-              className="admin-icon-action" data-action="unblock"
+              className="admin-icon-action"
+              data-action="unblock"
               title="Desbloquear"
               aria-label={`Desbloquear ${u.displayName || u.email}`}
             >
@@ -128,7 +121,8 @@ function UserRow({ u, onAccess }) {
           ) : (
             <button
               onClick={() => onAccess(u.uid, 'block')}
-              className="admin-icon-action" data-action="block"
+              className="admin-icon-action"
+              data-action="block"
               title="Bloquear"
               aria-label={`Bloquear ${u.displayName || u.email}`}
             >
@@ -343,10 +337,7 @@ export default function Admin() {
               <option value="untracked">Sem registro ainda</option>
             </select>
             <div className="admin-search">
-              <Search
-                size={13}
-                className="admin-search-icon"
-              />
+              <Search size={13} className="admin-search-icon" />
               <input
                 placeholder="Buscar..."
                 value={search}
@@ -363,18 +354,10 @@ export default function Admin() {
 
         {/* Header de colunas */}
         <div className="admin-users-header">
-          <span className="admin-users-heading">
-            Usuário
-          </span>
-          <span className="admin-users-heading admin-users-heading--desktop">
-            Status
-          </span>
-          <span className="admin-users-heading admin-users-heading--desktop">
-            Atividade
-          </span>
-          <span className="admin-users-heading admin-users-heading--actions">
-            Ações
-          </span>
+          <span className="admin-users-heading">Usuário</span>
+          <span className="admin-users-heading admin-users-heading--desktop">Status</span>
+          <span className="admin-users-heading admin-users-heading--desktop">Atividade</span>
+          <span className="admin-users-heading admin-users-heading--actions">Ações</span>
         </div>
 
         {filtered.length === 0 ? (
@@ -387,13 +370,7 @@ export default function Admin() {
             </p>
           </div>
         ) : (
-          filtered.map((u) => (
-            <UserRow
-              key={u.uid}
-              u={u}
-              onAccess={handleAccess}
-            />
-          ))
+          filtered.map((u) => <UserRow key={u.uid} u={u} onAccess={handleAccess} />)
         )}
       </Card>
     </div>

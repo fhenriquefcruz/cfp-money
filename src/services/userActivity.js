@@ -2,7 +2,6 @@ import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from './firebase'
 
 export function startUserActivityTracking(user) {
-
   const pulse = () => {
     if (document.hidden) return
     setDoc(

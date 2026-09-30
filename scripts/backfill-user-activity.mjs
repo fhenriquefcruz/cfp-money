@@ -126,9 +126,7 @@ async function profileExists(projectId, uid, token) {
 }
 
 async function updateLastSignIn(projectId, user, token) {
-  const url = new URL(
-    `${firestoreBase(projectId)}/users/${encodeURIComponent(user.uid)}`,
-  )
+  const url = new URL(`${firestoreBase(projectId)}/users/${encodeURIComponent(user.uid)}`)
   url.searchParams.append('updateMask.fieldPaths', 'lastSignInAt')
 
   await request(url, token, projectId, {
