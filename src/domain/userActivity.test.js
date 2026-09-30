@@ -20,7 +20,6 @@ describe('userActivity', () => {
     )
 
     expect(state.key).toBe('online')
-    expect(state.online).toBe(true)
   })
 
   it('usa o último login quando ainda não existe heartbeat', () => {
@@ -32,14 +31,13 @@ describe('userActivity', () => {
     )
 
     expect(state.key).toBe('week')
-    expect(state.online).toBe(false)
   })
 
   it('não presume que ausência de telemetria significa nunca acessou', () => {
     expect(getUserActivityState({}, now)).toMatchObject({
       key: 'untracked',
-      label: 'Sem registro',
-      online: false,
+      ageMs: null,
+      reference: null,
     })
   })
 
@@ -80,7 +78,6 @@ describe('userActivity', () => {
       online: 1,
       active7d: 2,
       inactive30: 1,
-      untracked: 1,
     })
   })
 
