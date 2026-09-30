@@ -1,6 +1,11 @@
-import { getTransactionActivityDate } from './transactionDates'
-
 const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
+
+export const getFinancialActivityDate = (transaction = {}) =>
+  transaction.type === 'expense' &&
+  transaction.paymentMethod === 'credit_card' &&
+  transaction.isCreditPurchase
+    ? transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date || ''
+    : transaction.date || transaction.dueDate || ''
 
 export const isFinanciallyEffectiveTransaction = (transaction = {}) =>
   transaction.paymentStatus !== 'cancelled' &&
@@ -42,7 +47,7 @@ export function calculateCurrentBalance(transactions = []) {
 export function transactionsForMonth(transactions = [], year, month) {
   return transactions.filter((transaction) => {
     if (!isFinanciallyEffectiveTransaction(transaction)) return false
-    const activityDate = getTransactionActivityDate(transaction)
+    const activityDate = getFinancialActivityDate(transaction)
     if (!/^\d{4}-\d{2}-\d{2}$/.test(activityDate || '')) return false
     const date = new Date(activityDate + 'T00:00:00')
     return date.getFullYear() === year && date.getMonth() === month
@@ -71,7 +76,7 @@ export function calculateBudgetUsage(transactions = [], budget, referenceDate = 
 
   const spent = transactions
     .filter((transaction) => {
-      const activityDate = getTransactionActivityDate(transaction)
+      const activityDate = getFinancialActivityDate(transaction)
       if (!/^\d{4}-\d{2}-\d{2}$/.test(activityDate || '')) return false
       const date = new Date(activityDate + 'T00:00:00')
 
