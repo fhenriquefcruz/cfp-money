@@ -29,14 +29,14 @@ describe('userActivity', () => {
     )
 
     expect(state.online).toBe(false)
-    expect(state.ageMs).toBe(2 * 24 * 60 * 60 * 1000)
+    expect(state.age).toBe(2 * 24 * 60 * 60 * 1000)
   })
 
   it('não presume que ausência de telemetria significa nunca acessou', () => {
     expect(getUserActivityState({}, now)).toMatchObject({
       online: false,
-      ageMs: null,
-      reference: null,
+      age: null,
+      date: null,
     })
   })
 
@@ -49,7 +49,7 @@ describe('userActivity', () => {
     )
 
     expect(state.online).toBe(false)
-    expect(state.ageMs).toBeGreaterThanOrEqual(30 * 24 * 60 * 60 * 1000)
+    expect(state.age).toBeGreaterThanOrEqual(30 * 24 * 60 * 60 * 1000)
   })
 
   it('formata tempo relativo de maneira compacta', () => {
