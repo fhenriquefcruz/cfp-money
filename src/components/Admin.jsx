@@ -29,41 +29,6 @@ import {
 import CommercialOverviewRouter from './CommercialOverviewRouter'
 import SupportAdminCard from './SupportAdminCard'
 
-// Badges coloridos por status
-const STATUS_STYLES = {
-  premium: {
-    bg: 'bg-emerald-100 dark:bg-emerald-900/40',
-    text: 'text-emerald-700 dark:text-emerald-400',
-    dot: 'bg-emerald-500',
-  },
-  premium_expired: {
-    bg: 'bg-orange-100 dark:bg-orange-900/40',
-    text: 'text-orange-700 dark:text-orange-400',
-    dot: 'bg-orange-400',
-  },
-  trial_active: {
-    bg: 'bg-blue-100 dark:bg-blue-900/40',
-    text: 'text-blue-700 dark:text-blue-400',
-    dot: 'bg-blue-400',
-  },
-  trial_expired: {
-    bg: 'bg-gray-100 dark:bg-gray-800',
-    text: 'text-gray-500 dark:text-gray-400',
-    dot: 'bg-gray-400',
-  },
-  blocked: {
-    bg: 'bg-red-100 dark:bg-red-900/40',
-    text: 'text-red-700 dark:text-red-400',
-    dot: 'bg-red-500',
-  },
-  free: {
-    bg: 'bg-gray-100 dark:bg-gray-800',
-    text: 'text-gray-500 dark:text-gray-400',
-    dot: 'bg-gray-300',
-  },
-}
-
-
 const ACTIVITY_META = {
   online: ['Online agora', 'premium'],
   today: ['Ativo hoje', 'trial_active'],
@@ -75,15 +40,15 @@ const ACTIVITY_META = {
 
 function ActivityBadge({ u }) {
   const state = getUserActivityState(u)
-  const [label, styleKey] = ACTIVITY_META[state.key] || ACTIVITY_META.untracked
-  const style = STATUS_STYLES[styleKey]
+  const [label, tone] = ACTIVITY_META[state.key] || ACTIVITY_META.untracked
 
   return (
     <span
-      className={`inline-flex max-w-full items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold ${style.bg} ${style.text}`}
+      className="admin-status-badge admin-tone"
+      data-tone={tone}
       title={state.key === 'online' ? 'Atividade registrada nos últimos 5 minutos.' : label}
     >
-      <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${style.dot}`} />
+      <span className="admin-status-dot" />
       {label}
     </span>
   )
@@ -91,12 +56,9 @@ function ActivityBadge({ u }) {
 
 function StatusBadge({ u }) {
   const info = getPlanPresentation(u)
-  const style = STATUS_STYLES[info.key]
   return (
-    <span
-      className={`inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold ${style.bg} ${style.text}`}
-    >
-      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${style.dot}`} />
+    <span className="admin-status-badge admin-tone" data-tone={info.key}>
+      <span className="admin-status-dot" />
       {info.label}
       {info.sub && <span className="opacity-70 font-normal">· {info.sub}</span>}
     </span>
@@ -112,21 +74,21 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
   return (
     <>
       {/* Linha principal — grid fixo */}
-      <div className="admin-user-row grid grid-cols-1 items-stretch gap-3 border-b border-[--border-subtle] px-4 py-3 transition-colors last:border-0 hover:bg-[--bg-hover] sm:grid-cols-[2fr_0.9fr_1.15fr_auto] sm:items-center">
+      <div className="admin-user-row">
         {/* Coluna 1: usuário */}
         <button
-          className="flex min-h-11 w-full items-center gap-2.5 min-w-0 text-left"
+          className="admin-user-identity"
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
         >
-          <div className="w-7 h-7 rounded-lg bg-[--brand-100] flex items-center justify-center flex-shrink-0 text-xs font-bold text-[--brand-600]">
+          <div className="admin-user-avatar">
             {(u.displayName || u.email || 'U')[0].toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-[--text-primary] truncate leading-tight">
+            <p className="admin-user-name">
               {u.displayName || '—'}
             </p>
-            <p className="text-xs text-[--text-tertiary] truncate leading-tight">{u.email}</p>
+            <p className="admin-user-email">{u.email}</p>
           </div>
           {expanded ? (
             <ChevronUp size={12} className="text-[--text-tertiary] flex-shrink-0 ml-1" />
@@ -136,26 +98,26 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
         </button>
 
         {/* Coluna 2: badge de status (oculto em mobile muito pequeno) */}
-        <div className="hidden sm:block">
+        <div className="admin-desktop-cell">
           <StatusBadge u={u} />
         </div>
 
         {/* Coluna 3: atividade recente */}
-        <div className="hidden min-w-0 sm:block">
+        <div className="admin-activity-cell">
           <ActivityBadge u={u} />
-          <p className="mt-1 text-[10px] text-[--text-tertiary]">
+          <p className="admin-activity-age">
             {formatRelativeActivity(getUserActivityReference(u))}
           </p>
         </div>
 
         {/* Coluna 4: ações agrupadas */}
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:flex-shrink-0">
+        <div className="admin-access-actions">
           {/* Select + Ativar colados */}
-          <div className="flex min-w-0 flex-1 sm:flex-none items-center rounded-xl border border-[--border-default] overflow-hidden">
+          <div className="admin-access-control">
             <select
               value={months}
               onChange={(e) => setMonths(Number(e.target.value))}
-              className="min-h-11 text-xs px-2 bg-[--bg-elevated] text-[--text-primary] border-0 focus:outline-none"
+              className="admin-access-select"
               aria-label={`Meses de acesso para ${u.displayName || u.email}`}
             >
               {[1, 2, 3, 6].map((m) => (
@@ -166,7 +128,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
             </select>
             <button
               onClick={() => onActivate(u.uid, months)}
-              className="min-h-11 flex-1 sm:flex-none px-3 bg-[--brand-600] text-white text-xs font-semibold hover:bg-[--brand-700] transition-colors inline-flex items-center justify-center gap-1"
+              className="admin-activate-button"
               aria-label={`Ativar ${months} ${months === 1 ? 'mês' : 'meses'} para ${u.displayName || u.email}`}
             >
               <CheckCircle size={11} /> Ativar
@@ -176,7 +138,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
           {isPremiumActive && (
             <button
               onClick={() => onRemovePremium(u.uid)}
-              className="w-11 h-11 inline-flex items-center justify-center rounded-xl border border-[--border-default] text-[--text-tertiary] hover:text-orange-600 hover:border-orange-300 hover:bg-orange-50 transition-colors"
+              className="admin-icon-action" data-action="remove"
               title="Remover Premium"
               aria-label={`Remover Premium de ${u.displayName || u.email}`}
             >
@@ -187,7 +149,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
           {u.blocked ? (
             <button
               onClick={() => onUnblock(u.uid)}
-              className="w-11 h-11 inline-flex items-center justify-center rounded-xl border border-[--border-default] text-[--text-tertiary] hover:text-[--success-icon] hover:border-[--success-border] transition-colors"
+              className="admin-icon-action" data-action="unblock"
               title="Desbloquear"
               aria-label={`Desbloquear ${u.displayName || u.email}`}
             >
@@ -196,7 +158,7 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
           ) : (
             <button
               onClick={() => onBlock(u.uid)}
-              className="w-11 h-11 inline-flex items-center justify-center rounded-xl border border-[--border-default] text-[--text-tertiary] hover:text-[--danger-text] hover:border-[--danger-border] hover:bg-[--danger-bg] transition-colors"
+              className="admin-icon-action" data-action="block"
               title="Bloquear"
               aria-label={`Bloquear ${u.displayName || u.email}`}
             >
@@ -208,12 +170,12 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
 
       {/* Expansão: badge mobile + detalhes */}
       {expanded && (
-        <div className="px-4 pb-3 bg-[--bg-subtle] border-b border-[--border-subtle]">
-          <div className="flex flex-wrap items-center gap-2 mb-2 pt-2 sm:hidden">
+        <div className="admin-user-expanded">
+          <div className="admin-mobile-badges">
             <StatusBadge u={u} />
             <ActivityBadge u={u} />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs">
+          <div className="admin-user-details">
             {[
               { label: 'Plano', value: u.plan || 'trial' },
               {
@@ -241,8 +203,8 @@ function UserRow({ u, onActivate, onRemovePremium, onBlock, onUnblock }) {
               },
             ].map((r) => (
               <div key={r.label}>
-                <span className="text-[--text-tertiary]">{r.label}: </span>
-                <span className="font-medium text-[--text-primary]">{r.value}</span>
+                <span className="admin-detail-label">{r.label}: </span>
+                <span className="admin-detail-value">{r.value}</span>
               </div>
             ))}
           </div>
@@ -333,9 +295,9 @@ export default function Admin() {
   if (!isAdmin)
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-3">
-        <Shield size={40} className="text-[--text-tertiary]" />
+        <Shield size={40} className="admin-detail-label" />
         <p className="text-lg font-bold text-[--text-primary]">Acesso restrito</p>
-        <p className="text-sm text-[--text-tertiary]">Área exclusiva para administradores.</p>
+        <p className="admin-users-empty-text">Área exclusiva para administradores.</p>
       </div>
     )
 
@@ -344,7 +306,7 @@ export default function Admin() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-3">
         <AlertTriangle size={40} className="text-[--danger-icon]" />
         <p className="text-base font-bold text-[--text-primary]">Erro ao carregar dados</p>
-        <p className="text-sm text-[--text-tertiary]">{error}</p>
+        <p className="admin-users-empty-text">{error}</p>
       </div>
     )
 
@@ -378,7 +340,7 @@ export default function Admin() {
     <div className="operational-page admin-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6">
       <div>
         <h1 className="text-2xl font-black text-[--text-primary]">Painel Admin</h1>
-        <p className="text-sm text-[--text-tertiary]">Usuários cadastrados e controle de acesso</p>
+        <p className="admin-users-empty-text">Usuários cadastrados e controle de acesso</p>
       </div>
 
       {toast && (
@@ -388,25 +350,25 @@ export default function Admin() {
       )}
 
       {/* Stats */}
-      <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+      <div className="operational-summary-grid admin-summary-grid">
         {[
           {
             label: 'Total',
             value: stats.total,
             icon: <Users size={15} />,
-            style: STATUS_STYLES.free,
+            tone: 'free',
           },
           {
             label: 'Premium',
             value: stats.premium,
             icon: <Star size={15} />,
-            style: STATUS_STYLES.premium,
+            tone: 'premium',
           },
           {
             label: 'Bloqueados',
             value: stats.blocked,
             icon: <Lock size={15} />,
-            style: STATUS_STYLES.blocked,
+            tone: 'blocked',
           },
           {
             label: 'Online agora',
@@ -418,7 +380,7 @@ export default function Admin() {
             label: 'Ativos em 7 dias',
             value: stats.active7d,
             icon: <Clock size={15} />,
-            style: STATUS_STYLES.trial_active,
+            tone: 'trial_active',
           },
           {
             label: 'Inativos 30+ dias',
@@ -428,10 +390,8 @@ export default function Admin() {
           },
         ].map((s) => (
           <Card key={s.label} className="!p-4">
-            <div
-              className={`inline-flex items-center justify-center w-8 h-8 rounded-xl mb-2 ${s.style.bg}`}
-            >
-              <span className={s.style.text}>{s.icon}</span>
+            <div className="admin-stat-icon admin-tone" data-tone={s.tone}>
+              {s.icon}
             </div>
             <p className="text-2xl font-black text-[--text-primary]">{s.value}</p>
             <p className="text-xs text-[--text-tertiary]">{s.label}</p>
@@ -460,15 +420,15 @@ export default function Admin() {
       {/* Tabela de usuários */}
       <Card className="admin-users-surface !p-0 overflow-hidden">
         {/* Cabeçalho da tabela */}
-        <div className="admin-users-toolbar flex flex-col gap-3 border-b border-[--border-subtle] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="admin-users-toolbar">
           <h2 className="text-sm font-bold text-[--text-primary]">
             Usuários <span className="text-[--text-tertiary] font-normal">({filtered.length})</span>
           </h2>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <div className="admin-users-filters">
             <select
               value={activityFilter}
               onChange={(event) => setActivityFilter(event.target.value)}
-              className="min-h-11 rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 text-xs text-[--text-primary] focus:border-[--brand-500] focus:outline-none"
+              className="admin-filter-select"
               aria-label="Filtrar usuários por atividade"
             >
               <option value="all">Toda atividade</option>
@@ -478,46 +438,46 @@ export default function Admin() {
               <option value="30d+">Sem acesso há 30+ dias</option>
               <option value="untracked">Sem registro ainda</option>
             </select>
-            <div className="relative w-full sm:w-auto">
+            <div className="admin-search">
               <Search
                 size={13}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[--text-tertiary]"
+                className="admin-search-icon"
               />
               <input
                 placeholder="Buscar..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-elevated] py-1.5 pl-7 pr-3 text-xs text-[--text-primary] focus:border-[--brand-500] focus:outline-none sm:w-44"
+                className="admin-search-input"
               />
             </div>
           </div>
         </div>
 
-        <div className="border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2 text-[10px] leading-relaxed text-[--text-tertiary]">
+        <div className="admin-activity-note">
           “Online agora” significa atividade registrada nos últimos 5 minutos. É uma presença aproximada,
           não uma confirmação de sessão aberta em tempo real.
         </div>
 
         {/* Header de colunas */}
-        <div className="grid grid-cols-[1fr_auto] border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2 sm:grid-cols-[2fr_0.9fr_1.15fr_auto]">
-          <span className="text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider">
+        <div className="admin-users-header">
+          <span className="admin-users-heading">
             Usuário
           </span>
-          <span className="hidden sm:block text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider">
+          <span className="admin-users-heading admin-users-heading--desktop">
             Status
           </span>
-          <span className="hidden sm:block text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider">
+          <span className="admin-users-heading admin-users-heading--desktop">
             Atividade
           </span>
-          <span className="text-[10px] font-bold text-[--text-tertiary] uppercase tracking-wider text-right">
+          <span className="admin-users-heading admin-users-heading--actions">
             Ações
           </span>
         </div>
 
         {filtered.length === 0 ? (
-          <div className="text-center py-12">
-            <Users size={28} className="text-[--text-tertiary] mx-auto mb-2" />
-            <p className="text-sm text-[--text-tertiary]">
+          <div className="admin-users-empty">
+            <Users size={28} className="admin-users-empty-icon" />
+            <p className="admin-users-empty-text">
               {search || activityFilter !== 'all'
                 ? 'Nenhum usuário corresponde aos filtros.'
                 : 'Nenhum usuário cadastrado.'}
