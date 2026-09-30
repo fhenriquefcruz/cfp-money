@@ -197,3 +197,38 @@ test('libera a projeção com confiança explícita após o período mínimo', (
   expect(result.projection.confidence).toBe('low')
   expect(result.projection.expenses).toBeCloseTo(3100, 5)
 })
+
+
+test('Money usa a data da movimentação e ignora cancelamentos', () => {
+  const result = analyzeMoney(
+    [
+      {
+        type: 'income',
+        amount: 3000,
+        date: '2026-07-05',
+        dueDate: '2026-08-05',
+        categoryName: 'Salário',
+      },
+      {
+        type: 'expense',
+        amount: 400,
+        date: '2026-07-10',
+        dueDate: '2026-08-10',
+        categoryName: 'Mercado',
+      },
+      {
+        type: 'expense',
+        amount: 900,
+        date: '2026-07-11',
+        paymentStatus: 'cancelled',
+        categoryName: 'Mercado',
+      },
+    ],
+    {},
+    '2026-07-15',
+  )
+
+  expect(result.current.income).toBe(3000)
+  expect(result.current.expenses).toBe(400)
+  expect(result.current.balance).toBe(2600)
+})
