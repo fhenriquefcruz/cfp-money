@@ -22,13 +22,13 @@ test('mantém o detalhamento oculto até o usuário pedir para entender o score'
     </MemoryRouter>,
   )
 
-  expect(screen.getByText(/Maior oportunidade: Equilíbrio do mês/i)).toBeInTheDocument()
+  expect(screen.getByText(/Maior oportunidade: Equilíbrio do período/i)).toBeInTheDocument()
   expect(screen.queryByTestId('financial-health-breakdown')).not.toBeInTheDocument()
 
   fireEvent.click(screen.getByRole('button', { name: /Entender indicador/i }))
 
   expect(screen.getByTestId('financial-health-breakdown')).toBeInTheDocument()
-  expect(screen.getByText('Equilíbrio do mês')).toBeInTheDocument()
+  expect(screen.getByText('Equilíbrio do período')).toBeInTheDocument()
   expect(screen.getByText('0/30 pts')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: /Revisar transações/i })).toHaveAttribute(
     'href',
