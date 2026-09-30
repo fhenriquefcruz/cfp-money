@@ -42,7 +42,8 @@ import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
 import PaymentControlCard from './PaymentControlCard'
 import FinancialHealthScore from './FinancialHealthScore'
-import { formatCurrency, formatRelativeDate, getMonthlyData } from '../utils'
+import { formatCurrency, formatRelativeDate } from '../utils'
+import { getMonthlyFinancialData } from '../domain/monthlyFinance'
 import {
   buildMonthAttentionSignals,
   getCalendarMonthBounds,
@@ -231,7 +232,7 @@ export default function Dashboard() {
   const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
   const categoryTotals = useMemo(() => getCategoryTotals(year, month), [year, month, transactions])
   const monthlyData = useMemo(
-    () => getMonthlyData(transactions, 6, viewDate),
+    () => getMonthlyFinancialData(transactions, 6, viewDate),
     [transactions, viewDate],
   )
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
