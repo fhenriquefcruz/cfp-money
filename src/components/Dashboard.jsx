@@ -146,10 +146,10 @@ function MonthAttentionCard({ items }) {
         <div>
           <div className="flex items-center gap-2">
             <Zap size={15} className="text-[--brand-600]" />
-            <h2 className="text-sm font-black text-[--text-primary]">Central do mês</h2>
+            <h2 className="text-sm font-black text-[--text-primary]">O que exige atenção</h2>
           </div>
           <p className="mt-1 text-xs text-[--text-tertiary]">
-            O que merece atenção agora, sem precisar procurar em várias telas.
+            Prioridades do período, ordenadas por impacto e urgência.
           </p>
         </div>
         {items.length > 0 && (
@@ -173,7 +173,7 @@ function MonthAttentionCard({ items }) {
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
-          {items.map(({ id, title, detail, to, tone, icon: Icon }) => {
+          {items.map(({ id, title, detail, actionLabel, to, tone, icon: Icon }) => {
             const classes = toneClasses[tone] || toneClasses.brand
 
             return (
@@ -193,7 +193,7 @@ function MonthAttentionCard({ items }) {
                     {detail}
                   </p>
                   <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand]">
-                    Ver detalhes
+                    {actionLabel || 'Ver detalhes'}
                     <ChevronRight
                       size={11}
                       className="transition-transform group-hover:translate-x-0.5"
@@ -367,6 +367,7 @@ export default function Dashboard() {
             to: '/transactions',
             tone: 'danger',
             icon: AlertTriangle,
+            actionLabel: 'Regularizar',
           }
         }
 
@@ -380,6 +381,7 @@ export default function Dashboard() {
             to: '/transactions',
             tone: 'warning',
             icon: Clock3,
+            actionLabel: 'Ver vencimentos',
           }
         }
 
@@ -393,6 +395,7 @@ export default function Dashboard() {
             to: `/budgets?month=${budgetOverview.monthKey}`,
             tone: signal.pct >= 100 ? 'danger' : 'warning',
             icon: Target,
+            actionLabel: 'Revisar orçamento',
           }
         }
 
@@ -403,6 +406,7 @@ export default function Dashboard() {
           to: '/transactions',
           tone: 'danger',
           icon: Wallet,
+          actionLabel: 'Revisar gastos',
         }
       }),
     [paymentSummary, budgetAlerts, currentSummary.balance, budgetOverview.monthKey],
@@ -456,7 +460,7 @@ export default function Dashboard() {
           </div>
           {/* Saudação secundária */}
           <p className="dashboard-greeting text-xs text-[--text-tertiary]">
-            {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'} 👋
+            {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'}
           </p>
         </div>
         <Link to="/transactions" className="dashboard-quick-add w-auto flex-shrink-0">
@@ -472,56 +476,53 @@ export default function Dashboard() {
         </Link>
       </motion.div>
 
-      {/* Hero — saldo do mês como principal, sem duplicar nos cards abaixo */}
-      <motion.div
-        className="aurora-balance-hero aurora-card--hero relative overflow-hidden rounded-[28px] p-3 text-white sm:p-6"
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.05 }}
-      >
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-8 -right-8 w-48 h-48 rounded-full bg-white/5" />
-          <div className="absolute -bottom-12 -left-8 w-40 h-40 rounded-full bg-white/5" />
-        </div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-1">
-            <p className="text-white/70 text-sm">Saldo do mês</p>
-            <InfoTooltip
-              text="Receitas menos despesas do mês visualizado. Não inclui outros meses."
-              className="text-white/60 hover:text-white"
-            />
-          </div>
-          {isLoading ? (
-            <div className="h-12 w-44 rounded-xl bg-white/20 animate-pulse mb-4" />
-          ) : (
-            <p
-              className={`mb-3 break-words text-[clamp(1.7rem,8.5vw,3.75rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${currentSummary.balance >= 0 ? 'text-white' : 'text-red-300'}`}
-            >
-              {formatCurrency(currentSummary.balance)}
-            </p>
-          )}
-          {/* Receitas / Despesas / Poupança — linha secundária */}
-          <div className="dashboard-balance-breakdown grid grid-cols-3 gap-1.5 border-t border-white/15 pt-3 min-[560px]:gap-3 min-[560px]:pt-4">
-            <div>
-              <p className="text-white/55 text-[11px] mb-0.5">↑ Receitas</p>
-              <p className="text-sm font-bold text-green-300">
-                {formatCurrency(currentSummary.income)}
-              </p>
+      <motion.div {...fade} transition={{ delay: 0.05 }}>
+        <Card variant="elevated" className="dashboard-period-summary">
+          <div className="grid gap-4 lg:grid-cols-[1.2fr_2fr] lg:items-end">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
+                  Resultado do período
+                </p>
+                <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
+              </div>
+              <p className="mt-1 text-[10px] text-[--text-tertiary]">{monthLabel}</p>
+              {isLoading ? (
+                <div className="mt-2 h-10 w-44 animate-pulse rounded-xl bg-[--bg-hover]" />
+              ) : (
+                <p
+                  className={`mt-2 break-words text-[clamp(1.8rem,7vw,3rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${
+                    currentSummary.balance >= 0
+                      ? 'text-[--text-primary]'
+                      : 'text-[--danger-text]'
+                  }`}
+                >
+                  {formatCurrency(currentSummary.balance)}
+                </p>
+              )}
             </div>
-            <div>
-              <p className="text-white/55 text-[11px] mb-0.5">↓ Despesas</p>
-              <p className="text-sm font-bold text-red-300">
-                {formatCurrency(currentSummary.expenses)}
-              </p>
-            </div>
-            <div>
-              <p className="text-white/55 text-[11px] mb-0.5 flex items-center gap-1">
-                <PiggyBank size={10} /> Poupança total
-              </p>
-              <p className="text-sm font-bold text-yellow-300">{formatCurrency(savingsBalance)}</p>
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[
+                ['Receitas', currentSummary.income, 'Entradas do período'],
+                ['Despesas', currentSummary.expenses, 'Saídas do período'],
+                ['Comprometido', paymentSummary.committedAmount || 0, 'Obrigações do mês'],
+                ['Reservado total', savingsBalance, 'Poupança registrada'],
+              ].map(([label, value, detail]) => (
+                <div
+                  key={label}
+                  className="min-w-0 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3"
+                >
+                  <p className="text-[10px] font-bold text-[--text-tertiary]">{label}</p>
+                  <p className="mt-1 break-words text-sm font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere]">
+                    {formatCurrency(value)}
+                  </p>
+                  <p className="mt-1 text-[10px] leading-tight text-[--text-tertiary]">{detail}</p>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+        </Card>
       </motion.div>
 
       <motion.div {...fade} transition={{ delay: 0.075 }}>
