@@ -3,9 +3,7 @@ import { db } from './firebase'
 
 export function startUserActivityTracking(user) {
   const reference = doc(db, 'users', user.uid)
-  const lastSignInAt = user.metadata?.lastSignInTime
-    ? new Date(user.metadata.lastSignInTime)
-    : null
+  const signIn = user.metadata.lastSignInTime
 
   const pulse = () => {
     if (document.hidden) return
@@ -13,13 +11,13 @@ export function startUserActivityTracking(user) {
       reference,
       {
         lastSeenAt: serverTimestamp(),
-        ...(lastSignInAt ? { lastSignInAt } : {}),
+        ...(signIn ? { lastSignInAt: new Date(signIn) } : {}),
       },
       { merge: true },
     ).catch(() => {})
   }
 
   pulse()
-  const intervalId = setInterval(pulse, 120_000)
+  const intervalId = setInterval(pulse, 120000)
   return () => clearInterval(intervalId)
 }
