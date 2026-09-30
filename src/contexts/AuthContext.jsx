@@ -10,7 +10,6 @@ import {
   resetPassword,
   logOut,
 } from '../services/firebase'
-import { startUserActivityTracking } from '../services/userActivity'
 
 const AuthContext = createContext({})
 
@@ -39,7 +38,18 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (E2E_MODE || !user?.uid) return undefined
-    return startUserActivityTracking(user)
+
+    let stop = () => {}
+    let active = true
+
+    import('../services/userActivity').then(({ startUserActivityTracking }) => {
+      if (active) stop = startUserActivityTracking(user)
+    })
+
+    return () => {
+      active = false
+      stop()
+    }
   }, [user?.uid])
 
   const clearError = () => setError(null)
