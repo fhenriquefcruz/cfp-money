@@ -1,8 +1,6 @@
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from './firebase'
 
-const INTERVAL = 2 * 60 * 1000
-
 export function startUserActivityTracking(user) {
   if (!user?.uid) return () => {}
 
@@ -12,7 +10,7 @@ export function startUserActivityTracking(user) {
     : null
 
   const pulse = () => {
-    if (document.visibilityState !== 'visible') return
+    if (document.hidden) return
     setDoc(
       reference,
       {
@@ -24,7 +22,7 @@ export function startUserActivityTracking(user) {
   }
 
   pulse()
-  const intervalId = setInterval(pulse, INTERVAL)
+  const intervalId = setInterval(pulse, 120_000)
   document.addEventListener('visibilitychange', pulse)
 
   return () => {
