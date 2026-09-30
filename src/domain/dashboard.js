@@ -1,5 +1,5 @@
 import { endOfMonth, format, startOfMonth } from 'date-fns'
-import { getTransactionAccountingDate, getTransactionActivityDate } from './transactionDates'
+import { getTransactionActivityDate } from './transactionDates'
 
 export function getCalendarMonthBounds(referenceDate = new Date()) {
   const date = referenceDate instanceof Date ? referenceDate : new Date(referenceDate)
@@ -19,9 +19,14 @@ export function getRecentDashboardTransactions(transactions = [], bounds, limit 
 
   return transactions
     .filter((transaction) => {
-      const accountingDate = getTransactionAccountingDate(transaction)
+      const activityDate = getTransactionActivityDate(transaction)
       return (
-        !transaction?.isSavings && accountingDate >= bounds.start && accountingDate <= bounds.end
+        transaction?.paymentStatus !== 'cancelled' &&
+        transaction?.flowType !== 'transfer' &&
+        transaction?.kind !== 'transfer' &&
+        !transaction?.isSavings &&
+        activityDate >= bounds.start &&
+        activityDate <= bounds.end
       )
     })
     .sort((a, b) => {
