@@ -91,7 +91,7 @@
     "eslint": "10.8.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-react-refresh": "0.5.3",
-    "firebase-tools": "15.24.0",
+    "firebase-tools": "15.32.0",
     "gh-pages": "^6.1.1",
     "globals": "^15.0.0",
     "jsdom": "^26.0.0",
@@ -104,6 +104,7 @@
   "overrides": {
     "undici": "6.28.1",
     "@grpc/grpc-js": "1.14.5",
-    "dompurify": "3.4.16"
+    "dompurify": "3.4.16",
+    "basic-ftp": "6.2.1"
   }
 }

@@ -478,48 +478,50 @@ export default function Dashboard() {
       <div className="dashboard-executive-grid">
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.05 }}>
           <Card variant="elevated" className="dashboard-period-summary h-full">
-          <div className="grid gap-4 lg:grid-cols-[1.2fr_2fr] lg:items-end">
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
-                  Resultado do período
-                </p>
-                <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
-              </div>
-              <p className="mt-1 text-[10px] text-[--text-tertiary]">{monthLabel}</p>
-              {isLoading ? (
-                <div className="mt-2 h-10 w-44 animate-pulse rounded-xl bg-[--bg-hover]" />
-              ) : (
-                <p
-                  className={`mt-2 break-words text-[clamp(1.8rem,7vw,3rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${
-                    currentSummary.balance >= 0 ? 'text-[--text-primary]' : 'text-[--danger-text]'
-                  }`}
-                >
-                  {formatCurrency(currentSummary.balance)}
-                </p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {[
-                ['Receitas', currentSummary.income, 'Entradas do período'],
-                ['Despesas', currentSummary.expenses, 'Saídas do período'],
-                ['Comprometido', paymentSummary.committedAmount || 0, 'Obrigações do mês'],
-                ['Reservado total', savingsBalance, 'Poupança registrada'],
-              ].map(([label, value, detail]) => (
-                <div
-                  key={label}
-                  className="min-w-0 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3"
-                >
-                  <p className="text-[10px] font-bold text-[--text-tertiary]">{label}</p>
-                  <p className="mt-1 break-words text-sm font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere]">
-                    {formatCurrency(value)}
+            <div className="grid gap-4 lg:grid-cols-[1.2fr_2fr] lg:items-end">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
+                    Resultado do período
                   </p>
-                  <p className="mt-1 text-[10px] leading-tight text-[--text-tertiary]">{detail}</p>
+                  <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
                 </div>
-              ))}
+                <p className="mt-1 text-[10px] text-[--text-tertiary]">{monthLabel}</p>
+                {isLoading ? (
+                  <div className="mt-2 h-10 w-44 animate-pulse rounded-xl bg-[--bg-hover]" />
+                ) : (
+                  <p
+                    className={`mt-2 break-words text-[clamp(1.8rem,7vw,3rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${
+                      currentSummary.balance >= 0 ? 'text-[--text-primary]' : 'text-[--danger-text]'
+                    }`}
+                  >
+                    {formatCurrency(currentSummary.balance)}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {[
+                  ['Receitas', currentSummary.income, 'Entradas do período'],
+                  ['Despesas', currentSummary.expenses, 'Saídas do período'],
+                  ['Comprometido', paymentSummary.committedAmount || 0, 'Obrigações do mês'],
+                  ['Reservado total', savingsBalance, 'Poupança registrada'],
+                ].map(([label, value, detail]) => (
+                  <div
+                    key={label}
+                    className="min-w-0 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3"
+                  >
+                    <p className="text-[10px] font-bold text-[--text-tertiary]">{label}</p>
+                    <p className="mt-1 break-words text-sm font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere]">
+                      {formatCurrency(value)}
+                    </p>
+                    <p className="mt-1 text-[10px] leading-tight text-[--text-tertiary]">
+                      {detail}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
           </Card>
         </motion.div>
 
