@@ -60,8 +60,18 @@ Com a personalização ativada, o Money reconhece perguntas como:
 
 A resposta expõe a amostra usada e, quando houver evidência suficiente, a categoria de maior peso e a forma de pagamento mais frequente.
 
-## Limite desta fase
+## Sugestão de categoria em rascunhos
 
-O perfil é somente explicativo e analítico. Ele não escolhe categoria, não cria lançamentos e não executa ações automaticamente.
+Quando a personalização está ativa, o Money pode sugerir a categoria predominante do perfil em um rascunho de despesa somente quando:
 
-Uma evolução futura poderá usar o perfil para sugerir categoria em rascunhos, desde que a confirmação humana continue obrigatória.
+- o texto do usuário não identifica uma categoria explicitamente;
+- a amostra do perfil é suficiente;
+- a categoria ainda existe e aceita despesas.
+
+A sugestão não preenche o rascunho sozinha. O campo **Categoria** permanece vazio até o usuário clicar em **Usar sugestão**. Mesmo depois disso, o lançamento só é salvo pela ação normal **Confirmar lançamento**.
+
+Se o texto já indicar uma categoria, a interpretação explícita do texto sempre prevalece sobre o histórico.
+
+## Limite atual
+
+O Money pode explicar padrões e oferecer uma sugestão opcional de categoria. Ele não cria lançamentos, não troca categorias já identificadas e não executa ações financeiras automaticamente.
