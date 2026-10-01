@@ -202,6 +202,7 @@ export function buildMoneyTransactionDraft({
   message,
   categories = [],
   transactions = [],
+  personalizationProfile = null,
   now = new Date(),
   allowAdvanced = false,
 }) {
@@ -226,6 +227,17 @@ export function buildMoneyTransactionDraft({
   const date = parseTransactionDate(normalizedMessage, now)
   const { category, matchedKeyword } = findCategoryFromText(normalizedMessage, categories, type)
   const description = deriveDescription(normalizedMessage, matchedKeyword, category?.name)
+  const suggestedCategory =
+    type === 'expense' &&
+    !category &&
+    personalizationProfile?.confidence &&
+    personalizationProfile.confidence !== 'insufficient'
+      ? categories.find(
+          (item) =>
+            (item.type === 'expense' || item.type === 'both') &&
+            item.id === personalizationProfile.topCategory?.id,
+        ) || null
+      : null
 
   const draft = {
     type,
@@ -263,5 +275,13 @@ export function buildMoneyTransactionDraft({
     draft,
     missingFields,
     warnings,
+    categorySuggestion: suggestedCategory
+      ? {
+          categoryId: suggestedCategory.id,
+          categoryName: suggestedCategory.name,
+          confidence: personalizationProfile.confidence,
+          reason: 'Baseada no seu histórico recente. Nada será aplicado sem sua escolha.',
+        }
+      : null,
   }
 }
