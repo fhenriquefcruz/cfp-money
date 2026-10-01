@@ -96,10 +96,13 @@
 - [x] sintaxe do bootstrap PowerShell validada automaticamente no CI;
 - [x] bootstrap Bash para Codespaces/Linux;
 - [x] sintaxe do bootstrap Bash validada automaticamente no CI;
-- [ ] implantar/configurar Worker e provedor de e-mail no ambiente externo;
-- [ ] executar gate contra produção;
-- [ ] confirmar entrega real do e-mail operacional de ativação;
-- [ ] habilitar `VITE_EMAIL_NOTIFICATIONS_ENABLED=true` em PR separado.
+- [x] implantar/configurar Worker e provedor de e-mail no ambiente externo;
+- [x] executar gate protegido contra produção;
+- [x] confirmar entrega real do e-mail operacional de ativação em 29/09/2026;
+- [x] habilitar `VITE_EMAIL_NOTIFICATIONS_ENABLED=true` na Fase 40F e publicar o frontend;
+- [ ] validar a interface no Perfil de uma conta Premium real;
+- [ ] salvar preferências com consentimento e solicitar relatório de teste pela interface;
+- [ ] acompanhar a primeira execução agendada e os logs do provedor.
 
 ## Personalização transparente do Money — Fase 41B
 
