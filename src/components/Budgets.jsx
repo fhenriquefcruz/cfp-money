@@ -17,11 +17,10 @@ import { buildCategoryReviewQueue } from '../domain/categoryReview'
 const monthLabel = (monthKey) => `${monthKey.slice(5, 7)}/${monthKey.slice(0, 4)}`
 function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
   const amount = Number(budget?.amount) || 0
-  const percent = amount > 0 ? Math.max(0, (spent / amount) * 100) : 0
+  const percent = amount > 0 ? (spent / amount) * 100 : 0
   const balance = amount - spent
   const isOver = balance < 0
   const tone = isOver ? 'danger' : percent >= 70 ? 'warning' : 'success'
-  const txHref = `/transactions?category=${category.id}&month=${monthKey}`
 
   return (
     <Card className={isOver ? 'ring-2 ring-[--danger-border]' : ''}>
@@ -106,7 +105,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
       ) : null}
 
       <div className="budget-card-actions">
-        <Link to={txHref} className="budget-drilldown-link">
+        <Link to={`/transactions?category=${category.id}&month=${monthKey}`} className="budget-drilldown-link">
           Ver lançamentos
         </Link>
         <button
@@ -271,27 +270,9 @@ export default function Budgets() {
           <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               ['Orçado', formatCurrency(overview.totalBudgeted), 'text-[--brand-500]'],
-              [
-                'Gasto orçado',
-                formatCurrency(overview.totalSpent),
-                overview.totalSpent > overview.totalBudgeted
-                  ? 'text-[--danger-icon]'
-                  : 'text-[--text-primary]',
-              ],
-              [
-                'Gasto sem limite',
-                formatCurrency(overview.totalUnbudgetedSpent),
-                overview.totalUnbudgetedSpent > 0
-                  ? 'text-[--warning-text]'
-                  : 'text-[--text-primary]',
-              ],
-              [
-                'Excedente total',
-                formatCurrency(overview.totalExceeded),
-                overview.totalExceeded > 0
-                  ? 'text-[--danger-text]'
-                  : 'text-[--success-icon]',
-              ],
+              ['Gasto orçado', formatCurrency(overview.totalSpent), 'text-[--text-primary]'],
+              ['Gasto sem limite', formatCurrency(overview.totalUnbudgetedSpent), 'text-[--warning-text]'],
+              ['Excedente total', formatCurrency(overview.totalExceeded), 'text-[--danger-text]'],
             ].map(([label, value, color]) => (
               <Card key={label} className="py-3 text-center">
                 <p className={`text-lg font-black tabular-nums ${color}`}>{value}</p>
@@ -301,28 +282,19 @@ export default function Budgets() {
           </div>
 
           <p className="budget-summary-note">
-            O resumo dos limites considera somente categorias orçadas. O gasto total do mês é{' '}
-            <strong className="font-semibold text-[--text-secondary]">
-              {formatCurrency(monthSpent)}
-            </strong>
-            , incluindo {formatCurrency(overview.totalUnbudgetedSpent)} em categorias sem limite.
+            Gasto total do mês: <strong>{formatCurrency(monthSpent)}</strong>.
           </p>
         </>
       )}
 
       {categoryReviewCount > 0 && (
         <div className="budget-review-banner">
-          <div>
-            <p className="text-sm font-bold text-[--warning-text]">
-              Revise as classificações antes de interpretar os alertas
-            </p>
-            <p className="mt-1 text-xs text-[--warning-text]">
-              {categoryReviewCount}{' '}
-              {categoryReviewCount === 1
-                ? 'lançamento pode alterar o gasto de uma categoria.'
-                : 'lançamentos podem alterar os gastos por categoria.'}
-            </p>
-          </div>
+          <p className="text-sm font-bold text-[--warning-text]">
+            {categoryReviewCount}{' '}
+            {categoryReviewCount === 1
+              ? 'lançamento precisa de revisão de categoria.'
+              : 'lançamentos precisam de revisão de categoria.'}
+          </p>
           <Link
             to={`/transactions?month=${selectedMonth}&review=categories`}
             className="budget-review-banner__action"
