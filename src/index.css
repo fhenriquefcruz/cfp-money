@@ -1795,3 +1795,73 @@ body {
   outline: 2px solid var(--brand-500);
   outline-offset: 2px;
 }
+
+
+.transaction-kind-icon,
+.transaction-kind-badge {
+  border: 1px solid var(--border-default);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+
+.transaction-kind-icon {
+  display: flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+}
+
+.transaction-kind-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.transaction-kind-icon[data-kind='income'],
+.transaction-kind-badge[data-kind='income'] {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.transaction-kind-icon[data-kind='expense'],
+.transaction-kind-badge[data-kind='expense'] {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.transaction-kind-icon[data-kind='savings'],
+.transaction-kind-badge[data-kind='savings'] {
+  border-color: var(--brand-200);
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+
+.transaction-amount {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.transaction-amount[data-kind='income'] {
+  color: var(--success-icon);
+}
+
+.transaction-amount[data-kind='expense'] {
+  color: var(--danger-icon);
+}
+
+.transaction-amount[data-kind='savings'] {
+  color: var(--brand-800);
+}
