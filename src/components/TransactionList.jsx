@@ -623,7 +623,7 @@ export default function TransactionList() {
     })?.id || ''
 
   const activeFilterChips = [
-    typeFilter !== 'all' && ['type', transactionKindLabel(typeFilter)],
+    typeFilter !== 'all' && ['type', TRANSACTION_KIND[typeFilter]?.[0] || 'Tipo'],
     catFilter !== 'all' && [
       'category',
       categories.find((category) => category.id === catFilter)?.name || 'Categoria',
