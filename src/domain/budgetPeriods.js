@@ -70,13 +70,10 @@ export function buildMonthlyBudgetOverview({
   const items = getBudgetsForMonth(budgets, monthKey, currentMonthKey).map((budget) => {
     const spent = getBudgetSpent(transactions, budget.categoryId, monthKey)
     const amount = Number(budget.amount) || 0
-    const excess = Math.max(0, spent - amount)
-
     return {
       ...budget,
       spent,
       amount,
-      excess,
       percent: amount > 0 ? (spent / amount) * 100 : 0,
     }
   })
@@ -97,9 +94,11 @@ export function buildMonthlyBudgetOverview({
     items,
     totalBudgeted: items.reduce((total, item) => total + item.amount, 0),
     totalSpent,
-    totalAllSpent: totalSpent + totalUnbudgetedSpent,
     totalUnbudgetedSpent,
-    totalExceeded: items.reduce((total, item) => total + item.excess, 0),
-    overCount: items.filter((item) => item.excess > 0).length,
+    totalExceeded: items.reduce(
+      (total, item) => total + Math.max(0, item.spent - item.amount),
+      0,
+    ),
+    overCount: items.filter((item) => item.spent > item.amount).length,
   }
 }
