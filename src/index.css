@@ -2198,8 +2198,6 @@ body {
 .budget-drilldown-link,
 .budget-edit-limit,
 .budget-review-link,
-.budget-small-link,
-.budget-small-action,
 .budget-review-banner__action {
   display: inline-flex;
   align-items: center;
@@ -2247,22 +2245,6 @@ body {
 }
 
 
-.budget-small-link,
-.budget-small-action {
-  min-height: 2.25rem;
-  border-radius: 0.5rem;
-  padding-inline: 0.625rem;
-  font-size: 0.625rem;
-}
-
-.budget-small-link {
-  border: 1px solid var(--border-default);
-  color: var(--text-secondary);
-}
-
-.budget-small-action {
-  color: var(--text-brand);
-}
 
 .budget-review-banner {
   display: flex;
@@ -2289,4 +2271,12 @@ body {
   color: var(--text-tertiary);
   font-size: 0.75rem;
   line-height: 1.625;
+}
+
+
+.budget-card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.75rem;
 }
