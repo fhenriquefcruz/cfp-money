@@ -64,4 +64,3 @@ export function isProtectedTransactionGroup(transaction = {}) {
     (transaction.isRecurring && transaction.recurringGroupId),
   )
 }
-

@@ -248,7 +248,6 @@ function TxRow({
   const paidAtLabel = toDateTimeLabel(tx.paidAt)
   const [kindLabel, KindIcon] = TRANSACTION_KIND[kind]
 
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -256,28 +255,20 @@ function TxRow({
       exit={{ opacity: 0, x: -16 }}
       className="transaction-row transaction-row-refined group"
     >
-      <div
-        className="transaction-kind-icon"
-        data-kind={kind}
-        aria-hidden="true"
-      >
+      <div className="transaction-kind-icon" data-kind={kind} aria-hidden="true">
         <KindIcon size={17} />
       </div>
 
       <div className="transaction-row-main">
         <div className="transaction-row-heading">
-          <p className="transaction-row-title">
-            {tx.description || cat?.name || kindLabel}
-          </p>
+          <p className="transaction-row-title">{tx.description || cat?.name || kindLabel}</p>
           {tx.isInstallment && (
             <span className="transaction-series-badge transaction-series-badge--installment">
               {tx.installmentNum}/{tx.installmentOf}x
             </span>
           )}
           {tx.isRecurring && !tx.isInstallment && (
-            <span className="transaction-series-badge">
-              Fixo
-            </span>
+            <span className="transaction-series-badge">Fixo</span>
           )}
         </div>
 
@@ -304,11 +295,7 @@ function TxRow({
           )}
 
           {categoryReview && (
-            <button
-              type="button"
-              onClick={() => onEdit(tx)}
-              className="transaction-review-action"
-            >
+            <button type="button" onClick={() => onEdit(tx)} className="transaction-review-action">
               Revisar categoria
             </button>
           )}
@@ -339,9 +326,7 @@ function TxRow({
           )}
 
           {payableExpense && cancelled && !structuredCredit && (
-            <span className="transaction-cancelled-status">
-              Cancelada
-            </span>
+            <span className="transaction-cancelled-status">Cancelada</span>
           )}
         </div>
 
@@ -1088,12 +1073,8 @@ export default function TransactionList() {
         />
 
         {activeFilterChips.length > 0 && (
-          <div
-            className="transaction-active-filters"
-          >
-            <span className="transaction-active-filters__label">
-              Filtros ativos
-            </span>
+          <div className="transaction-active-filters">
+            <span className="transaction-active-filters__label">Filtros ativos</span>
             {activeFilterChips.map((filter) => (
               <button
                 key={filter[0]}

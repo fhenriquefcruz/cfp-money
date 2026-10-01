@@ -75,4 +75,3 @@ test('identifica série que não deve ser alterada isoladamente', () => {
     }),
   ).toBe(false)
 })
-
