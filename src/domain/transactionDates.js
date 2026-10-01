@@ -65,21 +65,3 @@ export function isProtectedTransactionGroup(transaction = {}) {
   )
 }
 
-
-export const getTransactionKind = (transaction) =>
-  transaction.isSavings
-    ? 'savings'
-    : transaction.flowType === 'transfer' || transaction.kind === 'transfer'
-      ? 'transfer'
-      : transaction.type === 'income'
-        ? 'income'
-        : 'expense'
-
-const KIND_LABELS = {
-  income: 'Receita',
-  expense: 'Despesa',
-  transfer: 'Transferência',
-  savings: 'Aporte / reserva',
-}
-
-export const transactionKindLabel = (kind) => KIND_LABELS[kind]
