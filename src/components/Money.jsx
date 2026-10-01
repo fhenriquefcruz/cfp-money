@@ -33,6 +33,7 @@ import { getCalendarMonthBounds } from '../domain/dashboard'
 import { buildMoneyPriorities } from '../domain/moneyPriorities'
 import { budgetMonthKey, buildMonthlyBudgetOverview } from '../domain/budgetPeriods'
 import { buildMoneyAssistantResponse } from '../domain/moneyAssistant'
+import { buildMoneyPersonalizationProfile } from '../domain/moneyPersonalization'
 import { buildMoneyTransactionDraft } from '../domain/moneyTransactionDraft'
 import { buildMoneyCreditDraft } from '../domain/moneyCreditDraft'
 import { buildCreditTransaction, buildInstallmentTransactions } from '../domain/creditCards'
@@ -287,6 +288,19 @@ function MoneyContent() {
     () => analyzeSpendingLeaks(transactions, settings, now),
     [transactions, settings, now.getFullYear(), now.getMonth(), now.getDate()],
   )
+  const personalizationProfile = useMemo(
+    () =>
+      settings.personalizationEnabled
+        ? buildMoneyPersonalizationProfile(transactions, { now })
+        : null,
+    [
+      transactions,
+      settings.personalizationEnabled,
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    ],
+  )
   const priorityReport = useMemo(
     () =>
       buildMoneyPriorities({
@@ -476,6 +490,7 @@ function MoneyContent() {
         now: new Date(),
         analyze: analyzeMoney,
         priority: priorityReport.priorities?.[0]?.title,
+        personalizationProfile,
       })
 
     const timestamp = Date.now()
