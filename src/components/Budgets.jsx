@@ -61,7 +61,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
               <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
                 Gasto no mês
               </p>
-              <p className="mt-1 text-2xl font-black tabular-nums" style={{ color: `var(--${tone}-icon)` }}>
+              <p className="budget-spent-value" data-tone={tone}>
                 {formatCurrency(spent)}
               </p>
             </div>
@@ -81,22 +81,13 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
 
           <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[--bg-hover]">
             <div
-              className="h-full rounded-full"
-              style={{
-                background: `var(--${tone}-icon)`,
-                width: `${Math.min(percent, 100)}%`,
-              }}
+              className="budget-progress-fill"
+              data-tone={tone}
+              style={{ width: `${Math.min(percent, 100)}%` }}
             />
           </div>
 
-          <div
-            className="mt-3 rounded-xl border px-3 py-2 text-xs font-medium"
-            style={{
-              background: `var(--${tone}-bg)`,
-              borderColor: `var(--${tone}-border)`,
-              color: `var(--${tone}-text)`,
-            }}
-          >
+          <div className="budget-status" data-tone={tone}>
             {isOver ? `Excedido em ${(percent - 100).toFixed(0)}%` : `${percent.toFixed(0)}% utilizado`}
           </div>
         </>
