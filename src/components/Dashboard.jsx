@@ -3,8 +3,8 @@ import React, { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -21,7 +21,6 @@ import {
   Heart,
   ChevronLeft,
   ChevronRight,
-  PiggyBank,
   Clock3,
   CheckCircle2,
 } from 'lucide-react'
@@ -631,7 +630,7 @@ export default function Dashboard() {
             </div>
 
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={monthlyData} margin={{ top: 8, right: 8, left: 4, bottom: 4 }}>
+              <AreaChart data={monthlyData} margin={{ top: 8, right: 8, left: 4, bottom: 4 }}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="var(--border-subtle)"
@@ -651,7 +650,7 @@ export default function Dashboard() {
                   tickFormatter={formatAxisCurrency}
                 />
                 <Tooltip content={<ChartTooltip />} />
-                <Line
+                <Area
                   type="linear"
                   dataKey="income"
                   name="Receitas"
@@ -659,8 +658,9 @@ export default function Dashboard() {
                   strokeWidth={2}
                   dot={{ r: 3, strokeWidth: 2 }}
                   activeDot={{ r: 5 }}
+                  fill="transparent"
                 />
-                <Line
+                <Area
                   type="linear"
                   dataKey="expenses"
                   name="Despesas"
@@ -668,8 +668,9 @@ export default function Dashboard() {
                   strokeWidth={2}
                   dot={{ r: 3, strokeWidth: 2 }}
                   activeDot={{ r: 5 }}
+                  fill="transparent"
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
 
             <div
@@ -770,7 +771,6 @@ export default function Dashboard() {
               <div className="space-y-3">
                 {categoryBreakdown.slice(0, 6).map((cat) => {
                   const width = Math.max(4, cat.sharePercent)
-                  const category = categories.find((item) => item.id === cat.categoryId)
                   const isOtherLarge =
                     String(cat.categoryName || '').toLowerCase() === 'outros' &&
                     cat.sharePercent >= 25
