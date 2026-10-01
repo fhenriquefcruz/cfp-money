@@ -615,7 +615,6 @@ export default function Dashboard() {
                       disabled={disabled}
                       onClick={() => setTrendMonths(months)}
                       aria-pressed={trendMonths === months}
-                      title={disabled ? 'Disponível quando houver histórico em 12 meses' : undefined}
                       className={`min-h-9 rounded-lg px-3 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                         trendMonths === months
                           ? 'bg-[--bg-elevated] text-[--text-primary] shadow-sm'
