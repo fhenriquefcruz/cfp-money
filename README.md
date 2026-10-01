@@ -135,14 +135,14 @@ Sem Cloud Functions implantadas, use:
 
 ```env
 VITE_BACKEND_MODE=disabled
-VITE_EMAIL_NOTIFICATIONS_ENABLED=false
+VITE_EMAIL_NOTIFICATIONS_ENABLED=true
 VITE_ENFORCE_LEGAL_GATE=true
 VITE_APP_CHECK_ENABLED=true
 VITE_REQUIRE_APP_CHECK=true
 VITE_APP_CHECK_DEBUG=false
 ```
 
-O frontend permanece no Firebase Spark. O consentimento jurídico continua funcional sem Cloud Functions porque o `privacyGateway` usa o fallback `sparkPrivacy` para ler e registrar a aceitação no Firestore. Relatórios e alertas Premium por e-mail poderão ser processados pelo Worker em `worker/email-notifications` depois que ele for implantado e validado. A configuração está descrita em `docs/EMAIL_NOTIFICATIONS_SETUP.md`.
+O frontend permanece no Firebase Spark. O consentimento jurídico continua funcional sem Cloud Functions porque o `privacyGateway` usa o fallback `sparkPrivacy` para ler e registrar a aceitação no Firestore. Relatórios e alertas Premium por e-mail são processados pelo Worker em `worker/email-notifications`, implantado e validado pelo gate protegido em 29/09/2026. A configuração está descrita em `docs/EMAIL_NOTIFICATIONS_SETUP.md`.
 
 ```bash
 npm run notifications:validate
@@ -152,4 +152,4 @@ npm run notifications:activation:test
 npm run notifications:activation:check
 ```
 
-A ativação de produção segue o gate descrito em `docs/EMAIL_NOTIFICATIONS_ACTIVATION.md`. O workflow `Deploy Premium email worker` publica o Worker e executa um teste operacional protegido sem dados financeiros. A feature flag permanece desabilitada até health, gate e entrega real serem confirmados.
+A ativação de produção segue o gate descrito em `docs/EMAIL_NOTIFICATIONS_ACTIVATION.md`. O workflow `Deploy Premium email worker` publica o Worker e executa um teste operacional protegido sem dados financeiros. Health, gate e entrega real foram confirmados em 29/09/2026, e a feature flag está habilitada em produção.
