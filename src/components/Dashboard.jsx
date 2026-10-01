@@ -586,29 +586,52 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Gráficos — altura maior */}
+      {/* Análise principal: evolução e composição */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.15 }}>
-          <Card>
-            <div className="flex items-center gap-2 mb-4">
-              <div>
-                <h3 className="text-sm font-bold text-[--text-primary]">Evolução financeira</h3>
-                <p className="text-xs text-[--text-tertiary]">Últimos 6 meses</p>
+          <Card className="h-full">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-[--text-primary]">
+                    Receitas e despesas nos últimos {trendMonths} meses
+                  </h3>
+                  <InfoTooltip text="Valores agrupados pela data da movimentação. As linhas ligam pontos mensais reais, sem estimar valores entre os meses." />
+                </div>
+                <p className="mt-1 text-xs text-[--text-tertiary]">
+                  Selecione um mês para ver os valores exatos e abrir os lançamentos.
+                </p>
               </div>
-              <InfoTooltip text="Receitas (verde) vs Despesas (vermelho) mês a mês." />
+
+              <div
+                className="inline-flex rounded-xl border border-[--border-default] bg-[--bg-subtle] p-1"
+                aria-label="Período da evolução financeira"
+              >
+                {[6, 12].map((months) => {
+                  const disabled = months === 12 && availableMonthCount < 12
+                  return (
+                    <button
+                      key={months}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => setTrendMonths(months)}
+                      aria-pressed={trendMonths === months}
+                      title={disabled ? 'Disponível quando houver histórico em 12 meses' : undefined}
+                      className={`min-h-9 rounded-lg px-3 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                        trendMonths === months
+                          ? 'bg-[--bg-elevated] text-[--text-primary] shadow-sm'
+                          : 'text-[--text-tertiary] hover:text-[--text-primary]'
+                      }`}
+                    >
+                      {months} meses
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-            <ResponsiveContainer width="100%" height={240}>
-              <AreaChart data={monthlyData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="incG" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.18} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="expG" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.18} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
+
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={monthlyData} margin={{ top: 8, right: 8, left: 4, bottom: 4 }}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="var(--border-subtle)"
@@ -621,97 +644,179 @@ export default function Dashboard() {
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }}
+                  tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
                   axisLine={false}
                   tickLine={false}
-                  tickFormatter={(v) => formatCurrency(v, { compact: true })}
+                  width={72}
+                  tickFormatter={formatAxisCurrency}
                 />
                 <Tooltip content={<ChartTooltip />} />
-                <Area
-                  type="monotone"
+                <Line
+                  type="linear"
                   dataKey="income"
                   name="Receitas"
-                  stroke="#10b981"
+                  stroke="var(--success-icon)"
                   strokeWidth={2}
-                  fill="url(#incG)"
-                  dot={false}
-                  activeDot={{ r: 4 }}
+                  dot={{ r: 3, strokeWidth: 2 }}
+                  activeDot={{ r: 5 }}
                 />
-                <Area
-                  type="monotone"
+                <Line
+                  type="linear"
                   dataKey="expenses"
                   name="Despesas"
-                  stroke="#ef4444"
+                  stroke="var(--danger-icon)"
                   strokeWidth={2}
-                  fill="url(#expG)"
-                  dot={false}
-                  activeDot={{ r: 4 }}
+                  dot={{ r: 3, strokeWidth: 2 }}
+                  activeDot={{ r: 5 }}
                 />
-              </AreaChart>
+              </LineChart>
             </ResponsiveContainer>
+
+            <div
+              className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6"
+              role="list"
+              aria-label="Valores mensais da evolução financeira"
+            >
+              {monthlyData.map((item) => (
+                <button
+                  key={item.monthKey}
+                  type="button"
+                  role="listitem"
+                  onClick={() => setSelectedMonthKey(item.monthKey)}
+                  aria-pressed={selectedTrend?.monthKey === item.monthKey}
+                  className={`min-w-0 rounded-xl border p-2 text-left transition-colors ${
+                    selectedTrend?.monthKey === item.monthKey
+                      ? 'border-[--brand-300] bg-[--brand-50]'
+                      : 'border-[--border-subtle] bg-[--bg-subtle] hover:bg-[--bg-hover]'
+                  }`}
+                >
+                  <span className="block text-[10px] font-bold text-[--text-secondary]">
+                    {item.month}
+                  </span>
+                  <span className="mt-1 block truncate text-[10px] tabular-nums text-[--success-text]">
+                    R {formatCurrency(item.income)}
+                  </span>
+                  <span className="block truncate text-[10px] tabular-nums text-[--danger-text]">
+                    D {formatCurrency(item.expenses)}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {selectedTrend && (
+              <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-black text-[--text-primary]">{selectedTrend.fullMonth}</p>
+                  <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                    Receitas {formatCurrency(selectedTrend.income)} · Despesas{' '}
+                    {formatCurrency(selectedTrend.expenses)} · Resultado{' '}
+                    {formatCurrency(selectedTrend.balance)}
+                  </p>
+                </div>
+                <Link
+                  to={`/transactions?month=${selectedTrend.monthKey}`}
+                  className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-brand] hover:bg-[--bg-hover]"
+                >
+                  Ver lançamentos
+                  <ArrowRight size={12} />
+                </Link>
+              </div>
+            )}
+
+            {trendHighlight && (
+              <p className="mt-3 text-[10px] leading-relaxed text-[--text-tertiary]">
+                Maior mudança de despesas: <strong>{trendHighlight.month}</strong>,{' '}
+                {formatCurrency(Math.abs(trendHighlight.delta))}{' '}
+                {trendHighlight.delta >= 0 ? 'a mais' : 'a menos'} que{' '}
+                {trendHighlight.previousMonth}
+                {trendHighlight.percent !== null
+                  ? ` · ${formatVariation(trendHighlight.percent)}`
+                  : ' · sem base percentual anterior'}.
+              </p>
+            )}
           </Card>
         </motion.div>
 
         <motion.div {...fade} transition={{ delay: 0.2 }}>
           <Card className="h-full">
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-sm font-bold text-[--text-primary]">Por categoria</h3>
-              <InfoTooltip text="Distribuição das despesas do mês." />
+            <div className="mb-3">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-[--text-primary]">Gastos por categoria</h3>
+                <InfoTooltip text="Despesas do mês pela data da movimentação, ordenadas do maior para o menor gasto." />
+              </div>
+              <p className="mt-1 text-xs text-[--text-tertiary]">
+                Valor, participação no total e comparação com o mês anterior.
+              </p>
             </div>
-            {categoryTotals.length === 0 ? (
-              <p className="text-xs text-[--text-tertiary] text-center py-8">
+
+            {categoryReviewCount > 0 && (
+              <Link
+                to="/transactions?review=categories&scope=all"
+                className="mb-3 flex min-h-10 items-center justify-between gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-[10px] font-bold text-[--warning-text]"
+              >
+                <span>
+                  {categoryReviewCount}{' '}
+                  {categoryReviewCount === 1 ? 'classificação para revisar' : 'classificações para revisar'}
+                </span>
+                <ArrowRight size={12} />
+              </Link>
+            )}
+
+            {categoryBreakdown.length === 0 ? (
+              <p className="py-8 text-center text-xs text-[--text-tertiary]">
                 Nenhuma despesa no mês
               </p>
             ) : (
-              <>
-                <ResponsiveContainer width="100%" height={140}>
-                  <PieChart>
-                    <Pie
-                      data={categoryTotals}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={38}
-                      outerRadius={62}
-                      dataKey="total"
-                      nameKey="categoryName"
-                      paddingAngle={2}
+              <div className="space-y-3">
+                {categoryBreakdown.slice(0, 6).map((cat) => {
+                  const width = Math.max(4, cat.sharePercent)
+                  const category = categories.find((item) => item.id === cat.categoryId)
+                  const isOtherLarge =
+                    String(cat.categoryName || '').toLowerCase() === 'outros' &&
+                    cat.sharePercent >= 25
+
+                  return (
+                    <Link
+                      key={cat.categoryId || cat.categoryName}
+                      to={`/transactions?category=${encodeURIComponent(cat.categoryId || '')}&month=${budgetOverview.monthKey}`}
+                      className="group block rounded-xl border border-transparent p-1.5 transition-colors hover:border-[--border-default] hover:bg-[--bg-hover]"
                     >
-                      {categoryTotals.map((category, i) => (
-                        <Cell
-                          key={category.categoryId || category.categoryName || i}
-                          fill={PIE_COLORS[i % PIE_COLORS.length]}
-                          aria-label={`${category.categoryName}: ${formatCurrency(category.total)}`}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-bold text-[--text-primary]">
+                            {cat.categoryName}
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+                            {cat.sharePercent.toLocaleString('pt-BR', {
+                              maximumFractionDigits: 1,
+                            })}
+                            % do total · {formatVariation(cat.changePercent)}
+                          </p>
+                        </div>
+                        <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
+                          {formatCurrency(cat.total)}
+                        </span>
+                      </div>
+                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[--bg-hover]">
+                        <div
+                          className="h-full rounded-full bg-[--brand-600] transition-[width]"
+                          style={{ width: `${Math.min(100, width)}%` }}
+                          aria-hidden="true"
                         />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(v) => formatCurrency(v)}
-                      contentStyle={{
-                        background: 'var(--bg-elevated)',
-                        border: '1px solid var(--border-default)',
-                        borderRadius: 12,
-                        fontSize: 11,
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="space-y-1.5 mt-2">
-                  {categoryTotals.slice(0, 4).map((cat, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ background: PIE_COLORS[i % PIE_COLORS.length] }}
-                      />
-                      <span className="text-xs text-[--text-secondary] flex-1 truncate">
-                        {cat.categoryName}
+                      </div>
+                      {isOtherLarge && (
+                        <p className="mt-1.5 text-[10px] font-semibold text-[--warning-text]">
+                          “Outros” concentra uma parcela relevante dos gastos; abra para revisar a composição.
+                        </p>
+                      )}
+                      <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand] opacity-80 group-hover:opacity-100">
+                        Ver lançamentos
+                        <ArrowRight size={11} />
                       </span>
-                      <span className="text-xs font-semibold text-[--text-primary]">
-                        {formatCurrency(cat.total, { compact: true })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </>
+                    </Link>
+                  )
+                })}
+              </div>
             )}
           </Card>
         </motion.div>
