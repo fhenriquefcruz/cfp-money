@@ -246,7 +246,6 @@ function TxRow({
   const invoicePresentation = invoicePaymentPresentation(paymentState)
   const createdAtLabel = toDateTimeLabel(tx.createdAt)
   const paidAtLabel = toDateTimeLabel(tx.paidAt)
-  const activityDateLabel = formatTransactionIsoDate(dateContext.activityDate)
   const [kindLabel, KindIcon] = TRANSACTION_KIND[kind]
 
 
@@ -309,7 +308,6 @@ function TxRow({
               type="button"
               onClick={() => onEdit(tx)}
               className="transaction-review-action"
-              title={categoryReview.reason}
             >
               Revisar categoria
             </button>
@@ -353,7 +351,7 @@ function TxRow({
             Detalhes
           </summary>
           <div className="transaction-row-details-panel">
-            <span>Movimentação: {activityDateLabel}</span>
+            <span>Movimentação: {formatTransactionIsoDate(dateContext.activityDate)}</span>
             {!structuredCredit && tx.dueDate && tx.dueDate !== dateContext.activityDate && (
               <span>Vencimento: {dateContext.accountingLabel}</span>
             )}
@@ -363,7 +361,7 @@ function TxRow({
             {paidAtLabel && <span>Pagamento: {paidAtLabel}</span>}
             {createdAtLabel && <span>Cadastro: {createdAtLabel}</span>}
             {protectedGroup && (
-              <span>{tx.isInstallment ? 'Série parcelada gerenciável' : 'Série recorrente gerenciável'}</span>
+              <span>{tx.isInstallment ? 'Série parcelada' : 'Série recorrente'}</span>
             )}
             {tx.notes && <span className="transaction-row-note">Observação: {tx.notes}</span>}
           </div>
