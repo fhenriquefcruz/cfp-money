@@ -25,9 +25,6 @@ export function getBudgetForMonth(
   return budgets.find((budget) => budget.categoryId === categoryId && !budget.monthKey) || null
 }
 
-export const getBudgetTransactionMonth = (transaction = {}) =>
-  getTransactionActivityDate(transaction)?.slice(0, 7) || ''
-
 export function getBudgetTransactions(transactions = [], categoryId, monthKey) {
   if (!MONTH.test(monthKey || '')) return []
 
@@ -39,7 +36,7 @@ export function getBudgetTransactions(transactions = [], categoryId, monthKey) {
       transaction.flowType !== 'transfer' &&
       transaction.kind !== 'transfer' &&
       (!categoryId || transaction.categoryId === categoryId) &&
-      getBudgetTransactionMonth(transaction) === monthKey,
+      getTransactionActivityDate(transaction)?.slice(0, 7) === monthKey,
   )
 }
 
@@ -56,9 +53,11 @@ export function shiftBudgetMonth(monthKey, amount) {
 }
 
 function getBudgetsForMonth(budgets, monthKey, currentMonthKey) {
-  return [...new Set(budgets.map(({ categoryId }) => categoryId).filter(Boolean))]
-    .map((categoryId) => getBudgetForMonth(budgets, categoryId, monthKey, currentMonthKey))
-    .filter(Boolean)
+  return budgets.filter(
+    (budget) =>
+      budget.categoryId &&
+      getBudgetForMonth(budgets, budget.categoryId, monthKey, currentMonthKey) === budget,
+  )
 }
 
 export function buildMonthlyBudgetOverview({
