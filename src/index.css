@@ -2132,3 +2132,63 @@ body {
     opacity: 1;
   }
 }
+
+
+.transaction-row-details-summary {
+  display: inline-flex;
+  min-height: 2rem;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--text-tertiary);
+  font-size: 0.625rem;
+  font-weight: 600;
+}
+
+.transaction-row-details-summary:hover {
+  color: var(--text-primary);
+}
+
+.transaction-date-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.5rem 1rem;
+  background: var(--bg-subtle);
+}
+
+.transaction-date-label {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.transaction-date-totals {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.transaction-date-total {
+  font-weight: 600;
+}
+
+.transaction-date-total[data-kind='income'] {
+  color: var(--success-icon);
+}
+
+.transaction-date-total[data-kind='expense'] {
+  color: var(--danger-icon);
+}
+
+@media (min-width: 640px) {
+  .transaction-row-note {
+    grid-column: 1 / -1;
+  }
+}
