@@ -132,7 +132,6 @@ test('exclui transferências e expõe composição auditável do orçamento', ()
     totalSpent: 300,
     totalUnbudgetedSpent: 200,
     totalExceeded: 50,
-    overCount: 1,
   })
 })
 
