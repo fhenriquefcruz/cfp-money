@@ -37,9 +37,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
             <p className="text-xs text-[--text-tertiary]">
               {budget
                 ? `${formatCurrency(amount)} neste mês`
-                : spent > 0
-                  ? `Sem limite · ${formatCurrency(spent)} gasto`
-                  : 'Sem limite · nenhum gasto'}
+                : `Sem limite · ${formatCurrency(spent)} gasto`}
             </p>
           </div>
         </div>
@@ -290,10 +288,7 @@ export default function Budgets() {
       {categoryReviewCount > 0 && (
         <div className="budget-review-banner">
           <p className="text-sm font-bold text-[--warning-text]">
-            {categoryReviewCount}{' '}
-            {categoryReviewCount === 1
-              ? 'lançamento precisa de revisão de categoria.'
-              : 'lançamentos precisam de revisão de categoria.'}
+            Revisão de categoria: {categoryReviewCount}
           </p>
           <Link
             to={`/transactions?month=${selectedMonth}&review=categories`}
