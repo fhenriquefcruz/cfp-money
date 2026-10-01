@@ -37,7 +37,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
             <p className="text-xs text-[--text-tertiary]">
               {budget
                 ? `${formatCurrency(amount)} neste mês`
-                : `Sem limite · ${formatCurrency(spent)} gasto`}
+                : `Sem limite · ${formatCurrency(spent)}`}
             </p>
           </div>
         </div>
@@ -83,12 +83,12 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
             <div
               className="budget-progress-fill"
               data-tone={tone}
-              style={{ width: `${Math.min(percent, 100)}%` }}
+              style={{ width: `${percent}%` }}
             />
           </div>
 
           <div className="budget-status" data-tone={tone}>
-            {isOver ? `Excedido em ${(percent - 100).toFixed(0)}%` : `${percent.toFixed(0)}% utilizado`}
+            {`${percent.toFixed(0)}% usado`}
           </div>
         </>
       ) : null}
@@ -271,7 +271,7 @@ export default function Budgets() {
           </div>
 
           <p className="budget-summary-note">
-            Gasto total do mês: <strong>{formatCurrency(monthSpent)}</strong>.
+            Total no mês: <strong>{formatCurrency(monthSpent)}</strong>.
           </p>
         </>
       )}
