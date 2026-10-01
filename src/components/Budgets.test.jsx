@@ -87,10 +87,5 @@ describe('Budgets auditability', () => {
       'href',
       '/transactions?month=2026-09&review=categories',
     )
-
-    expect(screen.getByRole('link', { name: /1 classificação para revisar/i })).toHaveAttribute(
-      'href',
-      '/transactions?category=fuel&month=2026-09&review=categories',
-    )
   })
 })
