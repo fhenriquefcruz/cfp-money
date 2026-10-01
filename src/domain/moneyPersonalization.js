@@ -57,7 +57,12 @@ export function buildMoneyPersonalizationProfile(
 
     const name = String(item.categoryName || item.categoryId || 'Sem categoria').trim()
     const key = String(item.categoryId || name || 'sem-categoria')
-    const category = categories.get(key) || { id: key, name: name || 'Sem categoria', amount: 0, count: 0 }
+    const category = categories.get(key) || {
+      id: key,
+      name: name || 'Sem categoria',
+      amount: 0,
+      count: 0,
+    }
     category.amount += amount
     category.count += 1
     categories.set(key, category)
@@ -78,8 +83,7 @@ export function buildMoneyPersonalizationProfile(
     topCategory.share = totalExpenses > 0 ? topCategory.amount / totalExpenses : 0
   }
 
-  const preferredPaymentMethod =
-    [...payments.values()].sort((a, b) => b.count - a.count)[0] || null
+  const preferredPaymentMethod = [...payments.values()].sort((a, b) => b.count - a.count)[0] || null
 
   return {
     windowDays: days,

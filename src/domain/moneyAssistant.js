@@ -318,9 +318,7 @@ export function buildMoneyAssistantResponse({
               },
             ]
           : []),
-        ...(payment
-          ? [{ label: 'Mais usado', rawValue: payment.label || payment.id }]
-          : []),
+        ...(payment ? [{ label: 'Mais usado', rawValue: payment.label || payment.id }] : []),
       ],
     }
   }
