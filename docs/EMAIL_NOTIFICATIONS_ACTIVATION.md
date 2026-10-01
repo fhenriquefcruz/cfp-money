@@ -2,7 +2,7 @@
 
 ## Estado
 
-A infraestrutura de código está pronta para ativação controlada, mas a feature permanece desabilitada no frontend até a validação ponta a ponta.
+A infraestrutura foi ativada de forma controlada em 29/09/2026. O Worker foi implantado, o gate protegido passou, a entrega operacional foi confirmada e o frontend de produção está compilado com `VITE_EMAIL_NOTIFICATIONS_ENABLED=true`.
 
 ## Pré-requisitos externos
 
@@ -92,9 +92,9 @@ npm run notifications:activation:check
 
 Gate protegido aprovado e entrega real do e-mail operacional confirmada em 29/09/2026. A partir deste ponto:
 
-- [ ] criar PR separado para alterar `VITE_EMAIL_NOTIFICATIONS_ENABLED=true`;
-- [ ] publicar o frontend;
-- [ ] executar smoke de produção;
+- [x] habilitar `VITE_EMAIL_NOTIFICATIONS_ENABLED=true` em mudança isolada na Fase 40F;
+- [x] publicar o frontend;
+- [x] executar smoke de produção;
 - [ ] validar a interface no Perfil de uma conta Premium;
 - [ ] salvar preferências com consentimento;
 - [ ] solicitar o primeiro relatório de teste pela interface;
