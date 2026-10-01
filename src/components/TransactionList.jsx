@@ -253,7 +253,7 @@ function TxRow({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -16 }}
-      className="transaction-row group grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 px-3 py-3.5 transition-colors hover:bg-[--bg-hover] sm:flex sm:items-start sm:px-4"
+      className="transaction-row transaction-row-refined group"
     >
       <div
         className="transaction-kind-icon"
@@ -263,24 +263,24 @@ function TxRow({
         <KindIcon size={17} />
       </div>
 
-      <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <p className="max-w-full truncate text-sm font-semibold text-[--text-primary] sm:max-w-[260px]">
+      <div className="transaction-row-main">
+        <div className="transaction-row-heading">
+          <p className="transaction-row-title">
             {tx.description || cat?.name || transactionKindLabel(kind)}
           </p>
           {tx.isInstallment && (
-            <span className="flex-shrink-0 rounded-full bg-[--brand-100] px-1.5 py-0.5 text-[10px] font-bold text-[--brand-700]">
+            <span className="transaction-series-badge transaction-series-badge--installment">
               {tx.installmentNum}/{tx.installmentOf}x
             </span>
           )}
           {tx.isRecurring && !tx.isInstallment && (
-            <span className="flex-shrink-0 rounded-full bg-[--bg-hover] px-1.5 py-0.5 text-[10px] font-bold text-[--text-tertiary]">
+            <span className="transaction-series-badge">
               Fixo
             </span>
           )}
         </div>
 
-        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+        <div className="transaction-row-meta">
           <span className="transaction-kind-badge" data-kind={kind}>
             <KindIcon size={11} aria-hidden="true" />
             {transactionKindLabel(kind)}
@@ -288,7 +288,7 @@ function TxRow({
 
           {cat && !isSavings && !isTransfer && (
             <span
-              className="flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold text-[--text-secondary]"
+              className="transaction-category-badge"
               style={{
                 background: (cat.color || '#6366f1') + '15',
                 borderColor: (cat.color || '#6366f1') + '45',
@@ -300,7 +300,7 @@ function TxRow({
           )}
 
           {paymentMethod && !isSavings && !isTransfer && (
-            <span className="inline-flex items-center rounded-full border border-[--border-default] bg-[--bg-subtle] px-2 py-0.5 text-[10px] font-semibold text-[--text-secondary]">
+            <span className="transaction-payment-method">
               {paymentMethod.label}
             </span>
           )}
@@ -309,7 +309,7 @@ function TxRow({
             <button
               type="button"
               onClick={() => onEdit(tx)}
-              className="inline-flex min-h-8 items-center rounded-full border border-[--warning-border] bg-[--warning-bg] px-2 text-[10px] font-bold text-[--warning-text]"
+              className="transaction-review-action"
               title={categoryReview.reason}
             >
               Revisar categoria
@@ -323,7 +323,7 @@ function TxRow({
               disabled={paymentUpdating}
               aria-pressed={paid}
               aria-label={`${paid ? 'Marcar como pendente' : 'Marcar como paga'}: ${tx.description || cat?.name || 'despesa'}`}
-              className={`inline-flex min-h-8 items-center gap-1 rounded-full border px-2.5 text-[10px] font-bold transition-colors disabled:cursor-wait disabled:opacity-60 ${manualPresentation.className}`}
+              className={`transaction-payment-status ${manualPresentation.className}`}
             >
               {paid ? <CheckCircle2 size={12} /> : <Clock3 size={12} />}
               {paymentUpdating ? 'Salvando…' : manualPresentation.label}
@@ -334,7 +334,7 @@ function TxRow({
             <Link
               to="/cards"
               aria-label={`Abrir fatura de ${tx.cardName || 'cartão'}`}
-              className={`inline-flex min-h-8 items-center gap-1 rounded-full border px-2.5 text-[10px] font-bold transition-colors ${invoicePresentation.className}`}
+              className={`transaction-payment-status ${invoicePresentation.className}`}
             >
               {paid ? <CheckCircle2 size={12} /> : <Clock3 size={12} />}
               {invoicePresentation.label}
@@ -342,7 +342,7 @@ function TxRow({
           )}
 
           {payableExpense && cancelled && !structuredCredit && (
-            <span className="inline-flex min-h-8 items-center rounded-full border border-[--border-default] bg-[--bg-hover] px-2.5 text-[10px] font-bold text-[--text-tertiary]">
+            <span className="transaction-cancelled-status">
               Cancelada
             </span>
           )}
@@ -353,7 +353,7 @@ function TxRow({
             <ChevronDown size={12} aria-hidden="true" />
             Detalhes
           </summary>
-          <div className="mt-1 grid gap-x-4 gap-y-1 rounded-xl bg-[--bg-subtle] px-3 py-2 text-[10px] text-[--text-secondary] sm:grid-cols-2">
+          <div className="transaction-row-details-panel">
             <span>Movimentação: {activityDateLabel}</span>
             {!structuredCredit && tx.dueDate && tx.dueDate !== dateContext.activityDate && (
               <span>Vencimento: {dateContext.accountingLabel}</span>
@@ -371,16 +371,16 @@ function TxRow({
         </details>
       </div>
 
-      <div className="transaction-row__aside col-start-2 flex min-w-0 flex-wrap items-center justify-between gap-2 sm:ml-auto sm:flex-shrink-0 sm:flex-nowrap">
+      <div className="transaction-row__aside transaction-row-aside-refined">
         <span className="transaction-amount" data-kind={kind}>
           {isIncome ? '+' : kind === TRANSACTION_KIND.EXPENSE ? '−' : ''}
           {formatCurrency(tx.amount)}
         </span>
 
-        <div className="flex flex-shrink-0 items-center gap-1">
+        <div className="transaction-row-controls">
           {payableExpense && toggleablePayment && (
             <label
-              className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-[--border-default] bg-[--bg-surface] px-2 text-[10px] font-semibold text-[--text-secondary]"
+              className="transaction-select-control"
               title="Selecionar para ação em massa"
             >
               <input
@@ -394,17 +394,17 @@ function TxRow({
             </label>
           )}
 
-          <div className="flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+          <div className="transaction-row-actions">
             <button
               onClick={() => onEdit(tx)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-elevated] hover:text-[--text-brand]"
+              className="transaction-row-action transaction-row-action--edit"
               aria-label={`Editar transação ${tx.description || cat?.name || ''}`.trim()}
             >
               <Edit2 size={13} />
             </button>
             <button
               onClick={() => onDelete(tx)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
+              className="transaction-row-action transaction-row-action--delete"
               aria-label={`Excluir transação ${tx.description || cat?.name || ''}`.trim()}
             >
               <Trash2 size={13} />
@@ -1127,10 +1127,10 @@ export default function TransactionList() {
 
         {activeFilterChips.length > 0 && (
           <div
-            className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] px-3 py-2"
+            className="transaction-active-filters"
             aria-label="Filtros ativos"
           >
-            <span className="mr-1 text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+            <span className="transaction-active-filters__label">
               Filtros ativos
             </span>
             {activeFilterChips.map((filter) => (
@@ -1138,7 +1138,7 @@ export default function TransactionList() {
                 key={filter.id}
                 type="button"
                 onClick={() => removeActiveFilter(filter.id)}
-                className="inline-flex min-h-8 items-center gap-1 rounded-full border border-[--border-default] bg-[--bg-surface] px-2.5 text-[10px] font-semibold text-[--text-secondary] hover:border-[--brand-500] hover:text-[--text-brand]"
+                className="transaction-active-filter"
                 aria-label={`Remover filtro ${filter.label}`}
                 title="Clique para remover este filtro"
               >
@@ -1149,7 +1149,7 @@ export default function TransactionList() {
             <button
               type="button"
               onClick={clearFilters}
-              className="min-h-8 px-2 text-[10px] font-semibold text-[--text-tertiary] hover:text-[--danger-text]"
+              className="transaction-active-filters__clear"
             >
               Limpar todos
             </button>
