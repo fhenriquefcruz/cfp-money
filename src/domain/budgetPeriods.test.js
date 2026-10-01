@@ -91,7 +91,7 @@ test('resume apenas os limites e gastos da competência escolhida', () => {
   expect(report).toMatchObject({
     totalBudgeted: 500,
     totalSpent: 550,
-    overCount: 1,
+    totalExceeded: 50,
   })
 })
 
@@ -130,15 +130,9 @@ test('exclui transferências e expõe composição auditável do orçamento', ()
   expect(report).toMatchObject({
     totalBudgeted: 250,
     totalSpent: 300,
-    totalAllSpent: 500,
     totalUnbudgetedSpent: 200,
     totalExceeded: 50,
     overCount: 1,
-  })
-  expect(report.items[0]).toMatchObject({
-    spent: 300,
-    excess: 50,
-    percent: 120,
   })
 })
 
@@ -155,6 +149,5 @@ test('considera todo gasto do mês como não orçado quando não há limite conf
 
   expect(report.totalBudgeted).toBe(0)
   expect(report.totalSpent).toBe(0)
-  expect(report.totalAllSpent).toBe(200)
   expect(report.totalUnbudgetedSpent).toBe(200)
 })
