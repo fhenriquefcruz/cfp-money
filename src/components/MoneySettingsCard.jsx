@@ -1,5 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { CalendarRange, Save, Info, ShieldCheck, GitCompareArrows, PiggyBank } from 'lucide-react'
+import {
+  Brain,
+  CalendarRange,
+  Save,
+  Info,
+  ShieldCheck,
+  GitCompareArrows,
+  PiggyBank,
+} from 'lucide-react'
 import { useMoney } from '../contexts/MoneyContext'
 import { Card, Button, Select, Input } from './ui'
 import PremiumGate from './PremiumGate'
@@ -172,6 +180,33 @@ function MoneySettingsContent() {
               <label className="flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
+                  checked={form.personalizationEnabled === true}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      personalizationEnabled: event.target.checked,
+                    }))
+                  }
+                  className="mt-1 h-4 w-4 accent-[--brand-600]"
+                />
+                <span>
+                  <span className="flex items-center gap-2 text-sm font-bold text-[--text-primary]">
+                    <Brain size={15} className="text-[--brand-600]" />
+                    Personalizar o Money com meu histórico
+                  </span>
+                  <span className="mt-1 block text-[11px] leading-relaxed text-[--text-tertiary]">
+                    Quando ativado, o Money identifica padrões agregados somente dos seus próprios
+                    lançamentos recentes. O perfil não é salvo como uma nova base e pode ser
+                    desativado a qualquer momento.
+                  </span>
+                </span>
+              </label>
+            </section>
+
+            <section className="rounded-2xl border border-[--border-default] p-4">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
                   checked={form.excludeSavings}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -194,7 +229,7 @@ function MoneySettingsContent() {
               </label>
             </section>
 
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2">
               <FieldGuide icon={CalendarRange} title="Ciclo">
                 Determina onde começa e termina o período financeiro analisado.
               </FieldGuide>
@@ -203,6 +238,9 @@ function MoneySettingsContent() {
               </FieldGuide>
               <FieldGuide icon={ShieldCheck} title="Preservação">
                 Nenhuma escolha modifica transações, categorias ou saldos.
+              </FieldGuide>
+              <FieldGuide icon={Brain} title="Personalização">
+                O perfil é recalculado com dados da própria conta e só é usado quando você autoriza.
               </FieldGuide>
             </div>
 
@@ -232,11 +270,11 @@ export default function MoneySettingsCard() {
     <PremiumGate
       variant="card"
       feature="Configurações personalizadas do Money"
-      description="Personalize o ciclo financeiro e a forma como o Money compara seus gastos."
+      description="Personalize o ciclo financeiro, as comparações e, se quiser, o uso do seu próprio histórico pelo Money."
       benefits={[
         'Ciclo baseado no salário',
         'Comparação equivalente de períodos',
-        'Projeções mais fiéis ao perfil',
+        'Personalização opcional e transparente',
         'Preferências preservadas mesmo após expiração',
       ]}
     >
