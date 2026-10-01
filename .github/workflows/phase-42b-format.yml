@@ -1,0 +1,37 @@
+name: Phase 42B format
+
+on:
+  push:
+    branches:
+      - phase-42b-dashboard-decision-flow
+
+permissions:
+  contents: write
+
+jobs:
+  prettier:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: phase-42b-dashboard-decision-flow
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format Phase 42B files
+        run: |
+          npx prettier --write             src/components/Dashboard.jsx             src/domain/dashboard.js             src/domain/dashboard.test.js
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             src/components/Dashboard.jsx             src/domain/dashboard.js             src/domain/dashboard.test.js
+          git commit -m "Phase 42B: apply project formatting"
+          git push origin HEAD:phase-42b-dashboard-decision-flow
