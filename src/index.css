@@ -2336,9 +2336,11 @@ body {
   font-weight: 500;
 }
 
-.budget-spent-value[data-tone='success'],
-.budget-progress-fill[data-tone='success'] {
+.budget-spent-value[data-tone='success'] {
   color: var(--success-icon);
+}
+
+.budget-progress-fill[data-tone='success'] {
   background: var(--success-icon);
 }
 
@@ -2348,9 +2350,11 @@ body {
   color: var(--success-text);
 }
 
-.budget-spent-value[data-tone='warning'],
-.budget-progress-fill[data-tone='warning'] {
+.budget-spent-value[data-tone='warning'] {
   color: var(--warning-icon);
+}
+
+.budget-progress-fill[data-tone='warning'] {
   background: var(--warning-icon);
 }
 
@@ -2360,9 +2364,11 @@ body {
   color: var(--warning-text);
 }
 
-.budget-spent-value[data-tone='danger'],
-.budget-progress-fill[data-tone='danger'] {
+.budget-spent-value[data-tone='danger'] {
   color: var(--danger-icon);
+}
+
+.budget-progress-fill[data-tone='danger'] {
   background: var(--danger-icon);
 }
 
