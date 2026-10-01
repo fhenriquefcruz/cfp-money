@@ -491,9 +491,7 @@ export default function Dashboard() {
               ) : (
                 <p
                   className={`mt-2 break-words text-[clamp(1.8rem,7vw,3rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${
-                    currentSummary.balance >= 0
-                      ? 'text-[--text-primary]'
-                      : 'text-[--danger-text]'
+                    currentSummary.balance >= 0 ? 'text-[--text-primary]' : 'text-[--danger-text]'
                   }`}
                 >
                   {formatCurrency(currentSummary.balance)}
@@ -706,7 +704,9 @@ export default function Dashboard() {
             {selectedTrend && (
               <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-xs font-black text-[--text-primary]">{selectedTrend.fullMonth}</p>
+                  <p className="text-xs font-black text-[--text-primary]">
+                    {selectedTrend.fullMonth}
+                  </p>
                   <p className="mt-1 text-[10px] text-[--text-tertiary]">
                     Receitas {formatCurrency(selectedTrend.income)} · Despesas{' '}
                     {formatCurrency(selectedTrend.expenses)} · Resultado{' '}
@@ -731,7 +731,8 @@ export default function Dashboard() {
                 {trendHighlight.previousMonth}
                 {trendHighlight.percent !== null
                   ? ` · ${formatVariation(trendHighlight.percent)}`
-                  : ' · sem base percentual anterior'}.
+                  : ' · sem base percentual anterior'}
+                .
               </p>
             )}
           </Card>
@@ -756,7 +757,9 @@ export default function Dashboard() {
               >
                 <span>
                   {categoryReviewCount}{' '}
-                  {categoryReviewCount === 1 ? 'classificação para revisar' : 'classificações para revisar'}
+                  {categoryReviewCount === 1
+                    ? 'classificação para revisar'
+                    : 'classificações para revisar'}
                 </span>
                 <ArrowRight size={12} />
               </Link>
@@ -805,7 +808,8 @@ export default function Dashboard() {
                       </div>
                       {isOtherLarge && (
                         <p className="mt-1.5 text-[10px] font-semibold text-[--warning-text]">
-                          “Outros” concentra uma parcela relevante dos gastos; abra para revisar a composição.
+                          “Outros” concentra uma parcela relevante dos gastos; abra para revisar a
+                          composição.
                         </p>
                       )}
                       <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand] opacity-80 group-hover:opacity-100">

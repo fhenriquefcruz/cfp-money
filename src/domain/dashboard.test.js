@@ -84,7 +84,6 @@ test('inclui saldo negativo quando ainda existe espaço na Central do mês', () 
   ])
 })
 
-
 test('ordena categorias por gasto e calcula participação e variação', () => {
   const result = buildCategoryBreakdown(
     [

@@ -95,7 +95,6 @@ export function buildMonthAttentionSignals({
   return signals.slice(0, safeLimit)
 }
 
-
 export function buildCategoryBreakdown(current = [], previous = []) {
   const previousByCategory = new Map(
     previous.map((item) => [item.categoryId || item.categoryName, Number(item.total) || 0]),
@@ -105,8 +104,7 @@ export function buildCategoryBreakdown(current = [], previous = []) {
   return current
     .map((item) => {
       const amount = Number(item.total) || 0
-      const previousAmount =
-        previousByCategory.get(item.categoryId || item.categoryName) || 0
+      const previousAmount = previousByCategory.get(item.categoryId || item.categoryName) || 0
       return {
         ...item,
         total: amount,
@@ -132,8 +130,7 @@ export function getLargestMonthlyExpenseChange(monthlyData = []) {
         monthKey: current.monthKey,
         previousMonth: previous.fullMonth || previous.month,
         delta,
-        percent:
-          Number(previous.expenses) > 0 ? (delta / Number(previous.expenses)) * 100 : null,
+        percent: Number(previous.expenses) > 0 ? (delta / Number(previous.expenses)) * 100 : null,
       }
     }
   }
