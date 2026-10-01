@@ -25,7 +25,7 @@ function getBudgetStatus(percent) {
   return { tone, label }
 }
 
-function BudgetCard({ category, budget, spent, monthKey, reviewCount, onEdit, onRemove }) {
+function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
   const amount = Number(budget?.amount) || 0
   const percent = amount > 0 ? Math.max(0, (spent / amount) * 100) : 0
   const remaining = Math.max(0, amount - spent)
@@ -130,15 +130,6 @@ function BudgetCard({ category, budget, spent, monthKey, reviewCount, onEdit, on
               Alterar limite
             </button>
           </div>
-
-          {reviewCount > 0 && (
-            <Link
-              to={`/transactions?category=${category.id}&month=${monthKey}&review=categories`}
-              className="budget-review-link"
-            >
-              {reviewCount} {reviewCount === 1 ? 'classificação para revisar' : 'classificações para revisar'}
-            </Link>
-          )}
         </>
       ) : (
         <div className="budget-unbudgeted-box">
@@ -165,14 +156,6 @@ function BudgetCard({ category, budget, spent, monthKey, reviewCount, onEdit, on
               + Definir limite
             </button>
           </div>
-          {reviewCount > 0 && (
-            <Link
-              to={`/transactions?category=${category.id}&month=${monthKey}&review=categories`}
-              className="budget-review-link"
-            >
-              Revisar {reviewCount} {reviewCount === 1 ? 'classificação' : 'classificações'}
-            </Link>
-          )}
         </div>
       )}
     </Card>
@@ -221,17 +204,6 @@ export default function Budgets() {
         categories,
       ),
     [transactions, categories, selectedMonth],
-  )
-
-  const reviewCountByCategory = useMemo(
-    () =>
-      categoryReviewQueue.reduce((counts, item) => {
-        if (item.currentCategoryId) {
-          counts[item.currentCategoryId] = (counts[item.currentCategoryId] || 0) + 1
-        }
-        return counts
-      }, {}),
-    [categoryReviewQueue],
   )
 
   const sortedCategories = useMemo(
@@ -428,7 +400,6 @@ export default function Budgets() {
                 budget={budget}
                 spent={spent}
                 monthKey={selectedMonth}
-                reviewCount={reviewCountByCategory[category.id] || 0}
                 onEdit={openEditor}
                 onRemove={removeBudget}
               />
