@@ -40,7 +40,13 @@ vi.mock('../contexts/AppContext', () => ({
   useCategories: () => ({
     categories: [
       { id: 'fuel', name: 'Combustível', type: 'expense', icon: '⛽', color: '#f59e0b' },
-      { id: 'ride', name: 'Transporte por aplicativo', type: 'expense', icon: '🚕', color: '#3b82f6' },
+      {
+        id: 'ride',
+        name: 'Transporte por aplicativo',
+        type: 'expense',
+        icon: '🚕',
+        color: '#3b82f6',
+      },
       { id: 'leisure', name: 'Lazer', type: 'expense', icon: '🎬', color: '#8b5cf6' },
     ],
   }),
@@ -68,20 +74,22 @@ describe('Budgets auditability', () => {
     renderBudgets()
 
     const links = screen.getAllByRole('link', { name: /ver lançamentos/i })
-    expect(links.some((link) => link.getAttribute('href') === '/transactions?category=fuel&month=2026-09')).toBe(
-      true,
-    )
     expect(
-      links.some((link) => link.getAttribute('href') === '/transactions?category=leisure&month=2026-09'),
+      links.some(
+        (link) => link.getAttribute('href') === '/transactions?category=fuel&month=2026-09',
+      ),
+    ).toBe(true)
+    expect(
+      links.some(
+        (link) => link.getAttribute('href') === '/transactions?category=leisure&month=2026-09',
+      ),
     ).toBe(true)
   })
 
   it('avisa quando uma classificação suspeita pode distorcer o orçamento', () => {
     renderBudgets()
 
-    expect(
-      screen.getByText(/revisão de categoria/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/revisão de categoria/i)).toBeInTheDocument()
 
     expect(screen.getByRole('link', { name: /Revisar lançamentos/i })).toHaveAttribute(
       'href',

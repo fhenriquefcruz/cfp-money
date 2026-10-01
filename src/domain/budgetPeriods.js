@@ -80,9 +80,7 @@ export function buildMonthlyBudgetOverview({
 
   const totalUnbudgetedSpent = getBudgetTransactions(transactions, null, monthKey).reduce(
     (total, transaction) =>
-      budgetedCategoryIds.has(transaction.categoryId)
-        ? total
-        : total + (+transaction.amount || 0),
+      budgetedCategoryIds.has(transaction.categoryId) ? total : total + (+transaction.amount || 0),
     0,
   )
 

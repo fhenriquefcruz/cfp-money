@@ -95,7 +95,6 @@ test('resume apenas os limites e gastos da competência escolhida', () => {
   })
 })
 
-
 test('exclui transferências e expõe composição auditável do orçamento', () => {
   const transactions = [
     { id: 'food', type: 'expense', categoryId: 'food', amount: 300, date: '2026-09-05' },

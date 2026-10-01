@@ -94,7 +94,10 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
       ) : null}
 
       <div className="budget-card-actions">
-        <Link to={`/transactions?category=${category.id}&month=${monthKey}`} className="budget-drilldown-link">
+        <Link
+          to={`/transactions?category=${category.id}&month=${monthKey}`}
+          className="budget-drilldown-link"
+        >
           Ver lançamentos
         </Link>
         <button
@@ -260,7 +263,11 @@ export default function Budgets() {
             {[
               ['Orçado', formatCurrency(overview.totalBudgeted), 'text-[--brand-500]'],
               ['Gasto orçado', formatCurrency(overview.totalSpent), 'text-[--text-primary]'],
-              ['Gasto sem limite', formatCurrency(overview.totalUnbudgetedSpent), 'text-[--warning-text]'],
+              [
+                'Gasto sem limite',
+                formatCurrency(overview.totalUnbudgetedSpent),
+                'text-[--warning-text]',
+              ],
               ['Excedente total', formatCurrency(overview.totalExceeded), 'text-[--danger-text]'],
             ].map(([label, value, color]) => (
               <Card key={label} className="py-3 text-center">
