@@ -2192,3 +2192,108 @@ body {
     grid-column: 1 / -1;
   }
 }
+
+
+/* Orçamentos auditáveis */
+.budget-drilldown-link,
+.budget-edit-limit,
+.budget-review-link,
+.budget-small-link,
+.budget-small-action,
+.budget-review-banner__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.budget-drilldown-link {
+  min-height: 2.5rem;
+  border: 1px solid var(--border-default);
+  border-radius: 0.75rem;
+  padding-inline: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.budget-drilldown-link:hover {
+  background: var(--bg-hover);
+}
+
+.budget-edit-limit {
+  min-height: 2.5rem;
+  border-radius: 0.75rem;
+  padding-inline: 0.5rem;
+  color: var(--text-brand);
+  font-size: 0.75rem;
+}
+
+.budget-edit-limit:hover {
+  background: var(--brand-50);
+}
+
+.budget-review-link {
+  width: 100%;
+  min-height: 2.25rem;
+  margin-top: 0.5rem;
+  border: 1px solid var(--warning-border);
+  border-radius: 0.75rem;
+  padding-inline: 0.5rem;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  font-size: 0.625rem;
+  text-align: center;
+}
+
+.budget-unbudgeted-box {
+  margin-top: 1rem;
+  border: 1px dashed var(--border-default);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-subtle);
+}
+
+.budget-small-link,
+.budget-small-action {
+  min-height: 2.25rem;
+  border-radius: 0.5rem;
+  padding-inline: 0.625rem;
+  font-size: 0.625rem;
+}
+
+.budget-small-link {
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+.budget-small-action {
+  color: var(--text-brand);
+}
+
+.budget-review-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid var(--warning-border);
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--warning-bg);
+}
+
+.budget-review-banner__action {
+  min-height: 2.5rem;
+  border: 1px solid var(--warning-border);
+  border-radius: 0.75rem;
+  padding-inline: 0.75rem;
+  color: var(--warning-text);
+  font-size: 0.75rem;
+}
+
+.budget-summary-note {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  line-height: 1.625;
+}
