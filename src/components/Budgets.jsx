@@ -16,7 +16,7 @@ import { buildCategoryReviewQueue } from '../domain/categoryReview'
 
 const monthLabel = (monthKey) => `${monthKey.slice(5, 7)}/${monthKey.slice(0, 4)}`
 function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
-  const amount = Number(budget?.amount) || 0
+  const amount = +budget?.amount || 0
   const percent = amount > 0 ? (spent / amount) * 100 : 0
   const balance = amount - spent
   const isOver = balance < 0
