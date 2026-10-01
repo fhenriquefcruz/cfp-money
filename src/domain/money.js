@@ -6,6 +6,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   cycleStartDay: 1,
   comparisonMode: 'elapsed_days',
   excludeSavings: true,
+  personalizationEnabled: false,
 })
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
@@ -111,6 +112,7 @@ export function normalizeMoneySettings(settings = {}) {
     comparisonMode:
       settings.comparisonMode === 'full_cycle' ? 'full_cycle' : DEFAULT_SETTINGS.comparisonMode,
     excludeSavings: settings.excludeSavings !== false,
+    personalizationEnabled: settings.personalizationEnabled === true,
   }
 }
 
