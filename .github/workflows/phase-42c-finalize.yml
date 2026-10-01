@@ -1,0 +1,52 @@
+name: Phase 42C finalize
+
+on:
+  push:
+    branches:
+      - phase-42c-transactions-scanability
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      VITE_E2E_MODE: 'true'
+      VITE_FIREBASE_API_KEY: test-api-key
+      VITE_FIREBASE_AUTH_DOMAIN: test-project.firebaseapp.com
+      VITE_FIREBASE_PROJECT_ID: test-project
+      VITE_FIREBASE_STORAGE_BUCKET: test-project.firebasestorage.app
+      VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+      VITE_FIREBASE_APP_ID: '1:123456789:web:test'
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: phase-42c-transactions-scanability
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format Phase 42C files
+        run: |
+          npx prettier --write             src/components/TransactionList.jsx             src/domain/transactionDates.js             src/domain/transactionDates.test.js             src/index.css
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Update transactions desktop baseline
+        run: |
+          npx playwright test e2e/visual/visual.spec.js             --config=playwright.visual.config.js             --project=visual-desktop-chromium             --grep="transactions mantém baseline visual"             --update-snapshots
+      - name: Commit finalization
+        run: |
+          if git diff --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             src/components/TransactionList.jsx             src/domain/transactionDates.js             src/domain/transactionDates.test.js             src/index.css             e2e/visual/visual.spec.js-snapshots/transactions-visual-desktop-chromium-linux.png
+          git commit -m "Phase 42C: format code and update transactions baseline"
+          git push origin HEAD:phase-42c-transactions-scanability
