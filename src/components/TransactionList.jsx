@@ -607,17 +607,18 @@ export default function TransactionList() {
   }, [user?.uid])
 
   const summary = useMemo(() => {
-    const effective = filtered.filter(isFinanciallyEffectiveTransaction)
-    const income = effective
-      .filter((transaction) => getTransactionKind(transaction) === 'income')
-      .reduce((total, transaction) => total + transaction.amount, 0)
-    const expenses = effective
-      .filter((transaction) => getTransactionKind(transaction) === 'expense')
-      .reduce((total, transaction) => total + transaction.amount, 0)
-    const savings = effective
-      .filter((transaction) => getTransactionKind(transaction) === 'savings')
-      .reduce((total, transaction) => total + transaction.amount, 0)
-    return { income, expenses, savings, balance: income - expenses }
+    const totals = filtered.reduce(
+      (current, transaction) => {
+        if (!isFinanciallyEffectiveTransaction(transaction)) return current
+        const kind = getTransactionKind(transaction)
+        if (kind === 'income') current.income += transaction.amount
+        if (kind === 'expense') current.expenses += transaction.amount
+        if (kind === 'savings') current.savings += transaction.amount
+        return current
+      },
+      { income: 0, expenses: 0, savings: 0 },
+    )
+    return { ...totals, balance: totals.income - totals.expenses }
   }, [filtered])
 
   const grouped = useMemo(() => groupByDate(filtered.slice(0, page * PER_PAGE)), [filtered, page])
