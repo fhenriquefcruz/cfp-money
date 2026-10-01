@@ -2373,3 +2373,26 @@ body {
   border-color: var(--danger-border);
   color: var(--danger-text);
 }
+
+
+/* Phase 43 · composição executiva do Dashboard */
+.dashboard-executive-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.dashboard-executive-grid > * {
+  min-width: 0;
+}
+
+.dashboard-attention-card {
+  height: 100%;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-executive-grid {
+    grid-template-columns: minmax(0, 1.65fr) minmax(18rem, 0.85fr);
+  }
+}
