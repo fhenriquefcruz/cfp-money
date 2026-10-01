@@ -43,8 +43,12 @@ import {
 } from '../utils'
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { defaultDateRangeEnd } from '../domain/finance'
-import { getTransactionActivityDate, getTransactionDateContext } from '../domain/transactionDates'
+import { defaultDateRangeEnd, summarizeTransactions } from '../domain/finance'
+import {
+  formatTransactionIsoDate,
+  getTransactionActivityDate,
+  getTransactionDateContext,
+} from '../domain/transactionDates'
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
 import { isTransactionSeries } from '../domain/transactionSeries'
 import {
@@ -193,6 +197,28 @@ function invoicePaymentPresentation(paymentState = {}) {
   }
 }
 
+function toDateTimeLabel(value) {
+  if (!value) return null
+  const date = value?.toDate?.() || new Date(value)
+  return Number.isNaN(date.getTime()) ? null : format(date, "dd/MM/yyyy 'às' HH:mm")
+}
+
+const TRANSACTION_KIND = {
+  income: ['Receita', TrendingUp],
+  expense: ['Despesa', TrendingDown],
+  transfer: ['Transferência', ArrowLeftRight],
+  savings: ['Aporte / reserva', PiggyBank],
+}
+
+const getKind = (transaction) =>
+  transaction.isSavings
+    ? 'savings'
+    : transaction.flowType === 'transfer' || transaction.kind === 'transfer'
+      ? 'transfer'
+      : transaction.type === 'income'
+        ? 'income'
+        : 'expense'
+
 function TxRow({
   tx,
   cat,
@@ -205,8 +231,10 @@ function TxRow({
   onPaymentSelect,
   categoryReview,
 }) {
-  const isIncome = tx.type === 'income' && !tx.isSavings
-  const isSavings = tx.isSavings
+  const kind = getKind(tx)
+  const isIncome = kind === 'income'
+  const isSavings = kind === 'savings'
+  const isTransfer = kind === 'transfer'
   const dateContext = getTransactionDateContext(tx)
   const protectedGroup = isTransactionSeries(tx)
   const payableExpense = isPayableExpense(tx)
@@ -216,118 +244,60 @@ function TxRow({
   const cancelled = paymentState.status === PAYMENT_STATUS.CANCELLED
   const manualPresentation = manualPaymentPresentation(paymentState.status)
   const invoicePresentation = invoicePaymentPresentation(paymentState)
-  const createdAt = tx.createdAt?.toDate?.() || (tx.createdAt ? new Date(tx.createdAt) : null)
-  const createdAtLabel =
-    createdAt && !Number.isNaN(createdAt.getTime())
-      ? format(createdAt, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
-      : null
+  const createdAtLabel = toDateTimeLabel(tx.createdAt)
+  const paidAtLabel = toDateTimeLabel(tx.paidAt)
+  const [kindLabel, KindIcon] = TRANSACTION_KIND[kind]
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -16 }}
-      className="transaction-row group grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 px-3 py-3.5 transition-colors hover:bg-[--bg-hover] sm:flex sm:items-center sm:px-4"
+      className="transaction-row transaction-row-refined group"
     >
-      {/* Ícone */}
-      <div
-        className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg flex-shrink-0"
-        style={{
-          background: isSavings ? '#6366f115' : (cat?.color || '#6366f1') + '18',
-        }}
-      >
-        {isSavings ? '🐷' : cat?.icon || (isIncome ? '💰' : '💸')}
+      <div className="transaction-kind-icon" data-kind={kind} aria-hidden="true">
+        <KindIcon size={17} />
       </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <p className="max-w-full truncate text-sm font-semibold text-[--text-primary] sm:max-w-[200px]">
-            {tx.description || (isSavings ? 'Poupança' : cat?.name) || 'Sem descrição'}
-          </p>
+      <div className="transaction-row-main">
+        <div className="transaction-row-heading">
+          <p className="transaction-row-title">{tx.description || cat?.name || kindLabel}</p>
           {tx.isInstallment && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[--brand-100] text-[--brand-700] flex-shrink-0">
+            <span className="transaction-series-badge transaction-series-badge--installment">
               {tx.installmentNum}/{tx.installmentOf}x
             </span>
           )}
           {tx.isRecurring && !tx.isInstallment && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[--bg-hover] text-[--text-tertiary] flex-shrink-0">
-              Fixo
-            </span>
-          )}
-          {isSavings && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[--brand-100] text-[--brand-800] flex-shrink-0">
-              Poupança
-            </span>
+            <span className="transaction-series-badge">Fixo</span>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-          {cat && !isSavings && tx.description !== cat.name && (
+
+        <div className="transaction-row-meta">
+          <span className="transaction-kind-badge" data-kind={kind}>
+            {kindLabel}
+          </span>
+
+          {cat && !isSavings && !isTransfer && (
             <span
-              className="flex-shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold"
+              className="transaction-category-badge"
               style={{
                 background: (cat.color || '#6366f1') + '15',
                 borderColor: (cat.color || '#6366f1') + '45',
-                color: 'var(--text-secondary)',
               }}
             >
-              {cat.icon} {cat.name}
-            </span>
-          )}
-          {tx.paymentMethod && !isSavings && (
-            <span className="text-[10px] text-[--text-tertiary] hidden sm:inline">
-              {PAYMENT_METHODS.find((m) => m.id === tx.paymentMethod)?.icon}{' '}
-              {getPaymentLabel(tx.paymentMethod)}
-            </span>
-          )}
-          {dateContext.hasSeparateAccountingDate && (
-            <span
-              className="text-[10px] font-medium text-[--brand-600]"
-              title="A lista é agrupada pela competência da fatura"
-            >
-              Compra: {dateContext.purchaseLabel} · fatura: {dateContext.accountingLabel}
-            </span>
-          )}
-          {categoryReview && (
-            <button
-              type="button"
-              onClick={() => onEdit(tx)}
-              className="inline-flex min-h-8 items-center rounded-full border border-[--warning-border] bg-[--warning-bg] px-2 text-[10px] font-bold text-[--warning-text]"
-              title={categoryReview.reason}
-            >
-              Revisar categoria · sugestão: {categoryReview.suggestedCategoryName}
-            </button>
-          )}
-          {protectedGroup && (
-            <span className="text-[10px] text-[--warning-text]">Série gerenciável</span>
-          )}
-          {tx.notes && (
-            <span
-              className="text-[10px] text-[--text-tertiary] truncate max-w-[120px]"
-              title={tx.notes}
-            >
-              💬 {tx.notes}
-            </span>
-          )}
-          {payableExpense && !structuredCredit && tx.dueDate && (
-            <span className="text-[10px] font-medium text-[--text-secondary]">
-              Vence: {tx.dueDate.split('-').reverse().join('/')}
+              {cat.icon ? `${cat.icon} ` : ''}
+              {cat.name}
             </span>
           )}
 
-          {payableExpense && toggleablePayment && (
-            <label
-              className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-full border border-[--border-default] bg-[--bg-surface] px-2.5 text-[10px] font-semibold text-[--text-secondary]"
-              title="Selecionar para ação em massa"
-            >
-              <input
-                type="checkbox"
-                checked={Boolean(paymentSelected)}
-                onChange={() => onPaymentSelect(tx)}
-                className="h-4 w-4 rounded accent-[--brand-600]"
-              />
-              <span>Selecionar</span>
-            </label>
+          {tx.paymentMethod && !isSavings && !isTransfer && (
+            <span className="transaction-payment-method">{getPaymentLabel(tx.paymentMethod)}</span>
+          )}
+
+          {categoryReview && (
+            <button type="button" onClick={() => onEdit(tx)} className="transaction-review-action">
+              Revisar categoria
+            </button>
           )}
 
           {payableExpense && toggleablePayment && (
@@ -337,7 +307,7 @@ function TxRow({
               disabled={paymentUpdating}
               aria-pressed={paid}
               aria-label={`${paid ? 'Marcar como pendente' : 'Marcar como paga'}: ${tx.description || cat?.name || 'despesa'}`}
-              className={`inline-flex min-h-10 items-center gap-1 rounded-full border px-2.5 text-[10px] font-bold transition-colors disabled:cursor-wait disabled:opacity-60 ${manualPresentation.className}`}
+              className={`transaction-payment-status ${manualPresentation.className}`}
             >
               {paid ? <CheckCircle2 size={12} /> : <Clock3 size={12} />}
               {paymentUpdating ? 'Salvando…' : manualPresentation.label}
@@ -348,7 +318,7 @@ function TxRow({
             <Link
               to="/cards"
               aria-label={`Abrir fatura de ${tx.cardName || 'cartão'}`}
-              className={`inline-flex min-h-10 items-center gap-1 rounded-full border px-2.5 text-[10px] font-bold transition-colors ${invoicePresentation.className}`}
+              className={`transaction-payment-status ${invoicePresentation.className}`}
             >
               {paid ? <CheckCircle2 size={12} /> : <Clock3 size={12} />}
               {invoicePresentation.label}
@@ -356,50 +326,69 @@ function TxRow({
           )}
 
           {payableExpense && cancelled && !structuredCredit && (
-            <span className="inline-flex min-h-10 items-center rounded-full border border-[--border-default] bg-[--bg-hover] px-2.5 text-[10px] font-bold text-[--text-tertiary]">
-              Cancelada
-            </span>
+            <span className="transaction-cancelled-status">Cancelada</span>
           )}
-          <span
-            className="text-[10px] text-[--text-secondary]"
-            title={
-              createdAtLabel ? 'Cadastrada em ' + createdAtLabel : 'Data de cadastro indisponível'
-            }
-          >
-            Cadastro: {createdAtLabel || 'indisponível'}
-          </span>
         </div>
+
+        <details className="transaction-row-details">
+          <summary className="transaction-row-details-summary">
+            <ChevronDown size={12} />
+            Detalhes
+          </summary>
+          <div className="transaction-row-details-panel">
+            <span>Movimentação: {formatTransactionIsoDate(dateContext.activityDate)}</span>
+            {!structuredCredit && tx.dueDate && tx.dueDate !== dateContext.activityDate && (
+              <span>Vencimento: {dateContext.accountingLabel}</span>
+            )}
+            {dateContext.hasSeparateAccountingDate && (
+              <span>Fatura: {dateContext.accountingLabel}</span>
+            )}
+            {paidAtLabel && <span>Pagamento: {paidAtLabel}</span>}
+            {createdAtLabel && <span>Cadastro: {createdAtLabel}</span>}
+            {protectedGroup && (
+              <span>{tx.isInstallment ? 'Série parcelada' : 'Série recorrente'}</span>
+            )}
+            {tx.notes && <span className="transaction-row-note">Observação: {tx.notes}</span>}
+          </div>
+        </details>
       </div>
 
-      {/* Valor + ações */}
-      <div className="transaction-row__aside col-start-2 flex min-w-0 flex-wrap items-center justify-between gap-2 sm:ml-auto sm:flex-shrink-0 sm:flex-nowrap">
-        <span
-          className={`min-w-0 break-words text-sm font-bold tabular-nums [overflow-wrap:anywhere] ${
-            isSavings
-              ? 'text-[--brand-800]'
-              : isIncome
-                ? 'text-[--success-icon]'
-                : 'text-[--danger-icon]'
-          }`}
-        >
-          {isSavings ? '' : isIncome ? '+' : '−'}
+      <div className="transaction-row__aside transaction-row-aside-refined">
+        <span className="transaction-amount" data-kind={kind}>
+          {isIncome ? '+' : kind === 'expense' ? '−' : ''}
           {formatCurrency(tx.amount)}
         </span>
-        <div className="flex flex-shrink-0 gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
-          <button
-            onClick={() => onEdit(tx)}
-            className="w-11 h-11 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-elevated] text-[--text-tertiary] hover:text-[--text-brand] transition-colors"
-            aria-label={`Editar transação ${tx.description || cat?.name || ''}`.trim()}
-          >
-            <Edit2 size={13} />
-          </button>
-          <button
-            onClick={() => onDelete(tx)}
-            className="w-11 h-11 inline-flex items-center justify-center rounded-xl hover:bg-[--danger-bg] text-[--text-tertiary] hover:text-[--danger-text] transition-colors"
-            aria-label={`Excluir transação ${tx.description || cat?.name || ''}`.trim()}
-          >
-            <Trash2 size={13} />
-          </button>
+
+        <div className="transaction-row-controls">
+          {payableExpense && toggleablePayment && (
+            <label className="transaction-select-control">
+              <input
+                type="checkbox"
+                checked={Boolean(paymentSelected)}
+                onChange={() => onPaymentSelect(tx)}
+                className="h-4 w-4 rounded accent-[--brand-600]"
+                aria-label={`Selecionar ${tx.description || cat?.name || 'transação'}`}
+              />
+              <span className="hidden xl:inline">Selecionar</span>
+            </label>
+          )}
+
+          <div className="transaction-row-actions">
+            <button
+              onClick={() => onEdit(tx)}
+              className="transaction-row-action transaction-row-action--edit"
+              aria-label={`Editar transação ${tx.description || cat?.name || ''}`.trim()}
+            >
+              <Edit2 size={13} />
+            </button>
+            <button
+              onClick={() => onDelete(tx)}
+              className="transaction-row-action transaction-row-action--delete"
+              aria-label={`Excluir transação ${tx.description || cat?.name || ''}`.trim()}
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -478,9 +467,7 @@ export default function TransactionList() {
 
   const filtered = useMemo(() => {
     let txs = transactions.filter((tx) => {
-      if (typeFilter === 'savings' && !tx.isSavings) return false
-      if (typeFilter === 'income' && (tx.type !== 'income' || tx.isSavings)) return false
-      if (typeFilter === 'expense' && tx.type !== 'expense') return false
+      if (typeFilter !== 'all' && getKind(tx) !== typeFilter) return false
       if (catFilter !== 'all' && tx.categoryId !== catFilter) return false
       if (payFilter !== 'all' && tx.paymentMethod !== payFilter) return false
       if (categoryReviewOnly && !categoryReviewIndex.has(tx.id)) return false
@@ -590,28 +577,13 @@ export default function TransactionList() {
     setSavedViews(readSavedTransactionViews(user.uid, window.localStorage))
   }, [user?.uid])
 
-  const summary = useMemo(() => {
-    const income = filtered
-      .filter((t) => t.type === 'income' && !t.isSavings)
-      .reduce((s, t) => s + t.amount, 0)
-    const expenses = filtered.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-    const savings = filtered.filter((t) => t.isSavings).reduce((s, t) => s + t.amount, 0)
-    return { income, expenses, savings, balance: income - expenses }
-  }, [filtered])
+  const summary = useMemo(() => summarizeTransactions(filtered), [filtered])
 
   const grouped = useMemo(() => groupByDate(filtered.slice(0, page * PER_PAGE)), [filtered, page])
   const hasMore = filtered.length > page * PER_PAGE
   const currentMonthRange = getCurrentMonthRange()
   const hasCustomDateRange =
     dateRange.from !== currentMonthRange.from || dateRange.to !== currentMonthRange.to
-  const activeFilters = [
-    typeFilter !== 'all',
-    catFilter !== 'all',
-    payFilter !== 'all',
-    paymentStatusFilter !== 'all',
-    categoryReviewOnly,
-    hasCustomDateRange,
-  ].filter(Boolean).length
   const savableFilterCount = [
     typeFilter !== 'all',
     catFilter !== 'all',
@@ -624,6 +596,43 @@ export default function TransactionList() {
       const range = preset.getRange()
       return dateRange.from === range.from && dateRange.to === range.to
     })?.id || ''
+
+  const activeFilterChips = [
+    typeFilter !== 'all' && ['type', TRANSACTION_KIND[typeFilter][0]],
+    catFilter !== 'all' && [
+      'category',
+      categories.find((category) => category.id === catFilter)?.name || 'Categoria',
+    ],
+    payFilter !== 'all' && ['payment', getPaymentLabel(payFilter)],
+    paymentStatusFilter !== 'all' && [
+      'status',
+      {
+        unknown: 'A revisar',
+        to_pay: 'A pagar',
+        pending: 'Pendente',
+        partial: 'Parcial',
+        overdue: 'Atrasada',
+        paid: 'Paga',
+        cancelled: 'Cancelada',
+      }[paymentStatusFilter] || paymentStatusFilter,
+    ],
+    categoryReviewOnly && ['review', 'Categorias em revisão'],
+    hasCustomDateRange && [
+      'date',
+      DATE_PRESETS.find((preset) => preset.id === currentDatePreset)?.label || 'Período',
+    ],
+  ].filter(Boolean)
+  const activeFilters = activeFilterChips.length + Number(Boolean(search.trim()))
+
+  const removeActiveFilter = (filterId) => {
+    if (filterId === 'type') setTypeFilter('all')
+    if (filterId === 'category') setCatFilter('all')
+    if (filterId === 'payment') setPayFilter('all')
+    if (filterId === 'status') setPaymentStatusFilter('all')
+    if (filterId === 'review') setCategoryReviewOnly(false)
+    if (filterId === 'date') setDateRange(getCurrentMonthRange())
+    setPage(1)
+  }
 
   const handleEdit = (tx) => {
     if (isTransactionSeries(tx)) {
@@ -1063,6 +1072,31 @@ export default function TransactionList() {
           onDelete={deleteSavedView}
         />
 
+        {activeFilterChips.length > 0 && (
+          <div className="transaction-active-filters">
+            <span className="transaction-active-filters__label">Filtros ativos</span>
+            {activeFilterChips.map((filter) => (
+              <button
+                key={filter[0]}
+                type="button"
+                onClick={() => removeActiveFilter(filter[0])}
+                className="transaction-active-filter"
+                aria-label={`Remover filtro ${filter[1]}`}
+              >
+                <span>{filter[1]}</span>
+                <X size={11} />
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="transaction-active-filters__clear"
+            >
+              Limpar todos
+            </button>
+          </div>
+        )}
+
         {/* Filtros expandíveis */}
         <AnimatePresence>
           {showFilters && (
@@ -1096,7 +1130,8 @@ export default function TransactionList() {
                     <option value="all">Todos</option>
                     <option value="income">Receitas</option>
                     <option value="expense">Despesas</option>
-                    <option value="savings">Poupança</option>
+                    <option value="transfer">Transferências</option>
+                    <option value="savings">Aportes / reserva</option>
                   </select>
                 </div>
                 {/* Categoria */}
@@ -1343,54 +1378,45 @@ export default function TransactionList() {
         ) : (
           <>
             <AnimatePresence>
-              {grouped.map(([date, txs]) => (
-                <div key={date}>
-                  {/* Cabeçalho do grupo */}
-                  <div className="transaction-date-header flex flex-wrap items-center justify-between gap-2 border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2">
-                    <p className="text-xs font-bold text-[--text-secondary]">{dateLabel(date)}</p>
-                    <div className="flex items-center gap-3 text-xs tabular-nums">
-                      {txs.some((t) => t.type === 'income' && !t.isSavings) && (
-                        <span className="text-[--success-icon] font-semibold">
-                          +
-                          {formatCurrency(
-                            txs
-                              .filter((t) => t.type === 'income' && !t.isSavings)
-                              .reduce((s, t) => s + t.amount, 0),
-                          )}
-                        </span>
-                      )}
-                      {txs.some((t) => t.type === 'expense') && (
-                        <span className="text-[--danger-icon] font-semibold">
-                          −
-                          {formatCurrency(
-                            txs
-                              .filter((t) => t.type === 'expense')
-                              .reduce((s, t) => s + t.amount, 0),
-                          )}
-                        </span>
-                      )}
+              {grouped.map(([date, txs]) => {
+                const daily = summarizeTransactions(txs)
+                return (
+                  <div key={date}>
+                    <div className="transaction-date-header">
+                      <p className="transaction-date-label">{dateLabel(date)}</p>
+                      <div className="transaction-date-totals">
+                        {daily.income > 0 && (
+                          <span className="transaction-date-total" data-kind="income">
+                            +{formatCurrency(daily.income)}
+                          </span>
+                        )}
+                        {daily.expenses > 0 && (
+                          <span className="transaction-date-total" data-kind="expense">
+                            −{formatCurrency(daily.expenses)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="divide-y divide-[--border-subtle]">
+                      {txs.map((tx) => (
+                        <TxRow
+                          key={tx.id}
+                          tx={tx}
+                          cat={categories.find((category) => category.id === tx.categoryId)}
+                          onEdit={handleEdit}
+                          onDelete={handleDeleteRequest}
+                          onTogglePayment={handleTogglePayment}
+                          paymentUpdating={paymentUpdatingIds.has(tx.id)}
+                          paymentState={getTransactionPaymentState(tx, paymentStatusIndex)}
+                          paymentSelected={selectedPaymentIds.has(tx.id)}
+                          onPaymentSelect={togglePaymentSelection}
+                          categoryReview={categoryReviewIndex.get(tx.id)}
+                        />
+                      ))}
                     </div>
                   </div>
-                  {/* Transações do dia */}
-                  <div className="divide-y divide-[--border-subtle]">
-                    {txs.map((tx) => (
-                      <TxRow
-                        key={tx.id}
-                        tx={tx}
-                        cat={categories.find((c) => c.id === tx.categoryId)}
-                        onEdit={handleEdit}
-                        onDelete={handleDeleteRequest}
-                        onTogglePayment={handleTogglePayment}
-                        paymentUpdating={paymentUpdatingIds.has(tx.id)}
-                        paymentState={getTransactionPaymentState(tx, paymentStatusIndex)}
-                        paymentSelected={selectedPaymentIds.has(tx.id)}
-                        onPaymentSelect={togglePaymentSelection}
-                        categoryReview={categoryReviewIndex.get(tx.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </AnimatePresence>
 
             {hasMore && (
