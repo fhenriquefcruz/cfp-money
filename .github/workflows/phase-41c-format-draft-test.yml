@@ -1,0 +1,36 @@
+name: Phase 41C format draft test
+
+on:
+  push:
+    branches:
+      - phase-41c-money-category-suggestions
+    paths:
+      - .github/workflows/phase-41c-format-draft-test.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: phase-41c-money-category-suggestions
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write src/domain/moneyTransactionDraft.test.js
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/domain/moneyTransactionDraft.test.js
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+          else
+            git commit -m "Phase 41C: format category suggestion tests"
+            git push origin HEAD:phase-41c-money-category-suggestions
+          fi
