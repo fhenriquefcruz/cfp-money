@@ -77,7 +77,6 @@ export function buildMonthlyBudgetOverview({
       spent,
       amount,
       excess,
-      remaining: Math.max(0, amount - spent),
       percent: amount > 0 ? (spent / amount) * 100 : 0,
     }
   })
