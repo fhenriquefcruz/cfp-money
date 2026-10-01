@@ -43,7 +43,7 @@ import {
 } from '../utils'
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { defaultDateRangeEnd, isFinanciallyEffectiveTransaction } from '../domain/finance'
+import { defaultDateRangeEnd, summarizeTransactions } from '../domain/finance'
 import {
   formatTransactionIsoDate,
   getTransactionActivityDate,
@@ -134,19 +134,6 @@ function groupByDate(txs) {
     groups[activityDate].push(tx)
   })
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
-}
-
-function summarizeTransactionGroup(transactions) {
-  return transactions.reduce(
-    (summary, transaction) => {
-      if (!isFinanciallyEffectiveTransaction(transaction)) return summary
-      const kind = getTransactionKind(transaction)
-      if (kind === 'income') summary.income += transaction.amount
-      if (kind === 'expense') summary.expenses += transaction.amount
-      return summary
-    },
-    { income: 0, expenses: 0 },
-  )
 }
 
 function manualPaymentPresentation(status) {
@@ -604,20 +591,7 @@ export default function TransactionList() {
     setSavedViews(readSavedTransactionViews(user.uid, window.localStorage))
   }, [user?.uid])
 
-  const summary = useMemo(() => {
-    const totals = filtered.reduce(
-      (current, transaction) => {
-        if (!isFinanciallyEffectiveTransaction(transaction)) return current
-        const kind = getTransactionKind(transaction)
-        if (kind === 'income') current.income += transaction.amount
-        if (kind === 'expense') current.expenses += transaction.amount
-        if (kind === 'savings') current.savings += transaction.amount
-        return current
-      },
-      { income: 0, expenses: 0, savings: 0 },
-    )
-    return { ...totals, balance: totals.income - totals.expenses }
-  }, [filtered])
+  const summary = useMemo(() => summarizeTransactions(filtered), [filtered])
 
   const grouped = useMemo(() => groupByDate(filtered.slice(0, page * PER_PAGE)), [filtered, page])
   const hasMore = filtered.length > page * PER_PAGE
@@ -1426,7 +1400,7 @@ export default function TransactionList() {
           <>
             <AnimatePresence>
               {grouped.map(([date, txs]) => {
-                const daily = summarizeTransactionGroup(txs)
+                const daily = summarizeTransactions(txs)
                 return (
                   <div key={date}>
                     <div className="transaction-date-header">
