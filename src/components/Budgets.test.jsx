@@ -61,7 +61,7 @@ describe('Budgets auditability', () => {
     expect(screen.getByText('Gasto orçado')).toBeInTheDocument()
     expect(screen.getAllByText('Gasto sem limite').length).toBeGreaterThan(0)
     expect(screen.getByText('Excedente total')).toBeInTheDocument()
-    expect(screen.getByText(/incluindo.*categorias sem limite/i)).toBeInTheDocument()
+    expect(screen.getByText(/Gasto total do mês/i)).toBeInTheDocument()
   })
 
   it('permite abrir os lançamentos que compõem cada categoria', () => {
@@ -80,7 +80,7 @@ describe('Budgets auditability', () => {
     renderBudgets()
 
     expect(
-      screen.getByText(/Revise as classificações antes de interpretar os alertas/i),
+      screen.getByText(/revisão de categoria/i),
     ).toBeInTheDocument()
 
     expect(screen.getByRole('link', { name: /Revisar lançamentos/i })).toHaveAttribute(
