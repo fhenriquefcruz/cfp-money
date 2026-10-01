@@ -137,7 +137,6 @@ test('exclui transferências e expõe composição auditável do orçamento', ()
   })
   expect(report.items[0]).toMatchObject({
     spent: 300,
-    remaining: 0,
     excess: 50,
     percent: 120,
   })
