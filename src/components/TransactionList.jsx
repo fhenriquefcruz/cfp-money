@@ -198,10 +198,9 @@ function invoicePaymentPresentation(paymentState = {}) {
 }
 
 function toDateTimeLabel(value) {
-  const date = value?.toDate?.() || (value ? new Date(value) : null)
-  return date && !Number.isNaN(date.getTime())
-    ? format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
-    : null
+  if (!value) return null
+  const date = value?.toDate?.() || new Date(value)
+  return Number.isNaN(date.getTime()) ? null : format(date, "dd/MM/yyyy 'às' HH:mm")
 }
 
 const TRANSACTION_KIND = {
@@ -248,7 +247,6 @@ function TxRow({
   const createdAtLabel = toDateTimeLabel(tx.createdAt)
   const paidAtLabel = toDateTimeLabel(tx.paidAt)
   const activityDateLabel = formatTransactionIsoDate(dateContext.activityDate)
-  const paymentMethod = PAYMENT_METHODS.find((method) => method.id === tx.paymentMethod)
   const [kindLabel, KindIcon] = TRANSACTION_KIND[kind]
 
 
@@ -303,10 +301,8 @@ function TxRow({
             </span>
           )}
 
-          {paymentMethod && !isSavings && !isTransfer && (
-            <span className="transaction-payment-method">
-              {paymentMethod.label}
-            </span>
+          {tx.paymentMethod && !isSavings && !isTransfer && (
+            <span className="transaction-payment-method">{getPaymentLabel(tx.paymentMethod)}</span>
           )}
 
           {categoryReview && (
@@ -623,7 +619,7 @@ export default function TransactionList() {
     })?.id || ''
 
   const activeFilterChips = [
-    typeFilter !== 'all' && ['type', TRANSACTION_KIND[typeFilter]?.[0] || 'Tipo'],
+    typeFilter !== 'all' && ['type', TRANSACTION_KIND[typeFilter][0]],
     catFilter !== 'all' && [
       'category',
       categories.find((category) => category.id === catFilter)?.name || 'Categoria',
@@ -644,8 +640,7 @@ export default function TransactionList() {
     categoryReviewOnly && ['review', 'Categorias para revisar'],
     hasCustomDateRange && [
       'date',
-      DATE_PRESETS.find((preset) => preset.id === currentDatePreset)?.label ||
-        'Período personalizado',
+      DATE_PRESETS.find((preset) => preset.id === currentDatePreset)?.label || 'Período personalizado',
     ],
   ].filter(Boolean)
   const activeFilters = activeFilterChips.length + Number(Boolean(search.trim()))
