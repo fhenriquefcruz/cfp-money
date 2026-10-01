@@ -2193,7 +2193,6 @@ body {
   }
 }
 
-
 /* Orçamentos auditáveis */
 .budget-drilldown-link,
 .budget-edit-limit,
@@ -2244,8 +2243,6 @@ body {
   text-align: center;
 }
 
-
-
 .budget-review-banner {
   display: flex;
   flex-wrap: wrap;
@@ -2273,14 +2270,12 @@ body {
   line-height: 1.625;
 }
 
-
 .budget-card-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
-
 
 .budget-remove-button,
 .budget-month-nav-button {
@@ -2295,7 +2290,9 @@ body {
   width: 2.5rem;
   height: 2.5rem;
   color: var(--text-tertiary);
-  transition: color 150ms, background 150ms;
+  transition:
+    color 150ms,
+    background 150ms;
 }
 
 .budget-remove-button:hover {
@@ -2313,7 +2310,6 @@ body {
 .budget-month-nav-button:hover {
   background: var(--bg-hover);
 }
-
 
 .budget-spent-value {
   margin-top: 0.25rem;
