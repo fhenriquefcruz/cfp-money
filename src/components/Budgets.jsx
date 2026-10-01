@@ -15,24 +15,14 @@ import {
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
 
 const monthLabel = (monthKey) => `${monthKey.slice(5, 7)}/${monthKey.slice(0, 4)}`
-function getBudgetStatus(percent) {
-  const tone = percent > 100 ? 'danger' : percent >= 70 ? 'warning' : 'success'
-  const label =
-    percent > 100
-      ? `Excedido em ${(percent - 100).toFixed(0)}%`
-      : `${percent.toFixed(0)}% utilizado`
-
-  return { tone, label }
-}
-
 function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
   const amount = Number(budget?.amount) || 0
   const percent = amount > 0 ? Math.max(0, (spent / amount) * 100) : 0
   const remaining = Math.max(0, amount - spent)
   const excess = Math.max(0, spent - amount)
-  const status = getBudgetStatus(percent)
   const isOver = percent > 100
-  const barColor = `var(--${status.tone}-icon)`
+  const tone = isOver ? 'danger' : percent >= 70 ? 'warning' : 'success'
+  const txHref = `/transactions?category=${category.id}&month=${monthKey}`
 
   return (
     <Card className={isOver ? 'ring-2 ring-[--danger-border]' : ''}>
@@ -75,7 +65,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
               <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
                 Gasto no mês
               </p>
-              <p className="mt-1 text-2xl font-black tabular-nums" style={{ color: barColor }}>
+              <p className="mt-1 text-2xl font-black tabular-nums" style={{ color: `var(--${tone}-icon)` }}>
                 {formatCurrency(spent)}
               </p>
             </div>
@@ -97,7 +87,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
             <div
               className="h-full rounded-full"
               style={{
-                background: barColor,
+                background: `var(--${tone}-icon)`,
                 width: `${Math.min(percent, 100)}%`,
               }}
             />
@@ -106,54 +96,28 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
           <div
             className="mt-3 rounded-xl border px-3 py-2 text-xs font-medium"
             style={{
-              background: `var(--${status.tone}-bg)`,
-              borderColor: `var(--${status.tone}-border)`,
-              color: `var(--${status.tone}-text)`,
+              background: `var(--${tone}-bg)`,
+              borderColor: `var(--${tone}-border)`,
+              color: `var(--${tone}-text)`,
             }}
           >
-            {status.label}
-          </div>
-
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <Link
-              to={`/transactions?category=${category.id}&month=${monthKey}`}
-              className="budget-drilldown-link"
-            >
-              Ver lançamentos
-            </Link>
-            <button
-              type="button"
-              onClick={() =>
-                onEdit({
-                  categoryId: category.id,
-                  amount,
-                })
-              }
-              className="budget-edit-limit"
-            >
-              Alterar limite
-            </button>
+            {isOver ? `Excedido em ${(percent - 100).toFixed(0)}%` : `${percent.toFixed(0)}% utilizado`}
           </div>
         </>
-      ) : (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {spent > 0 && (
-            <Link
-              to={`/transactions?category=${category.id}&month=${monthKey}`}
-              className="budget-small-link"
-            >
-              Ver lançamentos
-            </Link>
-          )}
-          <button
-            type="button"
-            onClick={() => onEdit({ categoryId: category.id, amount: '' })}
-            className="budget-small-action"
-          >
-            + Definir limite
-          </button>
-        </div>
-      )}
+      ) : null}
+
+      <div className="budget-card-actions">
+        <Link to={txHref} className="budget-drilldown-link">
+          Ver lançamentos
+        </Link>
+        <button
+          type="button"
+          onClick={() => onEdit({ categoryId: category.id, amount: budget ? amount : '' })}
+          className="budget-edit-limit"
+        >
+          {budget ? 'Alterar limite' : '+ Definir limite'}
+        </button>
+      </div>
     </Card>
   )
 }
@@ -306,7 +270,7 @@ export default function Budgets() {
         </div>
       </Card>
 
-      {(overview.items.length > 0 || overview.totalAllSpent > 0) && (
+      {(overview.items.length > 0 || (overview.totalSpent + overview.totalUnbudgetedSpent) > 0) && (
         <>
           <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
@@ -343,7 +307,7 @@ export default function Budgets() {
           <p className="budget-summary-note">
             O resumo dos limites considera somente categorias orçadas. O gasto total do mês é{' '}
             <strong className="font-semibold text-[--text-secondary]">
-              {formatCurrency(overview.totalAllSpent)}
+              {formatCurrency((overview.totalSpent + overview.totalUnbudgetedSpent))}
             </strong>
             , incluindo {formatCurrency(overview.totalUnbudgetedSpent)} em categorias sem limite.
           </p>
