@@ -506,9 +506,7 @@ export default function TransactionList() {
 
   const filtered = useMemo(() => {
     let txs = transactions.filter((tx) => {
-      if (typeFilter === 'savings' && !tx.isSavings) return false
-      if (typeFilter === 'income' && (tx.type !== 'income' || tx.isSavings)) return false
-      if (typeFilter === 'expense' && tx.type !== 'expense') return false
+      if (!matchesTransactionKind(tx, typeFilter)) return false
       if (catFilter !== 'all' && tx.categoryId !== catFilter) return false
       if (payFilter !== 'all' && tx.paymentMethod !== payFilter) return false
       if (categoryReviewOnly && !categoryReviewIndex.has(tx.id)) return false
@@ -619,11 +617,16 @@ export default function TransactionList() {
   }, [user?.uid])
 
   const summary = useMemo(() => {
-    const income = filtered
-      .filter((t) => t.type === 'income' && !t.isSavings)
-      .reduce((s, t) => s + t.amount, 0)
-    const expenses = filtered.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-    const savings = filtered.filter((t) => t.isSavings).reduce((s, t) => s + t.amount, 0)
+    const effective = filtered.filter(isFinanciallyEffectiveTransaction)
+    const income = effective
+      .filter((transaction) => getTransactionKind(transaction) === TRANSACTION_KIND.INCOME)
+      .reduce((total, transaction) => total + transaction.amount, 0)
+    const expenses = effective
+      .filter((transaction) => getTransactionKind(transaction) === TRANSACTION_KIND.EXPENSE)
+      .reduce((total, transaction) => total + transaction.amount, 0)
+    const savings = effective
+      .filter((transaction) => getTransactionKind(transaction) === TRANSACTION_KIND.SAVINGS)
+      .reduce((total, transaction) => total + transaction.amount, 0)
     return { income, expenses, savings, balance: income - expenses }
   }, [filtered])
 
@@ -633,6 +636,7 @@ export default function TransactionList() {
   const hasCustomDateRange =
     dateRange.from !== currentMonthRange.from || dateRange.to !== currentMonthRange.to
   const activeFilters = [
+    Boolean(search.trim()),
     typeFilter !== 'all',
     catFilter !== 'all',
     payFilter !== 'all',
@@ -652,6 +656,54 @@ export default function TransactionList() {
       const range = preset.getRange()
       return dateRange.from === range.from && dateRange.to === range.to
     })?.id || ''
+
+  const activeFilterChips = [
+    search.trim() && { id: 'search', label: `Busca: ${search.trim()}` },
+    typeFilter !== 'all' && {
+      id: 'type',
+      label: `Tipo: ${transactionKindLabel(typeFilter)}`,
+    },
+    catFilter !== 'all' && {
+      id: 'category',
+      label: `Categoria: ${categories.find((category) => category.id === catFilter)?.name || 'Selecionada'}`,
+    },
+    payFilter !== 'all' && {
+      id: 'payment',
+      label: `Pagamento: ${getPaymentLabel(payFilter)}`,
+    },
+    paymentStatusFilter !== 'all' && {
+      id: 'status',
+      label: `Status: ${
+        {
+          unknown: 'A revisar',
+          to_pay: 'A pagar',
+          pending: 'Pendente',
+          partial: 'Parcial',
+          overdue: 'Atrasada',
+          paid: 'Paga',
+          cancelled: 'Cancelada',
+        }[paymentStatusFilter] || paymentStatusFilter
+      }`,
+    },
+    categoryReviewOnly && { id: 'review', label: 'Categorias para revisar' },
+    hasCustomDateRange && {
+      id: 'date',
+      label:
+        DATE_PRESETS.find((preset) => preset.id === currentDatePreset)?.label ||
+        `${dateRange.from || 'início'} → ${dateRange.to || 'hoje'}`,
+    },
+  ].filter(Boolean)
+
+  const removeActiveFilter = (filterId) => {
+    if (filterId === 'search') setSearch('')
+    if (filterId === 'type') setTypeFilter('all')
+    if (filterId === 'category') setCatFilter('all')
+    if (filterId === 'payment') setPayFilter('all')
+    if (filterId === 'status') setPaymentStatusFilter('all')
+    if (filterId === 'review') setCategoryReviewOnly(false)
+    if (filterId === 'date') setDateRange(getCurrentMonthRange())
+    setPage(1)
+  }
 
   const handleEdit = (tx) => {
     if (isTransactionSeries(tx)) {
@@ -1091,6 +1143,37 @@ export default function TransactionList() {
           onDelete={deleteSavedView}
         />
 
+        {activeFilterChips.length > 0 && (
+          <div
+            className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] px-3 py-2"
+            aria-label="Filtros ativos"
+          >
+            <span className="mr-1 text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+              Filtros ativos
+            </span>
+            {activeFilterChips.map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                onClick={() => removeActiveFilter(filter.id)}
+                className="inline-flex min-h-8 items-center gap-1 rounded-full border border-[--border-default] bg-[--bg-surface] px-2.5 text-[10px] font-semibold text-[--text-secondary] hover:border-[--brand-500] hover:text-[--text-brand]"
+                aria-label={`Remover filtro ${filter.label}`}
+                title="Clique para remover este filtro"
+              >
+                <span>{filter.label}</span>
+                <X size={11} aria-hidden="true" />
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="min-h-8 px-2 text-[10px] font-semibold text-[--text-tertiary] hover:text-[--danger-text]"
+            >
+              Limpar todos
+            </button>
+          </div>
+        )}
+
         {/* Filtros expandíveis */}
         <AnimatePresence>
           {showFilters && (
@@ -1124,7 +1207,8 @@ export default function TransactionList() {
                     <option value="all">Todos</option>
                     <option value="income">Receitas</option>
                     <option value="expense">Despesas</option>
-                    <option value="savings">Poupança</option>
+                    <option value="transfer">Transferências</option>
+                    <option value="savings">Aportes / reserva</option>
                   </select>
                 </div>
                 {/* Categoria */}
