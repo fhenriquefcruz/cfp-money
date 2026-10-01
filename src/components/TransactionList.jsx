@@ -48,8 +48,6 @@ import {
   formatTransactionIsoDate,
   getTransactionActivityDate,
   getTransactionDateContext,
-  getTransactionKind,
-  transactionKindLabel,
 } from '../domain/transactionDates'
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
 import { isTransactionSeries } from '../domain/transactionSeries'
@@ -206,6 +204,22 @@ function toDateTimeLabel(value) {
     : null
 }
 
+const TRANSACTION_KIND = {
+  income: ['Receita', TrendingUp],
+  expense: ['Despesa', TrendingDown],
+  transfer: ['Transferência', ArrowLeftRight],
+  savings: ['Aporte / reserva', PiggyBank],
+}
+
+const getKind = (transaction) =>
+  transaction.isSavings
+    ? 'savings'
+    : transaction.flowType === 'transfer' || transaction.kind === 'transfer'
+      ? 'transfer'
+      : transaction.type === 'income'
+        ? 'income'
+        : 'expense'
+
 function TxRow({
   tx,
   cat,
@@ -218,7 +232,7 @@ function TxRow({
   onPaymentSelect,
   categoryReview,
 }) {
-  const kind = getTransactionKind(tx)
+  const kind = getKind(tx)
   const isIncome = kind === 'income'
   const isSavings = kind === 'savings'
   const isTransfer = kind === 'transfer'
@@ -235,10 +249,7 @@ function TxRow({
   const paidAtLabel = toDateTimeLabel(tx.paidAt)
   const activityDateLabel = formatTransactionIsoDate(dateContext.activityDate)
   const paymentMethod = PAYMENT_METHODS.find((method) => method.id === tx.paymentMethod)
-  const KindIcon =
-    { income: TrendingUp, expense: TrendingDown, transfer: ArrowLeftRight, savings: PiggyBank }[
-      kind
-    ] || ArrowLeftRight
+  const [kindLabel, KindIcon] = TRANSACTION_KIND[kind]
 
 
   return (
@@ -259,7 +270,7 @@ function TxRow({
       <div className="transaction-row-main">
         <div className="transaction-row-heading">
           <p className="transaction-row-title">
-            {tx.description || cat?.name || transactionKindLabel(kind)}
+            {tx.description || cat?.name || kindLabel}
           </p>
           {tx.isInstallment && (
             <span className="transaction-series-badge transaction-series-badge--installment">
@@ -276,7 +287,7 @@ function TxRow({
         <div className="transaction-row-meta">
           <span className="transaction-kind-badge" data-kind={kind}>
             <KindIcon size={11} aria-hidden="true" />
-            {transactionKindLabel(kind)}
+            {kindLabel}
           </span>
 
           {cat && !isSavings && !isTransfer && (
@@ -481,7 +492,7 @@ export default function TransactionList() {
 
   const filtered = useMemo(() => {
     let txs = transactions.filter((tx) => {
-      if (typeFilter !== 'all' && getTransactionKind(tx) !== typeFilter) return false
+      if (typeFilter !== 'all' && getKind(tx) !== typeFilter) return false
       if (catFilter !== 'all' && tx.categoryId !== catFilter) return false
       if (payFilter !== 'all' && tx.paymentMethod !== payFilter) return false
       if (categoryReviewOnly && !categoryReviewIndex.has(tx.id)) return false
