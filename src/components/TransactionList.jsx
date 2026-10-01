@@ -50,12 +50,7 @@ import {
   getTransactionDateContext,
 } from '../domain/transactionDates'
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
-import {
-  getTransactionKind,
-  matchesTransactionKind,
-  transactionKindLabel,
-  TRANSACTION_KIND,
-} from '../domain/transactionPresentation'
+import { getTransactionKind, transactionKindLabel } from '../domain/transactionPresentation'
 import { isTransactionSeries } from '../domain/transactionSeries'
 import {
   PAYMENT_STATUS,
@@ -145,8 +140,8 @@ function summarizeTransactionGroup(transactions) {
     (summary, transaction) => {
       if (!isFinanciallyEffectiveTransaction(transaction)) return summary
       const kind = getTransactionKind(transaction)
-      if (kind === TRANSACTION_KIND.INCOME) summary.income += transaction.amount
-      if (kind === TRANSACTION_KIND.EXPENSE) summary.expenses += transaction.amount
+      if (kind === 'income') summary.income += transaction.amount
+      if (kind === 'expense') summary.expenses += transaction.amount
       return summary
     },
     { income: 0, expenses: 0 },
@@ -236,9 +231,9 @@ function TxRow({
   categoryReview,
 }) {
   const kind = getTransactionKind(tx)
-  const isIncome = kind === TRANSACTION_KIND.INCOME
-  const isSavings = kind === TRANSACTION_KIND.SAVINGS
-  const isTransfer = kind === TRANSACTION_KIND.TRANSFER
+  const isIncome = kind === 'income'
+  const isSavings = kind === 'savings'
+  const isTransfer = kind === 'transfer'
   const dateContext = getTransactionDateContext(tx)
   const protectedGroup = isTransactionSeries(tx)
   const payableExpense = isPayableExpense(tx)
@@ -254,10 +249,10 @@ function TxRow({
   const paymentMethod = PAYMENT_METHODS.find((method) => method.id === tx.paymentMethod)
   const KindIcon =
     {
-      [TRANSACTION_KIND.INCOME]: TrendingUp,
-      [TRANSACTION_KIND.EXPENSE]: TrendingDown,
-      [TRANSACTION_KIND.TRANSFER]: ArrowLeftRight,
-      [TRANSACTION_KIND.SAVINGS]: PiggyBank,
+      ['income']: TrendingUp,
+      ['expense']: TrendingDown,
+      ['transfer']: ArrowLeftRight,
+      ['savings']: PiggyBank,
     }[kind] || ArrowLeftRight
 
 
@@ -386,7 +381,7 @@ function TxRow({
 
       <div className="transaction-row__aside transaction-row-aside-refined">
         <span className="transaction-amount" data-kind={kind}>
-          {isIncome ? '+' : kind === TRANSACTION_KIND.EXPENSE ? '−' : ''}
+          {isIncome ? '+' : kind === 'expense' ? '−' : ''}
           {formatCurrency(tx.amount)}
         </span>
 
@@ -501,7 +496,7 @@ export default function TransactionList() {
 
   const filtered = useMemo(() => {
     let txs = transactions.filter((tx) => {
-      if (!matchesTransactionKind(tx, typeFilter)) return false
+      if (typeFilter !== 'all' && getTransactionKind(tx) !== typeFilter) return false
       if (catFilter !== 'all' && tx.categoryId !== catFilter) return false
       if (payFilter !== 'all' && tx.paymentMethod !== payFilter) return false
       if (categoryReviewOnly && !categoryReviewIndex.has(tx.id)) return false
@@ -614,13 +609,13 @@ export default function TransactionList() {
   const summary = useMemo(() => {
     const effective = filtered.filter(isFinanciallyEffectiveTransaction)
     const income = effective
-      .filter((transaction) => getTransactionKind(transaction) === TRANSACTION_KIND.INCOME)
+      .filter((transaction) => getTransactionKind(transaction) === 'income')
       .reduce((total, transaction) => total + transaction.amount, 0)
     const expenses = effective
-      .filter((transaction) => getTransactionKind(transaction) === TRANSACTION_KIND.EXPENSE)
+      .filter((transaction) => getTransactionKind(transaction) === 'expense')
       .reduce((total, transaction) => total + transaction.amount, 0)
     const savings = effective
-      .filter((transaction) => getTransactionKind(transaction) === TRANSACTION_KIND.SAVINGS)
+      .filter((transaction) => getTransactionKind(transaction) === 'savings')
       .reduce((total, transaction) => total + transaction.amount, 0)
     return { income, expenses, savings, balance: income - expenses }
   }, [filtered])
@@ -630,15 +625,6 @@ export default function TransactionList() {
   const currentMonthRange = getCurrentMonthRange()
   const hasCustomDateRange =
     dateRange.from !== currentMonthRange.from || dateRange.to !== currentMonthRange.to
-  const activeFilters = [
-    Boolean(search.trim()),
-    typeFilter !== 'all',
-    catFilter !== 'all',
-    payFilter !== 'all',
-    paymentStatusFilter !== 'all',
-    categoryReviewOnly,
-    hasCustomDateRange,
-  ].filter(Boolean).length
   const savableFilterCount = [
     typeFilter !== 'all',
     catFilter !== 'all',
@@ -653,41 +639,32 @@ export default function TransactionList() {
     })?.id || ''
 
   const activeFilterChips = [
-    search.trim() && { id: 'search', label: `Busca: ${search.trim()}` },
-    typeFilter !== 'all' && {
-      id: 'type',
-      label: `Tipo: ${transactionKindLabel(typeFilter)}`,
-    },
-    catFilter !== 'all' && {
-      id: 'category',
-      label: `Categoria: ${categories.find((category) => category.id === catFilter)?.name || 'Selecionada'}`,
-    },
-    payFilter !== 'all' && {
-      id: 'payment',
-      label: `Pagamento: ${getPaymentLabel(payFilter)}`,
-    },
-    paymentStatusFilter !== 'all' && {
-      id: 'status',
-      label: `Status: ${
-        {
-          unknown: 'A revisar',
-          to_pay: 'A pagar',
-          pending: 'Pendente',
-          partial: 'Parcial',
-          overdue: 'Atrasada',
-          paid: 'Paga',
-          cancelled: 'Cancelada',
-        }[paymentStatusFilter] || paymentStatusFilter
-      }`,
-    },
-    categoryReviewOnly && { id: 'review', label: 'Categorias para revisar' },
-    hasCustomDateRange && {
-      id: 'date',
-      label:
-        DATE_PRESETS.find((preset) => preset.id === currentDatePreset)?.label ||
-        `${dateRange.from || 'início'} → ${dateRange.to || 'hoje'}`,
-    },
+    typeFilter !== 'all' && ['type', transactionKindLabel(typeFilter)],
+    catFilter !== 'all' && [
+      'category',
+      categories.find((category) => category.id === catFilter)?.name || 'Categoria',
+    ],
+    payFilter !== 'all' && ['payment', getPaymentLabel(payFilter)],
+    paymentStatusFilter !== 'all' && [
+      'status',
+      {
+        unknown: 'A revisar',
+        to_pay: 'A pagar',
+        pending: 'Pendente',
+        partial: 'Parcial',
+        overdue: 'Atrasada',
+        paid: 'Paga',
+        cancelled: 'Cancelada',
+      }[paymentStatusFilter] || paymentStatusFilter,
+    ],
+    categoryReviewOnly && ['review', 'Categorias para revisar'],
+    hasCustomDateRange && [
+      'date',
+      DATE_PRESETS.find((preset) => preset.id === currentDatePreset)?.label ||
+        'Período personalizado',
+    ],
   ].filter(Boolean)
+  const activeFilters = activeFilterChips.length + Number(Boolean(search.trim()))
 
   const removeActiveFilter = (filterId) => {
     if (filterId === 'search') setSearch('')
@@ -1148,14 +1125,14 @@ export default function TransactionList() {
             </span>
             {activeFilterChips.map((filter) => (
               <button
-                key={filter.id}
+                key={filter[0]}
                 type="button"
-                onClick={() => removeActiveFilter(filter.id)}
+                onClick={() => removeActiveFilter(filter[0])}
                 className="transaction-active-filter"
-                aria-label={`Remover filtro ${filter.label}`}
+                aria-label={`Remover filtro ${filter[1]}`}
                 title="Clique para remover este filtro"
               >
-                <span>{filter.label}</span>
+                <span>{filter[1]}</span>
                 <X size={11} aria-hidden="true" />
               </button>
             ))}
