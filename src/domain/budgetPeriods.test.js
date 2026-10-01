@@ -3,6 +3,7 @@ import {
   buildMonthlyBudgetOverview,
   getBudgetForMonth,
   getBudgetSpent,
+  getBudgetTransactions,
   shiftBudgetMonth,
 } from './budgetPeriods'
 
@@ -92,4 +93,69 @@ test('resume apenas os limites e gastos da competência escolhida', () => {
     totalSpent: 550,
     overCount: 1,
   })
+})
+
+
+test('exclui transferências e expõe composição auditável do orçamento', () => {
+  const transactions = [
+    { id: 'food', type: 'expense', categoryId: 'food', amount: 300, date: '2026-09-05' },
+    {
+      id: 'transfer',
+      type: 'expense',
+      categoryId: 'food',
+      amount: 900,
+      date: '2026-09-06',
+      flowType: 'transfer',
+    },
+    {
+      id: 'unbudgeted',
+      type: 'expense',
+      categoryId: 'leisure',
+      amount: 200,
+      date: '2026-09-07',
+    },
+  ]
+
+  expect(getBudgetTransactions(transactions, 'food', '2026-09').map((item) => item.id)).toEqual([
+    'food',
+  ])
+
+  const report = buildMonthlyBudgetOverview({
+    budgets: [{ categoryId: 'food', amount: 250, monthKey: '2026-09' }],
+    transactions,
+    monthKey: '2026-09',
+    currentMonthKey: '2026-09',
+  })
+
+  expect(report).toMatchObject({
+    totalBudgeted: 250,
+    totalSpent: 300,
+    totalAllSpent: 500,
+    totalUnbudgetedSpent: 200,
+    totalExceeded: 50,
+    overCount: 1,
+  })
+  expect(report.items[0]).toMatchObject({
+    spent: 300,
+    remaining: 0,
+    excess: 50,
+    percent: 120,
+  })
+})
+
+test('considera todo gasto do mês como não orçado quando não há limite configurado', () => {
+  const report = buildMonthlyBudgetOverview({
+    budgets: [],
+    transactions: [
+      { type: 'expense', categoryId: 'food', amount: 120, date: '2026-09-05' },
+      { type: 'expense', categoryId: 'car', amount: 80, date: '2026-09-06' },
+    ],
+    monthKey: '2026-09',
+    currentMonthKey: '2026-09',
+  })
+
+  expect(report.totalBudgeted).toBe(0)
+  expect(report.totalSpent).toBe(0)
+  expect(report.totalAllSpent).toBe(200)
+  expect(report.totalUnbudgetedSpent).toBe(200)
 })
