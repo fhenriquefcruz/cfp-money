@@ -140,6 +140,19 @@ function groupByDate(txs) {
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
 }
 
+function summarizeTransactionGroup(transactions) {
+  return transactions.reduce(
+    (summary, transaction) => {
+      if (!isFinanciallyEffectiveTransaction(transaction)) return summary
+      const kind = getTransactionKind(transaction)
+      if (kind === TRANSACTION_KIND.INCOME) summary.income += transaction.amount
+      if (kind === TRANSACTION_KIND.EXPENSE) summary.expenses += transaction.amount
+      return summary
+    },
+    { income: 0, expenses: 0 },
+  )
+}
+
 function manualPaymentPresentation(status) {
   if (status === PAYMENT_STATUS.PAID) {
     return {
@@ -1437,70 +1450,45 @@ export default function TransactionList() {
         ) : (
           <>
             <AnimatePresence>
-              {grouped.map(([date, txs]) => (
-                <div key={date}>
-                  {/* Cabeçalho do grupo */}
-                  <div className="transaction-date-header flex flex-wrap items-center justify-between gap-2 border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2">
-                    <p className="text-xs font-bold text-[--text-secondary]">{dateLabel(date)}</p>
-                    <div className="flex items-center gap-3 text-xs tabular-nums">
-                      {txs.some(
-                        (transaction) =>
-                          isFinanciallyEffectiveTransaction(transaction) &&
-                          getTransactionKind(transaction) === TRANSACTION_KIND.INCOME,
-                      ) && (
-                        <span className="text-[--success-icon] font-semibold">
-                          +
-                          {formatCurrency(
-                            txs
-                              .filter(
-                                (transaction) =>
-                                  isFinanciallyEffectiveTransaction(transaction) &&
-                                  getTransactionKind(transaction) === TRANSACTION_KIND.INCOME,
-                              )
-                              .reduce((total, transaction) => total + transaction.amount, 0),
-                          )}
-                        </span>
-                      )}
-                      {txs.some(
-                        (transaction) =>
-                          isFinanciallyEffectiveTransaction(transaction) &&
-                          getTransactionKind(transaction) === TRANSACTION_KIND.EXPENSE,
-                      ) && (
-                        <span className="text-[--danger-icon] font-semibold">
-                          −
-                          {formatCurrency(
-                            txs
-                              .filter(
-                                (transaction) =>
-                                  isFinanciallyEffectiveTransaction(transaction) &&
-                                  getTransactionKind(transaction) === TRANSACTION_KIND.EXPENSE,
-                              )
-                              .reduce((total, transaction) => total + transaction.amount, 0),
-                          )}
-                        </span>
-                      )}
+              {grouped.map(([date, txs]) => {
+                const daily = summarizeTransactionGroup(txs)
+                return (
+                  <div key={date}>
+                    <div className="transaction-date-header flex flex-wrap items-center justify-between gap-2 border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2">
+                      <p className="text-xs font-bold text-[--text-secondary]">{dateLabel(date)}</p>
+                      <div className="flex items-center gap-3 text-xs tabular-nums">
+                        {daily.income > 0 && (
+                          <span className="text-[--success-icon] font-semibold">
+                            +{formatCurrency(daily.income)}
+                          </span>
+                        )}
+                        {daily.expenses > 0 && (
+                          <span className="text-[--danger-icon] font-semibold">
+                            −{formatCurrency(daily.expenses)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="divide-y divide-[--border-subtle]">
+                      {txs.map((tx) => (
+                        <TxRow
+                          key={tx.id}
+                          tx={tx}
+                          cat={categories.find((category) => category.id === tx.categoryId)}
+                          onEdit={handleEdit}
+                          onDelete={handleDeleteRequest}
+                          onTogglePayment={handleTogglePayment}
+                          paymentUpdating={paymentUpdatingIds.has(tx.id)}
+                          paymentState={getTransactionPaymentState(tx, paymentStatusIndex)}
+                          paymentSelected={selectedPaymentIds.has(tx.id)}
+                          onPaymentSelect={togglePaymentSelection}
+                          categoryReview={categoryReviewIndex.get(tx.id)}
+                        />
+                      ))}
                     </div>
                   </div>
-                  {/* Transações do dia */}
-                  <div className="divide-y divide-[--border-subtle]">
-                    {txs.map((tx) => (
-                      <TxRow
-                        key={tx.id}
-                        tx={tx}
-                        cat={categories.find((c) => c.id === tx.categoryId)}
-                        onEdit={handleEdit}
-                        onDelete={handleDeleteRequest}
-                        onTogglePayment={handleTogglePayment}
-                        paymentUpdating={paymentUpdatingIds.has(tx.id)}
-                        paymentState={getTransactionPaymentState(tx, paymentStatusIndex)}
-                        paymentSelected={selectedPaymentIds.has(tx.id)}
-                        onPaymentSelect={togglePaymentSelection}
-                        categoryReview={categoryReviewIndex.get(tx.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </AnimatePresence>
 
             {hasMore && (
