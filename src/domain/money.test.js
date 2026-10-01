@@ -77,6 +77,14 @@ test('normaliza configurações sem permitir dias de ciclo inseguros', () => {
   })
 })
 
+test('mantém personalização desativada por padrão e exige opt-in booleano explícito', () => {
+  expect(normalizeMoneySettings({}).personalizationEnabled).toBe(false)
+  expect(normalizeMoneySettings({ personalizationEnabled: true }).personalizationEnabled).toBe(true)
+  expect(normalizeMoneySettings({ personalizationEnabled: 'true' }).personalizationEnabled).toBe(
+    false,
+  )
+})
+
 test('usa mês civil como padrão', () => {
   expect(getFinancialCycle('2026-07-15')).toMatchObject({
     start: '2026-07-01',
