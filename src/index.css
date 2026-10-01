@@ -2313,3 +2313,61 @@ body {
 .budget-month-nav-button:hover {
   background: var(--bg-hover);
 }
+
+
+.budget-spent-value {
+  margin-top: 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+}
+
+.budget-status {
+  margin-top: 0.75rem;
+  border: 1px solid;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.budget-spent-value[data-tone='success'],
+.budget-progress-fill[data-tone='success'] {
+  color: var(--success-icon);
+  background: var(--success-icon);
+}
+
+.budget-status[data-tone='success'] {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+
+.budget-spent-value[data-tone='warning'],
+.budget-progress-fill[data-tone='warning'] {
+  color: var(--warning-icon);
+  background: var(--warning-icon);
+}
+
+.budget-status[data-tone='warning'] {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+}
+
+.budget-spent-value[data-tone='danger'],
+.budget-progress-fill[data-tone='danger'] {
+  color: var(--danger-icon);
+  background: var(--danger-icon);
+}
+
+.budget-status[data-tone='danger'] {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-text);
+}
