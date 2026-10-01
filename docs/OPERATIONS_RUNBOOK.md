@@ -28,13 +28,24 @@ Enquanto a produção permanecer no modo Spark, não implante Cloud Functions. O
 
 - variáveis `VITE_FIREBASE_*`;
 - `VITE_BACKEND_MODE=disabled`;
-- `VITE_EMAIL_NOTIFICATIONS_ENABLED=false`;
+- `VITE_EMAIL_NOTIFICATIONS_ENABLED=true` em produção; mantenha `false` apenas em ambientes locais/de teste quando os envios não devam ser expostos;
 - `VITE_ENFORCE_LEGAL_GATE=true`;
 - `VITE_APP_CHECK_ENABLED=true`;
 - `VITE_REQUIRE_APP_CHECK=true`;
 - `VITE_APP_CHECK_DEBUG=false`;
 - `VITE_RECAPTCHA_ENTERPRISE_SITE_KEY`;
 - identidade e contato jurídico.
+
+## Notificações Premium por e-mail
+
+O Worker externo e o gate protegido foram validados em 29/09/2026. A produção do frontend está publicada com `VITE_EMAIL_NOTIFICATIONS_ENABLED=true`.
+
+Em operação:
+
+- preserve o consentimento explícito do usuário;
+- confirme periodicamente o health do Worker e os logs do provedor;
+- use o workflow **Premium email activation gate** para revalidar o endpoint sem novo deploy;
+- em incidente, desative primeiro a flag do frontend e suspenda o cron do Worker se necessário.
 
 ## Incidente
 
