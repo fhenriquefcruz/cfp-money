@@ -2246,13 +2246,6 @@ body {
   text-align: center;
 }
 
-.budget-unbudgeted-box {
-  margin-top: 1rem;
-  border: 1px dashed var(--border-default);
-  border-radius: 1rem;
-  padding: 0.75rem;
-  background: var(--bg-subtle);
-}
 
 .budget-small-link,
 .budget-small-action {
