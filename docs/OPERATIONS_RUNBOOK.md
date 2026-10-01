@@ -28,7 +28,7 @@ Enquanto a produção permanecer no modo Spark, não implante Cloud Functions. O
 
 - variáveis `VITE_FIREBASE_*`;
 - `VITE_BACKEND_MODE=disabled`;
-- `VITE_EMAIL_NOTIFICATIONS_ENABLED=false`;
+- `VITE_EMAIL_NOTIFICATIONS_ENABLED=true`;
 - `VITE_ENFORCE_LEGAL_GATE=true`;
 - `VITE_APP_CHECK_ENABLED=true`;
 - `VITE_REQUIRE_APP_CHECK=true`;
