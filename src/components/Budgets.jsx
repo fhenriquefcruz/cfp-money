@@ -47,7 +47,11 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
           <div className="min-w-0">
             <p className="truncate font-semibold text-[--text-primary]">{category.name}</p>
             <p className="text-xs text-[--text-tertiary]">
-              {budget ? `${formatCurrency(amount)} neste mês` : 'Sem limite'}
+              {budget
+                ? `${formatCurrency(amount)} neste mês`
+                : spent > 0
+                  ? `Sem limite · ${formatCurrency(spent)} gasto`
+                  : 'Sem limite · nenhum gasto'}
             </p>
           </div>
         </div>
@@ -132,30 +136,22 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
           </div>
         </>
       ) : (
-        <div className="budget-unbudgeted-box">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-            Gasto sem limite
-          </p>
-          <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">
-            {formatCurrency(spent)}
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {spent > 0 && (
-              <Link
-                to={`/transactions?category=${category.id}&month=${monthKey}`}
-                className="budget-small-link"
-              >
-                Ver lançamentos
-              </Link>
-            )}
-            <button
-              type="button"
-              onClick={() => onEdit({ categoryId: category.id, amount: '' })}
-              className="budget-small-action"
+        <div className="mt-3 flex flex-wrap gap-2">
+          {spent > 0 && (
+            <Link
+              to={`/transactions?category=${category.id}&month=${monthKey}`}
+              className="budget-small-link"
             >
-              + Definir limite
-            </button>
-          </div>
+              Ver lançamentos
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => onEdit({ categoryId: category.id, amount: '' })}
+            className="budget-small-action"
+          >
+            + Definir limite
+          </button>
         </div>
       )}
     </Card>
@@ -312,7 +308,7 @@ export default function Budgets() {
 
       {(overview.items.length > 0 || overview.totalAllSpent > 0) && (
         <>
-          <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+          <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               ['Orçado', formatCurrency(overview.totalBudgeted), 'text-[--brand-500]'],
               [
@@ -321,11 +317,6 @@ export default function Budgets() {
                 overview.totalSpent > overview.totalBudgeted
                   ? 'text-[--danger-icon]'
                   : 'text-[--text-primary]',
-              ],
-              [
-                'Disponível nos limites',
-                formatCurrency(Math.max(0, overview.totalBudgeted - overview.totalSpent)),
-                'text-[--success-icon]',
               ],
               [
                 'Gasto sem limite',
