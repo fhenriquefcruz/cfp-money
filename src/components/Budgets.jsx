@@ -113,7 +113,7 @@ function BudgetCard({ category, budget, spent, monthKey, reviewCount, onEdit, on
           <div className="mt-3 grid grid-cols-2 gap-2">
             <Link
               to={`/transactions?category=${category.id}&month=${monthKey}`}
-              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[--border-default] px-2 text-center text-xs font-semibold text-[--text-secondary] hover:bg-[--bg-hover]"
+              className="budget-drilldown-link"
             >
               Ver lançamentos
             </Link>
@@ -125,7 +125,7 @@ function BudgetCard({ category, budget, spent, monthKey, reviewCount, onEdit, on
                   amount,
                 })
               }
-              className="min-h-10 rounded-xl px-2 text-xs font-semibold text-[--text-brand] hover:bg-[--brand-50]"
+              className="budget-edit-limit"
             >
               Alterar limite
             </button>
@@ -134,14 +134,14 @@ function BudgetCard({ category, budget, spent, monthKey, reviewCount, onEdit, on
           {reviewCount > 0 && (
             <Link
               to={`/transactions?category=${category.id}&month=${monthKey}&review=categories`}
-              className="mt-2 inline-flex min-h-9 w-full items-center justify-center rounded-xl border border-[--warning-border] bg-[--warning-bg] px-2 text-center text-[10px] font-bold text-[--warning-text]"
+              className="budget-review-link"
             >
               {reviewCount} {reviewCount === 1 ? 'classificação para revisar' : 'classificações para revisar'}
             </Link>
           )}
         </>
       ) : (
-        <div className="mt-4 rounded-2xl border border-dashed border-[--border-default] bg-[--bg-subtle] p-3">
+        <div className="budget-unbudgeted-box">
           <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
             Gasto sem limite
           </p>
@@ -152,7 +152,7 @@ function BudgetCard({ category, budget, spent, monthKey, reviewCount, onEdit, on
             {spent > 0 && (
               <Link
                 to={`/transactions?category=${category.id}&month=${monthKey}`}
-                className="inline-flex min-h-9 items-center rounded-lg border border-[--border-default] px-2.5 text-[10px] font-bold text-[--text-secondary]"
+                className="budget-small-link"
               >
                 Ver lançamentos
               </Link>
@@ -160,7 +160,7 @@ function BudgetCard({ category, budget, spent, monthKey, reviewCount, onEdit, on
             <button
               type="button"
               onClick={() => onEdit({ categoryId: category.id, amount: '' })}
-              className="inline-flex min-h-9 items-center rounded-lg px-2.5 text-[10px] font-bold text-[--text-brand]"
+              className="budget-small-action"
             >
               + Definir limite
             </button>
@@ -168,7 +168,7 @@ function BudgetCard({ category, budget, spent, monthKey, reviewCount, onEdit, on
           {reviewCount > 0 && (
             <Link
               to={`/transactions?category=${category.id}&month=${monthKey}&review=categories`}
-              className="mt-2 inline-flex min-h-9 w-full items-center justify-center rounded-lg border border-[--warning-border] bg-[--warning-bg] px-2 text-center text-[10px] font-bold text-[--warning-text]"
+              className="budget-review-link"
             >
               Revisar {reviewCount} {reviewCount === 1 ? 'classificação' : 'classificações'}
             </Link>
@@ -377,7 +377,7 @@ export default function Budgets() {
             ))}
           </div>
 
-          <p className="text-xs leading-relaxed text-[--text-tertiary]">
+          <p className="budget-summary-note">
             O resumo dos limites considera somente categorias orçadas. O gasto total do mês é{' '}
             <strong className="font-semibold text-[--text-secondary]">
               {formatCurrency(overview.totalAllSpent)}
@@ -388,7 +388,7 @@ export default function Budgets() {
       )}
 
       {categoryReviewQueue.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] px-4 py-3">
+        <div className="budget-review-banner">
           <div>
             <p className="text-sm font-bold text-[--warning-text]">
               Revise as classificações antes de interpretar os alertas
@@ -402,7 +402,7 @@ export default function Budgets() {
           </div>
           <Link
             to={`/transactions?month=${selectedMonth}&review=categories`}
-            className="inline-flex min-h-10 items-center rounded-xl border border-[--warning-border] px-3 text-xs font-bold text-[--warning-text]"
+            className="budget-review-banner__action"
           >
             Revisar lançamentos
           </Link>
