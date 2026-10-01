@@ -1,6 +1,6 @@
 // src/components/Budgets.jsx
 import React, { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useBudgets, useCategories, useTransactions } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Input, Modal } from './ui'
 import { formatCurrency } from '../utils'
@@ -9,8 +9,10 @@ import {
   buildMonthlyBudgetOverview,
   getBudgetForMonth,
   getBudgetSpent,
+  getBudgetTransactions,
   shiftBudgetMonth,
 } from '../domain/budgetPeriods'
+import { buildCategoryReviewQueue } from '../domain/categoryReview'
 
 const monthLabel = (monthKey) => `${monthKey.slice(5, 7)}/${monthKey.slice(0, 4)}`
 function getBudgetStatus(percent) {
@@ -23,7 +25,7 @@ function getBudgetStatus(percent) {
   return { tone, label }
 }
 
-function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
+function BudgetCard({ category, budget, spent, monthKey, reviewCount, onEdit, onRemove }) {
   const amount = Number(budget?.amount) || 0
   const percent = amount > 0 ? Math.max(0, (spent / amount) * 100) : 0
   const remaining = Math.max(0, amount - spent)
@@ -108,28 +110,69 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
             {status.label}
           </div>
 
-          <button
-            type="button"
-            onClick={() =>
-              onEdit({
-                categoryId: category.id,
-                amount,
-              })
-            }
-            className="mt-3 min-h-10 w-full text-center text-xs font-semibold text-[--text-tertiary] transition-colors hover:text-[--text-brand]"
-          >
-            Alterar limite
-          </button>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Link
+              to={`/transactions?category=${category.id}&month=${monthKey}`}
+              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[--border-default] px-2 text-center text-xs font-semibold text-[--text-secondary] hover:bg-[--bg-hover]"
+            >
+              Ver lançamentos
+            </Link>
+            <button
+              type="button"
+              onClick={() =>
+                onEdit({
+                  categoryId: category.id,
+                  amount,
+                })
+              }
+              className="min-h-10 rounded-xl px-2 text-xs font-semibold text-[--text-brand] hover:bg-[--brand-50]"
+            >
+              Alterar limite
+            </button>
+          </div>
+
+          {reviewCount > 0 && (
+            <Link
+              to={`/transactions?category=${category.id}&month=${monthKey}&review=categories`}
+              className="mt-2 inline-flex min-h-9 w-full items-center justify-center rounded-xl border border-[--warning-border] bg-[--warning-bg] px-2 text-center text-[10px] font-bold text-[--warning-text]"
+            >
+              {reviewCount} {reviewCount === 1 ? 'classificação para revisar' : 'classificações para revisar'}
+            </Link>
+          )}
         </>
       ) : (
         <div className="mt-4 rounded-2xl border border-dashed border-[--border-default] bg-[--bg-subtle] p-3">
-          <button
-            type="button"
-            onClick={() => onEdit({ categoryId: category.id, amount: '' })}
-            className="mt-2 inline-flex min-h-10 items-center gap-1.5 text-xs font-bold text-[--text-brand]"
-          >
-            + Definir limite
-          </button>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+            Gasto sem limite
+          </p>
+          <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">
+            {formatCurrency(spent)}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {spent > 0 && (
+              <Link
+                to={`/transactions?category=${category.id}&month=${monthKey}`}
+                className="inline-flex min-h-9 items-center rounded-lg border border-[--border-default] px-2.5 text-[10px] font-bold text-[--text-secondary]"
+              >
+                Ver lançamentos
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={() => onEdit({ categoryId: category.id, amount: '' })}
+              className="inline-flex min-h-9 items-center rounded-lg px-2.5 text-[10px] font-bold text-[--text-brand]"
+            >
+              + Definir limite
+            </button>
+          </div>
+          {reviewCount > 0 && (
+            <Link
+              to={`/transactions?category=${category.id}&month=${monthKey}&review=categories`}
+              className="mt-2 inline-flex min-h-9 w-full items-center justify-center rounded-lg border border-[--warning-border] bg-[--warning-bg] px-2 text-center text-[10px] font-bold text-[--warning-text]"
+            >
+              Revisar {reviewCount} {reviewCount === 1 ? 'classificação' : 'classificações'}
+            </Link>
+          )}
         </div>
       )}
     </Card>
@@ -169,6 +212,26 @@ export default function Budgets() {
         currentMonthKey,
       }),
     [budgets, transactions, selectedMonth, currentMonthKey],
+  )
+
+  const categoryReviewQueue = useMemo(
+    () =>
+      buildCategoryReviewQueue(
+        getBudgetTransactions(transactions, null, selectedMonth),
+        categories,
+      ),
+    [transactions, categories, selectedMonth],
+  )
+
+  const reviewCountByCategory = useMemo(
+    () =>
+      categoryReviewQueue.reduce((counts, item) => {
+        if (item.currentCategoryId) {
+          counts[item.currentCategoryId] = (counts[item.currentCategoryId] || 0) + 1
+        }
+        return counts
+      }, {}),
+    [categoryReviewQueue],
   )
 
   const sortedCategories = useMemo(
@@ -275,38 +338,74 @@ export default function Budgets() {
         </div>
       </Card>
 
-      {overview.items.length > 0 && (
-        <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            {
-              label: 'Orçado',
-              value: formatCurrency(overview.totalBudgeted),
-              color: 'text-[--brand-500]',
-            },
-            {
-              label: 'Gasto',
-              value: formatCurrency(overview.totalSpent),
-              color:
+      {(overview.items.length > 0 || overview.totalAllSpent > 0) && (
+        <>
+          <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+            {[
+              ['Orçado', formatCurrency(overview.totalBudgeted), 'text-[--brand-500]'],
+              [
+                'Gasto orçado',
+                formatCurrency(overview.totalSpent),
                 overview.totalSpent > overview.totalBudgeted
                   ? 'text-[--danger-icon]'
                   : 'text-[--text-primary]',
-            },
-            {
-              label: 'Disponível',
-              value: formatCurrency(Math.max(0, overview.totalBudgeted - overview.totalSpent)),
-              color: 'text-[--success-icon]',
-            },
-            {
-              label: 'Excedidos',
-              value: `${overview.overCount} categoria${overview.overCount === 1 ? '' : 's'}`,
-              color: overview.overCount > 0 ? 'text-[--danger-icon]' : 'text-[--success-icon]',
-            },
-          ].map((item) => (
-            <Card key={item.label} className="py-3 text-center">
-              <p className={`text-lg font-black ${item.color}`}>{item.value}</p>
-              <p className="mt-0.5 text-xs text-[--text-tertiary]">{item.label}</p>
-            </Card>
-          ))}
+              ],
+              [
+                'Disponível nos limites',
+                formatCurrency(Math.max(0, overview.totalBudgeted - overview.totalSpent)),
+                'text-[--success-icon]',
+              ],
+              [
+                'Gasto sem limite',
+                formatCurrency(overview.totalUnbudgetedSpent),
+                overview.totalUnbudgetedSpent > 0
+                  ? 'text-[--warning-text]'
+                  : 'text-[--text-primary]',
+              ],
+              [
+                'Excedente total',
+                formatCurrency(overview.totalExceeded),
+                overview.totalExceeded > 0
+                  ? 'text-[--danger-text]'
+                  : 'text-[--success-icon]',
+              ],
+            ].map(([label, value, color]) => (
+              <Card key={label} className="py-3 text-center">
+                <p className={`text-lg font-black tabular-nums ${color}`}>{value}</p>
+                <p className="mt-0.5 text-xs text-[--text-tertiary]">{label}</p>
+              </Card>
+            ))}
+          </div>
+
+          <p className="text-xs leading-relaxed text-[--text-tertiary]">
+            O resumo dos limites considera somente categorias orçadas. O gasto total do mês é{' '}
+            <strong className="font-semibold text-[--text-secondary]">
+              {formatCurrency(overview.totalAllSpent)}
+            </strong>
+            , incluindo {formatCurrency(overview.totalUnbudgetedSpent)} em categorias sem limite.
+          </p>
+        </>
+      )}
+
+      {categoryReviewQueue.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] px-4 py-3">
+          <div>
+            <p className="text-sm font-bold text-[--warning-text]">
+              Revise as classificações antes de interpretar os alertas
+            </p>
+            <p className="mt-1 text-xs text-[--warning-text]">
+              {categoryReviewQueue.length}{' '}
+              {categoryReviewQueue.length === 1
+                ? 'lançamento pode alterar o gasto de uma categoria.'
+                : 'lançamentos podem alterar os gastos por categoria.'}
+            </p>
+          </div>
+          <Link
+            to={`/transactions?month=${selectedMonth}&review=categories`}
+            className="inline-flex min-h-10 items-center rounded-xl border border-[--warning-border] px-3 text-xs font-bold text-[--warning-text]"
+          >
+            Revisar lançamentos
+          </Link>
         </div>
       )}
 
@@ -329,6 +428,7 @@ export default function Budgets() {
                 budget={budget}
                 spent={spent}
                 monthKey={selectedMonth}
+                reviewCount={reviewCountByCategory[category.id] || 0}
                 onEdit={openEditor}
                 onRemove={removeBudget}
               />
