@@ -26,8 +26,6 @@ export function getBudgetForMonth(
 }
 
 export function getBudgetTransactions(transactions = [], categoryId, monthKey) {
-  if (!MONTH.test(monthKey || '')) return []
-
   return transactions.filter(
     (transaction) =>
       transaction.type === 'expense' &&
@@ -67,7 +65,6 @@ export function buildMonthlyBudgetOverview({
   currentMonthKey = budgetMonthKey(),
 } = {}) {
   const monthBudgets = getBudgetsForMonth(budgets, monthKey, currentMonthKey)
-  const monthTransactions = getBudgetTransactions(transactions, null, monthKey)
   const budgetedCategoryIds = new Set(monthBudgets.map(({ categoryId }) => categoryId))
   let totalBudgeted = 0
   let totalSpent = 0
@@ -81,7 +78,7 @@ export function buildMonthlyBudgetOverview({
     totalExceeded += Math.max(0, spent - amount)
   }
 
-  const totalUnbudgetedSpent = monthTransactions.reduce(
+  const totalUnbudgetedSpent = getBudgetTransactions(transactions, null, monthKey).reduce(
     (total, transaction) =>
       budgetedCategoryIds.has(transaction.categoryId)
         ? total
