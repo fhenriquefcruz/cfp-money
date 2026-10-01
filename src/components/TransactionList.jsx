@@ -247,25 +247,6 @@ function TxRow({
       [TRANSACTION_KIND.SAVINGS]: PiggyBank,
     }[kind] || ArrowLeftRight
 
-  const kindClass =
-    {
-      [TRANSACTION_KIND.INCOME]:
-        'border-[--success-border] bg-[--success-bg] text-[--success-text]',
-      [TRANSACTION_KIND.EXPENSE]:
-        'border-[--danger-border] bg-[--danger-bg] text-[--danger-text]',
-      [TRANSACTION_KIND.TRANSFER]:
-        'border-[--border-default] bg-[--bg-subtle] text-[--text-secondary]',
-      [TRANSACTION_KIND.SAVINGS]:
-        'border-[--brand-200] bg-[--brand-50] text-[--brand-700]',
-    }[kind] || 'border-[--border-default] bg-[--bg-subtle] text-[--text-secondary]'
-
-  const valueClass = isIncome
-    ? 'text-[--success-icon]'
-    : kind === TRANSACTION_KIND.EXPENSE
-      ? 'text-[--danger-icon]'
-      : isSavings
-        ? 'text-[--brand-800]'
-        : 'text-[--text-primary]'
 
   return (
     <motion.div
@@ -275,7 +256,8 @@ function TxRow({
       className="transaction-row group grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 px-3 py-3.5 transition-colors hover:bg-[--bg-hover] sm:flex sm:items-start sm:px-4"
     >
       <div
-        className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border ${kindClass}`}
+        className="transaction-kind-icon"
+        data-kind={kind}
         aria-hidden="true"
       >
         <KindIcon size={17} />
@@ -299,7 +281,7 @@ function TxRow({
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${kindClass}`}>
+          <span className="transaction-kind-badge" data-kind={kind}>
             <KindIcon size={11} aria-hidden="true" />
             {transactionKindLabel(kind)}
           </span>
@@ -390,7 +372,7 @@ function TxRow({
       </div>
 
       <div className="transaction-row__aside col-start-2 flex min-w-0 flex-wrap items-center justify-between gap-2 sm:ml-auto sm:flex-shrink-0 sm:flex-nowrap">
-        <span className={`min-w-0 break-words text-sm font-bold tabular-nums [overflow-wrap:anywhere] ${valueClass}`}>
+        <span className="transaction-amount" data-kind={kind}>
           {isIncome ? '+' : kind === TRANSACTION_KIND.EXPENSE ? '−' : ''}
           {formatCurrency(tx.amount)}
         </span>
