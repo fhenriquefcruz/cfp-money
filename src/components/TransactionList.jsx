@@ -631,10 +631,10 @@ export default function TransactionList() {
         cancelled: 'Cancelada',
       }[paymentStatusFilter] || paymentStatusFilter,
     ],
-    categoryReviewOnly && ['review', 'Categorias para revisar'],
+    categoryReviewOnly && ['review', 'Categorias em revisão'],
     hasCustomDateRange && [
       'date',
-      DATE_PRESETS.find((preset) => preset.id === currentDatePreset)?.label || 'Período personalizado',
+      DATE_PRESETS.find((preset) => preset.id === currentDatePreset)?.label || 'Período',
     ],
   ].filter(Boolean)
   const activeFilters = activeFilterChips.length + Number(Boolean(search.trim()))
@@ -1103,7 +1103,7 @@ export default function TransactionList() {
                 aria-label={`Remover filtro ${filter[1]}`}
               >
                 <span>{filter[1]}</span>
-                <X size={11} aria-hidden="true" />
+                <X size={11} />
               </button>
             ))}
             <button
