@@ -111,7 +111,9 @@
 - [x] níveis de confiança baseados somente no tamanho da amostra;
 - [x] pergunta conversacional sobre o que o Money aprendeu;
 - [x] perfil derivado não persistido e conversa não armazenada;
-- [ ] usar o perfil, em fase futura, para sugerir categoria em rascunhos mantendo confirmação humana.
+- [x] sugerir categoria em rascunhos a partir do perfil somente quando o texto não identifica categoria;
+- [x] manter a sugestão separada do rascunho até o usuário clicar em “Usar sugestão”;
+- [x] exigir confirmação humana normal do lançamento mesmo após aceitar a sugestão.
 
 ## Estado atual
 

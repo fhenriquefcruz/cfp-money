@@ -477,6 +477,7 @@ function MoneyContent() {
         message: normalized,
         transactions,
         categories,
+        personalizationProfile,
         now: new Date(),
       })
 
