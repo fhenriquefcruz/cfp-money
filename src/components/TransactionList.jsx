@@ -406,6 +406,17 @@ function TxRow({
   )
 }
 
+function getMonthRouteRange(monthKey) {
+  if (!/^\d{4}-\d{2}$/.test(monthKey || '')) return null
+  const [year, month] = monthKey.split('-').map(Number)
+  if (month < 1 || month > 12) return null
+  const lastDay = new Date(year, month, 0).getDate()
+  return {
+    from: `${monthKey}-01`,
+    to: `${monthKey}-${String(lastDay).padStart(2, '0')}`,
+  }
+}
+
 export default function TransactionList() {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
@@ -425,14 +436,16 @@ export default function TransactionList() {
 
   const [search, setSearch] = useState(() => searchParams.get('search') || '')
   const [typeFilter, setTypeFilter] = useState('all')
-  const [catFilter, setCatFilter] = useState('all')
+  const [catFilter, setCatFilter] = useState(() => searchParams.get('category') || 'all')
   const [payFilter, setPayFilter] = useState('all')
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('all')
   const [categoryReviewOnly, setCategoryReviewOnly] = useState(
     () => searchParams.get('review') === 'categories',
   )
-  const [dateRange, setDateRange] = useState(() =>
-    searchParams.get('scope') === 'all' ? { from: '', to: '' } : getCurrentMonthRange(),
+  const [dateRange, setDateRange] = useState(
+    () =>
+      getMonthRouteRange(searchParams.get('month')) ||
+      (searchParams.get('scope') === 'all' ? { from: '', to: '' } : getCurrentMonthRange()),
   )
   const [showFilters, setShowFilters] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -555,13 +568,15 @@ export default function TransactionList() {
   ])
 
   useEffect(() => {
-    const routeSearch = searchParams.get('search') || ''
-    if (!routeSearch) return
+    setSearch(searchParams.get('search') || '')
+    setCatFilter(searchParams.get('category') || 'all')
 
-    setSearch(routeSearch)
-    if (searchParams.get('scope') === 'all') {
-      setDateRange({ from: '', to: '' })
-    }
+    const monthRange = getMonthRouteRange(searchParams.get('month'))
+    setDateRange(
+      monthRange ||
+        (searchParams.get('scope') === 'all' ? { from: '', to: '' } : getCurrentMonthRange()),
+    )
+
     setCategoryReviewOnly(searchParams.get('review') === 'categories')
     setPage(1)
   }, [searchParams])

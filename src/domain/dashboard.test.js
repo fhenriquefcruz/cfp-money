@@ -1,6 +1,8 @@
 import {
+  buildCategoryBreakdown,
   buildMonthAttentionSignals,
   getCalendarMonthBounds,
+  getLargestMonthlyExpenseChange,
   getRecentDashboardTransactions,
 } from './dashboard'
 
@@ -80,4 +82,41 @@ test('inclui saldo negativo quando ainda existe espaço na Central do mês', () 
       amount: 480,
     },
   ])
+})
+
+test('ordena categorias por gasto e calcula participação e variação', () => {
+  const result = buildCategoryBreakdown(
+    [
+      { categoryId: 'food', categoryName: 'Alimentação', total: 600 },
+      { categoryId: 'transport', categoryName: 'Transporte', total: 400 },
+    ],
+    [
+      { categoryId: 'food', categoryName: 'Alimentação', total: 500 },
+      { categoryId: 'transport', categoryName: 'Transporte', total: 500 },
+    ],
+  )
+
+  expect(result.map((item) => item.categoryId)).toEqual(['food', 'transport'])
+  expect(result[0]).toMatchObject({
+    sharePercent: 60,
+    changePercent: 20,
+  })
+  expect(result[1]).toMatchObject({
+    sharePercent: 40,
+    changePercent: -20,
+  })
+})
+
+test('encontra a maior mudança absoluta de despesas entre meses', () => {
+  expect(
+    getLargestMonthlyExpenseChange([
+      { monthKey: '2026-06', fullMonth: 'junho de 2026', expenses: 1000 },
+      { monthKey: '2026-07', fullMonth: 'julho de 2026', expenses: 1600 },
+      { monthKey: '2026-08', fullMonth: 'agosto de 2026', expenses: 1200 },
+    ]),
+  ).toMatchObject({
+    monthKey: '2026-07',
+    delta: 600,
+    percent: 60,
+  })
 })

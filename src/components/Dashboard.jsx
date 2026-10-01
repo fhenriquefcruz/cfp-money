@@ -5,9 +5,6 @@ import { Link } from 'react-router-dom'
 import {
   AreaChart,
   Area,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -24,7 +21,6 @@ import {
   Heart,
   ChevronLeft,
   ChevronRight,
-  PiggyBank,
   Clock3,
   CheckCircle2,
 } from 'lucide-react'
@@ -45,8 +41,10 @@ import FinancialHealthScore from './FinancialHealthScore'
 import { formatCurrency, formatRelativeDate } from '../utils'
 import { getMonthlyFinancialData } from '../domain/monthlyFinance'
 import {
+  buildCategoryBreakdown,
   buildMonthAttentionSignals,
   getCalendarMonthBounds,
+  getLargestMonthlyExpenseChange,
   getRecentDashboardTransactions,
 } from '../domain/dashboard'
 import { getTransactionActivityDate, getTransactionDateContext } from '../domain/transactionDates'
@@ -57,16 +55,19 @@ import { budgetMonthKey, buildMonthlyBudgetOverview } from '../domain/budgetPeri
 import { format, subMonths, addMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
-const PIE_COLORS = [
-  '#c49d6b',
-  '#4e8066',
-  '#a7804e',
-  '#b64c43',
-  '#786c8d',
-  '#9a6671',
-  '#5f8587',
-  '#b87645',
-]
+const formatAxisCurrency = (value) =>
+  `R$ ${new Intl.NumberFormat('pt-BR', {
+    notation: 'compact',
+    compactDisplay: 'long',
+    maximumFractionDigits: 1,
+  }).format(Number(value) || 0)}`
+
+const formatVariation = (value) => {
+  if (value === null || value === undefined) return 'sem base anterior'
+  const formatted = Math.abs(value).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
+  if (value === 0) return 'sem variação'
+  return `${formatted}% ${value > 0 ? 'acima' : 'abaixo'} do mês anterior`
+}
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -144,10 +145,10 @@ function MonthAttentionCard({ items }) {
         <div>
           <div className="flex items-center gap-2">
             <Zap size={15} className="text-[--brand-600]" />
-            <h2 className="text-sm font-black text-[--text-primary]">Central do mês</h2>
+            <h2 className="text-sm font-black text-[--text-primary]">O que exige atenção</h2>
           </div>
           <p className="mt-1 text-xs text-[--text-tertiary]">
-            O que merece atenção agora, sem precisar procurar em várias telas.
+            Prioridades do período, ordenadas por impacto e urgência.
           </p>
         </div>
         {items.length > 0 && (
@@ -171,7 +172,7 @@ function MonthAttentionCard({ items }) {
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
-          {items.map(({ id, title, detail, to, tone, icon: Icon }) => {
+          {items.map(({ id, title, detail, actionLabel, to, tone, icon: Icon }) => {
             const classes = toneClasses[tone] || toneClasses.brand
 
             return (
@@ -191,7 +192,7 @@ function MonthAttentionCard({ items }) {
                     {detail}
                   </p>
                   <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand]">
-                    Ver detalhes
+                    {actionLabel || 'Ver detalhes'}
                     <ChevronRight
                       size={11}
                       className="transition-transform group-hover:translate-x-0.5"
@@ -223,6 +224,8 @@ export default function Dashboard() {
   const { invoiceEvents } = useInvoiceEvents()
 
   const [viewDate, setViewDate] = useState(new Date())
+  const [trendMonths, setTrendMonths] = useState(6)
+  const [selectedMonthKey, setSelectedMonthKey] = useState('')
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
   const rawMonthLabel = format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })
@@ -231,10 +234,31 @@ export default function Dashboard() {
 
   const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
   const categoryTotals = useMemo(() => getCategoryTotals(year, month), [year, month, transactions])
-  const monthlyData = useMemo(
-    () => getMonthlyFinancialData(transactions, 6, viewDate),
-    [transactions, viewDate],
+  const previousViewDate = useMemo(() => subMonths(viewDate, 1), [year, month])
+  const previousCategoryTotals = useMemo(
+    () => getCategoryTotals(previousViewDate.getFullYear(), previousViewDate.getMonth()),
+    [previousViewDate, transactions],
   )
+  const categoryBreakdown = useMemo(
+    () => buildCategoryBreakdown(categoryTotals, previousCategoryTotals),
+    [categoryTotals, previousCategoryTotals],
+  )
+  const availableMonthCount = useMemo(
+    () =>
+      new Set(
+        transactions
+          .map((transaction) => getTransactionActivityDate(transaction)?.slice(0, 7))
+          .filter(Boolean),
+      ).size,
+    [transactions],
+  )
+  const monthlyData = useMemo(
+    () => getMonthlyFinancialData(transactions, trendMonths, viewDate),
+    [transactions, trendMonths, viewDate],
+  )
+  const trendHighlight = useMemo(() => getLargestMonthlyExpenseChange(monthlyData), [monthlyData])
+  const selectedTrend =
+    monthlyData.find((item) => item.monthKey === selectedMonthKey) || monthlyData.at(-1) || null
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
   const monthBounds = useMemo(() => getCalendarMonthBounds(viewDate), [year, month])
@@ -342,6 +366,7 @@ export default function Dashboard() {
             to: '/transactions',
             tone: 'danger',
             icon: AlertTriangle,
+            actionLabel: 'Regularizar',
           }
         }
 
@@ -355,6 +380,7 @@ export default function Dashboard() {
             to: '/transactions',
             tone: 'warning',
             icon: Clock3,
+            actionLabel: 'Ver vencimentos',
           }
         }
 
@@ -368,6 +394,7 @@ export default function Dashboard() {
             to: `/budgets?month=${budgetOverview.monthKey}`,
             tone: signal.pct >= 100 ? 'danger' : 'warning',
             icon: Target,
+            actionLabel: 'Revisar orçamento',
           }
         }
 
@@ -378,6 +405,7 @@ export default function Dashboard() {
           to: '/transactions',
           tone: 'danger',
           icon: Wallet,
+          actionLabel: 'Revisar gastos',
         }
       }),
     [paymentSummary, budgetAlerts, currentSummary.balance, budgetOverview.monthKey],
@@ -431,7 +459,7 @@ export default function Dashboard() {
           </div>
           {/* Saudação secundária */}
           <p className="dashboard-greeting text-xs text-[--text-tertiary]">
-            {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'} 👋
+            {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'}
           </p>
         </div>
         <Link to="/transactions" className="dashboard-quick-add w-auto flex-shrink-0">
@@ -447,56 +475,51 @@ export default function Dashboard() {
         </Link>
       </motion.div>
 
-      {/* Hero — saldo do mês como principal, sem duplicar nos cards abaixo */}
-      <motion.div
-        className="aurora-balance-hero aurora-card--hero relative overflow-hidden rounded-[28px] p-3 text-white sm:p-6"
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.05 }}
-      >
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-8 -right-8 w-48 h-48 rounded-full bg-white/5" />
-          <div className="absolute -bottom-12 -left-8 w-40 h-40 rounded-full bg-white/5" />
-        </div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-1">
-            <p className="text-white/70 text-sm">Saldo do mês</p>
-            <InfoTooltip
-              text="Receitas menos despesas do mês visualizado. Não inclui outros meses."
-              className="text-white/60 hover:text-white"
-            />
-          </div>
-          {isLoading ? (
-            <div className="h-12 w-44 rounded-xl bg-white/20 animate-pulse mb-4" />
-          ) : (
-            <p
-              className={`mb-3 break-words text-[clamp(1.7rem,8.5vw,3.75rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${currentSummary.balance >= 0 ? 'text-white' : 'text-red-300'}`}
-            >
-              {formatCurrency(currentSummary.balance)}
-            </p>
-          )}
-          {/* Receitas / Despesas / Poupança — linha secundária */}
-          <div className="dashboard-balance-breakdown grid grid-cols-3 gap-1.5 border-t border-white/15 pt-3 min-[560px]:gap-3 min-[560px]:pt-4">
-            <div>
-              <p className="text-white/55 text-[11px] mb-0.5">↑ Receitas</p>
-              <p className="text-sm font-bold text-green-300">
-                {formatCurrency(currentSummary.income)}
-              </p>
+      <motion.div {...fade} transition={{ delay: 0.05 }}>
+        <Card variant="elevated" className="dashboard-period-summary">
+          <div className="grid gap-4 lg:grid-cols-[1.2fr_2fr] lg:items-end">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
+                  Resultado do período
+                </p>
+                <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
+              </div>
+              <p className="mt-1 text-[10px] text-[--text-tertiary]">{monthLabel}</p>
+              {isLoading ? (
+                <div className="mt-2 h-10 w-44 animate-pulse rounded-xl bg-[--bg-hover]" />
+              ) : (
+                <p
+                  className={`mt-2 break-words text-[clamp(1.8rem,7vw,3rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${
+                    currentSummary.balance >= 0 ? 'text-[--text-primary]' : 'text-[--danger-text]'
+                  }`}
+                >
+                  {formatCurrency(currentSummary.balance)}
+                </p>
+              )}
             </div>
-            <div>
-              <p className="text-white/55 text-[11px] mb-0.5">↓ Despesas</p>
-              <p className="text-sm font-bold text-red-300">
-                {formatCurrency(currentSummary.expenses)}
-              </p>
-            </div>
-            <div>
-              <p className="text-white/55 text-[11px] mb-0.5 flex items-center gap-1">
-                <PiggyBank size={10} /> Poupança total
-              </p>
-              <p className="text-sm font-bold text-yellow-300">{formatCurrency(savingsBalance)}</p>
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[
+                ['Receitas', currentSummary.income, 'Entradas do período'],
+                ['Despesas', currentSummary.expenses, 'Saídas do período'],
+                ['Comprometido', paymentSummary.committedAmount || 0, 'Obrigações do mês'],
+                ['Reservado total', savingsBalance, 'Poupança registrada'],
+              ].map(([label, value, detail]) => (
+                <div
+                  key={label}
+                  className="min-w-0 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3"
+                >
+                  <p className="text-[10px] font-bold text-[--text-tertiary]">{label}</p>
+                  <p className="mt-1 break-words text-sm font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere]">
+                    {formatCurrency(value)}
+                  </p>
+                  <p className="mt-1 text-[10px] leading-tight text-[--text-tertiary]">{detail}</p>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+        </Card>
       </motion.div>
 
       <motion.div {...fade} transition={{ delay: 0.075 }}>
@@ -560,29 +583,51 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Gráficos — altura maior */}
+      {/* Análise principal: evolução e composição */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.15 }}>
-          <Card>
-            <div className="flex items-center gap-2 mb-4">
-              <div>
-                <h3 className="text-sm font-bold text-[--text-primary]">Evolução financeira</h3>
-                <p className="text-xs text-[--text-tertiary]">Últimos 6 meses</p>
+          <Card className="h-full">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-[--text-primary]">
+                    Receitas e despesas nos últimos {trendMonths} meses
+                  </h3>
+                  <InfoTooltip text="Valores agrupados pela data da movimentação. As linhas ligam pontos mensais reais, sem estimar valores entre os meses." />
+                </div>
+                <p className="mt-1 text-xs text-[--text-tertiary]">
+                  Selecione um mês para ver os valores exatos e abrir os lançamentos.
+                </p>
               </div>
-              <InfoTooltip text="Receitas (verde) vs Despesas (vermelho) mês a mês." />
+
+              <div
+                className="inline-flex rounded-xl border border-[--border-default] bg-[--bg-subtle] p-1"
+                aria-label="Período da evolução financeira"
+              >
+                {[6, 12].map((months) => {
+                  const disabled = months === 12 && availableMonthCount < 12
+                  return (
+                    <button
+                      key={months}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => setTrendMonths(months)}
+                      aria-pressed={trendMonths === months}
+                      className={`min-h-9 rounded-lg px-3 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                        trendMonths === months
+                          ? 'bg-[--bg-elevated] text-[--text-primary] shadow-sm'
+                          : 'text-[--text-tertiary] hover:text-[--text-primary]'
+                      }`}
+                    >
+                      {months} meses
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-            <ResponsiveContainer width="100%" height={240}>
-              <AreaChart data={monthlyData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="incG" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.18} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="expG" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.18} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
+
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={monthlyData} margin={{ top: 8, right: 8, left: 4, bottom: 4 }}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="var(--border-subtle)"
@@ -595,97 +640,185 @@ export default function Dashboard() {
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }}
+                  tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
                   axisLine={false}
                   tickLine={false}
-                  tickFormatter={(v) => formatCurrency(v, { compact: true })}
+                  width={72}
+                  tickFormatter={formatAxisCurrency}
                 />
                 <Tooltip content={<ChartTooltip />} />
                 <Area
-                  type="monotone"
+                  type="linear"
                   dataKey="income"
                   name="Receitas"
-                  stroke="#10b981"
+                  stroke="var(--success-icon)"
                   strokeWidth={2}
-                  fill="url(#incG)"
-                  dot={false}
-                  activeDot={{ r: 4 }}
+                  dot={{ r: 3, strokeWidth: 2 }}
+                  activeDot={{ r: 5 }}
+                  fill="transparent"
                 />
                 <Area
-                  type="monotone"
+                  type="linear"
                   dataKey="expenses"
                   name="Despesas"
-                  stroke="#ef4444"
+                  stroke="var(--danger-icon)"
                   strokeWidth={2}
-                  fill="url(#expG)"
-                  dot={false}
-                  activeDot={{ r: 4 }}
+                  dot={{ r: 3, strokeWidth: 2 }}
+                  activeDot={{ r: 5 }}
+                  fill="transparent"
                 />
               </AreaChart>
             </ResponsiveContainer>
+
+            <div
+              className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6"
+              role="group"
+              aria-label="Selecionar mês da evolução financeira"
+            >
+              {monthlyData.map((item) => (
+                <button
+                  key={item.monthKey}
+                  type="button"
+                  onClick={() => setSelectedMonthKey(item.monthKey)}
+                  aria-pressed={selectedTrend?.monthKey === item.monthKey}
+                  className={`min-w-0 rounded-xl border p-2 text-left transition-colors ${
+                    selectedTrend?.monthKey === item.monthKey
+                      ? 'border-[--brand-300] bg-[--brand-50]'
+                      : 'border-[--border-subtle] bg-[--bg-subtle] hover:bg-[--bg-hover]'
+                  }`}
+                >
+                  <span className="block text-[10px] font-bold text-[--text-secondary]">
+                    {item.month}
+                  </span>
+                  <span className="mt-1 block truncate text-[10px] tabular-nums text-[--success-text]">
+                    R {formatCurrency(item.income)}
+                  </span>
+                  <span className="block truncate text-[10px] tabular-nums text-[--danger-text]">
+                    D {formatCurrency(item.expenses)}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {selectedTrend && (
+              <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-black text-[--text-primary]">
+                    {selectedTrend.fullMonth}
+                  </p>
+                  <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                    Receitas {formatCurrency(selectedTrend.income)} · Despesas{' '}
+                    {formatCurrency(selectedTrend.expenses)} · Resultado{' '}
+                    {formatCurrency(selectedTrend.balance)}
+                  </p>
+                </div>
+                <Link
+                  to={`/transactions?month=${selectedTrend.monthKey}`}
+                  className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-brand] hover:bg-[--bg-hover]"
+                >
+                  Ver lançamentos
+                  <ArrowRight size={12} />
+                </Link>
+              </div>
+            )}
+
+            {trendHighlight && (
+              <p className="mt-3 text-[10px] leading-relaxed text-[--text-tertiary]">
+                Maior mudança de despesas: <strong>{trendHighlight.month}</strong>,{' '}
+                {formatCurrency(Math.abs(trendHighlight.delta))}{' '}
+                {trendHighlight.delta >= 0 ? 'a mais' : 'a menos'} que{' '}
+                {trendHighlight.previousMonth}
+                {trendHighlight.percent !== null
+                  ? ` · ${formatVariation(trendHighlight.percent)}`
+                  : ' · sem base percentual anterior'}
+                .
+              </p>
+            )}
           </Card>
         </motion.div>
 
         <motion.div {...fade} transition={{ delay: 0.2 }}>
           <Card className="h-full">
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-sm font-bold text-[--text-primary]">Por categoria</h3>
-              <InfoTooltip text="Distribuição das despesas do mês." />
+            <div className="mb-3">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-[--text-primary]">Gastos por categoria</h3>
+                <InfoTooltip text="Despesas do mês pela data da movimentação, ordenadas do maior para o menor gasto." />
+              </div>
+              <p className="mt-1 text-xs text-[--text-tertiary]">
+                Valor, participação no total e comparação com o mês anterior.
+              </p>
             </div>
-            {categoryTotals.length === 0 ? (
-              <p className="text-xs text-[--text-tertiary] text-center py-8">
+
+            {categoryReviewCount > 0 && (
+              <Link
+                to="/transactions?review=categories&scope=all"
+                className="mb-3 flex min-h-10 items-center justify-between gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-[10px] font-bold text-[--warning-text]"
+              >
+                <span>
+                  {categoryReviewCount}{' '}
+                  {categoryReviewCount === 1
+                    ? 'classificação para revisar'
+                    : 'classificações para revisar'}
+                </span>
+                <ArrowRight size={12} />
+              </Link>
+            )}
+
+            {categoryBreakdown.length === 0 ? (
+              <p className="py-8 text-center text-xs text-[--text-tertiary]">
                 Nenhuma despesa no mês
               </p>
             ) : (
-              <>
-                <ResponsiveContainer width="100%" height={140}>
-                  <PieChart>
-                    <Pie
-                      data={categoryTotals}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={38}
-                      outerRadius={62}
-                      dataKey="total"
-                      nameKey="categoryName"
-                      paddingAngle={2}
+              <div className="space-y-3">
+                {categoryBreakdown.slice(0, 6).map((cat) => {
+                  const width = Math.max(4, cat.sharePercent)
+                  const isOtherLarge =
+                    String(cat.categoryName || '').toLowerCase() === 'outros' &&
+                    cat.sharePercent >= 25
+
+                  return (
+                    <Link
+                      key={cat.categoryId || cat.categoryName}
+                      to={`/transactions?category=${encodeURIComponent(cat.categoryId || '')}&month=${budgetOverview.monthKey}`}
+                      className="group block rounded-xl border border-transparent p-1.5 transition-colors hover:border-[--border-default] hover:bg-[--bg-hover]"
                     >
-                      {categoryTotals.map((category, i) => (
-                        <Cell
-                          key={category.categoryId || category.categoryName || i}
-                          fill={PIE_COLORS[i % PIE_COLORS.length]}
-                          aria-label={`${category.categoryName}: ${formatCurrency(category.total)}`}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-bold text-[--text-primary]">
+                            {cat.categoryName}
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+                            {cat.sharePercent.toLocaleString('pt-BR', {
+                              maximumFractionDigits: 1,
+                            })}
+                            % do total · {formatVariation(cat.changePercent)}
+                          </p>
+                        </div>
+                        <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
+                          {formatCurrency(cat.total)}
+                        </span>
+                      </div>
+                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[--bg-hover]">
+                        <div
+                          className="h-full rounded-full bg-[--brand-600] transition-[width]"
+                          style={{ width: `${Math.min(100, width)}%` }}
+                          aria-hidden="true"
                         />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(v) => formatCurrency(v)}
-                      contentStyle={{
-                        background: 'var(--bg-elevated)',
-                        border: '1px solid var(--border-default)',
-                        borderRadius: 12,
-                        fontSize: 11,
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="space-y-1.5 mt-2">
-                  {categoryTotals.slice(0, 4).map((cat, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ background: PIE_COLORS[i % PIE_COLORS.length] }}
-                      />
-                      <span className="text-xs text-[--text-secondary] flex-1 truncate">
-                        {cat.categoryName}
+                      </div>
+                      {isOtherLarge && (
+                        <p className="mt-1.5 text-[10px] font-semibold text-[--warning-text]">
+                          “Outros” concentra uma parcela relevante dos gastos; abra para revisar a
+                          composição.
+                        </p>
+                      )}
+                      <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand] opacity-80 group-hover:opacity-100">
+                        Ver lançamentos
+                        <ArrowRight size={11} />
                       </span>
-                      <span className="text-xs font-semibold text-[--text-primary]">
-                        {formatCurrency(cat.total, { compact: true })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </>
+                    </Link>
+                  )
+                })}
+              </div>
             )}
           </Card>
         </motion.div>
