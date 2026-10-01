@@ -262,7 +262,7 @@ function TxRow({
         data-kind={kind}
         aria-hidden="true"
       >
-        <KindIcon size={17} />
+        <KindIcon size={17}/>
       </div>
 
       <div className="transaction-row-main">
@@ -284,7 +284,6 @@ function TxRow({
 
         <div className="transaction-row-meta">
           <span className="transaction-kind-badge" data-kind={kind}>
-            <KindIcon size={11} aria-hidden="true" />
             {kindLabel}
           </span>
 
@@ -379,10 +378,7 @@ function TxRow({
 
         <div className="transaction-row-controls">
           {payableExpense && toggleablePayment && (
-            <label
-              className="transaction-select-control"
-              title="Selecionar para ação em massa"
-            >
+            <label className="transaction-select-control">
               <input
                 type="checkbox"
                 checked={Boolean(paymentSelected)}
@@ -1108,7 +1104,6 @@ export default function TransactionList() {
                 onClick={() => removeActiveFilter(filter[0])}
                 className="transaction-active-filter"
                 aria-label={`Remover filtro ${filter[1]}`}
-                title="Clique para remover este filtro"
               >
                 <span>{filter[1]}</span>
                 <X size={11} aria-hidden="true" />
