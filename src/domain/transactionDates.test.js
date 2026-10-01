@@ -5,8 +5,6 @@ import {
   getTransactionDateContext,
   getTransactionPurchaseDate,
   isProtectedTransactionGroup,
-  getTransactionKind,
-  transactionKindLabel,
   isStructuredCreditPurchase,
 } from './transactionDates'
 
