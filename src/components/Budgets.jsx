@@ -1,6 +1,6 @@
 // src/components/Budgets.jsx
 import React, { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useBudgets, useCategories, useTransactions } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Input, Modal } from './ui'
 import { formatCurrency } from '../utils'
@@ -9,28 +9,18 @@ import {
   buildMonthlyBudgetOverview,
   getBudgetForMonth,
   getBudgetSpent,
+  getBudgetTransactions,
   shiftBudgetMonth,
 } from '../domain/budgetPeriods'
+import { buildCategoryReviewQueue } from '../domain/categoryReview'
 
 const monthLabel = (monthKey) => `${monthKey.slice(5, 7)}/${monthKey.slice(0, 4)}`
-function getBudgetStatus(percent) {
-  const tone = percent > 100 ? 'danger' : percent >= 70 ? 'warning' : 'success'
-  const label =
-    percent > 100
-      ? `Excedido em ${(percent - 100).toFixed(0)}%`
-      : `${percent.toFixed(0)}% utilizado`
-
-  return { tone, label }
-}
-
 function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
-  const amount = Number(budget?.amount) || 0
-  const percent = amount > 0 ? Math.max(0, (spent / amount) * 100) : 0
-  const remaining = Math.max(0, amount - spent)
-  const excess = Math.max(0, spent - amount)
-  const status = getBudgetStatus(percent)
-  const isOver = percent > 100
-  const barColor = `var(--${status.tone}-icon)`
+  const amount = +budget?.amount || 0
+  const percent = amount > 0 ? (spent / amount) * 100 : 0
+  const balance = amount - spent
+  const isOver = balance < 0
+  const tone = isOver ? 'danger' : percent >= 70 ? 'warning' : 'success'
 
   return (
     <Card className={isOver ? 'ring-2 ring-[--danger-border]' : ''}>
@@ -45,7 +35,9 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
           <div className="min-w-0">
             <p className="truncate font-semibold text-[--text-primary]">{category.name}</p>
             <p className="text-xs text-[--text-tertiary]">
-              {budget ? `${formatCurrency(amount)} neste mês` : 'Sem limite'}
+              {budget
+                ? `${formatCurrency(amount)} neste mês`
+                : `Sem limite · ${formatCurrency(spent)}`}
             </p>
           </div>
         </div>
@@ -54,7 +46,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
           <button
             type="button"
             onClick={() => onRemove(category.id, monthKey, budget.id)}
-            className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
+            className="budget-remove-button"
             aria-label={`Remover ${category.name}`}
           >
             ×
@@ -69,7 +61,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
               <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
                 Gasto no mês
               </p>
-              <p className="mt-1 text-2xl font-black tabular-nums" style={{ color: barColor }}>
+              <p className="budget-spent-value" data-tone={tone}>
                 {formatCurrency(spent)}
               </p>
             </div>
@@ -82,56 +74,40 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
                   isOver ? 'text-[--danger-text]' : 'text-[--text-primary]'
                 }`}
               >
-                {formatCurrency(isOver ? excess : remaining)}
+                {formatCurrency(Math.abs(balance))}
               </p>
             </div>
           </div>
 
           <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[--bg-hover]">
             <div
-              className="h-full rounded-full"
-              style={{
-                background: barColor,
-                width: `${Math.min(percent, 100)}%`,
-              }}
+              className="budget-progress-fill"
+              data-tone={tone}
+              style={{ width: `${percent}%` }}
             />
           </div>
 
-          <div
-            className="mt-3 rounded-xl border px-3 py-2 text-xs font-medium"
-            style={{
-              background: `var(--${status.tone}-bg)`,
-              borderColor: `var(--${status.tone}-border)`,
-              color: `var(--${status.tone}-text)`,
-            }}
-          >
-            {status.label}
+          <div className="budget-status" data-tone={tone}>
+            {`${percent.toFixed(0)}% usado`}
           </div>
-
-          <button
-            type="button"
-            onClick={() =>
-              onEdit({
-                categoryId: category.id,
-                amount,
-              })
-            }
-            className="mt-3 min-h-10 w-full text-center text-xs font-semibold text-[--text-tertiary] transition-colors hover:text-[--text-brand]"
-          >
-            Alterar limite
-          </button>
         </>
-      ) : (
-        <div className="mt-4 rounded-2xl border border-dashed border-[--border-default] bg-[--bg-subtle] p-3">
-          <button
-            type="button"
-            onClick={() => onEdit({ categoryId: category.id, amount: '' })}
-            className="mt-2 inline-flex min-h-10 items-center gap-1.5 text-xs font-bold text-[--text-brand]"
-          >
-            + Definir limite
-          </button>
-        </div>
-      )}
+      ) : null}
+
+      <div className="budget-card-actions">
+        <Link
+          to={`/transactions?category=${category.id}&month=${monthKey}`}
+          className="budget-drilldown-link"
+        >
+          Ver lançamentos
+        </Link>
+        <button
+          type="button"
+          onClick={() => onEdit({ categoryId: category.id, amount: budget ? amount : '' })}
+          className="budget-edit-limit"
+        >
+          {budget ? 'Alterar limite' : '+ Definir limite'}
+        </button>
+      </div>
     </Card>
   )
 }
@@ -170,6 +146,11 @@ export default function Budgets() {
       }),
     [budgets, transactions, selectedMonth, currentMonthKey],
   )
+
+  const categoryReviewCount = buildCategoryReviewQueue(
+    getBudgetTransactions(transactions, null, selectedMonth),
+    categories,
+  ).length
 
   const sortedCategories = useMemo(
     () =>
@@ -214,6 +195,7 @@ export default function Budgets() {
 
   const isCurrentMonth = selectedMonth === currentMonthKey
   const selectedLabel = monthLabel(selectedMonth)
+  const monthSpent = overview.totalSpent + overview.totalUnbudgetedSpent
 
   return (
     <div
@@ -249,7 +231,7 @@ export default function Budgets() {
             <button
               type="button"
               onClick={() => setSelectedMonth((month) => shiftBudgetMonth(month, -1))}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] text-[--text-secondary] hover:bg-[--bg-hover]"
+              className="budget-month-nav-button"
               aria-label="Mês anterior"
             >
               ‹
@@ -266,7 +248,7 @@ export default function Budgets() {
             <button
               type="button"
               onClick={() => setSelectedMonth((month) => shiftBudgetMonth(month, 1))}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] text-[--text-secondary] hover:bg-[--bg-hover]"
+              className="budget-month-nav-button"
               aria-label="Próximo mês"
             >
               ›
@@ -275,38 +257,43 @@ export default function Budgets() {
         </div>
       </Card>
 
-      {overview.items.length > 0 && (
-        <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            {
-              label: 'Orçado',
-              value: formatCurrency(overview.totalBudgeted),
-              color: 'text-[--brand-500]',
-            },
-            {
-              label: 'Gasto',
-              value: formatCurrency(overview.totalSpent),
-              color:
-                overview.totalSpent > overview.totalBudgeted
-                  ? 'text-[--danger-icon]'
-                  : 'text-[--text-primary]',
-            },
-            {
-              label: 'Disponível',
-              value: formatCurrency(Math.max(0, overview.totalBudgeted - overview.totalSpent)),
-              color: 'text-[--success-icon]',
-            },
-            {
-              label: 'Excedidos',
-              value: `${overview.overCount} categoria${overview.overCount === 1 ? '' : 's'}`,
-              color: overview.overCount > 0 ? 'text-[--danger-icon]' : 'text-[--success-icon]',
-            },
-          ].map((item) => (
-            <Card key={item.label} className="py-3 text-center">
-              <p className={`text-lg font-black ${item.color}`}>{item.value}</p>
-              <p className="mt-0.5 text-xs text-[--text-tertiary]">{item.label}</p>
-            </Card>
-          ))}
+      {(overview.totalBudgeted > 0 || monthSpent > 0) && (
+        <>
+          <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              ['Orçado', formatCurrency(overview.totalBudgeted), 'text-[--brand-500]'],
+              ['Gasto orçado', formatCurrency(overview.totalSpent), 'text-[--text-primary]'],
+              [
+                'Gasto sem limite',
+                formatCurrency(overview.totalUnbudgetedSpent),
+                'text-[--warning-text]',
+              ],
+              ['Excedente total', formatCurrency(overview.totalExceeded), 'text-[--danger-text]'],
+            ].map(([label, value, color]) => (
+              <Card key={label} className="py-3 text-center">
+                <p className={`text-lg font-black tabular-nums ${color}`}>{value}</p>
+                <p className="mt-0.5 text-xs text-[--text-tertiary]">{label}</p>
+              </Card>
+            ))}
+          </div>
+
+          <p className="budget-summary-note">
+            Total no mês: <strong>{formatCurrency(monthSpent)}</strong>.
+          </p>
+        </>
+      )}
+
+      {categoryReviewCount > 0 && (
+        <div className="budget-review-banner">
+          <p className="text-sm font-bold text-[--warning-text]">
+            Revisão de categoria: {categoryReviewCount}
+          </p>
+          <Link
+            to={`/transactions?month=${selectedMonth}&review=categories`}
+            className="budget-review-banner__action"
+          >
+            Revisar lançamentos
+          </Link>
         </div>
       )}
 

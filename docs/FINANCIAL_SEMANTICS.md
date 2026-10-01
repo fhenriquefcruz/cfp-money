@@ -105,6 +105,18 @@ excedente = max(0, gasto_orcamento - limite)
 
 Compras estruturadas no cartão entram no orçamento pelo mês da compra, não pelo vencimento da fatura.
 
+O resumo de Orçamentos distingue:
+
+- **Orçado:** soma dos limites configurados para o mês;
+- **Gasto orçado:** despesas efetivas apenas das categorias que possuem limite no mês;
+- **Disponível nos limites:** `max(0, orçado - gasto_orçado)`;
+- **Gasto sem limite:** despesas efetivas do mês em categorias sem orçamento configurado;
+- **Excedente total:** soma de `max(0, gasto_categoria - limite_categoria)` nas categorias orçadas.
+
+O gasto total do mês é exibido separadamente para evitar a interpretação incorreta de que “gasto orçado” representa todas as despesas.
+
+Cada categoria pode abrir os lançamentos que compõem o gasto. Se houver classificação suspeita, o orçamento sinaliza a revisão antes de apresentar o alerta como conclusivo.
+
 ### Comprometido
 
 Fonte: `buildPaymentControlOverview`.
