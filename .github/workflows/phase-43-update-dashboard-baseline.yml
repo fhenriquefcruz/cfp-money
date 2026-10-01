@@ -1,0 +1,49 @@
+name: Phase 43 update dashboard visual baseline
+
+on:
+  push:
+    branches:
+      - phase-43-dashboard-composition
+    paths:
+      - .github/workflows/phase-43-update-dashboard-baseline.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VITE_E2E_MODE: 'true'
+      VITE_FIREBASE_API_KEY: test-api-key
+      VITE_FIREBASE_AUTH_DOMAIN: test-project.firebaseapp.com
+      VITE_FIREBASE_PROJECT_ID: test-project
+      VITE_FIREBASE_STORAGE_BUCKET: test-project.firebasestorage.app
+      VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+      VITE_FIREBASE_APP_ID: '1:123456789:web:test'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: phase-43-dashboard-composition
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Update dashboard snapshots only
+        run: npx playwright test --config=playwright.visual.config.js -g "dashboard mantém baseline visual" --update-snapshots
+      - name: Commit dashboard baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            e2e/visual/visual.spec.js-snapshots/dashboard-visual-desktop-chromium-linux.png \
+            e2e/visual/visual.spec.js-snapshots/dashboard-visual-mobile-chromium-linux.png
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+          else
+            git commit -m "Phase 43: update dashboard visual baselines"
+            git push origin HEAD:phase-43-dashboard-composition
+          fi
