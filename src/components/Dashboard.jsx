@@ -672,14 +672,13 @@ export default function Dashboard() {
 
             <div
               className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6"
-              role="list"
-              aria-label="Valores mensais da evolução financeira"
+              role="group"
+              aria-label="Selecionar mês da evolução financeira"
             >
               {monthlyData.map((item) => (
                 <button
                   key={item.monthKey}
                   type="button"
-                  role="listitem"
                   onClick={() => setSelectedMonthKey(item.monthKey)}
                   aria-pressed={selectedTrend?.monthKey === item.monthKey}
                   className={`min-w-0 rounded-xl border p-2 text-left transition-colors ${
