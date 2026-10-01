@@ -18,9 +18,8 @@ const monthLabel = (monthKey) => `${monthKey.slice(5, 7)}/${monthKey.slice(0, 4)
 function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
   const amount = Number(budget?.amount) || 0
   const percent = amount > 0 ? Math.max(0, (spent / amount) * 100) : 0
-  const remaining = Math.max(0, amount - spent)
-  const excess = Math.max(0, spent - amount)
-  const isOver = percent > 100
+  const balance = amount - spent
+  const isOver = balance < 0
   const tone = isOver ? 'danger' : percent >= 70 ? 'warning' : 'success'
   const txHref = `/transactions?category=${category.id}&month=${monthKey}`
 
@@ -78,7 +77,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
                   isOver ? 'text-[--danger-text]' : 'text-[--text-primary]'
                 }`}
               >
-                {formatCurrency(isOver ? excess : remaining)}
+                {formatCurrency(Math.abs(balance))}
               </p>
             </div>
           </div>
@@ -157,14 +156,10 @@ export default function Budgets() {
     [budgets, transactions, selectedMonth, currentMonthKey],
   )
 
-  const categoryReviewQueue = useMemo(
-    () =>
-      buildCategoryReviewQueue(
-        getBudgetTransactions(transactions, null, selectedMonth),
-        categories,
-      ),
-    [transactions, categories, selectedMonth],
-  )
+  const categoryReviewCount = buildCategoryReviewQueue(
+    getBudgetTransactions(transactions, null, selectedMonth),
+    categories,
+  ).length
 
   const sortedCategories = useMemo(
     () =>
@@ -209,6 +204,7 @@ export default function Budgets() {
 
   const isCurrentMonth = selectedMonth === currentMonthKey
   const selectedLabel = monthLabel(selectedMonth)
+  const monthSpent = overview.totalSpent + overview.totalUnbudgetedSpent
 
   return (
     <div
@@ -270,7 +266,7 @@ export default function Budgets() {
         </div>
       </Card>
 
-      {(overview.items.length > 0 || (overview.totalSpent + overview.totalUnbudgetedSpent) > 0) && (
+      {(overview.totalBudgeted > 0 || monthSpent > 0) && (
         <>
           <div className="operational-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
@@ -307,22 +303,22 @@ export default function Budgets() {
           <p className="budget-summary-note">
             O resumo dos limites considera somente categorias orçadas. O gasto total do mês é{' '}
             <strong className="font-semibold text-[--text-secondary]">
-              {formatCurrency((overview.totalSpent + overview.totalUnbudgetedSpent))}
+              {formatCurrency(monthSpent)}
             </strong>
             , incluindo {formatCurrency(overview.totalUnbudgetedSpent)} em categorias sem limite.
           </p>
         </>
       )}
 
-      {categoryReviewQueue.length > 0 && (
+      {categoryReviewCount > 0 && (
         <div className="budget-review-banner">
           <div>
             <p className="text-sm font-bold text-[--warning-text]">
               Revise as classificações antes de interpretar os alertas
             </p>
             <p className="mt-1 text-xs text-[--warning-text]">
-              {categoryReviewQueue.length}{' '}
-              {categoryReviewQueue.length === 1
+              {categoryReviewCount}{' '}
+              {categoryReviewCount === 1
                 ? 'lançamento pode alterar o gasto de uma categoria.'
                 : 'lançamentos podem alterar os gastos por categoria.'}
             </p>
