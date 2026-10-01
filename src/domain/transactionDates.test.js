@@ -5,6 +5,8 @@ import {
   getTransactionDateContext,
   getTransactionPurchaseDate,
   isProtectedTransactionGroup,
+  getTransactionKind,
+  transactionKindLabel,
   isStructuredCreditPurchase,
 } from './transactionDates'
 
@@ -74,4 +76,14 @@ test('identifica série que não deve ser alterada isoladamente', () => {
       date: '2026-07-10',
     }),
   ).toBe(false)
+})
+
+
+test('distingue os tipos apresentados na lista de transações', () => {
+  expect(getTransactionKind({ type: 'income' })).toBe('income')
+  expect(getTransactionKind({ type: 'expense' })).toBe('expense')
+  expect(getTransactionKind({ type: 'expense', flowType: 'transfer' })).toBe('transfer')
+  expect(getTransactionKind({ type: 'expense', isSavings: true })).toBe('savings')
+  expect(transactionKindLabel('transfer')).toBe('Transferência')
+  expect(transactionKindLabel('savings')).toBe('Aporte / reserva')
 })
