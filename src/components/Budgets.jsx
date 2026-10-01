@@ -48,7 +48,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
           <button
             type="button"
             onClick={() => onRemove(category.id, monthKey, budget.id)}
-            className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
+            className="budget-remove-button"
             aria-label={`Remover ${category.name}`}
           >
             ×
@@ -239,7 +239,7 @@ export default function Budgets() {
             <button
               type="button"
               onClick={() => setSelectedMonth((month) => shiftBudgetMonth(month, -1))}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] text-[--text-secondary] hover:bg-[--bg-hover]"
+              className="budget-month-nav-button"
               aria-label="Mês anterior"
             >
               ‹
@@ -256,7 +256,7 @@ export default function Budgets() {
             <button
               type="button"
               onClick={() => setSelectedMonth((month) => shiftBudgetMonth(month, 1))}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] text-[--text-secondary] hover:bg-[--bg-hover]"
+              className="budget-month-nav-button"
               aria-label="Próximo mês"
             >
               ›
