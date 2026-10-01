@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle,
+  Brain,
   CheckCircle2,
   FilePenLine,
   RotateCcw,
@@ -154,6 +155,12 @@ export default function MoneyTransactionAction({
     setDraft((current) => ({ ...current, [field]: value }))
   }
 
+  const suggestion = response.categorySuggestion
+  const canUseSuggestion =
+    suggestion &&
+    !draft.categoryId &&
+    eligibleCategories.some((category) => category.id === suggestion.categoryId)
+
   const isValid = Number(draft.amount) > 0 && draft.categoryId && draft.paymentMethod && draft.date
 
   return (
@@ -169,6 +176,30 @@ export default function MoneyTransactionAction({
           Confira valor, categoria, data e pagamento. Nada foi salvo até este momento.
         </p>
       </div>
+
+      {canUseSuggestion && (
+        <div className="flex flex-col gap-3 rounded-xl border border-[--brand-200] bg-[--brand-50] p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-2">
+            <Brain size={15} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
+            <div>
+              <p className="text-xs font-bold text-[--brand-700]">
+                Seu histórico sugere {suggestion.categoryName}
+              </p>
+              <p className="mt-1 text-[11px] leading-relaxed text-[--brand-600]">
+                {suggestion.reason}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={busy}
+            onClick={() => update('categoryId', suggestion.categoryId)}
+          >
+            Usar sugestão
+          </Button>
+        </div>
+      )}
 
       {response.warnings?.map((warning) => (
         <div
