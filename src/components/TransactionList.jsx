@@ -262,7 +262,7 @@ function TxRow({
         data-kind={kind}
         aria-hidden="true"
       >
-        <KindIcon size={17}/>
+        <KindIcon size={17} />
       </div>
 
       <div className="transaction-row-main">
