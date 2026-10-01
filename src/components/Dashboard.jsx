@@ -171,7 +171,7 @@ function MonthAttentionCard({ items }) {
           </div>
         </div>
       ) : (
-        <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-2">
           {items.map(({ id, title, detail, actionLabel, to, tone, icon: Icon }) => {
             const classes = toneClasses[tone] || toneClasses.brand
 
@@ -475,8 +475,9 @@ export default function Dashboard() {
         </Link>
       </motion.div>
 
-      <motion.div {...fade} transition={{ delay: 0.05 }}>
-        <Card variant="elevated" className="dashboard-period-summary">
+      <div className="dashboard-executive-grid">
+        <motion.div className="min-w-0" {...fade} transition={{ delay: 0.05 }}>
+          <Card variant="elevated" className="dashboard-period-summary h-full">
           <div className="grid gap-4 lg:grid-cols-[1.2fr_2fr] lg:items-end">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
@@ -519,12 +520,13 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
-        </Card>
-      </motion.div>
+          </Card>
+        </motion.div>
 
-      <motion.div {...fade} transition={{ delay: 0.075 }}>
-        <MonthAttentionCard items={monthAttention} />
-      </motion.div>
+        <motion.div className="min-w-0" {...fade} transition={{ delay: 0.075 }}>
+          <MonthAttentionCard items={monthAttention} />
+        </motion.div>
+      </div>
 
       {/* Controle mensal sem alterar os cálculos financeiros existentes */}
       <motion.div {...fade} transition={{ delay: 0.08 }}>
