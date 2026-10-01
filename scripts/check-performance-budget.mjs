@@ -9,11 +9,13 @@ const indexPath = join(distRoot, 'index.html')
 // Budget v2: recalibrado após a correção de segurança do DOMPurify e a
 // introdução da semântica financeira auditável da Phase 42A. Na Phase 42D,
 // o teto total ganhou 1 KiB de margem para absorver a auditoria de orçamentos.
-// O ajuste acumulado permanece abaixo de 1% e não altera os limites de
-// carregamento inicial, chunk individual ou CSS.
+// A Phase 41B acrescenta mais 1 KiB global para a personalização transparente,
+// compensado por um teto dedicado da rota Money. Os limites de carregamento
+// inicial, maior chunk e CSS permanecem inalterados.
 const limits = {
   initialJavaScriptGzipBytes: 242 * 1024,
-  totalJavaScriptGzipBytes: 708 * 1024,
+  totalJavaScriptGzipBytes: 709 * 1024,
+  moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 20 * 1024,
 }
@@ -74,15 +76,21 @@ const initialCss = css.filter((asset) => asset.initial)
 const largestJavaScript = [...javascript].sort(
   (first, second) => second.gzipBytes - first.gzipBytes,
 )[0]
+const moneyRoute = javascript.find((asset) => /^assets\/Money-.*\.js$/i.test(asset.file))
 
 const metrics = {
   initialJavaScriptGzipBytes: sum(initialJavaScript, 'gzipBytes'),
   totalJavaScriptGzipBytes: sum(javascript, 'gzipBytes'),
+  moneyRouteGzipBytes: moneyRoute?.gzipBytes || 0,
   largestJavaScriptGzipBytes: largestJavaScript?.gzipBytes || 0,
   initialCssGzipBytes: sum(initialCss, 'gzipBytes'),
 }
 
 const failures = []
+
+if (!moneyRoute) {
+  failures.push('O chunk dedicado do Money não foi encontrado no build.')
+}
 
 for (const [metric, limit] of Object.entries(limits)) {
   if (metrics[metric] > limit) {
@@ -124,6 +132,11 @@ console.table([
     métrica: 'JavaScript total gzip',
     atual: kib(metrics.totalJavaScriptGzipBytes),
     limite: kib(limits.totalJavaScriptGzipBytes),
+  },
+  {
+    métrica: 'Rota Money gzip',
+    atual: kib(metrics.moneyRouteGzipBytes),
+    limite: kib(limits.moneyRouteGzipBytes),
   },
   {
     métrica: 'Maior JavaScript gzip',
