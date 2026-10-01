@@ -133,7 +133,6 @@ test('avisa sobre possível duplicidade', () => {
   expect(response.warnings).toHaveLength(1)
 })
 
-
 test('sugere categoria do perfil sem preencher o rascunho automaticamente', () => {
   const response = buildMoneyTransactionDraft({
     message: 'Paguei 90 por pix ontem',
