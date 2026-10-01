@@ -61,7 +61,7 @@ describe('Budgets auditability', () => {
     expect(screen.getByText('Gasto orçado')).toBeInTheDocument()
     expect(screen.getAllByText('Gasto sem limite').length).toBeGreaterThan(0)
     expect(screen.getByText('Excedente total')).toBeInTheDocument()
-    expect(screen.getByText(/Gasto total do mês/i)).toBeInTheDocument()
+    expect(screen.getByText(/Total no mês/i)).toBeInTheDocument()
   })
 
   it('permite abrir os lançamentos que compõem cada categoria', () => {
