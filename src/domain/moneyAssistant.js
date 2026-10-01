@@ -205,6 +205,16 @@ export function parseMoneyAssistantIntent(
     return { type: 'top', requestedMonth: requestedMonth || defaultMonth }
   }
 
+  if (
+    normalizedMessage.includes('o que voce aprendeu') ||
+    normalizedMessage.includes('meu perfil financeiro') ||
+    normalizedMessage.includes('meus habitos') ||
+    normalizedMessage.includes('como eu costumo gastar') ||
+    normalizedMessage.includes('personalizacao')
+  ) {
+    return { type: 'personalization_profile' }
+  }
+
   if (normalizedMessage.includes('merece minha atencao')) return { type: 'priority' }
 
   const asksMonthlyReport =
@@ -242,6 +252,7 @@ export function buildMoneyAssistantResponse({
   now = new Date(),
   analyze,
   priority,
+  personalizationProfile,
 }) {
   const intent = parseMoneyAssistantIntent(message, categories, transactions, now)
 
@@ -254,6 +265,63 @@ export function buildMoneyAssistantResponse({
       type: 'help',
       title: intent.type === 'unknown' ? 'Ainda não entendi esse pedido' : 'Como posso ajudar',
       text: 'Nesta fase, posso consultar seus dados sem alterar nenhum lançamento. Peça um relatório mensal, uma análise do período atual ou o total gasto em uma categoria.',
+    }
+  }
+
+  if (intent.type === 'personalization_profile') {
+    if (settings.personalizationEnabled !== true) {
+      return {
+        type: 'personalization_profile',
+        title: 'Personalização desativada',
+        text: 'Ative “Personalizar o Money com meu histórico” nas Preferências do Money para eu identificar padrões agregados dos seus próprios lançamentos.',
+      }
+    }
+
+    const sampleSize = Number(personalizationProfile?.sampleSize || 0)
+    if (personalizationProfile?.confidence === 'insufficient') {
+      return {
+        type: 'personalization_profile',
+        title: 'Ainda estou formando seu perfil',
+        text: 'Ainda não há histórico suficiente para formar um perfil individual de gastos.',
+        secondaryText:
+          'O Money precisa de pelo menos quatro despesas recentes para começar e aumenta a confiança conforme o histórico cresce.',
+        metrics: [{ label: 'Amostra', rawValue: `${sampleSize} despesas` }],
+      }
+    }
+
+    const topCategory = personalizationProfile?.topCategory
+    const payment = personalizationProfile?.preferredPaymentMethod
+    const evidence = [
+      topCategory
+        ? `${topCategory.name} representa ${Math.round((topCategory.share || 0) * 100)}% das despesas analisadas`
+        : '',
+      payment
+        ? `${payment.label || payment.id} aparece em ${payment.count} lançamento${payment.count === 1 ? '' : 's'}`
+        : '',
+    ].filter(Boolean)
+
+    return {
+      type: 'personalization_profile',
+      title: 'O que aprendi com seu histórico',
+      text: evidence.length
+        ? `Com base no seu próprio histórico, ${evidence.join('; ')}.`
+        : 'O histórico já permite personalização, mas ainda não existe um padrão dominante confiável.',
+      secondaryText:
+        'Esse perfil é recalculado no seu navegador a partir dos seus próprios lançamentos recentes. A conversa não é armazenada no Firestore.',
+      metrics: [
+        { label: 'Amostra', rawValue: `${sampleSize} despesas` },
+        ...(topCategory
+          ? [
+              {
+                label: 'Categoria principal',
+                rawValue: `${topCategory.name} · ${Math.round(topCategory.share * 100)}%`,
+              },
+            ]
+          : []),
+        ...(payment
+          ? [{ label: 'Mais usado', rawValue: payment.label || payment.id }]
+          : []),
+      ],
     }
   }
 
