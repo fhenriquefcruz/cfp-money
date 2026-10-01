@@ -2280,3 +2280,36 @@ body {
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
+
+
+.budget-remove-button,
+.budget-month-nav-button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+}
+
+.budget-remove-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--text-tertiary);
+  transition: color 150ms, background 150ms;
+}
+
+.budget-remove-button:hover {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.budget-month-nav-button {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+.budget-month-nav-button:hover {
+  background: var(--bg-hover);
+}
