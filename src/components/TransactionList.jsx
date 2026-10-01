@@ -48,9 +48,10 @@ import {
   formatTransactionIsoDate,
   getTransactionActivityDate,
   getTransactionDateContext,
+  getTransactionKind,
+  transactionKindLabel,
 } from '../domain/transactionDates'
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
-import { getTransactionKind, transactionKindLabel } from '../domain/transactionPresentation'
 import { isTransactionSeries } from '../domain/transactionSeries'
 import {
   PAYMENT_STATUS,
