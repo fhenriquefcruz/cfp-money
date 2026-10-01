@@ -23,18 +23,23 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - name: Update Firebase CLI
-        run: npm install --save-dev --save-exact firebase-tools@15.32.0
+      - name: Refresh Firebase CLI and patched FTP client
+        run: |
+          npm install --save-dev --save-exact firebase-tools@15.32.0
+          npm pkg set overrides.basic-ftp=5.3.1
+          npm install
+      - name: Format Phase 43 files
+        run: npx prettier --write src/components/Dashboard.jsx src/index.css package.json
       - name: Validate production audit
         run: npm run validate:production-audit
-      - name: Commit dependency refresh
+      - name: Commit validated refresh
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json
+          git add package.json package-lock.json src/components/Dashboard.jsx src/index.css
           if git diff --cached --quiet; then
             echo "Nothing to commit"
           else
-            git commit -m "Phase 43: refresh Firebase CLI security"
+            git commit -m "Phase 43: finalize composition and security refresh"
             git push origin HEAD:phase-43-dashboard-composition
           fi
