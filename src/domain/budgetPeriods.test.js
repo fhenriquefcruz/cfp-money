@@ -127,10 +127,17 @@ test('exclui transferências e expõe composição auditável do orçamento', ()
   })
 
   expect(report).toMatchObject({
+    monthKey: '2026-09',
     totalBudgeted: 250,
     totalSpent: 300,
     totalUnbudgetedSpent: 200,
     totalExceeded: 50,
+  })
+  expect(report.items[0]).toMatchObject({
+    categoryId: 'food',
+    amount: 250,
+    spent: 300,
+    percent: 120,
   })
 })
 
