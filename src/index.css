@@ -1775,3 +1775,23 @@ body {
 .admin-user-chevron[data-expanded='true'] {
   transform: rotate(180deg);
 }
+
+
+/* Phase 42C · detalhes progressivos das transações */
+.transaction-row-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.transaction-row-details > summary svg {
+  transition: transform 150ms ease;
+}
+
+.transaction-row-details[open] > summary svg {
+  transform: rotate(180deg);
+}
+
+.transaction-row-details > summary:focus-visible {
+  border-radius: 0.5rem;
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
