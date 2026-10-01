@@ -347,9 +347,9 @@ function TxRow({
           )}
         </div>
 
-        <details className="transaction-row-details mt-1.5">
+        <details className="transaction-row-details">
           <summary className="transaction-row-details-summary">
-            <ChevronDown size={12} aria-hidden="true" />
+            <ChevronDown size={12} />
             Detalhes
           </summary>
           <div className="transaction-row-details-panel">
@@ -1092,7 +1092,6 @@ export default function TransactionList() {
         {activeFilterChips.length > 0 && (
           <div
             className="transaction-active-filters"
-            aria-label="Filtros ativos"
           >
             <span className="transaction-active-filters__label">
               Filtros ativos
