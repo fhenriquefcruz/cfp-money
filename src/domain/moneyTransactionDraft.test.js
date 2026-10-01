@@ -132,3 +132,62 @@ test('avisa sobre possível duplicidade', () => {
 
   expect(response.warnings).toHaveLength(1)
 })
+
+
+test('sugere categoria do perfil sem preencher o rascunho automaticamente', () => {
+  const response = buildMoneyTransactionDraft({
+    message: 'Paguei 90 por pix ontem',
+    categories,
+    transactions: [],
+    personalizationProfile: {
+      confidence: 'medium',
+      topCategory: { id: 'food', name: 'Alimentação', share: 0.5 },
+    },
+    now,
+  })
+
+  expect(response).toMatchObject({
+    type: 'transaction_draft',
+    draft: {
+      categoryId: '',
+      paymentMethod: 'pix',
+    },
+    categorySuggestion: {
+      categoryId: 'food',
+      categoryName: 'Alimentação',
+      confidence: 'medium',
+    },
+  })
+  expect(response.missingFields).toContain('categoryId')
+})
+
+test('não sugere categoria com histórico insuficiente', () => {
+  const response = buildMoneyTransactionDraft({
+    message: 'Paguei 90 por pix ontem',
+    categories,
+    transactions: [],
+    personalizationProfile: {
+      confidence: 'insufficient',
+      topCategory: { id: 'food', name: 'Alimentação', share: 1 },
+    },
+    now,
+  })
+
+  expect(response.categorySuggestion).toBeNull()
+})
+
+test('não substitui categoria identificada explicitamente pelo texto', () => {
+  const response = buildMoneyTransactionDraft({
+    message: 'Paguei 90 no dentista por pix ontem',
+    categories,
+    transactions: [],
+    personalizationProfile: {
+      confidence: 'high',
+      topCategory: { id: 'food', name: 'Alimentação', share: 0.8 },
+    },
+    now,
+  })
+
+  expect(response.draft.categoryId).toBe('health')
+  expect(response.categorySuggestion).toBeNull()
+})
