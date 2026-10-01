@@ -248,12 +248,9 @@ function TxRow({
   const activityDateLabel = formatTransactionIsoDate(dateContext.activityDate)
   const paymentMethod = PAYMENT_METHODS.find((method) => method.id === tx.paymentMethod)
   const KindIcon =
-    {
-      ['income']: TrendingUp,
-      ['expense']: TrendingDown,
-      ['transfer']: ArrowLeftRight,
-      ['savings']: PiggyBank,
-    }[kind] || ArrowLeftRight
+    { income: TrendingUp, expense: TrendingDown, transfer: ArrowLeftRight, savings: PiggyBank }[
+      kind
+    ] || ArrowLeftRight
 
 
   return (
@@ -357,7 +354,7 @@ function TxRow({
         </div>
 
         <details className="transaction-row-details mt-1.5">
-          <summary className="inline-flex min-h-8 cursor-pointer list-none items-center gap-1 text-[10px] font-semibold text-[--text-tertiary] hover:text-[--text-primary]">
+          <summary className="transaction-row-details-summary">
             <ChevronDown size={12} aria-hidden="true" />
             Detalhes
           </summary>
@@ -374,7 +371,7 @@ function TxRow({
             {protectedGroup && (
               <span>{tx.isInstallment ? 'Série parcelada gerenciável' : 'Série recorrente gerenciável'}</span>
             )}
-            {tx.notes && <span className="sm:col-span-2">Observação: {tx.notes}</span>}
+            {tx.notes && <span className="transaction-row-note">Observação: {tx.notes}</span>}
           </div>
         </details>
       </div>
@@ -668,7 +665,6 @@ export default function TransactionList() {
   const activeFilters = activeFilterChips.length + Number(Boolean(search.trim()))
 
   const removeActiveFilter = (filterId) => {
-    if (filterId === 'search') setSearch('')
     if (filterId === 'type') setTypeFilter('all')
     if (filterId === 'category') setCatFilter('all')
     if (filterId === 'payment') setPayFilter('all')
@@ -1432,16 +1428,16 @@ export default function TransactionList() {
                 const daily = summarizeTransactionGroup(txs)
                 return (
                   <div key={date}>
-                    <div className="transaction-date-header flex flex-wrap items-center justify-between gap-2 border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2">
-                      <p className="text-xs font-bold text-[--text-secondary]">{dateLabel(date)}</p>
-                      <div className="flex items-center gap-3 text-xs tabular-nums">
+                    <div className="transaction-date-header">
+                      <p className="transaction-date-label">{dateLabel(date)}</p>
+                      <div className="transaction-date-totals">
                         {daily.income > 0 && (
-                          <span className="text-[--success-icon] font-semibold">
+                          <span className="transaction-date-total" data-kind="income">
                             +{formatCurrency(daily.income)}
                           </span>
                         )}
                         {daily.expenses > 0 && (
-                          <span className="text-[--danger-icon] font-semibold">
+                          <span className="transaction-date-total" data-kind="expense">
                             −{formatCurrency(daily.expenses)}
                           </span>
                         )}
