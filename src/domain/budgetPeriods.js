@@ -43,12 +43,11 @@ export function getBudgetTransactions(transactions = [], categoryId, monthKey) {
   )
 }
 
-export function getBudgetSpent(transactions = [], categoryId, monthKey) {
-  return getBudgetTransactions(transactions, categoryId, monthKey).reduce(
+export const getBudgetSpent = (transactions = [], categoryId, monthKey) =>
+  getBudgetTransactions(transactions, categoryId, monthKey).reduce(
     (total, transaction) => total + (Number(transaction.amount) || 0),
     0,
   )
-}
 
 export function shiftBudgetMonth(monthKey, amount) {
   if (!MONTH.test(monthKey || '')) return ''
@@ -85,20 +84,21 @@ export function buildMonthlyBudgetOverview({
 
   const budgetedCategoryIds = new Set(items.map((item) => item.categoryId))
   const monthTransactions = getBudgetTransactions(transactions, null, monthKey)
-  const totalAllSpent = monthTransactions.reduce(
-    (total, transaction) => total + (Number(transaction.amount) || 0),
+  const totalSpent = items.reduce((total, item) => total + item.spent, 0)
+  const totalUnbudgetedSpent = monthTransactions.reduce(
+    (total, transaction) =>
+      budgetedCategoryIds.has(transaction.categoryId)
+        ? total
+        : total + (Number(transaction.amount) || 0),
     0,
   )
-  const totalUnbudgetedSpent = monthTransactions
-    .filter((transaction) => !budgetedCategoryIds.has(transaction.categoryId))
-    .reduce((total, transaction) => total + (Number(transaction.amount) || 0), 0)
 
   return {
     monthKey,
     items,
     totalBudgeted: items.reduce((total, item) => total + item.amount, 0),
-    totalSpent: items.reduce((total, item) => total + item.spent, 0),
-    totalAllSpent,
+    totalSpent,
+    totalAllSpent: totalSpent + totalUnbudgetedSpent,
     totalUnbudgetedSpent,
     totalExceeded: items.reduce((total, item) => total + item.excess, 0),
     overCount: items.filter((item) => item.excess > 0).length,
