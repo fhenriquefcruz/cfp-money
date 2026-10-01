@@ -373,7 +373,7 @@ function TxRow({
           </summary>
           <div className="mt-1 grid gap-x-4 gap-y-1 rounded-xl bg-[--bg-subtle] px-3 py-2 text-[10px] text-[--text-secondary] sm:grid-cols-2">
             <span>Movimentação: {activityDateLabel}</span>
-            {tx.dueDate && tx.dueDate !== dateContext.activityDate && (
+            {!structuredCredit && tx.dueDate && tx.dueDate !== dateContext.activityDate && (
               <span>Vencimento: {dateContext.accountingLabel}</span>
             )}
             {dateContext.hasSeparateAccountingDate && (
@@ -1461,23 +1461,39 @@ export default function TransactionList() {
                   <div className="transaction-date-header flex flex-wrap items-center justify-between gap-2 border-b border-[--border-subtle] bg-[--bg-subtle] px-4 py-2">
                     <p className="text-xs font-bold text-[--text-secondary]">{dateLabel(date)}</p>
                     <div className="flex items-center gap-3 text-xs tabular-nums">
-                      {txs.some((t) => t.type === 'income' && !t.isSavings) && (
+                      {txs.some(
+                        (transaction) =>
+                          isFinanciallyEffectiveTransaction(transaction) &&
+                          getTransactionKind(transaction) === TRANSACTION_KIND.INCOME,
+                      ) && (
                         <span className="text-[--success-icon] font-semibold">
                           +
                           {formatCurrency(
                             txs
-                              .filter((t) => t.type === 'income' && !t.isSavings)
-                              .reduce((s, t) => s + t.amount, 0),
+                              .filter(
+                                (transaction) =>
+                                  isFinanciallyEffectiveTransaction(transaction) &&
+                                  getTransactionKind(transaction) === TRANSACTION_KIND.INCOME,
+                              )
+                              .reduce((total, transaction) => total + transaction.amount, 0),
                           )}
                         </span>
                       )}
-                      {txs.some((t) => t.type === 'expense') && (
+                      {txs.some(
+                        (transaction) =>
+                          isFinanciallyEffectiveTransaction(transaction) &&
+                          getTransactionKind(transaction) === TRANSACTION_KIND.EXPENSE,
+                      ) && (
                         <span className="text-[--danger-icon] font-semibold">
                           −
                           {formatCurrency(
                             txs
-                              .filter((t) => t.type === 'expense')
-                              .reduce((s, t) => s + t.amount, 0),
+                              .filter(
+                                (transaction) =>
+                                  isFinanciallyEffectiveTransaction(transaction) &&
+                                  getTransactionKind(transaction) === TRANSACTION_KIND.EXPENSE,
+                              )
+                              .reduce((total, transaction) => total + transaction.amount, 0),
                           )}
                         </span>
                       )}
