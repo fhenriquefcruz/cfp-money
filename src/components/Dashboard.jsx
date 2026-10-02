@@ -23,10 +23,6 @@ import {
   ChevronRight,
   Clock3,
   CheckCircle2,
-  TrendingUp,
-  TrendingDown,
-  ShieldCheck,
-  PiggyBank,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -521,11 +517,11 @@ export default function Dashboard() {
 
               <span className="dashboard-result-status" data-state={resultState}>
                 {resultState === 'positive' ? (
-                  <TrendingUp size={13} />
+                  <CheckCircle2 size={13} />
                 ) : resultState === 'negative' ? (
-                  <TrendingDown size={13} />
+                  <AlertTriangle size={13} />
                 ) : (
-                  <ShieldCheck size={13} />
+                  <Wallet size={13} />
                 )}
                 {resultHeadline}
               </span>
@@ -590,11 +586,7 @@ export default function Dashboard() {
             <div className="dashboard-period-summary__support">
               <div className="dashboard-period-support-item">
                 <div className="dashboard-period-support-item__icon" data-kind="usage">
-                  {expenseShare !== null && expenseShare <= 100 ? (
-                    <TrendingUp size={15} />
-                  ) : (
-                    <TrendingDown size={15} />
-                  )}
+                  <Zap size={15} />
                 </div>
                 <div>
                   <p className="dashboard-period-support-item__label">Uso da receita</p>
@@ -615,7 +607,7 @@ export default function Dashboard() {
 
               <div className="dashboard-period-support-item">
                 <div className="dashboard-period-support-item__icon" data-kind="commitment">
-                  <ShieldCheck size={15} />
+                  <Clock3 size={15} />
                 </div>
                 <div>
                   <p className="dashboard-period-support-item__label">Compromissos do mês</p>
@@ -630,7 +622,7 @@ export default function Dashboard() {
 
               <div className="dashboard-period-support-item">
                 <div className="dashboard-period-support-item__icon" data-kind="reserve">
-                  <PiggyBank size={15} />
+                  <Target size={15} />
                 </div>
                 <div>
                   <p className="dashboard-period-support-item__label">Reserva acumulada</p>
@@ -651,14 +643,16 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      <div className="dashboard-section-heading">
-        <div>
-          <p className="dashboard-section-heading__eyebrow">Controle e decisões</p>
-          <h2 className="dashboard-section-heading__title">O que organiza o seu mês</h2>
-          <p className="dashboard-section-heading__description">
-            Compromissos, ritmo de gastos e sinais financeiros para decidir com antecedência.
-          </p>
-        </div>
+      <div className="mt-1 px-1 sm:px-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-brand]">
+          Controle e decisões
+        </p>
+        <h2 className="mt-1 text-base font-black tracking-tight text-[--text-primary] sm:text-lg">
+          O que organiza o seu mês
+        </h2>
+        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[--text-tertiary]">
+          Compromissos, ritmo de gastos e sinais financeiros para decidir com antecedência.
+        </p>
       </div>
 
       {/* Controle mensal sem alterar os cálculos financeiros existentes */}
@@ -718,14 +712,16 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      <div className="dashboard-section-heading dashboard-section-heading--analysis">
-        <div>
-          <p className="dashboard-section-heading__eyebrow">Leitura do período</p>
-          <h2 className="dashboard-section-heading__title">Entenda o comportamento do seu dinheiro</h2>
-          <p className="dashboard-section-heading__description">
-            Evolução, composição dos gastos e mudanças que ajudam a explicar o resultado.
-          </p>
-        </div>
+      <div className="mt-3 px-1 sm:px-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-brand]">
+          Leitura do período
+        </p>
+        <h2 className="mt-1 text-base font-black tracking-tight text-[--text-primary] sm:text-lg">
+          Entenda o comportamento do seu dinheiro
+        </h2>
+        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[--text-tertiary]">
+          Evolução, composição dos gastos e mudanças que ajudam a explicar o resultado.
+        </p>
       </div>
 
       {/* Análise principal: evolução e composição */}
@@ -969,14 +965,16 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      <div className="dashboard-section-heading dashboard-section-heading--activity">
-        <div>
-          <p className="dashboard-section-heading__eyebrow">Movimentação e objetivos</p>
-          <h2 className="dashboard-section-heading__title">Do detalhe à próxima conquista</h2>
-          <p className="dashboard-section-heading__description">
-            Revise os lançamentos mais recentes, alertas de orçamento e avanço das suas metas.
-          </p>
-        </div>
+      <div className="mt-3 px-1 sm:px-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-brand]">
+          Movimentação e objetivos
+        </p>
+        <h2 className="mt-1 text-base font-black tracking-tight text-[--text-primary] sm:text-lg">
+          Do detalhe à próxima conquista
+        </h2>
+        <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[--text-tertiary]">
+          Revise os lançamentos mais recentes, alertas de orçamento e avanço das suas metas.
+        </p>
       </div>
 
       {/* Linha inferior */}
