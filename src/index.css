@@ -2439,9 +2439,6 @@ body {
   gap: 1.25rem;
 }
 
-.dashboard-period-hero__main {
-  min-width: 0;
-}
 
 .dashboard-period-hero__eyebrow {
   color: var(--text-tertiary);
@@ -2576,27 +2573,28 @@ body {
   font-weight: 800;
 }
 
-.dashboard-period-metric__signal {
+.dashboard-period-metric__header::before {
   width: 0.4375rem;
   height: 0.4375rem;
   flex: 0 0 auto;
   border-radius: 9999px;
   background: var(--text-tertiary);
+  content: '';
 }
 
-.dashboard-period-metric[data-tone='success'] .dashboard-period-metric__signal {
+.dashboard-period-metric:nth-child(1) .dashboard-period-metric__header::before {
   background: var(--success-icon);
 }
 
-.dashboard-period-metric[data-tone='danger'] .dashboard-period-metric__signal {
+.dashboard-period-metric:nth-child(2) .dashboard-period-metric__header::before {
   background: var(--danger-icon);
 }
 
-.dashboard-period-metric[data-tone='brand'] .dashboard-period-metric__signal {
+.dashboard-period-metric:nth-child(3) .dashboard-period-metric__header::before {
   background: var(--brand-600);
 }
 
-.dashboard-period-metric[data-tone='warning'] .dashboard-period-metric__signal {
+.dashboard-period-metric:nth-child(4) .dashboard-period-metric__header::before {
   background: var(--warning-icon);
 }
 
