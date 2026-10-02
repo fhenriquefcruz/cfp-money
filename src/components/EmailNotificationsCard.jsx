@@ -174,6 +174,11 @@ function EmailNotificationsContent() {
       return
     }
 
+    if (!settings.enabled || !canEnableEmailNotifications(settings)) {
+      setMessage('Salve as preferências com consentimento antes de solicitar um teste.')
+      return
+    }
+
     setAction('test')
     setMessage('')
 
@@ -434,7 +439,9 @@ function EmailNotificationsContent() {
                 variant="secondary"
                 fullWidth
                 loading={action === 'test'}
-                disabled={!settings.enabled || !verified}
+                disabled={
+                  !settings.enabled || !verified || !canEnableEmailNotifications(settings)
+                }
                 icon={<Send size={14} />}
                 onClick={requestTest}
               >
