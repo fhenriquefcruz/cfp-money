@@ -10,6 +10,10 @@ O benefício inclui:
 - alertas de progresso e prazo das metas;
 - relatório de teste.
 
+## Consentimento do teste
+
+O botão **Enviar teste** só fica disponível depois que as preferências de e-mail estiverem ativadas e o consentimento versionado tiver sido salvo. O serviço também revalida essa configuração persistida antes de criar o pedido de teste.
+
 ## Suspensão
 
 O envio é suspenso quando:

@@ -97,7 +97,7 @@ Gate protegido aprovado e entrega real do e-mail operacional confirmada em 29/09
 - [x] executar smoke de produção;
 - [ ] validar a interface no Perfil de uma conta Premium;
 - [ ] salvar preferências com consentimento;
-- [ ] solicitar o primeiro relatório de teste pela interface;
+- [ ] solicitar o primeiro relatório de teste pela interface somente após salvar as preferências com consentimento versionado;
 - [ ] acompanhar a primeira execução agendada e os logs do provedor.
 
 ## Rollback

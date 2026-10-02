@@ -102,6 +102,8 @@
 - [x] habilitar `VITE_EMAIL_NOTIFICATIONS_ENABLED=true` em produção;
 - [x] publicar o frontend com a feature habilitada;
 - [x] executar smoke de produção após a ativação;
+- [x] exigir preferências ativas e consentimento persistido antes de solicitar teste pela interface;
+- [x] validar automaticamente o bloqueio de teste sem consentimento no componente e no serviço;
 - [ ] validar a interface no Perfil de uma conta Premium;
 - [ ] salvar preferências com consentimento em uma conta Premium;
 - [ ] solicitar um relatório de teste pela interface;

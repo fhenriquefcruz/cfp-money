@@ -1,6 +1,7 @@
 import { deleteDoc, doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from './firebase'
 import {
+  canEnableEmailNotifications,
   DEFAULT_EMAIL_NOTIFICATION_SETTINGS,
   NOTIFICATION_SETTINGS_VERSION,
   nextTestRequestId,
@@ -70,6 +71,12 @@ export async function saveEmailNotificationSettings(uid, settings) {
 }
 
 export async function requestEmailNotificationTest(uid) {
+  const current = await getEmailNotificationSettings(uid)
+
+  if (!current.enabled || !canEnableEmailNotifications(current)) {
+    throw new Error('Salve as preferências com consentimento antes de solicitar um teste.')
+  }
+
   const testRequestId = nextTestRequestId()
 
   await setDoc(
