@@ -651,6 +651,16 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
+      <div className="dashboard-section-heading">
+        <div>
+          <p className="dashboard-section-heading__eyebrow">Controle e decisões</p>
+          <h2 className="dashboard-section-heading__title">O que organiza o seu mês</h2>
+          <p className="dashboard-section-heading__description">
+            Compromissos, ritmo de gastos e sinais financeiros para decidir com antecedência.
+          </p>
+        </div>
+      </div>
+
       {/* Controle mensal sem alterar os cálculos financeiros existentes */}
       <motion.div {...fade} transition={{ delay: 0.08 }}>
         <PaymentControlCard summary={paymentSummary} loading={isLoading} />
@@ -707,6 +717,16 @@ export default function Dashboard() {
           <MoneyInsightCard referenceDate={viewDate} />
         </div>
       </motion.div>
+
+      <div className="dashboard-section-heading dashboard-section-heading--analysis">
+        <div>
+          <p className="dashboard-section-heading__eyebrow">Leitura do período</p>
+          <h2 className="dashboard-section-heading__title">Entenda o comportamento do seu dinheiro</h2>
+          <p className="dashboard-section-heading__description">
+            Evolução, composição dos gastos e mudanças que ajudam a explicar o resultado.
+          </p>
+        </div>
+      </div>
 
       {/* Análise principal: evolução e composição */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
@@ -947,6 +967,16 @@ export default function Dashboard() {
             )}
           </Card>
         </motion.div>
+      </div>
+
+      <div className="dashboard-section-heading dashboard-section-heading--activity">
+        <div>
+          <p className="dashboard-section-heading__eyebrow">Movimentação e objetivos</p>
+          <h2 className="dashboard-section-heading__title">Do detalhe à próxima conquista</h2>
+          <p className="dashboard-section-heading__description">
+            Revise os lançamentos mais recentes, alertas de orçamento e avanço das suas metas.
+          </p>
+        </div>
       </div>
 
       {/* Linha inferior */}
