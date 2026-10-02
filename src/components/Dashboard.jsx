@@ -228,7 +228,7 @@ function PeriodResultHero({ summary, paymentSummary, loading }) {
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5">
               <p className="dashboard-period-hero__eyebrow">Resultado do período</p>
-              <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
+              <InfoTooltip text="Receitas menos despesas do mês pela data da movimentação. Não é saldo bancário." />
             </div>
             <span className="dashboard-period-status" data-tone={tone}>
               {balance < 0 ? 'Em atenção' : 'Positivo'}
