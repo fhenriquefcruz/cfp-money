@@ -71,7 +71,6 @@ O Worker não percorre todas as contas. Ele consulta apenas `notificationSubscri
 
 O limite `MAX_USERS_PER_RUN` deve ser revisto antes de ultrapassar a escala prevista para o plano gratuito.
 
-
 ## Homologação reversível da conta Premium de teste
 
 O workflow **Premium email production validation** valida o fluxo financeiro real de notificações sem deixar alterações permanentes na conta de teste.

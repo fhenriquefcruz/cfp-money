@@ -205,7 +205,11 @@ async function main() {
       body: JSON.stringify({ uid }),
     })
 
-    if (Number(result?.total) !== 1 || !Array.isArray(result?.results) || result.results.length !== 1) {
+    if (
+      Number(result?.total) !== 1 ||
+      !Array.isArray(result?.results) ||
+      result.results.length !== 1
+    ) {
       throw new Error('O Worker não processou exatamente a conta Premium de teste.')
     }
 
@@ -239,7 +243,9 @@ async function main() {
 
     delivered = true
 
-    console.log('Homologação Premium concluída: conta ativa, consentimento, processamento e entrega validados.')
+    console.log(
+      'Homologação Premium concluída: conta ativa, consentimento, processamento e entrega validados.',
+    )
     console.log('As preferências temporárias serão restauradas automaticamente.')
   } finally {
     await deliveryRef.delete().catch(() => {})
@@ -249,7 +255,9 @@ async function main() {
     if (temporaryPremium && user) {
       await userRef.set(
         {
-          plan: Object.prototype.hasOwnProperty.call(user, 'plan') ? user.plan : FieldValue.delete(),
+          plan: Object.prototype.hasOwnProperty.call(user, 'plan')
+            ? user.plan
+            : FieldValue.delete(),
           premiumUntil: Object.prototype.hasOwnProperty.call(user, 'premiumUntil')
             ? user.premiumUntil
             : FieldValue.delete(),
@@ -261,7 +269,9 @@ async function main() {
     await deleteApp(app).catch(() => {})
 
     if (!delivered) {
-      console.error('A homologação não chegou à confirmação de entrega; o estado anterior foi restaurado.')
+      console.error(
+        'A homologação não chegou à confirmação de entrega; o estado anterior foi restaurado.',
+      )
     }
   }
 }
