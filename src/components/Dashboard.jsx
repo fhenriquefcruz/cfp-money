@@ -231,7 +231,7 @@ function PeriodResultHero({ summary, paymentSummary, loading }) {
               <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
             </div>
             <span className="dashboard-period-status" data-tone={tone}>
-              {balance < 0 ? 'Fluxo em atenção' : 'Resultado positivo'}
+              {balance < 0 ? 'Em atenção' : 'Positivo'}
             </span>
           </div>
 
@@ -251,8 +251,8 @@ function PeriodResultHero({ summary, paymentSummary, loading }) {
             <div className="dashboard-period-flow__track" aria-hidden="true">
               <div
                 className="dashboard-period-flow__fill"
-                data-tone={expensePercent > 100 ? 'danger' : 'brand'}
-                style={{ width: `${Math.min(100, Math.max(0, expensePercent || 0))}%` }}
+                data-tone={expensePercent > 100 ? 'danger' : undefined}
+                style={{ width: `${Math.min(100, expensePercent || 0)}%` }}
               />
             </div>
           </div>
