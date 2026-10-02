@@ -213,7 +213,6 @@ function PeriodResultHero({ summary, paymentSummary, monthLabel, loading }) {
   const expenses = +summary.expenses || 0
   const balance = +summary.balance || 0
   const expensePercent = income > 0 ? Math.round((expenses / income) * 100) : null
-  const marginPercent = income > 0 ? Math.round((balance / income) * 100) : null
   const tone = balance < 0 ? 'danger' : 'success'
   const metrics = [
     ['Receitas', income, 'Entradas do mês', 'success'],
@@ -250,9 +249,7 @@ function PeriodResultHero({ summary, paymentSummary, monthLabel, loading }) {
           <p className="dashboard-period-hero__narrative">
             {expensePercent === null
               ? 'Registre receitas para comparar o peso das despesas.'
-              : expensePercent > 100
-                ? `Despesas ${expensePercent - 100}% acima das receitas registradas.`
-                : `${expensePercent}% das receitas foram consumidas pelas despesas.`}
+              : `Despesas equivalem a ${expensePercent}% das receitas registradas.`}
           </p>
 
           <div className="dashboard-period-flow">
@@ -266,11 +263,6 @@ function PeriodResultHero({ summary, paymentSummary, monthLabel, loading }) {
                 data-tone={expensePercent > 100 ? 'danger' : 'brand'}
                 style={{ width: `${Math.min(100, Math.max(0, expensePercent || 0))}%` }}
               />
-            </div>
-            <div className="dashboard-period-flow__footer">
-              <span>
-                {marginPercent === null ? 'Margem ainda sem base' : `Margem do período ${marginPercent}%`}
-              </span>
             </div>
           </div>
         </div>
@@ -292,14 +284,11 @@ function PeriodResultHero({ summary, paymentSummary, monthLabel, loading }) {
   )
 }
 
-function DashboardSectionHeading({ eyebrow, title, description }) {
+function DashboardSectionHeading({ eyebrow, title }) {
   return (
     <div className="dashboard-section-heading">
       <p className="dashboard-section-heading__eyebrow">{eyebrow}</p>
-      <div>
-        <h2>{title}</h2>
-        <p>{description}</p>
-      </div>
+      <h2>{title}</h2>
     </div>
   )
 }
@@ -589,7 +578,6 @@ export default function Dashboard() {
       <DashboardSectionHeading
         eyebrow="Leitura inteligente"
         title="Entenda o que está por trás dos números"
-        description="Contexto, tendência e saúde financeira para transformar dados em decisões mais claras."
       />
 
       {/* Resumo executivo: indicadores essenciais e análise do Money */}
@@ -647,7 +635,6 @@ export default function Dashboard() {
       <DashboardSectionHeading
         eyebrow="Comportamento financeiro"
         title="Evolução e composição do seu mês"
-        description="Compare períodos, identifique mudanças e veja onde o dinheiro está concentrado."
       />
 
       {/* Análise principal: evolução e composição */}
@@ -894,7 +881,6 @@ export default function Dashboard() {
       <DashboardSectionHeading
         eyebrow="Rotina financeira"
         title="Movimentações e objetivos"
-        description="Acompanhe o que aconteceu recentemente e mantenha suas metas visíveis."
       />
 
       {/* Linha inferior */}
