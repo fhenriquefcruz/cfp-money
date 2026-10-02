@@ -274,15 +274,6 @@ function PeriodResultHero({ summary, paymentSummary, loading }) {
   )
 }
 
-function DashboardSectionHeading({ eyebrow, title }) {
-  return (
-    <div className="dashboard-section-heading">
-      <p className="dashboard-section-heading__eyebrow">{eyebrow}</p>
-      <h2>{title}</h2>
-    </div>
-  )
-}
-
 export default function Dashboard() {
   const { user } = useAuth()
   const {
@@ -564,10 +555,7 @@ export default function Dashboard() {
         <PaymentControlCard summary={paymentSummary} loading={isLoading} />
       </motion.div>
 
-      <DashboardSectionHeading
-        eyebrow="Leitura inteligente"
-        title="Entenda o que está por trás dos números"
-      />
+      <h2 className="dashboard-section-title">Leitura inteligente</h2>
 
       {/* Resumo executivo: indicadores essenciais e análise do Money */}
       <motion.div
@@ -621,10 +609,7 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      <DashboardSectionHeading
-        eyebrow="Comportamento financeiro"
-        title="Evolução e composição do seu mês"
-      />
+      <h2 className="dashboard-section-title">Comportamento financeiro</h2>
 
       {/* Análise principal: evolução e composição */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
@@ -867,10 +852,7 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      <DashboardSectionHeading
-        eyebrow="Rotina financeira"
-        title="Movimentações e objetivos"
-      />
+      <h2 className="dashboard-section-title">Rotina financeira</h2>
 
       {/* Linha inferior */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
