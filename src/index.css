@@ -2395,3 +2395,362 @@ body {
     grid-template-columns: minmax(0, 1.65fr) minmax(18rem, 0.85fr);
   }
 }
+
+
+/* Phase 44 · Dashboard product design */
+.dashboard-period-summary {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--brand-500) 18%, var(--border-default));
+  background:
+    radial-gradient(circle at 92% 10%, rgba(196, 157, 107, 0.13), transparent 34%),
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--bg-elevated) 97%, var(--brand-50) 3%),
+      var(--bg-elevated)
+    );
+  box-shadow:
+    0 24px 72px rgba(15, 23, 42, 0.07),
+    0 2px 12px rgba(15, 23, 42, 0.035),
+    inset 0 1px rgba(255, 255, 255, 0.45);
+}
+
+.dashboard-period-summary[data-result-state='negative'] {
+  border-color: color-mix(in srgb, var(--danger-border) 68%, var(--border-default));
+  background:
+    radial-gradient(circle at 92% 10%, rgba(239, 68, 68, 0.08), transparent 34%),
+    var(--bg-elevated);
+}
+
+.dashboard-period-summary__glow {
+  position: absolute;
+  z-index: -1;
+  top: -7rem;
+  right: -5rem;
+  width: 17rem;
+  height: 17rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(196, 157, 107, 0.13), transparent 68%);
+  pointer-events: none;
+}
+
+.dashboard-period-summary[data-result-state='negative'] .dashboard-period-summary__glow {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.09), transparent 68%);
+}
+
+.dashboard-period-summary__header,
+.dashboard-cashflow-story__heading,
+.dashboard-flow-row__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dashboard-period-summary__header {
+  align-items: flex-start;
+}
+
+.dashboard-period-summary__eyebrow {
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.dashboard-period-summary__period {
+  margin-top: 0.25rem;
+  color: var(--text-tertiary);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.dashboard-result-status {
+  display: inline-flex;
+  min-height: 2rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--border-default);
+  border-radius: 9999px;
+  padding-inline: 0.65rem;
+  background: color-mix(in srgb, var(--bg-elevated) 84%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  backdrop-filter: blur(10px);
+}
+
+.dashboard-result-status[data-state='positive'] {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.dashboard-result-status[data-state='negative'] {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.dashboard-period-summary__main {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.dashboard-period-result {
+  align-self: center;
+  min-width: 0;
+}
+
+.dashboard-period-result__label {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.dashboard-period-result__value {
+  margin-top: 0.45rem;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: clamp(2.25rem, 8vw, 4.15rem);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 0.96;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-period-summary[data-result-state='negative'] .dashboard-period-result__value {
+  color: var(--danger-text);
+}
+
+.dashboard-period-result__narrative {
+  max-width: 32rem;
+  margin-top: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
+
+.dashboard-cashflow-story {
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.25rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--bg-subtle) 76%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.dashboard-cashflow-story__heading {
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.dashboard-cashflow-story__title {
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.dashboard-cashflow-story__subtitle {
+  margin-top: 0.2rem;
+  color: var(--text-tertiary);
+  font-size: 0.625rem;
+  line-height: 1.45;
+}
+
+.dashboard-cashflow-story__ratio {
+  flex: 0 0 auto;
+  border: 1px solid var(--border-default);
+  border-radius: 9999px;
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-size: 0.625rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-flow-row + .dashboard-flow-row {
+  margin-top: 0.9rem;
+}
+
+.dashboard-flow-row__meta {
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+}
+
+.dashboard-flow-row__meta strong {
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-flow-row[data-kind='income'] .dashboard-flow-row__meta strong {
+  color: var(--success-text);
+}
+
+.dashboard-flow-row[data-kind='expense'] .dashboard-flow-row__meta strong {
+  color: var(--danger-text);
+}
+
+.dashboard-flow-track {
+  height: 0.4rem;
+  margin-top: 0.4rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--bg-hover);
+}
+
+.dashboard-flow-fill {
+  height: 100%;
+  min-width: 0.25rem;
+  border-radius: inherit;
+  transition: width 350ms ease;
+}
+
+.dashboard-flow-row[data-kind='income'] .dashboard-flow-fill {
+  background: linear-gradient(90deg, var(--success-icon), var(--success-text));
+}
+
+.dashboard-flow-row[data-kind='expense'] .dashboard-flow-fill {
+  background: linear-gradient(90deg, var(--danger-icon), var(--danger-text));
+}
+
+.dashboard-period-summary__support {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin-top: 1.35rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.dashboard-period-support-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  padding-block: 0.9rem;
+}
+
+.dashboard-period-support-item + .dashboard-period-support-item {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.dashboard-period-support-item__icon {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.7rem;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+
+.dashboard-period-support-item__icon[data-kind='usage'] {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.dashboard-period-summary[data-result-state='negative']
+  .dashboard-period-support-item__icon[data-kind='usage'] {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.dashboard-period-support-item__icon[data-kind='commitment'] {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.dashboard-period-support-item__icon[data-kind='reserve'] {
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+
+.dashboard-period-support-item__label {
+  color: var(--text-tertiary);
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.dashboard-period-support-item__value {
+  margin-top: 0.125rem;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-period-support-item__detail {
+  margin-top: 0.2rem;
+  color: var(--text-tertiary);
+  font-size: 0.625rem;
+  line-height: 1.45;
+}
+
+.dashboard-attention-card {
+  border-color: color-mix(in srgb, var(--border-default) 80%, var(--brand-200));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-elevated) 97%, var(--brand-50) 3%), var(--bg-elevated));
+}
+
+@media (min-width: 640px) {
+  .dashboard-period-summary__support {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard-period-support-item {
+    padding: 1rem;
+  }
+
+  .dashboard-period-support-item:first-child {
+    padding-left: 0;
+  }
+
+  .dashboard-period-support-item:last-child {
+    padding-right: 0;
+  }
+
+  .dashboard-period-support-item + .dashboard-period-support-item {
+    border-top: 0;
+    border-left: 1px solid var(--border-subtle);
+  }
+}
+
+@media (min-width: 1100px) {
+  .dashboard-period-summary__main {
+    grid-template-columns: minmax(0, 1.04fr) minmax(20rem, 0.96fr);
+    align-items: center;
+  }
+
+  .dashboard-executive-grid {
+    grid-template-columns: minmax(0, 1.82fr) minmax(18rem, 0.78fr);
+  }
+}
+
+:root[data-theme='dark'] .dashboard-period-summary {
+  border-color: rgba(196, 157, 107, 0.24);
+  background:
+    radial-gradient(circle at 92% 10%, rgba(196, 157, 107, 0.09), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.025), transparent 56%),
+    var(--bg-elevated);
+  box-shadow:
+    0 26px 80px rgba(0, 0, 0, 0.26),
+    inset 0 1px rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme='dark'] .dashboard-period-summary[data-result-state='negative'] {
+  border-color: rgba(239, 68, 68, 0.25);
+  background:
+    radial-gradient(circle at 92% 10%, rgba(239, 68, 68, 0.08), transparent 34%),
+    var(--bg-elevated);
+}
+
+:root[data-theme='dark'] .dashboard-cashflow-story {
+  background: rgba(255, 255, 255, 0.025);
+}
