@@ -2529,16 +2529,12 @@ body {
   padding-top: 1rem;
 }
 
-.dashboard-period-flow__header,
-.dashboard-period-flow__footer {
+.dashboard-period-flow__header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem 1rem;
-}
-
-.dashboard-period-flow__header {
   color: var(--text-secondary);
   font-size: 0.6875rem;
   font-weight: 700;
@@ -2569,12 +2565,6 @@ body {
   background: var(--danger-icon);
 }
 
-.dashboard-period-flow__footer {
-  margin-top: 0.5rem;
-  color: var(--text-tertiary);
-  font-size: 0.625rem;
-  line-height: 1.4;
-}
 
 .dashboard-period-metrics {
   display: grid;
@@ -2657,13 +2647,6 @@ body {
   letter-spacing: -0.015em;
 }
 
-.dashboard-section-heading p:not(.dashboard-section-heading__eyebrow) {
-  margin-top: 0.125rem;
-  max-width: 48rem;
-  color: var(--text-tertiary);
-  font-size: 0.6875rem;
-  line-height: 1.55;
-}
 
 @media (min-width: 768px) {
   .dashboard-period-hero__content {
