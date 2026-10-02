@@ -215,16 +215,16 @@ function PeriodResultHero({ summary, paymentSummary, loading }) {
   const expensePercent = income > 0 ? Math.round((expenses / income) * 100) : null
   const tone = balance < 0 ? 'danger' : 'success'
   const metrics = [
-    ['Receitas', income, 'success'],
-    ['Despesas', expenses, 'danger'],
-    ['Reservado', +summary.savings || 0, 'brand'],
-    ['Comprometido', +paymentSummary.committedAmount || 0, 'warning'],
+    ['Receitas', income],
+    ['Despesas', expenses],
+    ['Reservado', +summary.savings || 0],
+    ['Comprometido', +paymentSummary.committedAmount || 0],
   ]
 
   return (
     <Card variant="elevated" className="dashboard-period-hero h-full">
       <div className="dashboard-period-hero__content">
-        <div className="dashboard-period-hero__main">
+        <div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5">
               <p className="dashboard-period-hero__eyebrow">Resultado do período</p>
@@ -259,12 +259,9 @@ function PeriodResultHero({ summary, paymentSummary, loading }) {
         </div>
 
         <div className="dashboard-period-metrics">
-          {metrics.map(([label, value, metricTone]) => (
-            <div key={label} className="dashboard-period-metric" data-tone={metricTone}>
-              <div className="dashboard-period-metric__header">
-                <span className="dashboard-period-metric__signal" aria-hidden="true" />
-                <span>{label}</span>
-              </div>
+          {metrics.map(([label, value]) => (
+            <div key={label} className="dashboard-period-metric">
+              <div className="dashboard-period-metric__header">{label}</div>
               <strong>{formatCurrency(value)}</strong>
             </div>
           ))}
