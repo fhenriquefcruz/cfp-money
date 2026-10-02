@@ -2467,14 +2467,6 @@ body {
   color: var(--danger-text);
 }
 
-.dashboard-period-hero__narrative {
-  max-width: 36rem;
-  margin-top: 0.75rem;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.55;
-}
 
 .dashboard-period-status {
   display: inline-flex;
