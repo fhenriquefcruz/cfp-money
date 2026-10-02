@@ -208,61 +208,18 @@ function MonthAttentionCard({ items }) {
   )
 }
 
-function PeriodResultHero({
-  summary,
-  paymentSummary,
-  savingsBalance,
-  monthLabel,
-  loading,
-}) {
-  const income = Number(summary.income) || 0
-  const expenses = Number(summary.expenses) || 0
-  const balance = Number(summary.balance) || 0
-  const reservedThisMonth = Number(summary.savings) || 0
-  const committed = Number(paymentSummary.committedAmount) || 0
-  const expenseShare = income > 0 ? (expenses / income) * 100 : null
-  const marginShare = income > 0 ? (balance / income) * 100 : null
-  const usageWidth = expenseShare === null ? 0 : Math.min(100, Math.max(0, expenseShare))
-  const tone = balance < 0 ? 'danger' : balance === 0 ? 'neutral' : 'success'
-  const statusLabel =
-    balance < 0 ? 'Fluxo em atenção' : balance === 0 ? 'Mês equilibrado' : 'Resultado positivo'
-
-  const narrative =
-    expenseShare === null
-      ? 'Registre receitas para comparar o peso das despesas no período.'
-      : expenseShare > 100
-        ? `As despesas estão ${(expenseShare - 100).toLocaleString('pt-BR', {
-            maximumFractionDigits: 0,
-          })}% acima das receitas registradas.`
-        : `As despesas consumiram ${expenseShare.toLocaleString('pt-BR', {
-            maximumFractionDigits: 0,
-          })}% das receitas registradas.`
-
+function PeriodResultHero({ summary, paymentSummary, monthLabel, loading }) {
+  const income = +summary.income || 0
+  const expenses = +summary.expenses || 0
+  const balance = +summary.balance || 0
+  const expensePercent = income > 0 ? Math.round((expenses / income) * 100) : null
+  const marginPercent = income > 0 ? Math.round((balance / income) * 100) : null
+  const tone = balance < 0 ? 'danger' : 'success'
   const metrics = [
-    {
-      label: 'Receitas',
-      value: income,
-      detail: 'Entradas do mês',
-      tone: 'success',
-    },
-    {
-      label: 'Despesas',
-      value: expenses,
-      detail: 'Saídas do mês',
-      tone: 'danger',
-    },
-    {
-      label: 'Reservado',
-      value: reservedThisMonth,
-      detail: 'Separado neste mês',
-      tone: 'brand',
-    },
-    {
-      label: 'Comprometido',
-      value: committed,
-      detail: 'Obrigações do período',
-      tone: 'warning',
-    },
+    ['Receitas', income, 'Entradas do mês', 'success'],
+    ['Despesas', expenses, 'Saídas do mês', 'danger'],
+    ['Reservado', +summary.savings || 0, 'Separado neste mês', 'brand'],
+    ['Comprometido', +paymentSummary.committedAmount || 0, 'Obrigações do período', 'warning'],
   ]
 
   return (
@@ -277,68 +234,56 @@ function PeriodResultHero({
             </div>
             <span className="dashboard-period-status" data-tone={tone}>
               <span className="dashboard-period-status__dot" aria-hidden="true" />
-              {statusLabel}
+              {balance < 0 ? 'Fluxo em atenção' : 'Resultado positivo'}
             </span>
           </div>
 
           <p className="dashboard-period-hero__month">{monthLabel}</p>
-
           {loading ? (
             <div className="mt-3 h-12 w-52 animate-pulse rounded-2xl bg-[--bg-hover]" />
           ) : (
-            <p
-              className="dashboard-period-hero__value"
-              data-tone={tone}
-              aria-label={`Resultado do período: ${formatCurrency(balance)}`}
-            >
+            <p className="dashboard-period-hero__value" data-tone={tone}>
               {formatCurrency(balance)}
             </p>
           )}
 
-          <p className="dashboard-period-hero__narrative">{narrative}</p>
+          <p className="dashboard-period-hero__narrative">
+            {expensePercent === null
+              ? 'Registre receitas para comparar o peso das despesas.'
+              : expensePercent > 100
+                ? `Despesas ${expensePercent - 100}% acima das receitas registradas.`
+                : `${expensePercent}% das receitas foram consumidas pelas despesas.`}
+          </p>
 
           <div className="dashboard-period-flow">
             <div className="dashboard-period-flow__header">
               <span>Uso das receitas</span>
-              <strong>
-                {expenseShare === null
-                  ? 'Sem base'
-                  : `${expenseShare.toLocaleString('pt-BR', {
-                      maximumFractionDigits: 0,
-                    })}%`}
-              </strong>
+              <strong>{expensePercent === null ? 'Sem base' : `${expensePercent}%`}</strong>
             </div>
             <div className="dashboard-period-flow__track" aria-hidden="true">
               <div
                 className="dashboard-period-flow__fill"
-                data-tone={expenseShare !== null && expenseShare > 100 ? 'danger' : 'brand'}
-                style={{ width: `${usageWidth}%` }}
+                data-tone={expensePercent > 100 ? 'danger' : 'brand'}
+                style={{ width: `${Math.min(100, Math.max(0, expensePercent || 0))}%` }}
               />
             </div>
             <div className="dashboard-period-flow__footer">
               <span>
-                {marginShare === null
-                  ? 'Margem ainda sem base'
-                  : `Margem do período ${marginShare.toLocaleString('pt-BR', {
-                      maximumFractionDigits: 0,
-                    })}%`}
+                {marginPercent === null ? 'Margem ainda sem base' : `Margem do período ${marginPercent}%`}
               </span>
-              {savingsBalance > 0 && (
-                <span>Reserva acumulada {formatCurrency(savingsBalance)}</span>
-              )}
             </div>
           </div>
         </div>
 
         <div className="dashboard-period-metrics">
-          {metrics.map((metric) => (
-            <div key={metric.label} className="dashboard-period-metric" data-tone={metric.tone}>
+          {metrics.map(([label, value, detail, metricTone]) => (
+            <div key={label} className="dashboard-period-metric" data-tone={metricTone}>
               <div className="dashboard-period-metric__header">
                 <span className="dashboard-period-metric__signal" aria-hidden="true" />
-                <span>{metric.label}</span>
+                <span>{label}</span>
               </div>
-              <strong>{formatCurrency(metric.value)}</strong>
-              <small>{metric.detail}</small>
+              <strong>{formatCurrency(value)}</strong>
+              <small>{detail}</small>
             </div>
           ))}
         </div>
@@ -439,11 +384,6 @@ export default function Dashboard() {
   const monthTx = useMemo(
     () => getRecentDashboardTransactions(transactions, monthBounds),
     [transactions, monthBounds],
-  )
-
-  const savingsBalance = useMemo(
-    () => transactions.filter((t) => t.isSavings).reduce((s, t) => s + t.amount, 0),
-    [transactions],
   )
 
   const budgetOverview = useMemo(
@@ -631,7 +571,6 @@ export default function Dashboard() {
           <PeriodResultHero
             summary={currentSummary}
             paymentSummary={paymentSummary}
-            savingsBalance={savingsBalance}
             monthLabel={monthLabel}
             loading={isLoading}
           />
