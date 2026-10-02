@@ -550,7 +550,8 @@ export default function Dashboard() {
                   </div>
                   {expenseShare !== null && (
                     <span className="dashboard-cashflow-story__ratio">
-                      {expenseShare.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}% consumido
+                      {expenseShare.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%
+                      consumido
                     </span>
                   )}
                 </div>
@@ -561,10 +562,7 @@ export default function Dashboard() {
                     <strong>{formatCurrency(currentSummary.income)}</strong>
                   </div>
                   <div className="dashboard-flow-track" aria-hidden="true">
-                    <div
-                      className="dashboard-flow-fill"
-                      style={{ width: `${incomeFlowWidth}%` }}
-                    />
+                    <div className="dashboard-flow-fill" style={{ width: `${incomeFlowWidth}%` }} />
                   </div>
                 </div>
 

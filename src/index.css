@@ -2396,7 +2396,6 @@ body {
   }
 }
 
-
 /* Phase 44 · Dashboard product design */
 .dashboard-period-summary {
   position: relative;
@@ -2419,8 +2418,7 @@ body {
 .dashboard-period-summary[data-result-state='negative'] {
   border-color: color-mix(in srgb, var(--danger-border) 68%, var(--border-default));
   background:
-    radial-gradient(circle at 92% 10%, rgba(239, 68, 68, 0.08), transparent 34%),
-    var(--bg-elevated);
+    radial-gradient(circle at 92% 10%, rgba(239, 68, 68, 0.08), transparent 34%), var(--bg-elevated);
 }
 
 .dashboard-period-summary__glow {
@@ -2695,8 +2693,11 @@ body {
 
 .dashboard-attention-card {
   border-color: color-mix(in srgb, var(--border-default) 80%, var(--brand-200));
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--bg-elevated) 97%, var(--brand-50) 3%), var(--bg-elevated));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-elevated) 97%, var(--brand-50) 3%),
+    var(--bg-elevated)
+  );
 }
 
 @media (min-width: 640px) {
@@ -2737,8 +2738,7 @@ body {
   border-color: rgba(196, 157, 107, 0.24);
   background:
     radial-gradient(circle at 92% 10%, rgba(196, 157, 107, 0.09), transparent 34%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.025), transparent 56%),
-    var(--bg-elevated);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.025), transparent 56%), var(--bg-elevated);
   box-shadow:
     0 26px 80px rgba(0, 0, 0, 0.26),
     inset 0 1px rgba(255, 255, 255, 0.04);
@@ -2747,11 +2747,9 @@ body {
 :root[data-theme='dark'] .dashboard-period-summary[data-result-state='negative'] {
   border-color: rgba(239, 68, 68, 0.25);
   background:
-    radial-gradient(circle at 92% 10%, rgba(239, 68, 68, 0.08), transparent 34%),
-    var(--bg-elevated);
+    radial-gradient(circle at 92% 10%, rgba(239, 68, 68, 0.08), transparent 34%), var(--bg-elevated);
 }
 
 :root[data-theme='dark'] .dashboard-cashflow-story {
   background: rgba(255, 255, 255, 0.025);
 }
-
