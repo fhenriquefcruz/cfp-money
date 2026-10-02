@@ -439,9 +439,7 @@ function EmailNotificationsContent() {
                 variant="secondary"
                 fullWidth
                 loading={action === 'test'}
-                disabled={
-                  !settings.enabled || !verified || !canEnableEmailNotifications(settings)
-                }
+                disabled={!settings.enabled || !verified || !canEnableEmailNotifications(settings)}
                 icon={<Send size={14} />}
                 onClick={requestTest}
               >

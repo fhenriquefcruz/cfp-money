@@ -92,7 +92,9 @@ describe('EmailNotificationsCard', () => {
     })
 
     expect(
-      screen.getByText(/Relatório de teste solicitado\. O processamento pode levar até 15 minutos/i),
+      screen.getByText(
+        /Relatório de teste solicitado\. O processamento pode levar até 15 minutos/i,
+      ),
     ).toBeInTheDocument()
   })
 
