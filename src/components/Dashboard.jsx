@@ -208,17 +208,17 @@ function MonthAttentionCard({ items }) {
   )
 }
 
-function PeriodResultHero({ summary, paymentSummary, monthLabel, loading }) {
+function PeriodResultHero({ summary, paymentSummary, loading }) {
   const income = +summary.income || 0
   const expenses = +summary.expenses || 0
   const balance = +summary.balance || 0
   const expensePercent = income > 0 ? Math.round((expenses / income) * 100) : null
   const tone = balance < 0 ? 'danger' : 'success'
   const metrics = [
-    ['Receitas', income, 'Entradas do mês', 'success'],
-    ['Despesas', expenses, 'Saídas do mês', 'danger'],
-    ['Reservado', +summary.savings || 0, 'Separado neste mês', 'brand'],
-    ['Comprometido', +paymentSummary.committedAmount || 0, 'Obrigações do período', 'warning'],
+    ['Receitas', income, 'success'],
+    ['Despesas', expenses, 'danger'],
+    ['Reservado', +summary.savings || 0, 'brand'],
+    ['Comprometido', +paymentSummary.committedAmount || 0, 'warning'],
   ]
 
   return (
@@ -237,7 +237,6 @@ function PeriodResultHero({ summary, paymentSummary, monthLabel, loading }) {
             </span>
           </div>
 
-          <p className="dashboard-period-hero__month">{monthLabel}</p>
           {loading ? (
             <div className="mt-3 h-12 w-52 animate-pulse rounded-2xl bg-[--bg-hover]" />
           ) : (
@@ -268,14 +267,13 @@ function PeriodResultHero({ summary, paymentSummary, monthLabel, loading }) {
         </div>
 
         <div className="dashboard-period-metrics">
-          {metrics.map(([label, value, detail, metricTone]) => (
+          {metrics.map(([label, value, metricTone]) => (
             <div key={label} className="dashboard-period-metric" data-tone={metricTone}>
               <div className="dashboard-period-metric__header">
                 <span className="dashboard-period-metric__signal" aria-hidden="true" />
                 <span>{label}</span>
               </div>
               <strong>{formatCurrency(value)}</strong>
-              <small>{detail}</small>
             </div>
           ))}
         </div>
@@ -560,7 +558,6 @@ export default function Dashboard() {
           <PeriodResultHero
             summary={currentSummary}
             paymentSummary={paymentSummary}
-            monthLabel={monthLabel}
             loading={isLoading}
           />
         </motion.div>
