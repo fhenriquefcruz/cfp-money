@@ -245,12 +245,6 @@ function PeriodResultHero({ summary, paymentSummary, loading }) {
             </p>
           )}
 
-          <p className="dashboard-period-hero__narrative">
-            {expensePercent === null
-              ? 'Registre receitas para comparar o peso das despesas.'
-              : `Despesas equivalem a ${expensePercent}% das receitas registradas.`}
-          </p>
-
           <div className="dashboard-period-flow">
             <div className="dashboard-period-flow__header">
               <span>Uso das receitas</span>
