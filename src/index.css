@@ -2451,12 +2451,6 @@ body {
   text-transform: uppercase;
 }
 
-.dashboard-period-hero__month {
-  margin-top: 0.625rem;
-  color: var(--text-tertiary);
-  font-size: 0.6875rem;
-  font-weight: 600;
-}
 
 .dashboard-period-hero__value {
   margin-top: 0.375rem;
@@ -2624,14 +2618,6 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.dashboard-period-metric small {
-  display: block;
-  margin-top: 0.375rem;
-  color: var(--text-tertiary);
-  font-size: 0.625rem;
-  font-weight: 600;
-  line-height: 1.35;
-}
 
 .dashboard-section-heading {
   display: grid;
