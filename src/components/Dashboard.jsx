@@ -208,6 +208,157 @@ function MonthAttentionCard({ items }) {
   )
 }
 
+function PeriodResultHero({
+  summary,
+  paymentSummary,
+  savingsBalance,
+  monthLabel,
+  loading,
+}) {
+  const income = Number(summary.income) || 0
+  const expenses = Number(summary.expenses) || 0
+  const balance = Number(summary.balance) || 0
+  const reservedThisMonth = Number(summary.savings) || 0
+  const committed = Number(paymentSummary.committedAmount) || 0
+  const expenseShare = income > 0 ? (expenses / income) * 100 : null
+  const marginShare = income > 0 ? (balance / income) * 100 : null
+  const usageWidth = expenseShare === null ? 0 : Math.min(100, Math.max(0, expenseShare))
+  const tone = balance < 0 ? 'danger' : balance === 0 ? 'neutral' : 'success'
+  const statusLabel =
+    balance < 0 ? 'Fluxo em atenção' : balance === 0 ? 'Mês equilibrado' : 'Resultado positivo'
+
+  const narrative =
+    expenseShare === null
+      ? 'Registre receitas para comparar o peso das despesas no período.'
+      : expenseShare > 100
+        ? `As despesas estão ${(expenseShare - 100).toLocaleString('pt-BR', {
+            maximumFractionDigits: 0,
+          })}% acima das receitas registradas.`
+        : `As despesas consumiram ${expenseShare.toLocaleString('pt-BR', {
+            maximumFractionDigits: 0,
+          })}% das receitas registradas.`
+
+  const metrics = [
+    {
+      label: 'Receitas',
+      value: income,
+      detail: 'Entradas do mês',
+      tone: 'success',
+    },
+    {
+      label: 'Despesas',
+      value: expenses,
+      detail: 'Saídas do mês',
+      tone: 'danger',
+    },
+    {
+      label: 'Reservado',
+      value: reservedThisMonth,
+      detail: 'Separado neste mês',
+      tone: 'brand',
+    },
+    {
+      label: 'Comprometido',
+      value: committed,
+      detail: 'Obrigações do período',
+      tone: 'warning',
+    },
+  ]
+
+  return (
+    <Card variant="elevated" className="dashboard-period-hero h-full">
+      <div className="dashboard-period-hero__glow" aria-hidden="true" />
+      <div className="dashboard-period-hero__content">
+        <div className="dashboard-period-hero__main">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <p className="dashboard-period-hero__eyebrow">Resultado do período</p>
+              <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
+            </div>
+            <span className="dashboard-period-status" data-tone={tone}>
+              <span className="dashboard-period-status__dot" aria-hidden="true" />
+              {statusLabel}
+            </span>
+          </div>
+
+          <p className="dashboard-period-hero__month">{monthLabel}</p>
+
+          {loading ? (
+            <div className="mt-3 h-12 w-52 animate-pulse rounded-2xl bg-[--bg-hover]" />
+          ) : (
+            <p
+              className="dashboard-period-hero__value"
+              data-tone={tone}
+              aria-label={`Resultado do período: ${formatCurrency(balance)}`}
+            >
+              {formatCurrency(balance)}
+            </p>
+          )}
+
+          <p className="dashboard-period-hero__narrative">{narrative}</p>
+
+          <div className="dashboard-period-flow">
+            <div className="dashboard-period-flow__header">
+              <span>Uso das receitas</span>
+              <strong>
+                {expenseShare === null
+                  ? 'Sem base'
+                  : `${expenseShare.toLocaleString('pt-BR', {
+                      maximumFractionDigits: 0,
+                    })}%`}
+              </strong>
+            </div>
+            <div className="dashboard-period-flow__track" aria-hidden="true">
+              <div
+                className="dashboard-period-flow__fill"
+                data-tone={expenseShare !== null && expenseShare > 100 ? 'danger' : 'brand'}
+                style={{ width: `${usageWidth}%` }}
+              />
+            </div>
+            <div className="dashboard-period-flow__footer">
+              <span>
+                {marginShare === null
+                  ? 'Margem ainda sem base'
+                  : `Margem do período ${marginShare.toLocaleString('pt-BR', {
+                      maximumFractionDigits: 0,
+                    })}%`}
+              </span>
+              {savingsBalance > 0 && (
+                <span>Reserva acumulada {formatCurrency(savingsBalance)}</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="dashboard-period-metrics">
+          {metrics.map((metric) => (
+            <div key={metric.label} className="dashboard-period-metric" data-tone={metric.tone}>
+              <div className="dashboard-period-metric__header">
+                <span className="dashboard-period-metric__signal" aria-hidden="true" />
+                <span>{metric.label}</span>
+              </div>
+              <strong>{formatCurrency(metric.value)}</strong>
+              <small>{metric.detail}</small>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+function DashboardSectionHeading({ eyebrow, title, description }) {
+  return (
+    <div className="dashboard-section-heading">
+      <p className="dashboard-section-heading__eyebrow">{eyebrow}</p>
+      <div>
+        <h2>{title}</h2>
+        <p>{description}</p>
+      </div>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { user } = useAuth()
   const {
@@ -477,52 +628,13 @@ export default function Dashboard() {
 
       <div className="dashboard-executive-grid">
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.05 }}>
-          <Card variant="elevated" className="dashboard-period-summary h-full">
-            <div className="grid gap-4 lg:grid-cols-[1.2fr_2fr] lg:items-end">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
-                    Resultado do período
-                  </p>
-                  <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
-                </div>
-                <p className="mt-1 text-[10px] text-[--text-tertiary]">{monthLabel}</p>
-                {isLoading ? (
-                  <div className="mt-2 h-10 w-44 animate-pulse rounded-xl bg-[--bg-hover]" />
-                ) : (
-                  <p
-                    className={`mt-2 break-words text-[clamp(1.8rem,7vw,3rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${
-                      currentSummary.balance >= 0 ? 'text-[--text-primary]' : 'text-[--danger-text]'
-                    }`}
-                  >
-                    {formatCurrency(currentSummary.balance)}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {[
-                  ['Receitas', currentSummary.income, 'Entradas do período'],
-                  ['Despesas', currentSummary.expenses, 'Saídas do período'],
-                  ['Comprometido', paymentSummary.committedAmount || 0, 'Obrigações do mês'],
-                  ['Reservado total', savingsBalance, 'Poupança registrada'],
-                ].map(([label, value, detail]) => (
-                  <div
-                    key={label}
-                    className="min-w-0 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3"
-                  >
-                    <p className="text-[10px] font-bold text-[--text-tertiary]">{label}</p>
-                    <p className="mt-1 break-words text-sm font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere]">
-                      {formatCurrency(value)}
-                    </p>
-                    <p className="mt-1 text-[10px] leading-tight text-[--text-tertiary]">
-                      {detail}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
+          <PeriodResultHero
+            summary={currentSummary}
+            paymentSummary={paymentSummary}
+            savingsBalance={savingsBalance}
+            monthLabel={monthLabel}
+            loading={isLoading}
+          />
         </motion.div>
 
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.075 }}>
@@ -534,6 +646,12 @@ export default function Dashboard() {
       <motion.div {...fade} transition={{ delay: 0.08 }}>
         <PaymentControlCard summary={paymentSummary} loading={isLoading} />
       </motion.div>
+
+      <DashboardSectionHeading
+        eyebrow="Leitura inteligente"
+        title="Entenda o que está por trás dos números"
+        description="Contexto, tendência e saúde financeira para transformar dados em decisões mais claras."
+      />
 
       {/* Resumo executivo: indicadores essenciais e análise do Money */}
       <motion.div
@@ -586,6 +704,12 @@ export default function Dashboard() {
           <MoneyInsightCard referenceDate={viewDate} />
         </div>
       </motion.div>
+
+      <DashboardSectionHeading
+        eyebrow="Comportamento financeiro"
+        title="Evolução e composição do seu mês"
+        description="Compare períodos, identifique mudanças e veja onde o dinheiro está concentrado."
+      />
 
       {/* Análise principal: evolução e composição */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
@@ -827,6 +951,12 @@ export default function Dashboard() {
           </Card>
         </motion.div>
       </div>
+
+      <DashboardSectionHeading
+        eyebrow="Rotina financeira"
+        title="Movimentações e objetivos"
+        description="Acompanhe o que aconteceu recentemente e mantenha suas metas visíveis."
+      />
 
       {/* Linha inferior */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
