@@ -1,0 +1,36 @@
+name: Phase 40H format consent hardening
+
+on:
+  push:
+    branches:
+      - phase-40h-email-test-consent-hardening
+    paths:
+      - .github/workflows/phase-40h-format-consent.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: phase-40h-email-test-consent-hardening
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write src/components/EmailNotificationsCard.jsx src/components/EmailNotificationsCard.test.jsx
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/EmailNotificationsCard.jsx src/components/EmailNotificationsCard.test.jsx
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+          else
+            git commit -m "Phase 40H: format consent hardening"
+            git push origin HEAD:phase-40h-email-test-consent-hardening
+          fi
