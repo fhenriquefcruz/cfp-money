@@ -70,3 +70,31 @@ Ao atender uma exclusão manual, remova também:
 O Worker não percorre todas as contas. Ele consulta apenas `notificationSubscribers`, lê transações somente quando um relatório está vencendo e processa alertas de orçamento pela fila do próprio usuário. Essa arquitetura reduz leituras desnecessárias do Firestore.
 
 O limite `MAX_USERS_PER_RUN` deve ser revisto antes de ultrapassar a escala prevista para o plano gratuito.
+
+
+## Homologação reversível da conta Premium de teste
+
+O workflow **Premium email production validation** valida o fluxo financeiro real de notificações sem deixar alterações permanentes na conta de teste.
+
+A execução:
+
+- exige uma conta existente no Firebase Authentication e no Firestore;
+- exige que o e-mail da conta de teste esteja verificado no Firebase Authentication;
+- bloqueia contas marcadas como `blocked`;
+- concede Premium temporariamente quando o plano de teste estiver inativo ou expirado;
+- salva preferências temporárias com consentimento `1.0.0`;
+- cria um pedido de relatório de teste;
+- executa o Worker somente para o UID configurado;
+- exige confirmação de processamento no documento de preferências;
+- exige um registro `notificationDeliveries` com status `sent`;
+- remove o registro temporário de entrega;
+- restaura as preferências, a inscrição e o plano originais no `finally`.
+
+A validação nunca marca `emailVerified=true` administrativamente. Se o e-mail não estiver verificado, a execução falha antes de qualquer mutação financeira.
+
+Comando local equivalente, desde que as variáveis protegidas estejam disponíveis:
+
+```bash
+npm ci --prefix functions
+npm run notifications:production:validate
+```
