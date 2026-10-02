@@ -1,0 +1,36 @@
+name: Phase 40H format production validation
+
+on:
+  push:
+    branches:
+      - phase-40h-email-notifications-production-validation
+    paths:
+      - .github/workflows/phase-40h-format-production-validation.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: phase-40h-email-notifications-production-validation
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write docs/EMAIL_NOTIFICATIONS_OPERATIONS.md functions/tools/validateEmailNotificationsProduction.js
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/EMAIL_NOTIFICATIONS_OPERATIONS.md functions/tools/validateEmailNotificationsProduction.js
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+          else
+            git commit -m "Phase 40H: format production validation"
+            git push origin HEAD:phase-40h-email-notifications-production-validation
+          fi
