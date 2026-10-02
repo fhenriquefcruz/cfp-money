@@ -2420,7 +2420,7 @@ body {
   opacity: 0.45;
 }
 
-.dashboard-period-hero__glow {
+.dashboard-period-hero::before {
   position: absolute;
   z-index: -1;
   top: -7rem;
@@ -2431,6 +2431,7 @@ body {
   background: var(--brand-100);
   filter: blur(1px);
   opacity: 0.55;
+  content: '';
 }
 
 .dashboard-period-hero__content {
@@ -2482,11 +2483,12 @@ body {
   font-weight: 800;
 }
 
-.dashboard-period-status__dot {
+.dashboard-period-status::before {
   width: 0.375rem;
   height: 0.375rem;
   border-radius: 9999px;
   background: var(--text-tertiary);
+  content: '';
 }
 
 .dashboard-period-status[data-tone='success'] {
@@ -2495,7 +2497,7 @@ body {
   color: var(--success-text);
 }
 
-.dashboard-period-status[data-tone='success'] .dashboard-period-status__dot {
+.dashboard-period-status[data-tone='success']::before {
   background: var(--success-icon);
 }
 
@@ -2505,7 +2507,7 @@ body {
   color: var(--danger-text);
 }
 
-.dashboard-period-status[data-tone='danger'] .dashboard-period-status__dot {
+.dashboard-period-status[data-tone='danger']::before {
   background: var(--danger-icon);
 }
 
