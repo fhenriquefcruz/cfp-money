@@ -223,7 +223,6 @@ function PeriodResultHero({ summary, paymentSummary, loading }) {
 
   return (
     <Card variant="elevated" className="dashboard-period-hero h-full">
-      <div className="dashboard-period-hero__glow" aria-hidden="true" />
       <div className="dashboard-period-hero__content">
         <div className="dashboard-period-hero__main">
           <div className="flex flex-wrap items-center gap-2">
@@ -232,7 +231,6 @@ function PeriodResultHero({ summary, paymentSummary, loading }) {
               <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
             </div>
             <span className="dashboard-period-status" data-tone={tone}>
-              <span className="dashboard-period-status__dot" aria-hidden="true" />
               {balance < 0 ? 'Fluxo em atenção' : 'Resultado positivo'}
             </span>
           </div>
