@@ -2443,8 +2443,7 @@ body {
   min-width: 0;
 }
 
-.dashboard-period-hero__eyebrow,
-.dashboard-section-heading__eyebrow {
+.dashboard-period-hero__eyebrow {
   color: var(--text-tertiary);
   font-size: 0.625rem;
   font-weight: 800;
@@ -2613,20 +2612,14 @@ body {
 }
 
 
-.dashboard-section-heading {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.375rem;
+.dashboard-section-title {
   margin-top: 0.25rem;
+  color: var(--text-tertiary);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
-
-.dashboard-section-heading h2 {
-  color: var(--text-primary);
-  font-size: 1rem;
-  font-weight: 900;
-  letter-spacing: -0.015em;
-}
-
 
 @media (min-width: 768px) {
   .dashboard-period-hero__content {
@@ -2646,10 +2639,4 @@ body {
     min-height: 7.5rem;
   }
 
-  .dashboard-section-heading {
-    grid-template-columns: 9rem minmax(0, 1fr);
-    align-items: start;
-    gap: 1.25rem;
-    padding-top: 0.25rem;
-  }
 }
