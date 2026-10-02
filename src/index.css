@@ -2395,3 +2395,298 @@ body {
     grid-template-columns: minmax(0, 1.65fr) minmax(18rem, 0.85fr);
   }
 }
+
+
+/* Phase 44 · Dashboard como superfície principal do produto */
+.dashboard-period-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: var(--border-default);
+  background:
+    linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-surface) 58%, var(--bg-subtle) 100%);
+}
+
+.dashboard-period-hero::after {
+  position: absolute;
+  z-index: -1;
+  right: -7rem;
+  bottom: -9rem;
+  width: 22rem;
+  height: 22rem;
+  border: 1px solid var(--brand-200);
+  border-radius: 9999px;
+  content: '';
+  opacity: 0.45;
+}
+
+.dashboard-period-hero__glow {
+  position: absolute;
+  z-index: -1;
+  top: -7rem;
+  right: -4rem;
+  width: 19rem;
+  height: 19rem;
+  border-radius: 9999px;
+  background: var(--brand-100);
+  filter: blur(1px);
+  opacity: 0.55;
+}
+
+.dashboard-period-hero__content {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.dashboard-period-hero__main {
+  min-width: 0;
+}
+
+.dashboard-period-hero__eyebrow,
+.dashboard-section-heading__eyebrow {
+  color: var(--text-tertiary);
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.dashboard-period-hero__month {
+  margin-top: 0.625rem;
+  color: var(--text-tertiary);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.dashboard-period-hero__value {
+  margin-top: 0.375rem;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: clamp(2.25rem, 8vw, 4rem);
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-period-hero__value[data-tone='danger'] {
+  color: var(--danger-text);
+}
+
+.dashboard-period-hero__narrative {
+  max-width: 36rem;
+  margin-top: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.dashboard-period-status {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid var(--border-default);
+  border-radius: 9999px;
+  padding-inline: 0.625rem;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-size: 0.625rem;
+  font-weight: 800;
+}
+
+.dashboard-period-status__dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: var(--text-tertiary);
+}
+
+.dashboard-period-status[data-tone='success'] {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.dashboard-period-status[data-tone='success'] .dashboard-period-status__dot {
+  background: var(--success-icon);
+}
+
+.dashboard-period-status[data-tone='danger'] {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.dashboard-period-status[data-tone='danger'] .dashboard-period-status__dot {
+  background: var(--danger-icon);
+}
+
+.dashboard-period-flow {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 1rem;
+}
+
+.dashboard-period-flow__header,
+.dashboard-period-flow__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.dashboard-period-flow__header {
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.dashboard-period-flow__header strong {
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-period-flow__track {
+  height: 0.5rem;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--bg-hover);
+}
+
+.dashboard-period-flow__fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--brand-600);
+  transition: width 300ms ease;
+}
+
+.dashboard-period-flow__fill[data-tone='danger'] {
+  background: var(--danger-icon);
+}
+
+.dashboard-period-flow__footer {
+  margin-top: 0.5rem;
+  color: var(--text-tertiary);
+  font-size: 0.625rem;
+  line-height: 1.4;
+}
+
+.dashboard-period-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+.dashboard-period-metric {
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  padding: 0.875rem;
+  background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+}
+
+.dashboard-period-metric__header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--text-tertiary);
+  font-size: 0.625rem;
+  font-weight: 800;
+}
+
+.dashboard-period-metric__signal {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  flex: 0 0 auto;
+  border-radius: 9999px;
+  background: var(--text-tertiary);
+}
+
+.dashboard-period-metric[data-tone='success'] .dashboard-period-metric__signal {
+  background: var(--success-icon);
+}
+
+.dashboard-period-metric[data-tone='danger'] .dashboard-period-metric__signal {
+  background: var(--danger-icon);
+}
+
+.dashboard-period-metric[data-tone='brand'] .dashboard-period-metric__signal {
+  background: var(--brand-600);
+}
+
+.dashboard-period-metric[data-tone='warning'] .dashboard-period-metric__signal {
+  background: var(--warning-icon);
+}
+
+.dashboard-period-metric strong {
+  display: block;
+  margin-top: 0.5rem;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: clamp(0.875rem, 3vw, 1.125rem);
+  font-weight: 900;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-period-metric small {
+  display: block;
+  margin-top: 0.375rem;
+  color: var(--text-tertiary);
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.dashboard-section-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+}
+
+.dashboard-section-heading h2 {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+}
+
+.dashboard-section-heading p:not(.dashboard-section-heading__eyebrow) {
+  margin-top: 0.125rem;
+  max-width: 48rem;
+  color: var(--text-tertiary);
+  font-size: 0.6875rem;
+  line-height: 1.55;
+}
+
+@media (min-width: 768px) {
+  .dashboard-period-hero__content {
+    grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 0.9fr);
+    align-items: stretch;
+    gap: 1.5rem;
+  }
+
+  .dashboard-period-metrics {
+    align-content: stretch;
+  }
+
+  .dashboard-period-metric {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 7.5rem;
+  }
+
+  .dashboard-section-heading {
+    grid-template-columns: 9rem minmax(0, 1fr);
+    align-items: start;
+    gap: 1.25rem;
+    padding-top: 0.25rem;
+  }
+}
