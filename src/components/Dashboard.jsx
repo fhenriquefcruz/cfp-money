@@ -23,6 +23,10 @@ import {
   ChevronRight,
   Clock3,
   CheckCircle2,
+  TrendingUp,
+  TrendingDown,
+  ShieldCheck,
+  PiggyBank,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -416,6 +420,29 @@ export default function Dashboard() {
     return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'
   }
   const isLoading = transactionsLoading
+  const expenseShare =
+    currentSummary.income > 0 ? (currentSummary.expenses / currentSummary.income) * 100 : null
+  const resultRate =
+    currentSummary.income > 0 ? (currentSummary.balance / currentSummary.income) * 100 : null
+  const resultState =
+    currentSummary.balance > 0 ? 'positive' : currentSummary.balance < 0 ? 'negative' : 'neutral'
+  const resultHeadline =
+    resultState === 'positive'
+      ? 'Período no azul'
+      : resultState === 'negative'
+        ? 'Fluxo pressionado'
+        : 'Período equilibrado'
+  const resultNarrative =
+    resultState === 'positive' && resultRate !== null
+      ? `${Math.abs(resultRate).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}% das receitas permaneceram como resultado do mês.`
+      : resultState === 'negative' && resultRate !== null
+        ? `As despesas superaram as receitas em ${Math.abs(resultRate).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}% da receita do período.`
+        : resultState === 'negative'
+          ? 'Há despesas no período sem uma base de receitas suficiente para absorvê-las.'
+          : 'Receitas e despesas ficaram equilibradas neste período.'
+  const flowScale = Math.max(currentSummary.income, currentSummary.expenses, 1)
+  const incomeFlowWidth = Math.min(100, (currentSummary.income / flowScale) * 100)
+  const expenseFlowWidth = Math.min(100, (currentSummary.expenses / flowScale) * 100)
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
@@ -457,9 +484,8 @@ export default function Dashboard() {
               </button>
             )}
           </div>
-          {/* Saudação secundária */}
           <p className="dashboard-greeting text-xs text-[--text-tertiary]">
-            {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'}
+            {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'} · seu mês em uma visão.
           </p>
         </div>
         <Link to="/transactions" className="dashboard-quick-add w-auto flex-shrink-0">
@@ -477,49 +503,144 @@ export default function Dashboard() {
 
       <div className="dashboard-executive-grid">
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.05 }}>
-          <Card variant="elevated" className="dashboard-period-summary h-full">
-            <div className="grid gap-4 lg:grid-cols-[1.2fr_2fr] lg:items-end">
-              <div className="min-w-0">
+          <Card
+            variant="elevated"
+            className="dashboard-period-summary h-full"
+            data-result-state={resultState}
+          >
+            <div className="dashboard-period-summary__glow" aria-hidden="true" />
+
+            <div className="dashboard-period-summary__header">
+              <div>
                 <div className="flex items-center gap-1.5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
-                    Resultado do período
-                  </p>
+                  <p className="dashboard-period-summary__eyebrow">Resultado do período</p>
                   <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
                 </div>
-                <p className="mt-1 text-[10px] text-[--text-tertiary]">{monthLabel}</p>
-                {isLoading ? (
-                  <div className="mt-2 h-10 w-44 animate-pulse rounded-xl bg-[--bg-hover]" />
+                <p className="dashboard-period-summary__period">{monthLabel}</p>
+              </div>
+
+              <span className="dashboard-result-status" data-state={resultState}>
+                {resultState === 'positive' ? (
+                  <TrendingUp size={13} />
+                ) : resultState === 'negative' ? (
+                  <TrendingDown size={13} />
                 ) : (
-                  <p
-                    className={`mt-2 break-words text-[clamp(1.8rem,7vw,3rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${
-                      currentSummary.balance >= 0 ? 'text-[--text-primary]' : 'text-[--danger-text]'
-                    }`}
-                  >
+                  <ShieldCheck size={13} />
+                )}
+                {resultHeadline}
+              </span>
+            </div>
+
+            <div className="dashboard-period-summary__main">
+              <div className="dashboard-period-result">
+                <p className="dashboard-period-result__label">Resultado líquido do mês</p>
+                {isLoading ? (
+                  <div className="mt-2 h-12 w-52 animate-pulse rounded-xl bg-[--bg-hover]" />
+                ) : (
+                  <p className="dashboard-period-result__value">
                     {formatCurrency(currentSummary.balance)}
                   </p>
                 )}
+                <p className="dashboard-period-result__narrative">{resultNarrative}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {[
-                  ['Receitas', currentSummary.income, 'Entradas do período'],
-                  ['Despesas', currentSummary.expenses, 'Saídas do período'],
-                  ['Comprometido', paymentSummary.committedAmount || 0, 'Obrigações do mês'],
-                  ['Reservado total', savingsBalance, 'Poupança registrada'],
-                ].map(([label, value, detail]) => (
-                  <div
-                    key={label}
-                    className="min-w-0 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3"
-                  >
-                    <p className="text-[10px] font-bold text-[--text-tertiary]">{label}</p>
-                    <p className="mt-1 break-words text-sm font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere]">
-                      {formatCurrency(value)}
-                    </p>
-                    <p className="mt-1 text-[10px] leading-tight text-[--text-tertiary]">
-                      {detail}
+              <div className="dashboard-cashflow-story">
+                <div className="dashboard-cashflow-story__heading">
+                  <div>
+                    <p className="dashboard-cashflow-story__title">Como o mês se compõe</p>
+                    <p className="dashboard-cashflow-story__subtitle">
+                      Compare entradas e saídas sem perder o contexto.
                     </p>
                   </div>
-                ))}
+                  {expenseShare !== null && (
+                    <span className="dashboard-cashflow-story__ratio">
+                      {expenseShare.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}% consumido
+                    </span>
+                  )}
+                </div>
+
+                <div className="dashboard-flow-row" data-kind="income">
+                  <div className="dashboard-flow-row__meta">
+                    <span>Receitas</span>
+                    <strong>{formatCurrency(currentSummary.income)}</strong>
+                  </div>
+                  <div className="dashboard-flow-track" aria-hidden="true">
+                    <div
+                      className="dashboard-flow-fill"
+                      style={{ width: `${incomeFlowWidth}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="dashboard-flow-row" data-kind="expense">
+                  <div className="dashboard-flow-row__meta">
+                    <span>Despesas</span>
+                    <strong>{formatCurrency(currentSummary.expenses)}</strong>
+                  </div>
+                  <div className="dashboard-flow-track" aria-hidden="true">
+                    <div
+                      className="dashboard-flow-fill"
+                      style={{ width: `${expenseFlowWidth}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="dashboard-period-summary__support">
+              <div className="dashboard-period-support-item">
+                <div className="dashboard-period-support-item__icon" data-kind="usage">
+                  {expenseShare !== null && expenseShare <= 100 ? (
+                    <TrendingUp size={15} />
+                  ) : (
+                    <TrendingDown size={15} />
+                  )}
+                </div>
+                <div>
+                  <p className="dashboard-period-support-item__label">Uso da receita</p>
+                  <p className="dashboard-period-support-item__value">
+                    {expenseShare === null
+                      ? 'Sem base de receita'
+                      : `${expenseShare.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%`}
+                  </p>
+                  <p className="dashboard-period-support-item__detail">
+                    {expenseShare === null
+                      ? 'Adicione receitas para medir a pressão das despesas.'
+                      : expenseShare <= 100
+                        ? 'Parcela da receita consumida pelas despesas.'
+                        : 'As despesas ultrapassam a receita do período.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="dashboard-period-support-item">
+                <div className="dashboard-period-support-item__icon" data-kind="commitment">
+                  <ShieldCheck size={15} />
+                </div>
+                <div>
+                  <p className="dashboard-period-support-item__label">Compromissos do mês</p>
+                  <p className="dashboard-period-support-item__value">
+                    {formatCurrency(paymentSummary.committedAmount || 0)}
+                  </p>
+                  <p className="dashboard-period-support-item__detail">
+                    Obrigações mapeadas para o período.
+                  </p>
+                </div>
+              </div>
+
+              <div className="dashboard-period-support-item">
+                <div className="dashboard-period-support-item__icon" data-kind="reserve">
+                  <PiggyBank size={15} />
+                </div>
+                <div>
+                  <p className="dashboard-period-support-item__label">Reserva acumulada</p>
+                  <p className="dashboard-period-support-item__value">
+                    {formatCurrency(savingsBalance)}
+                  </p>
+                  <p className="dashboard-period-support-item__detail">
+                    Poupança registrada ao longo do histórico.
+                  </p>
+                </div>
               </div>
             </div>
           </Card>
