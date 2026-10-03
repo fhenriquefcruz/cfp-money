@@ -170,14 +170,17 @@ const fullVulnerabilities = fullAudit.vulnerabilities ?? {}
 
 // Exceção temporária e estreita para um advisory sem release corrigida em braces.
 // O npm propaga a mesma vulnerabilidade por várias ferramentas de build (Tailwind,
-// gh-pages, firebase-tools etc.). A exceção só vale para dependências dev-only,
-// somente quando todas as folhas do encadeamento apontam para este advisory e
-// enquanto o próprio pacote braces continuar sem fixAvailable.
-const toleratedDevOnlyAdvisories = new Set([
-  'https://github.com/advisories/ghsa-vfj7-8cjw-p6xm',
+// gh-pages, firebase-tools etc.). A exceção só vale para dependências dev-only e
+// somente quando toda folha high/critical do encadeamento for exatamente o
+// advisory conhecido de braces.
+const toleratedDevOnlyAdvisories = new Map([
+  [
+    'https://github.com/advisories/ghsa-vfj7-8cjw-p6xm',
+    { packageName: 'braces', range: '<=3.0.3' },
+  ],
 ])
 
-const collectLeafAdvisories = (packageName, seen = new Set()) => {
+const collectHighSeverityLeaves = (packageName, seen = new Set()) => {
   if (seen.has(packageName)) return []
   seen.add(packageName)
 
@@ -186,30 +189,48 @@ const collectLeafAdvisories = (packageName, seen = new Set()) => {
 
   return (entry.via ?? []).flatMap((via) => {
     if (typeof via === 'string') {
-      return collectLeafAdvisories(via, seen)
+      const linked = fullVulnerabilities[via]
+      if (!linked || (linked.severity !== 'high' && linked.severity !== 'critical')) {
+        return []
+      }
+      return collectHighSeverityLeaves(via, new Set(seen))
     }
 
-    return via?.url ? [String(via.url).toLowerCase()] : []
+    if (!via?.url || (via.severity !== 'high' && via.severity !== 'critical')) {
+      return []
+    }
+
+    return [
+      {
+        url: String(via.url).toLowerCase(),
+        packageName: via.name || via.dependency || packageName,
+        range: via.range || '',
+      },
+    ]
   })
 }
 
-const unresolvedBracesAdvisory =
-  fullVulnerabilities.braces?.fixAvailable === false &&
-  collectLeafAdvisories('braces').every((url) => toleratedDevOnlyAdvisories.has(url))
+const isToleratedDevLeaf = (leaf) => {
+  const expected = toleratedDevOnlyAdvisories.get(leaf.url)
+  return (
+    expected &&
+    leaf.packageName === expected.packageName &&
+    leaf.range === expected.range
+  )
+}
 
 for (const [packageName, entry] of Object.entries(fullVulnerabilities)) {
   if (entry.severity !== 'high' && entry.severity !== 'critical') continue
 
-  const leafAdvisories = collectLeafAdvisories(packageName)
+  const highLeaves = collectHighSeverityLeaves(packageName)
   const isDevOnly = !productionVulnerabilities[packageName]
   const isOnlyToleratedAdvisory =
-    unresolvedBracesAdvisory &&
-    leafAdvisories.length > 0 &&
-    leafAdvisories.every((url) => toleratedDevOnlyAdvisories.has(url))
+    highLeaves.length > 0 && highLeaves.every(isToleratedDevLeaf)
 
   if (isDevOnly && isOnlyToleratedAdvisory) {
+    const urls = [...new Set(highLeaves.map((leaf) => leaf.url))]
     console.warn(
-      `Auditoria: exceção dev-only temporária para ${packageName} (${[...new Set(leafAdvisories)].join(', ')}).`,
+      `Auditoria: exceção dev-only temporária para ${packageName} (${urls.join(', ')}).`,
     )
     continue
   }
