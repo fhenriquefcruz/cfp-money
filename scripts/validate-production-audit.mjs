@@ -212,11 +212,7 @@ const collectHighSeverityLeaves = (packageName, seen = new Set()) => {
 
 const isToleratedDevLeaf = (leaf) => {
   const expected = toleratedDevOnlyAdvisories.get(leaf.url)
-  return (
-    expected &&
-    leaf.packageName === expected.packageName &&
-    leaf.range === expected.range
-  )
+  return expected && leaf.packageName === expected.packageName && leaf.range === expected.range
 }
 
 for (const [packageName, entry] of Object.entries(fullVulnerabilities)) {
