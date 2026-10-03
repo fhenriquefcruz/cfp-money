@@ -54,7 +54,7 @@ test('não exibe pontuação enquanto classificações suspeitas aguardam revis�
     </MemoryRouter>,
   )
 
-  expect(screen.getByText('Indicador financeiro · Em revisão')).toBeInTheDocument()
+  expect(screen.getByText('Saúde financeira · Em revisão')).toBeInTheDocument()
   expect(screen.getByText(/Ação necessária: Revisar classificações/i)).toBeInTheDocument()
   expect(screen.getByRole('link', { name: /Revisar categorias/i })).toHaveAttribute(
     'href',

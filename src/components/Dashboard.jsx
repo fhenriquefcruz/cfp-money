@@ -124,84 +124,45 @@ const TxItem = ({ tx, categories }) => {
 }
 
 function MonthAttentionCard({ items }) {
-  const toneClasses = {
-    danger: {
-      icon: 'bg-[--danger-bg] text-[--danger-icon] border-[--danger-border]',
-      link: 'hover:border-[--danger-border]',
-    },
-    warning: {
-      icon: 'bg-[--warning-bg] text-[--warning-icon] border-[--warning-border]',
-      link: 'hover:border-[--warning-border]',
-    },
-    brand: {
-      icon: 'bg-[--brand-50] text-[--brand-700] border-[--brand-200]',
-      link: 'hover:border-[--brand-300]',
-    },
-  }
-
   return (
-    <Card variant="elevated" className="dashboard-attention-card overflow-hidden">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+    <Card variant="elevated" className="dashboard-attention-card">
+      <div>
         <div>
-          <div className="flex items-center gap-2">
-            <Zap size={15} className="text-[--brand-600]" />
-            <h2 className="text-sm font-black text-[--text-primary]">O que exige atenção</h2>
+          <div className="dashboard-attention-card__title">
+            <Zap size={15} />
+            <h2>Prioridades do mês</h2>
           </div>
-          <p className="mt-1 text-xs text-[--text-tertiary]">
-            Prioridades do período, ordenadas por impacto e urgência.
-          </p>
+          <p>O que merece sua atenção agora.</p>
         </div>
-        {items.length > 0 && (
-          <span className="rounded-full border border-[--border-default] bg-[--bg-subtle] px-2.5 py-1 text-[10px] font-bold text-[--text-secondary]">
-            {items.length} {items.length === 1 ? 'ponto' : 'pontos'}
-          </span>
-        )}
       </div>
 
       {items.length === 0 ? (
-        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-[--success-border] bg-[--success-bg] p-3">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-[--success-border] text-[--success-icon]">
+        <div className="dashboard-attention-card__empty">
+          <div className="dashboard-attention-card__empty-icon">
             <CheckCircle2 size={17} />
           </div>
           <div>
-            <p className="text-sm font-bold text-[--success-text]">Nada crítico por agora</p>
-            <p className="mt-0.5 text-[10px] leading-relaxed text-[--success-text]">
-              Pagamentos e orçamentos não apresentam alertas relevantes neste mês.
-            </p>
+            <p>Tudo sob controle</p>
+            <span>Sem alertas relevantes em pagamentos ou orçamentos neste mês.</span>
           </div>
         </div>
       ) : (
-        <div className="mt-4 grid grid-cols-1 gap-2">
-          {items.map(({ id, title, detail, actionLabel, to, tone, icon: Icon }) => {
-            const classes = toneClasses[tone] || toneClasses.brand
-
-            return (
-              <Link
-                key={id}
-                to={to}
-                className={`group flex min-w-0 items-start gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 transition-colors hover:bg-[--bg-hover] ${classes.link}`}
-              >
-                <div
-                  className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border ${classes.icon}`}
-                >
-                  <Icon size={16} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-black text-[--text-primary]">{title}</p>
-                  <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
-                    {detail}
-                  </p>
-                  <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand]">
-                    {actionLabel || 'Ver detalhes'}
-                    <ChevronRight
-                      size={11}
-                      className="transition-transform group-hover:translate-x-0.5"
-                    />
-                  </span>
-                </div>
-              </Link>
-            )
-          })}
+        <div className="dashboard-attention-card__list">
+          {items.map(({ id, title, detail, actionLabel, to, icon: Icon }) => (
+            <Link key={id} to={to} className="dashboard-attention-card__item">
+              <div className="dashboard-attention-card__item-icon">
+                <Icon size={16} />
+              </div>
+              <div className="dashboard-attention-card__item-copy">
+                <p>{title}</p>
+                <span>{detail}</span>
+                <strong>
+                  {actionLabel || 'Ver detalhes'}
+                  <ChevronRight size={11} />
+                </strong>
+              </div>
+            </Link>
+          ))}
         </div>
       )}
     </Card>
@@ -230,6 +191,9 @@ export default function Dashboard() {
   const month = viewDate.getMonth()
   const rawMonthLabel = format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })
   const monthLabel = rawMonthLabel.charAt(0).toUpperCase() + rawMonthLabel.slice(1)
+  const rawCompactMonthLabel = format(viewDate, 'MMMM yyyy', { locale: ptBR })
+  const compactMonthLabel =
+    rawCompactMonthLabel.charAt(0).toUpperCase() + rawCompactMonthLabel.slice(1)
   const isCurrentMonth = year === new Date().getFullYear() && month === new Date().getMonth()
 
   const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
@@ -416,6 +380,12 @@ export default function Dashboard() {
     return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'
   }
   const isLoading = transactionsLoading
+  const expenseIncomeRatio =
+    currentSummary.income > 0
+      ? Math.round((currentSummary.expenses / currentSummary.income) * 100)
+      : null
+  const resultTone =
+    currentSummary.balance > 0 ? 'positive' : currentSummary.balance < 0 ? 'negative' : 'neutral'
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
@@ -439,7 +409,8 @@ export default function Dashboard() {
               <ChevronLeft size={16} />
             </button>
             <h1 className="min-w-0 truncate text-base font-black text-[--text-primary] min-[390px]:text-lg sm:text-2xl">
-              {monthLabel}
+              <span className="sm:hidden">{compactMonthLabel}</span>
+              <span className="hidden sm:inline">{monthLabel}</span>
             </h1>
             <button
               onClick={() => setViewDate((d) => addMonths(d, 1))}
@@ -477,50 +448,67 @@ export default function Dashboard() {
 
       <div className="dashboard-executive-grid">
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.05 }}>
-          <Card variant="elevated" className="dashboard-period-summary h-full">
-            <div className="grid gap-4 lg:grid-cols-[1.2fr_2fr] lg:items-end">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
-                    Resultado do período
-                  </p>
+          <Card variant="hero" className="dashboard-period-summary dashboard-period-hero h-full">
+            <div className="dashboard-period-hero__main">
+              <div className="dashboard-period-hero__amount">
+                <div className="dashboard-period-hero__eyebrow">
+                  <span>Resultado do período</span>
                   <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
                 </div>
-                <p className="mt-1 text-[10px] text-[--text-tertiary]">{monthLabel}</p>
-                {isLoading ? (
-                  <div className="mt-2 h-10 w-44 animate-pulse rounded-xl bg-[--bg-hover]" />
-                ) : (
-                  <p
-                    className={`mt-2 break-words text-[clamp(1.8rem,7vw,3rem)] font-black leading-none tabular-nums [overflow-wrap:anywhere] ${
-                      currentSummary.balance >= 0 ? 'text-[--text-primary]' : 'text-[--danger-text]'
-                    }`}
-                  >
-                    {formatCurrency(currentSummary.balance)}
-                  </p>
-                )}
+                <p className="dashboard-period-hero__value">
+                  {isLoading ? '—' : formatCurrency(currentSummary.balance)}
+                </p>
+                <span className="dashboard-period-hero__status" data-tone={resultTone}>
+                  {resultTone === 'positive'
+                    ? 'Período no azul'
+                    : resultTone === 'negative'
+                      ? 'Fluxo pressionado'
+                      : 'Período equilibrado'}
+                </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {[
-                  ['Receitas', currentSummary.income, 'Entradas do período'],
-                  ['Despesas', currentSummary.expenses, 'Saídas do período'],
-                  ['Comprometido', paymentSummary.committedAmount || 0, 'Obrigações do mês'],
-                  ['Reservado total', savingsBalance, 'Poupança registrada'],
-                ].map(([label, value, detail]) => (
-                  <div
-                    key={label}
-                    className="min-w-0 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3"
-                  >
-                    <p className="text-[10px] font-bold text-[--text-tertiary]">{label}</p>
-                    <p className="mt-1 break-words text-sm font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere]">
-                      {formatCurrency(value)}
-                    </p>
-                    <p className="mt-1 text-[10px] leading-tight text-[--text-tertiary]">
-                      {detail}
-                    </p>
-                  </div>
-                ))}
+              <div className="dashboard-period-hero__signal">
+                <div className="dashboard-period-hero__signal-head">
+                  <span>Uso das receitas</span>
+                  <strong>
+                    {expenseIncomeRatio === null ? 'Sem base' : `${expenseIncomeRatio}%`}
+                  </strong>
+                </div>
+                <div className="dashboard-period-hero__track" aria-hidden="true">
+                  <span
+                    data-tone={
+                      expenseIncomeRatio !== null && expenseIncomeRatio > 100
+                        ? 'negative'
+                        : 'positive'
+                    }
+                    style={{ width: `${Math.min(100, expenseIncomeRatio || 0)}%` }}
+                  />
+                </div>
+                <p className="dashboard-period-hero__story">
+                  {expenseIncomeRatio === null
+                    ? 'Registre receitas para comparar o quanto das entradas está sendo consumido.'
+                    : expenseIncomeRatio <= 100
+                      ? `As despesas consumiram ${expenseIncomeRatio}% das receitas deste mês.`
+                      : `As despesas estão ${expenseIncomeRatio - 100}% acima das receitas deste mês.`}
+                </p>
               </div>
+            </div>
+
+            <div className="dashboard-period-hero__metrics">
+              {[
+                ['Receitas', currentSummary.income, 'income'],
+                ['Despesas', currentSummary.expenses, 'expense'],
+                ['Comprometido', paymentSummary.committedAmount || 0, 'commitment'],
+                ['Reservado', savingsBalance, 'reserve'],
+              ].map(([label, value, kind]) => (
+                <div key={label} className="dashboard-period-metric" data-kind={kind}>
+                  <p className="dashboard-period-metric__label">
+                    <span aria-hidden="true" />
+                    {label}
+                  </p>
+                  <p className="dashboard-period-metric__value">{formatCurrency(value)}</p>
+                </div>
+              ))}
             </div>
           </Card>
         </motion.div>
@@ -548,9 +536,7 @@ export default function Dashboard() {
               <div>
                 <div className="mb-1 flex items-center gap-1.5">
                   <Zap size={14} className="text-[--brand-600]" />
-                  <p className="text-xs font-semibold text-[--text-tertiary]">
-                    Média de gastos · 3 meses
-                  </p>
+                  <p className="text-xs font-semibold text-[--text-tertiary]">Ritmo de gastos</p>
                   <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
                 </div>
                 {isLoading ? (
@@ -561,7 +547,7 @@ export default function Dashboard() {
                   </p>
                 )}
                 <p className="dashboard-forecast-helper mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
-                  Média dos 3 meses anteriores para apoiar o planejamento.
+                  Média dos últimos 3 meses para orientar o planejamento.
                 </p>
               </div>
               <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
@@ -574,7 +560,7 @@ export default function Dashboard() {
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="flex items-center gap-1.5">
                 <Heart size={14} className="text-[--danger-icon]" />
-                <p className="text-xs font-semibold text-[--text-tertiary]">Indicador financeiro</p>
+                <p className="text-xs font-semibold text-[--text-tertiary]">Saúde financeira</p>
                 <InfoTooltip text="Indicador de 0 a 100 baseado em equilíbrio do período, reserva, aderência a orçamentos, atrasos e relação despesas/receitas. Não representa diagnóstico financeiro completo." />
               </div>
             </div>
@@ -594,9 +580,7 @@ export default function Dashboard() {
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-[--text-primary]">
-                    Receitas e despesas nos últimos {trendMonths} meses
-                  </h3>
+                  <h3 className="text-sm font-bold text-[--text-primary]">Evolução financeira</h3>
                   <InfoTooltip text="Valores agrupados pela data da movimentação. As linhas ligam pontos mensais reais, sem estimar valores entre os meses." />
                 </div>
                 <p className="mt-1 text-xs text-[--text-tertiary]">
@@ -745,7 +729,7 @@ export default function Dashboard() {
           <Card className="h-full">
             <div className="mb-3">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-[--text-primary]">Gastos por categoria</h3>
+                <h3 className="text-sm font-bold text-[--text-primary]">Composição dos gastos</h3>
                 <InfoTooltip text="Despesas do mês pela data da movimentação, ordenadas do maior para o menor gasto." />
               </div>
               <p className="mt-1 text-xs text-[--text-tertiary]">
