@@ -1,0 +1,36 @@
+name: Security format audit policy
+
+on:
+  push:
+    branches:
+      - security-dev-only-braces-advisory
+    paths:
+      - .github/workflows/security-format-audit-policy.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: security-dev-only-braces-advisory
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write scripts/validate-production-audit.mjs
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/validate-production-audit.mjs
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+          else
+            git commit -m "Security: format audit policy"
+            git push origin HEAD:security-dev-only-braces-advisory
+          fi
