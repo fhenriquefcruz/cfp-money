@@ -220,14 +220,11 @@ for (const [packageName, entry] of Object.entries(fullVulnerabilities)) {
 
   const highLeaves = collectHighSeverityLeaves(packageName)
   const isDevOnly = !productionVulnerabilities[packageName]
-  const isOnlyToleratedAdvisory =
-    highLeaves.length > 0 && highLeaves.every(isToleratedDevLeaf)
+  const isOnlyToleratedAdvisory = highLeaves.length > 0 && highLeaves.every(isToleratedDevLeaf)
 
   if (isDevOnly && isOnlyToleratedAdvisory) {
     const urls = [...new Set(highLeaves.map((leaf) => leaf.url))]
-    console.warn(
-      `Auditoria: exceção dev-only temporária para ${packageName} (${urls.join(', ')}).`,
-    )
+    console.warn(`Auditoria: exceção dev-only temporária para ${packageName} (${urls.join(', ')}).`)
     continue
   }
 
