@@ -44,7 +44,7 @@ export default function FinancialHealthScore({ report }) {
 
         <div className="dashboard-health-copy min-w-0 flex-1">
           <p className="text-sm font-bold text-[--text-primary]">
-            Indicador financeiro · {report?.label || 'Em atenção'}
+            Saúde financeira · {report?.label || 'Em atenção'}
           </p>
           <p className="mt-0.5 text-xs text-[--text-tertiary]">
             {report?.summary || 'Revise os fatores do indicador.'}

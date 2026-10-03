@@ -156,47 +156,6 @@ body {
   letter-spacing: 0.01em;
 }
 
-.dashboard-balance-breakdown > div {
-  min-width: 0;
-  padding-inline: clamp(0.15rem, 1.2vw, 0.8rem);
-}
-
-.dashboard-balance-breakdown > div + div {
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dashboard-balance-breakdown > div:first-child {
-  padding-left: 0;
-}
-
-.dashboard-balance-breakdown > div:last-child {
-  padding-right: 0;
-}
-
-.aurora-balance-hero {
-  isolation: isolate;
-  border: 1px solid rgba(196, 157, 107, 0.24);
-  box-shadow:
-    0 30px 85px rgba(23, 25, 24, 0.28),
-    0 10px 30px rgba(196, 157, 107, 0.08),
-    inset 0 1px rgba(255, 255, 255, 0.14);
-}
-
-.aurora-balance-hero::after {
-  position: absolute;
-  right: -12%;
-  bottom: -45%;
-  width: min(22rem, 72vw);
-  aspect-ratio: 1;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  content: '';
-  pointer-events: none;
-  box-shadow:
-    0 0 0 2.5rem rgba(255, 255, 255, 0.025),
-    0 0 0 5rem rgba(255, 255, 255, 0.018);
-}
-
 .dashboard-bento-grid,
 .dashboard-chart-grid,
 .dashboard-bento-grid > *,
@@ -370,11 +329,6 @@ body {
   .dashboard-premium__toolbar {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .aurora-balance-hero {
-    margin-inline: -0.25rem;
-    border-radius: 24px;
   }
 
   .dashboard-chart-grid {
@@ -2382,16 +2336,305 @@ body {
   align-items: stretch;
 }
 
-.dashboard-executive-grid > * {
-  min-width: 0;
+/* Phase 44 · identidade premium do Dashboard */
+.dashboard-period-hero {
+  overflow: hidden;
+  padding: clamp(1.1rem, 2.2vw, 1.55rem);
+}
+
+.dashboard-period-hero__main {
+  display: grid;
+  gap: 1.25rem;
+  align-items: end;
+}
+
+.dashboard-period-hero__eyebrow,
+.dashboard-period-hero__signal-head,
+.dashboard-period-metric__label,
+.dashboard-attention-card__title,
+.dashboard-attention-card__item {
+  display: flex;
+  align-items: center;
+}
+
+.dashboard-period-hero__eyebrow {
+  gap: 0.4rem;
+  color: rgba(242, 241, 236, 0.68);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dashboard-period-hero__value {
+  margin-top: 0.8rem;
+  overflow-wrap: anywhere;
+  color: #f7f5ef;
+  font-size: clamp(2.35rem, 8vw, 4.4rem);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 0.94;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-period-hero__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+  padding: 0.32rem 0;
+  color: rgba(242, 241, 236, 0.82);
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.dashboard-period-hero__status::before,
+.dashboard-period-metric__label span {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--aurora-gold);
+  content: '';
+}
+
+.dashboard-period-hero__status[data-tone='positive']::before,
+.dashboard-period-metric[data-kind='income'] .dashboard-period-metric__label span {
+  background: #78bf94;
+}
+
+.dashboard-period-hero__status[data-tone='negative']::before,
+.dashboard-period-metric[data-kind='expense'] .dashboard-period-metric__label span {
+  background: #e58e8b;
+}
+
+.dashboard-period-metric[data-kind='reserve'] .dashboard-period-metric__label span {
+  background: #b7c5c7;
+}
+
+.dashboard-period-hero__signal {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 1.15rem;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.dashboard-period-hero__signal-head {
+  justify-content: space-between;
+  gap: 0.8rem;
+  color: rgba(242, 241, 236, 0.62);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.dashboard-period-hero__signal-head strong {
+  color: #f4e5d0;
+  font-size: 0.78rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-period-hero__track {
+  height: 0.38rem;
+  margin-top: 0.65rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dashboard-period-hero__track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #90704f, #d6b080);
+}
+
+.dashboard-period-hero__track span[data-tone='negative'] {
+  background: linear-gradient(90deg, #b3615f, #ef9996);
+}
+
+.dashboard-period-hero__story {
+  margin-top: 0.65rem;
+  color: rgba(242, 241, 236, 0.5);
+  font-size: 0.67rem;
+  line-height: 1.55;
+}
+
+.dashboard-period-hero__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.dashboard-period-metric {
+  padding: 0.9rem 0.75rem 0.1rem 0;
+}
+
+.dashboard-period-metric:nth-child(even) {
+  padding-left: 0.75rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dashboard-period-metric__label {
+  gap: 0.38rem;
+  color: rgba(242, 241, 236, 0.5);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.dashboard-period-metric__value {
+  margin-top: 0.28rem;
+  overflow-wrap: anywhere;
+  color: rgba(247, 245, 239, 0.96);
+  font-size: 0.88rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
 }
 
 .dashboard-attention-card {
-  height: 100%;
+  border-radius: 1.6rem;
+  padding: clamp(1rem, 1.8vw, 1.3rem);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(196, 157, 107, 0.075), transparent 34%),
+    var(--aurora-surface-elevated);
+}
+
+.dashboard-attention-card__title {
+  gap: 0.45rem;
+  color: var(--brand-600);
+}
+
+.dashboard-attention-card__title h2,
+.dashboard-attention-card__empty p,
+.dashboard-attention-card__item-copy p {
+  color: var(--text-primary);
+  font-weight: 900;
+}
+
+.dashboard-attention-card__title h2 {
+  font-size: 0.86rem;
+}
+
+.dashboard-attention-card > div > div > p {
+  margin-top: 0.28rem;
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+}
+
+.dashboard-attention-card__empty {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+  padding: 0.85rem;
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.dashboard-attention-card__empty-icon,
+.dashboard-attention-card__item-icon {
+  display: flex;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.8rem;
+}
+
+.dashboard-attention-card__empty span,
+.dashboard-attention-card__item-copy span {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.62rem;
+  line-height: 1.45;
+}
+
+.dashboard-attention-card__list {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.dashboard-attention-card__item {
+  min-width: 0;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-subtle);
+}
+
+.dashboard-attention-card__item:hover {
+  background: var(--bg-hover);
+}
+
+.dashboard-attention-card__item-icon {
+  border: 1px solid var(--brand-200);
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+
+.dashboard-attention-card__item-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.dashboard-attention-card__empty p,
+.dashboard-attention-card__item-copy p {
+  font-size: 0.72rem;
+}
+
+.dashboard-attention-card__item-copy span {
+  color: var(--text-tertiary);
+}
+
+.dashboard-attention-card__item-copy strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.45rem;
+  color: var(--text-brand);
+  font-size: 0.61rem;
+  font-weight: 800;
+}
+
+@media (min-width: 720px) {
+  .dashboard-period-hero__main {
+    grid-template-columns: minmax(0, 1.25fr) minmax(13rem, 0.75fr);
+  }
+
+  .dashboard-period-hero__metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .dashboard-period-metric,
+  .dashboard-period-metric:nth-child(even) {
+    padding: 1rem 0.9rem 0.1rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .dashboard-period-metric:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
 }
 
 @media (min-width: 1024px) {
   .dashboard-executive-grid {
-    grid-template-columns: minmax(0, 1.65fr) minmax(18rem, 0.85fr);
+    grid-template-columns: minmax(0, 1.78fr) minmax(19rem, 0.82fr);
+    gap: 1.1rem;
+  }
+
+  .dashboard-period-hero {
+    min-height: 18rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .dashboard-period-hero {
+    margin-inline: -0.25rem;
+    border-radius: 1.55rem;
   }
 }
