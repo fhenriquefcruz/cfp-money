@@ -168,10 +168,53 @@ const fullAudit = runAudit(false)
 
 const fullVulnerabilities = fullAudit.vulnerabilities ?? {}
 
+// Exceção temporária e estreita para um advisory sem release corrigida em braces.
+// O npm propaga a mesma vulnerabilidade por várias ferramentas de build (Tailwind,
+// gh-pages, firebase-tools etc.). A exceção só vale para dependências dev-only,
+// somente quando todas as folhas do encadeamento apontam para este advisory e
+// enquanto o próprio pacote braces continuar sem fixAvailable.
+const toleratedDevOnlyAdvisories = new Set([
+  'https://github.com/advisories/ghsa-vfj7-8cjw-p6xm',
+])
+
+const collectLeafAdvisories = (packageName, seen = new Set()) => {
+  if (seen.has(packageName)) return []
+  seen.add(packageName)
+
+  const entry = fullVulnerabilities[packageName]
+  if (!entry) return []
+
+  return (entry.via ?? []).flatMap((via) => {
+    if (typeof via === 'string') {
+      return collectLeafAdvisories(via, seen)
+    }
+
+    return via?.url ? [String(via.url).toLowerCase()] : []
+  })
+}
+
+const unresolvedBracesAdvisory =
+  fullVulnerabilities.braces?.fixAvailable === false &&
+  collectLeafAdvisories('braces').every((url) => toleratedDevOnlyAdvisories.has(url))
+
 for (const [packageName, entry] of Object.entries(fullVulnerabilities)) {
-  if (entry.severity === 'high' || entry.severity === 'critical') {
-    fail(`${packageName}: vulnerabilidade ${entry.severity} encontrada.`)
+  if (entry.severity !== 'high' && entry.severity !== 'critical') continue
+
+  const leafAdvisories = collectLeafAdvisories(packageName)
+  const isDevOnly = !productionVulnerabilities[packageName]
+  const isOnlyToleratedAdvisory =
+    unresolvedBracesAdvisory &&
+    leafAdvisories.length > 0 &&
+    leafAdvisories.every((url) => toleratedDevOnlyAdvisories.has(url))
+
+  if (isDevOnly && isOnlyToleratedAdvisory) {
+    console.warn(
+      `Auditoria: exceção dev-only temporária para ${packageName} (${[...new Set(leafAdvisories)].join(', ')}).`,
+    )
+    continue
   }
+
+  fail(`${packageName}: vulnerabilidade ${entry.severity} encontrada.`)
 }
 
 if (errors.length > 0) {
