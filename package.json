@@ -60,7 +60,8 @@
     "test:production:smoke": "playwright test --config=playwright.production.config.js",
     "test:production:report": "playwright show-report playwright-production-report",
     "notifications:activation:test": "node --test tests/activation/email-notifications-activation.test.mjs",
-    "notifications:activation:check": "node scripts/validate-email-notifications-activation.mjs"
+    "notifications:activation:check": "node scripts/validate-email-notifications-activation.mjs",
+    "notifications:production:validate": "node functions/tools/validateEmailNotificationsProduction.js"
   },
   "dependencies": {
     "clsx": "^2.1.0",
