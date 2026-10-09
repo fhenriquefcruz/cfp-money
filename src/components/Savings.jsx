@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
-  Edit2,
   History,
   Landmark,
   PiggyBank,
@@ -376,12 +375,12 @@ export default function Savings() {
                       <button
                         type="button"
                         onClick={() => setEditingMovement(movement)}
-                        className="flex h-9 w-9 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
+                        className="min-h-9 rounded-xl px-2 text-[10px] font-bold text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
                         aria-label={`Editar movimento ${
                           movement.description || getSavingsDestinationLabel(movement)
                         }`}
                       >
-                        <Edit2 size={14} />
+                        Editar
                       </button>
                     </div>
                   </div>
