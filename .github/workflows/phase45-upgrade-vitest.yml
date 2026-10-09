@@ -1,0 +1,53 @@
+name: Phase 45 test toolchain security upgrade
+
+on:
+  push:
+    branches:
+      - phase-45-goals-savings-reserves
+    paths:
+      - .github/workflows/phase45-upgrade-vitest.yml
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v7
+        with:
+          ref: phase-45-goals-savings-reserves
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Upgrade Vitest
+        run: npm install --save-dev --save-exact vitest@5.0.3 --package-lock-only
+
+      - name: Verify clean install
+        run: npm ci
+
+      - name: Run application tests
+        run: npm test
+
+      - name: Run strict production audit policy
+        run: npm run validate:production-audit
+
+      - name: Commit tested toolchain upgrade
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração necessária."
+            exit 0
+          fi
+          git commit -m "Security: upgrade Vitest toolchain [vitest-security]"
+          git push origin HEAD:phase-45-goals-savings-reserves
