@@ -130,9 +130,9 @@ export default function Savings() {
       </header>
 
       {legacyUnclassifiedCount > 0 && (
-        <Card className="border border-[--warning-border] bg-[--warning-bg]">
+        <Card className="border border-[--brand-200] bg-[--brand-50]">
           <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-[--bg-surface] p-2 text-[--warning-text]">
+            <div className="rounded-xl bg-[--bg-surface] p-2 text-[--brand-700]">
               <Landmark size={16} />
             </div>
             <div>
