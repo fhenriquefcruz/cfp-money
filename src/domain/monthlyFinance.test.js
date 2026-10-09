@@ -57,3 +57,33 @@ test('usa purchaseDate para compra estruturada no cartão', () => {
 
   expect(data[0].expenses).toBe(300)
 })
+
+
+test('poupança mensal usa aportes menos retiradas', () => {
+  const data = getMonthlyFinancialData(
+    [
+      {
+        id: 'save',
+        type: 'income',
+        isSavings: true,
+        savingsMovement: 'deposit',
+        amount: 600,
+        date: '2026-07-08',
+      },
+      {
+        id: 'withdraw',
+        type: 'income',
+        isSavings: true,
+        savingsMovement: 'withdrawal',
+        amount: 150,
+        date: '2026-07-12',
+      },
+    ],
+    1,
+    new Date(2026, 6, 15),
+  )
+
+  expect(data[0].savings).toBe(450)
+  expect(data[0].income).toBe(0)
+  expect(data[0].expenses).toBe(0)
+})
