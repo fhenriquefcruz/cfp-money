@@ -6,7 +6,9 @@ test.describe('Central de Poupança e Reservas', () => {
     await prepareE2EPage(page, '/savings')
 
     await expect(page.locator('.savings-premium')).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Seu dinheiro guardado, em um só lugar' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Seu dinheiro guardado, em um só lugar' }),
+    ).toBeVisible()
     await expect(page.getByText('Caixinha do carro').first()).toBeVisible()
     await expect(page.getByText('Nubank').first()).toBeVisible()
     await expect(page.getByText(/Entrada do carro/).first()).toBeVisible()

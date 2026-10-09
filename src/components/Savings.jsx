@@ -62,8 +62,7 @@ export default function Savings() {
     return summarizeTransactions(periodTransactions)
   }, [transactions, monthBounds])
 
-  const savingsRate =
-    monthSummary.income > 0 ? (overview.periodNet / monthSummary.income) * 100 : 0
+  const savingsRate = monthSummary.income > 0 ? (overview.periodNet / monthSummary.income) * 100 : 0
 
   const movements = useMemo(
     () =>
@@ -107,8 +106,8 @@ export default function Savings() {
             Seu dinheiro guardado, em um só lugar
           </h1>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[--text-tertiary]">
-            Acompanhe quanto está reservado, onde o dinheiro está e quais metas cada reserva ajuda
-            a financiar.
+            Acompanhe quanto está reservado, onde o dinheiro está e quais metas cada reserva ajuda a
+            financiar.
           </p>
         </div>
 
@@ -183,7 +182,9 @@ export default function Savings() {
               {savingsRate.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
             </p>
             <p className="text-[10px] text-[--text-tertiary]">
-              {overview.periodNet >= 0 ? 'poupança líquida positiva' : 'retiradas acima dos aportes'}
+              {overview.periodNet >= 0
+                ? 'poupança líquida positiva'
+                : 'retiradas acima dos aportes'}
             </p>
           </div>
         </div>
@@ -216,7 +217,9 @@ export default function Savings() {
             <div className="space-y-3">
               {overview.destinations.map((destination) => {
                 const share =
-                  overview.totalBalance > 0 ? (destination.balance / overview.totalBalance) * 100 : 0
+                  overview.totalBalance > 0
+                    ? (destination.balance / overview.totalBalance) * 100
+                    : 0
                 const linkedGoals = destination.goalIds
                   .map((goalId) => goalById.get(goalId))
                   .filter(Boolean)
@@ -240,7 +243,8 @@ export default function Savings() {
                           {formatCurrency(destination.balance)}
                         </p>
                         <p className="text-[10px] text-[--text-tertiary]">
-                          {share.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% das reservas
+                          {share.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% das
+                          reservas
                         </p>
                       </div>
                     </div>
@@ -256,7 +260,8 @@ export default function Savings() {
                       <div className="mt-3 space-y-2">
                         {linkedGoals.map((goal) => {
                           const current = getGoalEffectiveCurrent(goal, transactions)
-                          const progress = goal.targetAmount > 0 ? (current / goal.targetAmount) * 100 : 0
+                          const progress =
+                            goal.targetAmount > 0 ? (current / goal.targetAmount) * 100 : 0
                           return (
                             <div key={goal.id} className="rounded-xl bg-[--bg-surface] p-3">
                               <div className="flex items-center justify-between gap-3 text-xs">
@@ -322,7 +327,10 @@ export default function Savings() {
                 const signedAmount = getSavingsSignedAmount(movement)
                 const linkedGoal = movement.goalId ? goalById.get(movement.goalId) : null
                 return (
-                  <div key={movement.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                  <div
+                    key={movement.id}
+                    className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
+                  >
                     <div
                       className={`mt-0.5 rounded-xl p-2 ${
                         signedAmount >= 0

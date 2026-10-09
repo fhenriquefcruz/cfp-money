@@ -173,7 +173,6 @@ describe('TransactionForm savings destinations', () => {
   })
 })
 
-
 describe('TransactionForm savings presets', () => {
   it('abre diretamente como retirada com destino, instituição e meta pré-preenchidos', () => {
     render(

@@ -48,7 +48,6 @@ compressão, sem mudança visual ou inclusão de CSS nesta fase.
 
 A recalibração não permite que gráficos ou bibliotecas de PDF retornem ao carregamento inicial.
 
-
 ## Recalibração — Fase 46
 
 A Central de Poupança e Reservas é carregada sob demanda na rota `/savings`. O build mediu o

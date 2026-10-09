@@ -148,7 +148,6 @@
 - [x] documentar a nova semântica financeira;
 - [x] validar todos os gates da branch e revisar baselines visuais antes do merge.
 
-
 ## Central de Poupança e Reservas — Fase 46
 
 - [x] criar uma rota própria para Poupança e Reservas;
