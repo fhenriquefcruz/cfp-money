@@ -111,7 +111,7 @@ export default function Savings() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
           <Button
             variant="secondary"
             icon={<ArrowDownRight size={15} />}
@@ -149,7 +149,7 @@ export default function Savings() {
         </Card>
       )}
 
-      <section className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid min-w-0 grid-cols-1 gap-3 min-[360px]:grid-cols-2 xl:grid-cols-4">
         {[
           ['Total reservado', overview.totalBalance, 'Saldo atual de todas as reservas.'],
           ['Poupado no mês', overview.periodNet, 'Aportes menos retiradas no mês atual.'],
@@ -158,7 +158,7 @@ export default function Savings() {
         ].map(([label, value, helper]) => (
           <Card key={label} variant={label === 'Total reservado' ? 'elevated' : 'default'}>
             <p className="text-xs font-semibold text-[--text-tertiary]">{label}</p>
-            <p className="mt-2 text-2xl font-black tabular-nums text-[--text-primary]">
+            <p className="mt-2 text-xl font-black tabular-nums text-[--text-primary] sm:text-2xl">
               {formatCurrency(value)}
             </p>
             <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">{helper}</p>
