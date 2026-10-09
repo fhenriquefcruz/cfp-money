@@ -11,6 +11,7 @@ const ROUTES = [
   ['/transactions', '.transactions-premium'],
   ['/categories', '.categories-premium'],
   ['/goals', '.goals-premium'],
+  ['/savings', '.savings-premium'],
   ['/budgets', '.budgets-premium'],
   ['/reports', '.reports-premium'],
   ['/profile', '.profile-premium'],

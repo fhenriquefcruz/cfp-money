@@ -175,7 +175,16 @@ function getEffectiveDate(baseDate, closingDay) {
   return baseDate
 }
 
-export default function TransactionForm({ isOpen, onClose, transaction }) {
+export default function TransactionForm({
+  isOpen,
+  onClose,
+  transaction,
+  initialType = 'expense',
+  initialSavingsMovement = 'deposit',
+  initialSavingsDestination = '',
+  initialSavingsInstitution = '',
+  initialGoalId = '',
+}) {
   const { createTransaction, editTransaction, addTransactionBatch } = useTransactions()
   const { showNotification } = useNotifications()
   const { categories } = useCategories()
@@ -212,11 +221,26 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
       })
       setShowAdvanced(Boolean(transaction.dueDate || transaction.notes || transaction.isRecurring))
     } else {
-      setForm(EMPTY_FORM)
+      setForm({
+        ...EMPTY_FORM,
+        txType: initialType,
+        savingsMovement: initialSavingsMovement,
+        savingsDestination: initialSavingsDestination,
+        savingsInstitution: initialSavingsInstitution,
+        goalId: initialGoalId,
+      })
       setShowAdvanced(false)
     }
     setErrors({})
-  }, [transaction, isOpen])
+  }, [
+    transaction,
+    isOpen,
+    initialType,
+    initialSavingsMovement,
+    initialSavingsDestination,
+    initialSavingsInstitution,
+    initialGoalId,
+  ])
 
   const update = useCallback(
     (field) => (val) => {

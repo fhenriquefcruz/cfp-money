@@ -47,3 +47,13 @@ contra um teto histórico de 20 KiB, foi adicionada tolerância de **256 bytes**
 compressão, sem mudança visual ou inclusão de CSS nesta fase.
 
 A recalibração não permite que gráficos ou bibliotecas de PDF retornem ao carregamento inicial.
+
+## Recalibração — Fase 46
+
+A Central de Poupança e Reservas é carregada sob demanda na rota `/savings`. O build mediu o
+novo chunk `Savings` em aproximadamente **3,39 KiB gzip**, mantendo o JavaScript inicial em
+**241,91 KiB gzip**, abaixo do teto existente de 242 KiB.
+
+Para absorver exclusivamente essa nova capacidade, o teto de JavaScript total foi ajustado de
+**713 KiB** para **718 KiB gzip**. Permanecem inalterados os limites de JavaScript inicial, rota
+Money, maior chunk e CSS. A nova rota não pode retornar ao carregamento inicial.

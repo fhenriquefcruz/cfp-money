@@ -10,6 +10,7 @@ const ROUTES = [
   ['transactions', '/transactions', '.transactions-premium'],
   ['categories', '/categories', '.categories-premium'],
   ['goals', '/goals', '.goals-premium'],
+  ['savings', '/savings', '.savings-premium'],
   ['budgets', '/budgets', '.budgets-premium'],
   ['reports', '/reports', '.reports-premium'],
   ['profile', '/profile', '.profile-premium'],

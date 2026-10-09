@@ -32,6 +32,7 @@ const CreditCardsDashboard = lazy(() => import('./components/CreditCardsDashboar
 const TransactionList = lazy(() => import('./components/TransactionList'))
 const Categories = lazy(() => import('./components/Categories'))
 const Goals = lazy(() => import('./components/Goals'))
+const Savings = lazy(() => import('./components/Savings'))
 const Budgets = lazy(() => import('./components/Budgets'))
 const Reports = lazy(() => import('./components/Reports'))
 const Profile = lazy(() => import('./components/Profile'))
@@ -68,6 +69,7 @@ const AppRoutes = () => {
                     <Route path="/transactions" element={<TransactionList />} />
                     <Route path="/categories" element={<Categories />} />
                     <Route path="/goals" element={<Goals />} />
+                    <Route path="/savings" element={<Savings />} />
                     <Route path="/budgets" element={<Budgets />} />
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/profile" element={<Profile />} />

@@ -578,10 +578,10 @@ export default function Dashboard() {
                   Onde está
                 </p>
                 <Link
-                  to="/reports?tab=savings"
+                  to="/savings"
                   className="text-xs font-bold text-[--text-brand] hover:underline"
                 >
-                  Ver relatório
+                  Abrir reservas
                 </Link>
               </div>
               {savingsOverview.destinations.length === 0 ? (
