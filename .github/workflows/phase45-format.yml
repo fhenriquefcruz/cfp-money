@@ -1,0 +1,51 @@
+name: Phase 45 format touched files
+
+on:
+  push:
+    branches:
+      - phase-45-goals-savings-reserves
+    paths:
+      - .github/workflows/phase45-format.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v7
+        with:
+          ref: phase-45-goals-savings-reserves
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format Phase 45 files
+        run: |
+          npx prettier --write             docs/DATA_MAP.md             docs/FINANCIAL_SEMANTICS.md             docs/PERFORMANCE_BUDGET_PHASE_20.md             ROADMAP.md             src/components/Dashboard.jsx             src/components/Goals.jsx             src/components/Reports.jsx             src/components/TransactionForm.test.jsx             src/components/TransactionList.jsx             src/domain/finance.test.js             src/domain/monthlyFinance.test.js             src/domain/savings.js
+
+      - name: Verify formatting
+        run: npm run format:check
+
+      - name: Commit formatting only
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             docs/DATA_MAP.md             docs/FINANCIAL_SEMANTICS.md             docs/PERFORMANCE_BUDGET_PHASE_20.md             ROADMAP.md             src/components/Dashboard.jsx             src/components/Goals.jsx             src/components/Reports.jsx             src/components/TransactionForm.test.jsx             src/components/TransactionList.jsx             src/domain/finance.test.js             src/domain/monthlyFinance.test.js             src/domain/savings.js
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração de formato necessária."
+            exit 0
+          fi
+          git commit -m "Phase 45: format touched files [prettier]"
+          git push origin HEAD:phase-45-goals-savings-reserves
