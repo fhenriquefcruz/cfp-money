@@ -1,4 +1,6 @@
-import { getSavingsSignedAmount } from './savings'\n\nconst asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
+import { getSavingsSignedAmount } from './savings'
+
+const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
 
 export const getFinancialActivityDate = (transaction = {}) =>
   transaction.type === 'expense' &&
