@@ -113,3 +113,29 @@ test('ignora cancelamentos e transferências explícitas nos totais', () => {
     count: 2,
   })
 })
+
+
+test('retirada da poupança reduz o reservado sem virar despesa', () => {
+  const result = summarizeTransactions([
+    ...transactions,
+    {
+      type: 'income',
+      isSavings: true,
+      savingsMovement: 'deposit',
+      amount: 500,
+      date: '2026-07-15',
+    },
+    {
+      type: 'income',
+      isSavings: true,
+      savingsMovement: 'withdrawal',
+      amount: 200,
+      date: '2026-07-20',
+    },
+  ])
+
+  expect(result.savings).toBe(300)
+  expect(result.income).toBe(1000)
+  expect(result.expenses).toBe(250)
+  expect(result.balance).toBe(750)
+})
