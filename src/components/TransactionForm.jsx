@@ -30,6 +30,7 @@ import {
   splitInstallmentAmounts,
 } from '../domain/creditCards'
 import { reviewTransactionCategory } from '../domain/categoryReview'
+import { UNCLASSIFIED_SAVINGS_DESTINATION } from '../domain/savings'
 
 // ── Máscara monetária ──
 function maskCurrency(raw) {
@@ -202,7 +203,9 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         cardId: transaction.cardId || '',
         notes: transaction.notes || '',
         savingsMovement: transaction.savingsMovement || 'deposit',
-        savingsDestination: transaction.savingsDestination || '',
+        savingsDestination:
+          transaction.savingsDestination ||
+          (transaction.isSavings ? UNCLASSIFIED_SAVINGS_DESTINATION : ''),
         savingsInstitution: transaction.savingsInstitution || '',
         goalId: transaction.goalId || '',
         isRecurring: transaction.isRecurring || false,
