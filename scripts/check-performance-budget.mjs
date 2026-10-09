@@ -10,14 +10,16 @@ const indexPath = join(distRoot, 'index.html')
 // introdução da semântica financeira auditável da Phase 42A. Na Phase 42D,
 // o teto total ganhou 1 KiB de margem para absorver a auditoria de orçamentos.
 // A Phase 41B acrescenta mais 1 KiB global para a personalização transparente,
-// compensado por um teto dedicado da rota Money. Os limites de carregamento
-// inicial, maior chunk e CSS permanecem inalterados.
+// compensado por um teto dedicado da rota Money. Na Phase 45, o teto total ganha
+// 4 KiB para a semântica auditável de Poupança/Reservas distribuída nas rotas
+// lazy; o carregamento inicial e o maior chunk permanecem inalterados. O CSS
+// recebe apenas 256 bytes de tolerância à variação de compressão do build.
 const limits = {
   initialJavaScriptGzipBytes: 242 * 1024,
-  totalJavaScriptGzipBytes: 709 * 1024,
+  totalJavaScriptGzipBytes: 713 * 1024,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
-  initialCssGzipBytes: 20 * 1024,
+  initialCssGzipBytes: 20 * 1024 + 256,
 }
 
 if (!existsSync(indexPath)) {
