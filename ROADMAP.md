@@ -162,4 +162,4 @@
 - [x] apontar o card do Dashboard para a nova Central;
 - [x] adicionar cobertura unitária e E2E;
 - [x] incluir a nova rota nos gates Mobile, WCAG e Visual;
-- [ ] revisar os novos baselines visuais e validar todos os gates antes do merge.
+- [x] revisar os novos baselines visuais e validar todos os gates antes do merge.
