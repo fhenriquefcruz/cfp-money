@@ -19,6 +19,7 @@ import {
   Bot,
   Crown,
   CreditCard,
+  PiggyBank,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePlan } from '../contexts/PlanContext'
@@ -36,6 +37,7 @@ const NAV_ITEMS = [
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transações' },
   { to: '/categories', icon: Tags, label: 'Categorias' },
   { to: '/goals', icon: Target, label: 'Metas' },
+  { to: '/savings', icon: PiggyBank, label: 'Reservas' },
   { to: '/budgets', icon: PieChart, label: 'Orçamentos' },
   { to: '/reports', icon: BarChart3, label: 'Relatórios' },
   { to: '/profile', icon: User, label: 'Perfil' },
