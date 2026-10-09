@@ -143,7 +143,7 @@ describe('TransactionForm savings destinations', () => {
     render(<TransactionForm isOpen onClose={vi.fn()} transaction={null} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Poupança' }))
-    fireEvent.change(screen.getByLabelText('Valor'), { target: { value: '50000' } })
+    fireEvent.change(screen.getByLabelText(/Valor/), { target: { value: '50000' } })
 
     fireEvent.click(screen.getByRole('button', { name: 'Registrar aporte' }))
     expect(screen.getByText('Informe onde este dinheiro está guardado')).toBeInTheDocument()
