@@ -1,0 +1,51 @@
+name: Phase 46 format touched files
+
+on:
+  push:
+    branches:
+      - phase-46-savings-reserves-hub
+    paths:
+      - .github/workflows/phase46-format.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v7
+        with:
+          ref: phase-46-savings-reserves-hub
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format Phase 46 files
+        run: |
+          npx prettier --write             docs/PERFORMANCE_BUDGET_PHASE_20.md             e2e/savings.spec.js             ROADMAP.md             src/components/Savings.jsx             src/components/TransactionForm.test.jsx
+
+      - name: Verify formatting
+        run: npm run format:check
+
+      - name: Commit formatting only
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             docs/PERFORMANCE_BUDGET_PHASE_20.md             e2e/savings.spec.js             ROADMAP.md             src/components/Savings.jsx             src/components/TransactionForm.test.jsx
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração de formato necessária."
+            exit 0
+          fi
+          git commit -m "Phase 46: format reserves hub [prettier]"
+          git push origin HEAD:phase-46-savings-reserves-hub
