@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Clock3,
   CheckCircle2,
+  PiggyBank,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -52,6 +53,11 @@ import { buildCategoryReviewQueue } from '../domain/categoryReview'
 import { buildPaymentControlOverview } from '../domain/paymentControl'
 import { buildFinancialHealth } from '../domain/financialHealth'
 import { budgetMonthKey, buildMonthlyBudgetOverview } from '../domain/budgetPeriods'
+import {
+  buildSavingsOverview,
+  getGoalEffectiveCurrent,
+  getSavingsDestinationLabel,
+} from '../domain/savings'
 import { format, subMonths, addMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -105,18 +111,27 @@ const TxItem = ({ tx, categories }) => {
           {formatRelativeDate(dateContext.activityDate)}
           {dateContext.hasSeparateAccountingDate ? ` · fatura ${dateContext.accountingLabel}` : ''}
           {cat && !tx.isSavings ? ` · ${cat.name}` : ''}
+          {tx.isSavings ? ` · ${getSavingsDestinationLabel(tx)}` : ''}
         </p>
       </div>
       <span
         className={`max-w-[46%] flex-shrink-0 break-words text-right text-xs font-bold tabular-nums [overflow-wrap:anywhere] sm:text-sm ${
           tx.isSavings
-            ? 'text-[--brand-500]'
+            ? tx.savingsMovement === 'withdrawal'
+              ? 'text-[--danger-text]'
+              : 'text-[--brand-500]'
             : isIncome
               ? 'text-[--success-icon]'
               : 'text-[--danger-icon]'
         }`}
       >
-        {tx.isSavings ? '🐷' : isIncome ? '+' : '−'}
+        {tx.isSavings
+          ? tx.savingsMovement === 'withdrawal'
+            ? '−'
+            : '+'
+          : isIncome
+            ? '+'
+            : '−'}
         {formatCurrency(tx.amount)}
       </span>
     </div>
@@ -254,9 +269,9 @@ export default function Dashboard() {
     [transactions, monthBounds],
   )
 
-  const savingsBalance = useMemo(
-    () => transactions.filter((t) => t.isSavings).reduce((s, t) => s + t.amount, 0),
-    [transactions],
+  const savingsOverview = useMemo(
+    () => buildSavingsOverview(transactions, monthBounds),
+    [transactions, monthBounds],
   )
 
   const budgetOverview = useMemo(
@@ -499,7 +514,7 @@ export default function Dashboard() {
                 ['Receitas', currentSummary.income, 'income'],
                 ['Despesas', currentSummary.expenses, 'expense'],
                 ['Comprometido', paymentSummary.committedAmount || 0, 'commitment'],
-                ['Reservado', savingsBalance, 'reserve'],
+                ['Poupado no mês', currentSummary.savings, 'reserve'],
               ].map(([label, value, kind]) => (
                 <div key={label} className="dashboard-period-metric" data-kind={kind}>
                   <p className="dashboard-period-metric__label">
@@ -521,6 +536,84 @@ export default function Dashboard() {
       {/* Controle mensal sem alterar os cálculos financeiros existentes */}
       <motion.div {...fade} transition={{ delay: 0.08 }}>
         <PaymentControlCard summary={paymentSummary} loading={isLoading} />
+      </motion.div>
+
+      <motion.div {...fade} transition={{ delay: 0.09 }}>
+        <Card variant="elevated" className="dashboard-savings-card">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
+                  <PiggyBank size={16} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h2 className="text-sm font-black text-[--text-primary]">Poupança e Reservas</h2>
+                    <InfoTooltip text="Total reservado considera depósitos menos retiradas. O valor poupado no mês usa apenas o período visualizado." />
+                  </div>
+                  <p className="text-[10px] text-[--text-tertiary]">
+                    Quanto você tem guardado e onde esse dinheiro está.
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-4 text-3xl font-black tabular-nums text-[--text-primary]">
+                {formatCurrency(savingsOverview.totalBalance)}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[--text-tertiary]">
+                <span>
+                  Aportes no mês{' '}
+                  <strong className="text-[--success-text]">
+                    {formatCurrency(savingsOverview.periodDeposits)}
+                  </strong>
+                </span>
+                <span>
+                  Retiradas{' '}
+                  <strong className="text-[--danger-text]">
+                    {formatCurrency(savingsOverview.periodWithdrawals)}
+                  </strong>
+                </span>
+              </div>
+            </div>
+
+            <div className="min-w-0 flex-1 lg:max-w-xl">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                  Onde está
+                </p>
+                <Link to="/reports" className="text-xs font-bold text-[--text-brand] hover:underline">
+                  Ver relatório
+                </Link>
+              </div>
+              {savingsOverview.destinations.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-[--border-default] p-3 text-xs text-[--text-tertiary]">
+                  Registre uma Poupança e informe o destino para começar a acompanhar suas reservas.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {savingsOverview.destinations.slice(0, 4).map((destination) => (
+                    <div
+                      key={destination.label}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-[--border-subtle] bg-[--bg-subtle] px-3 py-2.5"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-[--text-primary]">
+                          {destination.destination}
+                        </p>
+                        <p className="truncate text-[10px] text-[--text-tertiary]">
+                          {destination.institution || 'Instituição não informada'}
+                        </p>
+                      </div>
+                      <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
+                        {formatCurrency(destination.balance)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
       </motion.div>
 
       {/* Resumo executivo: indicadores essenciais e análise do Money */}
@@ -920,7 +1013,8 @@ export default function Dashboard() {
               ) : (
                 <div className="space-y-4">
                   {goals.slice(0, 3).map((goal) => {
-                    const pct = Math.min(100, ((goal.currentAmount || 0) / goal.targetAmount) * 100)
+                    const effectiveCurrent = getGoalEffectiveCurrent(goal, transactions)
+                    const pct = Math.min(100, (effectiveCurrent / goal.targetAmount) * 100)
                     return (
                       <div key={goal.id}>
                         <div className="flex justify-between text-xs mb-1.5">
@@ -931,13 +1025,9 @@ export default function Dashboard() {
                             {pct.toFixed(0)}%
                           </span>
                         </div>
-                        <ProgressBar
-                          value={goal.currentAmount || 0}
-                          max={goal.targetAmount}
-                          animated
-                        />
+                        <ProgressBar value={effectiveCurrent} max={goal.targetAmount} animated />
                         <div className="flex justify-between text-xs mt-1 text-[--text-tertiary]">
-                          <span>{formatCurrency(goal.currentAmount || 0)}</span>
+                          <span>{formatCurrency(effectiveCurrent)}</span>
                           <span>{formatCurrency(goal.targetAmount)}</span>
                         </div>
                       </div>
