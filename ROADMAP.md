@@ -146,4 +146,21 @@
 - [x] evoluir Relatórios com aportes, retiradas, saldo e distribuição por destino;
 - [x] manter lançamentos antigos compatíveis como depósitos / Reserva não classificada;
 - [x] documentar a nova semântica financeira;
-- [ ] validar todos os gates da branch e revisar baselines visuais antes do merge.
+- [x] validar todos os gates da branch e revisar baselines visuais antes do merge.
+
+
+## Central de Poupança e Reservas — Fase 46
+
+- [x] criar uma rota própria para Poupança e Reservas;
+- [x] adicionar Reservas à navegação desktop/mobile e à busca global;
+- [x] mostrar total reservado, poupança líquida, aportes, retiradas e taxa de poupança;
+- [x] mostrar distribuição por destino e instituição;
+- [x] mostrar metas vinculadas e progresso dentro de cada reserva;
+- [x] permitir guardar e retirar diretamente da Central;
+- [x] reutilizar o formulário de transações com presets, sem criar nova fonte de dados;
+- [x] exibir histórico recente de movimentos;
+- [x] preservar e sinalizar lançamentos legados como Reserva não classificada;
+- [x] apontar o card do Dashboard para a nova Central;
+- [x] adicionar cobertura unitária e E2E;
+- [x] incluir a nova rota nos gates Mobile, WCAG e Visual;
+- [ ] revisar os novos baselines visuais e validar todos os gates antes do merge.
