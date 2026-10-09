@@ -132,3 +132,19 @@
 - [x] homologação técnica e funcional concluída;
 - [ ] concluir `docs/LEGAL_REVIEW_CHECKLIST.md` com revisão jurídica humana antes do lançamento
       comercial definitivo.
+
+
+## Metas, Poupança e Reservas — Fase 45
+
+- [x] corrigir a interação de edição de Metas com ação visível e teste E2E;
+- [x] preservar `currentAmount` como saldo inicial/legado das metas existentes;
+- [x] transformar novos aportes de Meta em movimentos reais de Poupança;
+- [x] permitir depósito e retirada de reservas;
+- [x] registrar destino e instituição da poupança;
+- [x] permitir vínculo opcional entre Poupança e Meta;
+- [x] separar no Dashboard “Poupado no mês” de “Total reservado”;
+- [x] mostrar no Dashboard onde as reservas estão;
+- [x] evoluir Relatórios com aportes, retiradas, saldo e distribuição por destino;
+- [x] manter lançamentos antigos compatíveis como depósitos / Reserva não classificada;
+- [x] documentar a nova semântica financeira;
+- [ ] validar todos os gates da branch e revisar baselines visuais antes do merge.
