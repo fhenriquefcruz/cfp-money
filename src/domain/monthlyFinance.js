@@ -1,6 +1,7 @@
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { getTransactionActivityDate } from './transactionDates'
+import { getSavingsSignedAmount } from './savings'
 
 const capitalizeMonth = (value) => (value ? value.charAt(0).toUpperCase() + value.slice(1) : '')
 const isEffective = (transaction) =>
@@ -45,7 +46,7 @@ export function getMonthlyFinancialData(transactions = [], months = 6, baseDate 
       .reduce((total, transaction) => total + transaction.amount, 0)
     const savings = periodTransactions
       .filter((transaction) => transaction.isSavings)
-      .reduce((total, transaction) => total + transaction.amount, 0)
+      .reduce((total, transaction) => total + getSavingsSignedAmount(transaction), 0)
 
     result.push({
       monthKey: format(date, 'yyyy-MM'),
