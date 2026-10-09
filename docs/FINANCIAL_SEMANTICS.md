@@ -227,3 +227,37 @@ A Phase 42A também incorporou uma atualização obrigatória do DOMPurify para 
 - CSS inicial gzip: permanece em 20 KiB.
 
 A mudança é inferior a 1% e cria uma pequena margem operacional sem liberar gráficos ou bibliotecas de PDF no carregamento inicial.
+
+
+## Poupança, reservas e metas — Fase 45
+
+### Uma única semântica financeira
+
+Poupança continua sendo um lançamento financeiro separado de receita e despesa por meio de
+`isSavings=true`. A Fase 45 adiciona os campos opcionais:
+
+- `savingsMovement`: `deposit` ou `withdrawal`;
+- `savingsDestination`: nome da reserva, caixinha, conta ou outro destino;
+- `savingsInstitution`: instituição em que o valor está guardado;
+- `goalId`: meta financeira vinculada ao movimento.
+
+Lançamentos históricos sem `savingsMovement` são interpretados como depósitos para manter
+compatibilidade. Lançamentos históricos sem destino aparecem como **Reserva não classificada**.
+
+### Total reservado x poupado no período
+
+- **Total reservado** = soma histórica de depósitos menos retiradas.
+- **Poupado no mês/período** = depósitos menos retiradas dentro do período selecionado.
+- Poupança não infla receitas e não é classificada como despesa.
+- Retirada de reserva reduz o valor reservado, mas não vira despesa automaticamente.
+
+### Progresso das metas
+
+O campo legado `goal.currentAmount` passa a representar o **saldo inicial / legado** da meta.
+Novos aportes feitos pela tela de Metas são gravados como transações de poupança vinculadas por
+`goalId`. O progresso efetivo é:
+
+`saldo inicial da meta + depósitos vinculados - retiradas vinculadas`.
+
+Esse modelo preserva metas existentes sem reescrever histórico e evita que novos aportes existam
+somente como um número isolado da movimentação financeira.
