@@ -50,6 +50,7 @@ import {
   getTransactionDateContext,
 } from '../domain/transactionDates'
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
+import { getSavingsDestinationLabel } from '../domain/savings'
 import { isTransactionSeries } from '../domain/transactionSeries'
 import {
   PAYMENT_STATUS,
@@ -246,7 +247,9 @@ function TxRow({
   const invoicePresentation = invoicePaymentPresentation(paymentState)
   const createdAtLabel = toDateTimeLabel(tx.createdAt)
   const paidAtLabel = toDateTimeLabel(tx.paidAt)
-  const [kindLabel, KindIcon] = TRANSACTION_KIND[kind]
+  const [baseKindLabel, KindIcon] = TRANSACTION_KIND[kind]
+  const kindLabel =
+    isSavings && tx.savingsMovement === 'withdrawal' ? 'Retirada da reserva' : baseKindLabel
 
   return (
     <motion.div
@@ -292,6 +295,10 @@ function TxRow({
 
           {tx.paymentMethod && !isSavings && !isTransfer && (
             <span className="transaction-payment-method">{getPaymentLabel(tx.paymentMethod)}</span>
+          )}
+
+          {isSavings && (
+            <span className="transaction-payment-method">{getSavingsDestinationLabel(tx)}</span>
           )}
 
           {categoryReview && (
@@ -348,6 +355,10 @@ function TxRow({
             {protectedGroup && (
               <span>{tx.isInstallment ? 'Série parcelada' : 'Série recorrente'}</span>
             )}
+            {isSavings && tx.savingsInstitution && (
+              <span>Instituição: {tx.savingsInstitution}</span>
+            )}
+            {isSavings && tx.savingsDestination && <span>Destino: {tx.savingsDestination}</span>}
             {tx.notes && <span className="transaction-row-note">Observação: {tx.notes}</span>}
           </div>
         </details>
@@ -355,7 +366,15 @@ function TxRow({
 
       <div className="transaction-row__aside transaction-row-aside-refined">
         <span className="transaction-amount" data-kind={kind}>
-          {isIncome ? '+' : kind === 'expense' ? '−' : ''}
+          {isSavings
+            ? tx.savingsMovement === 'withdrawal'
+              ? '−'
+              : '+'
+            : isIncome
+              ? '+'
+              : kind === 'expense'
+                ? '−'
+                : ''}
           {formatCurrency(tx.amount)}
         </span>
 

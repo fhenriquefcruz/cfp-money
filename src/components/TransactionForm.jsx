@@ -16,6 +16,7 @@ import {
 import {
   useCategories,
   useCreditCards,
+  useGoals,
   useNotifications,
   useTransactions,
 } from '../contexts/AppContext'
@@ -29,6 +30,7 @@ import {
   splitInstallmentAmounts,
 } from '../domain/creditCards'
 import { reviewTransactionCategory } from '../domain/categoryReview'
+import { UNCLASSIFIED_SAVINGS_DESTINATION } from '../domain/savings'
 
 // ── Máscara monetária ──
 function maskCurrency(raw) {
@@ -149,6 +151,10 @@ const EMPTY_FORM = {
   dueDate: '',
   paymentMethod: 'pix',
   notes: '',
+  savingsMovement: 'deposit',
+  savingsDestination: '',
+  savingsInstitution: '',
+  goalId: '',
   // Cartão
   isCredit: false,
   cardId: '',
@@ -174,6 +180,7 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
   const { showNotification } = useNotifications()
   const { categories } = useCategories()
   const { creditCards } = useCreditCards()
+  const { goals } = useGoals()
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
@@ -195,6 +202,12 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
         paymentMethod: transaction.paymentMethod || 'pix',
         cardId: transaction.cardId || '',
         notes: transaction.notes || '',
+        savingsMovement: transaction.savingsMovement || 'deposit',
+        savingsDestination:
+          transaction.savingsDestination ||
+          (transaction.isSavings ? UNCLASSIFIED_SAVINGS_DESTINATION : ''),
+        savingsInstitution: transaction.savingsInstitution || '',
+        goalId: transaction.goalId || '',
         isRecurring: transaction.isRecurring || false,
       })
       setShowAdvanced(Boolean(transaction.dueDate || transaction.notes || transaction.isRecurring))
@@ -215,6 +228,12 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           next.isRecurring = false
           next.isInstallment = false
           next.isCredit = false
+          if (value !== 'savings') {
+            next.savingsMovement = 'deposit'
+            next.savingsDestination = ''
+            next.savingsInstitution = ''
+            next.goalId = ''
+          }
         }
         if (field === 'paymentMethod') {
           next.isCredit = value === 'credit_card'
@@ -254,6 +273,8 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
     const errs = {}
     if (!form.amount || parseCurrency(form.amount) <= 0) errs.amount = 'Informe um valor válido'
     if (!isSavings && !form.categoryId) errs.categoryId = 'Selecione uma categoria'
+    if (isSavings && !form.savingsDestination.trim())
+      errs.savingsDestination = 'Informe onde este dinheiro está guardado'
     if (!form.date) errs.date = 'Data obrigatória'
     if (form.isInstallment && parseInt(form.installments) < 2)
       errs.installments = 'Mínimo 2 parcelas'
@@ -273,7 +294,13 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
     const baseData = {
       type: isSavings ? 'income' : form.txType,
       isSavings,
-      description: form.description.trim() || (isSavings ? 'Depósito em Poupança' : ''),
+      description:
+        form.description.trim() ||
+        (isSavings
+          ? form.savingsMovement === 'withdrawal'
+            ? 'Retirada da reserva'
+            : 'Aporte em reserva'
+          : ''),
       categoryId: isSavings ? '_savings' : form.categoryId,
       categoryName: isSavings ? 'Poupança' : cat?.name || '',
       categoryColor: isSavings ? '#c49d6b' : cat?.color || '',
@@ -281,6 +308,14 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
       paymentMethod: form.paymentMethod,
       notes: form.notes.trim(),
       isRecurring: form.isRecurring,
+      ...(isSavings
+        ? {
+            savingsMovement: form.savingsMovement,
+            savingsDestination: form.savingsDestination.trim(),
+            savingsInstitution: form.savingsInstitution.trim(),
+            goalId: form.goalId || '',
+          }
+        : {}),
     }
 
     try {
@@ -396,7 +431,8 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
     if (isEditing) return 'Salvar alterações'
     if (form.isInstallment) return `Criar ${form.installments} parcelas`
     if (form.isRecurring) return `Criar ${form.recurringMonths} meses`
-    if (isSavings) return 'Depositar na poupança'
+    if (isSavings)
+      return form.savingsMovement === 'withdrawal' ? 'Registrar retirada' : 'Registrar aporte'
     return 'Adicionar'
   }
 
@@ -455,17 +491,76 @@ export default function TransactionForm({ isOpen, onClose, transaction }) {
           error={errors.amount}
         />
 
-        {/* Poupança — só descrição */}
         {isSavings && (
-          <div className="p-3 rounded-xl bg-[--brand-50] border border-[--brand-200]">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="space-y-3 rounded-2xl border border-[--brand-200] bg-[--brand-50] p-3">
+            <div className="flex items-center gap-2">
               <PiggyBank size={14} className="text-[--brand-600]" />
-              <p className="text-xs font-bold text-[--brand-700]">Depósito em Poupança</p>
+              <div>
+                <p className="text-xs font-bold text-[--brand-700]">Poupança e Reservas</p>
+                <p className="mt-0.5 text-[10px] leading-relaxed text-[--brand-600]">
+                  Registre o movimento e identifique onde o dinheiro está. Poupança continua
+                  separada de receitas e despesas.
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-[--brand-600] leading-relaxed">
-              Este valor será registrado separadamente como poupança e não entra no saldo corrente
-              do mês. Você pode acompanhá-la no Dashboard.
-            </p>
+
+            <fieldset>
+              <legend className="mb-1.5 text-xs font-semibold text-[--text-secondary]">
+                Movimento
+              </legend>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  ['deposit', 'Guardar'],
+                  ['withdrawal', 'Retirar'],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => update('savingsMovement')(value)}
+                    aria-pressed={form.savingsMovement === value}
+                    className={`min-h-10 rounded-xl border px-3 text-xs font-bold transition-colors ${
+                      form.savingsMovement === value
+                        ? 'border-[--brand-400] bg-[--bg-elevated] text-[--text-primary]'
+                        : 'border-[--border-default] text-[--text-tertiary] hover:bg-[--bg-hover]'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <Input
+              label="Onde está guardado?"
+              placeholder="Ex: Caixinha Reserva de Emergência"
+              value={form.savingsDestination}
+              onChange={update('savingsDestination')}
+              error={errors.savingsDestination}
+              required
+            />
+
+            <Input
+              label="Instituição (opcional)"
+              placeholder="Ex: Nubank, Inter, Itaú"
+              value={form.savingsInstitution}
+              onChange={update('savingsInstitution')}
+            />
+
+            <label className="grid gap-1.5 text-sm font-medium text-[--text-secondary]">
+              Vincular a uma meta (opcional)
+              <select
+                value={form.goalId}
+                onChange={update('goalId')}
+                className="min-h-11 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+              >
+                <option value="">Nenhuma meta</option>
+                {goals.map((goal) => (
+                  <option key={goal.id} value={goal.id}>
+                    {goal.emoji || '🎯'} {goal.name}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
         )}
 

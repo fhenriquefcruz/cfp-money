@@ -1,3 +1,5 @@
+import { getSavingsSignedAmount } from './savings'
+
 const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
 
 export const getFinancialActivityDate = (transaction = {}) =>
@@ -19,7 +21,7 @@ export function summarizeTransactions(transactions = []) {
       const amount = asAmount(transaction.amount)
 
       if (transaction.isSavings) {
-        summary.savings += amount
+        summary.savings += getSavingsSignedAmount(transaction)
       } else if (transaction.type === 'income') {
         summary.income += amount
       } else if (transaction.type === 'expense') {

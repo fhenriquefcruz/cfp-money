@@ -22,6 +22,9 @@ vi.mock('../contexts/AppContext', () => ({
   useCreditCards: () => ({
     creditCards: [],
   }),
+  useGoals: () => ({
+    goals: [{ id: 'goal-reserve', name: 'Reserva de emergência', emoji: '🛟' }],
+  }),
   useCategories: () => ({
     categories: [
       {
@@ -131,5 +134,41 @@ describe('TransactionForm category review', () => {
     fireEvent.click(suggestion)
     expect(rideCategory).toHaveAttribute('aria-pressed', 'true')
     expect(appMocks.editTransaction).not.toHaveBeenCalled()
+  })
+})
+
+describe('TransactionForm savings destinations', () => {
+  it('exige destino e persiste movimento, instituição e meta', async () => {
+    render(<TransactionForm isOpen onClose={vi.fn()} transaction={null} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Poupança' }))
+    fireEvent.change(screen.getByLabelText(/Valor/), { target: { value: '50000' } })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar aporte' }))
+    expect(screen.getByText('Informe onde este dinheiro está guardado')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Onde está guardado?'), {
+      target: { value: 'Caixinha Reserva' },
+    })
+    fireEvent.change(screen.getByLabelText('Instituição (opcional)'), {
+      target: { value: 'Nubank' },
+    })
+    fireEvent.change(screen.getByLabelText('Vincular a uma meta (opcional)'), {
+      target: { value: 'goal-reserve' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar aporte' }))
+
+    await vi.waitFor(() => expect(appMocks.createTransaction).toHaveBeenCalledTimes(1))
+    expect(appMocks.createTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isSavings: true,
+        savingsMovement: 'deposit',
+        savingsDestination: 'Caixinha Reserva',
+        savingsInstitution: 'Nubank',
+        goalId: 'goal-reserve',
+        amount: 500,
+      }),
+    )
   })
 })
