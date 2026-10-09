@@ -173,4 +173,4 @@
 - [x] testar detecção de reservas sem classificação;
 - [x] testar persistência de destino, instituição e meta ao editar;
 - [x] cobrir edição pela Central em E2E;
-- [ ] validar gates e revisar baselines visuais antes do merge.
+- [x] validar gates e revisar baselines visuais antes do merge.
