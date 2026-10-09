@@ -581,7 +581,7 @@ export default function Dashboard() {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
                   Onde está
                 </p>
-                <Link to="/reports" className="text-xs font-bold text-[--text-brand] hover:underline">
+                <Link to="/reports?tab=savings" className="text-xs font-bold text-[--text-brand] hover:underline">
                   Ver relatório
                 </Link>
               </div>
