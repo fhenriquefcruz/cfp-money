@@ -196,3 +196,57 @@ describe('TransactionForm savings presets', () => {
     expect(screen.getByRole('button', { name: 'Registrar retirada' })).toBeInTheDocument()
   })
 })
+
+describe('TransactionForm savings editing', () => {
+  it('edita destino, instituição e meta de uma reserva existente', async () => {
+    const onClose = vi.fn()
+    render(
+      <TransactionForm
+        isOpen
+        onClose={onClose}
+        transaction={{
+          id: 'saving-existing',
+          type: 'income',
+          isSavings: true,
+          savingsMovement: 'deposit',
+          savingsDestination: 'Reserva antiga',
+          savingsInstitution: 'Banco A',
+          goalId: '',
+          amount: 900,
+          description: 'Aporte legado',
+          categoryId: '_savings',
+          categoryName: 'Poupança',
+          date: '2026-10-02',
+          paymentMethod: 'pix',
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Poupança' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByLabelText('Onde está guardado?')).toHaveValue('Reserva antiga')
+
+    fireEvent.change(screen.getByLabelText('Onde está guardado?'), {
+      target: { value: 'Reserva de emergência' },
+    })
+    fireEvent.change(screen.getByLabelText('Instituição (opcional)'), {
+      target: { value: 'Banco B' },
+    })
+    fireEvent.change(screen.getByLabelText('Vincular a uma meta (opcional)'), {
+      target: { value: 'goal-reserve' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+
+    await vi.waitFor(() => expect(appMocks.editTransaction).toHaveBeenCalledTimes(1))
+    expect(appMocks.editTransaction).toHaveBeenCalledWith(
+      'saving-existing',
+      expect.objectContaining({
+        isSavings: true,
+        savingsMovement: 'deposit',
+        savingsDestination: 'Reserva de emergência',
+        savingsInstitution: 'Banco B',
+        goalId: 'goal-reserve',
+        amount: 900,
+      }),
+    )
+  })
+})

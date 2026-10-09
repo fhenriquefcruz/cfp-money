@@ -57,3 +57,15 @@ novo chunk `Savings` em aproximadamente **3,39 KiB gzip**, mantendo o JavaScript
 Para absorver exclusivamente essa nova capacidade, o teto de JavaScript total foi ajustado de
 **713 KiB** para **718 KiB gzip**. Permanecem inalterados os limites de JavaScript inicial, rota
 Money, maior chunk e CSS. A nova rota não pode retornar ao carregamento inicial.
+
+## Estabilidade de medição — Fase 47
+
+Dois jobs independentes do mesmo commit mediram o JavaScript inicial em lados opostos do teto de
+**242 KiB**, com diferença de apenas **1 byte** no job que falhou. A rota de Reservas continuou
+lazy e o gate dedicado de Performance/PWA permaneceu aprovado.
+
+Para evitar flakiness sem ampliar o orçamento real, o alvo nominal de **242 KiB gzip** foi
+preservado e o verificador passou a aceitar somente **64 bytes de tolerância de medição** para o
+JavaScript inicial. Qualquer crescimento acima de 242 KiB + 64 bytes continua bloqueando o CI.
+
+Os limites de JavaScript total, rota Money, maior chunk e CSS não foram ampliados nesta fase.

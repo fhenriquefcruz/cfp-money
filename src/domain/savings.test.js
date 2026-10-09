@@ -2,6 +2,7 @@ import {
   buildSavingsOverview,
   getGoalEffectiveCurrent,
   getSavingsSignedAmount,
+  getUnclassifiedSavingsTransactions,
   UNCLASSIFIED_SAVINGS_DESTINATION,
 } from './savings'
 
@@ -70,4 +71,26 @@ test('meta preserva saldo inicial e soma apenas movimentos vinculados', () => {
       transactions,
     ),
   ).toBe(2750)
+})
+
+test('lista apenas reservas efetivas sem destino para classificação', () => {
+  const items = getUnclassifiedSavingsTransactions([
+    ...transactions,
+    {
+      id: 'classified-later',
+      isSavings: true,
+      amount: 100,
+      date: '2026-10-08',
+      savingsDestination: 'Viagem',
+    },
+    {
+      id: 'cancelled-legacy',
+      isSavings: true,
+      amount: 800,
+      date: '2026-10-09',
+      paymentStatus: 'cancelled',
+    },
+  ])
+
+  expect(items.map((item) => item.id)).toEqual(['legacy'])
 })

@@ -163,3 +163,14 @@
 - [x] adicionar cobertura unitária e E2E;
 - [x] incluir a nova rota nos gates Mobile, WCAG e Visual;
 - [x] revisar os novos baselines visuais e validar todos os gates antes do merge.
+
+## Gestão de Reservas — Fase 47
+
+- [x] detectar movimentos de Poupança legados sem destino;
+- [x] oferecer ação direta “Classificar agora” na Central;
+- [x] permitir editar aportes e retiradas existentes sem sair de Reservas;
+- [x] reutilizar o TransactionForm e a mesma fonte de verdade de transações;
+- [x] testar detecção de reservas sem classificação;
+- [x] testar persistência de destino, instituição e meta ao editar;
+- [x] cobrir edição pela Central em E2E;
+- [x] validar gates e revisar baselines visuais antes do merge.

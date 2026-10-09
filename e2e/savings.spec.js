@@ -40,4 +40,24 @@ test.describe('Central de Poupança e Reservas', () => {
     await expect(dialog).toBeHidden()
     await expect(page.getByText('R$ 1.250,00').first()).toBeVisible()
   })
+
+  test('edita um aporte existente sem sair da Central', async ({ page }) => {
+    await prepareE2EPage(page, '/savings')
+
+    await page
+      .getByRole('button', { name: 'Editar movimento Aporte para entrada do carro' })
+      .click()
+
+    const dialog = page.getByRole('dialog', { name: 'Editar transação' })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByLabel('Onde está guardado?')).toHaveValue('Caixinha do carro')
+    await expect(dialog.getByLabel('Instituição (opcional)')).toHaveValue('Nubank')
+
+    await dialog.getByLabel('Onde está guardado?').fill('Reserva do carro')
+    await dialog.getByRole('button', { name: 'Salvar alterações' }).click()
+
+    await expect(dialog).toBeHidden()
+    await expect(page.getByText('Reserva do carro').first()).toBeVisible()
+    await expect(page.getByText('Caixinha do carro')).toHaveCount(0)
+  })
 })

@@ -30,6 +30,17 @@ export function getSavingsDestinationLabel(transaction = {}) {
   return institution ? `${institution} · ${destination}` : destination
 }
 
+export function getUnclassifiedSavingsTransactions(transactions = []) {
+  return transactions
+    .filter(
+      (transaction) =>
+        transaction.isSavings &&
+        getSavingsSignedAmount(transaction) !== 0 &&
+        !String(transaction.savingsDestination || '').trim(),
+    )
+    .sort((first, second) => activityDate(second).localeCompare(activityDate(first)))
+}
+
 export function getGoalSavingsAmount(transactions = [], goalId = '') {
   if (!goalId) return 0
 
