@@ -194,11 +194,15 @@ export const GoalsProvider = ({ children, userId }) => {
     return undefined
   }, [userId])
 
-  const mutateGoal = async (action, message, type) => {
+  const mutateGoal = async (action, message, type, e2eMutation) => {
     if (!userId) return
     try {
-      await action()
-      setGoals(await getGoals(userId))
+      if (E2E_MODE) {
+        setGoals((current) => e2eMutation(current ?? []))
+      } else {
+        await action()
+        setGoals(await getGoals(userId))
+      }
       showNotification(message, type)
     } catch (error) {
       showNotification('Erro na meta.', 'error')
@@ -206,14 +210,45 @@ export const GoalsProvider = ({ children, userId }) => {
     }
   }
 
+  const createGoal = (data) =>
+    mutateGoal(
+      () => addGoal(userId, data),
+      'Meta criada!',
+      'success',
+      (current) => [
+        ...current,
+        {
+          ...data,
+          id: `e2e-goal-${Date.now()}`,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    )
+
+  const editGoal = (id, data) =>
+    mutateGoal(
+      () => updateGoal(userId, id, data),
+      'Meta salva!',
+      'success',
+      (current) => current.map((goal) => (goal.id === id ? { ...goal, ...data } : goal)),
+    )
+
+  const removeGoal = (id) =>
+    mutateGoal(
+      () => deleteGoal(userId, id),
+      'Meta removida.',
+      'info',
+      (current) => current.filter((goal) => goal.id !== id),
+    )
+
   return (
     <GoalsContext.Provider
       value={{
         goals: goals ?? [],
         loading: goals === null,
-        createGoal: (data) => mutateGoal(() => addGoal(userId, data), 'Meta criada!'),
-        editGoal: (id, data) => mutateGoal(() => updateGoal(userId, id, data), 'Meta salva!'),
-        removeGoal: (id) => mutateGoal(() => deleteGoal(userId, id), 'Meta removida.', 'info'),
+        createGoal,
+        editGoal,
+        removeGoal,
       }}
     >
       {children}
