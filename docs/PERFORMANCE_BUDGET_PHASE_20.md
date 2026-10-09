@@ -58,7 +58,6 @@ Para absorver exclusivamente essa nova capacidade, o teto de JavaScript total fo
 **713 KiB** para **718 KiB gzip**. Permanecem inalterados os limites de JavaScript inicial, rota
 Money, maior chunk e CSS. A nova rota não pode retornar ao carregamento inicial.
 
-
 ## Estabilidade de medição — Fase 47
 
 Dois jobs independentes do mesmo commit mediram o JavaScript inicial em lados opostos do teto de

@@ -30,7 +30,6 @@ export function getSavingsDestinationLabel(transaction = {}) {
   return institution ? `${institution} · ${destination}` : destination
 }
 
-
 export function getUnclassifiedSavingsTransactions(transactions = []) {
   return transactions
     .filter(

@@ -197,7 +197,6 @@ describe('TransactionForm savings presets', () => {
   })
 })
 
-
 describe('TransactionForm savings editing', () => {
   it('edita destino, instituição e meta de uma reserva existente', async () => {
     const onClose = vi.fn()

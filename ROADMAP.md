@@ -164,7 +164,6 @@
 - [x] incluir a nova rota nos gates Mobile, WCAG e Visual;
 - [x] revisar os novos baselines visuais e validar todos os gates antes do merge.
 
-
 ## Gestão de Reservas — Fase 47
 
 - [x] detectar movimentos de Poupança legados sem destino;

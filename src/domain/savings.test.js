@@ -73,7 +73,6 @@ test('meta preserva saldo inicial e soma apenas movimentos vinculados', () => {
   ).toBe(2750)
 })
 
-
 test('lista apenas reservas efetivas sem destino para classificação', () => {
   const items = getUnclassifiedSavingsTransactions([
     ...transactions,

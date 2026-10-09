@@ -135,7 +135,8 @@ export default function Savings() {
               </div>
               <div>
                 <p className="text-sm font-bold text-[--text-primary]">
-                  {legacyUnclassifiedCount} movimento{legacyUnclassifiedCount === 1 ? '' : 's'} antigo
+                  {legacyUnclassifiedCount} movimento{legacyUnclassifiedCount === 1 ? '' : 's'}{' '}
+                  antigo
                   {legacyUnclassifiedCount === 1 ? '' : 's'} sem destino
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">
