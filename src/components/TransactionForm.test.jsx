@@ -172,3 +172,28 @@ describe('TransactionForm savings destinations', () => {
     )
   })
 })
+
+
+describe('TransactionForm savings presets', () => {
+  it('abre diretamente como retirada com destino, instituição e meta pré-preenchidos', () => {
+    render(
+      <TransactionForm
+        isOpen
+        onClose={vi.fn()}
+        transaction={null}
+        initialType="savings"
+        initialSavingsMovement="withdrawal"
+        initialSavingsDestination="Caixinha Reserva"
+        initialSavingsInstitution="Nubank"
+        initialGoalId="goal-reserve"
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Poupança' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Retirar' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByLabelText('Onde está guardado?')).toHaveValue('Caixinha Reserva')
+    expect(screen.getByLabelText('Instituição (opcional)')).toHaveValue('Nubank')
+    expect(screen.getByLabelText('Vincular a uma meta (opcional)')).toHaveValue('goal-reserve')
+    expect(screen.getByRole('button', { name: 'Registrar retirada' })).toBeInTheDocument()
+  })
+})
