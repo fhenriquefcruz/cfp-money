@@ -463,7 +463,10 @@ function ReportsContent() {
                 <Card>
                   <p className="text-xs text-[--text-tertiary] mb-1 flex items-center gap-1">
                     Poupado por mês{' '}
-                    <InfoTooltip text="Média da poupança líquida (aportes menos retiradas) por mês." size={11} />
+                    <InfoTooltip
+                      text="Média da poupança líquida (aportes menos retiradas) por mês."
+                      size={11}
+                    />
                   </p>
                   <p className="text-xl font-black text-[--brand-500]">
                     {formatCurrency(periodTotals.savings / period)}
@@ -596,7 +599,9 @@ function ReportsContent() {
 
               <Card>
                 <div className="mb-4">
-                  <h3 className="text-sm font-bold text-[--text-primary]">Onde seu dinheiro está</h3>
+                  <h3 className="text-sm font-bold text-[--text-primary]">
+                    Onde seu dinheiro está
+                  </h3>
                   <p className="mt-1 text-xs text-[--text-tertiary]">
                     Distribuição atual das reservas por destino e instituição.
                   </p>

@@ -133,7 +133,6 @@
 - [ ] concluir `docs/LEGAL_REVIEW_CHECKLIST.md` com revisão jurídica humana antes do lançamento
       comercial definitivo.
 
-
 ## Metas, Poupança e Reservas — Fase 45
 
 - [x] corrigir a interação de edição de Metas com ação visível e teste E2E;

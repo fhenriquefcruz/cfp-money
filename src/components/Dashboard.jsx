@@ -125,13 +125,7 @@ const TxItem = ({ tx, categories }) => {
               : 'text-[--danger-icon]'
         }`}
       >
-        {tx.isSavings
-          ? tx.savingsMovement === 'withdrawal'
-            ? '−'
-            : '+'
-          : isIncome
-            ? '+'
-            : '−'}
+        {tx.isSavings ? (tx.savingsMovement === 'withdrawal' ? '−' : '+') : isIncome ? '+' : '−'}
         {formatCurrency(tx.amount)}
       </span>
     </div>
@@ -548,7 +542,9 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <h2 className="text-sm font-black text-[--text-primary]">Poupança e Reservas</h2>
+                    <h2 className="text-sm font-black text-[--text-primary]">
+                      Poupança e Reservas
+                    </h2>
                     <InfoTooltip text="Total reservado considera depósitos menos retiradas. O valor poupado no mês usa apenas o período visualizado." />
                   </div>
                   <p className="text-[10px] text-[--text-tertiary]">
@@ -581,7 +577,10 @@ export default function Dashboard() {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
                   Onde está
                 </p>
-                <Link to="/reports?tab=savings" className="text-xs font-bold text-[--text-brand] hover:underline">
+                <Link
+                  to="/reports?tab=savings"
+                  className="text-xs font-bold text-[--text-brand] hover:underline"
+                >
                   Ver relatório
                 </Link>
               </div>

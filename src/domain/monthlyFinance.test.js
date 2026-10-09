@@ -58,7 +58,6 @@ test('usa purchaseDate para compra estruturada no cartão', () => {
   expect(data[0].expenses).toBe(300)
 })
 
-
 test('poupança mensal usa aportes menos retiradas', () => {
   const data = getMonthlyFinancialData(
     [

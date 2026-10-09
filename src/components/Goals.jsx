@@ -139,12 +139,7 @@ function GoalCard({ goal, transactions, onEdit, onDelete, onContribute }) {
             >
               ✎
             </button>
-            <GoalMenu
-              goal={goal}
-              onContribute={onContribute}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
+            <GoalMenu goal={goal} onContribute={onContribute} onEdit={onEdit} onDelete={onDelete} />
           </div>
         </div>
 
@@ -623,7 +618,8 @@ function GoalsContent() {
                 Novo acumulado:{' '}
                 <strong>
                   {formatCurrency(
-                    getGoalEffectiveCurrent(contributing, transactions) + Number(contributionAmount),
+                    getGoalEffectiveCurrent(contributing, transactions) +
+                      Number(contributionAmount),
                   )}
                 </strong>
               </div>

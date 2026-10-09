@@ -29,7 +29,6 @@ Contém cadastro, plano, preferências do Money, versões jurídicas aceitas e m
 
 A rotina remove dados do usuário, categorias próprias, integrações, rascunhos, consentimentos identificáveis e a identidade no Firebase Authentication. O registro final utiliza hash do UID.
 
-
 ## Poupança e reservas — Fase 45
 
 Poupança continua armazenada em `users/{uid}/transactions`; não existe uma coleção paralela de

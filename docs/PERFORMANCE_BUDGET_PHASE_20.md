@@ -32,7 +32,6 @@ A remoção do preload antecipado de `charts` reduz o JavaScript inicial estimad
 de 327,82 KiB para aproximadamente 223,53 KiB gzip, sem duplicar Recharts e
 sem alterar a experiência das rotas Dashboard e Relatórios.
 
-
 ## Recalibração — Fase 45
 
 A Fase 45 adiciona semântica auditável de Poupança e Reservas em quatro rotas carregadas sob

@@ -137,7 +137,6 @@ describe('TransactionForm category review', () => {
   })
 })
 
-
 describe('TransactionForm savings destinations', () => {
   it('exige destino e persiste movimento, instituição e meta', async () => {
     render(<TransactionForm isOpen onClose={vi.fn()} transaction={null} />)

@@ -6,7 +6,11 @@ const isEffective = (transaction = {}) =>
   transaction.kind !== 'transfer'
 
 const activityDate = (transaction = {}) =>
-  transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date || transaction.dueDate || ''
+  transaction.purchaseDate ||
+  transaction.originalPurchaseDate ||
+  transaction.date ||
+  transaction.dueDate ||
+  ''
 
 export const SAVINGS_DEPOSIT = 'deposit'
 export const SAVINGS_WITHDRAWAL = 'withdrawal'

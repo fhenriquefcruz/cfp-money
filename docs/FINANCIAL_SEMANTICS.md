@@ -228,7 +228,6 @@ A Phase 42A também incorporou uma atualização obrigatória do DOMPurify para 
 
 A mudança é inferior a 1% e cria uma pequena margem operacional sem liberar gráficos ou bibliotecas de PDF no carregamento inicial.
 
-
 ## Poupança, reservas e metas — Fase 45
 
 ### Uma única semântica financeira

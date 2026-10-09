@@ -114,7 +114,6 @@ test('ignora cancelamentos e transferências explícitas nos totais', () => {
   })
 })
 
-
 test('retirada da poupança reduz o reservado sem virar despesa', () => {
   const result = summarizeTransactions([
     ...transactions,

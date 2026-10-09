@@ -355,7 +355,9 @@ function TxRow({
             {protectedGroup && (
               <span>{tx.isInstallment ? 'Série parcelada' : 'Série recorrente'}</span>
             )}
-            {isSavings && tx.savingsInstitution && <span>Instituição: {tx.savingsInstitution}</span>}
+            {isSavings && tx.savingsInstitution && (
+              <span>Instituição: {tx.savingsInstitution}</span>
+            )}
             {isSavings && tx.savingsDestination && <span>Destino: {tx.savingsDestination}</span>}
             {tx.notes && <span className="transaction-row-note">Observação: {tx.notes}</span>}
           </div>
