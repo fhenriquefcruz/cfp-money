@@ -33,6 +33,7 @@ import InfoTooltip from './InfoTooltip'
 import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { getTransactionActivityDate } from '../domain/transactionDates'
+import { buildSavingsOverview, getSavingsSignedAmount } from '../domain/savings'
 
 const isEffective = (transaction) =>
   transaction.paymentStatus !== 'cancelled' &&
@@ -124,7 +125,10 @@ function ReportsContent() {
   const [period, setPeriod] = useState(6)
   const [referenceMonth, setReferenceMonth] = useState(initialMonth)
   const [exporting, setExporting] = useState(false)
-  const [tab, setTab] = useState('overview') // 'overview' | 'categories' | 'savings'
+  const requestedTab = searchParams.get('tab')
+  const [tab, setTab] = useState(
+    ['overview', 'categories', 'savings'].includes(requestedTab) ? requestedTab : 'overview',
+  ) // 'overview' | 'categories' | 'savings'
 
   const referenceDate = useMemo(() => new Date(referenceMonth + '-01T00:00:00'), [referenceMonth])
   const periodStart = format(startOfMonth(subMonths(referenceDate, period - 1)), 'yyyy-MM-dd')
@@ -135,6 +139,15 @@ function ReportsContent() {
         if (!isEffective(transaction)) return false
         const activityDate = getTransactionActivityDate(transaction)
         return activityDate >= periodStart && activityDate <= periodEnd
+      }),
+    [transactions, periodStart, periodEnd],
+  )
+
+  const savingsOverview = useMemo(
+    () =>
+      buildSavingsOverview(transactions, {
+        start: periodStart,
+        end: periodEnd,
       }),
     [transactions, periodStart, periodEnd],
   )
@@ -150,15 +163,22 @@ function ReportsContent() {
       expenses += summary.expenses
     }
 
-    const savings = reportTransactions
-      .filter((transaction) => transaction.isSavings)
-      .reduce((total, transaction) => total + transaction.amount, 0)
+    const savings = savingsOverview.periodNet
     const balance = income - expenses
     const avg = expenses / (period || 1)
     const savingRate = income > 0 ? (savings / income) * 100 : 0
 
-    return { income, expenses, balance, avg, savingRate, savings }
-  }, [reportTransactions, period, getSummary, referenceDate])
+    return {
+      income,
+      expenses,
+      balance,
+      avg,
+      savingRate,
+      savings,
+      savingsDeposits: savingsOverview.periodDeposits,
+      savingsWithdrawals: savingsOverview.periodWithdrawals,
+    }
+  }, [period, getSummary, referenceDate, savingsOverview])
 
   const monthlyData = useMemo(
     () => getMonthlyFinancialData(transactions, period, referenceDate),
@@ -178,7 +198,7 @@ function ReportsContent() {
           const activityDate = getTransactionActivityDate(t)
           return activityDate >= from && activityDate <= to
         })
-        .reduce((s, t) => s + t.amount, 0)
+        .reduce((s, t) => s + getSavingsSignedAmount(t), 0)
       return { month: label, value }
     })
   }, [transactions, period, referenceDate])
@@ -319,11 +339,11 @@ function ReportsContent() {
               tooltip="Receitas menos despesas."
             />
             <KPI
-              label="Poupança"
+              label="Poupança líquida"
               value={formatCurrency(periodTotals.savings)}
               color="#c49d6b"
               icon={<PiggyBank size={16} />}
-              tooltip="Total depositado em poupança no período."
+              tooltip="Aportes menos retiradas de Poupança no período."
             />
           </div>
 
@@ -443,7 +463,7 @@ function ReportsContent() {
                 <Card>
                   <p className="text-xs text-[--text-tertiary] mb-1 flex items-center gap-1">
                     Poupado por mês{' '}
-                    <InfoTooltip text="Média de depósitos em poupança por mês." size={11} />
+                    <InfoTooltip text="Média da poupança líquida (aportes menos retiradas) por mês." size={11} />
                   </p>
                   <p className="text-xl font-black text-[--brand-500]">
                     {formatCurrency(periodTotals.savings / period)}
@@ -544,17 +564,102 @@ function ReportsContent() {
           {/* Poupança */}
           {tab === 'savings' && (
             <div className="space-y-4">
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
+                <Card>
+                  <p className="text-xs text-[--text-tertiary]">Total reservado</p>
+                  <p className="mt-1 text-2xl font-black text-[--text-primary]">
+                    {formatCurrency(savingsOverview.totalBalance)}
+                  </p>
+                  <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                    Saldo histórico: depósitos menos retiradas.
+                  </p>
+                </Card>
+                <Card>
+                  <p className="text-xs text-[--text-tertiary]">Aportes no período</p>
+                  <p className="mt-1 text-2xl font-black text-[--success-text]">
+                    {formatCurrency(periodTotals.savingsDeposits)}
+                  </p>
+                  <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                    Valores direcionados às suas reservas.
+                  </p>
+                </Card>
+                <Card>
+                  <p className="text-xs text-[--text-tertiary]">Retiradas no período</p>
+                  <p className="mt-1 text-2xl font-black text-[--danger-text]">
+                    {formatCurrency(periodTotals.savingsWithdrawals)}
+                  </p>
+                  <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                    Saídas registradas de reservas.
+                  </p>
+                </Card>
+              </div>
+
+              <Card>
+                <div className="mb-4">
+                  <h3 className="text-sm font-bold text-[--text-primary]">Onde seu dinheiro está</h3>
+                  <p className="mt-1 text-xs text-[--text-tertiary]">
+                    Distribuição atual das reservas por destino e instituição.
+                  </p>
+                </div>
+                {savingsOverview.destinations.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-[--text-tertiary]">
+                    Os lançamentos antigos continuam preservados como “Reserva não classificada”.
+                    Novas poupanças podem informar destino e instituição.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {savingsOverview.destinations.map((destination) => {
+                      const share =
+                        savingsOverview.totalBalance > 0
+                          ? (destination.balance / savingsOverview.totalBalance) * 100
+                          : 0
+                      return (
+                        <div key={destination.label}>
+                          <div className="flex items-start justify-between gap-3 text-xs">
+                            <div className="min-w-0">
+                              <p className="truncate font-bold text-[--text-primary]">
+                                {destination.destination}
+                              </p>
+                              <p className="truncate text-[10px] text-[--text-tertiary]">
+                                {destination.institution || 'Instituição não informada'}
+                                {destination.goalIds.length
+                                  ? ` · ${destination.goalIds.length} meta${destination.goalIds.length === 1 ? '' : 's'} vinculada${destination.goalIds.length === 1 ? '' : 's'}`
+                                  : ''}
+                              </p>
+                            </div>
+                            <div className="flex-shrink-0 text-right">
+                              <p className="font-black text-[--text-primary]">
+                                {formatCurrency(destination.balance)}
+                              </p>
+                              <p className="text-[10px] text-[--text-tertiary]">
+                                {share.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
+                              </p>
+                            </div>
+                          </div>
+                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-[--bg-hover]">
+                            <div
+                              className="h-full rounded-full bg-[--brand-500]"
+                              style={{ width: `${Math.min(100, share)}%` }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </Card>
+
               <Card>
                 <div className="flex items-center gap-2 mb-4">
                   <PiggyBank size={16} className="text-[--brand-500]" />
                   <h3 className="text-sm font-bold text-[--text-primary]">Evolução da Poupança</h3>
-                  <InfoTooltip text="Quanto você depositou em poupança a cada mês no período." />
+                  <InfoTooltip text="Poupança líquida por mês: aportes menos retiradas." />
                 </div>
-                {periodTotals.savings === 0 ? (
+                {periodTotals.savingsDeposits === 0 && periodTotals.savingsWithdrawals === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-3xl mb-2">🐷</p>
                     <p className="text-sm font-bold text-[--text-primary]">
-                      Nenhum depósito em poupança
+                      Nenhum movimento de poupança
                     </p>
                     <p className="text-xs text-[--text-tertiary] mt-1">
                       Adicione uma transação do tipo "Poupança" para começar a acompanhar.
@@ -591,7 +696,7 @@ function ReportsContent() {
 
                     <div className="mt-4 grid min-w-0 grid-cols-1 gap-3 min-[390px]:grid-cols-2">
                       <div className="text-center p-3 bg-[--brand-50] rounded-xl border border-[--brand-200]">
-                        <p className="text-xs text-[--brand-600] mb-0.5">Total poupado</p>
+                        <p className="text-xs text-[--brand-600] mb-0.5">Poupança líquida</p>
                         <p className="text-xl font-black text-[--brand-700]">
                           {formatCurrency(periodTotals.savings)}
                         </p>
