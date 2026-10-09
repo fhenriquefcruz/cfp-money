@@ -1,11 +1,12 @@
 // src/components/Goals.jsx
 import React, { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useGoals } from '../contexts/AppContext'
+import { useGoals, useTransactions } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
 import { formatCurrency, formatDate } from '../utils'
 import InfoTooltip from './InfoTooltip'
 import { buildGoalPlan, buildGoalsOverview } from '../domain/goalPlanning'
+import { getGoalEffectiveCurrent } from '../domain/savings'
 
 const EMOJI_LIST = [
   '🏠',
@@ -83,8 +84,9 @@ function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
   )
 }
 
-function GoalCard({ goal, onEdit, onDelete, onContribute }) {
-  const plan = buildGoalPlan(goal)
+function GoalCard({ goal, transactions, onEdit, onDelete, onContribute }) {
+  const effectiveCurrent = getGoalEffectiveCurrent(goal, transactions)
+  const plan = buildGoalPlan({ ...goal, currentAmount: effectiveCurrent })
   const isUrgent =
     plan.daysLeft !== null && plan.daysLeft >= 0 && plan.daysLeft <= 30 && !plan.completed
 
@@ -127,7 +129,23 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }) {
               </div>
             </div>
           </div>
-          <GoalMenu goal={goal} onContribute={onContribute} onEdit={onEdit} onDelete={onDelete} />
+          <div className="flex flex-shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => onEdit(goal)}
+              aria-label={`Editar meta ${goal.name}`}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
+              title="Editar meta"
+            >
+              ✎
+            </button>
+            <GoalMenu
+              goal={goal}
+              onContribute={onContribute}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          </div>
         </div>
 
         <div className="mt-4">
@@ -204,6 +222,7 @@ function GoalCard({ goal, onEdit, onDelete, onContribute }) {
 
 function GoalsContent() {
   const { goals, createGoal, editGoal, removeGoal } = useGoals()
+  const { transactions, createTransaction } = useTransactions()
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({
@@ -216,11 +235,21 @@ function GoalsContent() {
   const [loading, setLoading] = useState(false)
   const [contributing, setContributing] = useState(null)
   const [contributionAmount, setContributionAmount] = useState('')
+  const [contributionDestination, setContributionDestination] = useState('')
+  const [contributionInstitution, setContributionInstitution] = useState('')
   const [contributionLoading, setContributionLoading] = useState(false)
   const [deleteCandidate, setDeleteCandidate] = useState(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
-  const overview = useMemo(() => buildGoalsOverview(goals), [goals])
+  const effectiveGoals = useMemo(
+    () =>
+      goals.map((goal) => ({
+        ...goal,
+        currentAmount: getGoalEffectiveCurrent(goal, transactions),
+      })),
+    [goals, transactions],
+  )
+  const overview = useMemo(() => buildGoalsOverview(effectiveGoals), [effectiveGoals])
 
   const handleOpen = (goal = null) => {
     if (goal) {
@@ -275,23 +304,47 @@ function GoalsContent() {
   }
 
   const handleContribute = (goal) => {
+    const lastLinkedMovement = [...transactions]
+      .filter((transaction) => transaction.isSavings && transaction.goalId === goal.id)
+      .sort((first, second) => String(second.date || '').localeCompare(String(first.date || '')))[0]
+
     setContributing(goal)
     setContributionAmount('')
+    setContributionDestination(lastLinkedMovement?.savingsDestination || goal.name)
+    setContributionInstitution(lastLinkedMovement?.savingsInstitution || '')
   }
 
   const handleContributionSave = async () => {
     if (!contributing) return
 
     const value = Number(String(contributionAmount).replace(',', '.'))
-    if (!Number.isFinite(value) || value <= 0) return
+    if (!Number.isFinite(value) || value <= 0 || !contributionDestination.trim()) return
 
     setContributionLoading(true)
     try {
-      await editGoal(contributing.id, {
-        currentAmount: (Number(contributing.currentAmount) || 0) + value,
+      await createTransaction({
+        type: 'income',
+        isSavings: true,
+        savingsMovement: 'deposit',
+        savingsDestination: contributionDestination.trim(),
+        savingsInstitution: contributionInstitution.trim(),
+        goalId: contributing.id,
+        amount: value,
+        description: `Aporte para ${contributing.name}`,
+        categoryId: '_savings',
+        categoryName: 'Poupança',
+        categoryColor: '#c49d6b',
+        categoryIcon: '🐷',
+        paymentMethod: 'pix',
+        date: new Date().toISOString().slice(0, 10),
+        dueDate: '',
+        notes: '',
+        isRecurring: false,
       })
       setContributing(null)
       setContributionAmount('')
+      setContributionDestination('')
+      setContributionInstitution('')
     } finally {
       setContributionLoading(false)
     }
@@ -315,8 +368,8 @@ function GoalsContent() {
 
   // Ordenar: não concluídas primeiro, depois por prazo
   const sortedGoals = [...goals].sort((a, b) => {
-    const aDone = (a.currentAmount || 0) >= a.targetAmount
-    const bDone = (b.currentAmount || 0) >= b.targetAmount
+    const aDone = getGoalEffectiveCurrent(a, transactions) >= a.targetAmount
+    const bDone = getGoalEffectiveCurrent(b, transactions) >= b.targetAmount
     if (aDone && !bDone) return 1
     if (!aDone && bDone) return -1
     if (a.deadline && b.deadline) return new Date(a.deadline) - new Date(b.deadline)
@@ -407,6 +460,7 @@ function GoalsContent() {
               <GoalCard
                 key={goal.id}
                 goal={goal}
+                transactions={transactions}
                 onEdit={handleOpen}
                 onDelete={handleDelete}
                 onContribute={handleContribute}
@@ -436,7 +490,7 @@ function GoalsContent() {
               onChange={(e) => setForm((f) => ({ ...f, targetAmount: e.target.value }))}
             />
             <Input
-              label="Valor atual (R$)"
+              label="Saldo inicial / legado (R$)"
               type="number"
               step="0.01"
               min="0"
@@ -445,6 +499,10 @@ function GoalsContent() {
               onChange={(e) => setForm((f) => ({ ...f, currentAmount: e.target.value }))}
             />
           </div>
+          <p className="-mt-2 text-[10px] leading-relaxed text-[--text-tertiary]">
+            O saldo inicial preserva valores existentes da meta. Novos aportes devem ser registrados
+            pelo botão “Registrar aporte”, para também aparecerem em Poupança e Reservas.
+          </p>
 
           <div>
             <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">
@@ -497,6 +555,8 @@ function GoalsContent() {
         onClose={() => {
           setContributing(null)
           setContributionAmount('')
+          setContributionDestination('')
+          setContributionInstitution('')
         }}
         title={contributing ? `Aporte em ${contributing.name}` : 'Registrar aporte'}
       >
@@ -510,7 +570,7 @@ function GoalsContent() {
                     Acumulado
                   </p>
                   <p className="mt-1 text-sm font-black text-[--text-primary]">
-                    {formatCurrency(buildGoalPlan(contributing).current)}
+                    {formatCurrency(getGoalEffectiveCurrent(contributing, transactions))}
                   </p>
                 </div>
                 <div>
@@ -518,7 +578,12 @@ function GoalsContent() {
                     Falta
                   </p>
                   <p className="mt-1 text-sm font-black text-[--text-primary]">
-                    {formatCurrency(buildGoalPlan(contributing).remaining)}
+                    {formatCurrency(
+                      buildGoalPlan({
+                        ...contributing,
+                        currentAmount: getGoalEffectiveCurrent(contributing, transactions),
+                      }).remaining,
+                    )}
                   </p>
                 </div>
               </div>
@@ -534,12 +599,31 @@ function GoalsContent() {
               onChange={(event) => setContributionAmount(event.target.value)}
             />
 
+            <Input
+              label="Onde o dinheiro ficará?"
+              placeholder="Ex: Caixinha Viagem"
+              value={contributionDestination}
+              onChange={(event) => setContributionDestination(event.target.value)}
+            />
+
+            <Input
+              label="Instituição (opcional)"
+              placeholder="Ex: Nubank, Inter, Itaú"
+              value={contributionInstitution}
+              onChange={(event) => setContributionInstitution(event.target.value)}
+            />
+
+            <p className="text-[10px] leading-relaxed text-[--text-tertiary]">
+              Este aporte será registrado como poupança e ficará vinculado à meta. O progresso passa
+              a ser calculado pelo saldo inicial mais os movimentos vinculados.
+            </p>
+
             {Number(contributionAmount) > 0 && (
               <div className="rounded-xl border border-[--brand-200] bg-[--brand-50] p-3 text-xs text-[--brand-700]">
                 Novo acumulado:{' '}
                 <strong>
                   {formatCurrency(
-                    (Number(contributing.currentAmount) || 0) + Number(contributionAmount),
+                    getGoalEffectiveCurrent(contributing, transactions) + Number(contributionAmount),
                   )}
                 </strong>
               </div>
@@ -550,6 +634,7 @@ function GoalsContent() {
               fullWidth
               onClick={handleContributionSave}
               loading={contributionLoading}
+              disabled={!contributionDestination.trim()}
             >
               Confirmar aporte
             </Button>
@@ -569,7 +654,8 @@ function GoalsContent() {
                 Excluir “{deleteCandidate.name}”?
               </p>
               <p className="mt-1 text-xs leading-relaxed text-[--danger-text]">
-                O progresso desta meta será removido. Nenhuma transação financeira será alterada.
+                A meta será removida, mas os movimentos de poupança já registrados permanecem no
+                histórico financeiro. Eles deixam apenas de aparecer vinculados a uma meta ativa.
               </p>
             </div>
 
