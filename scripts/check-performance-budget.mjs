@@ -12,11 +12,12 @@ const indexPath = join(distRoot, 'index.html')
 // A Phase 41B acrescenta mais 1 KiB global para a personalização transparente,
 // compensado por um teto dedicado da rota Money. Na Phase 45, o teto total ganha
 // 4 KiB para a semântica auditável de Poupança/Reservas distribuída nas rotas
-// lazy; o carregamento inicial e o maior chunk permanecem inalterados. O CSS
-// recebe apenas 256 bytes de tolerância à variação de compressão do build.
+// lazy; o carregamento inicial e o maior chunk permanecem inalterados. Na
+// Phase 46, a Central de Reservas adiciona um chunk lazy de 3,39 KiB gzip;
+// o teto total recebe 5 KiB de margem dedicada, sem ampliar o bootstrap.
 const limits = {
   initialJavaScriptGzipBytes: 242 * 1024,
-  totalJavaScriptGzipBytes: 713 * 1024,
+  totalJavaScriptGzipBytes: 718 * 1024,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 20 * 1024 + 256,
