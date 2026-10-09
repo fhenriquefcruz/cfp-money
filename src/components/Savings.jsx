@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
+  Edit2,
   History,
   Landmark,
   PiggyBank,
@@ -16,6 +17,7 @@ import {
   buildSavingsOverview,
   getGoalEffectiveCurrent,
   getSavingsDestinationLabel,
+  getUnclassifiedSavingsTransactions,
   getSavingsSignedAmount,
   UNCLASSIFIED_SAVINGS_DESTINATION,
 } from '../domain/savings'
@@ -45,6 +47,7 @@ export default function Savings() {
   const { transactions } = useTransactions()
   const { goals } = useGoals()
   const [movementPreset, setMovementPreset] = useState(null)
+  const [editingMovement, setEditingMovement] = useState(null)
 
   const monthBounds = useMemo(currentMonthBounds, [])
 
@@ -72,16 +75,11 @@ export default function Savings() {
     [transactions],
   )
 
-  const legacyUnclassifiedCount = useMemo(
-    () =>
-      transactions.filter(
-        (transaction) =>
-          transaction.isSavings &&
-          !String(transaction.savingsDestination || '').trim() &&
-          getSavingsSignedAmount(transaction) !== 0,
-      ).length,
+  const legacyUnclassified = useMemo(
+    () => getUnclassifiedSavingsTransactions(transactions),
     [transactions],
   )
+  const legacyUnclassifiedCount = legacyUnclassified.length
 
   const goalById = useMemo(() => new Map(goals.map((goal) => [goal.id, goal])), [goals])
 
@@ -131,20 +129,30 @@ export default function Savings() {
 
       {legacyUnclassifiedCount > 0 && (
         <Card className="border border-[--brand-200] bg-[--brand-50]">
-          <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-[--bg-surface] p-2 text-[--brand-700]">
-              <Landmark size={16} />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-[--bg-surface] p-2 text-[--brand-700]">
+                <Landmark size={16} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-[--text-primary]">
+                  {legacyUnclassifiedCount} movimento{legacyUnclassifiedCount === 1 ? '' : 's'} antigo
+                  {legacyUnclassifiedCount === 1 ? '' : 's'} sem destino
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">
+                  Nada foi perdido. Esses valores aparecem como “{UNCLASSIFIED_SAVINGS_DESTINATION}”
+                  até serem classificados.
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-bold text-[--text-primary]">
-                {legacyUnclassifiedCount} movimento{legacyUnclassifiedCount === 1 ? '' : 's'} antigo
-                {legacyUnclassifiedCount === 1 ? '' : 's'} sem destino
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">
-                Nada foi perdido. Esses valores aparecem como “{UNCLASSIFIED_SAVINGS_DESTINATION}”
-                até serem classificados ao editar o lançamento.
-              </p>
-            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex-shrink-0"
+              onClick={() => setEditingMovement(legacyUnclassified[0])}
+            >
+              Classificar agora
+            </Button>
           </div>
         </Card>
       )}
@@ -356,14 +364,26 @@ export default function Savings() {
                         {formatDate(transactionDate(movement))}
                       </p>
                     </div>
-                    <span
-                      className={`flex-shrink-0 text-xs font-black tabular-nums ${
-                        signedAmount >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'
-                      }`}
-                    >
-                      {signedAmount >= 0 ? '+' : '−'}
-                      {formatCurrency(Math.abs(signedAmount))}
-                    </span>
+                    <div className="flex flex-shrink-0 items-center gap-2">
+                      <span
+                        className={`text-xs font-black tabular-nums ${
+                          signedAmount >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'
+                        }`}
+                      >
+                        {signedAmount >= 0 ? '+' : '−'}
+                        {formatCurrency(Math.abs(signedAmount))}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingMovement(movement)}
+                        className="flex h-9 w-9 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
+                        aria-label={`Editar movimento ${
+                          movement.description || getSavingsDestinationLabel(movement)
+                        }`}
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 )
               })}
@@ -382,6 +402,14 @@ export default function Savings() {
           initialSavingsDestination={movementPreset.destination}
           initialSavingsInstitution={movementPreset.institution}
           initialGoalId={movementPreset.goalId}
+        />
+      )}
+
+      {editingMovement && (
+        <TransactionForm
+          isOpen
+          transaction={editingMovement}
+          onClose={() => setEditingMovement(null)}
         />
       )}
     </div>
