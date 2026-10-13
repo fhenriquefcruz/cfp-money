@@ -122,7 +122,6 @@ test('encontra a maior mudança absoluta de despesas entre meses', () => {
   })
 })
 
-
 test('resume o resultado do período com leitura executiva e comparação mensal', () => {
   expect(
     buildPeriodResultInsight(
@@ -159,10 +158,7 @@ test('sinaliza pressão quando despesas superam receitas', () => {
 
 test('não força comparação quando o mês anterior não possui atividade', () => {
   expect(
-    buildPeriodResultInsight(
-      { income: 3000, expenses: 2500, balance: 500, count: 3 },
-      {},
-    ),
+    buildPeriodResultInsight({ income: 3000, expenses: 2500, balance: 500, count: 3 }, {}),
   ).toMatchObject({
     comparisonDelta: null,
     comparisonTone: 'neutral',

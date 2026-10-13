@@ -494,13 +494,16 @@ export default function Dashboard() {
                 <div className="dashboard-period-hero__signal-head">
                   <span>Uso das receitas</span>
                   <strong>
-                    {periodInsight.expenseIncomeRatio === null ? 'Sem base' : `${periodInsight.expenseIncomeRatio}%`}
+                    {periodInsight.expenseIncomeRatio === null
+                      ? 'Sem base'
+                      : `${periodInsight.expenseIncomeRatio}%`}
                   </strong>
                 </div>
                 <div className="dashboard-period-hero__track" aria-hidden="true">
                   <span
                     data-tone={
-                      periodInsight.expenseIncomeRatio !== null && periodInsight.expenseIncomeRatio > 100
+                      periodInsight.expenseIncomeRatio !== null &&
+                      periodInsight.expenseIncomeRatio > 100
                         ? 'negative'
                         : 'positive'
                     }

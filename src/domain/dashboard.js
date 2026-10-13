@@ -138,7 +138,6 @@ export function getLargestMonthlyExpenseChange(monthlyData = []) {
   return result
 }
 
-
 export function buildPeriodResultInsight(current = {}, previous = {}) {
   const income = Number(current.income) || 0
   const expenses = Number(current.expenses) || 0
