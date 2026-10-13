@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { useGoals, useTransactions } from '../contexts/AppContext'
-import { Button, Card, EmptyState, Modal, ProgressBar } from './ui'
+import { Button, Card, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
 import {
   buildSavingsOverview,
@@ -258,9 +258,7 @@ export default function Savings() {
                         {institution.institution}
                       </p>
                       <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                        {institution.destinationCount} destino
-                        {institution.destinationCount === 1 ? '' : 's'} vinculado
-                        {institution.destinationCount === 1 ? '' : 's'}
+                        Participação nas reservas
                       </p>
                     </div>
                     <div className="text-right">
@@ -271,12 +269,6 @@ export default function Savings() {
                         {institution.share.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
                       </p>
                     </div>
-                  </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[--bg-hover]">
-                    <div
-                      className="h-full rounded-full bg-[--brand-500]"
-                      style={{ width: `${Math.min(100, Math.max(0, institution.share))}%` }}
-                    />
                   </div>
                 </article>
               ))}
@@ -315,8 +307,7 @@ export default function Savings() {
                       {projection.status === 'behind' ? 'Abaixo do prazo' : projection.status === 'on-track' ? 'No ritmo' : projection.status === 'no-pace' ? 'Sem ritmo recente' : 'Ritmo atual'}
                     </span>
                   </div>
-                  <div className="mt-2"><ProgressBar value={projection.current} max={projection.target} /></div>
-                  <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                  <p className="mt-2 text-[10px] text-[--text-tertiary]">
                     {formatCurrency(projection.current)} de {formatCurrency(projection.target)}
                   </p>
                 </div>
@@ -360,10 +351,6 @@ export default function Savings() {
           ) : (
             <div className="space-y-3">
               {overview.destinations.map((destination) => {
-                const share =
-                  overview.totalBalance > 0
-                    ? (destination.balance / overview.totalBalance) * 100
-                    : 0
                 return (
                   <article
                     key={destination.label}
@@ -382,18 +369,7 @@ export default function Savings() {
                         <p className="text-lg font-black tabular-nums text-[--text-primary]">
                           {formatCurrency(destination.balance)}
                         </p>
-                        <p className="text-[10px] text-[--text-tertiary]">
-                          {share.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% das
-                          reservas
-                        </p>
                       </div>
-                    </div>
-
-                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-[--bg-hover]">
-                      <div
-                        className="h-full rounded-full bg-[--brand-500]"
-                        style={{ width: `${Math.min(100, Math.max(0, share))}%` }}
-                      />
                     </div>
 
                     <div className="mt-3 grid grid-cols-2 gap-2">
