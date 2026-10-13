@@ -24,9 +24,14 @@ export function getBudgetForMonth(
     .map((budget) => ({
       budget,
       effectiveMonth: MONTH.test(budget.monthKey || '') ? budget.monthKey.slice(0, 7) : currentMonthKey,
+      explicitMonth: MONTH.test(budget.monthKey || ''),
     }))
     .filter(({ effectiveMonth }) => effectiveMonth && effectiveMonth <= monthKey)
-    .sort((first, second) => second.effectiveMonth.localeCompare(first.effectiveMonth))
+    .sort(
+      (first, second) =>
+        second.effectiveMonth.localeCompare(first.effectiveMonth) ||
+        Number(second.explicitMonth) - Number(first.explicitMonth),
+    )
 
   const latest = versions[0]?.budget || null
   if (!latest || latest.disabled) return null
