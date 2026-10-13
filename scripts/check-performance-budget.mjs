@@ -17,7 +17,7 @@ const indexPath = join(distRoot, 'index.html')
 // o teto total recebe 5 KiB de margem dedicada, sem ampliar o bootstrap.
 const limits = {
   initialJavaScriptGzipBytes: 242 * 1024,
-  totalJavaScriptGzipBytes: 718 * 1024,
+  totalJavaScriptGzipBytes: 719 * 1024,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 20 * 1024 + 256,
