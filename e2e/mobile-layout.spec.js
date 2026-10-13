@@ -70,3 +70,29 @@ test('rotação retrato-paisagem não cria overflow', async ({ page }, testInfo)
   await page.waitForTimeout(180)
   await expectNoHorizontalOverflow(page)
 })
+
+
+test('controles de período dos Relatórios permanecem alinhados no mobile', async ({ page }) => {
+  await prepareE2EPage(page, '/reports')
+
+  const monthInput = page.getByLabel('Mês final do relatório')
+  const periodSelect = page.getByLabel('Período do relatório')
+
+  await expectElementInsideViewport(monthInput)
+  await expectElementInsideViewport(periodSelect)
+  await expectNoHorizontalOverflow(page)
+
+  const geometry = await page.evaluate(() => {
+    const month = document.querySelector('input[aria-label="Mês final do relatório"]')?.getBoundingClientRect()
+    const period = document.querySelector('select[aria-label="Período do relatório"]')?.getBoundingClientRect()
+    return {
+      monthWidth: month?.width || 0,
+      periodWidth: period?.width || 0,
+      monthLeft: month?.left || 0,
+      periodLeft: period?.left || 0,
+    }
+  })
+
+  expect(Math.abs(geometry.monthWidth - geometry.periodWidth)).toBeLessThanOrEqual(2)
+  expect(Math.abs(geometry.monthLeft - geometry.periodLeft)).toBeLessThanOrEqual(2)
+})
