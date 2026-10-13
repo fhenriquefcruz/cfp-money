@@ -381,6 +381,7 @@ export const setBudget = async (uid, categoryId, amount, monthKey) => {
       categoryId,
       amount,
       monthKey,
+      disabled: false,
       updatedAt: serverTimestamp(),
     },
     { merge: true },
@@ -390,16 +391,26 @@ export const setBudget = async (uid, categoryId, amount, monthKey) => {
 }
 
 export const deleteBudget = async (uid, categoryId, monthKey, budgetId = '') => {
-  if (budgetId) {
-    await deleteDoc(userDoc(uid, 'budgets', budgetId))
-    return
-  }
-
   if (!/^\d{4}-\d{2}$/.test(monthKey || '')) {
+    if (budgetId) {
+      await deleteDoc(userDoc(uid, 'budgets', budgetId))
+      return
+    }
     throw new Error('Competência mensal inválida.')
   }
 
-  await deleteDoc(userDoc(uid, 'budgets', `${monthKey}__${categoryId}`))
+  const tombstoneId = `${monthKey}__${categoryId}`
+  await setDoc(
+    userDoc(uid, 'budgets', tombstoneId),
+    {
+      categoryId,
+      amount: 0,
+      monthKey,
+      disabled: true,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  )
 }
 
 // ══════════════════════════════════════════════════════════════
