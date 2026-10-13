@@ -70,7 +70,7 @@ test.describe('Central de Poupança e Reservas', () => {
 
     const dialog = page.getByRole('dialog', { name: 'Excluir movimento da reserva' })
     await expect(dialog).toBeVisible()
-    await dialog.getByRole('button', { name: 'Excluir movimento' }).click()
+    await dialog.getByRole('button', { name: 'Excluir movimento', exact: true }).click()
 
     await expect(dialog).toBeHidden()
     await expect(page.getByText('R$ 1.500,00')).toHaveCount(0)
