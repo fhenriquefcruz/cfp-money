@@ -1,26 +1,17 @@
 import React, { useMemo, useState } from 'react'
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  History,
-  Landmark,
-  PiggyBank,
-  Target,
-  Trash2,
-  WalletCards,
-} from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Trash2 } from 'lucide-react'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { useGoals, useTransactions } from '../contexts/AppContext'
-import { Button, Card, EmptyState, Modal, ProgressBar } from './ui'
+import { Button, Card, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
 import {
   buildSavingsOverview,
-  getGoalEffectiveCurrent,
   getSavingsDestinationLabel,
   getUnclassifiedSavingsTransactions,
   getSavingsSignedAmount,
   UNCLASSIFIED_SAVINGS_DESTINATION,
 } from '../domain/savings'
+import { buildSavingsInsights } from '../domain/savingsInsights'
 import {
   getFinancialActivityDate,
   isFinanciallyEffectiveTransaction,
@@ -69,6 +60,17 @@ export default function Savings() {
 
   const savingsRate = monthSummary.income > 0 ? (overview.periodNet / monthSummary.income) * 100 : 0
 
+  const savingsInsights = useMemo(
+    () => buildSavingsInsights(transactions, goals),
+    [transactions, goals],
+  )
+  const institutionOverview = savingsInsights.institutions
+  const balanceHistory = savingsInsights.history
+  const activeGoalProjections = savingsInsights.projections
+  const historyMax = Math.max(0, ...balanceHistory.map((point) => point.balance))
+  const patrimonyChange =
+    (balanceHistory[balanceHistory.length - 1]?.balance || 0) - (balanceHistory[0]?.balance || 0)
+
   const movements = useMemo(
     () =>
       transactions
@@ -98,10 +100,6 @@ export default function Savings() {
     <div className="savings-premium mx-auto w-full max-w-7xl space-y-5 pb-24 lg:pb-8">
       <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[--brand-200] bg-[--brand-50] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[--brand-700]">
-            <PiggyBank size={13} />
-            Poupança e Reservas
-          </div>
           <h1 className="text-2xl font-black tracking-tight text-[--text-primary] sm:text-3xl">
             Seu dinheiro guardado, em um só lugar
           </h1>
@@ -133,9 +131,6 @@ export default function Savings() {
         <Card className="border border-[--brand-200] bg-[--brand-50]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
-              <div className="rounded-xl bg-[--bg-surface] p-2 text-[--brand-700]">
-                <Landmark size={16} />
-              </div>
               <div>
                 <p className="text-sm font-bold text-[--text-primary]">
                   {legacyUnclassifiedCount} movimento{legacyUnclassifiedCount === 1 ? '' : 's'}{' '}
@@ -177,28 +172,100 @@ export default function Savings() {
         ))}
       </section>
 
-      <Card variant="elevated">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <WalletCards size={16} className="text-[--brand-600]" />
-              <h2 className="text-sm font-black text-[--text-primary]">Ritmo de poupança</h2>
+      <section className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
+        <Card variant="elevated">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-black text-[--text-primary]">
+                Evolução do patrimônio reservado
+              </h2>
             </div>
-            <p className="mt-1 text-xs text-[--text-tertiary]">
-              Relação entre a poupança líquida e as receitas deste mês.
+            <p
+              className={`text-sm font-black tabular-nums ${patrimonyChange >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'}`}
+            >
+              {patrimonyChange >= 0 ? '+' : '−'}
+              {formatCurrency(Math.abs(patrimonyChange))}
             </p>
           </div>
-          <div className="text-left sm:text-right">
-            <p className="text-2xl font-black tabular-nums text-[--brand-600]">
-              {savingsRate.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
+          {historyMax > 0 ? (
+            <div className="mt-4 grid grid-cols-6 gap-2">
+              {balanceHistory.map((point) => (
+                <div key={point.monthKey} className="text-center">
+                  <div className="flex h-20 items-end rounded-lg bg-[--bg-subtle]">
+                    <div
+                      className="w-full rounded-lg bg-[--brand-500]"
+                      style={{ height: `${Math.max(6, (point.balance / historyMax) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[9px] text-[--text-tertiary]">{point.label}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-xs text-[--text-tertiary]">
+              Os primeiros aportes formarão esta evolução.
             </p>
-            <p className="text-[10px] text-[--text-tertiary]">
-              {overview.periodNet >= 0
-                ? 'poupança líquida positiva'
-                : 'retiradas acima dos aportes'}
-            </p>
+          )}
+          <p className="mt-3 text-[10px] text-[--text-tertiary]">
+            Ritmo de poupança do mês:{' '}
+            {savingsRate.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
+          </p>
+        </Card>
+
+        <Card>
+          <h2 className="text-base font-black text-[--text-primary]">Patrimônio por instituição</h2>
+          {institutionOverview.length === 0 ? (
+            <p className="py-8 text-sm text-[--text-tertiary]">Nenhuma instituição informada.</p>
+          ) : (
+            <div className="mt-4 divide-y divide-[--border-subtle]">
+              {institutionOverview.slice(0, 5).map((institution) => (
+                <div
+                  key={institution.institution}
+                  className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
+                >
+                  <span className="truncate text-xs font-bold text-[--text-primary]">
+                    {institution.institution}
+                  </span>
+                  <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
+                    {formatCurrency(institution.balance)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </section>
+
+      <Card>
+        <h2 className="text-base font-black text-[--text-primary]">Projeção das metas</h2>
+        <p className="mt-1 text-xs text-[--text-tertiary]">
+          Estimativa pelo ritmo líquido dos últimos 3 meses.
+        </p>
+        {activeGoalProjections.length === 0 ? (
+          <p className="mt-4 text-xs text-[--text-tertiary]">
+            {goals.length
+              ? 'Todas as metas estão concluídas.'
+              : 'Vincule aportes a metas para gerar projeções.'}
+          </p>
+        ) : (
+          <div className="mt-4 divide-y divide-[--border-subtle]">
+            {activeGoalProjections.map((projection) => (
+              <div
+                key={projection.goalId}
+                className="flex flex-col gap-1 py-2 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <span className="truncate text-xs font-bold text-[--text-primary]">
+                  {projection.emoji} {projection.name}
+                </span>
+                <span className="text-[10px] text-[--text-tertiary] sm:text-right">
+                  {projection.monthlyPace > 0
+                    ? `${formatCurrency(projection.monthlyPace)}/mês · ~${projection.projectedMonths} meses`
+                    : 'Sem ritmo recente'}
+                </span>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
       </Card>
 
       <section className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
@@ -210,7 +277,6 @@ export default function Savings() {
                 Distribuição atual por reserva e instituição.
               </p>
             </div>
-            <Landmark size={18} className="flex-shrink-0 text-[--brand-600]" />
           </div>
 
           {overview.destinations.length === 0 ? (
@@ -227,14 +293,6 @@ export default function Savings() {
           ) : (
             <div className="space-y-3">
               {overview.destinations.map((destination) => {
-                const share =
-                  overview.totalBalance > 0
-                    ? (destination.balance / overview.totalBalance) * 100
-                    : 0
-                const linkedGoals = destination.goalIds
-                  .map((goalId) => goalById.get(goalId))
-                  .filter(Boolean)
-
                 return (
                   <article
                     key={destination.label}
@@ -253,45 +311,8 @@ export default function Savings() {
                         <p className="text-lg font-black tabular-nums text-[--text-primary]">
                           {formatCurrency(destination.balance)}
                         </p>
-                        <p className="text-[10px] text-[--text-tertiary]">
-                          {share.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% das
-                          reservas
-                        </p>
                       </div>
                     </div>
-
-                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-[--bg-hover]">
-                      <div
-                        className="h-full rounded-full bg-[--brand-500]"
-                        style={{ width: `${Math.min(100, Math.max(0, share))}%` }}
-                      />
-                    </div>
-
-                    {linkedGoals.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        {linkedGoals.map((goal) => {
-                          const current = getGoalEffectiveCurrent(goal, transactions)
-                          const progress =
-                            goal.targetAmount > 0 ? (current / goal.targetAmount) * 100 : 0
-                          return (
-                            <div key={goal.id} className="rounded-xl bg-[--bg-surface] p-3">
-                              <div className="flex items-center justify-between gap-3 text-xs">
-                                <span className="min-w-0 truncate font-bold text-[--text-primary]">
-                                  <Target size={12} className="mr-1 inline" />
-                                  {goal.emoji || '🎯'} {goal.name}
-                                </span>
-                                <span className="flex-shrink-0 text-[--text-tertiary]">
-                                  {Math.min(100, progress).toFixed(0)}%
-                                </span>
-                              </div>
-                              <div className="mt-2">
-                                <ProgressBar value={current} max={goal.targetAmount} />
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
 
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <Button
@@ -318,14 +339,11 @@ export default function Savings() {
         </Card>
 
         <Card>
-          <div className="mb-4 flex items-center gap-2">
-            <History size={17} className="text-[--brand-600]" />
-            <div>
-              <h2 className="text-base font-black text-[--text-primary]">Movimentos recentes</h2>
-              <p className="mt-0.5 text-xs text-[--text-tertiary]">
-                Histórico de aportes e retiradas das reservas.
-              </p>
-            </div>
+          <div className="mb-4">
+            <h2 className="text-base font-black text-[--text-primary]">Movimentos recentes</h2>
+            <p className="mt-0.5 text-xs text-[--text-tertiary]">
+              Histórico de aportes e retiradas das reservas.
+            </p>
           </div>
 
           {movements.length === 0 ? (
