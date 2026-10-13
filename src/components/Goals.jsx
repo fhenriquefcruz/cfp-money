@@ -1,6 +1,7 @@
 // src/components/Goals.jsx
 import React, { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Pencil, Trash2 } from 'lucide-react'
 import { useGoals, useTransactions } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
 import { formatCurrency, formatDate } from '../utils'
@@ -25,64 +26,6 @@ const EMOJI_LIST = [
   '💰',
   '📈',
 ]
-
-function GoalMenu({ goal, onContribute, onEdit, onDelete }) {
-  const [open, setOpen] = React.useState(false)
-  React.useEffect(() => {
-    if (!open) return
-    const close = () => setOpen(false)
-    document.addEventListener('click', close)
-    return () => document.removeEventListener('click', close)
-  }, [open])
-  return (
-    <div className="relative flex-shrink-0">
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          setOpen((v) => !v)
-        }}
-        className="p-1.5 rounded-lg hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
-        title="Ações"
-      >
-        ⋮
-      </button>
-      {open && (
-        <div
-          className="absolute right-0 top-8 z-50 min-w-[140px] bg-[--bg-elevated] border border-[--border-default] rounded-xl shadow-xl overflow-hidden"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={() => {
-              onContribute(goal)
-              setOpen(false)
-            }}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--text-primary] hover:bg-[--bg-hover] transition-colors"
-          >
-            <span aria-hidden="true">↗</span> Aportar
-          </button>
-          <button
-            onClick={() => {
-              onEdit(goal)
-              setOpen(false)
-            }}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--text-primary] hover:bg-[--bg-hover] transition-colors"
-          >
-            <span aria-hidden="true">✎</span> Editar
-          </button>
-          <button
-            onClick={() => {
-              onDelete(goal)
-              setOpen(false)
-            }}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-[--danger-text] hover:bg-[--danger-bg] transition-colors border-t border-[--border-subtle]"
-          >
-            <span aria-hidden="true">×</span> Excluir
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
 
 function GoalCard({ goal, transactions, onEdit, onDelete, onContribute }) {
   const effectiveCurrent = getGoalEffectiveCurrent(goal, transactions)
@@ -137,9 +80,17 @@ function GoalCard({ goal, transactions, onEdit, onDelete, onContribute }) {
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
               title="Editar meta"
             >
-              ✎
+              <Pencil size={14} />
             </button>
-            <GoalMenu goal={goal} onContribute={onContribute} onEdit={onEdit} onDelete={onDelete} />
+            <button
+              type="button"
+              onClick={() => onDelete(goal)}
+              aria-label={`Excluir meta ${goal.name}`}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
+              title="Excluir meta"
+            >
+              <Trash2 size={14} />
+            </button>
           </div>
         </div>
 
