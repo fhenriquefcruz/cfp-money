@@ -191,14 +191,13 @@ export default function Savings() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="text-base font-black text-[--text-primary]">Evolução do patrimônio reservado</h2>
-              <p className="mt-1 text-xs text-[--text-tertiary]">Saldo acumulado ao fim de cada mês.</p>
             </div>
             <p className={`text-sm font-black tabular-nums ${patrimonyChange >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'}`}>
               {patrimonyChange >= 0 ? '+' : '−'}{formatCurrency(Math.abs(patrimonyChange))}
             </p>
           </div>
           {historyMax > 0 ? (
-            <div className="mt-4 grid grid-cols-6 gap-2" role="img" aria-label="Evolução do patrimônio reservado nos últimos seis meses">
+            <div className="mt-4 grid grid-cols-6 gap-2">
               {balanceHistory.map((point) => (
                 <div key={point.monthKey} className="text-center">
                   <div className="flex h-20 items-end rounded-lg bg-[--bg-subtle]">
@@ -218,7 +217,6 @@ export default function Savings() {
 
         <Card>
           <h2 className="text-base font-black text-[--text-primary]">Patrimônio por instituição</h2>
-          <p className="mt-1 text-xs text-[--text-tertiary]">Concentração atual do dinheiro reservado.</p>
           {institutionOverview.length === 0 ? (
             <p className="py-8 text-sm text-[--text-tertiary]">Nenhuma instituição informada.</p>
           ) : (
@@ -238,9 +236,7 @@ export default function Savings() {
 
       <Card>
         <h2 className="text-base font-black text-[--text-primary]">Projeção das metas</h2>
-        <p className="mt-1 text-xs text-[--text-tertiary]">
-          Ritmo líquido real dos últimos três meses. É uma estimativa, não uma promessa.
-        </p>
+        <p className="mt-1 text-xs text-[--text-tertiary]">Estimativa pelo ritmo líquido dos últimos 3 meses.</p>
         {activeGoalProjections.length === 0 ? (
           <p className="mt-4 text-xs text-[--text-tertiary]">
             {goals.length ? 'Todas as metas estão concluídas.' : 'Vincule aportes a metas para gerar projeções.'}
