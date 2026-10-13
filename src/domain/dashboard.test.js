@@ -1,6 +1,7 @@
 import {
   buildCategoryBreakdown,
   buildMonthAttentionSignals,
+  buildPeriodResultInsight,
   getCalendarMonthBounds,
   getLargestMonthlyExpenseChange,
   getRecentDashboardTransactions,
@@ -118,5 +119,52 @@ test('encontra a maior mudança absoluta de despesas entre meses', () => {
     monthKey: '2026-07',
     delta: 600,
     percent: 60,
+  })
+})
+
+
+test('resume o resultado do período com leitura executiva e comparação mensal', () => {
+  expect(
+    buildPeriodResultInsight(
+      { income: 10000, expenses: 8000, balance: 2000, count: 8 },
+      { income: 9000, expenses: 8000, balance: 1000, count: 7 },
+    ),
+  ).toEqual({
+    tone: 'positive',
+    statusLabel: 'Período no azul',
+    expenseIncomeRatio: 80,
+    retainedIncomeRatio: 20,
+    comparisonDelta: 1000,
+    comparisonTone: 'positive',
+    story: 'Resultado positivo equivalente a 20% das receitas do período.',
+  })
+})
+
+test('sinaliza pressão quando despesas superam receitas', () => {
+  expect(
+    buildPeriodResultInsight(
+      { income: 4000, expenses: 4500, balance: -500, count: 5 },
+      { income: 5000, expenses: 4700, balance: 300, count: 6 },
+    ),
+  ).toMatchObject({
+    tone: 'negative',
+    statusLabel: 'Fluxo pressionado',
+    expenseIncomeRatio: 113,
+    retainedIncomeRatio: null,
+    comparisonDelta: -800,
+    comparisonTone: 'negative',
+    story: 'As despesas superaram as receitas no período visualizado.',
+  })
+})
+
+test('não força comparação quando o mês anterior não possui atividade', () => {
+  expect(
+    buildPeriodResultInsight(
+      { income: 3000, expenses: 2500, balance: 500, count: 3 },
+      {},
+    ),
+  ).toMatchObject({
+    comparisonDelta: null,
+    comparisonTone: 'neutral',
   })
 })
