@@ -15,6 +15,9 @@ import {
   ArrowLeftRight,
   PiggyBank,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CalendarDays,
   TrendingUp,
   TrendingDown,
   ArrowUpDown,
@@ -70,40 +73,13 @@ import {
   writeSavedTransactionViews,
 } from '../domain/transactionViews'
 
-const DATE_PRESETS = [
-  {
-    id: 'current_month',
-    label: 'Este mês',
-    getRange: () => ({
-      from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
-      to: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
-    }),
-  },
-  {
-    id: 'previous_month',
-    label: 'Mês passado',
-    getRange: () => ({
-      from: format(startOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd'),
-      to: format(endOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd'),
-    }),
-  },
-  {
-    id: 'next_month',
-    label: 'Próximo mês',
-    getRange: () => {
-      const nextMonth = addMonths(new Date(), 1)
-      return {
-        from: format(startOfMonth(nextMonth), 'yyyy-MM-dd'),
-        to: format(endOfMonth(nextMonth), 'yyyy-MM-dd'),
-      }
-    },
-  },
+const RANGE_FILTERS = [
   {
     id: 'last_3_months',
     label: 'Últimos 3 meses',
     getRange: () => ({
-      from: format(subMonths(new Date(), 3), 'yyyy-MM-dd'),
-      to: format(new Date(), 'yyyy-MM-dd'),
+      from: format(startOfMonth(subMonths(new Date(), 2)), 'yyyy-MM-dd'),
+      to: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
     }),
   },
   {
@@ -111,11 +87,39 @@ const DATE_PRESETS = [
     label: 'Este ano',
     getRange: () => ({
       from: `${new Date().getFullYear()}-01-01`,
-      to: format(new Date(), 'yyyy-MM-dd'),
+      to: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
     }),
   },
   { id: 'all', label: 'Todos', getRange: () => ({ from: '', to: '' }) },
 ]
+
+function monthRange(monthKey) {
+  if (!/^\d{4}-\d{2}$/.test(monthKey || '')) return getCurrentMonthRange()
+  const [year, month] = monthKey.split('-').map(Number)
+  const date = new Date(year, month - 1, 1)
+  return {
+    from: format(startOfMonth(date), 'yyyy-MM-dd'),
+    to: format(endOfMonth(date), 'yyyy-MM-dd'),
+  }
+}
+
+function fullMonthKey(range = {}) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(range.from || '') || !range.to) return ''
+  const monthKey = range.from.slice(0, 7)
+  const expected = monthRange(monthKey)
+  return range.from === expected.from && range.to === expected.to ? monthKey : ''
+}
+
+function shiftMonthKey(monthKey, amount) {
+  const [year, month] = monthKey.split('-').map(Number)
+  return format(addMonths(new Date(year, month - 1, 1), amount), 'yyyy-MM')
+}
+
+function monthTitle(monthKey) {
+  const [year, month] = monthKey.split('-').map(Number)
+  const label = format(new Date(year, month - 1, 1), "MMMM 'de' yyyy", { locale: ptBR })
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
 
 function getCurrentMonthRange() {
   return {
@@ -601,20 +605,40 @@ export default function TransactionList() {
   const grouped = useMemo(() => groupByDate(filtered.slice(0, page * PER_PAGE)), [filtered, page])
   const hasMore = filtered.length > page * PER_PAGE
   const currentMonthRange = getCurrentMonthRange()
-  const hasCustomDateRange =
-    dateRange.from !== currentMonthRange.from || dateRange.to !== currentMonthRange.to
+  const currentMonthKey = currentMonthRange.from.slice(0, 7)
+  const visibleMonthKey = fullMonthKey(dateRange)
+  const selectedRangeFilter =
+    RANGE_FILTERS.find((preset) => {
+      const range = preset.getRange()
+      return dateRange.from === range.from && dateRange.to === range.to
+    })?.id || (visibleMonthKey ? 'month' : 'custom')
+  const hasExpandedDateFilter = !visibleMonthKey
   const savableFilterCount = [
     typeFilter !== 'all',
     catFilter !== 'all',
     payFilter !== 'all',
     paymentStatusFilter !== 'all',
-    hasCustomDateRange,
+    visibleMonthKey !== currentMonthKey || hasExpandedDateFilter,
   ].filter(Boolean).length
-  const currentDatePreset =
-    DATE_PRESETS.find((preset) => {
-      const range = preset.getRange()
-      return dateRange.from === range.from && dateRange.to === range.to
-    })?.id || ''
+  const currentDatePreset = selectedRangeFilter === 'month' ? '' : selectedRangeFilter
+
+  const navigateMonth = (amount) => {
+    const baseMonth = visibleMonthKey || currentMonthKey
+    setDateRange(monthRange(shiftMonthKey(baseMonth, amount)))
+    setPage(1)
+  }
+
+  const applyRangeFilter = (filterId) => {
+    if (filterId === 'month') {
+      setDateRange(monthRange(visibleMonthKey || currentMonthKey))
+    } else if (filterId === 'custom') {
+      return
+    } else {
+      const preset = RANGE_FILTERS.find((item) => item.id === filterId)
+      if (preset) setDateRange(preset.getRange())
+    }
+    setPage(1)
+  }
 
   const activeFilterChips = [
     typeFilter !== 'all' && ['type', TRANSACTION_KIND[typeFilter][0]],
@@ -636,9 +660,10 @@ export default function TransactionList() {
       }[paymentStatusFilter] || paymentStatusFilter,
     ],
     categoryReviewOnly && ['review', 'Categorias em revisão'],
-    hasCustomDateRange && [
+    hasExpandedDateFilter && [
       'date',
-      DATE_PRESETS.find((preset) => preset.id === currentDatePreset)?.label || 'Período',
+      RANGE_FILTERS.find((preset) => preset.id === selectedRangeFilter)?.label ||
+        'Período personalizado',
     ],
   ].filter(Boolean)
   const activeFilters = activeFilterChips.length + Number(Boolean(search.trim()))
@@ -819,7 +844,7 @@ export default function TransactionList() {
 
   const applySavedView = (view) => {
     const filters = view?.filters || {}
-    const preset = DATE_PRESETS.find((item) => item.id === filters.datePreset)
+    const preset = RANGE_FILTERS.find((item) => item.id === filters.datePreset)
     const categoryStillExists =
       filters.catFilter === 'all' ||
       categories.some((category) => category.id === filters.catFilter)
@@ -846,15 +871,26 @@ export default function TransactionList() {
     persistSavedViews(nextViews)
   }
 
-  const dateLabel = (dateStr) => {
-    const d = new Date(dateStr + 'T00:00:00')
+  const dateGroupMeta = (dateStr) => {
+    const date = new Date(dateStr + 'T00:00:00')
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const yesterday = new Date(today)
     yesterday.setDate(today.getDate() - 1)
-    if (d.toDateString() === today.toDateString()) return 'Hoje'
-    if (d.toDateString() === yesterday.toDateString()) return 'Ontem'
-    return format(d, "d 'de' MMMM", { locale: ptBR })
+
+    const relative =
+      date.toDateString() === today.toDateString()
+        ? 'Hoje'
+        : date.toDateString() === yesterday.toDateString()
+          ? 'Ontem'
+          : format(date, 'EEEE', { locale: ptBR })
+
+    return {
+      relative: relative.charAt(0).toUpperCase() + relative.slice(1),
+      day: format(date, 'dd'),
+      month: format(date, 'MMM', { locale: ptBR }).replace('.', ''),
+      full: format(date, "d 'de' MMMM 'de' yyyy", { locale: ptBR }),
+    }
   }
 
   return (
@@ -902,6 +938,80 @@ export default function TransactionList() {
             Nova
           </Button>
         </div>
+      </div>
+
+      <div className="rounded-3xl border border-[--border-default] bg-[--bg-surface] p-3 sm:p-4">
+        {visibleMonthKey ? (
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => navigateMonth(-1)}
+              aria-label="Ver mês anterior"
+              className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-[--border-subtle] text-[--text-secondary] transition-colors hover:border-[--brand-400] hover:bg-[--brand-50] hover:text-[--text-brand]"
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            <div className="min-w-0 flex-1 text-center">
+              <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-[--text-tertiary]">
+                <CalendarDays size={13} />
+                Mês em foco
+              </div>
+              <p className="mt-1 truncate text-lg font-black text-[--text-primary] sm:text-xl">
+                {monthTitle(visibleMonthKey)}
+              </p>
+              <p className="mt-0.5 text-xs text-[--text-tertiary]">
+                {filtered.length} {filtered.length === 1 ? 'lançamento' : 'lançamentos'} neste recorte
+              </p>
+              {visibleMonthKey !== currentMonthKey && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDateRange(getCurrentMonthRange())
+                    setPage(1)
+                  }}
+                  className="mt-1 text-[10px] font-bold text-[--text-brand] hover:underline"
+                >
+                  Voltar ao mês atual
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigateMonth(1)}
+              aria-label="Ver próximo mês"
+              className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-[--border-subtle] text-[--text-secondary] transition-colors hover:border-[--brand-400] hover:bg-[--brand-50] hover:text-[--text-brand]"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[--text-tertiary]">
+                Período filtrado
+              </p>
+              <p className="mt-1 text-base font-black text-[--text-primary]">
+                {RANGE_FILTERS.find((item) => item.id === selectedRangeFilter)?.label ||
+                  'Período personalizado'}
+              </p>
+              <p className="mt-0.5 text-xs text-[--text-tertiary]">
+                {dateRange.from || 'Início'} → {dateRange.to || 'Hoje'}
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setDateRange(getCurrentMonthRange())
+                setPage(1)
+              }}
+            >
+              Voltar à navegação mensal
+            </Button>
+          </div>
+        )}
       </div>
 
       {lastImportIds.length > 0 && (
@@ -1054,35 +1164,6 @@ export default function TransactionList() {
           </button>
         </div>
 
-        {/* Presets de data */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {DATE_PRESETS.map((p) =>
-            (() => {
-              const presetRange = p.getRange()
-              const isSelected =
-                dateRange.from === presetRange.from && dateRange.to === presetRange.to
-              return (
-                <button
-                  key={p.label}
-                  onClick={() => {
-                    const r = p.getRange()
-                    setDateRange(r)
-                    setPage(1)
-                  }}
-                  aria-pressed={isSelected}
-                  className={`min-h-11 text-xs font-medium px-3 py-1.5 rounded-full border whitespace-nowrap transition-all ${
-                    isSelected
-                      ? 'bg-[--brand-600] border-[--brand-600] text-white'
-                      : 'bg-[--bg-surface] border-[--border-default] text-[--text-secondary] hover:border-[--brand-500] hover:text-[--text-brand]'
-                  }`}
-                >
-                  {p.label}
-                </button>
-              )
-            })(),
-          )}
-        </div>
-
         <TransactionSavedViews
           views={savedViews}
           canSave={savableFilterCount > 0}
@@ -1228,6 +1309,27 @@ export default function TransactionList() {
                     <option value="overdue">Atrasadas</option>
                     <option value="paid">Pagas</option>
                     <option value="cancelled">Canceladas</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="transaction-range-filter"
+                    className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
+                  >
+                    Período
+                  </label>
+                  <select
+                    id="transaction-range-filter"
+                    value={selectedRangeFilter}
+                    onChange={(event) => applyRangeFilter(event.target.value)}
+                    className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-2.5 py-2 text-xs text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+                  >
+                    <option value="month">Mês exibido</option>
+                    <option value="last_3_months">Últimos 3 meses</option>
+                    <option value="current_year">Este ano</option>
+                    <option value="all">Todos</option>
+                    <option value="custom">Personalizado</option>
                   </select>
                 </div>
 
@@ -1401,21 +1503,41 @@ export default function TransactionList() {
                 const daily = summarizeTransactions(txs)
                 return (
                   <div key={date}>
-                    <div className="transaction-date-header">
-                      <p className="transaction-date-label">{dateLabel(date)}</p>
-                      <div className="transaction-date-totals">
-                        {daily.income > 0 && (
-                          <span className="transaction-date-total" data-kind="income">
-                            +{formatCurrency(daily.income)}
-                          </span>
-                        )}
-                        {daily.expenses > 0 && (
-                          <span className="transaction-date-total" data-kind="expense">
-                            −{formatCurrency(daily.expenses)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    {(() => {
+                      const meta = dateGroupMeta(date)
+                      return (
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[--border-subtle] bg-[--bg-subtle] px-3 py-3 sm:px-4">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-11 w-11 flex-shrink-0 flex-col items-center justify-center rounded-2xl border border-[--border-default] bg-[--bg-surface]">
+                              <span className="text-base font-black leading-none text-[--text-primary]">
+                                {meta.day}
+                              </span>
+                              <span className="mt-0.5 text-[9px] font-black uppercase tracking-wider text-[--text-tertiary]">
+                                {meta.month}
+                              </span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-black text-[--text-primary]">{meta.relative}</p>
+                              <p className="truncate text-[10px] text-[--text-tertiary]">
+                                {meta.full} · {txs.length} {txs.length === 1 ? 'movimento' : 'movimentos'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {daily.income > 0 && (
+                              <span className="rounded-full bg-[--success-bg] px-2 py-1 text-[10px] font-black text-[--success-text]">
+                                +{formatCurrency(daily.income)}
+                              </span>
+                            )}
+                            {daily.expenses > 0 && (
+                              <span className="rounded-full bg-[--danger-bg] px-2 py-1 text-[10px] font-black text-[--danger-text]">
+                                −{formatCurrency(daily.expenses)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })()}
                     <div className="divide-y divide-[--border-subtle]">
                       {txs.map((tx) => (
                         <TxRow
