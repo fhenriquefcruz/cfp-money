@@ -3,8 +3,7 @@ import { getGoalEffectiveCurrent, getSavingsSignedAmount } from './savings'
 const movementDate = (item = {}) =>
   item.purchaseDate || item.originalPurchaseDate || item.date || item.dueDate || ''
 
-const monthKey = (date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+const monthKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 
 const monthAt = (now, offset) => new Date(now.getFullYear(), now.getMonth() + offset, 1)
 
@@ -19,7 +18,8 @@ export function buildSavingsInsights(transactions = [], goals = [], now = new Da
 
   const groupedInstitutions = new Map()
   movements.forEach(({ transaction, amount }) => {
-    const institution = String(transaction.savingsInstitution || '').trim() || 'Instituição não informada'
+    const institution =
+      String(transaction.savingsInstitution || '').trim() || 'Instituição não informada'
     const current = groupedInstitutions.get(institution) || { institution, balance: 0 }
     current.balance += amount
     groupedInstitutions.set(institution, current)
@@ -41,10 +41,7 @@ export function buildSavingsInsights(transactions = [], goals = [], now = new Da
       label: `${new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(date).replace('.', '')}/${String(date.getFullYear()).slice(-2)}`,
       balance: Math.max(
         0,
-        movements.reduce(
-          (sum, item) => sum + (item.date.slice(0, 7) <= key ? item.amount : 0),
-          0,
-        ),
+        movements.reduce((sum, item) => sum + (item.date.slice(0, 7) <= key ? item.amount : 0), 0),
       ),
     }
   })
@@ -67,7 +64,8 @@ export function buildSavingsInsights(transactions = [], goals = [], now = new Da
         0,
       )
       const monthlyPace = Math.max(0, recentNet / 3)
-      const projectedMonths = remaining > 0 && monthlyPace > 0 ? Math.ceil(remaining / monthlyPace) : null
+      const projectedMonths =
+        remaining > 0 && monthlyPace > 0 ? Math.ceil(remaining / monthlyPace) : null
       return {
         goalId: goal.id,
         name: goal.name,

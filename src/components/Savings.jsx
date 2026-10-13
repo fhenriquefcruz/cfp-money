@@ -1,9 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Trash2,
-} from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Trash2 } from 'lucide-react'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { useGoals, useTransactions } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Modal } from './ui'
@@ -180,10 +176,15 @@ export default function Savings() {
         <Card variant="elevated">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-base font-black text-[--text-primary]">Evolução do patrimônio reservado</h2>
+              <h2 className="text-base font-black text-[--text-primary]">
+                Evolução do patrimônio reservado
+              </h2>
             </div>
-            <p className={`text-sm font-black tabular-nums ${patrimonyChange >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'}`}>
-              {patrimonyChange >= 0 ? '+' : '−'}{formatCurrency(Math.abs(patrimonyChange))}
+            <p
+              className={`text-sm font-black tabular-nums ${patrimonyChange >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'}`}
+            >
+              {patrimonyChange >= 0 ? '+' : '−'}
+              {formatCurrency(Math.abs(patrimonyChange))}
             </p>
           </div>
           {historyMax > 0 ? (
@@ -191,17 +192,23 @@ export default function Savings() {
               {balanceHistory.map((point) => (
                 <div key={point.monthKey} className="text-center">
                   <div className="flex h-20 items-end rounded-lg bg-[--bg-subtle]">
-                    <div className="w-full rounded-lg bg-[--brand-500]" style={{ height: `${Math.max(6, (point.balance / historyMax) * 100)}%` }} />
+                    <div
+                      className="w-full rounded-lg bg-[--brand-500]"
+                      style={{ height: `${Math.max(6, (point.balance / historyMax) * 100)}%` }}
+                    />
                   </div>
                   <span className="text-[9px] text-[--text-tertiary]">{point.label}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-xs text-[--text-tertiary]">Os primeiros aportes formarão esta evolução.</p>
+            <p className="mt-4 text-xs text-[--text-tertiary]">
+              Os primeiros aportes formarão esta evolução.
+            </p>
           )}
           <p className="mt-3 text-[10px] text-[--text-tertiary]">
-            Ritmo de poupança do mês: {savingsRate.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
+            Ritmo de poupança do mês:{' '}
+            {savingsRate.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
           </p>
         </Card>
 
@@ -212,8 +219,13 @@ export default function Savings() {
           ) : (
             <div className="mt-4 divide-y divide-[--border-subtle]">
               {institutionOverview.slice(0, 5).map((institution) => (
-                <div key={institution.institution} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
-                  <span className="truncate text-xs font-bold text-[--text-primary]">{institution.institution}</span>
+                <div
+                  key={institution.institution}
+                  className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
+                >
+                  <span className="truncate text-xs font-bold text-[--text-primary]">
+                    {institution.institution}
+                  </span>
                   <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
                     {formatCurrency(institution.balance)}
                   </span>
@@ -226,20 +238,29 @@ export default function Savings() {
 
       <Card>
         <h2 className="text-base font-black text-[--text-primary]">Projeção das metas</h2>
-        <p className="mt-1 text-xs text-[--text-tertiary]">Estimativa pelo ritmo líquido dos últimos 3 meses.</p>
+        <p className="mt-1 text-xs text-[--text-tertiary]">
+          Estimativa pelo ritmo líquido dos últimos 3 meses.
+        </p>
         {activeGoalProjections.length === 0 ? (
           <p className="mt-4 text-xs text-[--text-tertiary]">
-            {goals.length ? 'Todas as metas estão concluídas.' : 'Vincule aportes a metas para gerar projeções.'}
+            {goals.length
+              ? 'Todas as metas estão concluídas.'
+              : 'Vincule aportes a metas para gerar projeções.'}
           </p>
         ) : (
           <div className="mt-4 divide-y divide-[--border-subtle]">
             {activeGoalProjections.map((projection) => (
-              <div key={projection.goalId} className="flex flex-col gap-1 py-2 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+              <div
+                key={projection.goalId}
+                className="flex flex-col gap-1 py-2 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
+              >
                 <span className="truncate text-xs font-bold text-[--text-primary]">
                   {projection.emoji} {projection.name}
                 </span>
                 <span className="text-[10px] text-[--text-tertiary] sm:text-right">
-                  {projection.monthlyPace > 0 ? `${formatCurrency(projection.monthlyPace)}/mês · ~${projection.projectedMonths} meses` : 'Sem ritmo recente'}
+                  {projection.monthlyPace > 0
+                    ? `${formatCurrency(projection.monthlyPace)}/mês · ~${projection.projectedMonths} meses`
+                    : 'Sem ritmo recente'}
                 </span>
               </div>
             ))}
