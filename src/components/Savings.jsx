@@ -5,7 +5,6 @@ import {
   History,
   Landmark,
   PiggyBank,
-  Target,
   Trash2,
 } from 'lucide-react'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
@@ -187,90 +186,53 @@ export default function Savings() {
         ))}
       </section>
 
-      <section className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+      <section className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
         <Card variant="elevated">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2">
-                <History size={17} className="text-[--brand-600]" />
-                <h2 className="text-base font-black text-[--text-primary]">
-                  Evolução do patrimônio reservado
-                </h2>
-              </div>
-              <p className="mt-1 text-xs text-[--text-tertiary]">
-                Saldo acumulado das reservas ao fim de cada mês, considerando aportes e retiradas.
-              </p>
+              <h2 className="text-base font-black text-[--text-primary]">Evolução do patrimônio reservado</h2>
+              <p className="mt-1 text-xs text-[--text-tertiary]">Saldo acumulado ao fim de cada mês.</p>
             </div>
-            <div className="text-left sm:text-right">
-              <p className="text-xs font-semibold text-[--text-tertiary]">Variação em 6 meses</p>
-              <p className={`mt-1 text-lg font-black tabular-nums ${patrimonyChange >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'}`}>
-                {patrimonyChange >= 0 ? '+' : '−'}{formatCurrency(Math.abs(patrimonyChange))}
-              </p>
-              <p className="text-[10px] text-[--text-tertiary]">
-                Ritmo do mês: {savingsRate.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
-              </p>
-            </div>
+            <p className={`text-sm font-black tabular-nums ${patrimonyChange >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'}`}>
+              {patrimonyChange >= 0 ? '+' : '−'}{formatCurrency(Math.abs(patrimonyChange))}
+            </p>
           </div>
-
           {historyMax > 0 ? (
-            <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6" role="img" aria-label="Evolução do patrimônio reservado nos últimos seis meses">
+            <div className="mt-4 grid grid-cols-6 gap-2" role="img" aria-label="Evolução do patrimônio reservado nos últimos seis meses">
               {balanceHistory.map((point) => (
-                <div key={point.monthKey} className="min-w-0 text-center">
-                  <div className="flex h-24 items-end overflow-hidden rounded-xl bg-[--bg-subtle]" title={formatCurrency(point.balance)}>
-                    <div
-                      className="w-full rounded-xl bg-[--brand-500]"
-                      style={{ height: `${Math.max(6, (point.balance / historyMax) * 100)}%` }}
-                    />
+                <div key={point.monthKey} className="text-center">
+                  <div className="flex h-20 items-end rounded-lg bg-[--bg-subtle]">
+                    <div className="w-full rounded-lg bg-[--brand-500]" style={{ height: `${Math.max(6, (point.balance / historyMax) * 100)}%` }} />
                   </div>
-                  <p className="mt-1 text-[10px] font-bold text-[--text-tertiary]">{point.label}</p>
+                  <span className="text-[9px] text-[--text-tertiary]">{point.label}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="mt-5 rounded-2xl border border-dashed border-[--border-subtle] bg-[--bg-subtle] px-4 py-8 text-center text-xs text-[--text-tertiary]">
-              Os primeiros aportes vão formar automaticamente esta evolução.
-            </p>
+            <p className="mt-4 text-xs text-[--text-tertiary]">Os primeiros aportes formarão esta evolução.</p>
           )}
+          <p className="mt-3 text-[10px] text-[--text-tertiary]">
+            Ritmo de poupança do mês: {savingsRate.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
+          </p>
         </Card>
 
         <Card>
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-black text-[--text-primary]">Patrimônio por instituição</h2>
-              <p className="mt-1 text-xs text-[--text-tertiary]">
-                Onde o dinheiro reservado está concentrado hoje.
-              </p>
-            </div>
-            <Landmark size={18} className="flex-shrink-0 text-[--brand-600]" />
-          </div>
-
+          <h2 className="text-base font-black text-[--text-primary]">Patrimônio por instituição</h2>
+          <p className="mt-1 text-xs text-[--text-tertiary]">Concentração atual do dinheiro reservado.</p>
           {institutionOverview.length === 0 ? (
-            <p className="py-10 text-center text-sm text-[--text-tertiary]">
-              Informe a instituição ao guardar dinheiro para ver a consolidação.
-            </p>
+            <p className="py-8 text-sm text-[--text-tertiary]">Nenhuma instituição informada.</p>
           ) : (
-            <div className="space-y-4">
-              {institutionOverview.slice(0, 6).map((institution) => (
-                <article key={institution.institution}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-black text-[--text-primary]">
-                        {institution.institution}
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                        Participação nas reservas
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-black tabular-nums text-[--text-primary]">
-                        {formatCurrency(institution.balance)}
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                        {institution.share.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
-                      </p>
-                    </div>
-                  </div>
-                </article>
+            <div className="mt-4 divide-y divide-[--border-subtle]">
+              {institutionOverview.slice(0, 5).map((institution) => (
+                <div key={institution.institution} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
+                  <span className="truncate text-xs font-bold text-[--text-primary]">{institution.institution}</span>
+                  <span className="flex-shrink-0 text-right text-xs font-black tabular-nums text-[--text-primary]">
+                    {formatCurrency(institution.balance)}
+                    <small className="ml-1 font-medium text-[--text-tertiary]">
+                      {institution.share.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
+                    </small>
+                  </span>
+                </div>
               ))}
             </div>
           )}
@@ -278,48 +240,26 @@ export default function Savings() {
       </section>
 
       <Card>
-        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Target size={17} className="text-[--brand-600]" />
-              <h2 className="text-base font-black text-[--text-primary]">Projeção das metas</h2>
-            </div>
-            <p className="mt-1 text-xs text-[--text-tertiary]">
-              Ritmo líquido real dos últimos três meses. É uma estimativa, não uma promessa.
-            </p>
-          </div>
-        </div>
-
+        <h2 className="text-base font-black text-[--text-primary]">Projeção das metas</h2>
+        <p className="mt-1 text-xs text-[--text-tertiary]">
+          Ritmo líquido real dos últimos três meses. É uma estimativa, não uma promessa.
+        </p>
         {activeGoalProjections.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-[--border-subtle] bg-[--bg-subtle] px-4 py-8 text-center text-xs text-[--text-tertiary]">
-            {goals.length > 0 ? 'Todas as metas estão concluídas.' : 'Vincule aportes a metas para gerar projeções.'}
+          <p className="mt-4 text-xs text-[--text-tertiary]">
+            {goals.length ? 'Todas as metas estão concluídas.' : 'Vincule aportes a metas para gerar projeções.'}
           </p>
         ) : (
-          <div className="divide-y divide-[--border-subtle]">
+          <div className="mt-4 divide-y divide-[--border-subtle]">
             {activeGoalProjections.map((projection) => (
-              <article key={projection.goalId} className="grid gap-3 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                <div className="min-w-0">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="truncate text-sm font-black text-[--text-primary]">
-                      {projection.emoji} {projection.name}
-                    </p>
-                    <span className={`text-[10px] font-bold ${projection.status === 'behind' ? 'text-[--warning-icon]' : projection.status === 'on-track' ? 'text-[--success-text]' : 'text-[--text-tertiary]'}`}>
-                      {projection.status === 'behind' ? 'Abaixo do prazo' : projection.status === 'on-track' ? 'No ritmo' : projection.status === 'no-pace' ? 'Sem ritmo recente' : 'Ritmo atual'}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-[10px] text-[--text-tertiary]">
-                    {formatCurrency(projection.current)} de {formatCurrency(projection.target)}
-                  </p>
-                </div>
-                <div className="text-left sm:min-w-40 sm:text-right">
-                  <p className="text-xs font-black text-[--text-primary]">
-                    {projection.monthlyPace > 0 ? `${formatCurrency(projection.monthlyPace)}/mês` : 'Sem aporte líquido'}
-                  </p>
-                  <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                    {projection.projectedMonths ? `Chegada em ~${projection.projectedMonths} meses` : 'Ainda sem projeção'}
-                  </p>
-                </div>
-              </article>
+              <div key={projection.goalId} className="flex flex-col gap-1 py-2 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                <span className="truncate text-xs font-bold text-[--text-primary]">
+                  {projection.emoji} {projection.name}
+                </span>
+                <span className="text-[10px] text-[--text-tertiary] sm:text-right">
+                  {projection.monthlyPace > 0 ? `${formatCurrency(projection.monthlyPace)}/mês · ~${projection.projectedMonths} meses` : 'Sem ritmo recente'}
+                  {projection.status === 'behind' ? ' · abaixo do prazo' : projection.status === 'on-track' ? ' · no ritmo' : ''}
+                </span>
+              </div>
             ))}
           </div>
         )}
