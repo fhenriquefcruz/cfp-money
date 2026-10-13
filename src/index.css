@@ -2377,15 +2377,36 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.dashboard-period-hero__context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.8rem;
+  margin-top: 0.85rem;
+}
+
 .dashboard-period-hero__status {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  margin-top: 0.85rem;
   padding: 0.32rem 0;
   color: rgba(242, 241, 236, 0.82);
   font-size: 0.66rem;
   font-weight: 800;
+}
+
+.dashboard-period-hero__comparison {
+  color: rgba(242, 241, 236, 0.56);
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.dashboard-period-hero__comparison[data-tone='positive'] {
+  color: #9bd0b0;
+}
+
+.dashboard-period-hero__comparison[data-tone='negative'] {
+  color: #eeaaa7;
 }
 
 .dashboard-period-hero__status::before,
