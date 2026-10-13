@@ -10,10 +10,14 @@ import {
   WalletCards,
 } from 'lucide-react'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 import { useGoals, useTransactions } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Modal, ProgressBar } from './ui'
 import TransactionForm from './TransactionForm'
 import {
+  buildGoalSavingsProjections,
+  buildSavingsBalanceHistory,
+  buildSavingsInstitutionOverview,
   buildSavingsOverview,
   getGoalEffectiveCurrent,
   getSavingsDestinationLabel,
@@ -68,6 +72,27 @@ export default function Savings() {
   }, [transactions, monthBounds])
 
   const savingsRate = monthSummary.income > 0 ? (overview.periodNet / monthSummary.income) * 100 : 0
+
+  const institutionOverview = useMemo(
+    () => buildSavingsInstitutionOverview(transactions),
+    [transactions],
+  )
+  const balanceHistory = useMemo(
+    () => buildSavingsBalanceHistory(transactions, { months: 6 }),
+    [transactions],
+  )
+  const goalProjections = useMemo(
+    () => buildGoalSavingsProjections(goals, transactions, { months: 3 }),
+    [goals, transactions],
+  )
+  const activeGoalProjections = useMemo(
+    () => goalProjections.filter((projection) => !projection.completed).slice(0, 4),
+    [goalProjections],
+  )
+
+  const firstHistoryBalance = balanceHistory[0]?.balance || 0
+  const latestHistoryBalance = balanceHistory[balanceHistory.length - 1]?.balance || 0
+  const patrimonyChange = latestHistoryBalance - firstHistoryBalance
 
   const movements = useMemo(
     () =>
@@ -199,6 +224,235 @@ export default function Savings() {
             </p>
           </div>
         </div>
+      </Card>
+
+      <section className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+        <Card variant="elevated">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <History size={17} className="text-[--brand-600]" />
+                <h2 className="text-base font-black text-[--text-primary]">
+                  Evolução do patrimônio reservado
+                </h2>
+              </div>
+              <p className="mt-1 text-xs text-[--text-tertiary]">
+                Saldo acumulado das reservas ao fim de cada mês, considerando aportes e retiradas.
+              </p>
+            </div>
+            <div className="text-left sm:text-right">
+              <p className="text-xs font-semibold text-[--text-tertiary]">Variação em 6 meses</p>
+              <p
+                className={`mt-1 text-lg font-black tabular-nums ${
+                  patrimonyChange >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'
+                }`}
+              >
+                {patrimonyChange >= 0 ? '+' : '−'}
+                {formatCurrency(Math.abs(patrimonyChange))}
+              </p>
+            </div>
+          </div>
+
+          {balanceHistory.some((point) => point.balance > 0) ? (
+            <div
+              className="mt-5 h-56 min-w-0"
+              role="img"
+              aria-label="Gráfico com a evolução do patrimônio reservado nos últimos seis meses"
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={balanceHistory} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+                  <XAxis
+                    dataKey="label"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'var(--text-tertiary)', fontSize: 10 }}
+                  />
+                  <Tooltip
+                    formatter={(value) => [formatCurrency(value), 'Saldo reservado']}
+                    contentStyle={{
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: '12px',
+                      boxShadow: 'var(--shadow-md)',
+                    }}
+                    labelStyle={{ color: 'var(--text-secondary)', fontSize: '11px' }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="balance"
+                    stroke="var(--brand-600)"
+                    fill="var(--brand-100)"
+                    fillOpacity={0.72}
+                    strokeWidth={2.5}
+                    dot={false}
+                    activeDot={{ r: 4 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="mt-5 rounded-2xl border border-dashed border-[--border-subtle] bg-[--bg-subtle] px-4 py-10 text-center">
+              <p className="text-sm font-bold text-[--text-primary]">Ainda sem histórico patrimonial</p>
+              <p className="mt-1 text-xs text-[--text-tertiary]">
+                Os primeiros aportes vão formar automaticamente esta curva de evolução.
+              </p>
+            </div>
+          )}
+        </Card>
+
+        <Card>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-black text-[--text-primary]">Patrimônio por instituição</h2>
+              <p className="mt-1 text-xs text-[--text-tertiary]">
+                Onde o dinheiro reservado está concentrado hoje.
+              </p>
+            </div>
+            <Landmark size={18} className="flex-shrink-0 text-[--brand-600]" />
+          </div>
+
+          {institutionOverview.length === 0 ? (
+            <p className="py-10 text-center text-sm text-[--text-tertiary]">
+              Informe a instituição ao guardar dinheiro para ver a consolidação.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {institutionOverview.slice(0, 6).map((institution) => (
+                <article key={institution.institution}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-black text-[--text-primary]">
+                        {institution.institution}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+                        {institution.destinationCount} destino
+                        {institution.destinationCount === 1 ? '' : 's'} vinculado
+                        {institution.destinationCount === 1 ? '' : 's'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-black tabular-nums text-[--text-primary]">
+                        {formatCurrency(institution.balance)}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+                        {institution.share.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[--bg-hover]">
+                    <div
+                      className="h-full rounded-full bg-[--brand-500]"
+                      style={{ width: `${Math.min(100, Math.max(0, institution.share))}%` }}
+                    />
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </Card>
+      </section>
+
+      <Card>
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Target size={17} className="text-[--brand-600]" />
+              <h2 className="text-base font-black text-[--text-primary]">Projeção das metas</h2>
+            </div>
+            <p className="mt-1 text-xs text-[--text-tertiary]">
+              Estimativa baseada no ritmo líquido real de aportes vinculados dos últimos três meses.
+            </p>
+          </div>
+          <span className="w-fit rounded-full border border-[--border-subtle] bg-[--bg-subtle] px-3 py-1 text-[10px] font-bold text-[--text-tertiary]">
+            Projeção, não promessa
+          </span>
+        </div>
+
+        {activeGoalProjections.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[--border-subtle] bg-[--bg-subtle] px-4 py-8 text-center">
+            <p className="text-sm font-bold text-[--text-primary]">
+              {goals.length > 0 ? 'Todas as metas estão concluídas' : 'Nenhuma meta ativa'}
+            </p>
+            <p className="mt-1 text-xs text-[--text-tertiary]">
+              Vincule aportes às metas para construir uma projeção baseada no seu comportamento real.
+            </p>
+          </div>
+        ) : (
+          <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
+            {activeGoalProjections.map((projection) => {
+              const statusLabel =
+                projection.status === 'behind'
+                  ? 'Ritmo abaixo do prazo'
+                  : projection.status === 'on-track'
+                    ? 'Ritmo compatível com o prazo'
+                    : projection.status === 'no-pace'
+                      ? 'Sem ritmo recente suficiente'
+                      : 'Projeção pelo ritmo atual'
+
+              return (
+                <article
+                  key={projection.goalId}
+                  className="rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-black text-[--text-primary]">
+                        {projection.emoji} {projection.name}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+                        {formatCurrency(projection.current)} de {formatCurrency(projection.target)}
+                      </p>
+                    </div>
+                    <span
+                      className={`flex-shrink-0 text-right text-[10px] font-bold ${
+                        projection.status === 'behind'
+                          ? 'text-[--warning-icon]'
+                          : projection.status === 'on-track'
+                            ? 'text-[--success-text]'
+                            : 'text-[--text-tertiary]'
+                      }`}
+                    >
+                      {statusLabel}
+                    </span>
+                  </div>
+
+                  <div className="mt-3">
+                    <ProgressBar value={projection.current} max={projection.target} />
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="rounded-xl bg-[--bg-surface] p-3">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                        Ritmo real · 3 meses
+                      </p>
+                      <p className="mt-1 text-xs font-black text-[--text-primary]">
+                        {projection.averageMonthlyContribution > 0
+                          ? `${formatCurrency(projection.averageMonthlyContribution)}/mês`
+                          : 'Sem ritmo líquido'}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-[--bg-surface] p-3">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                        Chegada estimada
+                      </p>
+                      <p className="mt-1 text-xs font-black text-[--text-primary]">
+                        {projection.projectedDate
+                          ? formatDate(projection.projectedDate)
+                          : 'Ainda sem projeção'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {projection.deadline && (
+                    <p className="mt-2 text-[10px] text-[--text-tertiary]">
+                      Prazo definido: {formatDate(projection.deadline)}.
+                    </p>
+                  )}
+                </article>
+              )
+            })}
+          </div>
+        )}
       </Card>
 
       <section className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
