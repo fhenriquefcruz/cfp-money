@@ -18,7 +18,7 @@ test.describe('Central de Poupança e Reservas', () => {
     ).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Patrimônio por instituição' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Projeção das metas' })).toBeVisible()
-    await expect(page.getByText('Projeção, não promessa')).toBeVisible()
+    await expect(page.getByText(/estimativa, não uma promessa/i)).toBeVisible()
   })
 
   test('retirada rápida preserva o destino e reduz o total reservado', async ({ page }) => {
