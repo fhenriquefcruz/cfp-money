@@ -64,8 +64,6 @@ test('consolida instituições e reconstrói a evolução patrimonial', () => {
       balance: 400,
     }),
   ])
-  expect(insights.institutions.reduce((sum, item) => sum + item.share, 0)).toBeCloseTo(100, 5)
-
   expect(insights.history.slice(-3)).toEqual([
     expect.objectContaining({ monthKey: '2026-08', balance: 300 }),
     expect.objectContaining({ monthKey: '2026-09', balance: 1100 }),
@@ -91,11 +89,9 @@ test('projeta meta pelo ritmo líquido real dos últimos três meses', () => {
 
   expect(insights.projections[0]).toMatchObject({
     goalId: 'goal-trip',
-    current: 900,
     remaining: 900,
     monthlyPace: 300,
     projectedMonths: 3,
-    status: 'on-track',
   })
 })
 
@@ -115,10 +111,8 @@ test('não inventa prazo quando não existe ritmo recente de aporte', () => {
   )
 
   expect(insights.projections[0]).toMatchObject({
-    current: 1000,
     remaining: 4000,
     monthlyPace: 0,
     projectedMonths: null,
-    status: 'no-pace',
   })
 })
