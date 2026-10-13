@@ -226,11 +226,8 @@ export default function Savings() {
               {institutionOverview.slice(0, 5).map((institution) => (
                 <div key={institution.institution} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
                   <span className="truncate text-xs font-bold text-[--text-primary]">{institution.institution}</span>
-                  <span className="flex-shrink-0 text-right text-xs font-black tabular-nums text-[--text-primary]">
+                  <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
                     {formatCurrency(institution.balance)}
-                    <small className="ml-1 font-medium text-[--text-tertiary]">
-                      {institution.share.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
-                    </small>
                   </span>
                 </div>
               ))}
@@ -257,7 +254,6 @@ export default function Savings() {
                 </span>
                 <span className="text-[10px] text-[--text-tertiary] sm:text-right">
                   {projection.monthlyPace > 0 ? `${formatCurrency(projection.monthlyPace)}/mês · ~${projection.projectedMonths} meses` : 'Sem ritmo recente'}
-                  {projection.status === 'behind' ? ' · abaixo do prazo' : projection.status === 'on-track' ? ' · no ritmo' : ''}
                 </span>
               </div>
             ))}
