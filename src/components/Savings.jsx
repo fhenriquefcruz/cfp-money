@@ -436,7 +436,8 @@ export default function Savings() {
           <div className="space-y-4">
             <div className="rounded-2xl border border-[--danger-border] bg-[--danger-bg] p-4">
               <p className="text-sm font-bold text-[--danger-text]">
-                Excluir “{deleteMovement.description || getSavingsDestinationLabel(deleteMovement)}”?
+                Excluir “{deleteMovement.description || getSavingsDestinationLabel(deleteMovement)}
+                ”?
               </p>
               <p className="mt-1 text-xs leading-relaxed text-[--danger-text]">
                 Este lançamento será removido do histórico e o saldo da reserva será recalculado.

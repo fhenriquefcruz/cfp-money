@@ -961,7 +961,8 @@ export default function TransactionList() {
                 {monthTitle(visibleMonthKey)}
               </p>
               <p className="mt-0.5 text-xs text-[--text-tertiary]">
-                {filtered.length} {filtered.length === 1 ? 'lançamento' : 'lançamentos'} neste recorte
+                {filtered.length} {filtered.length === 1 ? 'lançamento' : 'lançamentos'} neste
+                recorte
               </p>
               {visibleMonthKey !== currentMonthKey && (
                 <button
@@ -1517,9 +1518,12 @@ export default function TransactionList() {
                               </span>
                             </div>
                             <div className="min-w-0">
-                              <p className="text-xs font-black text-[--text-primary]">{meta.relative}</p>
+                              <p className="text-xs font-black text-[--text-primary]">
+                                {meta.relative}
+                              </p>
                               <p className="truncate text-[10px] text-[--text-tertiary]">
-                                {meta.full} · {txs.length} {txs.length === 1 ? 'movimento' : 'movimentos'}
+                                {meta.full} · {txs.length}{' '}
+                                {txs.length === 1 ? 'movimento' : 'movimentos'}
                               </p>
                             </div>
                           </div>

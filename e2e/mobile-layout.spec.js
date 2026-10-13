@@ -71,7 +71,6 @@ test('rotação retrato-paisagem não cria overflow', async ({ page }, testInfo)
   await expectNoHorizontalOverflow(page)
 })
 
-
 test('controles de período dos Relatórios permanecem alinhados no mobile', async ({ page }) => {
   await prepareE2EPage(page, '/reports')
 
@@ -83,8 +82,12 @@ test('controles de período dos Relatórios permanecem alinhados no mobile', asy
   await expectNoHorizontalOverflow(page)
 
   const geometry = await page.evaluate(() => {
-    const month = document.querySelector('input[aria-label="Mês final do relatório"]')?.getBoundingClientRect()
-    const period = document.querySelector('select[aria-label="Período do relatório"]')?.getBoundingClientRect()
+    const month = document
+      .querySelector('input[aria-label="Mês final do relatório"]')
+      ?.getBoundingClientRect()
+    const period = document
+      .querySelector('select[aria-label="Período do relatório"]')
+      ?.getBoundingClientRect()
     return {
       monthWidth: month?.width || 0,
       periodWidth: period?.width || 0,

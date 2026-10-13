@@ -261,7 +261,6 @@ Novos aportes feitos pela tela de Metas são gravados como transações de poupa
 Esse modelo preserva metas existentes sem reescrever histórico e evita que novos aportes existam
 somente como um número isolado da movimentação financeira.
 
-
 ## Orçamento com vigência
 
 Orçamentos mensais são tratados como **versões com início de vigência**, não como cópias independentes.

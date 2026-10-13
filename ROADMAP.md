@@ -175,7 +175,6 @@
 - [x] cobrir edição pela Central em E2E;
 - [x] validar gates e revisar baselines visuais antes do merge.
 
-
 ## Navegação financeira e vigência de orçamento — Fase 48
 
 - [x] substituir presets mensais de Transações por navegação anterior/próximo mês;

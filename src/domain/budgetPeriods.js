@@ -23,7 +23,9 @@ export function getBudgetForMonth(
     .filter((budget) => budget.categoryId === categoryId)
     .map((budget) => ({
       budget,
-      effectiveMonth: MONTH.test(budget.monthKey || '') ? budget.monthKey.slice(0, 7) : currentMonthKey,
+      effectiveMonth: MONTH.test(budget.monthKey || '')
+        ? budget.monthKey.slice(0, 7)
+        : currentMonthKey,
       explicitMonth: MONTH.test(budget.monthKey || ''),
     }))
     .filter(({ effectiveMonth }) => effectiveMonth && effectiveMonth <= monthKey)

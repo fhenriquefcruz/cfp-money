@@ -70,7 +70,6 @@ JavaScript inicial. Qualquer crescimento acima de 242 KiB + 64 bytes continua bl
 
 Os limites de JavaScript total, rota Money, maior chunk e CSS não foram ampliados nesta fase.
 
-
 ## Recalibração — Fase 48
 
 A navegação mensal de Transações, as ações explícitas de Metas/Reservas e a nova semântica de
