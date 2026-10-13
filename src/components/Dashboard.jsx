@@ -471,39 +471,43 @@ export default function Dashboard() {
                 <p className="dashboard-period-hero__value">
                   {isLoading ? '—' : formatCurrency(currentSummary.balance)}
                 </p>
-                <span className="dashboard-period-hero__status" data-tone={resultTone}>
-                  {resultTone === 'positive'
-                    ? 'Período no azul'
-                    : resultTone === 'negative'
-                      ? 'Fluxo pressionado'
-                      : 'Período equilibrado'}
-                </span>
+                <div className="dashboard-period-hero__context">
+                  <span className="dashboard-period-hero__status" data-tone={periodInsight.tone}>
+                    {periodInsight.statusLabel}
+                  </span>
+                  {periodInsight.comparisonDelta !== null && (
+                    <span
+                      className="dashboard-period-hero__comparison"
+                      data-tone={periodInsight.comparisonTone}
+                    >
+                      {periodInsight.comparisonDelta > 0
+                        ? `${formatCurrency(periodInsight.comparisonDelta)} melhor que ${previousMonthLabel}`
+                        : periodInsight.comparisonDelta < 0
+                          ? `${formatCurrency(Math.abs(periodInsight.comparisonDelta))} pior que ${previousMonthLabel}`
+                          : `Mesmo resultado de ${previousMonthLabel}`}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="dashboard-period-hero__signal">
                 <div className="dashboard-period-hero__signal-head">
                   <span>Uso das receitas</span>
                   <strong>
-                    {expenseIncomeRatio === null ? 'Sem base' : `${expenseIncomeRatio}%`}
+                    {periodInsight.expenseIncomeRatio === null ? 'Sem base' : `${periodInsight.expenseIncomeRatio}%`}
                   </strong>
                 </div>
                 <div className="dashboard-period-hero__track" aria-hidden="true">
                   <span
                     data-tone={
-                      expenseIncomeRatio !== null && expenseIncomeRatio > 100
+                      periodInsight.expenseIncomeRatio !== null && periodInsight.expenseIncomeRatio > 100
                         ? 'negative'
                         : 'positive'
                     }
-                    style={{ width: `${Math.min(100, expenseIncomeRatio || 0)}%` }}
+                    style={{ width: `${Math.min(100, periodInsight.expenseIncomeRatio || 0)}%` }}
                   />
                 </div>
-                <p className="dashboard-period-hero__story">
-                  {expenseIncomeRatio === null
-                    ? 'Registre receitas para comparar o quanto das entradas está sendo consumido.'
-                    : expenseIncomeRatio <= 100
-                      ? `As despesas consumiram ${expenseIncomeRatio}% das receitas deste mês.`
-                      : `As despesas estão ${expenseIncomeRatio - 100}% acima das receitas deste mês.`}
-                </p>
+                <p className="dashboard-period-hero__story">{periodInsight.story}</p>
               </div>
             </div>
 
