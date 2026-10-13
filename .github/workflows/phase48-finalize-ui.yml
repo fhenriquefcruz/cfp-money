@@ -1,0 +1,65 @@
+name: Phase 48 finalize reviewed UI
+
+on:
+  push:
+    branches:
+      - phase-48-transaction-navigation-goals-budgets-reports
+    paths:
+      - .github/workflows/phase48-finalize-ui.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    env:
+      VITE_E2E_MODE: 'true'
+      VITE_FIREBASE_API_KEY: test-api-key
+      VITE_FIREBASE_AUTH_DOMAIN: test-project.firebaseapp.com
+      VITE_FIREBASE_PROJECT_ID: test-project
+      VITE_FIREBASE_STORAGE_BUCKET: test-project.firebasestorage.app
+      VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+      VITE_FIREBASE_APP_ID: 1:123456789:web:test
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v7
+        with:
+          ref: phase-48-transaction-navigation-goals-budgets-reports
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format touched tests
+        run: |
+          npx prettier --write             e2e/accessibility/accessibility.spec.js             e2e/goals.spec.js             e2e/savings.spec.js
+
+      - name: Verify formatting
+        run: npm run format:check
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Regenerate visual baselines
+        run: npm run test:visual:update
+
+      - name: Commit reviewed Phase 48 UI state
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             e2e/accessibility/accessibility.spec.js             e2e/goals.spec.js             e2e/savings.spec.js             e2e/visual/visual.spec.js-snapshots/transactions-visual-desktop-chromium-linux.png             e2e/visual/visual.spec.js-snapshots/transactions-visual-mobile-chromium-linux.png             e2e/visual/visual.spec.js-snapshots/budgets-visual-desktop-chromium-linux.png             e2e/visual/visual.spec.js-snapshots/budgets-visual-mobile-chromium-linux.png             e2e/visual/visual.spec.js-snapshots/reports-visual-mobile-chromium-linux.png
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração final necessária."
+            exit 0
+          fi
+          git commit -m "Phase 48: finalize reviewed responsive UI [visual-baseline]"
+          git push origin HEAD:phase-48-transaction-navigation-goals-budgets-reports
