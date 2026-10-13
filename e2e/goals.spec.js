@@ -48,7 +48,7 @@ test.describe('Metas e Poupança integradas', () => {
 
     const dialog = page.getByRole('dialog', { name: 'Excluir meta' })
     await expect(dialog).toBeVisible()
-    await dialog.getByRole('button', { name: 'Excluir meta' }).click()
+    await dialog.getByRole('button', { name: 'Excluir meta', exact: true }).click()
 
     await expect(dialog).toBeHidden()
     await expect(page.getByText('Entrada do carro')).toHaveCount(0)
