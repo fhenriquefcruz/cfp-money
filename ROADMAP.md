@@ -189,4 +189,4 @@
 - [x] remover a necessidade de copiar orçamento mês a mês;
 - [x] reorganizar filtros de Relatórios para encaixe responsivo;
 - [x] adicionar testes de navegação, vigência, exclusão e responsividade;
-- [ ] revisar diffs visuais e validar todos os gates antes do merge.
+- [x] revisar diffs visuais e validar todos os gates antes do merge.
