@@ -20,10 +20,8 @@ export function buildSavingsInsights(transactions = [], goals = [], now = new Da
   const groupedInstitutions = new Map()
   movements.forEach(({ transaction, amount }) => {
     const institution = String(transaction.savingsInstitution || '').trim() || 'Instituição não informada'
-    const destination = String(transaction.savingsDestination || '').trim() || 'Reserva não classificada'
-    const current = groupedInstitutions.get(institution) || { institution, balance: 0, destinations: new Set() }
+    const current = groupedInstitutions.get(institution) || { institution, balance: 0 }
     current.balance += amount
-    current.destinations.add(destination)
     groupedInstitutions.set(institution, current)
   })
 
@@ -31,7 +29,6 @@ export function buildSavingsInsights(transactions = [], goals = [], now = new Da
     .map((item) => ({
       institution: item.institution,
       balance: Math.max(0, item.balance),
-      destinationCount: item.destinations.size,
     }))
     .filter((item) => item.balance > 0)
     .sort((a, b) => b.balance - a.balance)
