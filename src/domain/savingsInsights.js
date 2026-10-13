@@ -33,11 +33,6 @@ export function buildSavingsInsights(transactions = [], goals = [], now = new Da
     .filter((item) => item.balance > 0)
     .sort((a, b) => b.balance - a.balance)
 
-  const institutionTotal = institutions.reduce((sum, item) => sum + item.balance, 0)
-  institutions.forEach((item) => {
-    item.share = institutionTotal > 0 ? (item.balance / institutionTotal) * 100 : 0
-  })
-
   const history = Array.from({ length: 6 }, (_, index) => {
     const date = monthAt(now, index - 5)
     const key = monthKey(date)
@@ -73,32 +68,16 @@ export function buildSavingsInsights(transactions = [], goals = [], now = new Da
       )
       const monthlyPace = Math.max(0, recentNet / 3)
       const projectedMonths = remaining > 0 && monthlyPace > 0 ? Math.ceil(remaining / monthlyPace) : null
-      const projectedMonth = projectedMonths === null ? null : monthKey(monthAt(now, projectedMonths))
-      const deadlineMonth = goal.deadline ? String(goal.deadline).slice(0, 7) : null
-      const status =
-        remaining === 0
-          ? 'completed'
-          : !projectedMonth
-            ? 'no-pace'
-            : deadlineMonth && projectedMonth > deadlineMonth
-              ? 'behind'
-              : deadlineMonth
-                ? 'on-track'
-                : 'projected'
-
       return {
         goalId: goal.id,
         name: goal.name,
         emoji: goal.emoji || '🎯',
-        target,
-        current,
         remaining,
         monthlyPace,
         projectedMonths,
-        status,
       }
     })
-    .filter((item) => item.status !== 'completed')
+    .filter((item) => item.remaining > 0)
     .sort((a, b) => b.remaining - a.remaining)
     .slice(0, 4)
 
