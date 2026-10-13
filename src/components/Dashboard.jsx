@@ -18,7 +18,6 @@ import {
   Target,
   AlertTriangle,
   Zap,
-  Heart,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -664,7 +663,7 @@ export default function Dashboard() {
           <Card variant="elevated" className="dashboard-health-card h-full shadow-sm">
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="flex items-center gap-1.5">
-                <Heart size={14} className="text-[--danger-icon]" />
+                <CheckCircle2 size={14} className="text-[--brand-600]" />
                 <p className="text-xs font-semibold text-[--text-tertiary]">Saúde financeira</p>
                 <InfoTooltip text="Indicador de 0 a 100 baseado em equilíbrio do período, reserva, aderência a orçamentos, atrasos e relação despesas/receitas. Não representa diagnóstico financeiro completo." />
               </div>
