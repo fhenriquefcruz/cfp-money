@@ -60,4 +60,19 @@ test.describe('Central de Poupança e Reservas', () => {
     await expect(page.getByText('Reserva do carro').first()).toBeVisible()
     await expect(page.getByText('Caixinha do carro')).toHaveCount(0)
   })
+
+  test('exclui um movimento de reserva por ação explícita', async ({ page }) => {
+    await prepareE2EPage(page, '/savings')
+
+    await page
+      .getByRole('button', { name: 'Excluir movimento Aporte para entrada do carro' })
+      .click()
+
+    const dialog = page.getByRole('dialog', { name: 'Excluir movimento da reserva' })
+    await expect(dialog).toBeVisible()
+    await dialog.getByRole('button', { name: 'Excluir movimento', exact: true }).click()
+
+    await expect(dialog).toBeHidden()
+    await expect(page.getByText('R$ 1.500,00')).toHaveCount(0)
+  })
 })

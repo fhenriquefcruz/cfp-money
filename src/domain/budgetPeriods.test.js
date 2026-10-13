@@ -13,27 +13,56 @@ test('gera e navega por competência mensal', () => {
   expect(shiftBudgetMonth('2026-12', 1)).toBe('2027-01')
 })
 
-test('prioriza orçamento específico do mês e não carrega orçamento para outro mês', () => {
+test('mantém orçamento vigente nos meses seguintes sem alterar meses anteriores', () => {
   const budgets = [
     { id: 'legacy', categoryId: 'food', amount: 500 },
     { id: 'sep', categoryId: 'food', amount: 700, monthKey: '2026-09' },
+    { id: 'jan', categoryId: 'food', amount: 850, monthKey: '2027-01' },
   ]
 
+  expect(getBudgetForMonth(budgets, 'food', '2026-08', '2026-09')).toBeNull()
   expect(getBudgetForMonth(budgets, 'food', '2026-09', '2026-09')).toMatchObject({
     id: 'sep',
     amount: 700,
   })
-
-  expect(getBudgetForMonth(budgets, 'food', '2026-08', '2026-09')).toBeNull()
+  expect(getBudgetForMonth(budgets, 'food', '2026-12', '2026-09')).toMatchObject({
+    id: 'sep',
+    amount: 700,
+  })
+  expect(getBudgetForMonth(budgets, 'food', '2027-01', '2026-09')).toMatchObject({
+    id: 'jan',
+    amount: 850,
+  })
+  expect(getBudgetForMonth(budgets, 'food', '2027-03', '2026-09')).toMatchObject({
+    id: 'jan',
+    amount: 850,
+  })
 })
 
-test('usa orçamento legado somente como transição no mês vigente', () => {
+test('orçamento legado passa a valer do mês vigente em diante até nova alteração', () => {
   const budgets = [{ id: 'legacy', categoryId: 'food', amount: 500 }]
 
+  expect(getBudgetForMonth(budgets, 'food', '2026-08', '2026-09')).toBeNull()
   expect(getBudgetForMonth(budgets, 'food', '2026-09', '2026-09')).toMatchObject({
     id: 'legacy',
   })
-  expect(getBudgetForMonth(budgets, 'food', '2026-10', '2026-09')).toBeNull()
+  expect(getBudgetForMonth(budgets, 'food', '2026-10', '2026-09')).toMatchObject({
+    id: 'legacy',
+  })
+})
+
+test('encerramento de orçamento vale dali em diante sem apagar o histórico', () => {
+  const budgets = [
+    { id: 'sep', categoryId: 'food', amount: 700, monthKey: '2026-09' },
+    { id: 'nov-off', categoryId: 'food', amount: 0, monthKey: '2026-11', disabled: true },
+  ]
+
+  expect(getBudgetForMonth(budgets, 'food', '2026-10', '2026-10')).toMatchObject({
+    id: 'sep',
+    amount: 700,
+  })
+  expect(getBudgetForMonth(budgets, 'food', '2026-11', '2026-10')).toBeNull()
+  expect(getBudgetForMonth(budgets, 'food', '2027-01', '2026-10')).toBeNull()
 })
 
 test('calcula consumo pelo mês da compra e não pelo vencimento da fatura', () => {
@@ -89,7 +118,7 @@ test('resume apenas os limites e gastos da competência escolhida', () => {
   })
 
   expect(report).toMatchObject({
-    totalBudgeted: 500,
+    totalBudgeted: 800,
     totalSpent: 550,
     totalExceeded: 50,
   })

@@ -17,12 +17,27 @@ export function getBudgetForMonth(
   monthKey,
   currentMonthKey = budgetMonthKey(),
 ) {
-  const exact = budgets.find(
-    (budget) => budget.categoryId === categoryId && budget.monthKey === monthKey,
-  )
-  if (exact || monthKey !== currentMonthKey) return exact || null
+  if (!categoryId || !MONTH.test(monthKey || '')) return null
 
-  return budgets.find((budget) => budget.categoryId === categoryId && !budget.monthKey) || null
+  const versions = budgets
+    .filter((budget) => budget.categoryId === categoryId)
+    .map((budget) => ({
+      budget,
+      effectiveMonth: MONTH.test(budget.monthKey || '')
+        ? budget.monthKey.slice(0, 7)
+        : currentMonthKey,
+      explicitMonth: MONTH.test(budget.monthKey || ''),
+    }))
+    .filter(({ effectiveMonth }) => effectiveMonth && effectiveMonth <= monthKey)
+    .sort(
+      (first, second) =>
+        second.effectiveMonth.localeCompare(first.effectiveMonth) ||
+        Number(second.explicitMonth) - Number(first.explicitMonth),
+    )
+
+  const latest = versions[0]?.budget || null
+  if (!latest || latest.disabled) return null
+  return latest
 }
 
 export function getBudgetTransactions(transactions = [], categoryId, monthKey) {

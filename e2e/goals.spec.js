@@ -39,4 +39,18 @@ test.describe('Metas e Poupança integradas', () => {
     await expect(dialog).toBeHidden()
     await expect(goalCard).toContainText('R$ 20.500,00')
   })
+
+  test('exclusão fica visível sem menu redundante', async ({ page }) => {
+    await prepareE2EPage(page, '/goals')
+
+    await expect(page.getByTitle('Ações')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Excluir meta Entrada do carro' }).click()
+
+    const dialog = page.getByRole('dialog', { name: 'Excluir meta' })
+    await expect(dialog).toBeVisible()
+    await dialog.getByRole('button', { name: 'Excluir meta', exact: true }).click()
+
+    await expect(dialog).toBeHidden()
+    await expect(page.getByText('Entrada do carro')).toHaveCount(0)
+  })
 })

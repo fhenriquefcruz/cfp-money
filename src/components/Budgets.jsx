@@ -36,7 +36,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
             <p className="truncate font-semibold text-[--text-primary]">{category.name}</p>
             <p className="text-xs text-[--text-tertiary]">
               {budget
-                ? `${formatCurrency(amount)} neste mês`
+                ? `${formatCurrency(amount)} · vigente ${budget.monthKey ? `desde ${monthLabel(budget.monthKey)}` : 'continuamente'}`
                 : `Sem limite · ${formatCurrency(spent)}`}
             </p>
           </div>
@@ -123,18 +123,11 @@ export default function Budgets() {
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState({ categoryId: '', amount: '' })
   const [saving, setSaving] = useState(false)
-  const sourceMonth = shiftBudgetMonth(selectedMonth, -1)
 
   const expenseCategories = useMemo(
     () => categories.filter((category) => category.type === 'expense'),
     [categories],
   )
-
-  const carryoverPlan = expenseCategories.flatMap((category) => {
-    const source = getBudgetForMonth(budgets, category.id, sourceMonth, currentMonthKey)
-    const target = getBudgetForMonth(budgets, category.id, selectedMonth, currentMonthKey)
-    return source && !target ? [{ categoryId: category.id, amount: source.amount }] : []
-  })
 
   const overview = useMemo(
     () =>
@@ -214,17 +207,14 @@ export default function Budgets() {
 
       <Card className="shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[--text-tertiary]">
+              Competência
+            </p>
             <p className="mt-1 text-lg font-black text-[--text-primary]">{selectedLabel}</p>
-            {carryoverPlan.length > 0 && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => saveBudget(carryoverPlan, null, selectedMonth)}
-              >
-                Copiar {monthLabel(sourceMonth)}
-              </Button>
-            )}
+            <p className="mt-0.5 text-xs text-[--text-tertiary]">
+              Os limites vigentes continuam automaticamente até uma nova alteração.
+            </p>
           </div>
 
           <div className="flex items-center gap-1">
@@ -327,9 +317,13 @@ export default function Budgets() {
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={`Orçamento de ${selectedLabel}`}
+        title={`Orçamento a partir de ${selectedLabel}`}
       >
         <div className="space-y-4">
+          <div className="rounded-2xl border border-[--brand-200] bg-[--brand-50] p-3 text-xs leading-relaxed text-[--brand-700]">
+            Este limite passa a valer em {selectedLabel} e continua nos meses seguintes até você
+            alterá-lo novamente. Meses anteriores não serão modificados.
+          </div>
           <div>
             <label
               htmlFor="budget-category"

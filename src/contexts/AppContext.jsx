@@ -131,7 +131,7 @@ export const BudgetsProvider = ({ children }) => {
           items.map((item) => setBudget(user.uid, item.categoryId, item.amount, monthKey)),
         )
         await refreshBudgets()
-        showNotification('Orçamento salvo!')
+        showNotification('Orçamento salvo e vigente a partir deste mês!')
       } catch (error) {
         showNotification('Erro ao salvar.', 'error')
         throw error
@@ -146,7 +146,7 @@ export const BudgetsProvider = ({ children }) => {
       try {
         await deleteBudget(user.uid, categoryId, monthKey, budgetId)
         await refreshBudgets()
-        showNotification('Orçamento mensal removido.', 'info')
+        showNotification('Orçamento encerrado a partir deste mês.', 'info')
       } catch (error) {
         showNotification('Erro ao remover orçamento.', 'error')
         throw error

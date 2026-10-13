@@ -260,3 +260,16 @@ Novos aportes feitos pela tela de Metas são gravados como transações de poupa
 
 Esse modelo preserva metas existentes sem reescrever histórico e evita que novos aportes existam
 somente como um número isolado da movimentação financeira.
+
+## Orçamento com vigência
+
+Orçamentos mensais são tratados como **versões com início de vigência**, não como cópias independentes.
+
+- um limite definido em `YYYY-MM` permanece válido nos meses seguintes;
+- uma alteração em mês posterior cria uma nova versão e não modifica competências anteriores;
+- ao encerrar um limite, é gravada uma versão desativada a partir daquela competência;
+- a competência consultada usa sempre a versão mais recente cuja vigência começou naquele mês ou antes;
+- registros legados sem `monthKey` passam a ser considerados vigentes a partir do mês corrente na leitura, preservando compatibilidade.
+
+Exemplo: R$ 500 em outubro continua válido em novembro e dezembro. Se janeiro for alterado para
+R$ 650, outubro–dezembro permanecem em R$ 500 e janeiro em diante passa a usar R$ 650.

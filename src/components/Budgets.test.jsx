@@ -86,6 +86,16 @@ describe('Budgets auditability', () => {
     ).toBe(true)
   })
 
+  it('mantém o limite vigente sem exigir cópia mensal', () => {
+    renderBudgets()
+
+    expect(screen.queryByRole('button', { name: /Copiar/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/vigente desde 09\/2026/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/continuam automaticamente até uma nova alteração/i),
+    ).toBeInTheDocument()
+  })
+
   it('avisa quando uma classificação suspeita pode distorcer o orçamento', () => {
     renderBudgets()
 

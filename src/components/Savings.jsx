@@ -6,11 +6,12 @@ import {
   Landmark,
   PiggyBank,
   Target,
+  Trash2,
   WalletCards,
 } from 'lucide-react'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { useGoals, useTransactions } from '../contexts/AppContext'
-import { Button, Card, EmptyState, ProgressBar } from './ui'
+import { Button, Card, EmptyState, Modal, ProgressBar } from './ui'
 import TransactionForm from './TransactionForm'
 import {
   buildSavingsOverview,
@@ -43,10 +44,12 @@ const transactionDate = (transaction) =>
   ''
 
 export default function Savings() {
-  const { transactions } = useTransactions()
+  const { transactions, removeTransaction } = useTransactions()
   const { goals } = useGoals()
   const [movementPreset, setMovementPreset] = useState(null)
   const [editingMovement, setEditingMovement] = useState(null)
+  const [deleteMovement, setDeleteMovement] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   const monthBounds = useMemo(currentMonthBounds, [])
 
@@ -383,6 +386,17 @@ export default function Savings() {
                       >
                         Editar
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteMovement(movement)}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
+                        aria-label={`Excluir movimento ${
+                          movement.description || getSavingsDestinationLabel(movement)
+                        }`}
+                        title="Excluir movimento"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
                 )
@@ -412,6 +426,49 @@ export default function Savings() {
           onClose={() => setEditingMovement(null)}
         />
       )}
+
+      <Modal
+        isOpen={Boolean(deleteMovement)}
+        onClose={() => setDeleteMovement(null)}
+        title="Excluir movimento da reserva"
+      >
+        {deleteMovement && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-[--danger-border] bg-[--danger-bg] p-4">
+              <p className="text-sm font-bold text-[--danger-text]">
+                Excluir “{deleteMovement.description || getSavingsDestinationLabel(deleteMovement)}
+                ”?
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-[--danger-text]">
+                Este lançamento será removido do histórico e o saldo da reserva será recalculado.
+                Outros aportes e retiradas permanecem preservados.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Button variant="secondary" fullWidth onClick={() => setDeleteMovement(null)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                fullWidth
+                className="bg-[--danger-icon] hover:opacity-90"
+                loading={deleteLoading}
+                onClick={async () => {
+                  setDeleteLoading(true)
+                  try {
+                    await removeTransaction(deleteMovement.id)
+                    setDeleteMovement(null)
+                  } finally {
+                    setDeleteLoading(false)
+                  }
+                }}
+              >
+                Excluir movimento
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

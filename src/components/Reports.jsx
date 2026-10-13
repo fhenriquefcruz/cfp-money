@@ -254,50 +254,53 @@ function ReportsContent() {
           <h1 className="text-2xl font-black text-[--text-primary]">Relatórios</h1>
           <p className="text-xs text-[--text-tertiary] mt-0.5">Análise do seu período financeiro</p>
         </div>
-        <div className="reports-premium__filters flex min-w-0 flex-wrap items-center gap-2">
-          <label className="grid w-full min-w-0 gap-1 text-xs text-[--text-tertiary] min-[560px]:w-auto">
+        <div className="reports-premium__filters grid w-full min-w-0 grid-cols-1 gap-2 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 min-[420px]:grid-cols-2 xl:w-[560px] xl:min-w-[560px] xl:grid-cols-[180px_160px_minmax(0,1fr)]">
+          <label className="grid min-w-0 gap-1 text-xs text-[--text-tertiary]">
             Mês final
             <input
               type="month"
               value={referenceMonth}
               onChange={(event) => setReferenceMonth(event.target.value)}
               aria-label="Mês final do relatório"
-              className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 py-2 text-sm min-[560px]:w-auto
-                text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+              className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 py-2 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
             />
           </label>
-          <select
-            value={period}
-            onChange={(e) => setPeriod(Number(e.target.value))}
-            aria-label="Período do relatório"
-            className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 py-2 text-sm min-[560px]:w-auto
-              text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-          >
-            <option value={3}>3 meses</option>
-            <option value={6}>6 meses</option>
-            <option value={12}>12 meses</option>
-          </select>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-full min-[560px]:w-auto"
-            icon={<Download size={14} />}
-            onClick={() => exportToCSV(reportTransactions)}
-            disabled={!hasTx}
-          >
-            CSV
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            className="w-full min-[560px]:w-auto"
-            icon={<FileText size={14} />}
-            onClick={handleExportPDF}
-            loading={exporting}
-            disabled={!hasTx}
-          >
-            {exporting ? 'Gerando...' : 'PDF'}
-          </Button>
+          <label className="grid min-w-0 gap-1 text-xs text-[--text-tertiary]">
+            Período analisado
+            <select
+              value={period}
+              onChange={(e) => setPeriod(Number(e.target.value))}
+              aria-label="Período do relatório"
+              className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 py-2 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+            >
+              <option value={3}>3 meses</option>
+              <option value={6}>6 meses</option>
+              <option value={12}>12 meses</option>
+            </select>
+          </label>
+          <div className="grid grid-cols-2 gap-2 min-[420px]:col-span-2 xl:col-span-1 xl:self-end">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="w-full"
+              icon={<Download size={14} />}
+              onClick={() => exportToCSV(reportTransactions)}
+              disabled={!hasTx}
+            >
+              CSV
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              className="w-full"
+              icon={<FileText size={14} />}
+              onClick={handleExportPDF}
+              loading={exporting}
+              disabled={!hasTx}
+            >
+              {exporting ? 'Gerando...' : 'PDF'}
+            </Button>
+          </div>
         </div>
       </div>
 

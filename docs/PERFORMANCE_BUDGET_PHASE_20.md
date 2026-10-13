@@ -69,3 +69,14 @@ preservado e o verificador passou a aceitar somente **64 bytes de tolerância de
 JavaScript inicial. Qualquer crescimento acima de 242 KiB + 64 bytes continua bloqueando o CI.
 
 Os limites de JavaScript total, rota Money, maior chunk e CSS não foram ampliados nesta fase.
+
+## Recalibração — Fase 48
+
+A navegação mensal de Transações, as ações explícitas de Metas/Reservas e a nova semântica de
+vigência de Orçamentos aumentaram o JavaScript total em aproximadamente **283 bytes gzip**.
+
+O JavaScript inicial permaneceu no teto nominal existente de **242 KiB gzip**. Para absorver
+somente o crescimento legítimo das rotas alteradas, o teto de JavaScript total foi ajustado de
+**718 KiB** para **719 KiB gzip**.
+
+Permanecem inalterados os limites de JavaScript inicial, rota Money, maior chunk e CSS.

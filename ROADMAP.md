@@ -174,3 +174,19 @@
 - [x] testar persistência de destino, instituição e meta ao editar;
 - [x] cobrir edição pela Central em E2E;
 - [x] validar gates e revisar baselines visuais antes do merge.
+
+## Navegação financeira e vigência de orçamento — Fase 48
+
+- [x] substituir presets mensais de Transações por navegação anterior/próximo mês;
+- [x] exibir de forma explícita o mês em foco em Transações;
+- [x] mover Últimos 3 meses, Este ano e Todos para o painel de filtros;
+- [x] melhorar cabeçalhos diários e leitura visual da listagem de Transações;
+- [x] remover o menu redundante de três pontos das Metas;
+- [x] manter edição visível e adicionar exclusão explícita de Meta;
+- [x] adicionar exclusão explícita de movimento em Reservas com confirmação;
+- [x] transformar Orçamentos em limites contínuos com vigência futura;
+- [x] impedir alteração retroativa de competências anteriores do Orçamento;
+- [x] remover a necessidade de copiar orçamento mês a mês;
+- [x] reorganizar filtros de Relatórios para encaixe responsivo;
+- [x] adicionar testes de navegação, vigência, exclusão e responsividade;
+- [x] revisar diffs visuais e validar todos os gates antes do merge.

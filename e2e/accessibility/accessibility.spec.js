@@ -136,6 +136,11 @@ test('modal de nova transação mantém foco contido, fecha com Escape e devolve
 
   const dialog = page.getByRole('dialog', { name: 'Nova transação' })
   await expect(dialog).toBeVisible()
+  await expect
+    .poll(() => dialog.evaluate((element) => Number(window.getComputedStyle(element).opacity)), {
+      message: 'O modal deve terminar a animação antes da auditoria de contraste.',
+    })
+    .toBe(1)
   await audit(page, testInfo, 'modal-nova-transacao', {
     stableSelector: '[role="dialog"]',
     include: '[role="dialog"]',
