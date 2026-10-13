@@ -106,9 +106,6 @@ export default function Savings() {
     <div className="savings-premium mx-auto w-full max-w-7xl space-y-5 pb-24 lg:pb-8">
       <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[--brand-200] bg-[--brand-50] px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[--brand-700]">
-            Poupança e Reservas
-          </div>
           <h1 className="text-2xl font-black tracking-tight text-[--text-primary] sm:text-3xl">
             Seu dinheiro guardado, em um só lugar
           </h1>
