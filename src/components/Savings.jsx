@@ -2,8 +2,6 @@ import React, { useMemo, useState } from 'react'
 import {
   ArrowDownRight,
   ArrowUpRight,
-  History,
-  Landmark,
   Trash2,
 } from 'lucide-react'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
@@ -137,9 +135,6 @@ export default function Savings() {
         <Card className="border border-[--brand-200] bg-[--brand-50]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
-              <div className="rounded-xl bg-[--bg-surface] p-2 text-[--brand-700]">
-                <Landmark size={16} />
-              </div>
               <div>
                 <p className="text-sm font-bold text-[--text-primary]">
                   {legacyUnclassifiedCount} movimento{legacyUnclassifiedCount === 1 ? '' : 's'}{' '}
@@ -261,7 +256,6 @@ export default function Savings() {
                 Distribuição atual por reserva e instituição.
               </p>
             </div>
-            <Landmark size={18} className="flex-shrink-0 text-[--brand-600]" />
           </div>
 
           {overview.destinations.length === 0 ? (
@@ -324,14 +318,11 @@ export default function Savings() {
         </Card>
 
         <Card>
-          <div className="mb-4 flex items-center gap-2">
-            <History size={17} className="text-[--brand-600]" />
-            <div>
-              <h2 className="text-base font-black text-[--text-primary]">Movimentos recentes</h2>
-              <p className="mt-0.5 text-xs text-[--text-tertiary]">
-                Histórico de aportes e retiradas das reservas.
-              </p>
-            </div>
+          <div className="mb-4">
+            <h2 className="text-base font-black text-[--text-primary]">Movimentos recentes</h2>
+            <p className="mt-0.5 text-xs text-[--text-tertiary]">
+              Histórico de aportes e retiradas das reservas.
+            </p>
           </div>
 
           {movements.length === 0 ? (
