@@ -10,21 +10,17 @@ import {
   WalletCards,
 } from 'lucide-react'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 import { useGoals, useTransactions } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Modal, ProgressBar } from './ui'
 import TransactionForm from './TransactionForm'
 import {
-  buildGoalSavingsProjections,
-  buildSavingsBalanceHistory,
-  buildSavingsInstitutionOverview,
   buildSavingsOverview,
-  getGoalEffectiveCurrent,
   getSavingsDestinationLabel,
   getUnclassifiedSavingsTransactions,
   getSavingsSignedAmount,
   UNCLASSIFIED_SAVINGS_DESTINATION,
 } from '../domain/savings'
+import { buildSavingsInsights } from '../domain/savingsInsights'
 import {
   getFinancialActivityDate,
   isFinanciallyEffectiveTransaction,
@@ -73,26 +69,16 @@ export default function Savings() {
 
   const savingsRate = monthSummary.income > 0 ? (overview.periodNet / monthSummary.income) * 100 : 0
 
-  const institutionOverview = useMemo(
-    () => buildSavingsInstitutionOverview(transactions),
-    [transactions],
+  const savingsInsights = useMemo(
+    () => buildSavingsInsights(transactions, goals),
+    [transactions, goals],
   )
-  const balanceHistory = useMemo(
-    () => buildSavingsBalanceHistory(transactions, { months: 6 }),
-    [transactions],
-  )
-  const goalProjections = useMemo(
-    () => buildGoalSavingsProjections(goals, transactions, { months: 3 }),
-    [goals, transactions],
-  )
-  const activeGoalProjections = useMemo(
-    () => goalProjections.filter((projection) => !projection.completed).slice(0, 4),
-    [goalProjections],
-  )
-
-  const firstHistoryBalance = balanceHistory[0]?.balance || 0
-  const latestHistoryBalance = balanceHistory[balanceHistory.length - 1]?.balance || 0
-  const patrimonyChange = latestHistoryBalance - firstHistoryBalance
+  const institutionOverview = savingsInsights.institutions
+  const balanceHistory = savingsInsights.history
+  const activeGoalProjections = savingsInsights.projections
+  const historyMax = Math.max(0, ...balanceHistory.map((point) => point.balance))
+  const patrimonyChange =
+    (balanceHistory[balanceHistory.length - 1]?.balance || 0) - (balanceHistory[0]?.balance || 0)
 
   const movements = useMemo(
     () =>
@@ -202,30 +188,6 @@ export default function Savings() {
         ))}
       </section>
 
-      <Card variant="elevated">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <WalletCards size={16} className="text-[--brand-600]" />
-              <h2 className="text-sm font-black text-[--text-primary]">Ritmo de poupança</h2>
-            </div>
-            <p className="mt-1 text-xs text-[--text-tertiary]">
-              Relação entre a poupança líquida e as receitas deste mês.
-            </p>
-          </div>
-          <div className="text-left sm:text-right">
-            <p className="text-2xl font-black tabular-nums text-[--brand-600]">
-              {savingsRate.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
-            </p>
-            <p className="text-[10px] text-[--text-tertiary]">
-              {overview.periodNet >= 0
-                ? 'poupança líquida positiva'
-                : 'retiradas acima dos aportes'}
-            </p>
-          </div>
-        </div>
-      </Card>
-
       <section className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <Card variant="elevated">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -242,61 +204,33 @@ export default function Savings() {
             </div>
             <div className="text-left sm:text-right">
               <p className="text-xs font-semibold text-[--text-tertiary]">Variação em 6 meses</p>
-              <p
-                className={`mt-1 text-lg font-black tabular-nums ${
-                  patrimonyChange >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'
-                }`}
-              >
-                {patrimonyChange >= 0 ? '+' : '−'}
-                {formatCurrency(Math.abs(patrimonyChange))}
+              <p className={`mt-1 text-lg font-black tabular-nums ${patrimonyChange >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'}`}>
+                {patrimonyChange >= 0 ? '+' : '−'}{formatCurrency(Math.abs(patrimonyChange))}
+              </p>
+              <p className="text-[10px] text-[--text-tertiary]">
+                Ritmo do mês: {savingsRate.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
               </p>
             </div>
           </div>
 
-          {balanceHistory.some((point) => point.balance > 0) ? (
-            <div
-              className="mt-5 h-56 min-w-0"
-              role="img"
-              aria-label="Gráfico com a evolução do patrimônio reservado nos últimos seis meses"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={balanceHistory} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
-                  <XAxis
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: 'var(--text-tertiary)', fontSize: 10 }}
-                  />
-                  <Tooltip
-                    formatter={(value) => [formatCurrency(value), 'Saldo reservado']}
-                    contentStyle={{
-                      background: 'var(--bg-surface)',
-                      border: '1px solid var(--border-subtle)',
-                      borderRadius: '12px',
-                      boxShadow: 'var(--shadow-md)',
-                    }}
-                    labelStyle={{ color: 'var(--text-secondary)', fontSize: '11px' }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="balance"
-                    stroke="var(--brand-600)"
-                    fill="var(--brand-100)"
-                    fillOpacity={0.72}
-                    strokeWidth={2.5}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+          {historyMax > 0 ? (
+            <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6" role="img" aria-label="Evolução do patrimônio reservado nos últimos seis meses">
+              {balanceHistory.map((point) => (
+                <div key={point.monthKey} className="min-w-0 text-center">
+                  <div className="flex h-24 items-end overflow-hidden rounded-xl bg-[--bg-subtle]" title={formatCurrency(point.balance)}>
+                    <div
+                      className="w-full rounded-xl bg-[--brand-500]"
+                      style={{ height: `${Math.max(6, (point.balance / historyMax) * 100)}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-[10px] font-bold text-[--text-tertiary]">{point.label}</p>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="mt-5 rounded-2xl border border-dashed border-[--border-subtle] bg-[--bg-subtle] px-4 py-10 text-center">
-              <p className="text-sm font-bold text-[--text-primary]">Ainda sem histórico patrimonial</p>
-              <p className="mt-1 text-xs text-[--text-tertiary]">
-                Os primeiros aportes vão formar automaticamente esta curva de evolução.
-              </p>
-            </div>
+            <p className="mt-5 rounded-2xl border border-dashed border-[--border-subtle] bg-[--bg-subtle] px-4 py-8 text-center text-xs text-[--text-tertiary]">
+              Os primeiros aportes vão formar automaticamente esta evolução.
+            </p>
           )}
         </Card>
 
@@ -360,97 +294,43 @@ export default function Savings() {
               <h2 className="text-base font-black text-[--text-primary]">Projeção das metas</h2>
             </div>
             <p className="mt-1 text-xs text-[--text-tertiary]">
-              Estimativa baseada no ritmo líquido real de aportes vinculados dos últimos três meses.
+              Ritmo líquido real dos últimos três meses. É uma estimativa, não uma promessa.
             </p>
           </div>
-          <span className="w-fit rounded-full border border-[--border-subtle] bg-[--bg-subtle] px-3 py-1 text-[10px] font-bold text-[--text-tertiary]">
-            Projeção, não promessa
-          </span>
         </div>
 
         {activeGoalProjections.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[--border-subtle] bg-[--bg-subtle] px-4 py-8 text-center">
-            <p className="text-sm font-bold text-[--text-primary]">
-              {goals.length > 0 ? 'Todas as metas estão concluídas' : 'Nenhuma meta ativa'}
-            </p>
-            <p className="mt-1 text-xs text-[--text-tertiary]">
-              Vincule aportes às metas para construir uma projeção baseada no seu comportamento real.
-            </p>
-          </div>
+          <p className="rounded-2xl border border-dashed border-[--border-subtle] bg-[--bg-subtle] px-4 py-8 text-center text-xs text-[--text-tertiary]">
+            {goals.length > 0 ? 'Todas as metas estão concluídas.' : 'Vincule aportes a metas para gerar projeções.'}
+          </p>
         ) : (
-          <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
-            {activeGoalProjections.map((projection) => {
-              const statusLabel =
-                projection.status === 'behind'
-                  ? 'Ritmo abaixo do prazo'
-                  : projection.status === 'on-track'
-                    ? 'Ritmo compatível com o prazo'
-                    : projection.status === 'no-pace'
-                      ? 'Sem ritmo recente suficiente'
-                      : 'Projeção pelo ritmo atual'
-
-              return (
-                <article
-                  key={projection.goalId}
-                  className="rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-4"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-black text-[--text-primary]">
-                        {projection.emoji} {projection.name}
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                        {formatCurrency(projection.current)} de {formatCurrency(projection.target)}
-                      </p>
-                    </div>
-                    <span
-                      className={`flex-shrink-0 text-right text-[10px] font-bold ${
-                        projection.status === 'behind'
-                          ? 'text-[--warning-icon]'
-                          : projection.status === 'on-track'
-                            ? 'text-[--success-text]'
-                            : 'text-[--text-tertiary]'
-                      }`}
-                    >
-                      {statusLabel}
+          <div className="divide-y divide-[--border-subtle]">
+            {activeGoalProjections.map((projection) => (
+              <article key={projection.goalId} className="grid gap-3 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                <div className="min-w-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="truncate text-sm font-black text-[--text-primary]">
+                      {projection.emoji} {projection.name}
+                    </p>
+                    <span className={`text-[10px] font-bold ${projection.status === 'behind' ? 'text-[--warning-icon]' : projection.status === 'on-track' ? 'text-[--success-text]' : 'text-[--text-tertiary]'}`}>
+                      {projection.status === 'behind' ? 'Abaixo do prazo' : projection.status === 'on-track' ? 'No ritmo' : projection.status === 'no-pace' ? 'Sem ritmo recente' : 'Ritmo atual'}
                     </span>
                   </div>
-
-                  <div className="mt-3">
-                    <ProgressBar value={projection.current} max={projection.target} />
-                  </div>
-
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <div className="rounded-xl bg-[--bg-surface] p-3">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-                        Ritmo real · 3 meses
-                      </p>
-                      <p className="mt-1 text-xs font-black text-[--text-primary]">
-                        {projection.averageMonthlyContribution > 0
-                          ? `${formatCurrency(projection.averageMonthlyContribution)}/mês`
-                          : 'Sem ritmo líquido'}
-                      </p>
-                    </div>
-                    <div className="rounded-xl bg-[--bg-surface] p-3">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-                        Chegada estimada
-                      </p>
-                      <p className="mt-1 text-xs font-black text-[--text-primary]">
-                        {projection.projectedDate
-                          ? formatDate(projection.projectedDate)
-                          : 'Ainda sem projeção'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {projection.deadline && (
-                    <p className="mt-2 text-[10px] text-[--text-tertiary]">
-                      Prazo definido: {formatDate(projection.deadline)}.
-                    </p>
-                  )}
-                </article>
-              )
-            })}
+                  <div className="mt-2"><ProgressBar value={projection.current} max={projection.target} /></div>
+                  <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                    {formatCurrency(projection.current)} de {formatCurrency(projection.target)}
+                  </p>
+                </div>
+                <div className="text-left sm:min-w-40 sm:text-right">
+                  <p className="text-xs font-black text-[--text-primary]">
+                    {projection.monthlyPace > 0 ? `${formatCurrency(projection.monthlyPace)}/mês` : 'Sem aporte líquido'}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+                    {projection.projectedMonths ? `Chegada em ~${projection.projectedMonths} meses` : 'Ainda sem projeção'}
+                  </p>
+                </div>
+              </article>
+            ))}
           </div>
         )}
       </Card>
@@ -485,10 +365,6 @@ export default function Savings() {
                   overview.totalBalance > 0
                     ? (destination.balance / overview.totalBalance) * 100
                     : 0
-                const linkedGoals = destination.goalIds
-                  .map((goalId) => goalById.get(goalId))
-                  .filter(Boolean)
-
                 return (
                   <article
                     key={destination.label}
@@ -520,32 +396,6 @@ export default function Savings() {
                         style={{ width: `${Math.min(100, Math.max(0, share))}%` }}
                       />
                     </div>
-
-                    {linkedGoals.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        {linkedGoals.map((goal) => {
-                          const current = getGoalEffectiveCurrent(goal, transactions)
-                          const progress =
-                            goal.targetAmount > 0 ? (current / goal.targetAmount) * 100 : 0
-                          return (
-                            <div key={goal.id} className="rounded-xl bg-[--bg-surface] p-3">
-                              <div className="flex items-center justify-between gap-3 text-xs">
-                                <span className="min-w-0 truncate font-bold text-[--text-primary]">
-                                  <Target size={12} className="mr-1 inline" />
-                                  {goal.emoji || '🎯'} {goal.name}
-                                </span>
-                                <span className="flex-shrink-0 text-[--text-tertiary]">
-                                  {Math.min(100, progress).toFixed(0)}%
-                                </span>
-                              </div>
-                              <div className="mt-2">
-                                <ProgressBar value={current} max={goal.targetAmount} />
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
 
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <Button
