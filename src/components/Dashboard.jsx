@@ -516,7 +516,7 @@ export default function Dashboard() {
                 ['Receitas', currentSummary.income, 'income'],
                 ['Despesas', currentSummary.expenses, 'expense'],
                 ['Comprometido', paymentSummary.committedAmount || 0, 'commitment'],
-                ['Poupado no mês', currentSummary.savings, 'reserve'],
+                ['Reservado total', savingsOverview.totalBalance, 'reserve'],
               ].map(([label, value, kind]) => (
                 <div key={label} className="dashboard-period-metric" data-kind={kind}>
                   <p className="dashboard-period-metric__label">
@@ -566,17 +566,19 @@ export default function Dashboard() {
               </p>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[--text-tertiary]">
                 <span>
-                  Aportes no mês{' '}
-                  <strong className="text-[--success-text]">
-                    {formatCurrency(savingsOverview.periodDeposits)}
+                  Poupado no mês{' '}
+                  <strong
+                    className={
+                      savingsOverview.periodNet >= 0
+                        ? 'text-[--success-text]'
+                        : 'text-[--danger-text]'
+                    }
+                  >
+                    {formatCurrency(savingsOverview.periodNet)}
                   </strong>
                 </span>
-                <span>
-                  Retiradas{' '}
-                  <strong className="text-[--danger-text]">
-                    {formatCurrency(savingsOverview.periodWithdrawals)}
-                  </strong>
-                </span>
+                <span>Aportes {formatCurrency(savingsOverview.periodDeposits)}</span>
+                <span>Retiradas {formatCurrency(savingsOverview.periodWithdrawals)}</span>
               </div>
             </div>
 
