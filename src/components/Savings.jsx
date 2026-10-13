@@ -7,7 +7,6 @@ import {
   PiggyBank,
   Target,
   Trash2,
-  WalletCards,
 } from 'lucide-react'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { useGoals, useTransactions } from '../contexts/AppContext'
