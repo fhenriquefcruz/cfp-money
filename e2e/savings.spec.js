@@ -13,6 +13,12 @@ test.describe('Central de Poupança e Reservas', () => {
     await expect(page.getByText('Nubank').first()).toBeVisible()
     await expect(page.getByText(/Entrada do carro/).first()).toBeVisible()
     await expect(page.getByText('R$ 1.500,00').first()).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Evolução do patrimônio reservado' }),
+    ).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Patrimônio por instituição' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Projeção das metas' })).toBeVisible()
+    await expect(page.getByText('Projeção, não promessa')).toBeVisible()
   })
 
   test('retirada rápida preserva o destino e reduz o total reservado', async ({ page }) => {
