@@ -44,6 +44,7 @@ import { getMonthlyFinancialData } from '../domain/monthlyFinance'
 import {
   buildCategoryBreakdown,
   buildMonthAttentionSignals,
+  buildPeriodResultInsight,
   getCalendarMonthBounds,
   getLargestMonthlyExpenseChange,
   getRecentDashboardTransactions,
@@ -208,6 +209,11 @@ export default function Dashboard() {
   const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
   const categoryTotals = useMemo(() => getCategoryTotals(year, month), [year, month, transactions])
   const previousViewDate = useMemo(() => subMonths(viewDate, 1), [year, month])
+  const previousSummary = useMemo(
+    () => getSummary(previousViewDate.getFullYear(), previousViewDate.getMonth()),
+    [previousViewDate, transactions],
+  )
+  const previousMonthLabel = format(previousViewDate, 'MMMM', { locale: ptBR })
   const previousCategoryTotals = useMemo(
     () => getCategoryTotals(previousViewDate.getFullYear(), previousViewDate.getMonth()),
     [previousViewDate, transactions],
@@ -389,12 +395,10 @@ export default function Dashboard() {
     return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'
   }
   const isLoading = transactionsLoading
-  const expenseIncomeRatio =
-    currentSummary.income > 0
-      ? Math.round((currentSummary.expenses / currentSummary.income) * 100)
-      : null
-  const resultTone =
-    currentSummary.balance > 0 ? 'positive' : currentSummary.balance < 0 ? 'negative' : 'neutral'
+  const periodInsight = useMemo(
+    () => buildPeriodResultInsight(currentSummary, previousSummary),
+    [currentSummary, previousSummary],
+  )
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
