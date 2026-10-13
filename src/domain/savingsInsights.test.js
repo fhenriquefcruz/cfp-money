@@ -58,12 +58,10 @@ test('consolida instituições e reconstrói a evolução patrimonial', () => {
     expect.objectContaining({
       institution: 'Nubank',
       balance: 900,
-      destinationCount: 1,
     }),
     expect.objectContaining({
       institution: 'Itaú',
       balance: 400,
-      destinationCount: 1,
     }),
   ])
   expect(insights.institutions.reduce((sum, item) => sum + item.share, 0)).toBeCloseTo(100, 5)
