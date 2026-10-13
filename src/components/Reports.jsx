@@ -254,7 +254,7 @@ function ReportsContent() {
           <h1 className="text-2xl font-black text-[--text-primary]">Relatórios</h1>
           <p className="text-xs text-[--text-tertiary] mt-0.5">Análise do seu período financeiro</p>
         </div>
-        <div className="reports-premium__filters grid w-full min-w-0 grid-cols-1 gap-2 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 min-[420px]:grid-cols-2 xl:w-auto xl:min-w-[560px] xl:grid-cols-[minmax(170px,1fr)_minmax(150px,0.8fr)_auto]">
+        <div className="reports-premium__filters grid w-full min-w-0 grid-cols-1 gap-2 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 min-[420px]:grid-cols-2 xl:w-[560px] xl:min-w-[560px] xl:grid-cols-[180px_160px_minmax(0,1fr)]">
           <label className="grid min-w-0 gap-1 text-xs text-[--text-tertiary]">
             Mês final
             <input
