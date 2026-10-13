@@ -1,0 +1,58 @@
+name: Phase 48 refresh reports desktop baseline
+
+on:
+  push:
+    branches:
+      - phase-48-transaction-navigation-goals-budgets-reports
+    paths:
+      - .github/workflows/phase48-refresh-reports-baseline.yml
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    env:
+      VITE_E2E_MODE: 'true'
+      VITE_FIREBASE_API_KEY: test-api-key
+      VITE_FIREBASE_AUTH_DOMAIN: test-project.firebaseapp.com
+      VITE_FIREBASE_PROJECT_ID: test-project
+      VITE_FIREBASE_STORAGE_BUCKET: test-project.firebasestorage.app
+      VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+      VITE_FIREBASE_APP_ID: 1:123456789:web:test
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v7
+        with:
+          ref: phase-48-transaction-navigation-goals-budgets-reports
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Regenerate baselines
+        run: npm run test:visual:update
+
+      - name: Commit reviewed reports desktop baseline
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add e2e/visual/visual.spec.js-snapshots/reports-visual-desktop-chromium-linux.png
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração necessária."
+            exit 0
+          fi
+          git commit -m "Phase 48: refresh reviewed reports desktop baseline"
+          git push origin HEAD:phase-48-transaction-navigation-goals-budgets-reports
