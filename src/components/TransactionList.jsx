@@ -807,7 +807,7 @@ export default function TransactionList() {
     setPayFilter('all')
     setPaymentStatusFilter('all')
     setCategoryReviewOnly(false)
-    setDateRange({ from: '', to: '' })
+    setDateRange(getCurrentMonthRange())
     setSearch('')
     setPage(1)
   }
