@@ -537,14 +537,15 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Controle mensal sem alterar os cálculos financeiros existentes */}
-      <motion.div {...fade} transition={{ delay: 0.08 }}>
-        <PaymentControlCard summary={paymentSummary} loading={isLoading} />
-      </motion.div>
+      {/* Faixa operacional: compromissos do mês + patrimônio reservado */}
+      <div className="dashboard-operational-grid grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <motion.div className="min-w-0" {...fade} transition={{ delay: 0.08 }}>
+          <PaymentControlCard summary={paymentSummary} loading={isLoading} />
+        </motion.div>
 
-      <motion.div {...fade} transition={{ delay: 0.09 }}>
-        <Card variant="elevated" className="dashboard-savings-card">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <motion.div className="min-w-0" {...fade} transition={{ delay: 0.09 }}>
+          <Card variant="elevated" className="dashboard-savings-card h-full">
+            <div className="flex h-full flex-col gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
@@ -584,7 +585,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="min-w-0 flex-1 lg:max-w-xl">
+              <div className="min-w-0 flex-1">
               <div className="mb-2 flex items-center justify-between gap-3">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
                   Onde está
@@ -602,7 +603,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {savingsOverview.destinations.slice(0, 4).map((destination) => (
+                  {savingsOverview.destinations.slice(0, 3).map((destination) => (
                     <div
                       key={destination.label}
                       className="flex items-center justify-between gap-3 rounded-xl border border-[--border-subtle] bg-[--bg-subtle] px-3 py-2.5"
@@ -624,8 +625,9 @@ export default function Dashboard() {
               )}
             </div>
           </div>
-        </Card>
-      </motion.div>
+          </Card>
+        </motion.div>
+      </div>
 
       {/* Resumo executivo: indicadores essenciais e análise do Money */}
       <motion.div
