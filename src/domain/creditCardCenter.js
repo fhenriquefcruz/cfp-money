@@ -74,25 +74,21 @@ export function isStructuredCreditTransaction(transaction = {}) {
   )
 }
 
-function inferInvoiceMonth(purchaseDate, card = {}) {
-  const [year, month, day] = String(purchaseDate || '')
-    .split('-')
-    .map(Number)
-  if (!year || !month || !day) return ''
-
+function inferInvoiceMonth(date, card = {}) {
+  if (!date) return ''
   const closingDay = Number(card.closingDay) || 1
-  const dueDay = Number(card.dueDay) || 1
-  return monthKeyFromDate(
-    new Date(year, month - 1 + (day > closingDay ? 1 : 0) + (dueDay <= closingDay ? 1 : 0), 1),
-  )
+  const offset =
+    (Number(String(date).slice(8, 10)) > closingDay ? 1 : 0) +
+    ((Number(card.dueDay) || 1) <= closingDay ? 1 : 0)
+
+  return shiftMonthKey(String(date).slice(0, 7), offset)
 }
 
 function transactionInvoiceMonth(transaction, card) {
   const explicitMonth = transaction.invoiceMonth || transaction.dueDate?.slice(0, 7)
   if (explicitMonth) return explicitMonth
 
-  const purchaseDate =
-    transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date || ''
+  const purchaseDate = transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date
 
   return inferInvoiceMonth(purchaseDate, card) || transaction.date?.slice(0, 7) || ''
 }
