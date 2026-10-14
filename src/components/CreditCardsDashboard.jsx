@@ -355,7 +355,11 @@ function CreditCardsCenterContent() {
                 <Info size={17} className="mt-0.5 flex-shrink-0 text-[--warning-icon]" />
                 <div>
                   <p className="text-xs font-black text-[--text-primary]">
-                    {center.legacyCount} {center.legacyCount === 1 ? 'compra no crédito está' : 'compras no crédito estão'} sem cartão identificado
+                    {center.legacyCount}{' '}
+                    {center.legacyCount === 1
+                      ? 'compra no crédito está'
+                      : 'compras no crédito estão'}{' '}
+                    sem cartão identificado
                   </p>
                   <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
                     {formatCurrency(center.legacyTotal)} ainda não pode ser atribuído a uma fatura.

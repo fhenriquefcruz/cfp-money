@@ -163,7 +163,6 @@ test('navega e rotula meses em português', () => {
   expect(labelForMonth('2026-08')).toBe('Agosto de 2026')
 })
 
-
 test('recupera compra antiga vinculada ao cartão mesmo sem flag estruturada', () => {
   const center = buildCreditCardCenter({
     transactions: [

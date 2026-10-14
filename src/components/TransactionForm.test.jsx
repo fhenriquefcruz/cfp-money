@@ -255,7 +255,6 @@ describe('TransactionForm savings editing', () => {
   })
 })
 
-
 describe('TransactionForm credit card integration', () => {
   const nubank = {
     id: 'nubank',

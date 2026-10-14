@@ -794,5 +794,4 @@ describe('controle de pagamentos', () => {
     expect(summary.card.itemCount).toBe(1)
     expect(summary.card.obligationCount).toBe(1)
   })
-
 })
