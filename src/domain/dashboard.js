@@ -151,10 +151,9 @@ export function buildDashboardActionInsights({
     const delta = balance - previousBalance
     insights.push({
       id: 'result',
-      tone: delta > 0 ? 'positive' : 'negative',
       title: delta > 0 ? 'Resultado melhorou' : 'Resultado perdeu força',
       amount: Math.abs(delta),
-      detail: `${delta > 0 ? 'Melhora' : 'Queda'} frente ao mês anterior.`,
+      detail: delta > 0 ? 'Melhora frente ao mês anterior.' : 'Queda frente ao mês anterior.',
       to: '/transactions',
       actionLabel: 'Entender movimentações',
     })
@@ -166,7 +165,6 @@ export function buildDashboardActionInsights({
     const change = category.changePercent
     insights.push({
       id: 'category',
-      tone: (change !== null && Number(change) > 15) || share >= 35 ? 'warning' : 'neutral',
       title: `${category.categoryName} lidera os gastos`,
       amount: Number(category.total),
       detail:
@@ -184,7 +182,6 @@ export function buildDashboardActionInsights({
     const isOverdue = overdue > 0
     insights.push({
       id: 'payments',
-      tone: isOverdue ? 'negative' : 'warning',
       title: `${isOverdue ? overdue : dueSoon} ${
         isOverdue
           ? overdue === 1
@@ -197,16 +194,13 @@ export function buildDashboardActionInsights({
       amount: Number(
         isOverdue ? paymentSummary.overdueAmount || 0 : paymentSummary.dueNext7DaysAmount || 0,
       ),
-      detail: isOverdue
-        ? 'Regularizar reduz a pressão sobre o mês.'
-        : 'Antecipar ajuda a proteger o resultado.',
+      detail: isOverdue ? 'Regularize para reduzir a pressão no mês.' : 'Antecipe para proteger o resultado.',
       to: '/transactions',
       actionLabel: isOverdue ? 'Regularizar' : 'Ver vencimentos',
     })
   } else if (Number(savingsOverview.totalBalance || 0) > 0) {
     insights.push({
       id: 'reserve',
-      tone: Number(savingsOverview.periodNet || 0) >= 0 ? 'positive' : 'neutral',
       title: 'Reservas como proteção',
       amount: Number(savingsOverview.totalBalance),
       detail:
@@ -219,10 +213,9 @@ export function buildDashboardActionInsights({
   } else if (budgetMonthKey) {
     insights.push({
       id: 'budget',
-      tone: 'neutral',
       title: 'Planejamento do mês',
       amount: null,
-      detail: 'Acompanhe os limites para proteger o resultado até o fechamento.',
+      detail: 'Acompanhe os limites para proteger o resultado.',
       to: `/budgets?month=${budgetMonthKey}`,
       actionLabel: 'Abrir orçamento',
     })
