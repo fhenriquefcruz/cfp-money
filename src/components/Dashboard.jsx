@@ -757,40 +757,16 @@ export default function Dashboard() {
                 <AreaChart data={monthlyData} margin={{ top: 12, right: 10, left: 4, bottom: 4 }}>
                   <defs>
                     <linearGradient id="dashboardIncomeGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="0%"
-                        stopColor="var(--success-icon)"
-                        stopOpacity={0.22}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor="var(--success-icon)"
-                        stopOpacity={0.01}
-                      />
+                      <stop offset="0%" stopColor="var(--success-icon)" stopOpacity={0.22} />
+                      <stop offset="100%" stopColor="var(--success-icon)" stopOpacity={0.01} />
                     </linearGradient>
                     <linearGradient id="dashboardExpenseGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="0%"
-                        stopColor="var(--danger-icon)"
-                        stopOpacity={0.18}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor="var(--danger-icon)"
-                        stopOpacity={0.01}
-                      />
+                      <stop offset="0%" stopColor="var(--danger-icon)" stopOpacity={0.18} />
+                      <stop offset="100%" stopColor="var(--danger-icon)" stopOpacity={0.01} />
                     </linearGradient>
                     <linearGradient id="dashboardResultGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="0%"
-                        stopColor="var(--brand-500)"
-                        stopOpacity={0.24}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor="var(--brand-500)"
-                        stopOpacity={0.015}
-                      />
+                      <stop offset="0%" stopColor="var(--brand-500)" stopOpacity={0.24} />
+                      <stop offset="100%" stopColor="var(--brand-500)" stopOpacity={0.015} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -905,7 +881,6 @@ export default function Dashboard() {
                 </Link>
               </div>
             )}
-
           </Card>
         </motion.div>
 
