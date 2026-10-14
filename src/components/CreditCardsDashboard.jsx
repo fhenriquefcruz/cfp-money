@@ -355,8 +355,7 @@ function CreditCardsCenterContent() {
                     Compras sem cartão
                   </p>
                   <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
-                    {center.legacyCount} lançamento{center.legacyCount === 1 ? '' : 's'} ·{' '}
-                    {formatCurrency(center.legacyTotal)} fora das faturas.
+                    Itens: {center.legacyCount} · {formatCurrency(center.legacyTotal)} fora das faturas.
                   </p>
               </div>
               <Link to="/transactions" className="text-xs font-bold text-[--text-brand]">
