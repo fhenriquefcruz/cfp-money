@@ -112,7 +112,6 @@ for (const [name, route, selector] of ROUTES) {
 
     if (name === 'dashboard') {
       await expectDashboardOperationalLayout(page, testInfo.project.name)
-      await expectDashboardPremiumVisualization(page, testInfo.project.name)
     }
 
     await expect(page).toHaveScreenshot(`${name}.png`, {
@@ -121,6 +120,10 @@ for (const [name, route, selector] of ROUTES) {
       caret: 'hide',
       maxDiffPixelRatio: 0.002,
     })
+
+    if (name === 'dashboard') {
+      await expectDashboardPremiumVisualization(page, testInfo.project.name)
+    }
 
     await testInfo.attach(`${name}-viewport`, {
       body: Buffer.from(
