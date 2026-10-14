@@ -191,7 +191,6 @@
 - [x] adicionar testes de navegação, vigência, exclusão e responsividade;
 - [x] revisar diffs visuais e validar todos os gates antes do merge.
 
-
 ## Inteligência patrimonial de Reservas — Fase 49
 
 - [x] adicionar evolução do patrimônio reservado nos últimos 6 meses;

@@ -546,85 +546,86 @@ export default function Dashboard() {
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.09 }}>
           <Card variant="elevated" className="dashboard-savings-card h-full">
             <div className="flex h-full flex-col gap-4">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
-                  <PiggyBank size={16} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h2 className="text-sm font-black text-[--text-primary]">
-                      Poupança e Reservas
-                    </h2>
-                    <InfoTooltip text="Total reservado considera depósitos menos retiradas. O valor poupado no mês usa apenas o período visualizado." />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
+                    <PiggyBank size={16} />
                   </div>
-                  <p className="text-[10px] text-[--text-tertiary]">
-                    Quanto você tem guardado e onde esse dinheiro está.
-                  </p>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h2 className="text-sm font-black text-[--text-primary]">
+                        Poupança e Reservas
+                      </h2>
+                      <InfoTooltip text="Total reservado considera depósitos menos retiradas. O valor poupado no mês usa apenas o período visualizado." />
+                    </div>
+                    <p className="text-[10px] text-[--text-tertiary]">
+                      Quanto você tem guardado e onde esse dinheiro está.
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-4 text-3xl font-black tabular-nums text-[--text-primary]">
+                  {formatCurrency(savingsOverview.totalBalance)}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[--text-tertiary]">
+                  <span>
+                    Poupado no mês{' '}
+                    <strong
+                      className={
+                        savingsOverview.periodNet >= 0
+                          ? 'text-[--success-text]'
+                          : 'text-[--danger-text]'
+                      }
+                    >
+                      {formatCurrency(savingsOverview.periodNet)}
+                    </strong>
+                  </span>
+                  <span>Aportes {formatCurrency(savingsOverview.periodDeposits)}</span>
+                  <span>Retiradas {formatCurrency(savingsOverview.periodWithdrawals)}</span>
                 </div>
               </div>
-
-              <p className="mt-4 text-3xl font-black tabular-nums text-[--text-primary]">
-                {formatCurrency(savingsOverview.totalBalance)}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[--text-tertiary]">
-                <span>
-                  Poupado no mês{' '}
-                  <strong
-                    className={
-                      savingsOverview.periodNet >= 0
-                        ? 'text-[--success-text]'
-                        : 'text-[--danger-text]'
-                    }
-                  >
-                    {formatCurrency(savingsOverview.periodNet)}
-                  </strong>
-                </span>
-                <span>Aportes {formatCurrency(savingsOverview.periodDeposits)}</span>
-                <span>Retiradas {formatCurrency(savingsOverview.periodWithdrawals)}</span>
-              </div>
-            </div>
 
               <div className="min-w-0 flex-1">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-                  Onde está
-                </p>
-                <Link
-                  to="/savings"
-                  className="text-xs font-bold text-[--text-brand] hover:underline"
-                >
-                  Abrir reservas
-                </Link>
-              </div>
-              {savingsOverview.destinations.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-[--border-default] p-3 text-xs text-[--text-tertiary]">
-                  Registre uma Poupança e informe o destino para começar a acompanhar suas reservas.
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                    Onde está
+                  </p>
+                  <Link
+                    to="/savings"
+                    className="text-xs font-bold text-[--text-brand] hover:underline"
+                  >
+                    Abrir reservas
+                  </Link>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {savingsOverview.destinations.slice(0, 3).map((destination) => (
-                    <div
-                      key={destination.label}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-[--border-subtle] bg-[--bg-subtle] px-3 py-2.5"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-bold text-[--text-primary]">
-                          {destination.destination}
-                        </p>
-                        <p className="truncate text-[10px] text-[--text-tertiary]">
-                          {destination.institution || 'Instituição não informada'}
-                        </p>
+                {savingsOverview.destinations.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-[--border-default] p-3 text-xs text-[--text-tertiary]">
+                    Registre uma Poupança e informe o destino para começar a acompanhar suas
+                    reservas.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {savingsOverview.destinations.slice(0, 3).map((destination) => (
+                      <div
+                        key={destination.label}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-[--border-subtle] bg-[--bg-subtle] px-3 py-2.5"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-bold text-[--text-primary]">
+                            {destination.destination}
+                          </p>
+                          <p className="truncate text-[10px] text-[--text-tertiary]">
+                            {destination.institution || 'Instituição não informada'}
+                          </p>
+                        </div>
+                        <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
+                          {formatCurrency(destination.balance)}
+                        </span>
                       </div>
-                      <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
-                        {formatCurrency(destination.balance)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
           </Card>
         </motion.div>
       </div>
