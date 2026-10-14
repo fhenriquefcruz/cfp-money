@@ -917,7 +917,12 @@ export default function Dashboard() {
                 <InfoTooltip text="Despesas do mês pela data da movimentação, ordenadas do maior para o menor gasto." />
               </div>
               <p className="mt-1 text-xs text-[--text-tertiary]">
-                Ranking das categorias que mais pressionam o mês.
+                Ranking · Top 3 concentram{' '}
+                {categoryBreakdown
+                  .slice(0, 3)
+                  .reduce((total, category) => total + category.sharePercent, 0)
+                  .toLocaleString('pt-BR', { maximumFractionDigits: 1 })}
+                % das despesas.
               </p>
             </div>
 
@@ -942,22 +947,6 @@ export default function Dashboard() {
               </p>
             ) : (
               <>
-                <div className="mb-4 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-                    Top 3 concentram
-                  </span>
-                  <strong className="mt-1 block text-xl font-black tabular-nums text-[--text-primary]">
-                    {categoryBreakdown
-                      .slice(0, 3)
-                      .reduce((total, category) => total + category.sharePercent, 0)
-                      .toLocaleString('pt-BR', { maximumFractionDigits: 1 })}
-                    %
-                  </strong>
-                  <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                    das despesas categorizadas deste mês
-                  </p>
-                </div>
-
                 <div className="space-y-2.5">
                   {categoryBreakdown.slice(0, 6).map((cat, index) => {
                     const width = Math.max(4, cat.sharePercent)
