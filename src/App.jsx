@@ -39,11 +39,12 @@ const Profile = lazy(() => import('./components/Profile'))
 const Admin = lazy(() => import('./components/Admin'))
 
 const LoadingScreen = () => (
-  <div className="aurora-app-shell flex h-screen items-center justify-center bg-[--bg-app]">
-    <div className="flex flex-col items-center gap-3">
-      <div className="w-10 h-10 border-2 border-[--brand-500] border-t-transparent rounded-full animate-spin" />
-      <p className="text-sm text-[--text-tertiary]">Carregando...</p>
-    </div>
+  <div
+    className="aurora-app-shell flex h-screen items-center justify-center bg-[--bg-app]"
+    role="status"
+    aria-label="Carregando"
+  >
+    <div className="h-10 w-10 animate-spin rounded-full border-2 border-[--brand-500] border-t-transparent" />
   </div>
 )
 
