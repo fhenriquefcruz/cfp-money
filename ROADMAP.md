@@ -234,3 +234,16 @@
 - [x] validar o encaixe premium e a alternância dos modos do gráfico nos testes visuais;
 - [x] preservar o orçamento original de JavaScript e CSS sem ampliar limites;
 - [x] homologar os baselines finais do Dashboard em desktop e mobile antes do merge.
+
+
+## Integração Cartões ↔ Transações — Fase 53
+
+- [x] considerar como obrigação de fatura toda despesa no crédito que possua cartão identificado;
+- [x] recuperar compras antigas com `cardId` mesmo quando a flag `isCreditPurchase` não existe;
+- [x] derivar o mês da fatura a partir do cartão e da data da compra quando os campos históricos estiverem incompletos;
+- [x] persistir corretamente cartão, vencimento e mês da fatura ao editar uma transação;
+- [x] estruturar despesas recorrentes no crédito como compras de cartão em cada competência;
+- [x] impedir dupla contagem entre Controle de Pagamentos e Central de Cartões;
+- [x] manter como legado apenas compras no crédito sem cartão identificável;
+- [x] tornar o aviso de registros sem vínculo acionável, com acesso para revisão em Transações;
+- [x] adicionar cobertura de domínio e de formulário para os fluxos recuperados.
