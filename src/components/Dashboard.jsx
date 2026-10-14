@@ -18,7 +18,6 @@ import {
   Target,
   AlertTriangle,
   Zap,
-  Heart,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -44,6 +43,7 @@ import { getMonthlyFinancialData } from '../domain/monthlyFinance'
 import {
   buildCategoryBreakdown,
   buildMonthAttentionSignals,
+  buildPeriodResultInsight,
   getCalendarMonthBounds,
   getLargestMonthlyExpenseChange,
   getRecentDashboardTransactions,
@@ -208,6 +208,11 @@ export default function Dashboard() {
   const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
   const categoryTotals = useMemo(() => getCategoryTotals(year, month), [year, month, transactions])
   const previousViewDate = useMemo(() => subMonths(viewDate, 1), [year, month])
+  const previousSummary = useMemo(
+    () => getSummary(previousViewDate.getFullYear(), previousViewDate.getMonth()),
+    [previousViewDate, transactions],
+  )
+  const previousMonthLabel = format(previousViewDate, 'MMMM', { locale: ptBR })
   const previousCategoryTotals = useMemo(
     () => getCategoryTotals(previousViewDate.getFullYear(), previousViewDate.getMonth()),
     [previousViewDate, transactions],
@@ -389,12 +394,10 @@ export default function Dashboard() {
     return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'
   }
   const isLoading = transactionsLoading
-  const expenseIncomeRatio =
-    currentSummary.income > 0
-      ? Math.round((currentSummary.expenses / currentSummary.income) * 100)
-      : null
-  const resultTone =
-    currentSummary.balance > 0 ? 'positive' : currentSummary.balance < 0 ? 'negative' : 'neutral'
+  const periodInsight = useMemo(
+    () => buildPeriodResultInsight(currentSummary, previousSummary),
+    [currentSummary, previousSummary],
+  )
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
@@ -467,39 +470,46 @@ export default function Dashboard() {
                 <p className="dashboard-period-hero__value">
                   {isLoading ? '—' : formatCurrency(currentSummary.balance)}
                 </p>
-                <span className="dashboard-period-hero__status" data-tone={resultTone}>
-                  {resultTone === 'positive'
-                    ? 'Período no azul'
-                    : resultTone === 'negative'
-                      ? 'Fluxo pressionado'
-                      : 'Período equilibrado'}
-                </span>
+                <div className="dashboard-period-hero__context">
+                  <span className="dashboard-period-hero__status" data-tone={periodInsight.tone}>
+                    {periodInsight.statusLabel}
+                  </span>
+                  {periodInsight.comparisonDelta !== null && (
+                    <span
+                      className="dashboard-period-hero__comparison"
+                      data-tone={periodInsight.comparisonTone}
+                    >
+                      {periodInsight.comparisonDelta > 0
+                        ? `${formatCurrency(periodInsight.comparisonDelta)} melhor que ${previousMonthLabel}`
+                        : periodInsight.comparisonDelta < 0
+                          ? `${formatCurrency(Math.abs(periodInsight.comparisonDelta))} pior que ${previousMonthLabel}`
+                          : `Mesmo resultado de ${previousMonthLabel}`}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="dashboard-period-hero__signal">
                 <div className="dashboard-period-hero__signal-head">
                   <span>Uso das receitas</span>
                   <strong>
-                    {expenseIncomeRatio === null ? 'Sem base' : `${expenseIncomeRatio}%`}
+                    {periodInsight.expenseIncomeRatio === null
+                      ? 'Sem base'
+                      : `${periodInsight.expenseIncomeRatio}%`}
                   </strong>
                 </div>
                 <div className="dashboard-period-hero__track" aria-hidden="true">
                   <span
                     data-tone={
-                      expenseIncomeRatio !== null && expenseIncomeRatio > 100
+                      periodInsight.expenseIncomeRatio !== null &&
+                      periodInsight.expenseIncomeRatio > 100
                         ? 'negative'
                         : 'positive'
                     }
-                    style={{ width: `${Math.min(100, expenseIncomeRatio || 0)}%` }}
+                    style={{ width: `${Math.min(100, periodInsight.expenseIncomeRatio || 0)}%` }}
                   />
                 </div>
-                <p className="dashboard-period-hero__story">
-                  {expenseIncomeRatio === null
-                    ? 'Registre receitas para comparar o quanto das entradas está sendo consumido.'
-                    : expenseIncomeRatio <= 100
-                      ? `As despesas consumiram ${expenseIncomeRatio}% das receitas deste mês.`
-                      : `As despesas estão ${expenseIncomeRatio - 100}% acima das receitas deste mês.`}
-                </p>
+                <p className="dashboard-period-hero__story">{periodInsight.story}</p>
               </div>
             </div>
 
@@ -508,7 +518,7 @@ export default function Dashboard() {
                 ['Receitas', currentSummary.income, 'income'],
                 ['Despesas', currentSummary.expenses, 'expense'],
                 ['Comprometido', paymentSummary.committedAmount || 0, 'commitment'],
-                ['Poupado no mês', currentSummary.savings, 'reserve'],
+                ['Reservado total', savingsOverview.totalBalance, 'reserve'],
               ].map(([label, value, kind]) => (
                 <div key={label} className="dashboard-period-metric" data-kind={kind}>
                   <p className="dashboard-period-metric__label">
@@ -558,17 +568,19 @@ export default function Dashboard() {
               </p>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[--text-tertiary]">
                 <span>
-                  Aportes no mês{' '}
-                  <strong className="text-[--success-text]">
-                    {formatCurrency(savingsOverview.periodDeposits)}
+                  Poupado no mês{' '}
+                  <strong
+                    className={
+                      savingsOverview.periodNet >= 0
+                        ? 'text-[--success-text]'
+                        : 'text-[--danger-text]'
+                    }
+                  >
+                    {formatCurrency(savingsOverview.periodNet)}
                   </strong>
                 </span>
-                <span>
-                  Retiradas{' '}
-                  <strong className="text-[--danger-text]">
-                    {formatCurrency(savingsOverview.periodWithdrawals)}
-                  </strong>
-                </span>
+                <span>Aportes {formatCurrency(savingsOverview.periodDeposits)}</span>
+                <span>Retiradas {formatCurrency(savingsOverview.periodWithdrawals)}</span>
               </div>
             </div>
 
@@ -651,7 +663,7 @@ export default function Dashboard() {
           <Card variant="elevated" className="dashboard-health-card h-full shadow-sm">
             <div className="mb-2 flex items-center justify-between gap-3">
               <div className="flex items-center gap-1.5">
-                <Heart size={14} className="text-[--danger-icon]" />
+                <CheckCircle2 size={14} className="text-[--brand-600]" />
                 <p className="text-xs font-semibold text-[--text-tertiary]">Saúde financeira</p>
                 <InfoTooltip text="Indicador de 0 a 100 baseado em equilíbrio do período, reserva, aderência a orçamentos, atrasos e relação despesas/receitas. Não representa diagnóstico financeiro completo." />
               </div>

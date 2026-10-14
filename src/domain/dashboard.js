@@ -137,3 +137,53 @@ export function getLargestMonthlyExpenseChange(monthlyData = []) {
 
   return result
 }
+
+export function buildPeriodResultInsight(current = {}, previous = {}) {
+  const income = Number(current.income) || 0
+  const expenses = Number(current.expenses) || 0
+  const balance = Number(current.balance) || 0
+  const previousIncome = Number(previous.income) || 0
+  const previousExpenses = Number(previous.expenses) || 0
+  const previousBalance = Number(previous.balance) || 0
+  const hasPreviousActivity =
+    Number(previous.count || 0) > 0 || previousIncome > 0 || previousExpenses > 0
+
+  const expenseIncomeRatio = income > 0 ? Math.round((expenses / income) * 100) : null
+  const retainedIncomeRatio =
+    income > 0 && balance > 0 ? Math.round((balance / income) * 100) : null
+  const comparisonDelta = hasPreviousActivity ? balance - previousBalance : null
+
+  const tone = balance > 0 ? 'positive' : balance < 0 ? 'negative' : 'neutral'
+  const comparisonTone =
+    comparisonDelta === null || comparisonDelta === 0
+      ? 'neutral'
+      : comparisonDelta > 0
+        ? 'positive'
+        : 'negative'
+
+  const statusLabel =
+    tone === 'positive'
+      ? 'Período no azul'
+      : tone === 'negative'
+        ? 'Fluxo pressionado'
+        : 'Período equilibrado'
+
+  const story =
+    tone === 'positive' && retainedIncomeRatio !== null
+      ? `Resultado positivo equivalente a ${retainedIncomeRatio}% das receitas do período.`
+      : tone === 'negative'
+        ? 'As despesas superaram as receitas no período visualizado.'
+        : income > 0 || expenses > 0
+          ? 'Receitas e despesas ficaram equilibradas no período.'
+          : 'Registre receitas e despesas para construir a leitura do período.'
+
+  return {
+    tone,
+    statusLabel,
+    expenseIncomeRatio,
+    retainedIncomeRatio,
+    comparisonDelta,
+    comparisonTone,
+    story,
+  }
+}
