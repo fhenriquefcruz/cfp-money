@@ -337,9 +337,7 @@ export default function Dashboard() {
       }).map((item) => ({
         ...item,
         detail:
-          item.amount === null
-            ? item.detail
-            : `${formatCurrency(item.amount)} · ${item.detail}`,
+          item.amount === null ? item.detail : `${formatCurrency(item.amount)} · ${item.detail}`,
       })),
     [
       currentSummary,

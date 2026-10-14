@@ -133,7 +133,6 @@ export function buildPeriodResultInsight(current = {}, previous = {}) {
   }
 }
 
-
 export function buildDashboardActionInsights({
   currentSummary = {},
   previousSummary = {},

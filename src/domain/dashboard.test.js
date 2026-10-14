@@ -47,8 +47,6 @@ test('exclui o mês seguinte e ordena as transações recentes por atividade', (
   ).toEqual(['manual-different-due', 'newer', 'credit-purchase', 'older'])
 })
 
-
-
 test('ordena categorias por gasto e calcula participação e variação', () => {
   const result = buildCategoryBreakdown(
     [
@@ -129,7 +127,6 @@ test('não força comparação quando o mês anterior não possui atividade', ()
   })
 })
 
-
 test('gera leituras acionáveis com resultado, categoria e proteção financeira', () => {
   const insights = buildDashboardActionInsights({
     currentSummary: { income: 10000, expenses: 7000, balance: 3000, count: 8 },
@@ -155,11 +152,7 @@ test('gera leituras acionáveis com resultado, categoria e proteção financeira
   })
 
   expect(insights).toHaveLength(3)
-  expect(insights.map((item) => item.id)).toEqual([
-    'result',
-    'category',
-    'reserve',
-  ])
+  expect(insights.map((item) => item.id)).toEqual(['result', 'category', 'reserve'])
   expect(insights[0]).toMatchObject({
     tone: 'positive',
     amount: 1500,
@@ -194,10 +187,7 @@ test('prioriza compromissos vencidos na leitura de proteção financeira', () =>
     budgetMonthKey: '2026-10',
   })
 
-  expect(insights.map((item) => item.id)).toEqual([
-    'result',
-    'payments',
-  ])
+  expect(insights.map((item) => item.id)).toEqual(['result', 'payments'])
   expect(insights[1]).toMatchObject({
     tone: 'negative',
     amount: 800,

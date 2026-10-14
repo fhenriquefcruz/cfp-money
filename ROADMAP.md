@@ -235,7 +235,6 @@
 - [x] preservar o orçamento original de JavaScript e CSS sem ampliar limites;
 - [x] homologar os baselines finais do Dashboard em desktop e mobile antes do merge.
 
-
 ## Inteligência acionável do Dashboard — Fase 53
 
 - [x] substituir a lógica antiga de Prioridades do mês por leituras financeiras acionáveis;
