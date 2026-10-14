@@ -124,7 +124,7 @@ for (const [name, route, selector] of ROUTES) {
     if (name === 'dashboard') {
       await expectDashboardPremiumVisualization(page, testInfo.project.name)
 
-      const chartGrid = page.locator('.dashboard-chart-grid')
+      const chartGrid = page.locator('.dashboard-chart-grid:has(.dashboard-finance-chart)')
       await chartGrid.scrollIntoViewIfNeeded()
       await expect(chartGrid).toHaveScreenshot('dashboard-charts.png', {
         animations: 'disabled',
