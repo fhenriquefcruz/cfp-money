@@ -221,3 +221,16 @@
 - [x] validar por geometria que Pagamentos e Reservas ficam lado a lado no desktop e empilhados no mobile;
 - [x] preservar o orçamento de performance original;
 - [x] revisar o baseline desktop do Dashboard antes do merge.
+
+
+## Data Visualization & Premium Dashboard — Fase 52
+
+- [ ] elevar a leitura visual do Dashboard sem alterar a semântica financeira;
+- [ ] transformar a evolução financeira em uma leitura combinada de Receitas, Despesas e Resultado;
+- [ ] aplicar preenchimentos sutis e paleta semântica consistente aos gráficos;
+- [ ] simplificar a seleção mensal para destacar o resultado de cada período;
+- [ ] apresentar o mês selecionado com Receitas, Despesas e Resultado em leitura executiva;
+- [ ] transformar a composição de gastos em visual radial com ranking clicável;
+- [ ] adotar paleta mineral/bronze/sage/terracota também no dark mode;
+- [ ] preservar acessibilidade, Mobile e orçamento de performance;
+- [ ] revisar e homologar baselines do Dashboard em desktop e mobile antes do merge.
