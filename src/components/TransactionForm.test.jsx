@@ -404,7 +404,7 @@ describe('TransactionForm credit card integration', () => {
     fireEvent.change(screen.getByLabelText('Pagamento'), {
       target: { value: 'credit_card' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Adicionar despesa' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar' }))
 
     expect(screen.getByText('Selecione o cartão usado nesta compra')).toBeInTheDocument()
     expect(appMocks.createTransaction).not.toHaveBeenCalled()
