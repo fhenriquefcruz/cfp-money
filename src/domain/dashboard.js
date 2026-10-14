@@ -154,7 +154,6 @@ export function buildDashboardActionInsights({
       amount: Math.abs(delta),
       detail: delta > 0 ? 'Melhora frente ao mês anterior.' : 'Queda frente ao mês anterior.',
       to: '/transactions',
-      actionLabel: 'Entender movimentações',
     })
   }
 
@@ -170,7 +169,6 @@ export function buildDashboardActionInsights({
           ? `${share.toFixed(0)}% das despesas categorizadas.`
           : `${share.toFixed(0)}% das despesas · ${Number(change) >= 0 ? '+' : ''}${Number(change).toFixed(0)}% vs. mês anterior.`,
       to: `/transactions?category=${encodeURIComponent(category.categoryId || '')}`,
-      actionLabel: 'Ver lançamentos',
     })
   }
 
@@ -206,15 +204,12 @@ export function buildDashboardActionInsights({
           ? 'O patrimônio reservado não recuou neste período.'
           : 'Houve retirada líquida das reservas neste período.',
       to: '/savings',
-      actionLabel: 'Abrir reservas',
     })
   } else if (budgetMonthKey) {
     insights.push({
       title: 'Planejamento do mês',
-      amount: null,
       detail: 'Acompanhe os limites para proteger o resultado.',
       to: `/budgets?month=${budgetMonthKey}`,
-      actionLabel: 'Abrir orçamento',
     })
   }
 
