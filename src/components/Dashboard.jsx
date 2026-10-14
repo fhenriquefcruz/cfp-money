@@ -694,7 +694,7 @@ export default function Dashboard() {
                   <InfoTooltip text="Valores agrupados pela data da movimentação. As linhas ligam pontos mensais reais, sem estimar valores entre os meses." />
                 </div>
                 <p className="mt-1 text-xs text-[--text-tertiary]">
-                  Selecione um mês para ver os valores exatos e abrir os lançamentos.
+                  Selecione um mês para detalhar o período.
                 </p>
               </div>
 
@@ -838,9 +838,6 @@ export default function Dashboard() {
                     <p className="text-xs font-black text-[--text-primary]">
                       {selectedTrend.fullMonth}
                     </p>
-                    <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                      Leitura consolidada do mês selecionado.
-                    </p>
                   </div>
                   <Link
                     to={`/transactions?month=${selectedTrend.monthKey}`}
@@ -877,7 +874,7 @@ export default function Dashboard() {
                 <InfoTooltip text="Distribuição das despesas do mês pela data da movimentação, com participação e variação por categoria." />
               </div>
               <p className="mt-1 text-xs text-[--text-tertiary]">
-                Veja onde o dinheiro se concentrou e abra cada categoria para investigar.
+                Distribuição e variação por categoria.
               </p>
             </div>
 
@@ -917,7 +914,7 @@ export default function Dashboard() {
                         {formatCurrency(currentSummary.expenses, { compact: true })}
                       </strong>
                       <span className="mt-1 text-[9px] text-[--text-tertiary]">
-                        {Math.min(categoryBreakdown.length, 5)} principais categorias
+                        Top categorias
                       </span>
                     </div>
                   </div>
