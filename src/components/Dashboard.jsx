@@ -791,16 +791,40 @@ export default function Dashboard() {
                 >
                   <defs>
                     <linearGradient id="dashboardIncomeGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--dashboard-chart-income)" stopOpacity={0.22} />
-                      <stop offset="100%" stopColor="var(--dashboard-chart-income)" stopOpacity={0.01} />
+                      <stop
+                        offset="0%"
+                        stopColor="var(--dashboard-chart-income)"
+                        stopOpacity={0.22}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor="var(--dashboard-chart-income)"
+                        stopOpacity={0.01}
+                      />
                     </linearGradient>
                     <linearGradient id="dashboardExpenseGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--dashboard-chart-expense)" stopOpacity={0.18} />
-                      <stop offset="100%" stopColor="var(--dashboard-chart-expense)" stopOpacity={0.01} />
+                      <stop
+                        offset="0%"
+                        stopColor="var(--dashboard-chart-expense)"
+                        stopOpacity={0.18}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor="var(--dashboard-chart-expense)"
+                        stopOpacity={0.01}
+                      />
                     </linearGradient>
                     <linearGradient id="dashboardResultGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--dashboard-chart-result)" stopOpacity={0.24} />
-                      <stop offset="100%" stopColor="var(--dashboard-chart-result)" stopOpacity={0.015} />
+                      <stop
+                        offset="0%"
+                        stopColor="var(--dashboard-chart-result)"
+                        stopOpacity={0.24}
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor="var(--dashboard-chart-result)"
+                        stopOpacity={0.015}
+                      />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -821,7 +845,10 @@ export default function Dashboard() {
                     width={72}
                     tickFormatter={formatAxisCurrency}
                   />
-                  <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'var(--border-default)' }} />
+                  <Tooltip
+                    content={<ChartTooltip />}
+                    cursor={{ stroke: 'var(--border-default)' }}
+                  />
                   {trendView === 'flow' ? (
                     <>
                       <Area
@@ -886,7 +913,9 @@ export default function Dashboard() {
             {selectedTrend && (
               <div className="dashboard-finance-chart__selected mt-3 grid gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                 <div className="min-w-0">
-                  <p className="text-xs font-black text-[--text-primary]">{selectedTrend.fullMonth}</p>
+                  <p className="text-xs font-black text-[--text-primary]">
+                    {selectedTrend.fullMonth}
+                  </p>
                   <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[--text-tertiary]">
                     <span>Receitas {formatCurrency(selectedTrend.income)}</span>
                     <span>Despesas {formatCurrency(selectedTrend.expenses)}</span>

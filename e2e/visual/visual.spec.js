@@ -43,7 +43,6 @@ async function expectDashboardOperationalLayout(page, projectName) {
   expect(geometry.savings.top).toBeGreaterThan(geometry.payments.bottom)
 }
 
-
 async function expectDashboardPremiumVisualization(page, projectName) {
   const resultButton = page.getByRole('button', { name: 'Resultado', exact: true })
   const flowButton = page.getByRole('button', { name: 'Fluxo', exact: true })
@@ -64,9 +63,7 @@ async function expectDashboardPremiumVisualization(page, projectName) {
     const money = document.querySelector('.dashboard-money-insight')?.getBoundingClientRect()
 
     const compact = (rect) =>
-      rect
-        ? { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right }
-        : null
+      rect ? { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right } : null
 
     return {
       forecast: compact(forecast),

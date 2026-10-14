@@ -2651,7 +2651,6 @@ body {
   }
 }
 
-
 /* ── DASHBOARD PREMIUM DATA VIZ · FASE 52 ── */
 .dashboard-premium {
   --dashboard-chart-income: color-mix(in srgb, var(--success-icon) 82%, var(--text-primary) 18%);
@@ -2738,8 +2737,7 @@ body {
 
 .dashboard-spending-composition__headline {
   background:
-    radial-gradient(circle at 100% 0%, rgba(196, 157, 107, 0.09), transparent 44%),
-    var(--bg-subtle);
+    radial-gradient(circle at 100% 0%, rgba(196, 157, 107, 0.09), transparent 44%), var(--bg-subtle);
 }
 
 .dashboard-spending-composition__rank {
@@ -2769,8 +2767,7 @@ body {
 
 :root[data-theme='dark'] .dashboard-spending-composition__headline {
   background:
-    radial-gradient(circle at 100% 0%, rgba(196, 157, 107, 0.07), transparent 44%),
-    var(--bg-subtle);
+    radial-gradient(circle at 100% 0%, rgba(196, 157, 107, 0.07), transparent 44%), var(--bg-subtle);
 }
 
 @media (max-width: 639px) {
