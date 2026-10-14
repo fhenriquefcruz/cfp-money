@@ -1,5 +1,6 @@
 import {
   buildCreditCardCenter,
+  firstRelevantForecastMonth,
   invoiceDatesForMonth,
   invoiceStatus,
   labelForMonth,
@@ -208,4 +209,28 @@ test('mantém como legado somente compra no crédito sem cartão identificável'
   expect(center.selectedTotal).toBe(0)
   expect(center.legacyCount).toBe(1)
   expect(center.legacyTotal).toBe(75)
+})
+
+
+test('encontra a primeira fatura futura com lançamentos', () => {
+  expect(
+    firstRelevantForecastMonth(
+      [
+        { month: '2026-09', total: 0, itemCount: 0 },
+        { month: '2026-10', total: 904.63, itemCount: 2 },
+        { month: '2026-11', total: 120, itemCount: 1 },
+      ],
+      '2026-09',
+    ),
+  ).toBe('2026-10')
+
+  expect(
+    firstRelevantForecastMonth(
+      [
+        { month: '2026-09', total: 0, itemCount: 0 },
+        { month: '2026-10', total: 0, itemCount: 0 },
+      ],
+      '2026-09',
+    ),
+  ).toBe('')
 })
