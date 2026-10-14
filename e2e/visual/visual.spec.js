@@ -16,7 +16,6 @@ const ROUTES = [
   ['profile', '/profile', '.profile-premium'],
 ]
 
-
 async function expectDashboardOperationalLayout(page, projectName) {
   const geometry = await page.evaluate(() => {
     const payments = document.querySelector('.payment-control-card')?.getBoundingClientRect()
