@@ -368,7 +368,6 @@ function CreditCardsCenterContent() {
                 className="inline-flex min-h-10 flex-shrink-0 items-center justify-center gap-1 rounded-xl border border-[--warning-border] bg-[--bg-surface] px-3 text-xs font-bold text-[--text-primary] hover:bg-[--bg-hover]"
               >
                 Revisar
-                <ChevronRight size={13} />
               </Link>
             </div>
           )}
