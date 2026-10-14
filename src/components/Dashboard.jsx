@@ -67,9 +67,6 @@ const formatAxisCurrency = (value) =>
     maximumFractionDigits: 1,
   }).format(Number(value) || 0)}`
 
-const formatVariation = (value) =>
-  value == null ? 'sem base' : `${Math.round(value)}% vs. mês anterior`
-
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
@@ -744,16 +741,6 @@ export default function Dashboard() {
 
             <ResponsiveContainer width="100%" height={270}>
               <AreaChart data={monthlyData} margin={{ top: 8, right: 8, left: 4, bottom: 4 }}>
-                <defs>
-                  <linearGradient id="dashboardIncomeFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--success-icon)" stopOpacity={0.24} />
-                    <stop offset="100%" stopColor="var(--success-icon)" stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="dashboardExpenseFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--danger-icon)" stopOpacity={0.18} />
-                    <stop offset="100%" stopColor="var(--danger-icon)" stopOpacity={0.01} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid
                   strokeDasharray="3 5"
                   stroke="var(--border-subtle)"
@@ -784,7 +771,8 @@ export default function Dashboard() {
                   strokeWidth={2.4}
                   dot={false}
                   activeDot={{ r: 5, strokeWidth: 2 }}
-                  fill="url(#dashboardIncomeFill)"
+                  fill="var(--success-icon)"
+                  fillOpacity={0.12}
                 />
                 <Area
                   type="linear"
@@ -794,7 +782,8 @@ export default function Dashboard() {
                   strokeWidth={2.4}
                   dot={false}
                   activeDot={{ r: 5, strokeWidth: 2 }}
-                  fill="url(#dashboardExpenseFill)"
+                  fill="var(--danger-icon)"
+                  fillOpacity={0.08}
                 />
                 <Area
                   type="linear"
@@ -862,24 +851,18 @@ export default function Dashboard() {
                   </Link>
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2">
-                  {[
-                    ['Receitas', selectedTrend.income, 'text-[--success-text]'],
-                    ['Despesas', selectedTrend.expenses, 'text-[--danger-text]'],
-                    [
-                      'Resultado',
-                      selectedTrend.balance,
-                      selectedTrend.balance >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]',
-                    ],
-                  ].map(([label, value, tone]) => (
-                    <div key={label} className="rounded-xl bg-[--bg-elevated] px-3 py-2.5">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-                        {label}
-                      </p>
-                      <p className={`mt-1 truncate text-xs font-black tabular-nums ${tone}`}>
-                        {formatCurrency(value)}
-                      </p>
-                    </div>
-                  ))}
+                  <div className="rounded-xl bg-[--bg-elevated] px-3 py-2.5">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">Receitas</p>
+                    <p className="mt-1 truncate text-xs font-black tabular-nums text-[--success-text]">{formatCurrency(selectedTrend.income)}</p>
+                  </div>
+                  <div className="rounded-xl bg-[--bg-elevated] px-3 py-2.5">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">Despesas</p>
+                    <p className="mt-1 truncate text-xs font-black tabular-nums text-[--danger-text]">{formatCurrency(selectedTrend.expenses)}</p>
+                  </div>
+                  <div className="rounded-xl bg-[--bg-elevated] px-3 py-2.5">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">Resultado</p>
+                    <p className={`mt-1 truncate text-xs font-black tabular-nums ${selectedTrend.balance >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'}`}>{formatCurrency(selectedTrend.balance)}</p>
+                  </div>
                 </div>
               </div>
             )}
@@ -973,7 +956,7 @@ export default function Dashboard() {
                               })}
                               %
                             </span>
-                            <span>{formatVariation(cat.changePercent)}</span>
+                            <span>{cat.changePercent == null ? 'sem base' : `${Math.round(cat.changePercent)}% vs. mês anterior`}</span>
                           </div>
                           {isOtherLarge && (
                             <p className="mt-1 text-[9px] font-semibold text-[--warning-text]">
