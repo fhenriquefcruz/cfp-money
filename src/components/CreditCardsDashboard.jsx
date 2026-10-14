@@ -350,17 +350,26 @@ function CreditCardsCenterContent() {
           </div>
 
           {center.legacyCount > 0 && (
-            <div className="flex items-start gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4">
-              <Info size={17} className="mt-0.5 flex-shrink-0 text-[--warning-icon]" />
-              <div>
-                <p className="text-xs font-black text-[--text-primary]">
-                  Existem compras antigas fora da consolidação
-                </p>
-                <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
-                  Esses registros continuam nos relatórios gerais, mas não possuem cartão,
-                  fechamento e vencimento suficientes para compor uma fatura estruturada.
-                </p>
+            <div className="flex flex-col gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <Info size={17} className="mt-0.5 flex-shrink-0 text-[--warning-icon]" />
+                <div>
+                  <p className="text-xs font-black text-[--text-primary]">
+                    {center.legacyCount} {center.legacyCount === 1 ? 'compra no crédito está' : 'compras no crédito estão'} sem cartão identificado
+                  </p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
+                    {formatCurrency(center.legacyTotal)} ainda não pode ser atribuído a uma fatura.
+                    Revise esses lançamentos e selecione o cartão correto para consolidá-los.
+                  </p>
+                </div>
               </div>
+              <Link
+                to="/transactions"
+                className="inline-flex min-h-10 flex-shrink-0 items-center justify-center gap-1 rounded-xl border border-[--warning-border] bg-[--bg-surface] px-3 text-xs font-bold text-[--text-primary] hover:bg-[--bg-hover]"
+              >
+                Revisar transações
+                <ChevronRight size={13} />
+              </Link>
             </div>
           )}
 
