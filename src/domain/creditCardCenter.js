@@ -66,16 +66,12 @@ export function invoiceStatus(monthKey, card, now = new Date()) {
   return 'forming'
 }
 
-export function isLinkedCreditTransaction(transaction = {}) {
+export function isStructuredCreditTransaction(transaction = {}) {
   return Boolean(
     transaction.type === 'expense' &&
     transaction.paymentMethod === 'credit_card' &&
     transaction.cardId,
   )
-}
-
-export function isStructuredCreditTransaction(transaction = {}) {
-  return isLinkedCreditTransaction(transaction)
 }
 
 function inferInvoiceMonth(purchaseDate, card = {}) {
@@ -128,7 +124,7 @@ export function buildCreditCardCenter({
   now = new Date(),
   forecastMonths = 6,
 }) {
-  const structured = transactions.filter(isLinkedCreditTransaction)
+  const structured = transactions.filter(isStructuredCreditTransaction)
   const legacy = transactions.filter(
     (transaction) =>
       transaction.type === 'expense' &&
