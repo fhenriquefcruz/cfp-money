@@ -234,3 +234,17 @@
 - [x] validar o encaixe premium e a alternância dos modos do gráfico nos testes visuais;
 - [x] preservar o orçamento original de JavaScript e CSS sem ampliar limites;
 - [x] homologar os baselines finais do Dashboard em desktop e mobile antes do merge.
+
+
+## Inteligência acionável do Dashboard — Fase 53
+
+- [x] substituir a lógica antiga de Prioridades do mês por leituras financeiras acionáveis;
+- [x] reutilizar o mesmo espaço visual, sem aumentar a verticalização do Dashboard;
+- [x] explicar a evolução do resultado frente ao mês anterior quando houver base;
+- [x] destacar a categoria que mais concentra despesas e sua variação;
+- [x] priorizar compromissos vencidos ou próximos quando exigirem ação;
+- [x] usar Reservas como leitura de proteção quando não houver pressão de pagamentos;
+- [x] oferecer Orçamento como próximo passo quando não houver outro sinal relevante;
+- [x] manter ações diretas para Transações, Reservas e Orçamentos;
+- [x] remover o gerador legado de alertas mensais substituído pela nova camada;
+- [x] cobrir a nova lógica com testes unitários e preservar os gates existentes.
