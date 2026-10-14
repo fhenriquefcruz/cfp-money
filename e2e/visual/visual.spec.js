@@ -123,6 +123,14 @@ for (const [name, route, selector] of ROUTES) {
 
     if (name === 'dashboard') {
       await expectDashboardPremiumVisualization(page, testInfo.project.name)
+
+      const chartGrid = page.locator('.dashboard-chart-grid')
+      await chartGrid.scrollIntoViewIfNeeded()
+      await expect(chartGrid).toHaveScreenshot('dashboard-charts.png', {
+        animations: 'disabled',
+        caret: 'hide',
+        maxDiffPixelRatio: 0.002,
+      })
     }
 
     await testInfo.attach(`${name}-viewport`, {
