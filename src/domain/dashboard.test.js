@@ -91,6 +91,7 @@ test('resume o resultado do período com leitura executiva e comparação mensal
       { income: 9000, expenses: 8000, balance: 1000, count: 7 },
     ),
   ).toEqual({
+    tone: 'positive',
     statusLabel: 'Período no azul',
     expenseIncomeRatio: 80,
     retainedIncomeRatio: 20,
@@ -150,7 +151,11 @@ test('gera leituras acionáveis com resultado, categoria e proteção financeira
   })
 
   expect(insights).toHaveLength(3)
-  expect(insights.map((item) => item.id)).toEqual(['result', 'category', 'reserve'])
+  expect(insights.map((item) => item.title)).toEqual([
+    'Resultado melhorou',
+    'Alimentação lidera os gastos',
+    'Reservas como proteção',
+  ])
   expect(insights[0]).toMatchObject({
     amount: 1500,
   })
@@ -182,7 +187,10 @@ test('prioriza compromissos vencidos na leitura de proteção financeira', () =>
     budgetMonthKey: '2026-10',
   })
 
-  expect(insights.map((item) => item.id)).toEqual(['result', 'payments'])
+  expect(insights.map((item) => item.title)).toEqual([
+    'Resultado perdeu força',
+    '2 pagamentos atrasados',
+  ])
   expect(insights[1]).toMatchObject({
     amount: 800,
     actionLabel: 'Regularizar',
@@ -200,7 +208,7 @@ test('usa orçamento como próximo passo quando não há alerta de pagamentos ne
   })
 
   expect(insights.at(-1)).toMatchObject({
-    id: 'budget',
+    title: 'Planejamento do mês',
     to: '/budgets?month=2026-10',
   })
 })
