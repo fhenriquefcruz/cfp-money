@@ -302,7 +302,7 @@ export default function TransactionForm({
     if (!form.date) errs.date = 'Data obrigatória'
     if (
       isExpense &&
-      form.paymentMethod === 'credit_card' &&
+      form.isCredit &&
       activeCreditCards.length > 0 &&
       !form.cardId
     ) {
@@ -354,7 +354,7 @@ export default function TransactionForm({
       if (isEditing) {
         let editData
 
-        if (isExpense && form.paymentMethod === 'credit_card' && selectedCreditCard) {
+        if (isExpense && form.isCredit && selectedCreditCard) {
           editData = buildCreditTransaction({
             baseData,
             totalAmount: baseAmount,
@@ -370,8 +370,6 @@ export default function TransactionForm({
             cardId: '',
             cardName: '',
             cardLast4: '',
-            cardClosingDay: '',
-            cardDueDay: '',
             invoiceClosingDate: '',
             invoiceMonth: '',
             purchaseDate: '',
@@ -433,7 +431,7 @@ export default function TransactionForm({
             recurringOf: months,
           }
 
-          if (isExpense && form.paymentMethod === 'credit_card' && selectedCreditCard) {
+          if (isExpense && form.isCredit && selectedCreditCard) {
             return {
               ...buildCreditTransaction({
                 baseData,
