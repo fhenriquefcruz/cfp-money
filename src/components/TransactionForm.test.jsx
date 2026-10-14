@@ -8,6 +8,7 @@ const appMocks = vi.hoisted(() => ({
   editTransaction: vi.fn(),
   addTransactionBatch: vi.fn(),
   showNotification: vi.fn(),
+  creditCards: [],
 }))
 
 vi.mock('../contexts/AppContext', () => ({
@@ -20,7 +21,7 @@ vi.mock('../contexts/AppContext', () => ({
     showNotification: appMocks.showNotification,
   }),
   useCreditCards: () => ({
-    creditCards: [],
+    creditCards: appMocks.creditCards,
   }),
   useGoals: () => ({
     goals: [{ id: 'goal-reserve', name: 'Reserva de emergência', emoji: '🛟' }],
@@ -53,7 +54,11 @@ vi.mock('../contexts/AppContext', () => ({
 }))
 
 beforeEach(() => {
-  Object.values(appMocks).forEach((mock) => mock.mockClear())
+  appMocks.createTransaction.mockClear()
+  appMocks.editTransaction.mockClear()
+  appMocks.addTransactionBatch.mockClear()
+  appMocks.showNotification.mockClear()
+  appMocks.creditCards = []
 })
 
 describe('TransactionForm progressive disclosure', () => {
@@ -248,5 +253,161 @@ describe('TransactionForm savings editing', () => {
         amount: 900,
       }),
     )
+  })
+})
+
+
+describe('TransactionForm credit card integration', () => {
+  const card = {
+    id: 'nubank',
+    name: 'Nubank',
+    last4: '1234',
+    closingDay: 24,
+    dueDay: 1,
+    active: true,
+  }
+
+  it('estrutura uma transação existente ao vincular um cartão cadastrado', async () => {
+    appMocks.creditCards = [card]
+
+    render(
+      <TransactionForm
+        isOpen
+        onClose={vi.fn()}
+        transaction={{
+          id: 'tx-existing-card-link',
+          type: 'expense',
+          amount: 250,
+          description: 'Mercado',
+          categoryId: 'food',
+          categoryName: 'Alimentação',
+          date: '2026-07-10',
+          paymentMethod: 'pix',
+        }}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Pagamento'), {
+      target: { value: 'credit_card' },
+    })
+    fireEvent.change(screen.getByLabelText('Cartão cadastrado'), {
+      target: { value: 'nubank' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+
+    await vi.waitFor(() => expect(appMocks.editTransaction).toHaveBeenCalledTimes(1))
+    expect(appMocks.editTransaction).toHaveBeenCalledWith(
+      'tx-existing-card-link',
+      expect.objectContaining({
+        paymentMethod: 'credit_card',
+        cardId: 'nubank',
+        cardName: 'Nubank',
+        isCreditPurchase: true,
+        purchaseDate: '2026-07-10',
+        dueDate: '2026-08-01',
+        invoiceMonth: '2026-08',
+        date: '2026-08-01',
+      }),
+    )
+  })
+
+  it('limpa metadados de fatura ao trocar uma compra no cartão para PIX', async () => {
+    appMocks.creditCards = [card]
+
+    render(
+      <TransactionForm
+        isOpen
+        onClose={vi.fn()}
+        transaction={{
+          id: 'tx-credit-to-pix',
+          type: 'expense',
+          amount: 250,
+          description: 'Mercado',
+          categoryId: 'food',
+          categoryName: 'Alimentação',
+          date: '2026-08-01',
+          purchaseDate: '2026-07-10',
+          paymentMethod: 'credit_card',
+          cardId: 'nubank',
+          cardName: 'Nubank',
+          isCreditPurchase: true,
+          invoiceMonth: '2026-08',
+          dueDate: '2026-08-01',
+        }}
+      />,
+    )
+
+    expect(screen.getByLabelText(/Data/)).toHaveValue('2026-07-10')
+    fireEvent.change(screen.getByLabelText('Pagamento'), { target: { value: 'pix' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+
+    await vi.waitFor(() => expect(appMocks.editTransaction).toHaveBeenCalledTimes(1))
+    expect(appMocks.editTransaction).toHaveBeenCalledWith(
+      'tx-credit-to-pix',
+      expect.objectContaining({
+        paymentMethod: 'pix',
+        date: '2026-07-10',
+        cardId: '',
+        invoiceMonth: '',
+        isCreditPurchase: false,
+      }),
+    )
+  })
+
+  it('estrutura recorrências mensais no cartão em suas faturas correspondentes', async () => {
+    appMocks.creditCards = [card]
+
+    render(<TransactionForm isOpen onClose={vi.fn()} transaction={null} />)
+
+    fireEvent.change(screen.getByLabelText(/Valor/), { target: { value: '12000' } })
+    fireEvent.click(screen.getByRole('button', { name: /Alimentação/i }))
+    fireEvent.change(screen.getByLabelText('Pagamento'), {
+      target: { value: 'credit_card' },
+    })
+    fireEvent.change(screen.getByLabelText('Cartão cadastrado'), {
+      target: { value: 'nubank' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /mais opções/i }))
+    fireEvent.click(screen.getByRole('checkbox', { name: /Despesa fixa/i }))
+    fireEvent.change(screen.getByLabelText('Repetir por quantos meses'), {
+      target: { value: '2' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Criar 2 meses' }))
+
+    await vi.waitFor(() => expect(appMocks.addTransactionBatch).toHaveBeenCalledTimes(1))
+    const [items] = appMocks.addTransactionBatch.mock.calls[0]
+
+    expect(items).toHaveLength(2)
+    expect(items[0]).toMatchObject({
+      cardId: 'nubank',
+      isCreditPurchase: true,
+      purchaseDate: expect.any(String),
+      invoiceMonth: expect.any(String),
+      recurringNum: 1,
+      recurringOf: 2,
+    })
+    expect(items[1]).toMatchObject({
+      cardId: 'nubank',
+      isCreditPurchase: true,
+      recurringNum: 2,
+      recurringOf: 2,
+    })
+    expect(items[0].invoiceMonth).not.toBe(items[1].invoiceMonth)
+  })
+
+  it('exige selecionar um cartão quando existem cartões cadastrados', async () => {
+    appMocks.creditCards = [card]
+
+    render(<TransactionForm isOpen onClose={vi.fn()} transaction={null} />)
+
+    fireEvent.change(screen.getByLabelText(/Valor/), { target: { value: '8000' } })
+    fireEvent.click(screen.getByRole('button', { name: /Alimentação/i }))
+    fireEvent.change(screen.getByLabelText('Pagamento'), {
+      target: { value: 'credit_card' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar despesa' }))
+
+    expect(screen.getByText('Selecione o cartão usado nesta compra')).toBeInTheDocument()
+    expect(appMocks.createTransaction).not.toHaveBeenCalled()
   })
 })
