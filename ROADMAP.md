@@ -222,7 +222,6 @@
 - [x] preservar o orçamento de performance original;
 - [x] revisar o baseline desktop do Dashboard antes do merge.
 
-
 ## Data Visualization & Premium Dashboard — Fase 52
 
 - [ ] elevar a leitura visual do Dashboard sem alterar a semântica financeira;

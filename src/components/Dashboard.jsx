@@ -883,7 +883,11 @@ export default function Dashboard() {
                   {[
                     ['Receitas', selectedTrend.income, 'text-[--success-text]'],
                     ['Despesas', selectedTrend.expenses, 'text-[--danger-text]'],
-                    ['Resultado', selectedTrend.balance, selectedTrend.balance >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'],
+                    [
+                      'Resultado',
+                      selectedTrend.balance,
+                      selectedTrend.balance >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]',
+                    ],
                   ].map(([label, value, tone]) => (
                     <div key={label} className="rounded-xl bg-[--bg-elevated] px-3 py-2.5">
                       <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
@@ -982,7 +986,10 @@ export default function Dashboard() {
                           </div>
                           <div className="mt-0.5 flex items-center justify-between gap-2 text-[9px] text-[--text-tertiary]">
                             <span>
-                              {cat.sharePercent.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
+                              {cat.sharePercent.toLocaleString('pt-BR', {
+                                maximumFractionDigits: 1,
+                              })}
+                              %
                             </span>
                             <span>{formatVariation(cat.changePercent)}</span>
                           </div>
