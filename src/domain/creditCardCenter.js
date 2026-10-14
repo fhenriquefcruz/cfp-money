@@ -17,14 +17,14 @@ function isoDate(year, monthIndex, day) {
 }
 
 function inferredInvoiceMonth(purchaseDate, card = {}) {
-  const date = new Date(`${String(purchaseDate || '').slice(0, 10)}T00:00:00`)
-  if (Number.isNaN(date.getTime())) return ''
+  const [year, month, day] = String(purchaseDate || '').split('-').map(Number)
+  if (!year || !month || !day) return ''
 
   const closingDay = Number(card.closingDay) || 1
-  const dueDay = Number(card.dueDay) || 1
-  const monthOffset = (date.getDate() > closingDay ? 1 : 0) + (dueDay > closingDay ? 0 : 1)
+  const offset =
+    (day > closingDay ? 1 : 0) + ((Number(card.dueDay) || 1) > closingDay ? 0 : 1)
 
-  return monthKeyFromDate(new Date(date.getFullYear(), date.getMonth() + monthOffset, 1))
+  return shiftMonthKey(`${year}-${pad(month)}`, offset)
 }
 
 export function monthKeyFromDate(value = new Date()) {
