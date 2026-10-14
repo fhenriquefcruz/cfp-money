@@ -190,3 +190,34 @@
 - [x] reorganizar filtros de Relatórios para encaixe responsivo;
 - [x] adicionar testes de navegação, vigência, exclusão e responsividade;
 - [x] revisar diffs visuais e validar todos os gates antes do merge.
+
+## Inteligência patrimonial de Reservas — Fase 49
+
+- [x] adicionar evolução do patrimônio reservado nos últimos 6 meses;
+- [x] consolidar o saldo atual das reservas por instituição;
+- [x] projetar metas pelo ritmo líquido real de aportes vinculados dos últimos 3 meses;
+- [x] preservar a fonte única de dados de Poupança e Reservas sem migração de schema;
+- [x] manter o orçamento de performance original sem ampliar limites;
+- [x] validar testes unitários, E2E, Mobile, WCAG e regressão visual antes do merge.
+
+## Refinamento executivo do Dashboard — Fase 50
+
+- [x] transformar a leitura do Resultado do Período em regra de domínio testável;
+- [x] comparar o resultado do período com o mês anterior quando houver base;
+- [x] manter a leitura de uso das receitas sem confundir resultado com saldo bancário;
+- [x] substituir “Poupado no mês” por “Reservado total” no bloco executivo;
+- [x] manter “Poupado no mês”, aportes e retiradas dentro da área de Reservas;
+- [x] revisar e homologar os baselines do Dashboard em desktop e mobile;
+- [x] estabilizar a prontidão de dados do baseline visual de Metas sem alterar seu baseline;
+- [x] preservar o orçamento de performance e validar todos os gates antes e depois do merge.
+
+## Composição operacional do Dashboard — Fase 51
+
+- [x] reduzir a verticalização do Dashboard sem remover informação;
+- [x] compor Controle de pagamentos e Poupança e Reservas na mesma faixa operacional no desktop;
+- [x] preservar o empilhamento natural dos dois cards no mobile;
+- [x] reutilizar a grade executiva existente sem adicionar novo CSS de layout;
+- [x] limitar a prévia de Reservas a três destinos para preservar densidade visual;
+- [x] validar por geometria que Pagamentos e Reservas ficam lado a lado no desktop e empilhados no mobile;
+- [x] preservar o orçamento de performance original;
+- [x] revisar o baseline desktop do Dashboard antes do merge.

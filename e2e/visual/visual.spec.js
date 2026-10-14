@@ -16,6 +16,33 @@ const ROUTES = [
   ['profile', '/profile', '.profile-premium'],
 ]
 
+async function expectDashboardOperationalLayout(page, projectName) {
+  const geometry = await page.evaluate(() => {
+    const payments = document.querySelector('.payment-control-card')?.getBoundingClientRect()
+    const savings = document.querySelector('.dashboard-savings-card')?.getBoundingClientRect()
+
+    return {
+      payments: payments
+        ? { top: payments.top, bottom: payments.bottom, left: payments.left, right: payments.right }
+        : null,
+      savings: savings
+        ? { top: savings.top, bottom: savings.bottom, left: savings.left, right: savings.right }
+        : null,
+    }
+  })
+
+  expect(geometry.payments).not.toBeNull()
+  expect(geometry.savings).not.toBeNull()
+
+  if (projectName === 'visual-desktop-chromium') {
+    expect(Math.abs(geometry.payments.top - geometry.savings.top)).toBeLessThanOrEqual(2)
+    expect(geometry.payments.right).toBeLessThanOrEqual(geometry.savings.left)
+    return
+  }
+
+  expect(geometry.savings.top).toBeGreaterThan(geometry.payments.bottom)
+}
+
 async function prepareVisualPage(page, route, selector) {
   await page.clock.install({ time: FIXED_TIME })
   await prepareE2EPage(page, route)
@@ -35,6 +62,10 @@ async function prepareVisualPage(page, route, selector) {
 for (const [name, route, selector] of ROUTES) {
   test(`${name} mantém baseline visual`, async ({ page }, testInfo) => {
     await prepareVisualPage(page, route, selector)
+
+    if (name === 'dashboard') {
+      await expectDashboardOperationalLayout(page, testInfo.project.name)
+    }
 
     await expect(page).toHaveScreenshot(`${name}.png`, {
       fullPage: true,
