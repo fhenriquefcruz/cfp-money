@@ -45,7 +45,6 @@ import {
   buildMonthAttentionSignals,
   buildPeriodResultInsight,
   getCalendarMonthBounds,
-  getLargestMonthlyExpenseChange,
   getRecentDashboardTransactions,
 } from '../domain/dashboard'
 import { getTransactionActivityDate, getTransactionDateContext } from '../domain/transactionDates'
@@ -235,21 +234,8 @@ export default function Dashboard() {
     () => getMonthlyFinancialData(transactions, trendMonths, viewDate),
     [transactions, trendMonths, viewDate],
   )
-  const trendHighlight = useMemo(() => getLargestMonthlyExpenseChange(monthlyData), [monthlyData])
   const selectedTrend =
     monthlyData.find((item) => item.monthKey === selectedMonthKey) || monthlyData.at(-1) || null
-  const trendWindowSummary = useMemo(
-    () =>
-      monthlyData.reduce(
-        (summary, item) => ({
-          income: summary.income + item.income,
-          expenses: summary.expenses + item.expenses,
-          balance: summary.balance + item.balance,
-        }),
-        { income: 0, expenses: 0, balance: 0 },
-      ),
-    [monthlyData],
-  )
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
   const monthBounds = useMemo(() => getCalendarMonthBounds(viewDate), [year, month])
@@ -767,9 +753,9 @@ export default function Dashboard() {
 
               <div className="dashboard-finance-chart__summary grid grid-cols-3 gap-2">
                 {[
-                  ['Entradas', trendWindowSummary.income, 'income'],
-                  ['Saídas', trendWindowSummary.expenses, 'expense'],
-                  ['Resultado', trendWindowSummary.balance, 'result'],
+                  ['Entradas', selectedTrend?.income || 0, 'income'],
+                  ['Saídas', selectedTrend?.expenses || 0, 'expense'],
+                  ['Resultado', selectedTrend?.balance || 0, 'result'],
                 ].map(([label, value, tone]) => (
                   <div key={label} className="dashboard-finance-chart__summary-item">
                     <span>{label}</span>
@@ -940,18 +926,6 @@ export default function Dashboard() {
               </div>
             )}
 
-            {trendHighlight && trendView === 'flow' && (
-              <p className="mt-3 text-[10px] leading-relaxed text-[--text-tertiary]">
-                Maior mudança de despesas: <strong>{trendHighlight.month}</strong>,{' '}
-                {formatCurrency(Math.abs(trendHighlight.delta))}{' '}
-                {trendHighlight.delta >= 0 ? 'a mais' : 'a menos'} que{' '}
-                {trendHighlight.previousMonth}
-                {trendHighlight.percent !== null
-                  ? ` · ${formatVariation(trendHighlight.percent)}`
-                  : ' · sem base percentual anterior'}
-                .
-              </p>
-            )}
           </Card>
         </motion.div>
 
