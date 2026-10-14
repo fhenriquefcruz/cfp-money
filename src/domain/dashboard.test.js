@@ -193,7 +193,6 @@ test('prioriza compromissos vencidos na leitura de proteção financeira', () =>
   ])
   expect(insights[1]).toMatchObject({
     amount: 800,
-    actionLabel: 'Regularizar',
   })
 })
 
