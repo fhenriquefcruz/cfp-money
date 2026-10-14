@@ -360,7 +360,7 @@ function CreditCardsCenterContent() {
                   </p>
               </div>
               <Link to="/transactions" className="text-xs font-bold text-[--text-brand]">
-                Revisar transações
+                Revisar
               </Link>
             </div>
           )}
