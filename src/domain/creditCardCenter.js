@@ -17,25 +17,14 @@ function isoDate(year, monthIndex, day) {
 }
 
 function inferredInvoiceMonth(purchaseDate, card = {}) {
-  const [year, month, day] = String(purchaseDate || '')
-    .slice(0, 10)
-    .split('-')
-    .map(Number)
-
-  if (!year || !month || !day) return ''
+  const date = new Date(`${String(purchaseDate || '').slice(0, 10)}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return ''
 
   const closingDay = Number(card.closingDay) || 1
   const dueDay = Number(card.dueDay) || 1
-  const closingMonthOffset = day > closingDay ? 1 : 0
-  const closingMonth = new Date(year, month - 1 + closingMonthOffset, 1)
-  const dueMonthOffset = dueDay > closingDay ? 0 : 1
-  const dueMonth = new Date(
-    closingMonth.getFullYear(),
-    closingMonth.getMonth() + dueMonthOffset,
-    1,
-  )
+  const monthOffset = (date.getDate() > closingDay ? 1 : 0) + (dueDay > closingDay ? 0 : 1)
 
-  return `${dueMonth.getFullYear()}-${pad(dueMonth.getMonth() + 1)}`
+  return monthKeyFromDate(new Date(date.getFullYear(), date.getMonth() + monthOffset, 1))
 }
 
 export function monthKeyFromDate(value = new Date()) {
@@ -104,11 +93,11 @@ function transactionInvoiceMonth(transaction, cardMap) {
   const purchaseDate =
     transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date || ''
 
-  if (card && purchaseDate) {
-    return inferredInvoiceMonth(purchaseDate, card) || transaction.date?.slice(0, 7) || ''
-  }
-
-  return transaction.date?.slice(0, 7) || ''
+  return (
+    (card && purchaseDate ? inferredInvoiceMonth(purchaseDate, card) : '') ||
+    transaction.date?.slice(0, 7) ||
+    ''
+  )
 }
 
 function cardSnapshotFromTransaction(transaction) {
