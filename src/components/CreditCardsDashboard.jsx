@@ -355,15 +355,11 @@ function CreditCardsCenterContent() {
                 <Info size={17} className="mt-0.5 flex-shrink-0 text-[--warning-icon]" />
                 <div>
                   <p className="text-xs font-black text-[--text-primary]">
-                    {center.legacyCount}{' '}
-                    {center.legacyCount === 1
-                      ? 'compra no crédito está'
-                      : 'compras no crédito estão'}{' '}
-                    sem cartão identificado
+                    Compras no crédito sem cartão identificado
                   </p>
                   <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
-                    {formatCurrency(center.legacyTotal)} ainda não pode ser atribuído a uma fatura.
-                    Revise esses lançamentos e selecione o cartão correto para consolidá-los.
+                    {center.legacyCount} lançamento{center.legacyCount === 1 ? '' : 's'} ·{' '}
+                    {formatCurrency(center.legacyTotal)} fora das faturas.
                   </p>
                 </div>
               </div>
@@ -371,7 +367,7 @@ function CreditCardsCenterContent() {
                 to="/transactions"
                 className="inline-flex min-h-10 flex-shrink-0 items-center justify-center gap-1 rounded-xl border border-[--warning-border] bg-[--bg-surface] px-3 text-xs font-bold text-[--text-primary] hover:bg-[--bg-hover]"
               >
-                Revisar transações
+                Revisar
                 <ChevronRight size={13} />
               </Link>
             </div>
