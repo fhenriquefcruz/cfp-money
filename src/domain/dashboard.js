@@ -150,7 +150,6 @@ export function buildDashboardActionInsights({
   if (hasPrevious && balance !== previousBalance) {
     const delta = balance - previousBalance
     insights.push({
-      id: 'result',
       title: delta > 0 ? 'Resultado melhorou' : 'Resultado perdeu força',
       amount: Math.abs(delta),
       detail: delta > 0 ? 'Melhora frente ao mês anterior.' : 'Queda frente ao mês anterior.',
@@ -164,7 +163,6 @@ export function buildDashboardActionInsights({
     const share = Number(category.sharePercent || 0)
     const change = category.changePercent
     insights.push({
-      id: 'category',
       title: `${category.categoryName} lidera os gastos`,
       amount: Number(category.total),
       detail:
@@ -181,7 +179,6 @@ export function buildDashboardActionInsights({
   if (overdue || dueSoon) {
     const isOverdue = overdue > 0
     insights.push({
-      id: 'payments',
       title: `${isOverdue ? overdue : dueSoon} ${
         isOverdue
           ? overdue === 1
@@ -200,7 +197,6 @@ export function buildDashboardActionInsights({
     })
   } else if (Number(savingsOverview.totalBalance || 0) > 0) {
     insights.push({
-      id: 'reserve',
       title: 'Reservas como proteção',
       amount: Number(savingsOverview.totalBalance),
       detail:
@@ -212,7 +208,6 @@ export function buildDashboardActionInsights({
     })
   } else if (budgetMonthKey) {
     insights.push({
-      id: 'budget',
       title: 'Planejamento do mês',
       amount: null,
       detail: 'Acompanhe os limites para proteger o resultado.',
