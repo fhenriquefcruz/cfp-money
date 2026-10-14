@@ -300,12 +300,7 @@ export default function TransactionForm({
     if (isSavings && !form.savingsDestination.trim())
       errs.savingsDestination = 'Informe onde este dinheiro está guardado'
     if (!form.date) errs.date = 'Data obrigatória'
-    if (
-      isExpense &&
-      form.isCredit &&
-      activeCreditCards.length > 0 &&
-      !form.cardId
-    ) {
+    if (isExpense && form.isCredit && activeCreditCards.length > 0 && !form.cardId) {
       errs.cardId = 'Selecione o cartão usado nesta compra'
     }
     if (form.isInstallment && parseInt(form.installments) < 2)

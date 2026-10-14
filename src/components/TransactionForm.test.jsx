@@ -367,7 +367,6 @@ describe('TransactionForm credit card integration', () => {
     expect(screen.queryByRole('checkbox', { name: /Despesa fixa/i })).not.toBeInTheDocument()
   })
 
-
   it('exige selecionar um cartão quando existem cartões cadastrados', async () => {
     appMocks.creditCards = [card]
 

@@ -86,8 +86,7 @@ function transactionInvoiceMonth(transaction, cardMap) {
     const [year, month, day] = String(purchaseDate).split('-').map(Number)
     if (year && month && day) {
       const closingDay = Number(card.closingDay) || 1
-      const offset =
-        (day > closingDay ? 1 : 0) + ((Number(card.dueDay) || 1) > closingDay ? 0 : 1)
+      const offset = (day > closingDay ? 1 : 0) + ((Number(card.dueDay) || 1) > closingDay ? 0 : 1)
       return shiftMonthKey(`${year}-${pad(month)}`, offset)
     }
   }
