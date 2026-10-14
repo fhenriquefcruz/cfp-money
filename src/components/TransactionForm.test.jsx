@@ -353,46 +353,20 @@ describe('TransactionForm credit card integration', () => {
     )
   })
 
-  it('estrutura recorrências mensais no cartão em suas faturas correspondentes', async () => {
+  it('não oferece recorrência mensal dentro do fluxo de cartão', () => {
     appMocks.creditCards = [card]
 
     render(<TransactionForm isOpen onClose={vi.fn()} transaction={null} />)
 
-    fireEvent.change(screen.getByLabelText(/Valor/), { target: { value: '12000' } })
-    fireEvent.click(screen.getByRole('button', { name: /Alimentação/i }))
     fireEvent.change(screen.getByLabelText('Pagamento'), {
       target: { value: 'credit_card' },
     })
-    fireEvent.change(screen.getByLabelText('Cartão cadastrado'), {
-      target: { value: 'nubank' },
-    })
+
     fireEvent.click(screen.getByRole('button', { name: /mais opções/i }))
-    fireEvent.click(screen.getByRole('checkbox', { name: /Despesa fixa/i }))
-    fireEvent.change(screen.getByLabelText('Repetir por quantos meses'), {
-      target: { value: '2' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Criar 2 meses' }))
 
-    await vi.waitFor(() => expect(appMocks.addTransactionBatch).toHaveBeenCalledTimes(1))
-    const [items] = appMocks.addTransactionBatch.mock.calls[0]
-
-    expect(items).toHaveLength(2)
-    expect(items[0]).toMatchObject({
-      cardId: 'nubank',
-      isCreditPurchase: true,
-      purchaseDate: expect.any(String),
-      invoiceMonth: expect.any(String),
-      recurringNum: 1,
-      recurringOf: 2,
-    })
-    expect(items[1]).toMatchObject({
-      cardId: 'nubank',
-      isCreditPurchase: true,
-      recurringNum: 2,
-      recurringOf: 2,
-    })
-    expect(items[0].invoiceMonth).not.toBe(items[1].invoiceMonth)
+    expect(screen.queryByRole('checkbox', { name: /Despesa fixa/i })).not.toBeInTheDocument()
   })
+
 
   it('exige selecionar um cartão quando existem cartões cadastrados', async () => {
     appMocks.creditCards = [card]
