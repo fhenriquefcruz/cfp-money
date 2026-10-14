@@ -170,6 +170,14 @@
   --danger-border: #67322e;
   --danger-icon: #cf6b62;
 
+  /* Chart Colors — mineral / bronze / sage */
+  --chart-1: #d3a96f;
+  --chart-2: #79a889;
+  --chart-3: #c77c4b;
+  --chart-4: #6f99a8;
+  --chart-5: #9383a8;
+  --chart-6: #b97985;
+
   --info-bg: #101a1d;
   --info-text: #a5c1c8;
   --info-border: #38535a;
