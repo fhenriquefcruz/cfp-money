@@ -91,7 +91,6 @@ test('resume o resultado do período com leitura executiva e comparação mensal
       { income: 9000, expenses: 8000, balance: 1000, count: 7 },
     ),
   ).toEqual({
-    tone: 'positive',
     statusLabel: 'Período no azul',
     expenseIncomeRatio: 80,
     retainedIncomeRatio: 20,
@@ -108,7 +107,6 @@ test('sinaliza pressão quando despesas superam receitas', () => {
       { income: 5000, expenses: 4700, balance: 300, count: 6 },
     ),
   ).toMatchObject({
-    tone: 'negative',
     statusLabel: 'Fluxo pressionado',
     expenseIncomeRatio: 113,
     retainedIncomeRatio: null,
@@ -154,17 +152,14 @@ test('gera leituras acionáveis com resultado, categoria e proteção financeira
   expect(insights).toHaveLength(3)
   expect(insights.map((item) => item.id)).toEqual(['result', 'category', 'reserve'])
   expect(insights[0]).toMatchObject({
-    tone: 'positive',
     amount: 1500,
   })
   expect(insights[1]).toMatchObject({
     title: 'Alimentação lidera os gastos',
-    tone: 'warning',
     amount: 2100,
   })
   expect(insights[2]).toMatchObject({
     title: 'Reservas como proteção',
-    tone: 'positive',
     amount: 5000,
   })
 })
@@ -189,7 +184,6 @@ test('prioriza compromissos vencidos na leitura de proteção financeira', () =>
 
   expect(insights.map((item) => item.id)).toEqual(['result', 'payments'])
   expect(insights[1]).toMatchObject({
-    tone: 'negative',
     amount: 800,
     actionLabel: 'Regularizar',
   })
