@@ -686,13 +686,13 @@ export default function Dashboard() {
       {/* Análise principal: evolução e composição */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.15 }}>
-          <Card className="dashboard-finance-chart h-full">
+          <Card className="dashboard-finance-chart h-full overflow-hidden">
             <div className="dashboard-finance-chart__header mb-4 flex flex-col gap-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-[--text-primary]">Evolução financeira</h3>
-                    <InfoTooltip text="Valores agrupados pela data da movimentação. Clique no gráfico ou use o seletor de meses para detalhar um período." />
+                    <InfoTooltip text="Valores agrupados pela data da movimentação. Use o seletor de meses para detalhar um período." />
                   </div>
                   <p className="mt-1 text-xs text-[--text-tertiary]">
                     Compare entradas e saídas ou isole o resultado líquido do período.
@@ -751,71 +751,50 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="dashboard-finance-chart__summary grid grid-cols-3 gap-2">
-                {[
-                  ['Entradas', selectedTrend?.income || 0, 'income'],
-                  ['Saídas', selectedTrend?.expenses || 0, 'expense'],
-                  ['Resultado', selectedTrend?.balance || 0, 'result'],
-                ].map(([label, value, tone]) => (
-                  <div key={label} className="dashboard-finance-chart__summary-item">
-                    <span>{label}</span>
-                    <strong data-tone={tone}>{formatCurrency(value)}</strong>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="dashboard-finance-chart__canvas">
+            <div className="-mx-1 rounded-2xl">
               <ResponsiveContainer width="100%" height={280}>
-                <AreaChart
-                  data={monthlyData}
-                  margin={{ top: 12, right: 10, left: 4, bottom: 4 }}
-                  onClick={(state) => {
-                    const monthKey = state?.activePayload?.[0]?.payload?.monthKey
-                    if (monthKey) setSelectedMonthKey(monthKey)
-                  }}
-                >
+                <AreaChart data={monthlyData} margin={{ top: 12, right: 10, left: 4, bottom: 4 }}>
                   <defs>
                     <linearGradient id="dashboardIncomeGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop
                         offset="0%"
-                        stopColor="var(--dashboard-chart-income)"
+                        stopColor="var(--success-icon)"
                         stopOpacity={0.22}
                       />
                       <stop
                         offset="100%"
-                        stopColor="var(--dashboard-chart-income)"
+                        stopColor="var(--success-icon)"
                         stopOpacity={0.01}
                       />
                     </linearGradient>
                     <linearGradient id="dashboardExpenseGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop
                         offset="0%"
-                        stopColor="var(--dashboard-chart-expense)"
+                        stopColor="var(--danger-icon)"
                         stopOpacity={0.18}
                       />
                       <stop
                         offset="100%"
-                        stopColor="var(--dashboard-chart-expense)"
+                        stopColor="var(--danger-icon)"
                         stopOpacity={0.01}
                       />
                     </linearGradient>
                     <linearGradient id="dashboardResultGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop
                         offset="0%"
-                        stopColor="var(--dashboard-chart-result)"
+                        stopColor="var(--brand-500)"
                         stopOpacity={0.24}
                       />
                       <stop
                         offset="100%"
-                        stopColor="var(--dashboard-chart-result)"
+                        stopColor="var(--brand-500)"
                         stopOpacity={0.015}
                       />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
                     strokeDasharray="2 7"
-                    stroke="var(--dashboard-chart-grid)"
+                    stroke="var(--border-subtle)"
                     vertical={false}
                   />
                   <XAxis
@@ -841,7 +820,7 @@ export default function Dashboard() {
                         type="monotone"
                         dataKey="income"
                         name="Receitas"
-                        stroke="var(--dashboard-chart-income)"
+                        stroke="var(--success-icon)"
                         strokeWidth={2.5}
                         dot={false}
                         activeDot={{ r: 4, strokeWidth: 2 }}
@@ -851,7 +830,7 @@ export default function Dashboard() {
                         type="monotone"
                         dataKey="expenses"
                         name="Despesas"
-                        stroke="var(--dashboard-chart-expense)"
+                        stroke="var(--danger-icon)"
                         strokeWidth={2.5}
                         dot={false}
                         activeDot={{ r: 4, strokeWidth: 2 }}
@@ -863,7 +842,7 @@ export default function Dashboard() {
                       type="monotone"
                       dataKey="balance"
                       name="Resultado"
-                      stroke="var(--dashboard-chart-result)"
+                      stroke="var(--brand-500)"
                       strokeWidth={2.75}
                       dot={false}
                       activeDot={{ r: 4, strokeWidth: 2 }}
@@ -930,7 +909,7 @@ export default function Dashboard() {
         </motion.div>
 
         <motion.div {...fade} transition={{ delay: 0.2 }}>
-          <Card className="dashboard-spending-composition h-full">
+          <Card className="dashboard-spending-composition h-full overflow-hidden">
             <div className="mb-3">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-[--text-primary]">Composição dos gastos</h3>
@@ -962,7 +941,7 @@ export default function Dashboard() {
               </p>
             ) : (
               <>
-                <div className="dashboard-spending-composition__headline mb-4 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
+                <div className="mb-4 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
                     Top 3 concentram
                   </span>
@@ -992,7 +971,7 @@ export default function Dashboard() {
                         className="group block rounded-xl border border-transparent p-1.5 transition-colors hover:border-[--border-default] hover:bg-[--bg-hover]"
                       >
                         <div className="flex items-start gap-2.5">
-                          <span className="dashboard-spending-composition__rank">
+                          <span className="flex-shrink-0 text-[10px] font-black tabular-nums text-[--text-tertiary]">
                             {String(index + 1).padStart(2, '0')}
                           </span>
                           <div className="min-w-0 flex-1">
@@ -1014,7 +993,7 @@ export default function Dashboard() {
                             </div>
                             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[--bg-hover]">
                               <div
-                                className="dashboard-spending-composition__bar h-full rounded-full transition-[width]"
+                                className="h-full rounded-full bg-[--brand-500] transition-[width]"
                                 style={{ width: `${Math.min(100, width)}%` }}
                                 aria-hidden="true"
                               />
