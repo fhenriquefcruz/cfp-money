@@ -1,0 +1,37 @@
+name: Phase 53 cards baseline
+
+on:
+  push:
+    branches:
+      - phase-53-card-transaction-integration
+
+permissions:
+  contents: write
+
+jobs:
+  update-cards-baseline:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: phase-53-card-transaction-integration
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Update only Cards visual baselines
+        run: npx playwright test --config=playwright.visual.config.js --update-snapshots --grep "cards mantém baseline visual"
+      - name: Commit Cards baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add e2e/visual/visual.spec.js-snapshots/cards-visual-desktop-chromium-linux.png
+          git add e2e/visual/visual.spec.js-snapshots/cards-visual-mobile-chromium-linux.png
+          if git diff --cached --quiet; then
+            exit 1
+          fi
+          git commit -m "Phase 53: update Cards visual baselines"
+          git push origin HEAD:phase-53-card-transaction-integration
