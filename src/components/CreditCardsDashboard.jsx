@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CalendarDays,
   ChevronLeft,
@@ -14,7 +14,12 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
-import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
+import {
+  buildCreditCardCenter,
+  firstRelevantForecastMonth,
+  monthKeyFromDate,
+  shiftMonthKey,
+} from '../domain/creditCardCenter'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
@@ -163,6 +168,7 @@ function CreditCardsCenterContent() {
   const { creditCards, loading: creditCardsLoading } = useCreditCards()
   const { invoiceEvents, loading: invoiceEventsLoading, createInvoiceEvent } = useInvoiceEvents()
   const [selectedMonth, setSelectedMonth] = useState(monthKeyFromDate())
+  const userSelectedMonthRef = useRef(false)
   const [selectedCardId, setSelectedCardId] = useState('all')
   const [managingCardId, setManagingCardId] = useState(null)
   const [cardSettingsOpen, setCardSettingsOpen] = useState(false)
@@ -196,6 +202,32 @@ function CreditCardsCenterContent() {
   const managedInvoice = center.invoices.find((invoice) => invoice.card.id === managingCardId)
 
   const loadingData = transactionsLoading || creditCardsLoading || invoiceEventsLoading
+
+  useEffect(() => {
+    if (loadingData || userSelectedMonthRef.current) return
+    if (center.selectedItemCount > 0 || center.selectedTotal > 0 || center.selectedPaidTotal > 0) {
+      return
+    }
+
+    const relevantMonth = firstRelevantForecastMonth(center.forecast, selectedMonth)
+    if (!relevantMonth) return
+
+    setSelectedMonth(relevantMonth)
+    setSelectedCardId('all')
+  }, [
+    center.forecast,
+    center.selectedItemCount,
+    center.selectedPaidTotal,
+    center.selectedTotal,
+    loadingData,
+    selectedMonth,
+  ])
+
+  const selectMonth = (month) => {
+    userSelectedMonthRef.current = true
+    setSelectedMonth(month)
+    setSelectedCardId('all')
+  }
 
   return (
     <div className="operational-page credit-cards-premium mx-auto min-w-0 w-full max-w-7xl space-y-5 pb-24 lg:pb-6">
@@ -262,7 +294,7 @@ function CreditCardsCenterContent() {
           <div className="credit-cards-period flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => setSelectedMonth((month) => shiftMonthKey(month, -1))}
+              onClick={() => selectMonth(shiftMonthKey(selectedMonth, -1))}
               className="flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] bg-[--bg-surface] text-[--text-secondary] hover:bg-[--bg-hover]"
               aria-label="Fatura do mês anterior"
             >
@@ -279,8 +311,7 @@ function CreditCardsCenterContent() {
                 type="month"
                 value={selectedMonth}
                 onChange={(event) => {
-                  setSelectedMonth(event.target.value)
-                  setSelectedCardId('all')
+                  selectMonth(event.target.value)
                 }}
                 className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-surface] pl-9 pr-3 text-xs font-semibold text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] sm:w-auto"
               />
@@ -288,7 +319,7 @@ function CreditCardsCenterContent() {
 
             <button
               type="button"
-              onClick={() => setSelectedMonth((month) => shiftMonthKey(month, 1))}
+              onClick={() => selectMonth(shiftMonthKey(selectedMonth, 1))}
               className="flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] bg-[--bg-surface] text-[--text-secondary] hover:bg-[--bg-hover]"
               aria-label="Fatura do próximo mês"
             >
@@ -389,8 +420,7 @@ function CreditCardsCenterContent() {
                         key={item.month}
                         type="button"
                         onClick={() => {
-                          setSelectedMonth(item.month)
-                          setSelectedCardId('all')
+                          selectMonth(item.month)
                         }}
                         className={`rounded-2xl border p-2 text-center transition-colors ${
                           active
