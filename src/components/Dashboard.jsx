@@ -67,20 +67,10 @@ const formatAxisCurrency = (value) =>
     maximumFractionDigits: 1,
   }).format(Number(value) || 0)}`
 
-const formatVariation = (value) => {
-  if (value === null || value === undefined) return 'sem base anterior'
-  const formatted = Math.abs(value).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
-  if (value === 0) return 'sem variação'
-  return `${formatted}% ${value > 0 ? 'acima' : 'abaixo'} do mês anterior`
-}
-
-const DASHBOARD_CHART_COLORS = [
-  'var(--chart-1)',
-  'var(--chart-2)',
-  'var(--chart-3)',
-  'var(--chart-4)',
-  'var(--chart-5)',
-]
+const formatVariation = (value) =>
+  value == null
+    ? 'sem base'
+    : `${value > 0 ? '+' : ''}${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% vs. mês anterior`
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -228,22 +218,16 @@ export default function Dashboard() {
     () => buildCategoryBreakdown(categoryTotals, previousCategoryTotals),
     [categoryTotals, previousCategoryTotals],
   )
-  const categoryVisual = useMemo(() => {
+  const categoryRing = useMemo(() => {
     let cursor = 0
-    const items = categoryBreakdown.slice(0, 5)
-    const stops = items.map((item, index) => {
+    const stops = categoryBreakdown.slice(0, 5).map((item, index) => {
       const start = cursor
       cursor += item.sharePercent
-      return `${DASHBOARD_CHART_COLORS[index]} ${start}% ${cursor}%`
+      return `var(--chart-${index + 1}) ${start}% ${cursor}%`
     })
-
-    if (cursor < 100) stops.push(`var(--bg-hover) ${cursor}% 100%`)
-
-    return {
-      items,
-      remainingShare: Math.max(0, 100 - cursor),
-      ring: stops.length ? `conic-gradient(${stops.join(', ')})` : 'var(--bg-hover)',
-    }
+    return stops.length
+      ? `conic-gradient(${stops.join(', ')}, var(--bg-hover) ${cursor}% 100%)`
+      : 'var(--bg-hover)'
   }, [categoryBreakdown])
 
   const availableMonthCount = useMemo(
@@ -940,7 +924,7 @@ export default function Dashboard() {
                 <div className="mb-4 flex items-center justify-center">
                   <div
                     className="relative h-40 w-40 rounded-full p-[15px] shadow-inner"
-                    style={{ background: categoryVisual.ring }}
+                    style={{ background: categoryRing }}
                     role="img"
                     aria-label="Distribuição percentual dos gastos por categoria"
                   >
@@ -952,14 +936,14 @@ export default function Dashboard() {
                         {formatCurrency(currentSummary.expenses, { compact: true })}
                       </strong>
                       <span className="mt-1 text-[9px] text-[--text-tertiary]">
-                        {categoryVisual.items.length} principais categorias
+                        {Math.min(categoryBreakdown.length, 5)} principais categorias
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  {categoryVisual.items.map((cat, index) => {
+                  {categoryBreakdown.slice(0, 5).map((cat, index) => {
                     const isOtherLarge =
                       String(cat.categoryName || '').toLowerCase() === 'outros' &&
                       cat.sharePercent >= 25
@@ -972,7 +956,7 @@ export default function Dashboard() {
                       >
                         <span
                           className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
-                          style={{ background: DASHBOARD_CHART_COLORS[index] }}
+                          style={{ background: `var(--chart-${index + 1})` }}
                           aria-hidden="true"
                         />
                         <div className="min-w-0 flex-1">
@@ -1007,18 +991,6 @@ export default function Dashboard() {
                     )
                   })}
 
-                  {categoryVisual.remainingShare > 0.5 && (
-                    <div className="flex items-center gap-3 px-2 py-2 text-[10px] text-[--text-tertiary]">
-                      <span className="h-2.5 w-2.5 rounded-full bg-[--bg-hover]" />
-                      <span className="flex-1">Demais categorias</span>
-                      <span className="font-bold tabular-nums">
-                        {categoryVisual.remainingShare.toLocaleString('pt-BR', {
-                          maximumFractionDigits: 1,
-                        })}
-                        %
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
             )}
