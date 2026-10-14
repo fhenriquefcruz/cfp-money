@@ -370,14 +370,7 @@ export default function TransactionForm({
             Object.assign(editData, {
               isCreditPurchase: false,
               cardId: '',
-              cardName: '',
-              cardLast4: '',
-              cardClosingDay: '',
-              cardDueDay: '',
               invoiceMonth: '',
-              invoiceClosingDate: '',
-              purchaseDate: '',
-              originalPurchaseDate: '',
             })
           }
         }
