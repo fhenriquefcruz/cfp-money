@@ -43,6 +43,53 @@ async function expectDashboardOperationalLayout(page, projectName) {
   expect(geometry.savings.top).toBeGreaterThan(geometry.payments.bottom)
 }
 
+async function expectDashboardPremiumVisualization(page, projectName) {
+  const resultButton = page.getByRole('button', { name: 'Resultado', exact: true })
+  const flowButton = page.getByRole('button', { name: 'Fluxo', exact: true })
+  const chartAreas = page.locator('.dashboard-finance-chart .recharts-area-area')
+
+  await expect(resultButton).toBeVisible()
+  await resultButton.click()
+  await expect(resultButton).toHaveAttribute('aria-pressed', 'true')
+  await expect(chartAreas).toHaveCount(1)
+
+  await flowButton.click()
+  await expect(flowButton).toHaveAttribute('aria-pressed', 'true')
+  await expect(chartAreas).toHaveCount(2)
+
+  const geometry = await page.evaluate(() => {
+    const forecast = document.querySelector('.dashboard-forecast-card')?.getBoundingClientRect()
+    const health = document.querySelector('.dashboard-health-card')?.getBoundingClientRect()
+    const money = document.querySelector('.dashboard-money-insight')?.getBoundingClientRect()
+
+    const compact = (rect) =>
+      rect ? { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right } : null
+
+    return {
+      forecast: compact(forecast),
+      health: compact(health),
+      money: compact(money),
+    }
+  })
+
+  expect(geometry.forecast).not.toBeNull()
+  expect(geometry.health).not.toBeNull()
+  expect(geometry.money).not.toBeNull()
+
+  if (projectName === 'visual-desktop-chromium') {
+    expect(Math.abs(geometry.forecast.top - geometry.health.top)).toBeLessThanOrEqual(2)
+    expect(Math.abs(geometry.forecast.top - geometry.money.top)).toBeLessThanOrEqual(2)
+    expect(geometry.forecast.right).toBeLessThanOrEqual(geometry.health.left)
+    expect(geometry.health.right).toBeLessThanOrEqual(geometry.money.left)
+    return
+  }
+
+  expect(Math.abs(geometry.forecast.top - geometry.health.top)).toBeLessThanOrEqual(2)
+  expect(geometry.money.top).toBeGreaterThan(
+    Math.max(geometry.forecast.bottom, geometry.health.bottom),
+  )
+}
+
 async function prepareVisualPage(page, route, selector) {
   await page.clock.install({ time: FIXED_TIME })
   await prepareE2EPage(page, route)
@@ -73,6 +120,18 @@ for (const [name, route, selector] of ROUTES) {
       caret: 'hide',
       maxDiffPixelRatio: 0.002,
     })
+
+    if (name === 'dashboard') {
+      await expectDashboardPremiumVisualization(page, testInfo.project.name)
+
+      const chartGrid = page.locator('.dashboard-chart-grid:has(.dashboard-finance-chart)')
+      await chartGrid.scrollIntoViewIfNeeded()
+      await expect(chartGrid).toHaveScreenshot('dashboard-charts.png', {
+        animations: 'disabled',
+        caret: 'hide',
+        maxDiffPixelRatio: 0.002,
+      })
+    }
 
     await testInfo.attach(`${name}-viewport`, {
       body: Buffer.from(

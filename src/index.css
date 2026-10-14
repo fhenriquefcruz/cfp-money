@@ -739,10 +739,6 @@ body {
     overflow-wrap: anywhere;
   }
 
-  .dashboard-compact-kpis {
-    display: contents;
-  }
-
   .dashboard-forecast-card,
   .dashboard-health-card {
     min-height: 7.25rem;
@@ -1049,11 +1045,6 @@ body {
   }
 
   .dashboard-bento-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .dashboard-compact-kpis {
-    display: grid;
     grid-template-columns: minmax(0, 1fr);
   }
 

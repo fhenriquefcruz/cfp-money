@@ -221,3 +221,16 @@
 - [x] validar por geometria que Pagamentos e Reservas ficam lado a lado no desktop e empilhados no mobile;
 - [x] preservar o orçamento de performance original;
 - [x] revisar o baseline desktop do Dashboard antes do merge.
+
+## Dashboard Premium Visual & Data Experience — Fase 52
+
+- [x] reorganizar Ritmo de gastos, Saúde financeira e Money em uma faixa bento mais equilibrada;
+- [x] adicionar modos Fluxo e Resultado à evolução financeira;
+- [x] aplicar áreas suaves e cores semânticas para receitas, despesas e resultado;
+- [x] preservar seleção de 6 e 12 meses e detalhamento do mês selecionado;
+- [x] transformar a composição dos gastos em ranking visual com concentração do Top 3;
+- [x] manter drill-down de categorias e acesso aos lançamentos do mês;
+- [x] reutilizar tokens nativos do design system e remover CSS exclusivo desnecessário;
+- [x] validar o encaixe premium e a alternância dos modos do gráfico nos testes visuais;
+- [x] preservar o orçamento original de JavaScript e CSS sem ampliar limites;
+- [x] homologar os baselines finais do Dashboard em desktop e mobile antes do merge.
