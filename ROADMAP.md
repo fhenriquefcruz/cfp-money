@@ -222,7 +222,6 @@
 - [x] preservar o orçamento de performance original;
 - [x] revisar o baseline desktop do Dashboard antes do merge.
 
-
 ## Dashboard Premium Visual & Data Experience — Fase 52
 
 - [x] reorganizar Ritmo de gastos, Saúde financeira e Money em uma faixa bento mais equilibrada;
