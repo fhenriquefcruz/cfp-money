@@ -1,0 +1,37 @@
+name: Phase 52 dashboard baseline
+
+on:
+  push:
+    branches:
+      - phase-52-dashboard-premium-data-viz
+
+permissions:
+  contents: write
+
+jobs:
+  update-dashboard-baseline:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: phase-52-dashboard-premium-data-viz
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Update Dashboard desktop baselines
+        run: npx playwright test --config=playwright.visual.config.js --project=visual-desktop-chromium --update-snapshots --grep "dashboard mantém baseline visual"
+      - name: Commit Dashboard baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add e2e/visual/visual.spec.js-snapshots/dashboard-visual-desktop-chromium-linux.png
+          git add e2e/visual/visual.spec.js-snapshots/dashboard-charts-visual-desktop-chromium-linux.png
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Phase 52: update Dashboard desktop visual baselines"
+          git push origin HEAD:phase-52-dashboard-premium-data-viz
