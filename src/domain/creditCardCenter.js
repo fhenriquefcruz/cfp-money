@@ -30,6 +30,13 @@ export function shiftMonthKey(monthKey, amount) {
   return monthKeyFromDate(new Date(year, month - 1 + amount, 1))
 }
 
+export function firstRelevantForecastMonth(forecast = [], selectedMonth = '') {
+  const relevant = forecast.find(
+    (item) => item.month !== selectedMonth && Number(item.itemCount || 0) > 0,
+  )
+  return relevant?.month || ''
+}
+
 export function labelForMonth(monthKey) {
   const [year, month] = monthKey.split('-').map(Number)
   const label = new Intl.DateTimeFormat('pt-BR', {
