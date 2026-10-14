@@ -417,43 +417,21 @@ export default function TransactionForm({
           await addTransactionBatch(items)
         }
       } else if (form.isRecurring) {
-        // Recorrente (receita OU despesa)
+        // Recorrente (receita OU despesa fora do cartão de crédito)
         const months = parseInt(form.recurringMonths) || 12
         const groupId = `${Date.now()}_${Math.random().toString(36).slice(2)}`
-        const items = Array.from({ length: months }, (_, i) => {
-          const occurrenceDate = format(
-            addMonths(new Date(form.date + 'T00:00:00'), i),
-            'yyyy-MM-dd',
-          )
-          const recurringMeta = {
-            recurringGroupId: groupId,
-            recurringNum: i + 1,
-            recurringOf: months,
-          }
-
-          if (isExpense && form.isCredit && selectedCreditCard) {
-            return {
-              ...buildCreditTransaction({
-                baseData,
-                totalAmount: baseAmount,
-                purchaseDate: occurrenceDate,
-                card: selectedCreditCard,
-              }),
-              ...recurringMeta,
-            }
-          }
-
-          return {
-            ...baseData,
-            amount: baseAmount,
-            date: occurrenceDate,
-            dueDate:
-              isExpense && form.dueDate
-                ? format(addMonths(new Date(form.dueDate + 'T00:00:00'), i), 'yyyy-MM-dd')
-                : '',
-            ...recurringMeta,
-          }
-        })
+        const items = Array.from({ length: months }, (_, i) => ({
+          ...baseData,
+          amount: baseAmount,
+          date: format(addMonths(new Date(form.date + 'T00:00:00'), i), 'yyyy-MM-dd'),
+          dueDate:
+            isExpense && form.dueDate
+              ? format(addMonths(new Date(form.dueDate + 'T00:00:00'), i), 'yyyy-MM-dd')
+              : '',
+          recurringGroupId: groupId,
+          recurringNum: i + 1,
+          recurringOf: months,
+        }))
         await addTransactionBatch(items)
       } else {
         if (isExpense && form.isCredit && selectedCreditCard) {
@@ -495,7 +473,7 @@ export default function TransactionForm({
     showCreditFields && selectedCreditCard && form.date
       ? calculateInvoiceSchedule(form.date, selectedCreditCard)
       : null
-  const showRecurringField = (isIncome || isExpense) && !isEditing
+  const showRecurringField = (isIncome || (isExpense && !showCreditFields)) && !isEditing
 
   const btnLabel = () => {
     if (isEditing) return 'Salvar alterações'
