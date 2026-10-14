@@ -1,7 +1,6 @@
 import {
   buildCategoryBreakdown,
   buildDashboardActionInsights,
-  buildMonthAttentionSignals,
   buildPeriodResultInsight,
   getCalendarMonthBounds,
   getLargestMonthlyExpenseChange,
@@ -48,43 +47,7 @@ test('exclui o mês seguinte e ordena as transações recentes por atividade', (
   ).toEqual(['manual-different-due', 'newer', 'credit-purchase', 'older'])
 })
 
-test('prioriza atrasos, vencimentos e orçamento antes do saldo negativo', () => {
-  const signals = buildMonthAttentionSignals({
-    paymentSummary: {
-      overdueCount: 2,
-      overdueAmount: 350,
-      dueNext7DaysCount: 1,
-      dueNext7DaysAmount: 120,
-    },
-    budgetAlerts: [
-      {
-        budget: { id: 'food', amount: 1000 },
-        cat: { name: 'Alimentação' },
-        spent: 920,
-        pct: 92,
-      },
-    ],
-    balance: -500,
-  })
 
-  expect(signals.map((signal) => signal.type)).toEqual(['overdue', 'due-soon', 'budget'])
-  expect(signals).toHaveLength(3)
-})
-
-test('inclui saldo negativo quando ainda existe espaço na Central do mês', () => {
-  expect(
-    buildMonthAttentionSignals({
-      paymentSummary: {},
-      budgetAlerts: [],
-      balance: -480,
-    }),
-  ).toEqual([
-    {
-      type: 'negative-balance',
-      amount: 480,
-    },
-  ])
-})
 
 test('ordena categorias por gasto e calcula participação e variação', () => {
   const result = buildCategoryBreakdown(
@@ -193,9 +156,9 @@ test('gera leituras acionáveis com resultado, categoria e proteção financeira
 
   expect(insights).toHaveLength(3)
   expect(insights.map((item) => item.id)).toEqual([
-    'period-result-change',
-    'top-expense-category',
-    'reserve-protection',
+    'result',
+    'category',
+    'reserve',
   ])
   expect(insights[0]).toMatchObject({
     tone: 'positive',
@@ -207,7 +170,7 @@ test('gera leituras acionáveis com resultado, categoria e proteção financeira
     amount: 2100,
   })
   expect(insights[2]).toMatchObject({
-    title: 'Reservas seguem fortalecidas',
+    title: 'Reservas como proteção',
     tone: 'positive',
     amount: 5000,
   })
@@ -232,8 +195,8 @@ test('prioriza compromissos vencidos na leitura de proteção financeira', () =>
   })
 
   expect(insights.map((item) => item.id)).toEqual([
-    'period-result-change',
-    'payment-protection',
+    'result',
+    'payments',
   ])
   expect(insights[1]).toMatchObject({
     tone: 'negative',
@@ -253,7 +216,7 @@ test('usa orçamento como próximo passo quando não há alerta de pagamentos ne
   })
 
   expect(insights.at(-1)).toMatchObject({
-    id: 'budget-follow-up',
+    id: 'budget',
     to: '/budgets?month=2026-10',
   })
 })
