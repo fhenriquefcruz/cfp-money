@@ -5,7 +5,6 @@ import {
   ChevronRight,
   CircleDollarSign,
   CreditCard,
-  Info,
   Layers3,
   Plus,
   ReceiptText,
@@ -351,9 +350,7 @@ function CreditCardsCenterContent() {
 
           {center.legacyCount > 0 && (
             <div className="flex flex-col gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-3">
-                <Info size={17} className="mt-0.5 flex-shrink-0 text-[--warning-icon]" />
-                <div>
+              <div>
                   <p className="text-xs font-black text-[--text-primary]">
                     Compras no crédito sem cartão identificado
                   </p>
@@ -361,7 +358,6 @@ function CreditCardsCenterContent() {
                     {center.legacyCount} lançamento{center.legacyCount === 1 ? '' : 's'} ·{' '}
                     {formatCurrency(center.legacyTotal)} fora das faturas.
                   </p>
-                </div>
               </div>
               <Link
                 to="/transactions"
