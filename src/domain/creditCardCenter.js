@@ -1,4 +1,3 @@
-import { calculateInvoiceSchedule } from './creditCards'
 import { buildInvoiceLifecycle, getInvoiceEvents } from './invoiceLifecycle'
 
 function pad(value) {
@@ -79,6 +78,17 @@ export function isStructuredCreditTransaction(transaction = {}) {
   return isLinkedCreditTransaction(transaction)
 }
 
+function inferInvoiceMonth(purchaseDate, card = {}) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(purchaseDate || '')) return ''
+  const [year, month, day] = purchaseDate.split('-').map(Number)
+  const closingDay = Math.max(1, Math.min(31, Number(card.closingDay) || 1))
+  const dueDay = Math.max(1, Math.min(31, Number(card.dueDay) || 1))
+  const closingMonthOffset = day > closingDay ? 1 : 0
+  const dueMonthOffset = dueDay > closingDay ? 0 : 1
+
+  return monthKeyFromDate(new Date(year, month - 1 + closingMonthOffset + dueMonthOffset, 1))
+}
+
 function transactionInvoiceMonth(transaction, card) {
   const explicitMonth = transaction.invoiceMonth || transaction.dueDate?.slice(0, 7)
   if (explicitMonth) return explicitMonth
@@ -86,15 +96,7 @@ function transactionInvoiceMonth(transaction, card) {
   const purchaseDate =
     transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date || ''
 
-  if (card && purchaseDate) {
-    try {
-      return calculateInvoiceSchedule(purchaseDate, card).invoiceMonth
-    } catch {
-      // Mantém compatibilidade com registros antigos incompletos.
-    }
-  }
-
-  return transaction.date?.slice(0, 7) || ''
+  return inferInvoiceMonth(purchaseDate, card) || transaction.date?.slice(0, 7) || ''
 }
 
 function cardSnapshotFromTransaction(transaction) {
