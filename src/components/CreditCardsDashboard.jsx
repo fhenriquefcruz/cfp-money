@@ -359,11 +359,8 @@ function CreditCardsCenterContent() {
                     {formatCurrency(center.legacyTotal)} fora das faturas.
                   </p>
               </div>
-              <Link
-                to="/transactions"
-                className="inline-flex min-h-10 flex-shrink-0 items-center justify-center gap-1 rounded-xl border border-[--warning-border] bg-[--bg-surface] px-3 text-xs font-bold text-[--text-primary] hover:bg-[--bg-hover]"
-              >
-                Revisar
+              <Link to="/transactions" className="text-xs font-bold text-[--text-brand]">
+                Revisar transações
               </Link>
             </div>
           )}
