@@ -193,7 +193,6 @@ export function buildDashboardActionInsights({
         ? 'Regularize para reduzir a pressão no mês.'
         : 'Antecipe para proteger o resultado.',
       to: '/transactions',
-      actionLabel: isOverdue ? 'Regularizar' : 'Ver vencimentos',
     })
   } else if (Number(savingsOverview.totalBalance || 0) > 0) {
     insights.push({
