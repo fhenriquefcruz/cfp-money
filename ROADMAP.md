@@ -233,4 +233,4 @@
 - [x] reutilizar tokens nativos do design system e remover CSS exclusivo desnecessário;
 - [x] validar o encaixe premium e a alternância dos modos do gráfico nos testes visuais;
 - [x] preservar o orçamento original de JavaScript e CSS sem ampliar limites;
-- [ ] homologar os baselines finais do Dashboard em desktop e mobile e concluir o merge.
+- [x] homologar os baselines finais do Dashboard em desktop e mobile antes do merge.
