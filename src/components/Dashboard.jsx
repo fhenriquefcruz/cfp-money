@@ -745,10 +745,35 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <ResponsiveContainer width="100%" height={250}>
+            <div className="mb-3 flex flex-wrap items-center gap-3 text-[10px] font-bold text-[--text-tertiary]">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-[--success-icon]" />
+                Receitas
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-[--danger-icon]" />
+                Despesas
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-0.5 w-4 rounded-full bg-[--brand-600]" />
+                Resultado
+              </span>
+            </div>
+
+            <ResponsiveContainer width="100%" height={270}>
               <AreaChart data={monthlyData} margin={{ top: 8, right: 8, left: 4, bottom: 4 }}>
+                <defs>
+                  <linearGradient id="dashboardIncomeFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--success-icon)" stopOpacity={0.24} />
+                    <stop offset="100%" stopColor="var(--success-icon)" stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="dashboardExpenseFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--danger-icon)" stopOpacity={0.18} />
+                    <stop offset="100%" stopColor="var(--danger-icon)" stopOpacity={0.01} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid
-                  strokeDasharray="3 3"
+                  strokeDasharray="3 5"
                   stroke="var(--border-subtle)"
                   vertical={false}
                 />
@@ -765,32 +790,46 @@ export default function Dashboard() {
                   width={72}
                   tickFormatter={formatAxisCurrency}
                 />
-                <Tooltip content={<ChartTooltip />} />
+                <Tooltip
+                  content={<ChartTooltip />}
+                  cursor={{ stroke: 'var(--border-default)', strokeDasharray: '4 4' }}
+                />
                 <Area
                   type="linear"
                   dataKey="income"
                   name="Receitas"
                   stroke="var(--success-icon)"
-                  strokeWidth={2}
-                  dot={{ r: 3, strokeWidth: 2 }}
-                  activeDot={{ r: 5 }}
-                  fill="transparent"
+                  strokeWidth={2.4}
+                  dot={false}
+                  activeDot={{ r: 5, strokeWidth: 2 }}
+                  fill="url(#dashboardIncomeFill)"
                 />
                 <Area
                   type="linear"
                   dataKey="expenses"
                   name="Despesas"
                   stroke="var(--danger-icon)"
-                  strokeWidth={2}
-                  dot={{ r: 3, strokeWidth: 2 }}
-                  activeDot={{ r: 5 }}
+                  strokeWidth={2.4}
+                  dot={false}
+                  activeDot={{ r: 5, strokeWidth: 2 }}
+                  fill="url(#dashboardExpenseFill)"
+                />
+                <Area
+                  type="linear"
+                  dataKey="balance"
+                  name="Resultado"
+                  stroke="var(--brand-600)"
+                  strokeWidth={2.2}
+                  strokeDasharray="6 4"
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 2 }}
                   fill="transparent"
                 />
               </AreaChart>
             </ResponsiveContainer>
 
             <div
-              className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6"
+              className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6"
               role="group"
               aria-label="Selecionar mês da evolução financeira"
             >
@@ -800,7 +839,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setSelectedMonthKey(item.monthKey)}
                   aria-pressed={selectedTrend?.monthKey === item.monthKey}
-                  className={`min-w-0 rounded-xl border p-2 text-left transition-colors ${
+                  className={`min-w-0 rounded-xl border px-2 py-2.5 text-left transition-colors ${
                     selectedTrend?.monthKey === item.monthKey
                       ? 'border-[--brand-300] bg-[--brand-50]'
                       : 'border-[--border-subtle] bg-[--bg-subtle] hover:bg-[--bg-hover]'
@@ -809,49 +848,54 @@ export default function Dashboard() {
                   <span className="block text-[10px] font-bold text-[--text-secondary]">
                     {item.month}
                   </span>
-                  <span className="mt-1 block truncate text-[10px] tabular-nums text-[--success-text]">
-                    R {formatCurrency(item.income)}
-                  </span>
-                  <span className="block truncate text-[10px] tabular-nums text-[--danger-text]">
-                    D {formatCurrency(item.expenses)}
+                  <span
+                    className={`mt-1 block truncate text-[10px] font-black tabular-nums ${
+                      item.balance >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'
+                    }`}
+                  >
+                    {item.balance > 0 ? '+' : ''}
+                    {formatCurrency(item.balance)}
                   </span>
                 </button>
               ))}
             </div>
 
             {selectedTrend && (
-              <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs font-black text-[--text-primary]">
-                    {selectedTrend.fullMonth}
-                  </p>
-                  <p className="mt-1 text-[10px] text-[--text-tertiary]">
-                    Receitas {formatCurrency(selectedTrend.income)} · Despesas{' '}
-                    {formatCurrency(selectedTrend.expenses)} · Resultado{' '}
-                    {formatCurrency(selectedTrend.balance)}
-                  </p>
+              <div className="mt-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs font-black text-[--text-primary]">
+                      {selectedTrend.fullMonth}
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+                      Leitura consolidada do mês selecionado.
+                    </p>
+                  </div>
+                  <Link
+                    to={`/transactions?month=${selectedTrend.monthKey}`}
+                    className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-brand] hover:bg-[--bg-hover]"
+                  >
+                    Ver lançamentos
+                    <ArrowRight size={12} />
+                  </Link>
                 </div>
-                <Link
-                  to={`/transactions?month=${selectedTrend.monthKey}`}
-                  className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-brand] hover:bg-[--bg-hover]"
-                >
-                  Ver lançamentos
-                  <ArrowRight size={12} />
-                </Link>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {[
+                    ['Receitas', selectedTrend.income, 'text-[--success-text]'],
+                    ['Despesas', selectedTrend.expenses, 'text-[--danger-text]'],
+                    ['Resultado', selectedTrend.balance, selectedTrend.balance >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'],
+                  ].map(([label, value, tone]) => (
+                    <div key={label} className="rounded-xl bg-[--bg-elevated] px-3 py-2.5">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                        {label}
+                      </p>
+                      <p className={`mt-1 truncate text-xs font-black tabular-nums ${tone}`}>
+                        {formatCurrency(value)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
-
-            {trendHighlight && (
-              <p className="mt-3 text-[10px] leading-relaxed text-[--text-tertiary]">
-                Maior mudança de despesas: <strong>{trendHighlight.month}</strong>,{' '}
-                {formatCurrency(Math.abs(trendHighlight.delta))}{' '}
-                {trendHighlight.delta >= 0 ? 'a mais' : 'a menos'} que{' '}
-                {trendHighlight.previousMonth}
-                {trendHighlight.percent !== null
-                  ? ` · ${formatVariation(trendHighlight.percent)}`
-                  : ' · sem base percentual anterior'}
-                .
-              </p>
             )}
           </Card>
         </motion.div>
