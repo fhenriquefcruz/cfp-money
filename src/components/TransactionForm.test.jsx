@@ -8,6 +8,7 @@ const appMocks = vi.hoisted(() => ({
   editTransaction: vi.fn(),
   addTransactionBatch: vi.fn(),
   showNotification: vi.fn(),
+  creditCards: [],
 }))
 
 vi.mock('../contexts/AppContext', () => ({
@@ -20,7 +21,7 @@ vi.mock('../contexts/AppContext', () => ({
     showNotification: appMocks.showNotification,
   }),
   useCreditCards: () => ({
-    creditCards: [],
+    creditCards: appMocks.creditCards,
   }),
   useGoals: () => ({
     goals: [{ id: 'goal-reserve', name: 'Reserva de emergência', emoji: '🛟' }],
@@ -53,7 +54,10 @@ vi.mock('../contexts/AppContext', () => ({
 }))
 
 beforeEach(() => {
-  Object.values(appMocks).forEach((mock) => mock.mockClear())
+  Object.values(appMocks).forEach((mock) => {
+    if (typeof mock?.mockClear === 'function') mock.mockClear()
+  })
+  appMocks.creditCards = []
 })
 
 describe('TransactionForm progressive disclosure', () => {
@@ -248,5 +252,89 @@ describe('TransactionForm savings editing', () => {
         amount: 900,
       }),
     )
+  })
+})
+
+
+describe('TransactionForm credit card integration', () => {
+  const nubank = {
+    id: 'nubank',
+    name: 'Nubank',
+    last4: '1234',
+    closingDay: 24,
+    dueDay: 1,
+    active: true,
+  }
+
+  it('estrutura uma transação antiga vinculada ao cartão ao salvar a edição', async () => {
+    appMocks.creditCards = [nubank]
+
+    render(
+      <TransactionForm
+        isOpen
+        onClose={vi.fn()}
+        transaction={{
+          id: 'legacy-card',
+          type: 'expense',
+          amount: 180,
+          description: 'Compra antiga',
+          categoryId: 'food',
+          categoryName: 'Alimentação',
+          date: '2026-10-20',
+          paymentMethod: 'credit_card',
+          cardId: 'nubank',
+        }}
+      />,
+    )
+
+    expect(screen.getByLabelText('Cartão cadastrado')).toHaveValue('nubank')
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+
+    await vi.waitFor(() => expect(appMocks.editTransaction).toHaveBeenCalledTimes(1))
+    expect(appMocks.editTransaction).toHaveBeenCalledWith(
+      'legacy-card',
+      expect.objectContaining({
+        paymentMethod: 'credit_card',
+        isCreditPurchase: true,
+        cardId: 'nubank',
+        cardName: 'Nubank',
+        purchaseDate: '2026-10-20',
+        dueDate: '2026-11-01',
+        invoiceMonth: '2026-11',
+      }),
+    )
+  })
+
+  it('estrutura cada mês de uma despesa recorrente feita no cartão', async () => {
+    appMocks.creditCards = [nubank]
+
+    render(<TransactionForm isOpen onClose={vi.fn()} transaction={null} />)
+
+    fireEvent.change(screen.getByLabelText(/Valor/), { target: { value: '12000' } })
+    fireEvent.click(screen.getByRole('button', { name: /Alimentação/i }))
+    fireEvent.change(screen.getByLabelText('Pagamento'), {
+      target: { value: 'credit_card' },
+    })
+    fireEvent.change(screen.getByLabelText('Cartão cadastrado'), {
+      target: { value: 'nubank' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /mais opções/i }))
+    fireEvent.click(screen.getByText('Despesa fixa — repetir mensalmente'))
+
+    fireEvent.click(screen.getByRole('button', { name: /Criar 12 meses/i }))
+
+    await vi.waitFor(() => expect(appMocks.addTransactionBatch).toHaveBeenCalledTimes(1))
+    const items = appMocks.addTransactionBatch.mock.calls[0][0]
+
+    expect(items).toHaveLength(12)
+    expect(items[0]).toMatchObject({
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      cardId: 'nubank',
+      recurringNum: 1,
+      recurringOf: 12,
+    })
+    expect(items.every((item) => item.cardId === 'nubank' && item.invoiceMonth)).toBe(true)
   })
 })
