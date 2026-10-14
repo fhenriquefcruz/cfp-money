@@ -1,7 +1,7 @@
 // src/components/PlanAlert.jsx
 // Banner flutuante de alerta de vencimento do plano
 import React, { useState } from 'react'
-import { AlertTriangle, Crown, X } from 'lucide-react'
+import { AlertTriangle, X, Star } from 'lucide-react'
 import { usePlan } from '../contexts/PlanContext'
 
 export default function PlanAlert() {
@@ -27,7 +27,7 @@ export default function PlanAlert() {
       {isExpired ? (
         <AlertTriangle size={16} className="flex-shrink-0" />
       ) : (
-        <Crown size={16} className="flex-shrink-0" />
+        <Star size={16} className="flex-shrink-0 fill-current" />
       )}
       <p className="text-xs font-medium flex-1">
         {isExpired
