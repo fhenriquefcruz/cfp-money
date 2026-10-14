@@ -95,7 +95,8 @@ export function resolveCreditTransactionInvoiceMonth(transaction, card) {
   const explicitMonth = transaction.invoiceMonth || transaction.dueDate?.slice(0, 7)
   if (explicitMonth) return explicitMonth
 
-  const purchaseDate = transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date
+  const purchaseDate =
+    transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date
 
   return inferInvoiceMonth(purchaseDate, card) || transaction.date?.slice(0, 7) || ''
 }
@@ -181,7 +182,8 @@ export function buildCreditCardCenter({
   const selectedTransactions = structured
     .filter(
       (transaction) =>
-        resolveCreditTransactionInvoiceMonth(transaction, cardMap.get(transaction.cardId)) === selectedMonth,
+        resolveCreditTransactionInvoiceMonth(transaction, cardMap.get(transaction.cardId)) ===
+        selectedMonth,
     )
     .sort((first, second) => {
       const firstDate = first.purchaseDate || first.originalPurchaseDate || first.date
@@ -227,7 +229,8 @@ export function buildCreditCardCenter({
       const month = shiftMonthKey(selectedMonth, index)
       const items = structured.filter(
         (transaction) =>
-          resolveCreditTransactionInvoiceMonth(transaction, cardMap.get(transaction.cardId)) === month,
+          resolveCreditTransactionInvoiceMonth(transaction, cardMap.get(transaction.cardId)) ===
+          month,
       )
 
       return {
@@ -242,7 +245,8 @@ export function buildCreditCardCenter({
   const futureInstallments = structured.filter(
     (transaction) =>
       transaction.isInstallment &&
-      resolveCreditTransactionInvoiceMonth(transaction, cardMap.get(transaction.cardId)) > selectedMonth,
+      resolveCreditTransactionInvoiceMonth(transaction, cardMap.get(transaction.cardId)) >
+        selectedMonth,
   )
 
   const selectedLegacy = legacy.filter(

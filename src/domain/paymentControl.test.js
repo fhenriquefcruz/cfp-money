@@ -827,5 +827,4 @@ describe('controle de pagamentos', () => {
       detail: 'paid',
     })
   })
-
 })

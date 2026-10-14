@@ -211,7 +211,6 @@ test('mantém como legado somente compra no crédito sem cartão identificável'
   expect(center.legacyTotal).toBe(75)
 })
 
-
 test('encontra a primeira fatura futura com lançamentos', () => {
   expect(
     firstRelevantForecastMonth(

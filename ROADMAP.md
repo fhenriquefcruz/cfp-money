@@ -235,7 +235,6 @@
 - [x] preservar o orçamento original de JavaScript e CSS sem ampliar limites;
 - [x] homologar os baselines finais do Dashboard em desktop e mobile antes do merge.
 
-
 ## Integração Cartões ↔ Transações — Fase 53
 
 - [x] considerar como obrigação de fatura toda despesa no crédito que possua cartão identificado;
