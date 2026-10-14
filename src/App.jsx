@@ -19,7 +19,6 @@ import Login from './components/Login'
 import PlanAlert from './components/PlanAlert'
 import Onboarding from './components/Onboarding'
 import LegalGate from './components/LegalGate'
-import PwaUpdateNotice from './components/PwaUpdateNotice'
 
 // Notificações globais
 import NotificationStack from './components/NotificationStack'
@@ -37,14 +36,14 @@ const Budgets = lazy(() => import('./components/Budgets'))
 const Reports = lazy(() => import('./components/Reports'))
 const Profile = lazy(() => import('./components/Profile'))
 const Admin = lazy(() => import('./components/Admin'))
+const PwaUpdateNotice = lazy(() => import('./components/PwaUpdateNotice'))
 
 const LoadingScreen = () => (
-  <div
-    className="flex h-screen items-center justify-center bg-[--bg-app]"
-    role="status"
-    aria-label="Carregando"
-  >
-    <div className="size-10 animate-spin rounded-full border-2 border-[--brand-500] border-t-transparent" />
+  <div className="aurora-app-shell flex h-screen items-center justify-center bg-[--bg-app]">
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-10 h-10 border-2 border-[--brand-500] border-t-transparent rounded-full animate-spin" />
+      <p className="text-sm text-[--text-tertiary]">Carregando...</p>
+    </div>
   </div>
 )
 
@@ -87,7 +86,9 @@ const AppRoutes = () => {
               <Onboarding />
               <LegalGate />
               <NotificationStack />
-              <PwaUpdateNotice />
+              <Suspense fallback={null}>
+                <PwaUpdateNotice />
+              </Suspense>
             </div>
           </GoalsProvider>
         </InvoiceEventsProvider>
