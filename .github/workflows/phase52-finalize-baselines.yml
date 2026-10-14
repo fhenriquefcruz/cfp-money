@@ -1,0 +1,43 @@
+name: Phase 52 finalize baselines
+
+on:
+  push:
+    branches:
+      - phase-52-dashboard-premium-data-viz
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: phase-52-dashboard-premium-data-viz
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Generate reviewed Dashboard baselines
+        run: npx playwright test --config=playwright.visual.config.js --update-snapshots --grep "dashboard mantém baseline visual"
+      - name: Normalize roadmap and remove temporary workflows
+        run: |
+          npx prettier --write ROADMAP.md
+          git rm -f .github/workflows/phase52-baseline-review.yml
+          git rm -f .github/workflows/phase52-finalize-baselines.yml
+      - name: Commit reviewed baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ROADMAP.md
+          git add e2e/visual/visual.spec.js-snapshots/dashboard-visual-desktop-chromium-linux.png
+          git add e2e/visual/visual.spec.js-snapshots/dashboard-visual-mobile-chromium-linux.png
+          git add e2e/visual/visual.spec.js-snapshots/dashboard-charts-visual-desktop-chromium-linux.png
+          git add e2e/visual/visual.spec.js-snapshots/dashboard-charts-visual-mobile-chromium-linux.png
+          git add -u .github/workflows
+          git commit -m "Phase 52: homologate Dashboard visual baselines"
+          git push origin HEAD:phase-52-dashboard-premium-data-viz
