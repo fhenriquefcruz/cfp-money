@@ -191,7 +191,9 @@ export function buildDashboardActionInsights({
       amount: Number(
         isOverdue ? paymentSummary.overdueAmount || 0 : paymentSummary.dueNext7DaysAmount || 0,
       ),
-      detail: isOverdue ? 'Regularize para reduzir a pressão no mês.' : 'Antecipe para proteger o resultado.',
+      detail: isOverdue
+        ? 'Regularize para reduzir a pressão no mês.'
+        : 'Antecipe para proteger o resultado.',
       to: '/transactions',
       actionLabel: isOverdue ? 'Regularizar' : 'Ver vencimentos',
     })
