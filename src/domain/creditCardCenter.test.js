@@ -162,3 +162,52 @@ test('navega e rotula meses em português', () => {
   expect(shiftMonthKey('2026-12', 1)).toBe('2027-01')
   expect(labelForMonth('2026-08')).toBe('Agosto de 2026')
 })
+
+
+test('reconcilia transação antiga vinculada ao cartão mesmo sem flag estruturada', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'legacy-linked',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'nubank',
+        amount: 275,
+        date: '2026-07-10',
+        description: 'Compra antiga vinculada',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+    now: new Date(2026, 6, 20),
+  })
+
+  expect(center.selectedTotal).toBe(275)
+  expect(center.selectedItemCount).toBe(1)
+  expect(center.selectedTransactions[0]).toMatchObject({
+    id: 'legacy-linked',
+    cardId: 'nubank',
+  })
+  expect(center.legacyCount).toBe(0)
+})
+
+test('usa vencimento legado como mês da fatura quando já estiver disponível', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'legacy-due',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'inter',
+        amount: 90,
+        date: '2026-07-05',
+        dueDate: '2026-09-17',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-09',
+  })
+
+  expect(center.selectedTotal).toBe(90)
+  expect(center.selectedItemCount).toBe(1)
+})
