@@ -538,7 +538,7 @@ export default function Dashboard() {
       </div>
 
       {/* Faixa operacional: compromissos do mês + patrimônio reservado */}
-      <div className="dashboard-operational-grid grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+      <div className="dashboard-executive-grid">
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.08 }}>
           <PaymentControlCard summary={paymentSummary} loading={isLoading} />
         </motion.div>
