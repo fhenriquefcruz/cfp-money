@@ -210,3 +210,15 @@
 - [x] revisar e homologar os baselines do Dashboard em desktop e mobile;
 - [x] estabilizar a prontidão de dados do baseline visual de Metas sem alterar seu baseline;
 - [x] preservar o orçamento de performance e validar todos os gates antes e depois do merge.
+
+
+## Composição operacional do Dashboard — Fase 51
+
+- [x] reduzir a verticalização do Dashboard sem remover informação;
+- [x] compor Controle de pagamentos e Poupança e Reservas na mesma faixa operacional no desktop;
+- [x] preservar o empilhamento natural dos dois cards no mobile;
+- [x] reutilizar a grade executiva existente sem adicionar novo CSS de layout;
+- [x] limitar a prévia de Reservas a três destinos para preservar densidade visual;
+- [x] validar por geometria que Pagamentos e Reservas ficam lado a lado no desktop e empilhados no mobile;
+- [x] preservar o orçamento de performance original;
+- [x] revisar o baseline desktop do Dashboard antes do merge.
