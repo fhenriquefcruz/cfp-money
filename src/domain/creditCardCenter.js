@@ -1,3 +1,4 @@
+import { calculateInvoiceSchedule } from './creditCards'
 import { buildInvoiceLifecycle, getInvoiceEvents } from './invoiceLifecycle'
 
 function pad(value) {
@@ -70,18 +71,27 @@ export function isStructuredCreditTransaction(transaction = {}) {
   return Boolean(
     transaction.type === 'expense' &&
     transaction.paymentMethod === 'credit_card' &&
-    transaction.isCreditPurchase &&
     transaction.cardId,
   )
 }
 
-function transactionInvoiceMonth(transaction) {
-  return (
-    transaction.invoiceMonth ||
-    transaction.dueDate?.slice(0, 7) ||
-    transaction.date?.slice(0, 7) ||
-    ''
-  )
+function transactionInvoiceMonth(transaction, cardMap) {
+  if (transaction.invoiceMonth) return transaction.invoiceMonth
+  if (transaction.dueDate) return transaction.dueDate.slice(0, 7)
+
+  const card = cardMap?.get(transaction.cardId)
+  const purchaseDate =
+    transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date || ''
+
+  if (card && purchaseDate) {
+    try {
+      return calculateInvoiceSchedule(purchaseDate, card).invoiceMonth
+    } catch {
+      // Compatibilidade defensiva: cai para a data contábil quando a origem é inválida.
+    }
+  }
+
+  return transaction.date?.slice(0, 7) || ''
 }
 
 function cardSnapshotFromTransaction(transaction) {
@@ -163,7 +173,7 @@ export function buildCreditCardCenter({
   })
 
   const selectedTransactions = structured
-    .filter((transaction) => transactionInvoiceMonth(transaction) === selectedMonth)
+    .filter((transaction) => transactionInvoiceMonth(transaction, cardMap) === selectedMonth)
     .sort((first, second) => {
       const firstDate = first.purchaseDate || first.originalPurchaseDate || first.date
       const secondDate = second.purchaseDate || second.originalPurchaseDate || second.date
@@ -207,7 +217,7 @@ export function buildCreditCardCenter({
     (_, index) => {
       const month = shiftMonthKey(selectedMonth, index)
       const items = structured.filter(
-        (transaction) => transactionInvoiceMonth(transaction) === month,
+        (transaction) => transactionInvoiceMonth(transaction, cardMap) === month,
       )
 
       return {
@@ -221,7 +231,7 @@ export function buildCreditCardCenter({
 
   const futureInstallments = structured.filter(
     (transaction) =>
-      transaction.isInstallment && transactionInvoiceMonth(transaction) > selectedMonth,
+      transaction.isInstallment && transactionInvoiceMonth(transaction, cardMap) > selectedMonth,
   )
 
   const selectedLegacy = legacy.filter(
