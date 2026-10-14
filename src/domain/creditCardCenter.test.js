@@ -162,3 +162,51 @@ test('navega e rotula meses em português', () => {
   expect(shiftMonthKey('2026-12', 1)).toBe('2027-01')
   expect(labelForMonth('2026-08')).toBe('Agosto de 2026')
 })
+
+
+test('recupera compra antiga vinculada ao cartão mesmo sem flag estruturada', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'legacy-linked',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'inter',
+        amount: 180,
+        date: '2026-07-20',
+        description: 'Compra antiga vinculada',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+    now: new Date(2026, 6, 20),
+  })
+
+  expect(center.selectedTotal).toBe(180)
+  expect(center.selectedItemCount).toBe(1)
+  expect(center.legacyCount).toBe(0)
+  expect(center.invoices.find((invoice) => invoice.card.id === 'inter')).toMatchObject({
+    purchaseTotal: 180,
+    itemCount: 1,
+  })
+})
+
+test('mantém como legado somente compra no crédito sem cartão identificável', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'legacy-unlinked',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        amount: 75,
+        date: '2026-08-03',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+  })
+
+  expect(center.selectedTotal).toBe(0)
+  expect(center.legacyCount).toBe(1)
+  expect(center.legacyTotal).toBe(75)
+})
