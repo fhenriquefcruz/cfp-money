@@ -352,7 +352,7 @@ function CreditCardsCenterContent() {
             <div className="flex flex-col gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                   <p className="text-xs font-black text-[--text-primary]">
-                    Compras no crédito sem cartão identificado
+                    Compras sem cartão
                   </p>
                   <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
                     {center.legacyCount} lançamento{center.legacyCount === 1 ? '' : 's'} ·{' '}
