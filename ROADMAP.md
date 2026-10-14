@@ -211,7 +211,6 @@
 - [x] estabilizar a prontidão de dados do baseline visual de Metas sem alterar seu baseline;
 - [x] preservar o orçamento de performance e validar todos os gates antes e depois do merge.
 
-
 ## Composição operacional do Dashboard — Fase 51
 
 - [x] reduzir a verticalização do Dashboard sem remover informação;
