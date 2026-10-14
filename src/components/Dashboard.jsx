@@ -68,9 +68,7 @@ const formatAxisCurrency = (value) =>
   }).format(Number(value) || 0)}`
 
 const formatVariation = (value) =>
-  value == null
-    ? 'sem base'
-    : `${value > 0 ? '+' : ''}${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% vs. mês anterior`
+  value == null ? 'sem base' : `${Math.round(value)}% vs. mês anterior`
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
