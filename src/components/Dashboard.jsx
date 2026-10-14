@@ -155,7 +155,7 @@ function MonthAttentionCard({ items }) {
         </div>
       ) : (
         <div className="dashboard-attention-card__list">
-          {items.map(({ title, detail, actionLabel, to }) => (
+          {items.map(({ title, detail, to }) => (
             <Link key={title} to={to} className="dashboard-attention-card__item">
               <div className="dashboard-attention-card__item-icon">
                 <Zap size={16} />
@@ -164,7 +164,7 @@ function MonthAttentionCard({ items }) {
                 <p>{title}</p>
                 <span>{detail}</span>
                 <strong>
-                  {actionLabel || 'Ver detalhes'}
+                  Abrir
                   <ChevronRight size={11} />
                 </strong>
               </div>
