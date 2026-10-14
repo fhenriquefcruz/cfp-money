@@ -195,6 +195,7 @@ export default function Dashboard() {
 
   const [viewDate, setViewDate] = useState(new Date())
   const [trendMonths, setTrendMonths] = useState(6)
+  const [trendView, setTrendView] = useState('flow')
   const [selectedMonthKey, setSelectedMonthKey] = useState('')
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
@@ -237,6 +238,18 @@ export default function Dashboard() {
   const trendHighlight = useMemo(() => getLargestMonthlyExpenseChange(monthlyData), [monthlyData])
   const selectedTrend =
     monthlyData.find((item) => item.monthKey === selectedMonthKey) || monthlyData.at(-1) || null
+  const trendWindowSummary = useMemo(
+    () =>
+      monthlyData.reduce(
+        (summary, item) => ({
+          income: summary.income + item.income,
+          expenses: summary.expenses + item.expenses,
+          balance: summary.balance + item.balance,
+        }),
+        { income: 0, expenses: 0, balance: 0 },
+      ),
+    [monthlyData],
+  )
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
   const monthBounds = useMemo(() => getCalendarMonthBounds(viewDate), [year, month])
@@ -630,52 +643,56 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Resumo executivo: indicadores essenciais e análise do Money */}
+      {/* Inteligência executiva: ritmo, saúde e Money em uma faixa coerente */}
       <motion.div
         className="dashboard-bento-grid grid min-w-0 grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <div className="dashboard-compact-kpis grid min-w-0 gap-2 sm:gap-4 md:grid-cols-[1.15fr_0.85fr] xl:col-span-5 xl:grid-cols-1 xl:grid-rows-2">
-          <Card variant="elevated" className="dashboard-forecast-card h-full shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="mb-1 flex items-center gap-1.5">
-                  <Zap size={14} className="text-[--brand-600]" />
-                  <p className="text-xs font-semibold text-[--text-tertiary]">Ritmo de gastos</p>
-                  <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
-                </div>
-                {isLoading ? (
-                  <div className="h-7 w-28 animate-pulse rounded bg-[--bg-hover]" />
-                ) : (
-                  <p className="text-2xl font-black tabular-nums text-[--text-primary]">
-                    {formatCurrency(forecast)}
-                  </p>
-                )}
-                <p className="dashboard-forecast-helper mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
-                  Média dos últimos 3 meses para orientar o planejamento.
+        <Card
+          variant="elevated"
+          className="dashboard-forecast-card col-span-1 h-full shadow-sm xl:col-span-3"
+        >
+          <div className="flex h-full items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="mb-1 flex items-center gap-1.5">
+                <Zap size={14} className="text-[--brand-600]" />
+                <p className="text-xs font-semibold text-[--text-tertiary]">Ritmo de gastos</p>
+                <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
+              </div>
+              {isLoading ? (
+                <div className="h-7 w-28 animate-pulse rounded bg-[--bg-hover]" />
+              ) : (
+                <p className="text-2xl font-black tabular-nums text-[--text-primary]">
+                  {formatCurrency(forecast)}
                 </p>
-              </div>
-              <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
-                <Zap size={16} />
-              </div>
+              )}
+              <p className="dashboard-forecast-helper mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
+                Média dos últimos 3 meses para orientar o planejamento.
+              </p>
             </div>
-          </Card>
-
-          <Card variant="elevated" className="dashboard-health-card h-full shadow-sm">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-[--brand-600]" />
-                <p className="text-xs font-semibold text-[--text-tertiary]">Saúde financeira</p>
-                <InfoTooltip text="Indicador de 0 a 100 baseado em equilíbrio do período, reserva, aderência a orçamentos, atrasos e relação despesas/receitas. Não representa diagnóstico financeiro completo." />
-              </div>
+            <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
+              <Zap size={16} />
             </div>
-            <FinancialHealthScore report={healthReport} />
-          </Card>
-        </div>
+          </div>
+        </Card>
 
-        <div className="dashboard-money-insight col-span-2 min-w-0 xl:col-span-7">
+        <Card
+          variant="elevated"
+          className="dashboard-health-card col-span-1 h-full shadow-sm xl:col-span-3"
+        >
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 size={14} className="text-[--brand-600]" />
+              <p className="text-xs font-semibold text-[--text-tertiary]">Saúde financeira</p>
+              <InfoTooltip text="Indicador de 0 a 100 baseado em equilíbrio do período, reserva, aderência a orçamentos, atrasos e relação despesas/receitas. Não representa diagnóstico financeiro completo." />
+            </div>
+          </div>
+          <FinancialHealthScore report={healthReport} />
+        </Card>
+
+        <div className="dashboard-money-insight col-span-2 min-w-0 xl:col-span-6">
           <MoneyInsightCard referenceDate={viewDate} />
         </div>
       </motion.div>
@@ -683,90 +700,169 @@ export default function Dashboard() {
       {/* Análise principal: evolução e composição */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.15 }}>
-          <Card className="h-full">
-            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-[--text-primary]">Evolução financeira</h3>
-                  <InfoTooltip text="Valores agrupados pela data da movimentação. As linhas ligam pontos mensais reais, sem estimar valores entre os meses." />
+          <Card className="dashboard-finance-chart h-full">
+            <div className="dashboard-finance-chart__header mb-4 flex flex-col gap-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-[--text-primary]">Evolução financeira</h3>
+                    <InfoTooltip text="Valores agrupados pela data da movimentação. Clique no gráfico ou use o seletor de meses para detalhar um período." />
+                  </div>
+                  <p className="mt-1 text-xs text-[--text-tertiary]">
+                    Compare entradas e saídas ou isole o resultado líquido do período.
+                  </p>
                 </div>
-                <p className="mt-1 text-xs text-[--text-tertiary]">
-                  Selecione um mês para ver os valores exatos e abrir os lançamentos.
-                </p>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div
+                    className="inline-flex rounded-xl border border-[--border-default] bg-[--bg-subtle] p-1"
+                    aria-label="Visualização da evolução financeira"
+                  >
+                    {[
+                      ['flow', 'Fluxo'],
+                      ['result', 'Resultado'],
+                    ].map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setTrendView(value)}
+                        aria-pressed={trendView === value}
+                        className={`min-h-9 rounded-lg px-3 text-xs font-bold transition-colors ${
+                          trendView === value
+                            ? 'bg-[--bg-elevated] text-[--text-primary] shadow-sm'
+                            : 'text-[--text-tertiary] hover:text-[--text-primary]'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div
+                    className="inline-flex rounded-xl border border-[--border-default] bg-[--bg-subtle] p-1"
+                    aria-label="Período da evolução financeira"
+                  >
+                    {[6, 12].map((months) => {
+                      const disabled = months === 12 && availableMonthCount < 12
+                      return (
+                        <button
+                          key={months}
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => setTrendMonths(months)}
+                          aria-pressed={trendMonths === months}
+                          className={`min-h-9 rounded-lg px-3 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                            trendMonths === months
+                              ? 'bg-[--bg-elevated] text-[--text-primary] shadow-sm'
+                              : 'text-[--text-tertiary] hover:text-[--text-primary]'
+                          }`}
+                        >
+                          {months}m
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
               </div>
 
-              <div
-                className="inline-flex rounded-xl border border-[--border-default] bg-[--bg-subtle] p-1"
-                aria-label="Período da evolução financeira"
-              >
-                {[6, 12].map((months) => {
-                  const disabled = months === 12 && availableMonthCount < 12
-                  return (
-                    <button
-                      key={months}
-                      type="button"
-                      disabled={disabled}
-                      onClick={() => setTrendMonths(months)}
-                      aria-pressed={trendMonths === months}
-                      className={`min-h-9 rounded-lg px-3 text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                        trendMonths === months
-                          ? 'bg-[--bg-elevated] text-[--text-primary] shadow-sm'
-                          : 'text-[--text-tertiary] hover:text-[--text-primary]'
-                      }`}
-                    >
-                      {months} meses
-                    </button>
-                  )
-                })}
+              <div className="dashboard-finance-chart__summary grid grid-cols-3 gap-2">
+                {[
+                  ['Entradas', trendWindowSummary.income, 'income'],
+                  ['Saídas', trendWindowSummary.expenses, 'expense'],
+                  ['Resultado', trendWindowSummary.balance, 'result'],
+                ].map(([label, value, tone]) => (
+                  <div key={label} className="dashboard-finance-chart__summary-item">
+                    <span>{label}</span>
+                    <strong data-tone={tone}>{formatCurrency(value)}</strong>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={monthlyData} margin={{ top: 8, right: 8, left: 4, bottom: 4 }}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--border-subtle)"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 11, fill: 'var(--text-tertiary)' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={72}
-                  tickFormatter={formatAxisCurrency}
-                />
-                <Tooltip content={<ChartTooltip />} />
-                <Area
-                  type="linear"
-                  dataKey="income"
-                  name="Receitas"
-                  stroke="var(--success-icon)"
-                  strokeWidth={2}
-                  dot={{ r: 3, strokeWidth: 2 }}
-                  activeDot={{ r: 5 }}
-                  fill="transparent"
-                />
-                <Area
-                  type="linear"
-                  dataKey="expenses"
-                  name="Despesas"
-                  stroke="var(--danger-icon)"
-                  strokeWidth={2}
-                  dot={{ r: 3, strokeWidth: 2 }}
-                  activeDot={{ r: 5 }}
-                  fill="transparent"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div className="dashboard-finance-chart__canvas">
+              <ResponsiveContainer width="100%" height={280}>
+                <AreaChart
+                  data={monthlyData}
+                  margin={{ top: 12, right: 10, left: 4, bottom: 4 }}
+                  onClick={(state) => {
+                    const monthKey = state?.activePayload?.[0]?.payload?.monthKey
+                    if (monthKey) setSelectedMonthKey(monthKey)
+                  }}
+                >
+                  <defs>
+                    <linearGradient id="dashboardIncomeGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--dashboard-chart-income)" stopOpacity={0.22} />
+                      <stop offset="100%" stopColor="var(--dashboard-chart-income)" stopOpacity={0.01} />
+                    </linearGradient>
+                    <linearGradient id="dashboardExpenseGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--dashboard-chart-expense)" stopOpacity={0.18} />
+                      <stop offset="100%" stopColor="var(--dashboard-chart-expense)" stopOpacity={0.01} />
+                    </linearGradient>
+                    <linearGradient id="dashboardResultGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--dashboard-chart-result)" stopOpacity={0.24} />
+                      <stop offset="100%" stopColor="var(--dashboard-chart-result)" stopOpacity={0.015} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="2 7"
+                    stroke="var(--dashboard-chart-grid)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: 'var(--text-tertiary)' }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={72}
+                    tickFormatter={formatAxisCurrency}
+                  />
+                  <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'var(--border-default)' }} />
+                  {trendView === 'flow' ? (
+                    <>
+                      <Area
+                        type="monotone"
+                        dataKey="income"
+                        name="Receitas"
+                        stroke="var(--dashboard-chart-income)"
+                        strokeWidth={2.5}
+                        dot={false}
+                        activeDot={{ r: 4, strokeWidth: 2 }}
+                        fill="url(#dashboardIncomeGradient)"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="expenses"
+                        name="Despesas"
+                        stroke="var(--dashboard-chart-expense)"
+                        strokeWidth={2.5}
+                        dot={false}
+                        activeDot={{ r: 4, strokeWidth: 2 }}
+                        fill="url(#dashboardExpenseGradient)"
+                      />
+                    </>
+                  ) : (
+                    <Area
+                      type="monotone"
+                      dataKey="balance"
+                      name="Resultado"
+                      stroke="var(--dashboard-chart-result)"
+                      strokeWidth={2.75}
+                      dot={false}
+                      activeDot={{ r: 4, strokeWidth: 2 }}
+                      fill="url(#dashboardResultGradient)"
+                    />
+                  )}
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
 
             <div
-              className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6"
+              className="dashboard-finance-chart__month-selector scrollbar-none mt-3 flex gap-1.5 overflow-x-auto pb-1"
               role="group"
               aria-label="Selecionar mês da evolução financeira"
             >
@@ -776,36 +872,34 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setSelectedMonthKey(item.monthKey)}
                   aria-pressed={selectedTrend?.monthKey === item.monthKey}
-                  className={`min-w-0 rounded-xl border p-2 text-left transition-colors ${
+                  className={`min-h-9 flex-shrink-0 rounded-full border px-3 text-[10px] font-bold transition-colors ${
                     selectedTrend?.monthKey === item.monthKey
-                      ? 'border-[--brand-300] bg-[--brand-50]'
-                      : 'border-[--border-subtle] bg-[--bg-subtle] hover:bg-[--bg-hover]'
+                      ? 'border-[--brand-300] bg-[--brand-50] text-[--text-primary]'
+                      : 'border-[--border-subtle] bg-[--bg-subtle] text-[--text-tertiary] hover:bg-[--bg-hover]'
                   }`}
                 >
-                  <span className="block text-[10px] font-bold text-[--text-secondary]">
-                    {item.month}
-                  </span>
-                  <span className="mt-1 block truncate text-[10px] tabular-nums text-[--success-text]">
-                    R {formatCurrency(item.income)}
-                  </span>
-                  <span className="block truncate text-[10px] tabular-nums text-[--danger-text]">
-                    D {formatCurrency(item.expenses)}
-                  </span>
+                  {item.month}
                 </button>
               ))}
             </div>
 
             {selectedTrend && (
-              <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs font-black text-[--text-primary]">
-                    {selectedTrend.fullMonth}
-                  </p>
-                  <p className="mt-1 text-[10px] text-[--text-tertiary]">
-                    Receitas {formatCurrency(selectedTrend.income)} · Despesas{' '}
-                    {formatCurrency(selectedTrend.expenses)} · Resultado{' '}
-                    {formatCurrency(selectedTrend.balance)}
-                  </p>
+              <div className="dashboard-finance-chart__selected mt-3 grid gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                <div className="min-w-0">
+                  <p className="text-xs font-black text-[--text-primary]">{selectedTrend.fullMonth}</p>
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[--text-tertiary]">
+                    <span>Receitas {formatCurrency(selectedTrend.income)}</span>
+                    <span>Despesas {formatCurrency(selectedTrend.expenses)}</span>
+                    <strong
+                      className={
+                        selectedTrend.balance >= 0
+                          ? 'text-[--success-text]'
+                          : 'text-[--danger-text]'
+                      }
+                    >
+                      Resultado {formatCurrency(selectedTrend.balance)}
+                    </strong>
+                  </div>
                 </div>
                 <Link
                   to={`/transactions?month=${selectedTrend.monthKey}`}
@@ -817,7 +911,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            {trendHighlight && (
+            {trendHighlight && trendView === 'flow' && (
               <p className="mt-3 text-[10px] leading-relaxed text-[--text-tertiary]">
                 Maior mudança de despesas: <strong>{trendHighlight.month}</strong>,{' '}
                 {formatCurrency(Math.abs(trendHighlight.delta))}{' '}
@@ -833,14 +927,14 @@ export default function Dashboard() {
         </motion.div>
 
         <motion.div {...fade} transition={{ delay: 0.2 }}>
-          <Card className="h-full">
+          <Card className="dashboard-spending-composition h-full">
             <div className="mb-3">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-[--text-primary]">Composição dos gastos</h3>
                 <InfoTooltip text="Despesas do mês pela data da movimentação, ordenadas do maior para o menor gasto." />
               </div>
               <p className="mt-1 text-xs text-[--text-tertiary]">
-                Valor, participação no total e comparação com o mês anterior.
+                Ranking das categorias que mais pressionam o mês.
               </p>
             </div>
 
@@ -864,56 +958,76 @@ export default function Dashboard() {
                 Nenhuma despesa no mês
               </p>
             ) : (
-              <div className="space-y-3">
-                {categoryBreakdown.slice(0, 6).map((cat) => {
-                  const width = Math.max(4, cat.sharePercent)
-                  const isOtherLarge =
-                    String(cat.categoryName || '').toLowerCase() === 'outros' &&
-                    cat.sharePercent >= 25
+              <>
+                <div className="dashboard-spending-composition__headline mb-4 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                    Top 3 concentram
+                  </span>
+                  <strong className="mt-1 block text-xl font-black tabular-nums text-[--text-primary]">
+                    {categoryBreakdown
+                      .slice(0, 3)
+                      .reduce((total, category) => total + category.sharePercent, 0)
+                      .toLocaleString('pt-BR', { maximumFractionDigits: 1 })}
+                    %
+                  </strong>
+                  <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+                    das despesas categorizadas deste mês
+                  </p>
+                </div>
 
-                  return (
-                    <Link
-                      key={cat.categoryId || cat.categoryName}
-                      to={`/transactions?category=${encodeURIComponent(cat.categoryId || '')}&month=${budgetOverview.monthKey}`}
-                      className="group block rounded-xl border border-transparent p-1.5 transition-colors hover:border-[--border-default] hover:bg-[--bg-hover]"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-xs font-bold text-[--text-primary]">
-                            {cat.categoryName}
-                          </p>
-                          <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                            {cat.sharePercent.toLocaleString('pt-BR', {
-                              maximumFractionDigits: 1,
-                            })}
-                            % do total · {formatVariation(cat.changePercent)}
-                          </p>
+                <div className="space-y-2.5">
+                  {categoryBreakdown.slice(0, 6).map((cat, index) => {
+                    const width = Math.max(4, cat.sharePercent)
+                    const isOtherLarge =
+                      String(cat.categoryName || '').toLowerCase() === 'outros' &&
+                      cat.sharePercent >= 25
+
+                    return (
+                      <Link
+                        key={cat.categoryId || cat.categoryName}
+                        to={`/transactions?category=${encodeURIComponent(cat.categoryId || '')}&month=${budgetOverview.monthKey}`}
+                        className="group block rounded-xl border border-transparent p-1.5 transition-colors hover:border-[--border-default] hover:bg-[--bg-hover]"
+                      >
+                        <div className="flex items-start gap-2.5">
+                          <span className="dashboard-spending-composition__rank">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-xs font-bold text-[--text-primary]">
+                                  {cat.categoryName}
+                                </p>
+                                <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+                                  {cat.sharePercent.toLocaleString('pt-BR', {
+                                    maximumFractionDigits: 1,
+                                  })}
+                                  % · {formatVariation(cat.changePercent)}
+                                </p>
+                              </div>
+                              <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
+                                {formatCurrency(cat.total)}
+                              </span>
+                            </div>
+                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[--bg-hover]">
+                              <div
+                                className="dashboard-spending-composition__bar h-full rounded-full transition-[width]"
+                                style={{ width: `${Math.min(100, width)}%` }}
+                                aria-hidden="true"
+                              />
+                            </div>
+                            {isOtherLarge && (
+                              <p className="mt-1.5 text-[10px] font-semibold text-[--warning-text]">
+                                “Outros” concentra uma parcela relevante; revise a classificação.
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
-                          {formatCurrency(cat.total)}
-                        </span>
-                      </div>
-                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[--bg-hover]">
-                        <div
-                          className="h-full rounded-full bg-[--brand-600] transition-[width]"
-                          style={{ width: `${Math.min(100, width)}%` }}
-                          aria-hidden="true"
-                        />
-                      </div>
-                      {isOtherLarge && (
-                        <p className="mt-1.5 text-[10px] font-semibold text-[--warning-text]">
-                          “Outros” concentra uma parcela relevante dos gastos; abra para revisar a
-                          composição.
-                        </p>
-                      )}
-                      <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand] opacity-80 group-hover:opacity-100">
-                        Ver lançamentos
-                        <ArrowRight size={11} />
-                      </span>
-                    </Link>
-                  )
-                })}
-              </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </>
             )}
           </Card>
         </motion.div>
