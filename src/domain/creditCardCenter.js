@@ -16,17 +16,6 @@ function isoDate(year, monthIndex, day) {
   return `${year}-${pad(monthIndex + 1)}-${pad(clampDay(year, monthIndex, day))}`
 }
 
-function inferredInvoiceMonth(purchaseDate, card = {}) {
-  const [year, month, day] = String(purchaseDate || '').split('-').map(Number)
-  if (!year || !month || !day) return ''
-
-  const closingDay = Number(card.closingDay) || 1
-  const offset =
-    (day > closingDay ? 1 : 0) + ((Number(card.dueDay) || 1) > closingDay ? 0 : 1)
-
-  return shiftMonthKey(`${year}-${pad(month)}`, offset)
-}
-
 export function monthKeyFromDate(value = new Date()) {
   if (typeof value === 'string' && /^\d{4}-\d{2}/.test(value)) {
     return value.slice(0, 7)
@@ -93,11 +82,17 @@ function transactionInvoiceMonth(transaction, cardMap) {
   const purchaseDate =
     transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date || ''
 
-  return (
-    (card && purchaseDate ? inferredInvoiceMonth(purchaseDate, card) : '') ||
-    transaction.date?.slice(0, 7) ||
-    ''
-  )
+  if (card && purchaseDate) {
+    const [year, month, day] = String(purchaseDate).split('-').map(Number)
+    if (year && month && day) {
+      const closingDay = Number(card.closingDay) || 1
+      const offset =
+        (day > closingDay ? 1 : 0) + ((Number(card.dueDay) || 1) > closingDay ? 0 : 1)
+      return shiftMonthKey(`${year}-${pad(month)}`, offset)
+    }
+  }
+
+  return transaction.date?.slice(0, 7) || ''
 }
 
 function cardSnapshotFromTransaction(transaction) {
