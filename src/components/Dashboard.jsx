@@ -750,6 +750,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
+            </div>
 
             <div className="-mx-1 rounded-2xl">
               <ResponsiveContainer width="100%" height={280}>
