@@ -20,6 +20,13 @@ async function prepareVisualPage(page, route, selector) {
   await page.clock.install({ time: FIXED_TIME })
   await prepareE2EPage(page, route)
   await expect(page.locator(selector)).toBeVisible()
+
+  if (route === '/goals') {
+    await expect(
+      page.locator('.goals-card-grid').getByText('Entrada do carro', { exact: true }),
+    ).toBeVisible()
+  }
+
   await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'light' })
   await page.evaluate(() => document.fonts.ready)
   await page.waitForTimeout(250)
