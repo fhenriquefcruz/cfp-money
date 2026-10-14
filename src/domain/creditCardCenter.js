@@ -76,7 +76,7 @@ export function isLinkedCreditTransaction(transaction = {}) {
 }
 
 export function isStructuredCreditTransaction(transaction = {}) {
-  return Boolean(isLinkedCreditTransaction(transaction) && transaction.isCreditPurchase)
+  return isLinkedCreditTransaction(transaction)
 }
 
 function transactionInvoiceMonth(transaction, card) {
