@@ -336,8 +336,7 @@ export default function Dashboard() {
         budgetMonthKey: budgetOverview.monthKey,
       }).map((item) => ({
         ...item,
-        detail:
-          item.amount === null ? item.detail : `${formatCurrency(item.amount)} · ${item.detail}`,
+        detail: item.amount ? `${formatCurrency(item.amount)} · ${item.detail}` : item.detail,
       })),
     [
       currentSummary,
