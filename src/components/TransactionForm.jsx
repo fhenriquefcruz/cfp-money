@@ -206,7 +206,7 @@ export default function TransactionForm({
         amount: maskCurrency(String(Math.round(transaction.amount * 100))),
         description: transaction.description || '',
         categoryId: transaction.categoryId || '',
-        date: transaction.date,
+        date: transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date,
         dueDate: transaction.dueDate || '',
         paymentMethod: transaction.paymentMethod || 'pix',
         cardId: transaction.cardId || '',
@@ -300,6 +300,14 @@ export default function TransactionForm({
     if (isSavings && !form.savingsDestination.trim())
       errs.savingsDestination = 'Informe onde este dinheiro está guardado'
     if (!form.date) errs.date = 'Data obrigatória'
+    if (
+      isExpense &&
+      form.paymentMethod === 'credit_card' &&
+      activeCreditCards.length > 0 &&
+      !form.cardId
+    ) {
+      errs.cardId = 'Selecione o cartão usado nesta compra'
+    }
     if (form.isInstallment && parseInt(form.installments) < 2)
       errs.installments = 'Mínimo 2 parcelas'
     setErrors(errs)
@@ -344,14 +352,32 @@ export default function TransactionForm({
 
     try {
       if (isEditing) {
-        const editData = {
-          ...baseData,
-          amount: baseAmount,
-          date: form.date,
-        }
+        let editData
 
-        if (!transaction.isCreditPurchase) {
-          editData.dueDate = isExpense ? form.dueDate || '' : ''
+        if (isExpense && form.paymentMethod === 'credit_card' && selectedCreditCard) {
+          editData = buildCreditTransaction({
+            baseData,
+            totalAmount: baseAmount,
+            purchaseDate: form.date,
+            card: selectedCreditCard,
+          })
+        } else {
+          editData = {
+            ...baseData,
+            amount: baseAmount,
+            date: form.date,
+            dueDate: isExpense ? form.dueDate || '' : '',
+            cardId: '',
+            cardName: '',
+            cardLast4: '',
+            cardClosingDay: '',
+            cardDueDay: '',
+            invoiceClosingDate: '',
+            invoiceMonth: '',
+            purchaseDate: '',
+            originalPurchaseDate: '',
+            isCreditPurchase: false,
+          }
         }
 
         await editTransaction(transaction.id, editData)
@@ -396,18 +422,40 @@ export default function TransactionForm({
         // Recorrente (receita OU despesa)
         const months = parseInt(form.recurringMonths) || 12
         const groupId = `${Date.now()}_${Math.random().toString(36).slice(2)}`
-        const items = Array.from({ length: months }, (_, i) => ({
-          ...baseData,
-          amount: baseAmount,
-          date: format(addMonths(new Date(form.date + 'T00:00:00'), i), 'yyyy-MM-dd'),
-          dueDate:
-            isExpense && form.dueDate
-              ? format(addMonths(new Date(form.dueDate + 'T00:00:00'), i), 'yyyy-MM-dd')
-              : '',
-          recurringGroupId: groupId,
-          recurringNum: i + 1,
-          recurringOf: months,
-        }))
+        const items = Array.from({ length: months }, (_, i) => {
+          const occurrenceDate = format(
+            addMonths(new Date(form.date + 'T00:00:00'), i),
+            'yyyy-MM-dd',
+          )
+          const recurringMeta = {
+            recurringGroupId: groupId,
+            recurringNum: i + 1,
+            recurringOf: months,
+          }
+
+          if (isExpense && form.paymentMethod === 'credit_card' && selectedCreditCard) {
+            return {
+              ...buildCreditTransaction({
+                baseData,
+                totalAmount: baseAmount,
+                purchaseDate: occurrenceDate,
+                card: selectedCreditCard,
+              }),
+              ...recurringMeta,
+            }
+          }
+
+          return {
+            ...baseData,
+            amount: baseAmount,
+            date: occurrenceDate,
+            dueDate:
+              isExpense && form.dueDate
+                ? format(addMonths(new Date(form.dueDate + 'T00:00:00'), i), 'yyyy-MM-dd')
+                : '',
+            ...recurringMeta,
+          }
+        })
         await addTransactionBatch(items)
       } else {
         if (isExpense && form.isCredit && selectedCreditCard) {
@@ -724,7 +772,11 @@ export default function TransactionForm({
                       id="transaction-credit-card"
                       value={form.cardId}
                       onChange={update('cardId')}
-                      className="w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 py-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+                      aria-invalid={errors.cardId ? 'true' : undefined}
+                      aria-describedby={errors.cardId ? 'transaction-card-error' : undefined}
+                      className={`w-full rounded-xl border bg-[--bg-surface] px-3 py-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] ${
+                        errors.cardId ? 'border-[--danger-border]' : 'border-[--border-default]'
+                      }`}
                     >
                       <option value="">Usar fechamento manual</option>
                       {activeCreditCards.map((card) => (
@@ -734,6 +786,11 @@ export default function TransactionForm({
                         </option>
                       ))}
                     </select>
+                    {errors.cardId && (
+                      <p id="transaction-card-error" className="mt-1 text-xs text-[--danger-text]">
+                        {errors.cardId}
+                      </p>
+                    )}
                   </div>
                 )}
 
