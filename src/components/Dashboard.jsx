@@ -905,17 +905,17 @@ export default function Dashboard() {
             <div className="mb-3">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-[--text-primary]">Composição dos gastos</h3>
-                <InfoTooltip text="Despesas do mês pela data da movimentação, ordenadas do maior para o menor gasto." />
+                <InfoTooltip text="Distribuição das despesas do mês pela data da movimentação, com participação e variação por categoria." />
               </div>
               <p className="mt-1 text-xs text-[--text-tertiary]">
-                Valor, participação no total e comparação com o mês anterior.
+                Veja onde o dinheiro se concentrou e abra cada categoria para investigar.
               </p>
             </div>
 
             {categoryReviewCount > 0 && (
               <Link
                 to="/transactions?review=categories&scope=all"
-                className="mb-3 flex min-h-10 items-center justify-between gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-[10px] font-bold text-[--warning-text]"
+                className="mb-4 flex min-h-10 items-center justify-between gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-[10px] font-bold text-[--warning-text]"
               >
                 <span>
                   {categoryReviewCount}{' '}
@@ -928,59 +928,91 @@ export default function Dashboard() {
             )}
 
             {categoryBreakdown.length === 0 ? (
-              <p className="py-8 text-center text-xs text-[--text-tertiary]">
+              <p className="py-10 text-center text-xs text-[--text-tertiary]">
                 Nenhuma despesa no mês
               </p>
             ) : (
-              <div className="space-y-3">
-                {categoryBreakdown.slice(0, 6).map((cat) => {
-                  const width = Math.max(4, cat.sharePercent)
-                  const isOtherLarge =
-                    String(cat.categoryName || '').toLowerCase() === 'outros' &&
-                    cat.sharePercent >= 25
+              <div>
+                <div className="mb-4 flex items-center justify-center">
+                  <div
+                    className="relative h-40 w-40 rounded-full p-[15px] shadow-inner"
+                    style={{ background: categoryVisual.ring }}
+                    role="img"
+                    aria-label="Distribuição percentual dos gastos por categoria"
+                  >
+                    <div className="flex h-full w-full flex-col items-center justify-center rounded-full bg-[--bg-elevated] px-4 text-center">
+                      <span className="text-[9px] font-black uppercase tracking-[0.14em] text-[--text-tertiary]">
+                        Gastos do mês
+                      </span>
+                      <strong className="mt-1 max-w-full truncate text-base font-black tabular-nums text-[--text-primary]">
+                        {formatCurrency(currentSummary.expenses, { compact: true })}
+                      </strong>
+                      <span className="mt-1 text-[9px] text-[--text-tertiary]">
+                        {categoryVisual.items.length} principais categorias
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-                  return (
-                    <Link
-                      key={cat.categoryId || cat.categoryName}
-                      to={`/transactions?category=${encodeURIComponent(cat.categoryId || '')}&month=${budgetOverview.monthKey}`}
-                      className="group block rounded-xl border border-transparent p-1.5 transition-colors hover:border-[--border-default] hover:bg-[--bg-hover]"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-xs font-bold text-[--text-primary]">
-                            {cat.categoryName}
-                          </p>
-                          <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                            {cat.sharePercent.toLocaleString('pt-BR', {
-                              maximumFractionDigits: 1,
-                            })}
-                            % do total · {formatVariation(cat.changePercent)}
-                          </p>
-                        </div>
-                        <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
-                          {formatCurrency(cat.total)}
-                        </span>
-                      </div>
-                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[--bg-hover]">
-                        <div
-                          className="h-full rounded-full bg-[--brand-600] transition-[width]"
-                          style={{ width: `${Math.min(100, width)}%` }}
+                <div className="space-y-1.5">
+                  {categoryVisual.items.map((cat, index) => {
+                    const isOtherLarge =
+                      String(cat.categoryName || '').toLowerCase() === 'outros' &&
+                      cat.sharePercent >= 25
+
+                    return (
+                      <Link
+                        key={cat.categoryId || cat.categoryName}
+                        to={`/transactions?category=${encodeURIComponent(cat.categoryId || '')}&month=${budgetOverview.monthKey}`}
+                        className="group flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-[--bg-hover]"
+                      >
+                        <span
+                          className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                          style={{ background: DASHBOARD_CHART_COLORS[index] }}
                           aria-hidden="true"
                         />
-                      </div>
-                      {isOtherLarge && (
-                        <p className="mt-1.5 text-[10px] font-semibold text-[--warning-text]">
-                          “Outros” concentra uma parcela relevante dos gastos; abra para revisar a
-                          composição.
-                        </p>
-                      )}
-                      <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-[--text-brand] opacity-80 group-hover:opacity-100">
-                        Ver lançamentos
-                        <ArrowRight size={11} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="truncate text-xs font-bold text-[--text-primary]">
+                              {cat.categoryName}
+                            </p>
+                            <span className="flex-shrink-0 text-[10px] font-black tabular-nums text-[--text-primary]">
+                              {formatCurrency(cat.total)}
+                            </span>
+                          </div>
+                          <div className="mt-0.5 flex items-center justify-between gap-2 text-[9px] text-[--text-tertiary]">
+                            <span>
+                              {cat.sharePercent.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
+                            </span>
+                            <span>{formatVariation(cat.changePercent)}</span>
+                          </div>
+                          {isOtherLarge && (
+                            <p className="mt-1 text-[9px] font-semibold text-[--warning-text]">
+                              “Outros” está concentrando uma parcela relevante dos gastos.
+                            </p>
+                          )}
+                        </div>
+                        <ArrowRight
+                          size={12}
+                          className="flex-shrink-0 text-[--text-tertiary] transition-transform group-hover:translate-x-0.5"
+                        />
+                      </Link>
+                    )
+                  })}
+
+                  {categoryVisual.remainingShare > 0.5 && (
+                    <div className="flex items-center gap-3 px-2 py-2 text-[10px] text-[--text-tertiary]">
+                      <span className="h-2.5 w-2.5 rounded-full bg-[--bg-hover]" />
+                      <span className="flex-1">Demais categorias</span>
+                      <span className="font-bold tabular-nums">
+                        {categoryVisual.remainingShare.toLocaleString('pt-BR', {
+                          maximumFractionDigits: 1,
+                        })}
+                        %
                       </span>
-                    </Link>
-                  )
-                })}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </Card>
