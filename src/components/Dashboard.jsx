@@ -45,7 +45,6 @@ import {
   buildMonthAttentionSignals,
   buildPeriodResultInsight,
   getCalendarMonthBounds,
-  getLargestMonthlyExpenseChange,
   getRecentDashboardTransactions,
 } from '../domain/dashboard'
 import { getTransactionActivityDate, getTransactionDateContext } from '../domain/transactionDates'
@@ -74,6 +73,14 @@ const formatVariation = (value) => {
   if (value === 0) return 'sem variação'
   return `${formatted}% ${value > 0 ? 'acima' : 'abaixo'} do mês anterior`
 }
+
+const DASHBOARD_CHART_COLORS = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+]
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -221,6 +228,24 @@ export default function Dashboard() {
     () => buildCategoryBreakdown(categoryTotals, previousCategoryTotals),
     [categoryTotals, previousCategoryTotals],
   )
+  const categoryVisual = useMemo(() => {
+    let cursor = 0
+    const items = categoryBreakdown.slice(0, 5)
+    const stops = items.map((item, index) => {
+      const start = cursor
+      cursor += item.sharePercent
+      return `${DASHBOARD_CHART_COLORS[index]} ${start}% ${cursor}%`
+    })
+
+    if (cursor < 100) stops.push(`var(--bg-hover) ${cursor}% 100%`)
+
+    return {
+      items,
+      remainingShare: Math.max(0, 100 - cursor),
+      ring: stops.length ? `conic-gradient(${stops.join(', ')})` : 'var(--bg-hover)',
+    }
+  }, [categoryBreakdown])
+
   const availableMonthCount = useMemo(
     () =>
       new Set(
@@ -234,7 +259,6 @@ export default function Dashboard() {
     () => getMonthlyFinancialData(transactions, trendMonths, viewDate),
     [transactions, trendMonths, viewDate],
   )
-  const trendHighlight = useMemo(() => getLargestMonthlyExpenseChange(monthlyData), [monthlyData])
   const selectedTrend =
     monthlyData.find((item) => item.monthKey === selectedMonthKey) || monthlyData.at(-1) || null
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
