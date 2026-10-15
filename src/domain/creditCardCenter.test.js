@@ -233,3 +233,130 @@ test('encontra a primeira fatura futura com lançamentos', () => {
     ),
   ).toBe('')
 })
+
+
+test('considera despesa vinculada por cardId mesmo com método legado inconsistente', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'linked-legacy-method',
+        type: 'expense',
+        paymentMethod: 'pix',
+        cardId: 'inter',
+        amount: 220,
+        date: '2026-07-20',
+        description: 'Compra vinculada em registro antigo',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+    now: new Date(2026, 6, 20),
+  })
+
+  expect(center.selectedTotal).toBe(220)
+  expect(center.selectedItemCount).toBe(1)
+  expect(center.invoices.find((invoice) => invoice.card.id === 'inter')).toMatchObject({
+    purchaseTotal: 220,
+    itemCount: 1,
+  })
+})
+
+test('usa status pago das transações quando a fatura não tem eventos manuais', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'paid-card-purchase',
+        type: 'expense',
+        cardId: 'inter',
+        paymentMethod: 'credit_card',
+        paymentStatus: 'paid',
+        amount: 180,
+        invoiceMonth: '2026-08',
+        date: '2026-08-17',
+      },
+      {
+        id: 'pending-card-purchase',
+        type: 'expense',
+        cardId: 'inter',
+        paymentMethod: 'credit_card',
+        paymentStatus: 'pending',
+        amount: 120,
+        invoiceMonth: '2026-08',
+        date: '2026-08-17',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+    now: new Date(2026, 7, 5),
+  })
+
+  expect(center.selectedTotal).toBe(300)
+  expect(center.selectedPaidTotal).toBe(180)
+  expect(center.selectedRemainingTotal).toBe(120)
+  expect(center.invoices.find((invoice) => invoice.card.id === 'inter')).toMatchObject({
+    paymentSource: 'transactions',
+    status: 'partially_paid',
+  })
+})
+
+test('eventos manuais da fatura prevalecem sobre status pagos das transações', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'paid-card-purchase',
+        type: 'expense',
+        cardId: 'inter',
+        paymentMethod: 'credit_card',
+        paymentStatus: 'paid',
+        amount: 300,
+        invoiceMonth: '2026-08',
+        date: '2026-08-17',
+      },
+    ],
+    creditCards: cards,
+    invoiceEvents: [
+      {
+        id: 'manual-payment',
+        type: 'payment',
+        cardId: 'inter',
+        invoiceMonth: '2026-08',
+        amount: 100,
+      },
+    ],
+    selectedMonth: '2026-08',
+    now: new Date(2026, 7, 5),
+  })
+
+  expect(center.selectedTotal).toBe(300)
+  expect(center.selectedPaidTotal).toBe(100)
+  expect(center.selectedRemainingTotal).toBe(200)
+  expect(center.invoices.find((invoice) => invoice.card.id === 'inter')).toMatchObject({
+    paymentSource: 'invoice_events',
+  })
+})
+
+test('remove compras canceladas do total, da previsão e dos compromissos futuros', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'cancelled-card-purchase',
+        type: 'expense',
+        cardId: 'inter',
+        paymentMethod: 'credit_card',
+        paymentStatus: 'cancelled',
+        amount: 999,
+        invoiceMonth: '2026-08',
+        date: '2026-08-17',
+        isInstallment: true,
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+    now: new Date(2026, 7, 5),
+  })
+
+  expect(center.selectedTotal).toBe(0)
+  expect(center.selectedItemCount).toBe(0)
+  expect(center.futureInstallmentTotal).toBe(0)
+  expect(center.forecast[0].total).toBe(0)
+})
