@@ -119,22 +119,10 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             {invoice.itemCount === 1 ? '' : 's'}
           </p>
 
-          {invoice.futureCommitmentCount > 0 && (
-            <div className="mt-3 rounded-xl border border-[--border-subtle] bg-[--bg-subtle] p-2.5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-                  Próximos compromissos
-                </p>
-                <p className="text-[10px] font-black tabular-nums text-[--text-primary]">
-                  {formatCurrency(invoice.futureCommitmentTotal)}
-                </p>
-              </div>
-              {invoice.nextInvoiceMonth && (
-                <p className="mt-1 text-[9px] text-[--text-tertiary]">
-                  Próxima fatura: {formatCurrency(invoice.nextInvoiceTotal)}
-                </p>
-              )}
-            </div>
+          {invoice.futureCommitmentTotal > 0 && (
+            <p className="mt-2 text-[10px] text-[--text-tertiary]">
+              Compromissos futuros: {formatCurrency(invoice.futureCommitmentTotal)}
+            </p>
           )}
 
           {Number(card.limit) > 0 && (
