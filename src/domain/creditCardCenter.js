@@ -213,19 +213,6 @@ export function buildCreditCardCenter({
         resolveCreditTransactionInvoiceMonth(transaction, card) > selectedMonth,
     )
     const futureCommitmentTotal = sum(futureItems)
-    const futureCommitmentCount = futureItems.length
-    const nextInvoiceMonth = futureItems.reduce((closest, transaction) => {
-      const month = resolveCreditTransactionInvoiceMonth(transaction, card)
-      return !closest || month < closest ? month : closest
-    }, '')
-    const nextInvoiceTotal = nextInvoiceMonth
-      ? sum(
-          futureItems.filter(
-            (transaction) =>
-              resolveCreditTransactionInvoiceMonth(transaction, card) === nextInvoiceMonth,
-          ),
-        )
-      : 0
     const cardLimit = Math.max(0, Number(card.limit) || 0)
     const committedFromInvoice = lifecycle.remainingAmount + futureCommitmentTotal
     const estimatedAvailable = cardLimit > 0 ? Math.max(0, cardLimit - committedFromInvoice) : null
@@ -245,9 +232,6 @@ export function buildCreditCardCenter({
       lifecycle,
       status: lifecycle.status,
       futureCommitmentTotal,
-      futureCommitmentCount,
-      nextInvoiceMonth,
-      nextInvoiceTotal,
       committedFromInvoice,
       estimatedAvailable,
       utilizationPercent,
