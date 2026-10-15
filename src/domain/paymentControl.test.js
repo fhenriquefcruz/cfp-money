@@ -859,5 +859,4 @@ describe('controle de pagamentos', () => {
       obligationCount: 1,
     })
   })
-
 })
