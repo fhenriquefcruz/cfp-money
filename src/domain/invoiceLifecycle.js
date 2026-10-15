@@ -60,6 +60,7 @@ export function getPaymentReversibleAmount(payment, invoiceEvents = []) {
 
 export function buildInvoiceLifecycle({
   purchaseTotal = 0,
+  baselinePaidAmount = 0,
   events = [],
   closingDate = '',
   dueDate = '',
@@ -80,7 +81,8 @@ export function buildInvoiceLifecycle({
   )
 
   const invoiceTotalCents = Math.max(0, toCents(purchaseTotal) + adjustmentCents)
-  const paidCents = Math.max(0, paymentCents - reversalCents)
+  const baselinePaidCents = Math.max(0, toCents(baselinePaidAmount))
+  const paidCents = Math.max(0, baselinePaidCents + paymentCents - reversalCents)
   const remainingCents = Math.max(0, invoiceTotalCents - paidCents)
   const creditCents = Math.max(0, paidCents - invoiceTotalCents)
   const manuallyClosed = events.some((event) => event.type === 'manual_close')
@@ -116,6 +118,7 @@ export function buildInvoiceLifecycle({
     purchaseTotal: fromCents(toCents(purchaseTotal)),
     adjustmentTotal: fromCents(adjustmentCents),
     invoiceTotal: fromCents(invoiceTotalCents),
+    baselinePaidAmount: fromCents(baselinePaidCents),
     paidAmount: fromCents(paidCents),
     remainingAmount: fromCents(remainingCents),
     creditAmount: fromCents(creditCents),
