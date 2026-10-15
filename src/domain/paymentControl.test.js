@@ -827,4 +827,36 @@ describe('controle de pagamentos', () => {
       detail: 'paid',
     })
   })
+
+  test('cardId legado continua pertencendo à fatura mesmo com método inconsistente', () => {
+    const linked = cardExpense({
+      id: 'legacy-card-method',
+      paymentMethod: 'pix',
+      isCreditPurchase: undefined,
+      paymentStatus: 'paid',
+    })
+
+    expect(canToggleTransactionPayment(linked)).toBe(false)
+
+    const summary = buildPaymentControlOverview({
+      transactions: [linked],
+      creditCards: [card],
+      bounds: { start: '2026-08-01', end: '2026-08-31' },
+      now: new Date(2026, 7, 5),
+    })
+
+    expect(summary).toMatchObject({
+      totalAmount: 300,
+      paidAmount: 300,
+      pendingAmount: 0,
+      totalCount: 1,
+      paidCount: 1,
+    })
+    expect(summary.card).toMatchObject({
+      purchaseTotal: 300,
+      paidAmount: 300,
+      remainingAmount: 0,
+    })
+  })
+
 })
