@@ -63,8 +63,9 @@ function InvoiceCard({ invoice, selected, onSelect }) {
   const [statusLabel, statusClass] = STATUS[invoice.status] || STATUS.empty
   const { card, dates, lifecycle } = invoice
   const cardLimit = Math.max(0, Number(card.limit) || 0)
-  const limitUsage = cardLimit ? Math.round((invoice.committedFromInvoice / cardLimit) * 100) : 0
-  const limitExceeded = cardLimit > 0 && invoice.committedFromInvoice > cardLimit
+  const committed = lifecycle.remainingAmount + invoice.futureCommitmentTotal
+  const limitUsage = cardLimit ? Math.round((committed / cardLimit) * 100) : 0
+  const limitExceeded = cardLimit > 0 && committed > cardLimit
 
   return (
     <button
@@ -152,12 +153,12 @@ function InvoiceCard({ invoice, selected, onSelect }) {
               </div>
               <div className="mt-1.5 flex flex-wrap justify-between gap-2 text-[9px] text-[--text-tertiary]">
                 <span>
-                  {formatCurrency(invoice.committedFromInvoice)} de {formatCurrency(card.limit)}
+                  {formatCurrency(committed)} de {formatCurrency(cardLimit)}
                 </span>
                 <span>
                   {limitExceeded
-                    ? `Excede em ${formatCurrency(invoice.committedFromInvoice - cardLimit)}`
-                    : `Margem estimada ${formatCurrency(cardLimit - invoice.committedFromInvoice)}`}
+                    ? `Excede em ${formatCurrency(committed - cardLimit)}`
+                    : `Margem estimada ${formatCurrency(cardLimit - committed)}`}
                 </span>
               </div>
             </div>
