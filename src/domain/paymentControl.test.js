@@ -229,7 +229,7 @@ describe('controle de pagamentos', () => {
     })
   })
 
-  test('usa a fatura como fonte de verdade para cartão estruturado', () => {
+  test('sincroniza status pago da transação com a fatura quando não há evento manual', () => {
     const transaction = cardExpense({ paymentStatus: 'paid' })
     const statusIndex = buildPaymentStatusIndex({
       transactions: [transaction],
@@ -239,9 +239,9 @@ describe('controle de pagamentos', () => {
 
     expect(canToggleTransactionPayment(transaction)).toBe(false)
     expect(getTransactionPaymentState(transaction, statusIndex)).toMatchObject({
-      status: 'pending',
+      status: 'paid',
       source: 'invoice',
-      detail: 'pending',
+      detail: 'paid',
     })
   })
 
@@ -853,9 +853,10 @@ describe('controle de pagamentos', () => {
       paidCount: 1,
     })
     expect(summary.card).toMatchObject({
-      purchaseTotal: 300,
+      totalAmount: 300,
       paidAmount: 300,
-      remainingAmount: 0,
+      pendingAmount: 0,
+      obligationCount: 1,
     })
   })
 
