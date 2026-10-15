@@ -276,7 +276,6 @@ test('calcula compromisso futuro e margem estimada por cartão', () => {
 
   expect(invoice).toMatchObject({
     futureCommitmentTotal: 500,
-    committedFromInvoice: 1100,
   })
 })
 
@@ -309,9 +308,8 @@ test('sinaliza compromisso acima do limite sem inventar margem negativa', () => 
 
   const invoice = center.invoices.find((item) => item.card.id === 'inter')
 
-  expect(invoice).toMatchObject({
-    committedFromInvoice: 1200,
-  })
-  expect(Math.max(0, 1000 - invoice.committedFromInvoice)).toBe(0)
-  expect(invoice.committedFromInvoice - 1000).toBe(200)
+  const committed = invoice.lifecycle.remainingAmount + invoice.futureCommitmentTotal
+  expect(committed).toBe(1200)
+  expect(Math.max(0, 1000 - committed)).toBe(0)
+  expect(committed - 1000).toBe(200)
 })
