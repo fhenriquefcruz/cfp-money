@@ -245,4 +245,9 @@
 - [x] impedir dupla contagem entre Controle de Pagamentos e Central de Cartões;
 - [x] manter como legado apenas compras no crédito sem cartão identificável;
 - [x] tornar o aviso de registros sem vínculo acionável, com acesso para revisão em Transações;
-- [x] adicionar cobertura de domínio e de formulário para os fluxos recuperados.
+- [x] adicionar cobertura de domínio e de formulário para os fluxos recuperados;
+- [x] tratar `cardId` como vínculo financeiro do cartão mesmo em registros históricos com método inconsistente;
+- [x] sincronizar pago e pendente a partir do status das transações quando não houver pagamento manual de fatura;
+- [x] manter eventos manuais da fatura como fonte prioritária para evitar dupla contagem;
+- [x] excluir compras canceladas de faturas, previsões e parcelas futuras;
+- [x] validar em E2E que compras vinculadas em Transações aparecem na Central de Cartões com total consolidado.

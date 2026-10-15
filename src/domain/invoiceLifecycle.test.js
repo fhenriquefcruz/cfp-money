@@ -185,3 +185,21 @@ test('filtra eventos da fatura correta', () => {
 
   expect(getInvoiceEvents(events, 'nubank', '2026-08')).toEqual([events[0]])
 })
+
+test('aceita valor pago derivado das transações quando não há evento manual', () => {
+  const lifecycle = buildInvoiceLifecycle({
+    purchaseTotal: 500,
+    baselinePaidAmount: 200,
+    dueDate: '2026-08-10',
+    now: new Date(2026, 7, 5),
+    events: [],
+  })
+
+  expect(lifecycle).toMatchObject({
+    invoiceTotal: 500,
+    baselinePaidAmount: 200,
+    paidAmount: 200,
+    remainingAmount: 300,
+    status: 'partially_paid',
+  })
+})
