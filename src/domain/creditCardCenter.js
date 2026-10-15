@@ -213,8 +213,6 @@ export function buildCreditCardCenter({
         resolveCreditTransactionInvoiceMonth(transaction, card) > selectedMonth,
     )
     const futureCommitmentTotal = sum(futureItems)
-    const committedFromInvoice = lifecycle.remainingAmount + futureCommitmentTotal
-
     return {
       card,
       items,
@@ -227,7 +225,6 @@ export function buildCreditCardCenter({
       lifecycle,
       status: lifecycle.status,
       futureCommitmentTotal,
-      committedFromInvoice,
     }
   })
 
