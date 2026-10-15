@@ -56,6 +56,7 @@ export function normalizeCreditCard(card = {}) {
       .slice(-4),
     closingDay: clampDay(card.closingDay),
     dueDay: clampDay(card.dueDay),
+    limit: Math.max(0, Number(card.limit) || 0),
     active: card.active !== false,
   }
 }
