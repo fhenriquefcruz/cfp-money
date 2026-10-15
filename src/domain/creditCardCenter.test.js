@@ -233,3 +233,93 @@ test('encontra a primeira fatura futura com lançamentos', () => {
     ),
   ).toBe('')
 })
+
+
+test('calcula compromisso futuro e margem estimada por cartão', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'current',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'nubank',
+        amount: 600,
+        invoiceMonth: '2026-08',
+        date: '2026-08-01',
+      },
+      {
+        id: 'future-1',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'nubank',
+        amount: 300,
+        invoiceMonth: '2026-09',
+        date: '2026-09-01',
+        isInstallment: true,
+      },
+      {
+        id: 'future-2',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'nubank',
+        amount: 200,
+        invoiceMonth: '2026-10',
+        date: '2026-10-01',
+        isInstallment: true,
+      },
+    ],
+    creditCards: [{ ...cards[0], limit: 2000 }],
+    selectedMonth: '2026-08',
+    now: new Date(2026, 6, 20),
+  })
+
+  const invoice = center.invoices.find((item) => item.card.id === 'nubank')
+
+  expect(invoice).toMatchObject({
+    futureCommitmentTotal: 500,
+    futureCommitmentCount: 2,
+    nextInvoiceMonth: '2026-09',
+    nextInvoiceTotal: 300,
+    committedFromInvoice: 1100,
+    estimatedAvailable: 900,
+    utilizationPercent: 55,
+    exceededAmount: 0,
+  })
+})
+
+test('sinaliza compromisso acima do limite sem inventar margem negativa', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'current-over',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'inter',
+        amount: 900,
+        invoiceMonth: '2026-08',
+        date: '2026-08-17',
+      },
+      {
+        id: 'future-over',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'inter',
+        amount: 300,
+        invoiceMonth: '2026-09',
+        date: '2026-09-17',
+      },
+    ],
+    creditCards: [{ ...cards[1], limit: 1000 }],
+    selectedMonth: '2026-08',
+    now: new Date(2026, 6, 20),
+  })
+
+  const invoice = center.invoices.find((item) => item.card.id === 'inter')
+
+  expect(invoice).toMatchObject({
+    committedFromInvoice: 1200,
+    estimatedAvailable: 0,
+    utilizationPercent: 120,
+    exceededAmount: 200,
+  })
+})
