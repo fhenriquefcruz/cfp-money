@@ -251,7 +251,6 @@
 
 - [x] adicionar limite opcional ao cadastro de cartões sem exigir migração de schema;
 - [x] calcular compromissos futuros por cartão a partir das transações já vinculadas;
-- [x] identificar a próxima fatura e seu valor por cartão;
 - [x] calcular o valor comprometido a partir da fatura selecionada;
 - [x] mostrar percentual comprometido e margem estimada somente quando houver limite cadastrado;
 - [x] sinalizar quando os compromissos registrados ultrapassarem o limite informado;
