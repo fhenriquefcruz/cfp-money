@@ -76,8 +76,9 @@ export function invoiceStatus(monthKey, card, now = new Date()) {
 export function isStructuredCreditTransaction(transaction = {}) {
   return Boolean(
     transaction.type === 'expense' &&
-    transaction.paymentMethod === 'credit_card' &&
-    transaction.cardId,
+    !transaction.isSavings &&
+    transaction.cardId &&
+    transaction.paymentStatus !== 'cancelled',
   )
 }
 
@@ -134,8 +135,10 @@ export function buildCreditCardCenter({
   const legacy = transactions.filter(
     (transaction) =>
       transaction.type === 'expense' &&
+      !transaction.isSavings &&
       transaction.paymentMethod === 'credit_card' &&
-      !transaction.cardId,
+      !transaction.cardId &&
+      transaction.paymentStatus !== 'cancelled',
   )
 
   const cardMap = new Map(
@@ -197,9 +200,21 @@ export function buildCreditCardCenter({
     const dates = invoiceDatesForMonth(selectedMonth, card)
     const events = getInvoiceEvents(invoiceEvents, card.id, selectedMonth)
     const purchaseTotal = sum(items)
+    const hasManualPaymentEvents = events.some(
+      (event) => event.type === 'payment' || event.type === 'reversal',
+    )
+    const transactionPaidTotal = hasManualPaymentEvents
+      ? 0
+      : sum(
+          items.filter(
+            (transaction) =>
+              transaction.paymentStatus === 'paid' || transaction.isPaid === true,
+          ),
+        )
     const temporalStatus = items.length ? invoiceStatus(selectedMonth, card, now) : 'empty'
     const lifecycle = buildInvoiceLifecycle({
       purchaseTotal,
+      baselinePaidAmount: transactionPaidTotal,
       events,
       closingDate: dates.closingDate,
       dueDate: dates.dueDate,
@@ -217,6 +232,11 @@ export function buildCreditCardCenter({
       dates,
       events,
       lifecycle,
+      paymentSource: hasManualPaymentEvents
+        ? 'invoice_events'
+        : transactionPaidTotal > 0
+          ? 'transactions'
+          : 'none',
       status: lifecycle.status,
     }
   })
