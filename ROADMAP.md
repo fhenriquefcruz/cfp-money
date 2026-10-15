@@ -246,3 +246,17 @@
 - [x] manter como legado apenas compras no crédito sem cartão identificável;
 - [x] tornar o aviso de registros sem vínculo acionável, com acesso para revisão em Transações;
 - [x] adicionar cobertura de domínio e de formulário para os fluxos recuperados.
+
+
+## Inteligência por Cartão — Fase 54
+
+- [x] adicionar limite opcional ao cadastro de cartões sem exigir migração de schema;
+- [x] calcular compromissos futuros por cartão a partir das transações já vinculadas;
+- [x] identificar a próxima fatura e seu valor por cartão;
+- [x] calcular o valor comprometido a partir da fatura selecionada;
+- [x] mostrar percentual comprometido e margem estimada somente quando houver limite cadastrado;
+- [x] sinalizar quando os compromissos registrados ultrapassarem o limite informado;
+- [x] evitar chamar a margem estimada de limite disponível bancário atual;
+- [x] manter Transações e eventos de fatura como fonte de verdade;
+- [ ] revisar baselines de Cartões em desktop e mobile;
+- [ ] validar Segurança, Performance/PWA, Validate, Deploy, Smoke, Mobile e Visual/WCAG antes do merge.
