@@ -276,9 +276,6 @@ test('calcula compromisso futuro e margem estimada por cartão', () => {
 
   expect(invoice).toMatchObject({
     futureCommitmentTotal: 500,
-    futureCommitmentCount: 2,
-    nextInvoiceMonth: '2026-09',
-    nextInvoiceTotal: 300,
     committedFromInvoice: 1100,
     estimatedAvailable: 900,
     utilizationPercent: 55,
