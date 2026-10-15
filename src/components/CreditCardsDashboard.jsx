@@ -17,6 +17,7 @@ import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/A
 import {
   buildCreditCardCenter,
   firstRelevantForecastMonth,
+  labelForMonth,
   monthKeyFromDate,
   shiftMonthKey,
 } from '../domain/creditCardCenter'
@@ -118,6 +119,65 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             Pago: {formatCurrency(lifecycle.paidAmount)} · {invoice.itemCount} lançamento
             {invoice.itemCount === 1 ? '' : 's'}
           </p>
+
+          {invoice.futureCommitmentCount > 0 && (
+            <div className="mt-3 rounded-xl border border-[--border-subtle] bg-[--bg-subtle] p-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                  Próximos compromissos
+                </p>
+                <p className="text-[10px] font-black tabular-nums text-[--text-primary]">
+                  {formatCurrency(invoice.futureCommitmentTotal)}
+                </p>
+              </div>
+              {invoice.nextInvoiceMonth && (
+                <p className="mt-1 text-[9px] text-[--text-tertiary]">
+                  Próxima fatura: {labelForMonth(invoice.nextInvoiceMonth)} ·{' '}
+                  {formatCurrency(invoice.nextInvoiceTotal)}
+                </p>
+              )}
+            </div>
+          )}
+
+          {Number(card.limit) > 0 && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between gap-2 text-[9px]">
+                <span className="font-bold text-[--text-tertiary]">
+                  Comprometido a partir desta fatura
+                </span>
+                <strong
+                  className={
+                    invoice.exceededAmount > 0
+                      ? 'text-[--danger-text]'
+                      : 'text-[--text-primary]'
+                  }
+                >
+                  {invoice.utilizationPercent?.toLocaleString('pt-BR', {
+                    maximumFractionDigits: 1,
+                  })}
+                  %
+                </strong>
+              </div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[--bg-hover]">
+                <div
+                  className={`h-full rounded-full ${
+                    invoice.exceededAmount > 0 ? 'bg-[--danger-icon]' : 'bg-[--brand-500]'
+                  }`}
+                  style={{ width: `${Math.min(100, invoice.utilizationPercent || 0)}%` }}
+                />
+              </div>
+              <div className="mt-1.5 flex flex-wrap justify-between gap-2 text-[9px] text-[--text-tertiary]">
+                <span>
+                  {formatCurrency(invoice.committedFromInvoice)} de {formatCurrency(card.limit)}
+                </span>
+                <span>
+                  {invoice.exceededAmount > 0
+                    ? `Excede em ${formatCurrency(invoice.exceededAmount)}`
+                    : `Margem estimada ${formatCurrency(invoice.estimatedAvailable)}`}
+                </span>
+              </div>
+            </div>
+          )}
 
           {card.historicalOnly && (
             <p className="mt-2 text-[9px] leading-relaxed text-[--warning-text]">
