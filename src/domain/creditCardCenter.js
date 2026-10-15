@@ -207,8 +207,7 @@ export function buildCreditCardCenter({
       ? 0
       : sum(
           items.filter(
-            (transaction) =>
-              transaction.paymentStatus === 'paid' || transaction.isPaid === true,
+            (transaction) => transaction.paymentStatus === 'paid' || transaction.isPaid === true,
           ),
         )
     const temporalStatus = items.length ? invoiceStatus(selectedMonth, card, now) : 'empty'

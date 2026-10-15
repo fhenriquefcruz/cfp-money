@@ -234,7 +234,6 @@ test('encontra a primeira fatura futura com lançamentos', () => {
   ).toBe('')
 })
 
-
 test('considera despesa vinculada por cardId mesmo com método legado inconsistente', () => {
   const center = buildCreditCardCenter({
     transactions: [

@@ -17,7 +17,9 @@ test('Central de Cartões consolida compras vinculadas nas Transações', async 
   await expect(invoices).toContainText('2 lançamentos')
 })
 
-test('Central de Cartões avança do mês vazio para a primeira fatura com lançamentos', async ({ page }) => {
+test('Central de Cartões avança do mês vazio para a primeira fatura com lançamentos', async ({
+  page,
+}) => {
   await prepareE2EPage(page, '/cards')
 
   await expect(page.getByText('Compras do mercado', { exact: true })).toBeVisible()

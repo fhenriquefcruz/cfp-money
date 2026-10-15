@@ -374,5 +374,4 @@ describe('TransactionForm credit card integration', () => {
       }),
     )
   })
-
 })
