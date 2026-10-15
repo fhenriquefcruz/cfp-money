@@ -684,7 +684,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Análise principal: evolução e composição */}
-      <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="dashboard-chart-grid dashboard-premium-analysis-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
         <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.15 }}>
           <Card className="dashboard-finance-chart h-full overflow-hidden">
             <div className="dashboard-finance-chart__header mb-4 flex flex-col gap-4">
