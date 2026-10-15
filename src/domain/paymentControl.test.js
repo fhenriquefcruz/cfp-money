@@ -769,4 +769,62 @@ describe('controle de pagamentos', () => {
     expect(audit).toHaveLength(20)
     expect(audit.at(-1).operationId).toBe(operation.operationId)
   })
+
+  test('compra antiga com cardId passa a ser gerenciada pela fatura sem dupla contagem', () => {
+    const linkedLegacy = cardExpense({
+      id: 'legacy-linked-card',
+      isCreditPurchase: undefined,
+    })
+
+    expect(canToggleTransactionPayment(linkedLegacy)).toBe(false)
+
+    const summary = buildPaymentControlOverview({
+      transactions: [linkedLegacy],
+      creditCards: [card],
+      bounds: { start: '2026-08-01', end: '2026-08-31' },
+      now: new Date(2026, 7, 5),
+    })
+
+    expect(summary).toMatchObject({
+      totalAmount: 300,
+      pendingAmount: 300,
+      totalCount: 1,
+      pendingCount: 1,
+    })
+    expect(summary.card.itemCount).toBe(1)
+    expect(summary.card.obligationCount).toBe(1)
+  })
+
+  test('compra histórica vinculada recebe o status da fatura inferida', () => {
+    const linkedLegacy = cardExpense({
+      id: 'legacy-paid-by-invoice',
+      isCreditPurchase: undefined,
+      invoiceMonth: undefined,
+      dueDate: undefined,
+      date: '2026-07-10',
+      purchaseDate: undefined,
+      originalPurchaseDate: undefined,
+    })
+
+    const statusIndex = buildPaymentStatusIndex({
+      transactions: [linkedLegacy],
+      creditCards: [card],
+      invoiceEvents: [
+        {
+          id: 'legacy-invoice-payment',
+          type: 'payment',
+          cardId: card.id,
+          invoiceMonth: '2026-08',
+          amount: 300,
+        },
+      ],
+      now: new Date(2026, 7, 5),
+    })
+
+    expect(getTransactionPaymentState(linkedLegacy, statusIndex)).toMatchObject({
+      status: 'paid',
+      source: 'invoice',
+      detail: 'paid',
+    })
+  })
 })

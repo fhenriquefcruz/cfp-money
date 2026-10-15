@@ -206,10 +206,15 @@ export default function TransactionForm({
         amount: maskCurrency(String(Math.round(transaction.amount * 100))),
         description: transaction.description || '',
         categoryId: transaction.categoryId || '',
-        date: transaction.date,
+        date:
+          transaction.isCreditPurchase || transaction.cardId
+            ? transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date
+            : transaction.date,
         dueDate: transaction.dueDate || '',
         paymentMethod: transaction.paymentMethod || 'pix',
+        isCredit: transaction.paymentMethod === 'credit_card',
         cardId: transaction.cardId || '',
+        closingDay: transaction.cardClosingDay || '',
         notes: transaction.notes || '',
         savingsMovement: transaction.savingsMovement || 'deposit',
         savingsDestination:
@@ -344,14 +349,30 @@ export default function TransactionForm({
 
     try {
       if (isEditing) {
-        const editData = {
-          ...baseData,
-          amount: baseAmount,
-          date: form.date,
-        }
+        let editData
 
-        if (!transaction.isCreditPurchase) {
-          editData.dueDate = isExpense ? form.dueDate || '' : ''
+        if (isExpense && form.paymentMethod === 'credit_card' && selectedCreditCard) {
+          editData = buildCreditTransaction({
+            baseData,
+            totalAmount: baseAmount,
+            purchaseDate: form.date,
+            card: selectedCreditCard,
+          })
+        } else {
+          editData = {
+            ...baseData,
+            amount: baseAmount,
+            date: form.date,
+            dueDate: isExpense ? form.dueDate || '' : '',
+          }
+
+          if (form.paymentMethod !== 'credit_card' || !form.cardId) {
+            Object.assign(editData, {
+              isCreditPurchase: false,
+              cardId: '',
+              invoiceMonth: '',
+            })
+          }
         }
 
         await editTransaction(transaction.id, editData)
@@ -396,21 +417,41 @@ export default function TransactionForm({
         // Recorrente (receita OU despesa)
         const months = parseInt(form.recurringMonths) || 12
         const groupId = `${Date.now()}_${Math.random().toString(36).slice(2)}`
-        const items = Array.from({ length: months }, (_, i) => ({
-          ...baseData,
-          amount: baseAmount,
-          date: format(addMonths(new Date(form.date + 'T00:00:00'), i), 'yyyy-MM-dd'),
-          dueDate:
-            isExpense && form.dueDate
-              ? format(addMonths(new Date(form.dueDate + 'T00:00:00'), i), 'yyyy-MM-dd')
-              : '',
-          recurringGroupId: groupId,
-          recurringNum: i + 1,
-          recurringOf: months,
-        }))
+        const items = Array.from({ length: months }, (_, i) => {
+          const recurringDate = format(
+            addMonths(new Date(form.date + 'T00:00:00'), i),
+            'yyyy-MM-dd',
+          )
+          const recurringData = {
+            ...baseData,
+            isRecurring: true,
+            recurringGroupId: groupId,
+            recurringNum: i + 1,
+            recurringOf: months,
+          }
+
+          if (isExpense && form.paymentMethod === 'credit_card' && selectedCreditCard) {
+            return buildCreditTransaction({
+              baseData: recurringData,
+              totalAmount: baseAmount,
+              purchaseDate: recurringDate,
+              card: selectedCreditCard,
+            })
+          }
+
+          return {
+            ...recurringData,
+            amount: baseAmount,
+            date: recurringDate,
+            dueDate:
+              isExpense && form.dueDate
+                ? format(addMonths(new Date(form.dueDate + 'T00:00:00'), i), 'yyyy-MM-dd')
+                : '',
+          }
+        })
         await addTransactionBatch(items)
       } else {
-        if (isExpense && form.isCredit && selectedCreditCard) {
+        if (isExpense && form.paymentMethod === 'credit_card' && selectedCreditCard) {
           await createTransaction(
             buildCreditTransaction({
               baseData,
@@ -444,7 +485,7 @@ export default function TransactionForm({
 
   const showCreditFields = isExpense && form.paymentMethod === 'credit_card'
   const activeCreditCards = creditCards.filter((card) => card.active !== false)
-  const selectedCreditCard = activeCreditCards.find((card) => card.id === form.cardId)
+  const selectedCreditCard = creditCards.find((card) => card.id === form.cardId)
   const invoicePreview =
     showCreditFields && selectedCreditCard && form.date
       ? calculateInvoiceSchedule(form.date, selectedCreditCard)

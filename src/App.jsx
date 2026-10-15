@@ -19,7 +19,6 @@ import Login from './components/Login'
 import PlanAlert from './components/PlanAlert'
 import Onboarding from './components/Onboarding'
 import LegalGate from './components/LegalGate'
-import PwaUpdateNotice from './components/PwaUpdateNotice'
 
 // Notificações globais
 import NotificationStack from './components/NotificationStack'
@@ -37,6 +36,7 @@ const Budgets = lazy(() => import('./components/Budgets'))
 const Reports = lazy(() => import('./components/Reports'))
 const Profile = lazy(() => import('./components/Profile'))
 const Admin = lazy(() => import('./components/Admin'))
+const PwaUpdateNotice = lazy(() => import('./components/PwaUpdateNotice'))
 
 const LoadingScreen = () => (
   <div className="aurora-app-shell flex h-screen items-center justify-center bg-[--bg-app]">
@@ -86,7 +86,9 @@ const AppRoutes = () => {
               <Onboarding />
               <LegalGate />
               <NotificationStack />
-              <PwaUpdateNotice />
+              <Suspense fallback={null}>
+                <PwaUpdateNotice />
+              </Suspense>
             </div>
           </GoalsProvider>
         </InvoiceEventsProvider>

@@ -2,6 +2,7 @@ import {
   buildCreditCardCenter,
   isStructuredCreditTransaction,
   monthKeyFromDate,
+  resolveCreditTransactionInvoiceMonth,
 } from './creditCardCenter'
 
 export { isStructuredCreditTransaction }
@@ -120,14 +121,12 @@ export function buildPaymentStatusIndex({
   now = new Date(),
 } = {}) {
   const index = new Map()
+  const cardMap = new Map(creditCards.map((card) => [card.id, card]))
   const months = new Set(
     transactions
       .filter(isStructuredCreditTransaction)
-      .map(
-        (transaction) =>
-          transaction.invoiceMonth ||
-          transaction.dueDate?.slice(0, 7) ||
-          transaction.date?.slice(0, 7),
+      .map((transaction) =>
+        resolveCreditTransactionInvoiceMonth(transaction, cardMap.get(transaction.cardId)),
       )
       .filter(Boolean),
   )

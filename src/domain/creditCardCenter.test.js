@@ -1,5 +1,6 @@
 import {
   buildCreditCardCenter,
+  firstRelevantForecastMonth,
   invoiceDatesForMonth,
   invoiceStatus,
   labelForMonth,
@@ -161,4 +162,74 @@ test('expõe estado temporal sem afirmar que a fatura foi paga', () => {
 test('navega e rotula meses em português', () => {
   expect(shiftMonthKey('2026-12', 1)).toBe('2027-01')
   expect(labelForMonth('2026-08')).toBe('Agosto de 2026')
+})
+
+test('recupera compra antiga vinculada ao cartão mesmo sem flag estruturada', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'legacy-linked',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'inter',
+        amount: 180,
+        date: '2026-07-20',
+        description: 'Compra antiga vinculada',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+    now: new Date(2026, 6, 20),
+  })
+
+  expect(center.selectedTotal).toBe(180)
+  expect(center.selectedItemCount).toBe(1)
+  expect(center.legacyCount).toBe(0)
+  expect(center.invoices.find((invoice) => invoice.card.id === 'inter')).toMatchObject({
+    purchaseTotal: 180,
+    itemCount: 1,
+  })
+})
+
+test('mantém como legado somente compra no crédito sem cartão identificável', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'legacy-unlinked',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        amount: 75,
+        date: '2026-08-03',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+  })
+
+  expect(center.selectedTotal).toBe(0)
+  expect(center.legacyCount).toBe(1)
+  expect(center.legacyTotal).toBe(75)
+})
+
+test('encontra a primeira fatura futura com lançamentos', () => {
+  expect(
+    firstRelevantForecastMonth(
+      [
+        { month: '2026-09', total: 0, itemCount: 0 },
+        { month: '2026-10', total: 904.63, itemCount: 2 },
+        { month: '2026-11', total: 120, itemCount: 1 },
+      ],
+      '2026-09',
+    ),
+  ).toBe('2026-10')
+
+  expect(
+    firstRelevantForecastMonth(
+      [
+        { month: '2026-09', total: 0, itemCount: 0 },
+        { month: '2026-10', total: 0, itemCount: 0 },
+      ],
+      '2026-09',
+    ),
+  ).toBe('')
 })
