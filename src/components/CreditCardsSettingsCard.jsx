@@ -101,22 +101,16 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
         />
       </div>
 
-      <div>
-        <Input
-          label="Limite do cartão (opcional)"
-          type="number"
-          min="0"
-          step="0.01"
-          inputMode="decimal"
-          value={form.limit ?? ''}
-          onChange={update('limit')}
-          placeholder="Ex.: 8000"
-          error={errors.limit}
-        />
-        <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
-          Usado apenas para estimar o comprometimento com faturas e compras futuras já registradas.
-        </p>
-      </div>
+      <Input
+        label="Limite do cartão (opcional)"
+        type="number"
+        min="0"
+        step="0.01"
+        value={form.limit ?? ''}
+        onChange={update('limit')}
+        placeholder="Ex.: 8000"
+        error={errors.limit}
+      />
 
       <label className="flex items-start gap-3 rounded-xl border border-[--border-default] p-3">
         <input
