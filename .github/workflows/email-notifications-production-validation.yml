@@ -1,0 +1,64 @@
+name: Premium email production validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production-validation:
+    name: Validate Premium email production flow
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: '985715fac917490c0a3102d4e261bfc7'
+      GOOGLE_CLIENT_EMAIL: ${{ secrets.GOOGLE_CLIENT_EMAIL }}
+      GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+      EMAIL_NOTIFICATIONS_ADMIN_SECRET: ${{ secrets.EMAIL_NOTIFICATIONS_ADMIN_SECRET }}
+      EMAIL_NOTIFICATIONS_TEST_UID: ${{ secrets.EMAIL_NOTIFICATIONS_TEST_UID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm ci --prefix functions
+
+      - name: Validate script syntax
+        run: node --check functions/tools/validateEmailNotificationsProduction.js
+
+      - name: Resolve deployed Worker URL
+        shell: bash
+        run: |
+          SUBDOMAIN="$(
+            curl --fail-with-body --silent --show-error \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" \
+              | node -e '
+                  let body = ""
+                  process.stdin.on("data", (chunk) => { body += chunk })
+                  process.stdin.on("end", () => {
+                    const data = JSON.parse(body)
+                    if (!data.success || !data.result?.subdomain) process.exit(1)
+                    process.stdout.write(data.result.subdomain)
+                  })
+                '
+          )"
+
+          echo "EMAIL_NOTIFICATIONS_WORKER_URL=https://meu-real-email-notifications.${SUBDOMAIN}.workers.dev" >> "$GITHUB_ENV"
+
+      - name: Run reversible production validation
+        run: npm run notifications:production:validate
