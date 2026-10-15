@@ -207,6 +207,12 @@ export function buildCreditCardCenter({
       now,
     })
 
+    const futureItems = structured.filter(
+      (transaction) =>
+        transaction.cardId === card.id &&
+        resolveCreditTransactionInvoiceMonth(transaction, card) > selectedMonth,
+    )
+    const futureCommitmentTotal = sum(futureItems)
     return {
       card,
       items,
@@ -218,6 +224,7 @@ export function buildCreditCardCenter({
       events,
       lifecycle,
       status: lifecycle.status,
+      futureCommitmentTotal,
     }
   })
 

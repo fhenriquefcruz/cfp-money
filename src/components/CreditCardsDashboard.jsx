@@ -62,6 +62,10 @@ function SummaryCard({ icon: Icon, label, value, helper }) {
 function InvoiceCard({ invoice, selected, onSelect }) {
   const [statusLabel, statusClass] = STATUS[invoice.status] || STATUS.empty
   const { card, dates, lifecycle } = invoice
+  const cardLimit = Math.max(0, Number(card.limit) || 0)
+  const committed = lifecycle.remainingAmount + invoice.futureCommitmentTotal
+  const limitUsage = cardLimit ? Math.round((committed / cardLimit) * 100) : 0
+  const limitExceeded = cardLimit > 0 && committed > cardLimit
 
   return (
     <button
@@ -118,6 +122,47 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             Pago: {formatCurrency(lifecycle.paidAmount)} · {invoice.itemCount} lançamento
             {invoice.itemCount === 1 ? '' : 's'}
           </p>
+
+          {invoice.futureCommitmentTotal > 0 && (
+            <p className="mt-2 text-[10px] text-[--text-tertiary]">
+              Compromissos futuros: {formatCurrency(invoice.futureCommitmentTotal)}
+            </p>
+          )}
+
+          {cardLimit > 0 && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between gap-2 text-[9px]">
+                <span className="font-bold text-[--text-tertiary]">
+                  Comprometido a partir desta fatura
+                </span>
+                <strong
+                  className={
+                    limitExceeded ? 'text-[--danger-text]' : 'text-[--text-primary]'
+                  }
+                >
+                  {limitUsage}%
+                </strong>
+              </div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[--bg-hover]">
+                <div
+                  className={`h-full rounded-full ${
+                    limitExceeded ? 'bg-[--danger-icon]' : 'bg-[--brand-500]'
+                  }`}
+                  style={{ width: `${Math.min(100, limitUsage)}%` }}
+                />
+              </div>
+              <div className="mt-1.5 flex flex-wrap justify-between gap-2 text-[9px] text-[--text-tertiary]">
+                <span>
+                  {formatCurrency(committed)} de {formatCurrency(cardLimit)}
+                </span>
+                <span>
+                  {limitExceeded
+                    ? `Excede em ${formatCurrency(committed - cardLimit)}`
+                    : `Margem estimada ${formatCurrency(cardLimit - committed)}`}
+                </span>
+              </div>
+            </div>
+          )}
 
           {card.historicalOnly && (
             <p className="mt-2 text-[9px] leading-relaxed text-[--warning-text]">
