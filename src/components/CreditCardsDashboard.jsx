@@ -147,9 +147,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
                 </span>
                 <strong
                   className={
-                    invoice.exceededAmount > 0
-                      ? 'text-[--danger-text]'
-                      : 'text-[--text-primary]'
+                    invoice.exceededAmount > 0 ? 'text-[--danger-text]' : 'text-[--text-primary]'
                   }
                 >
                   {invoice.utilizationPercent?.toLocaleString('pt-BR', {

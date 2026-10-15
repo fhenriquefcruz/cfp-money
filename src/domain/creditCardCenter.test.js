@@ -234,7 +234,6 @@ test('encontra a primeira fatura futura com lançamentos', () => {
   ).toBe('')
 })
 
-
 test('calcula compromisso futuro e margem estimada por cartão', () => {
   const center = buildCreditCardCenter({
     transactions: [

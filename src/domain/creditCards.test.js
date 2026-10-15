@@ -95,7 +95,6 @@ test('cria parcelas em faturas mensais consecutivas', () => {
   })
 })
 
-
 test('normaliza limite opcional sem permitir valor negativo', () => {
   expect(normalizeCreditCard({ ...card, limit: '8500.50' })).toMatchObject({
     limit: 8500.5,

@@ -247,7 +247,6 @@
 - [x] tornar o aviso de registros sem vínculo acionável, com acesso para revisão em Transações;
 - [x] adicionar cobertura de domínio e de formulário para os fluxos recuperados.
 
-
 ## Inteligência por Cartão — Fase 54
 
 - [x] adicionar limite opcional ao cadastro de cartões sem exigir migração de schema;

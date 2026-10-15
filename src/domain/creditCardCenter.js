@@ -221,7 +221,8 @@ export function buildCreditCardCenter({
     const nextInvoiceTotal = nextInvoiceMonth
       ? sum(
           futureItems.filter(
-            (transaction) => resolveCreditTransactionInvoiceMonth(transaction, card) === nextInvoiceMonth,
+            (transaction) =>
+              resolveCreditTransactionInvoiceMonth(transaction, card) === nextInvoiceMonth,
           ),
         )
       : 0

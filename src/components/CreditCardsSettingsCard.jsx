@@ -54,8 +54,8 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
           ✓
         </span>
         <p className="text-xs leading-relaxed text-[--brand-700]">
-          Cadastre apenas identificação, calendário e limite opcional. Nunca informe número completo,
-          código de segurança ou senha.
+          Cadastre apenas identificação, calendário e limite opcional. Nunca informe número
+          completo, código de segurança ou senha.
         </p>
       </div>
 
