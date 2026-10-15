@@ -10,6 +10,7 @@ const EMPTY_CARD = {
   last4: '',
   closingDay: '',
   dueDay: '',
+  limit: '',
   active: true,
 }
 
@@ -35,6 +36,9 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
     if (form.last4 && !/^\d{4}$/.test(form.last4)) {
       nextErrors.last4 = 'Informe exatamente os 4 últimos números.'
     }
+    if (form.limit !== '' && Number(form.limit) < 0) {
+      nextErrors.limit = 'O limite não pode ser negativo.'
+    }
 
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) return
@@ -49,7 +53,7 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
           ✓
         </span>
         <p className="text-xs leading-relaxed text-[--brand-700]">
-          Cadastre apenas informações de identificação e calendário. Nunca informe número completo,
+          Cadastre apenas identificação, calendário e limite opcional. Nunca informe número completo,
           código de segurança ou senha.
         </p>
       </div>
@@ -95,6 +99,23 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
           onChange={update('dueDay')}
           error={errors.dueDay}
         />
+      </div>
+
+      <div>
+        <Input
+          label="Limite do cartão (opcional)"
+          type="number"
+          min="0"
+          step="0.01"
+          inputMode="decimal"
+          value={form.limit ?? ''}
+          onChange={update('limit')}
+          placeholder="Ex.: 8000"
+          error={errors.limit}
+        />
+        <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
+          Usado apenas para estimar o comprometimento com faturas e compras futuras já registradas.
+        </p>
       </div>
 
       <label className="flex items-start gap-3 rounded-xl border border-[--border-default] p-3">
@@ -265,6 +286,7 @@ function CreditCardsContent() {
                     </div>
                     <p className="mt-0.5 text-xs text-[--text-tertiary]">
                       Fecha dia {card.closingDay} · vence dia {card.dueDay}
+                      {Number(card.limit) > 0 ? ` · limite ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(card.limit)}` : ''}
                     </p>
                   </div>
 
