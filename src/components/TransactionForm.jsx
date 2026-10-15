@@ -211,8 +211,8 @@ export default function TransactionForm({
             ? transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date
             : transaction.date,
         dueDate: transaction.dueDate || '',
-        paymentMethod: transaction.paymentMethod || 'pix',
-        isCredit: transaction.paymentMethod === 'credit_card',
+        paymentMethod: transaction.cardId ? 'credit_card' : transaction.paymentMethod || 'pix',
+        isCredit: Boolean(transaction.cardId) || transaction.paymentMethod === 'credit_card',
         cardId: transaction.cardId || '',
         closingDay: transaction.cardClosingDay || '',
         notes: transaction.notes || '',
