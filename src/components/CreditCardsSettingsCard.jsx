@@ -4,7 +4,6 @@ import { useCreditCards } from '../contexts/AppContext'
 import { Button, Card, Input, Modal } from './ui'
 import PremiumGate from './PremiumGate'
 import { normalizeCreditCard } from '../domain/creditCards'
-import { formatCurrency } from '../utils'
 
 const EMPTY_CARD = {
   name: '',
@@ -287,7 +286,6 @@ function CreditCardsContent() {
                     </div>
                     <p className="mt-0.5 text-xs text-[--text-tertiary]">
                       Fecha dia {card.closingDay} · vence dia {card.dueDay}
-                      {Number(card.limit) > 0 ? ` · limite ${formatCurrency(card.limit)}` : ''}
                     </p>
                   </div>
 
