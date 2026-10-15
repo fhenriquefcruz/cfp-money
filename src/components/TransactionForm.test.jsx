@@ -336,4 +336,43 @@ describe('TransactionForm credit card integration', () => {
     })
     expect(items.every((item) => item.cardId === 'nubank' && item.invoiceMonth)).toBe(true)
   })
+
+  it('preserva cardId legado mesmo quando o método salvo está inconsistente', async () => {
+    appMocks.creditCards = [nubank]
+
+    render(
+      <TransactionForm
+        isOpen
+        onClose={vi.fn()}
+        transaction={{
+          id: 'legacy-card-method',
+          type: 'expense',
+          amount: 220,
+          description: 'Compra antiga com vínculo',
+          categoryId: 'food',
+          categoryName: 'Alimentação',
+          date: '2026-10-20',
+          paymentMethod: 'pix',
+          cardId: 'nubank',
+        }}
+      />,
+    )
+
+    expect(screen.getByLabelText('Pagamento')).toHaveValue('credit_card')
+    expect(screen.getByLabelText('Cartão cadastrado')).toHaveValue('nubank')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+
+    await vi.waitFor(() => expect(appMocks.editTransaction).toHaveBeenCalledTimes(1))
+    expect(appMocks.editTransaction).toHaveBeenCalledWith(
+      'legacy-card-method',
+      expect.objectContaining({
+        paymentMethod: 'credit_card',
+        cardId: 'nubank',
+        isCreditPurchase: true,
+        invoiceMonth: '2026-11',
+      }),
+    )
+  })
+
 })
