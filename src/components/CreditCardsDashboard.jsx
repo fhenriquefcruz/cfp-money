@@ -62,6 +62,9 @@ function SummaryCard({ icon: Icon, label, value, helper }) {
 function InvoiceCard({ invoice, selected, onSelect }) {
   const [statusLabel, statusClass] = STATUS[invoice.status] || STATUS.empty
   const { card, dates, lifecycle } = invoice
+  const cardLimit = Math.max(0, Number(card.limit) || 0)
+  const limitUsage = cardLimit ? Math.round((invoice.committedFromInvoice / cardLimit) * 100) : 0
+  const limitExceeded = cardLimit > 0 && invoice.committedFromInvoice > cardLimit
 
   return (
     <button
@@ -125,7 +128,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             </p>
           )}
 
-          {Number(card.limit) > 0 && (
+          {cardLimit > 0 && (
             <div className="mt-3">
               <div className="flex items-center justify-between gap-2 text-[9px]">
                 <span className="font-bold text-[--text-tertiary]">
@@ -133,18 +136,18 @@ function InvoiceCard({ invoice, selected, onSelect }) {
                 </span>
                 <strong
                   className={
-                    invoice.exceededAmount > 0 ? 'text-[--danger-text]' : 'text-[--text-primary]'
+                    limitExceeded ? 'text-[--danger-text]' : 'text-[--text-primary]'
                   }
                 >
-                  {invoice.utilizationPercent}%
+                  {limitUsage}%
                 </strong>
               </div>
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[--bg-hover]">
                 <div
                   className={`h-full rounded-full ${
-                    invoice.exceededAmount > 0 ? 'bg-[--danger-icon]' : 'bg-[--brand-500]'
+                    limitExceeded ? 'bg-[--danger-icon]' : 'bg-[--brand-500]'
                   }`}
-                  style={{ width: `${Math.min(100, invoice.utilizationPercent || 0)}%` }}
+                  style={{ width: `${Math.min(100, limitUsage)}%` }}
                 />
               </div>
               <div className="mt-1.5 flex flex-wrap justify-between gap-2 text-[9px] text-[--text-tertiary]">
@@ -152,9 +155,9 @@ function InvoiceCard({ invoice, selected, onSelect }) {
                   {formatCurrency(invoice.committedFromInvoice)} de {formatCurrency(card.limit)}
                 </span>
                 <span>
-                  {invoice.exceededAmount > 0
-                    ? `Excede em ${formatCurrency(invoice.exceededAmount)}`
-                    : `Margem estimada ${formatCurrency(invoice.estimatedAvailable)}`}
+                  {limitExceeded
+                    ? `Excede em ${formatCurrency(invoice.committedFromInvoice - cardLimit)}`
+                    : `Margem estimada ${formatCurrency(cardLimit - invoice.committedFromInvoice)}`}
                 </span>
               </div>
             </div>
