@@ -17,7 +17,6 @@ import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/A
 import {
   buildCreditCardCenter,
   firstRelevantForecastMonth,
-  labelForMonth,
   monthKeyFromDate,
   shiftMonthKey,
 } from '../domain/creditCardCenter'
@@ -132,8 +131,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
               </div>
               {invoice.nextInvoiceMonth && (
                 <p className="mt-1 text-[9px] text-[--text-tertiary]">
-                  Próxima fatura: {labelForMonth(invoice.nextInvoiceMonth)} ·{' '}
-                  {formatCurrency(invoice.nextInvoiceTotal)}
+                  Próxima fatura: {formatCurrency(invoice.nextInvoiceTotal)}
                 </p>
               )}
             </div>
@@ -150,10 +148,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
                     invoice.exceededAmount > 0 ? 'text-[--danger-text]' : 'text-[--text-primary]'
                   }
                 >
-                  {invoice.utilizationPercent?.toLocaleString('pt-BR', {
-                    maximumFractionDigits: 1,
-                  })}
-                  %
+                  {invoice.utilizationPercent}%
                 </strong>
               </div>
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-[--bg-hover]">
