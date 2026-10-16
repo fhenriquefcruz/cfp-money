@@ -3,7 +3,7 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
-import { CalendarDays, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 export const Button = ({
   children,
@@ -46,24 +46,20 @@ export const Button = ({
 }
 
 export const Input = ({ label, error, icon, iconRight, className, onClick, ...props }) => {
-  const dateInputRef = React.useRef(null)
-  const hasNativePicker = props.type === 'date' || props.type === 'month'
-  const openDatePicker = () => {
-    const input = dateInputRef.current
-    if (!input || input.disabled || input.readOnly) return
-    try {
-      if (typeof input.showPicker === 'function') {
-        input.showPicker()
-        return
-      }
-    } catch {
-      // Some mobile browsers require native focus as a fallback.
-    }
-    input.focus()
-  }
   const generatedId = React.useId()
   const inputId = props.id || generatedId
   const errorId = `${inputId}-error`
+  const hasNativePicker = props.type === 'date' || props.type === 'month'
+  const openDatePicker = () => {
+    const input = document.getElementById(inputId)
+    if (!input || input.disabled || input.readOnly) return
+    try {
+      if (input.showPicker) return input.showPicker()
+    } catch {
+      // Native pickers may be unavailable on some mobile browsers.
+    }
+    input.focus()
+  }
 
   return (
     <div className="space-y-1.5">
@@ -73,13 +69,12 @@ export const Input = ({ label, error, icon, iconRight, className, onClick, ...pr
         </label>
       )}
       <div className="relative">
-        {icon && (
+        {icon && !hasNativePicker && (
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[--text-tertiary]">
             {icon}
           </div>
         )}
         <input
-          ref={dateInputRef}
           id={inputId}
           onClick={(event) => {
             onClick?.(event)
@@ -89,7 +84,7 @@ export const Input = ({ label, error, icon, iconRight, className, onClick, ...pr
           aria-describedby={error ? errorId : props['aria-describedby']}
           className={clsx(
             'w-full bg-[--bg-surface] border rounded-xl px-4 py-2.5 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] transition-all',
-            icon ? 'pl-10' : '',
+            icon && !hasNativePicker ? 'pl-10' : '',
             iconRight || hasNativePicker ? 'pr-12' : '',
             error ? 'border-[--danger-border]' : 'border-[--border-default]',
             className,
@@ -104,7 +99,20 @@ export const Input = ({ label, error, icon, iconRight, className, onClick, ...pr
             aria-label={`Abrir calendário: ${label || props['aria-label'] || 'Selecionar data'}`}
             className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-[--text-secondary] hover:bg-[--bg-hover] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--brand-500] disabled:opacity-40"
           >
-            <CalendarDays size={17} aria-hidden="true" />
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <path d="M8 2v4M16 2v4M3 10h18" />
+            </svg>
           </button>
         ) : (
           iconRight && <div className="absolute right-3 top-1/2 -translate-y-1/2">{iconRight}</div>
