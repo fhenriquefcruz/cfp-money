@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileText,
-  Calendar,
   CreditCard,
   ArrowUpCircle,
   ArrowDownCircle,
@@ -722,7 +721,6 @@ export default function TransactionForm({
             type="date"
             value={form.date}
             onChange={update('date')}
-            icon={<Calendar size={15} />}
             error={errors.date}
             required
           />
@@ -917,8 +915,7 @@ export default function TransactionForm({
                     type="date"
                     value={form.dueDate}
                     onChange={update('dueDate')}
-                    icon={<Calendar size={15} />}
-                  />
+                          />
                 )}
 
                 {showRecurringField && (
