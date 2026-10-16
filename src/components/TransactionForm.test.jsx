@@ -375,3 +375,42 @@ describe('TransactionForm credit card integration', () => {
     )
   })
 })
+
+
+describe('Credit card invoice linkage', () => {
+  it('impede salvar compra de cartão cadastrado sem vínculo de fatura', () => {
+    appMocks.creditCards = [
+      { id: 'card-one', name: 'Banco A', closingDay: 5, dueDay: 12, active: true },
+      { id: 'card-two', name: 'Banco B', closingDay: 15, dueDay: 23, active: true },
+    ]
+    render(<TransactionForm isOpen onClose={vi.fn()} transaction={null} />)
+
+    fireEvent.change(screen.getByLabelText('Pagamento', { exact: true }), {
+      target: { value: 'credit_card' },
+    })
+    fireEvent.change(screen.getByLabelText(/Valor/), { target: { value: '40000' } })
+    fireEvent.click(screen.getByRole('button', { name: /Alimentação/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar', exact: true }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Selecione o cartão cadastrado')
+    expect(appMocks.createTransaction).not.toHaveBeenCalled()
+  })
+
+  it('seleciona automaticamente o único cartão e salva a compra com seu ID', async () => {
+    appMocks.creditCards = [
+      { id: 'unique-card', name: 'Nubank', closingDay: 5, dueDay: 12, active: true },
+    ]
+    render(<TransactionForm isOpen onClose={vi.fn()} transaction={null} />)
+    fireEvent.change(screen.getByLabelText('Pagamento', { exact: true }), {
+      target: { value: 'credit_card' },
+    })
+    expect(screen.getByLabelText('Cartão cadastrado')).toHaveValue('unique-card')
+    fireEvent.change(screen.getByLabelText(/Valor/), { target: { value: '40000' } })
+    fireEvent.click(screen.getByRole('button', { name: /Alimentação/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar', exact: true }))
+    await vi.waitFor(() => expect(appMocks.createTransaction).toHaveBeenCalledTimes(1))
+    expect(appMocks.createTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({ cardId: 'unique-card', paymentMethod: 'credit_card', invoiceMonth: expect.any(String) }),
+    )
+  })
+})
