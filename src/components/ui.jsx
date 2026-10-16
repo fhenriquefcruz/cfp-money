@@ -45,7 +45,7 @@ export const Button = ({
   )
 }
 
-export const Input = ({ label, error, icon, iconRight, className, ...props }) => {
+export const Input = ({ label, error, icon, iconRight, className, onClick, ...props }) => {
   const dateInputRef = React.useRef(null)
   const hasNativePicker = props.type === 'date' || props.type === 'month'
   const openDatePicker = () => {
@@ -60,7 +60,6 @@ export const Input = ({ label, error, icon, iconRight, className, ...props }) =>
       // Some mobile browsers require native focus as a fallback.
     }
     input.focus()
-    input.click()
   }
   const generatedId = React.useId()
   const inputId = props.id || generatedId
@@ -82,6 +81,10 @@ export const Input = ({ label, error, icon, iconRight, className, ...props }) =>
         <input
           ref={dateInputRef}
           id={inputId}
+          onClick={(event) => {
+            onClick?.(event)
+            if (hasNativePicker && !event.defaultPrevented) openDatePicker()
+          }}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={error ? errorId : props['aria-describedby']}
           className={clsx(
