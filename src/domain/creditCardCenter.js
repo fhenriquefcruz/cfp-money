@@ -118,27 +118,18 @@ function sum(items, selector = (item) => item.amount) {
 
 // Resolve older credit purchases only when the saved card identity uniquely matches.
 export function resolveLegacyCardId(transaction = {}, cards = []) {
-  if (transaction.cardId) return transaction.cardId
-  const directId = transaction.creditCardId || transaction.creditCard?.id
-  if (directId) return directId
+  const id = transaction.cardId || transaction.creditCardId || transaction.creditCard?.id
+  if (id) return id
   if (transaction.type !== 'expense') return ''
 
-  const last4 = String(transaction.cardLast4 || transaction.creditCardLast4 || '')
-    .replace(/\D/g, '')
-    .slice(-4)
-  const name = String(transaction.cardName || transaction.creditCardName || '')
-    .trim()
-    .toLocaleLowerCase('pt-BR')
-  const candidates = cards.filter((card) => {
-    const cardLast4 = String(card.last4 || '')
-      .replace(/\D/g, '')
-      .slice(-4)
-    const cardName = String(card.name || '')
-      .trim()
-      .toLocaleLowerCase('pt-BR')
-    return (last4 && cardLast4 === last4) || (name && cardName === name)
-  })
-  return candidates.length === 1 ? candidates[0].id : ''
+  const last4 = String(transaction.cardLast4 || transaction.creditCardLast4 || '').slice(-4)
+  const name = String(transaction.cardName || transaction.creditCardName || '').trim().toLowerCase()
+  const matches = cards.filter(
+    (card) =>
+      (last4 && card.last4 === last4) ||
+      (name && String(card.name || '').trim().toLowerCase() === name),
+  )
+  return matches.length === 1 ? matches[0].id : ''
 }
 
 export function closestPopulatedInvoiceMonth(months = [], referenceMonth = monthKeyFromDate()) {
@@ -297,9 +288,6 @@ export function buildCreditCardCenter({
         selectedMonth,
   )
 
-  const selectedLegacy = legacy.filter(
-    (transaction) => transaction.date?.slice(0, 7) === selectedMonth,
-  )
   const populatedMonths = [
     ...structured.map((transaction) =>
       resolveCreditTransactionInvoiceMonth(transaction, cardMap.get(transaction.cardId)),
@@ -324,8 +312,6 @@ export function buildCreditCardCenter({
     ).length,
     futureInstallmentCount: futureInstallments.length,
     futureInstallmentTotal: sum(futureInstallments),
-    legacyCount: selectedLegacy.length,
-    legacyTotal: sum(selectedLegacy),
     unlinkedCount: legacy.length,
     unlinkedTotal: sum(legacy),
     suggestedMonth: closestPopulatedInvoiceMonth(populatedMonths, selectedMonth),
