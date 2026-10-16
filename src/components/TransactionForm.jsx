@@ -826,7 +826,7 @@ export default function TransactionForm({
                       </p>
                     )}
                   </>
-                )}
+                ) : null}
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
