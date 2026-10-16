@@ -3,7 +3,7 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
-import { CalendarDays, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 export const Button = ({
   children,
@@ -99,7 +99,7 @@ export const Input = ({ label, error, icon, iconRight, className, onClick, ...pr
             aria-label={`Abrir calendário: ${label || props['aria-label'] || 'Selecionar data'}`}
             className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-[--text-secondary] hover:bg-[--bg-hover] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--brand-500] disabled:opacity-40"
           >
-            <CalendarDays size={17} aria-hidden="true" />
+            <span aria-hidden="true" className="text-lg leading-none">{icon || '▦'}</span>
           </button>
         ) : (
           iconRight && <div className="absolute right-3 top-1/2 -translate-y-1/2">{iconRight}</div>
