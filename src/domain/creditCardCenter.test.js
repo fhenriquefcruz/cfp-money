@@ -359,3 +359,50 @@ test('remove compras canceladas do total, da previsão e dos compromissos futuro
   expect(center.futureInstallmentTotal).toBe(0)
   expect(center.forecast[0].total).toBe(0)
 })
+
+
+test('recupera compra antiga com identificação única do cartão e respeita período da fatura', () => {
+  const center = buildCreditCardCenter({
+    creditCards: cards,
+    transactions: [{
+      id: 'old-credit', type: 'expense', paymentMethod: 'credit_card',
+      cardName: 'Inter', amount: 340, date: '2026-07-20',
+      description: 'Compra pré-integração',
+    }],
+    selectedMonth: '2026-08',
+    now: new Date(2026, 6, 20),
+  })
+
+  expect(center.selectedPurchaseTotal).toBe(340)
+  expect(center.selectedTransactions[0].cardId).toBe('inter')
+  expect(center.unlinkedCount).toBe(0)
+})
+
+test('não inventa vínculo quando faltam dados ou cartão é ambíguo', () => {
+  const center = buildCreditCardCenter({
+    creditCards: cards,
+    transactions: [
+      { id: 'orphan', type: 'expense', paymentMethod: 'credit_card', amount: 150, date: '2026-05-10' },
+      { id: 'ambiguous', type: 'expense', paymentMethod: 'credit_card', cardName: 'Banco', amount: 50, date: '2026-06-10' },
+    ],
+    selectedMonth: '2026-10',
+    now: new Date(2026, 9, 10),
+  })
+
+  expect(center.selectedTotal).toBe(0)
+  expect(center.unlinkedCount).toBe(2)
+  expect(center.unlinkedTotal).toBe(200)
+})
+
+test('encontra fatura com lançamentos em mês anterior ou posterior ao selecionado', () => {
+  const center = buildCreditCardCenter({
+    creditCards: cards,
+    transactions: [
+      { id: 'old', type: 'expense', cardId: 'inter', amount: 300, invoiceMonth: '2026-06', date: '2026-06-17' },
+      { id: 'future', type: 'expense', cardId: 'inter', amount: 400, invoiceMonth: '2026-12', date: '2026-12-17' },
+    ],
+    selectedMonth: '2026-10',
+    now: new Date(2026, 9, 10),
+  })
+  expect(center.suggestedMonth).toBe('2026-12')
+})
