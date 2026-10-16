@@ -309,6 +309,9 @@ function CreditCardsCenterContent() {
               />
               <input
                 type="month"
+                      onClick={(event) => {
+                        try { event.currentTarget.showPicker?.() } catch { /* Native fallback */ }
+                      }}
                 value={selectedMonth}
                 onChange={(event) => {
                   selectMonth(event.target.value)
