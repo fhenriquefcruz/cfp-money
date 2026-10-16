@@ -55,6 +55,7 @@ import {
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
 import { getSavingsDestinationLabel } from '../domain/savings'
 import { isTransactionSeries } from '../domain/transactionSeries'
+import { resolveLegacyCardId } from '../domain/creditCardCenter'
 import {
   PAYMENT_STATUS,
   buildPaymentBulkOperation,
@@ -454,6 +455,9 @@ export default function TransactionList() {
   const [categoryReviewOnly, setCategoryReviewOnly] = useState(
     () => searchParams.get('review') === 'categories',
   )
+  const [cardLinkReviewOnly, setCardLinkReviewOnly] = useState(
+    () => searchParams.get('review') === 'card-link',
+  )
   const [dateRange, setDateRange] = useState(
     () =>
       getMonthRouteRange(searchParams.get('month')) ||
@@ -494,6 +498,7 @@ export default function TransactionList() {
       if (catFilter !== 'all' && tx.categoryId !== catFilter) return false
       if (payFilter !== 'all' && tx.paymentMethod !== payFilter) return false
       if (categoryReviewOnly && !categoryReviewIndex.has(tx.id)) return false
+      if (cardLinkReviewOnly && !(tx.type === 'expense' && tx.paymentMethod === 'credit_card' && !tx.cardId && !resolveLegacyCardId(tx, creditCards))) return false
 
       if (paymentStatusFilter !== 'all') {
         if (!isPayableExpense(tx)) return false
@@ -541,7 +546,9 @@ export default function TransactionList() {
     paymentStatusFilter,
     paymentStatusIndex,
     categoryReviewOnly,
+    cardLinkReviewOnly,
     categoryReviewIndex,
+    creditCards,
     dateRange,
     search,
     sortAsc,
@@ -588,6 +595,7 @@ export default function TransactionList() {
     )
 
     setCategoryReviewOnly(searchParams.get('review') === 'categories')
+    setCardLinkReviewOnly(searchParams.get('review') === 'card-link')
     setPage(1)
   }, [searchParams])
 
@@ -660,6 +668,7 @@ export default function TransactionList() {
       }[paymentStatusFilter] || paymentStatusFilter,
     ],
     categoryReviewOnly && ['review', 'Categorias em revisão'],
+    cardLinkReviewOnly && ['card-link', 'Compras sem cartão vinculado'],
     hasExpandedDateFilter && [
       'date',
       RANGE_FILTERS.find((preset) => preset.id === selectedRangeFilter)?.label ||
@@ -674,6 +683,7 @@ export default function TransactionList() {
     if (filterId === 'payment') setPayFilter('all')
     if (filterId === 'status') setPaymentStatusFilter('all')
     if (filterId === 'review') setCategoryReviewOnly(false)
+    if (filterId === 'card-link') setCardLinkReviewOnly(false)
     if (filterId === 'date') setDateRange(getCurrentMonthRange())
     setPage(1)
   }
@@ -807,6 +817,7 @@ export default function TransactionList() {
     setPayFilter('all')
     setPaymentStatusFilter('all')
     setCategoryReviewOnly(false)
+    setCardLinkReviewOnly(false)
     setDateRange(getCurrentMonthRange())
     setSearch('')
     setPage(1)
