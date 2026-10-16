@@ -47,7 +47,7 @@ describe('Native date picker', () => {
     HTMLInputElement.prototype.showPicker = showPicker
     try {
       render(<Input label="Data do lançamento" type="date" defaultValue="2026-10-16" />)
-      fireEvent.click(screen.getByRole('button', { name: 'Abrir calendário: Data do lançamento' }))
+      fireEvent.click(screen.getByLabelText('Data do lançamento'))
       expect(showPicker).toHaveBeenCalledTimes(1)
       expect(screen.getByLabelText('Data do lançamento')).toHaveValue('2026-10-16')
     } finally {
