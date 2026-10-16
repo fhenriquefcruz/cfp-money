@@ -498,7 +498,16 @@ export default function TransactionList() {
       if (catFilter !== 'all' && tx.categoryId !== catFilter) return false
       if (payFilter !== 'all' && tx.paymentMethod !== payFilter) return false
       if (categoryReviewOnly && !categoryReviewIndex.has(tx.id)) return false
-      if (cardLinkReviewOnly && !(tx.type === 'expense' && tx.paymentMethod === 'credit_card' && !tx.cardId && !resolveLegacyCardId(tx, creditCards))) return false
+      if (
+        cardLinkReviewOnly &&
+        !(
+          tx.type === 'expense' &&
+          tx.paymentMethod === 'credit_card' &&
+          !tx.cardId &&
+          !resolveLegacyCardId(tx, creditCards)
+        )
+      )
+        return false
 
       if (paymentStatusFilter !== 'all') {
         if (!isPayableExpense(tx)) return false
