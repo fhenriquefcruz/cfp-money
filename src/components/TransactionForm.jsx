@@ -309,7 +309,7 @@ export default function TransactionForm({
     if (isSavings && !form.savingsDestination.trim())
       errs.savingsDestination = 'Informe onde este dinheiro está guardado'
     if (!form.date) errs.date = 'Data obrigatória'
-    if (isExpense && form.paymentMethod === 'credit_card' && creditCards.some((card) => card.active !== false) && !form.cardId) {
+    if (isExpense && form.paymentMethod === 'credit_card' && creditCards.some((card) => card.active !== false) && !creditCards.some((card) => card.id === form.cardId && card.active !== false)) {
       errs.cardId = 'Selecione o cartão cadastrado para incluir a compra na fatura'
     }
     if (form.isInstallment && parseInt(form.installments) < 2)
