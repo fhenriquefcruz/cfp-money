@@ -307,7 +307,8 @@ export function buildCreditCardCenter({
     futureInstallmentTotal: sum(futureInstallments),
     unlinkedCount: legacy.length,
     unlinkedTotal: sum(legacy),
-          suggestedMonth: populatedMonths.find((month) => month >= selectedMonth) || populatedMonths.at(-1) || '',
+        suggestedMonth:
+      populatedMonths.find((month) => month >= selectedMonth) || populatedMonths.at(-1) || '',
     forecast,
     forecastMax: Math.max(1, ...forecast.map((item) => item.total)),
   }
