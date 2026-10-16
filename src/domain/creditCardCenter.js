@@ -30,13 +30,6 @@ export function shiftMonthKey(monthKey, amount) {
   return monthKeyFromDate(new Date(year, month - 1 + amount, 1))
 }
 
-export function firstRelevantForecastMonth(forecast = [], selectedMonth = '') {
-  const relevant = forecast.find(
-    (item) => item.month !== selectedMonth && Number(item.itemCount || 0) > 0,
-  )
-  return relevant?.month || ''
-}
-
 export function labelForMonth(monthKey) {
   const [year, month] = monthKey.split('-').map(Number)
   const label = new Intl.DateTimeFormat('pt-BR', {
@@ -149,7 +142,7 @@ export function resolveLegacyCardId(transaction = {}, cards = []) {
 }
 
 export function closestPopulatedInvoiceMonth(months = [], referenceMonth = monthKeyFromDate()) {
-  const available = [...new Set(months.filter((value) => /^\d{4}-\d{2}$/.test(value || '')))].sort()
+  const available = months.filter((value) => /^\d{4}-\d{2}$/.test(value || '')).sort()
   if (!available.length) return ''
   if (available.includes(referenceMonth)) return referenceMonth
   return available.find((month) => month > referenceMonth) || available[available.length - 1]
