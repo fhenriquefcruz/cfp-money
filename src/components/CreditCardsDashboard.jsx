@@ -371,8 +371,11 @@ function CreditCardsCenterContent() {
                   faturas.
                 </p>
               </div>
-              <Link to="/transactions" className="text-xs font-bold text-[--text-brand]">
-                Revisar
+              <Link
+                to="/transactions?review=card-link&scope=all"
+                className="text-xs font-bold text-[--text-brand]"
+              >
+                Vincular compras
               </Link>
             </div>
           )}
