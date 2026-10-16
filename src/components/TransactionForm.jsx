@@ -315,7 +315,7 @@ export default function TransactionForm({
       creditCards.some((card) => card.active !== false) &&
       !creditCards.some((card) => card.id === form.cardId && card.active !== false)
     ) {
-      errs.cardId = 'Selecione o cartão cadastrado para incluir a compra na fatura'
+      errs.cardId = 'Selecione o cartão cadastrado para ver a fatura'
     }
     if (form.isInstallment && parseInt(form.installments) < 2)
       errs.installments = 'Mínimo 2 parcelas'
@@ -811,8 +811,7 @@ export default function TransactionForm({
                 ) : activeCreditCards.length === 0 ? (
                   <>
                     <p className="text-xs text-[--warning-text]">
-                      Sem cartão cadastrado: este lançamento ficará fora da Central de Cartões.
-                      Cadastre um cartão e vincule a compra para acompanhar a fatura.
+                      Sem cartão cadastrado: esta compra ficará fora das faturas. Vincule um cartão depois.
                     </p>
                     <Input
                       label="Dia de fechamento da fatura"
@@ -826,8 +825,7 @@ export default function TransactionForm({
                     />
                     {form.closingDay && (
                       <p className="text-xs text-[--brand-600]">
-                        💡 Fluxo manual: compras após dia {form.closingDay} serão lançadas no mês
-                        seguinte.
+                        Compras após o dia {form.closingDay} passam ao mês seguinte.
                       </p>
                     )}
                   </>
