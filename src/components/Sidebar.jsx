@@ -127,6 +127,7 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [avatarSrc, setAvatarSrc] = useState('')
+  const [profileName, setProfileName] = useState(user?.displayName?.trim() || 'Usuário')
 
   useEffect(() => {
     const refreshAvatar = () => {
@@ -140,6 +141,7 @@ export default function Sidebar() {
         // A imagem do provedor continua disponível em navegação privada.
       }
       setAvatarSrc(savedPhoto || user?.photoURL || '')
+      setProfileName(user?.displayName?.trim() || 'Usuário')
     }
     refreshAvatar()
     window.addEventListener('meu-real-profile-updated', refreshAvatar)
@@ -294,7 +296,7 @@ export default function Sidebar() {
         <NavLink
           to="/profile"
           title={collapsed ? 'Abrir meu perfil' : undefined}
-          aria-label={`Abrir perfil de ${user?.displayName?.trim() || 'Usuário'}`}
+          aria-label={`Abrir perfil de ${profileName}`}
           className={clsx(
             'group flex min-w-0 items-center rounded-2xl border border-[--border-subtle] bg-[--bg-surface] transition-colors hover:border-[--brand-300] hover:bg-[--brand-50] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--brand-500]',
             collapsed ? 'h-11 w-11 justify-center p-1' : 'gap-2.5 p-2.5',
@@ -316,7 +318,7 @@ export default function Sidebar() {
           </div>
           {!collapsed && (
             <p className="min-w-0 flex-1 truncate text-xs font-bold text-[--text-primary]">
-              {user?.displayName?.trim() || 'Usuário'}
+              {profileName}
             </p>
           )}
         </NavLink>
