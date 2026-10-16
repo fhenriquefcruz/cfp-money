@@ -2633,7 +2633,7 @@ body {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .dashboard-executive-grid {
     grid-template-columns: minmax(0, 1.78fr) minmax(19rem, 0.82fr);
     gap: 1.1rem;
@@ -2649,4 +2649,56 @@ body {
     margin-inline: -0.25rem;
     border-radius: 1.55rem;
   }
+}
+
+/* Fase 52 — ritmo visual, alinhamento e contraste em ambas as aparências. */
+.dashboard-premium .dashboard-bento-grid,
+.dashboard-premium .dashboard-chart-grid {
+  align-items: stretch;
+}
+.dashboard-premium .dashboard-bento-grid > *,
+.dashboard-premium .dashboard-chart-grid > *,
+.dashboard-premium .dashboard-executive-grid > * {
+  min-width: 0;
+}
+.dashboard-premium .dashboard-bento-grid > .aurora-card {
+  border-top-color: color-mix(in srgb, var(--brand-400) 42%, var(--border-default));
+  background:
+    linear-gradient(
+      150deg,
+      color-mix(in srgb, var(--brand-100) 18%, transparent),
+      transparent 60%
+    ),
+    var(--aurora-surface-elevated);
+}
+.dashboard-premium .dashboard-bento-grid .dashboard-forecast-card,
+.dashboard-premium .dashboard-bento-grid .dashboard-health-card {
+  min-width: 0;
+  height: 100%;
+}
+.dashboard-premium .dashboard-bento-grid .dashboard-forecast-card .tabular-nums {
+  overflow-wrap: anywhere;
+}
+.dashboard-premium .dashboard-money-insight {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+.dashboard-premium .dashboard-money-insight > * {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.dashboard-premium .dashboard-chart-grid > .aurora-card,
+.dashboard-premium .dashboard-chart-grid > [class*='col-span'] > .aurora-card {
+  height: 100%;
+}
+.dashboard-premium .dashboard-chart-grid .aurora-card {
+  border-top-color: color-mix(in srgb, var(--brand-300) 21%, var(--border-default));
+}
+.meu-real-date-input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  pointer-events: none;
+}
+.meu-real-calendar {
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(0, 0, 0, 0.08);
 }
