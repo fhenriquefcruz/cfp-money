@@ -1,7 +1,7 @@
 import React from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import { Modal } from './ui'
+import { Input, Modal } from './ui'
 
 describe('Modal', () => {
   test('expõe semântica de diálogo e fechamento acessível', () => {
@@ -42,7 +42,7 @@ describe('Modal', () => {
 
 
 describe('Native date picker', () => {
-  it('abre o calendário pelo botão explícito sem depender de digitação', () => {
+  test('abre o calendário pelo botão explícito sem depender de digitação', () => {
     const showPicker = vi.fn()
     const original = HTMLInputElement.prototype.showPicker
     HTMLInputElement.prototype.showPicker = showPicker
