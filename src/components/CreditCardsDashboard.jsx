@@ -16,7 +16,6 @@ import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import {
   buildCreditCardCenter,
-  firstRelevantForecastMonth,
   monthKeyFromDate,
   shiftMonthKey,
 } from '../domain/creditCardCenter'
@@ -209,13 +208,13 @@ function CreditCardsCenterContent() {
       return
     }
 
-    const relevantMonth = firstRelevantForecastMonth(center.forecast, selectedMonth)
+    const relevantMonth = center.suggestedMonth
     if (!relevantMonth) return
 
     setSelectedMonth(relevantMonth)
     setSelectedCardId('all')
   }, [
-    center.forecast,
+    center.suggestedMonth,
     center.selectedItemCount,
     center.selectedPaidTotal,
     center.selectedTotal,
@@ -320,10 +319,7 @@ function CreditCardsCenterContent() {
 
             <button
               type="button"
-              onClick={() => {
-                setSelectedMonth(monthKeyFromDate())
-                setSelectedCardId('all')
-              }}
+              onClick={() => selectMonth(monthKeyFromDate())}
               className="min-h-11 rounded-xl border border-[--brand-200] bg-[--brand-50] px-3 text-xs font-bold text-[--brand-700]"
             >
               Mês atual
@@ -371,7 +367,7 @@ function CreditCardsCenterContent() {
             />
           </div>
 
-          {center.legacyCount > 0 && (
+          {center.unlinkedCount > 0 && (
             <div className="flex flex-col gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs font-black text-[--text-primary]">Compras sem cartão</p>
