@@ -100,6 +100,8 @@ export default function Profile() {
       }
 
       await updateProfile(currentUser, updates)
+      // Atualiza a foto da navegação sem exigir recarga ou novo login.
+      window.dispatchEvent(new Event('meu-real-profile-updated'))
       toast('✓ Perfil atualizado com sucesso!')
     } catch (err) {
       toastErr('Erro ao salvar: ' + (err.message || 'Tente novamente.'))

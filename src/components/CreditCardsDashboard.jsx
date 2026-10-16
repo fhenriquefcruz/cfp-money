@@ -386,6 +386,21 @@ function CreditCardsCenterContent() {
             />
           </div>
 
+          {center.reconciledPurchaseCount > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--info-border] bg-[--info-bg] p-3 text-xs text-[--info-text]">
+              <p>
+                {center.reconciledPurchaseCount} compra
+                {center.reconciledPurchaseCount === 1 ? '' : 's'} antiga
+                {center.reconciledPurchaseCount === 1 ? '' : 's'} conciliada
+                {center.reconciledPurchaseCount === 1 ? '' : 's'} pelo nome ou final do cartão.
+                Confira o vínculo na lista de transações.
+              </p>
+              <Link to="/transactions" className="font-bold underline-offset-2 hover:underline">
+                Conferir
+              </Link>
+            </div>
+          )}
+
           {center.unlinkedPurchaseCount > 0 && (
             <div className="flex flex-col gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
