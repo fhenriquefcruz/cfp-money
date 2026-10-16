@@ -132,13 +132,6 @@ export function resolveLegacyCardId(transaction = {}, cards = []) {
   return matches.length === 1 ? matches[0].id : ''
 }
 
-export function closestPopulatedInvoiceMonth(months = [], referenceMonth = monthKeyFromDate()) {
-  const available = months.filter((value) => /^\d{4}-\d{2}$/.test(value || '')).sort()
-  if (!available.length) return ''
-  if (available.includes(referenceMonth)) return referenceMonth
-  return available.find((month) => month > referenceMonth) || available[available.length - 1]
-}
-
 export function buildCreditCardCenter({
   transactions = [],
   creditCards = [],
@@ -293,7 +286,7 @@ export function buildCreditCardCenter({
       resolveCreditTransactionInvoiceMonth(transaction, cardMap.get(transaction.cardId)),
     ),
     ...invoiceEvents.map((event) => event.invoiceMonth),
-  ]
+  ].filter(Boolean).sort()
 
   return {
     selectedMonth,
@@ -314,7 +307,7 @@ export function buildCreditCardCenter({
     futureInstallmentTotal: sum(futureInstallments),
     unlinkedCount: legacy.length,
     unlinkedTotal: sum(legacy),
-    suggestedMonth: closestPopulatedInvoiceMonth(populatedMonths, selectedMonth),
+          suggestedMonth: populatedMonths.find((month) => month >= selectedMonth) || populatedMonths.at(-1) || '',
     forecast,
     forecastMax: Math.max(1, ...forecast.map((item) => item.total)),
   }
