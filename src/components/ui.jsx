@@ -3,7 +3,7 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
-import { Loader2 } from 'lucide-react'
+import { CalendarDays, Loader2 } from 'lucide-react'
 
 export const Button = ({
   children,
@@ -46,6 +46,22 @@ export const Button = ({
 }
 
 export const Input = ({ label, error, icon, iconRight, className, ...props }) => {
+  const dateInputRef = React.useRef(null)
+  const hasNativePicker = props.type === 'date' || props.type === 'month'
+  const openDatePicker = () => {
+    const input = dateInputRef.current
+    if (!input || input.disabled || input.readOnly) return
+    try {
+      if (typeof input.showPicker === 'function') {
+        input.showPicker()
+        return
+      }
+    } catch {
+      // Some mobile browsers require native focus as a fallback.
+    }
+    input.focus()
+    input.click()
+  }
   const generatedId = React.useId()
   const inputId = props.id || generatedId
   const errorId = `${inputId}-error`
@@ -64,19 +80,32 @@ export const Input = ({ label, error, icon, iconRight, className, ...props }) =>
           </div>
         )}
         <input
+          ref={dateInputRef}
           id={inputId}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={error ? errorId : props['aria-describedby']}
           className={clsx(
             'w-full bg-[--bg-surface] border rounded-xl px-4 py-2.5 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] transition-all',
             icon ? 'pl-10' : '',
-            iconRight ? 'pr-10' : '',
+            iconRight || hasNativePicker ? 'pr-12' : '',
             error ? 'border-[--danger-border]' : 'border-[--border-default]',
             className,
           )}
           {...props}
         />
-        {iconRight && <div className="absolute right-3 top-1/2 -translate-y-1/2">{iconRight}</div>}
+        {hasNativePicker ? (
+          <button
+            type="button"
+            onClick={openDatePicker}
+            disabled={props.disabled || props.readOnly}
+            aria-label={`Abrir calendário: ${label || props['aria-label'] || 'Selecionar data'}`}
+            className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-[--text-secondary] hover:bg-[--bg-hover] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--brand-500] disabled:opacity-40"
+          >
+            <CalendarDays size={17} aria-hidden="true" />
+          </button>
+        ) : (
+          iconRight && <div className="absolute right-3 top-1/2 -translate-y-1/2">{iconRight}</div>
+        )}
       </div>
       {error && (
         <p id={errorId} className="text-xs text-[--danger-text]">
