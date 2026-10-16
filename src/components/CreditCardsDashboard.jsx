@@ -309,9 +309,13 @@ function CreditCardsCenterContent() {
               />
               <input
                 type="month"
-                      onClick={(event) => {
-                        try { event.currentTarget.showPicker?.() } catch { /* Native fallback */ }
-                      }}
+                onClick={(event) => {
+                  try {
+                    event.currentTarget.showPicker?.()
+                  } catch {
+                    /* Native fallback */
+                  }
+                }}
                 value={selectedMonth}
                 onChange={(event) => {
                   selectMonth(event.target.value)
@@ -387,7 +391,9 @@ function CreditCardsCenterContent() {
               <div>
                 <p className="text-xs font-black text-[--text-primary]">Compras sem cartão</p>
                 <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
-                  Total sem vínculo: {center.unlinkedPurchaseCount} compra(s), {formatCurrency(center.unlinkedPurchaseTotal)} em todos os meses. Neste mês: {center.legacyCount} compra(s), {formatCurrency(center.legacyTotal)} fora das
+                  Total sem vínculo: {center.unlinkedPurchaseCount} compra(s),{' '}
+                  {formatCurrency(center.unlinkedPurchaseTotal)} em todos os meses. Neste mês:{' '}
+                  {center.legacyCount} compra(s), {formatCurrency(center.legacyTotal)} fora das
                   faturas.
                 </p>
               </div>

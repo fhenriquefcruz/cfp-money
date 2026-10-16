@@ -259,9 +259,13 @@ function ReportsContent() {
             Mês final
             <input
               type="month"
-                      onClick={(event) => {
-                        try { event.currentTarget.showPicker?.() } catch { /* Native fallback */ }
-                      }}
+              onClick={(event) => {
+                try {
+                  event.currentTarget.showPicker?.()
+                } catch {
+                  /* Native fallback */
+                }
+              }}
               value={referenceMonth}
               onChange={(event) => setReferenceMonth(event.target.value)}
               aria-label="Mês final do relatório"

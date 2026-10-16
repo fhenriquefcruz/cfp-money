@@ -778,12 +778,16 @@ export default function TransactionForm({
                       ))}
                     </select>
                     {errors.cardId && (
-                      <p className="mt-1 text-xs text-[--danger-text]" role="alert">{errors.cardId}</p>
+                      <p className="mt-1 text-xs text-[--danger-text]" role="alert">
+                        {errors.cardId}
+                      </p>
                     )}
                   </div>
                 )}
                 {activeCreditCards.length === 0 && (
-                  <p className="text-xs text-[--warning-text]">Cadastre um cartão em Cartões e faturas para vincular esta compra.</p>
+                  <p className="text-xs text-[--warning-text]">
+                    Cadastre um cartão em Cartões e faturas para vincular esta compra.
+                  </p>
                 )}
 
                 {selectedCreditCard ? (

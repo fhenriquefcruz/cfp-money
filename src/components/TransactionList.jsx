@@ -1347,7 +1347,11 @@ export default function TransactionList() {
                       id="transaction-date-from"
                       type="date"
                       onClick={(event) => {
-                        try { event.currentTarget.showPicker?.() } catch { /* Native fallback */ }
+                        try {
+                          event.currentTarget.showPicker?.()
+                        } catch {
+                          /* Native fallback */
+                        }
                       }}
                       value={dateRange.from}
                       onChange={(e) => {
@@ -1369,7 +1373,11 @@ export default function TransactionList() {
                       id="transaction-date-to"
                       type="date"
                       onClick={(event) => {
-                        try { event.currentTarget.showPicker?.() } catch { /* Native fallback */ }
+                        try {
+                          event.currentTarget.showPicker?.()
+                        } catch {
+                          /* Native fallback */
+                        }
                       }}
                       value={dateRange.to}
                       min={dateRange.from || undefined}
