@@ -96,6 +96,18 @@ export function resolveCreditTransactionInvoiceMonth(transaction, card) {
   const explicitMonth = transaction.invoiceMonth || transaction.dueDate?.slice(0, 7)
   if (explicitMonth) return explicitMonth
 
+  // Registros anteriores ao modelo de compras podem ter apenas a data da própria
+  // fatura no campo date. Se coincidir exatamente com o dia de vencimento do
+  // cartão, usamos esse mês, sem deslocar novamente a data.
+  if (
+    !transaction.purchaseDate &&
+    !transaction.originalPurchaseDate &&
+    /^\d{4}-\d{2}-\d{2}$/.test(transaction.date || '') &&
+    Number(transaction.date.slice(8, 10)) === Number(card?.dueDay)
+  ) {
+    return transaction.date.slice(0, 7)
+  }
+
   const purchaseDate =
     transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date
 
