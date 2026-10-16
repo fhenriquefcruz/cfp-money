@@ -21,7 +21,7 @@ import {
   shiftMonthKey,
 } from '../domain/creditCardCenter'
 import { formatCurrency, formatDate } from '../utils'
-import { Card } from './ui'
+import { Card, Input } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
 import CreditCardsSettingsCard from './CreditCardsSettingsCard'
 import PremiumGate from './PremiumGate'
@@ -301,21 +301,13 @@ function CreditCardsCenterContent() {
               <ChevronLeft size={17} />
             </button>
 
-            <label className="relative">
-              <span className="sr-only">Selecionar mês da fatura</span>
-              <CalendarDays
-                size={15}
-                className="pointer-events-none absolute left-3 top-3.5 text-[--text-tertiary]"
-              />
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(event) => {
-                  selectMonth(event.target.value)
-                }}
-                className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-surface] pl-9 pr-3 text-xs font-semibold text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] sm:w-auto"
-              />
-            </label>
+            <Input
+              type="month"
+              aria-label="Selecionar mês da fatura"
+              value={selectedMonth}
+              onChange={(event) => selectMonth(event.target.value)}
+              className="min-h-11 text-xs font-semibold sm:w-auto"
+            />
 
             <button
               type="button"
