@@ -268,12 +268,16 @@ export default function TransactionForm({
           next.isCredit = value === 'credit_card'
           next.isInstallment = false
           if (value !== 'credit_card') next.cardId = ''
+          else if (!next.cardId) {
+            const activeCards = creditCards.filter((card) => card.active !== false)
+            if (activeCards.length === 1) next.cardId = activeCards[0].id
+          }
         }
         return next
       })
       setErrors((e) => ({ ...e, [field]: '' }))
     },
-    [],
+    [creditCards],
   )
 
   const isSavings = form.txType === 'savings'
@@ -305,6 +309,9 @@ export default function TransactionForm({
     if (isSavings && !form.savingsDestination.trim())
       errs.savingsDestination = 'Informe onde este dinheiro está guardado'
     if (!form.date) errs.date = 'Data obrigatória'
+    if (isExpense && form.paymentMethod === 'credit_card' && creditCards.some((card) => card.active !== false) && !form.cardId) {
+      errs.cardId = 'Selecione o cartão cadastrado para incluir a compra na fatura'
+    }
     if (form.isInstallment && parseInt(form.installments) < 2)
       errs.installments = 'Mínimo 2 parcelas'
     setErrors(errs)
@@ -767,7 +774,7 @@ export default function TransactionForm({
                       onChange={update('cardId')}
                       className="w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 py-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
                     >
-                      <option value="">Usar fechamento manual</option>
+                      <option value="">Selecione um cartão</option>
                       {activeCreditCards.map((card) => (
                         <option key={card.id} value={card.id}>
                           {card.name}
@@ -775,6 +782,11 @@ export default function TransactionForm({
                         </option>
                       ))}
                     </select>
+                    {errors.cardId && (
+                      <p role="alert" className="mt-1 text-xs text-[--danger-text]">
+                        {errors.cardId}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -791,8 +803,12 @@ export default function TransactionForm({
                       </p>
                     )}
                   </div>
-                ) : (
+                ) : activeCreditCards.length === 0 ? (
                   <>
+                    <p className="text-xs text-[--warning-text]">
+                      Sem cartão cadastrado: este lançamento ficará fora da Central de Cartões.
+                      Cadastre um cartão e vincule a compra para acompanhar a fatura.
+                    </p>
                     <Input
                       label="Dia de fechamento da fatura"
                       type="number"
