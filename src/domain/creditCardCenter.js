@@ -274,6 +274,8 @@ export function buildCreditCardCenter({
 
   return {
     selectedMonth,
+    unlinkedPurchaseCount: legacy.length,
+    unlinkedPurchaseTotal: sum(legacy),
     selectedMonthLabel: labelForMonth(selectedMonth),
     cards,
     invoices,
