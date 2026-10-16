@@ -371,6 +371,13 @@ export default function InvoiceLifecycleModal({
               <input
                 id="invoice-event-date"
                 type="date"
+                onClick={(event) => {
+                  try {
+                    event.currentTarget.showPicker?.()
+                  } catch {
+                    /* Native fallback */
+                  }
+                }}
                 value={eventDate}
                 onChange={(event) => setEventDate(event.target.value)}
                 className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"

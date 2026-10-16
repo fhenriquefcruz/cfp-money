@@ -3,7 +3,7 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
-import { Loader2 } from 'lucide-react'
+import { CalendarDays, Loader2 } from 'lucide-react'
 
 export const Button = ({
   children,
@@ -49,6 +49,19 @@ export const Input = ({ label, error, icon, iconRight, className, ...props }) =>
   const generatedId = React.useId()
   const inputId = props.id || generatedId
   const errorId = `${inputId}-error`
+  const dateRef = React.useRef(null)
+  const isDateField = props.type === 'date' || props.type === 'month'
+  const openDatePicker = () => {
+    try {
+      if (typeof dateRef.current?.showPicker === 'function') {
+        dateRef.current.showPicker()
+      } else {
+        dateRef.current?.focus()
+      }
+    } catch {
+      dateRef.current?.focus()
+    }
+  }
 
   return (
     <div className="space-y-1.5">
@@ -64,19 +77,31 @@ export const Input = ({ label, error, icon, iconRight, className, ...props }) =>
           </div>
         )}
         <input
+          ref={dateRef}
           id={inputId}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={error ? errorId : props['aria-describedby']}
           className={clsx(
             'w-full bg-[--bg-surface] border rounded-xl px-4 py-2.5 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] transition-all',
             icon ? 'pl-10' : '',
-            iconRight ? 'pr-10' : '',
+            iconRight || isDateField ? 'pr-11' : '',
             error ? 'border-[--danger-border]' : 'border-[--border-default]',
             className,
           )}
           {...props}
         />
-        {iconRight && <div className="absolute right-3 top-1/2 -translate-y-1/2">{iconRight}</div>}
+        {isDateField ? (
+          <button
+            type="button"
+            onClick={openDatePicker}
+            aria-label={props.type === 'month' ? 'Abrir seletor de mês' : 'Abrir calendário'}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-[--text-secondary] hover:bg-[--bg-hover] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+          >
+            <CalendarDays size={16} />
+          </button>
+        ) : iconRight ? (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">{iconRight}</div>
+        ) : null}
       </div>
       {error && (
         <p id={errorId} className="text-xs text-[--danger-text]">

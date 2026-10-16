@@ -305,6 +305,8 @@ export default function TransactionForm({
     if (isSavings && !form.savingsDestination.trim())
       errs.savingsDestination = 'Informe onde este dinheiro está guardado'
     if (!form.date) errs.date = 'Data obrigatória'
+    if (isExpense && form.paymentMethod === 'credit_card' && !form.cardId)
+      errs.cardId = 'Selecione o cartão para incluir a compra na fatura'
     if (form.isInstallment && parseInt(form.installments) < 2)
       errs.installments = 'Mínimo 2 parcelas'
     setErrors(errs)
@@ -767,7 +769,7 @@ export default function TransactionForm({
                       onChange={update('cardId')}
                       className="w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 py-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
                     >
-                      <option value="">Usar fechamento manual</option>
+                      <option value="">Selecione um cartão cadastrado</option>
                       {activeCreditCards.map((card) => (
                         <option key={card.id} value={card.id}>
                           {card.name}
@@ -775,7 +777,17 @@ export default function TransactionForm({
                         </option>
                       ))}
                     </select>
+                    {errors.cardId && (
+                      <p className="mt-1 text-xs text-[--danger-text]" role="alert">
+                        {errors.cardId}
+                      </p>
+                    )}
                   </div>
+                )}
+                {activeCreditCards.length === 0 && (
+                  <p className="text-xs text-[--warning-text]">
+                    Cadastre um cartão em Cartões e faturas para vincular esta compra.
+                  </p>
                 )}
 
                 {selectedCreditCard ? (

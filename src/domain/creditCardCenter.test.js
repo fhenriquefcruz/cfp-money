@@ -359,3 +359,25 @@ test('remove compras canceladas do total, da previsão e dos compromissos futuro
   expect(center.futureInstallmentTotal).toBe(0)
   expect(center.forecast[0].total).toBe(0)
 })
+
+test('mostra compras sem cartão de outros meses para permitir conciliação', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      { id: 'old', type: 'expense', paymentMethod: 'credit_card', amount: 170, date: '2026-06-03' },
+      {
+        id: 'current',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        amount: 90,
+        date: '2026-10-04',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-10',
+  })
+
+  expect(center.unlinkedPurchaseCount).toBe(2)
+  expect(center.unlinkedPurchaseTotal).toBe(260)
+  expect(center.legacyCount).toBe(1)
+  expect(center.selectedTotal).toBe(0)
+})
