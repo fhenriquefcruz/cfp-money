@@ -631,7 +631,7 @@ export default function Dashboard() {
 
       {/* Inteligência executiva: ritmo, saúde e Money em uma faixa coerente */}
       <motion.div
-        className="dashboard-bento-grid grid min-w-0 grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-12"
+        className="dashboard-bento-grid grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
@@ -678,14 +678,14 @@ export default function Dashboard() {
           <FinancialHealthScore report={healthReport} />
         </Card>
 
-        <div className="dashboard-money-insight col-span-2 min-w-0 xl:col-span-6">
+        <div className="dashboard-money-insight col-span-1 min-w-0 md:col-span-2 xl:col-span-6">
           <MoneyInsightCard referenceDate={viewDate} />
         </div>
       </motion.div>
 
       {/* Análise principal: evolução e composição */}
-      <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
-        <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.15 }}>
+      <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-3">
+        <motion.div className="xl:col-span-2" {...fade} transition={{ delay: 0.15 }}>
           <Card className="dashboard-finance-chart h-full overflow-hidden">
             <div className="dashboard-finance-chart__header mb-4 flex flex-col gap-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -981,8 +981,8 @@ export default function Dashboard() {
       </div>
 
       {/* Linha inferior */}
-      <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3">
-        <motion.div className="lg:col-span-2" {...fade} transition={{ delay: 0.25 }}>
+      <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-3">
+        <motion.div className="xl:col-span-2" {...fade} transition={{ delay: 0.25 }}>
           <Card>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
