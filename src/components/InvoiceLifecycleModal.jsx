@@ -8,7 +8,7 @@ import {
   getPaymentReversibleAmount,
 } from '../domain/invoiceLifecycle'
 import { formatCurrency, formatDate } from '../utils'
-import { Button, Modal } from './ui'
+import { Button, Input, Modal } from './ui'
 
 function todayIso() {
   const now = new Date()
@@ -361,21 +361,13 @@ export default function InvoiceLifecycleModal({
               </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="invoice-event-date"
-                className="mb-1.5 block text-sm font-medium text-[--text-secondary]"
-              >
-                Data do evento
-              </label>
-              <input
-                id="invoice-event-date"
-                type="date"
-                value={eventDate}
-                onChange={(event) => setEventDate(event.target.value)}
-                className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-              />
-            </div>
+            <Input
+              id="invoice-event-date"
+              label="Data do evento"
+              type="date"
+              value={eventDate}
+              onChange={(event) => setEventDate(event.target.value)}
+            />
 
             {tab === 'payment' && (
               <div>
