@@ -123,6 +123,30 @@ function sum(items, selector = (item) => item.amount) {
   return cents / 100
 }
 
+// Resolve older credit purchases only when the saved card identity uniquely matches.
+export function resolveLegacyCardId(transaction = {}, cards = []) {
+  if (transaction.cardId) return transaction.cardId
+  const directId = transaction.creditCardId || transaction.creditCard?.id
+  if (directId) return directId
+  if (transaction.type !== 'expense') return ''
+
+  const last4 = String(transaction.cardLast4 || transaction.creditCardLast4 || '').replace(/\D/g, '').slice(-4)
+  const name = String(transaction.cardName || transaction.creditCardName || '').trim().toLocaleLowerCase('pt-BR')
+  const candidates = cards.filter((card) => {
+    const cardLast4 = String(card.last4 || '').replace(/\D/g, '').slice(-4)
+    const cardName = String(card.name || '').trim().toLocaleLowerCase('pt-BR')
+    return (last4 && cardLast4 === last4) || (name && cardName === name)
+  })
+  return candidates.length === 1 ? candidates[0].id : ''
+}
+
+export function closestPopulatedInvoiceMonth(months = [], referenceMonth = monthKeyFromDate()) {
+  const available = [...new Set(months.filter((value) => /^\d{4}-\d{2}$/.test(value || '')))].sort()
+  if (!available.length) return ''
+  if (available.includes(referenceMonth)) return referenceMonth
+  return available.find((month) => month > referenceMonth) || available[available.length - 1]
+}
+
 export function buildCreditCardCenter({
   transactions = [],
   creditCards = [],
@@ -131,8 +155,12 @@ export function buildCreditCardCenter({
   now = new Date(),
   forecastMonths = 6,
 }) {
-  const structured = transactions.filter(isStructuredCreditTransaction)
-  const legacy = transactions.filter(
+  const linkedTransactions = transactions.map((transaction) => {
+    const cardId = resolveLegacyCardId(transaction, creditCards)
+    return cardId && !transaction.cardId ? { ...transaction, cardId } : transaction
+  })
+  const structured = linkedTransactions.filter(isStructuredCreditTransaction)
+  const legacy = linkedTransactions.filter(
     (transaction) =>
       transaction.type === 'expense' &&
       !transaction.isSavings &&
@@ -271,6 +299,12 @@ export function buildCreditCardCenter({
   const selectedLegacy = legacy.filter(
     (transaction) => transaction.date?.slice(0, 7) === selectedMonth,
   )
+  const populatedMonths = [
+    ...structured.map((transaction) =>
+      resolveCreditTransactionInvoiceMonth(transaction, cardMap.get(transaction.cardId)),
+    ),
+    ...invoiceEvents.map((event) => event.invoiceMonth),
+  ]
 
   return {
     selectedMonth,
@@ -291,6 +325,9 @@ export function buildCreditCardCenter({
     futureInstallmentTotal: sum(futureInstallments),
     legacyCount: selectedLegacy.length,
     legacyTotal: sum(selectedLegacy),
+    unlinkedCount: legacy.length,
+    unlinkedTotal: sum(legacy),
+    suggestedMonth: closestPopulatedInvoiceMonth(populatedMonths, selectedMonth),
     forecast,
     forecastMax: Math.max(1, ...forecast.map((item) => item.total)),
   }
