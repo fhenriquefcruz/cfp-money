@@ -476,6 +476,7 @@ test('mantém eventos de pagamento prevalecendo sobre status pago após concilia
         paymentMethod: 'credit_card',
         cardName: 'Inter',
         amount: 230,
+        invoiceMonth: '2026-08',
         date: '2026-08-17',
         paymentStatus: 'paid',
       },
