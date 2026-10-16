@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
 import { CalendarDays, Loader2 } from 'lucide-react'
-import CalendarDateField from './CalendarDateField'
+const CalendarDateField = React.lazy(() => import('./CalendarDateField'))
 
 export const Button = ({
   children,
@@ -115,7 +115,13 @@ const StandardInput = ({ label, error, icon, iconRight, className, ...props }) =
 
 // Date fields share one visual calendar across forms; other inputs retain their native behavior.
 export const Input = (props) =>
-  props.type === 'date' ? <CalendarDateField {...props} /> : <StandardInput {...props} />
+  props.type === 'date' ? (
+    <React.Suspense fallback={<StandardInput {...props} />}>
+      <CalendarDateField {...props} />
+    </React.Suspense>
+  ) : (
+    <StandardInput {...props} />
+  )
 
 export const Select = ({ label, error, children, className, ...props }) => {
   const generatedId = React.useId()
