@@ -305,6 +305,8 @@ export default function TransactionForm({
     if (isSavings && !form.savingsDestination.trim())
       errs.savingsDestination = 'Informe onde este dinheiro está guardado'
     if (!form.date) errs.date = 'Data obrigatória'
+    if (isExpense && form.paymentMethod === 'credit_card' && !form.cardId)
+      errs.cardId = 'Selecione o cartão para incluir a compra na fatura'
     if (form.isInstallment && parseInt(form.installments) < 2)
       errs.installments = 'Mínimo 2 parcelas'
     setErrors(errs)
