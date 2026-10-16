@@ -45,10 +45,11 @@ export const Button = ({
   )
 }
 
-export const Input = ({ label, error, icon, iconRight, className, ...props }) => {
+export const Input = ({ label, error, icon, iconRight, className, onClick, ...props }) => {
   const generatedId = React.useId()
   const inputId = props.id || generatedId
   const errorId = `${inputId}-error`
+  const hasNativePicker = props.type === 'date' || props.type === 'month'
 
   return (
     <div className="space-y-1.5">
@@ -58,18 +59,28 @@ export const Input = ({ label, error, icon, iconRight, className, ...props }) =>
         </label>
       )}
       <div className="relative">
-        {icon && (
+        {icon && !hasNativePicker && (
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[--text-tertiary]">
             {icon}
           </div>
         )}
         <input
           id={inputId}
+          onClick={(event) => {
+            onClick?.(event)
+            if (hasNativePicker && !event.defaultPrevented) {
+              try {
+                event.currentTarget.showPicker?.()
+              } catch {
+                // The browser can still use its native picker.
+              }
+            }
+          }}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={error ? errorId : props['aria-describedby']}
           className={clsx(
             'w-full bg-[--bg-surface] border rounded-xl px-4 py-2.5 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] transition-all',
-            icon ? 'pl-10' : '',
+            icon && !hasNativePicker ? 'pl-10' : '',
             iconRight ? 'pr-10' : '',
             error ? 'border-[--danger-border]' : 'border-[--border-default]',
             className,

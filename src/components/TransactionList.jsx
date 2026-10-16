@@ -32,7 +32,7 @@ import {
   useTransactions,
 } from '../contexts/AppContext'
 import { useAuth } from '../contexts/AuthContext'
-import { Button, EmptyState, Modal } from './ui'
+import { Button, EmptyState, Input, Modal } from './ui'
 import TransactionForm from './TransactionForm'
 import TransactionSeriesModal from './TransactionSeriesModal'
 import TransactionCsvImportModal from './TransactionCsvImportModal'
@@ -55,6 +55,7 @@ import {
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
 import { getSavingsDestinationLabel } from '../domain/savings'
 import { isTransactionSeries } from '../domain/transactionSeries'
+import { resolveLegacyCardId } from '../domain/creditCardCenter'
 import {
   PAYMENT_STATUS,
   buildPaymentBulkOperation,
@@ -454,6 +455,9 @@ export default function TransactionList() {
   const [categoryReviewOnly, setCategoryReviewOnly] = useState(
     () => searchParams.get('review') === 'categories',
   )
+  const [cardLinkReviewOnly, setCardLinkReviewOnly] = useState(
+    () => searchParams.get('review') === 'card-link',
+  )
   const [dateRange, setDateRange] = useState(
     () =>
       getMonthRouteRange(searchParams.get('month')) ||
@@ -494,6 +498,16 @@ export default function TransactionList() {
       if (catFilter !== 'all' && tx.categoryId !== catFilter) return false
       if (payFilter !== 'all' && tx.paymentMethod !== payFilter) return false
       if (categoryReviewOnly && !categoryReviewIndex.has(tx.id)) return false
+      if (
+        cardLinkReviewOnly &&
+        !(
+          tx.type === 'expense' &&
+          tx.paymentMethod === 'credit_card' &&
+          !tx.cardId &&
+          !resolveLegacyCardId(tx, creditCards)
+        )
+      )
+        return false
 
       if (paymentStatusFilter !== 'all') {
         if (!isPayableExpense(tx)) return false
@@ -541,7 +555,9 @@ export default function TransactionList() {
     paymentStatusFilter,
     paymentStatusIndex,
     categoryReviewOnly,
+    cardLinkReviewOnly,
     categoryReviewIndex,
+    creditCards,
     dateRange,
     search,
     sortAsc,
@@ -588,6 +604,7 @@ export default function TransactionList() {
     )
 
     setCategoryReviewOnly(searchParams.get('review') === 'categories')
+    setCardLinkReviewOnly(searchParams.get('review') === 'card-link')
     setPage(1)
   }, [searchParams])
 
@@ -660,6 +677,7 @@ export default function TransactionList() {
       }[paymentStatusFilter] || paymentStatusFilter,
     ],
     categoryReviewOnly && ['review', 'Categorias em revisão'],
+    cardLinkReviewOnly && ['card-link', 'Compras sem cartão vinculado'],
     hasExpandedDateFilter && [
       'date',
       RANGE_FILTERS.find((preset) => preset.id === selectedRangeFilter)?.label ||
@@ -674,6 +692,7 @@ export default function TransactionList() {
     if (filterId === 'payment') setPayFilter('all')
     if (filterId === 'status') setPaymentStatusFilter('all')
     if (filterId === 'review') setCategoryReviewOnly(false)
+    if (filterId === 'card-link') setCardLinkReviewOnly(false)
     if (filterId === 'date') setDateRange(getCurrentMonthRange())
     setPage(1)
   }
@@ -807,6 +826,7 @@ export default function TransactionList() {
     setPayFilter('all')
     setPaymentStatusFilter('all')
     setCategoryReviewOnly(false)
+    setCardLinkReviewOnly(false)
     setDateRange(getCurrentMonthRange())
     setSearch('')
     setPage(1)
@@ -1334,46 +1354,30 @@ export default function TransactionList() {
                   </select>
                 </div>
 
-                {/* Datas */}
+                {/* Datas com calendário acessível */}
                 <div className="grid grid-cols-1 gap-2 min-[420px]:col-span-2 min-[420px]:grid-cols-2">
-                  <div>
-                    <label
-                      htmlFor="transaction-date-from"
-                      className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
-                    >
-                      De
-                    </label>
-                    <input
-                      id="transaction-date-from"
-                      type="date"
-                      value={dateRange.from}
-                      onChange={(e) => {
-                        const from = e.target.value
-                        setDateRange({ from, to: defaultDateRangeEnd(from) })
-                        setPage(1)
-                      }}
-                      className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-2.5 py-2 text-xs text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="transaction-date-to"
-                      className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
-                    >
-                      Até
-                    </label>
-                    <input
-                      id="transaction-date-to"
-                      type="date"
-                      value={dateRange.to}
-                      min={dateRange.from || undefined}
-                      onChange={(e) => {
-                        setDateRange((r) => ({ ...r, to: e.target.value }))
-                        setPage(1)
-                      }}
-                      className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-2.5 py-2 text-xs text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-                    />
-                  </div>
+                  <Input
+                    id="transaction-date-from"
+                    label="De"
+                    type="date"
+                    value={dateRange.from}
+                    onChange={(e) => {
+                      const from = e.target.value
+                      setDateRange({ from, to: defaultDateRangeEnd(from) })
+                      setPage(1)
+                    }}
+                  />
+                  <Input
+                    id="transaction-date-to"
+                    label="Até"
+                    type="date"
+                    value={dateRange.to}
+                    min={dateRange.from || undefined}
+                    onChange={(e) => {
+                      setDateRange((r) => ({ ...r, to: e.target.value }))
+                      setPage(1)
+                    }}
+                  />
                 </div>
                 <div className="flex items-end justify-end sm:col-span-1">
                   <button

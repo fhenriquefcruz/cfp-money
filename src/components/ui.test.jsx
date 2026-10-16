@@ -1,7 +1,7 @@
 import React from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, test, vi } from 'vitest'
-import { Modal } from './ui'
+import { Input, Modal } from './ui'
 
 describe('Modal', () => {
   test('expõe semântica de diálogo e fechamento acessível', () => {
@@ -37,5 +37,21 @@ describe('Modal', () => {
 
     expect(onClose).not.toHaveBeenCalled()
     expect(screen.getByRole('textbox', { name: 'Descrição' })).toHaveValue('Rascunho')
+  })
+})
+
+describe('Native date picker', () => {
+  test('abre o calendário pelo botão explícito sem depender de digitação', () => {
+    const showPicker = vi.fn()
+    const original = HTMLInputElement.prototype.showPicker
+    HTMLInputElement.prototype.showPicker = showPicker
+    try {
+      render(<Input label="Data do lançamento" type="date" defaultValue="2026-10-16" />)
+      fireEvent.click(screen.getByLabelText('Data do lançamento'))
+      expect(showPicker).toHaveBeenCalledTimes(1)
+      expect(screen.getByLabelText('Data do lançamento')).toHaveValue('2026-10-16')
+    } finally {
+      HTMLInputElement.prototype.showPicker = original
+    }
   })
 })

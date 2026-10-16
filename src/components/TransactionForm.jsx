@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FileText,
-  Calendar,
   CreditCard,
   ArrowUpCircle,
   ArrowDownCircle,
@@ -268,12 +267,16 @@ export default function TransactionForm({
           next.isCredit = value === 'credit_card'
           next.isInstallment = false
           if (value !== 'credit_card') next.cardId = ''
+          else if (!next.cardId) {
+            const activeCards = creditCards.filter((card) => card.active !== false)
+            if (activeCards.length === 1) next.cardId = activeCards[0].id
+          }
         }
         return next
       })
       setErrors((e) => ({ ...e, [field]: '' }))
     },
-    [],
+    [creditCards],
   )
 
   const isSavings = form.txType === 'savings'
@@ -305,6 +308,14 @@ export default function TransactionForm({
     if (isSavings && !form.savingsDestination.trim())
       errs.savingsDestination = 'Informe onde este dinheiro está guardado'
     if (!form.date) errs.date = 'Data obrigatória'
+    if (
+      isExpense &&
+      form.paymentMethod === 'credit_card' &&
+      creditCards.some((card) => card.active !== false) &&
+      !creditCards.some((card) => card.id === form.cardId && card.active !== false)
+    ) {
+      errs.cardId = 'Selecione o cartão cadastrado para ver a fatura'
+    }
     if (form.isInstallment && parseInt(form.installments) < 2)
       errs.installments = 'Mínimo 2 parcelas'
     setErrors(errs)
@@ -710,7 +721,6 @@ export default function TransactionForm({
             type="date"
             value={form.date}
             onChange={update('date')}
-            icon={<Calendar size={15} />}
             error={errors.date}
             required
           />
@@ -767,7 +777,7 @@ export default function TransactionForm({
                       onChange={update('cardId')}
                       className="w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 py-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
                     >
-                      <option value="">Usar fechamento manual</option>
+                      <option value="">Selecione um cartão</option>
                       {activeCreditCards.map((card) => (
                         <option key={card.id} value={card.id}>
                           {card.name}
@@ -775,6 +785,11 @@ export default function TransactionForm({
                         </option>
                       ))}
                     </select>
+                    {errors.cardId && (
+                      <p role="alert" className="mt-1 text-xs text-[--danger-text]">
+                        {errors.cardId}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -791,8 +806,11 @@ export default function TransactionForm({
                       </p>
                     )}
                   </div>
-                ) : (
+                ) : activeCreditCards.length === 0 ? (
                   <>
+                    <p className="text-xs text-[--warning-text]">
+                      Sem cartão cadastrado: esta compra ficará fora das faturas. Vincule um cartão depois.
+                    </p>
                     <Input
                       label="Dia de fechamento da fatura"
                       type="number"
@@ -805,12 +823,11 @@ export default function TransactionForm({
                     />
                     {form.closingDay && (
                       <p className="text-xs text-[--brand-600]">
-                        💡 Fluxo manual: compras após dia {form.closingDay} serão lançadas no mês
-                        seguinte.
+                        Compras após o dia {form.closingDay} passam ao mês seguinte.
                       </p>
                     )}
                   </>
-                )}
+                ) : null}
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -898,8 +915,7 @@ export default function TransactionForm({
                     type="date"
                     value={form.dueDate}
                     onChange={update('dueDate')}
-                    icon={<Calendar size={15} />}
-                  />
+                          />
                 )}
 
                 {showRecurringField && (

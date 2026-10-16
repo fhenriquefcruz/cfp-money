@@ -25,7 +25,7 @@ import {
   ArrowLeftRight,
 } from 'lucide-react'
 import { useTransactions } from '../contexts/AppContext'
-import { Card, Button } from './ui'
+import { Card, Button, Input } from './ui'
 import { formatCurrency, exportToCSV, exportToPDF } from '../utils'
 import { getMonthlyFinancialData } from '../domain/monthlyFinance'
 import PremiumGate from './PremiumGate'
@@ -255,16 +255,14 @@ function ReportsContent() {
           <p className="text-xs text-[--text-tertiary] mt-0.5">Análise do seu período financeiro</p>
         </div>
         <div className="reports-premium__filters grid w-full min-w-0 grid-cols-1 gap-2 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 min-[420px]:grid-cols-2 xl:w-[560px] xl:min-w-[560px] xl:grid-cols-[180px_160px_minmax(0,1fr)]">
-          <label className="grid min-w-0 gap-1 text-xs text-[--text-tertiary]">
-            Mês final
-            <input
-              type="month"
-              value={referenceMonth}
-              onChange={(event) => setReferenceMonth(event.target.value)}
-              aria-label="Mês final do relatório"
-              className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 py-2 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-            />
-          </label>
+          <Input
+            label="Mês final"
+            type="month"
+            value={referenceMonth}
+            onChange={(event) => setReferenceMonth(event.target.value)}
+            aria-label="Mês final do relatório"
+            className="min-h-11 min-w-0 bg-[--bg-elevated]"
+          />
           <label className="grid min-w-0 gap-1 text-xs text-[--text-tertiary]">
             Período analisado
             <select

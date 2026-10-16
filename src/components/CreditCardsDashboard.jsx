@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
@@ -14,14 +13,9 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
-import {
-  buildCreditCardCenter,
-  firstRelevantForecastMonth,
-  monthKeyFromDate,
-  shiftMonthKey,
-} from '../domain/creditCardCenter'
+import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { formatCurrency, formatDate } from '../utils'
-import { Card } from './ui'
+import { Card, Input } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
 import CreditCardsSettingsCard from './CreditCardsSettingsCard'
 import PremiumGate from './PremiumGate'
@@ -209,13 +203,13 @@ function CreditCardsCenterContent() {
       return
     }
 
-    const relevantMonth = firstRelevantForecastMonth(center.forecast, selectedMonth)
+    const relevantMonth = center.suggestedMonth
     if (!relevantMonth) return
 
     setSelectedMonth(relevantMonth)
     setSelectedCardId('all')
   }, [
-    center.forecast,
+    center.suggestedMonth,
     center.selectedItemCount,
     center.selectedPaidTotal,
     center.selectedTotal,
@@ -301,21 +295,13 @@ function CreditCardsCenterContent() {
               <ChevronLeft size={17} />
             </button>
 
-            <label className="relative">
-              <span className="sr-only">Selecionar mês da fatura</span>
-              <CalendarDays
-                size={15}
-                className="pointer-events-none absolute left-3 top-3.5 text-[--text-tertiary]"
-              />
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(event) => {
-                  selectMonth(event.target.value)
-                }}
-                className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-surface] pl-9 pr-3 text-xs font-semibold text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] sm:w-auto"
-              />
-            </label>
+            <Input
+              type="month"
+              aria-label="Selecionar mês da fatura"
+              value={selectedMonth}
+              onChange={(event) => selectMonth(event.target.value)}
+              className="min-h-11 text-xs font-semibold sm:w-auto"
+            />
 
             <button
               type="button"
@@ -328,10 +314,7 @@ function CreditCardsCenterContent() {
 
             <button
               type="button"
-              onClick={() => {
-                setSelectedMonth(monthKeyFromDate())
-                setSelectedCardId('all')
-              }}
+              onClick={() => selectMonth(monthKeyFromDate())}
               className="min-h-11 rounded-xl border border-[--brand-200] bg-[--brand-50] px-3 text-xs font-bold text-[--brand-700]"
             >
               Mês atual
@@ -379,7 +362,7 @@ function CreditCardsCenterContent() {
             />
           </div>
 
-          {center.legacyCount > 0 && (
+          {center.unlinkedCount > 0 && (
             <div className="flex flex-col gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs font-black text-[--text-primary]">Compras sem cartão</p>
@@ -388,8 +371,11 @@ function CreditCardsCenterContent() {
                   faturas.
                 </p>
               </div>
-              <Link to="/transactions" className="text-xs font-bold text-[--text-brand]">
-                Revisar
+              <Link
+                to="/transactions?review=card-link&scope=all"
+                className="text-xs font-bold text-[--text-brand]"
+              >
+                Vincular compras
               </Link>
             </div>
           )}

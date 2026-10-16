@@ -1,6 +1,5 @@
 import {
   buildCreditCardCenter,
-  firstRelevantForecastMonth,
   invoiceDatesForMonth,
   invoiceStatus,
   labelForMonth,
@@ -106,8 +105,8 @@ test('consolida a fatura por cartão sem incluir transação antiga manual', () 
   expect(center.selectedTotal).toBe(300)
   expect(center.selectedItemCount).toBe(2)
   expect(center.cardsWithTransactions).toBe(2)
-  expect(center.legacyCount).toBe(1)
-  expect(center.legacyTotal).toBe(50)
+  expect(center.unlinkedCount).toBe(1)
+  expect(center.unlinkedTotal).toBe(50)
 })
 
 test('calcula parcelas futuras e previsão mensal', () => {
@@ -184,7 +183,7 @@ test('recupera compra antiga vinculada ao cartão mesmo sem flag estruturada', (
 
   expect(center.selectedTotal).toBe(180)
   expect(center.selectedItemCount).toBe(1)
-  expect(center.legacyCount).toBe(0)
+  expect(center.unlinkedCount).toBe(0)
   expect(center.invoices.find((invoice) => invoice.card.id === 'inter')).toMatchObject({
     purchaseTotal: 180,
     itemCount: 1,
@@ -207,31 +206,8 @@ test('mantém como legado somente compra no crédito sem cartão identificável'
   })
 
   expect(center.selectedTotal).toBe(0)
-  expect(center.legacyCount).toBe(1)
-  expect(center.legacyTotal).toBe(75)
-})
-
-test('encontra a primeira fatura futura com lançamentos', () => {
-  expect(
-    firstRelevantForecastMonth(
-      [
-        { month: '2026-09', total: 0, itemCount: 0 },
-        { month: '2026-10', total: 904.63, itemCount: 2 },
-        { month: '2026-11', total: 120, itemCount: 1 },
-      ],
-      '2026-09',
-    ),
-  ).toBe('2026-10')
-
-  expect(
-    firstRelevantForecastMonth(
-      [
-        { month: '2026-09', total: 0, itemCount: 0 },
-        { month: '2026-10', total: 0, itemCount: 0 },
-      ],
-      '2026-09',
-    ),
-  ).toBe('')
+  expect(center.unlinkedCount).toBe(1)
+  expect(center.unlinkedTotal).toBe(75)
 })
 
 test('considera despesa vinculada por cardId mesmo com método legado inconsistente', () => {
@@ -358,4 +334,83 @@ test('remove compras canceladas do total, da previsão e dos compromissos futuro
   expect(center.selectedItemCount).toBe(0)
   expect(center.futureInstallmentTotal).toBe(0)
   expect(center.forecast[0].total).toBe(0)
+})
+
+test('recupera compra antiga com identificação única do cartão e respeita período da fatura', () => {
+  const center = buildCreditCardCenter({
+    creditCards: cards,
+    transactions: [
+      {
+        id: 'old-credit',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardName: 'Inter',
+        amount: 340,
+        date: '2026-07-20',
+        description: 'Compra pré-integração',
+      },
+    ],
+    selectedMonth: '2026-08',
+    now: new Date(2026, 6, 20),
+  })
+
+  expect(center.selectedPurchaseTotal).toBe(340)
+  expect(center.selectedTransactions[0].cardId).toBe('inter')
+  expect(center.unlinkedCount).toBe(0)
+})
+
+test('não inventa vínculo quando faltam dados ou cartão é ambíguo', () => {
+  const center = buildCreditCardCenter({
+    creditCards: cards,
+    transactions: [
+      {
+        id: 'orphan',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        amount: 150,
+        date: '2026-05-10',
+      },
+      {
+        id: 'ambiguous',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardName: 'Banco',
+        amount: 50,
+        date: '2026-06-10',
+      },
+    ],
+    selectedMonth: '2026-10',
+    now: new Date(2026, 9, 10),
+  })
+
+  expect(center.selectedTotal).toBe(0)
+  expect(center.unlinkedCount).toBe(2)
+  expect(center.unlinkedTotal).toBe(200)
+})
+
+test('encontra fatura com lançamentos em mês anterior ou posterior ao selecionado', () => {
+  const center = buildCreditCardCenter({
+    creditCards: cards,
+    transactions: [
+      {
+        id: 'old',
+        type: 'expense',
+        cardId: 'inter',
+        amount: 300,
+        invoiceMonth: '2026-06',
+        date: '2026-06-17',
+      },
+      {
+        id: 'future',
+        type: 'expense',
+        cardId: 'inter',
+        amount: 400,
+        invoiceMonth: '2026-12',
+        date: '2026-12-17',
+      },
+    ],
+    selectedMonth: '2026-10',
+    now: new Date(2026, 9, 10),
+  })
+  expect(center.suggestedMonth).toBe('2026-12')
 })
