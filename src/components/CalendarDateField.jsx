@@ -98,7 +98,7 @@ export default function CalendarDateField({
   }, [isOpen])
 
   const select = (isoDate) => {
-    if ((min && isoDate < min) || (max && isoDate > max)) return
+    if (isoDate && ((min && isoDate < min) || (max && isoDate > max))) return
     // Compatible with the native input onChange handlers already used by the forms.
     onChange?.({ target: { value: isoDate, name: name || '' } })
     setIsOpen(false)
