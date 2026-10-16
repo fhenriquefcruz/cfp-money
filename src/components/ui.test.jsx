@@ -40,7 +40,6 @@ describe('Modal', () => {
   })
 })
 
-
 describe('Native date picker', () => {
   test('abre o calendário pelo botão explícito sem depender de digitação', () => {
     const showPicker = vi.fn()

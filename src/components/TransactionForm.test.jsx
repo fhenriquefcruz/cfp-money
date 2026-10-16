@@ -376,7 +376,6 @@ describe('TransactionForm credit card integration', () => {
   })
 })
 
-
 describe('Credit card invoice linkage', () => {
   it('impede salvar compra de cartão cadastrado sem vínculo de fatura', () => {
     appMocks.creditCards = [
@@ -410,7 +409,11 @@ describe('Credit card invoice linkage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Adicionar', exact: true }))
     await vi.waitFor(() => expect(appMocks.createTransaction).toHaveBeenCalledTimes(1))
     expect(appMocks.createTransaction).toHaveBeenCalledWith(
-      expect.objectContaining({ cardId: 'unique-card', paymentMethod: 'credit_card', invoiceMonth: expect.any(String) }),
+      expect.objectContaining({
+        cardId: 'unique-card',
+        paymentMethod: 'credit_card',
+        invoiceMonth: expect.any(String),
+      }),
     )
   })
 })

@@ -130,11 +130,19 @@ export function resolveLegacyCardId(transaction = {}, cards = []) {
   if (directId) return directId
   if (transaction.type !== 'expense') return ''
 
-  const last4 = String(transaction.cardLast4 || transaction.creditCardLast4 || '').replace(/\D/g, '').slice(-4)
-  const name = String(transaction.cardName || transaction.creditCardName || '').trim().toLocaleLowerCase('pt-BR')
+  const last4 = String(transaction.cardLast4 || transaction.creditCardLast4 || '')
+    .replace(/\D/g, '')
+    .slice(-4)
+  const name = String(transaction.cardName || transaction.creditCardName || '')
+    .trim()
+    .toLocaleLowerCase('pt-BR')
   const candidates = cards.filter((card) => {
-    const cardLast4 = String(card.last4 || '').replace(/\D/g, '').slice(-4)
-    const cardName = String(card.name || '').trim().toLocaleLowerCase('pt-BR')
+    const cardLast4 = String(card.last4 || '')
+      .replace(/\D/g, '')
+      .slice(-4)
+    const cardName = String(card.name || '')
+      .trim()
+      .toLocaleLowerCase('pt-BR')
     return (last4 && cardLast4 === last4) || (name && cardName === name)
   })
   return candidates.length === 1 ? candidates[0].id : ''
