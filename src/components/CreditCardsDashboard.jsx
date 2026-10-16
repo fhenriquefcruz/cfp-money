@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
