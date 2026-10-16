@@ -105,8 +105,8 @@ test('consolida a fatura por cartão sem incluir transação antiga manual', () 
   expect(center.selectedTotal).toBe(300)
   expect(center.selectedItemCount).toBe(2)
   expect(center.cardsWithTransactions).toBe(2)
-  expect(center.legacyCount).toBe(1)
-  expect(center.legacyTotal).toBe(50)
+  expect(center.unlinkedCount).toBe(1)
+  expect(center.unlinkedTotal).toBe(50)
 })
 
 test('calcula parcelas futuras e previsão mensal', () => {
@@ -183,7 +183,7 @@ test('recupera compra antiga vinculada ao cartão mesmo sem flag estruturada', (
 
   expect(center.selectedTotal).toBe(180)
   expect(center.selectedItemCount).toBe(1)
-  expect(center.legacyCount).toBe(0)
+  expect(center.unlinkedCount).toBe(0)
   expect(center.invoices.find((invoice) => invoice.card.id === 'inter')).toMatchObject({
     purchaseTotal: 180,
     itemCount: 1,
@@ -206,8 +206,8 @@ test('mantém como legado somente compra no crédito sem cartão identificável'
   })
 
   expect(center.selectedTotal).toBe(0)
-  expect(center.legacyCount).toBe(1)
-  expect(center.legacyTotal).toBe(75)
+  expect(center.unlinkedCount).toBe(1)
+  expect(center.unlinkedTotal).toBe(75)
 })
 
 test('considera despesa vinculada por cardId mesmo com método legado inconsistente', () => {
