@@ -50,16 +50,6 @@ export const Input = ({ label, error, icon, iconRight, className, onClick, ...pr
   const inputId = props.id || generatedId
   const errorId = `${inputId}-error`
   const hasNativePicker = props.type === 'date' || props.type === 'month'
-  const openDatePicker = () => {
-    const input = document.getElementById(inputId)
-    if (!input || input.disabled || input.readOnly) return
-    try {
-      if (input.showPicker) return input.showPicker()
-    } catch {
-      // Native pickers may be unavailable on some mobile browsers.
-    }
-    input.focus()
-  }
 
   return (
     <div className="space-y-1.5">
@@ -78,32 +68,26 @@ export const Input = ({ label, error, icon, iconRight, className, onClick, ...pr
           id={inputId}
           onClick={(event) => {
             onClick?.(event)
-            if (hasNativePicker && !event.defaultPrevented) openDatePicker()
+            if (hasNativePicker && !event.defaultPrevented) {
+              try {
+                event.currentTarget.showPicker?.()
+              } catch {
+                // The browser can still use its native picker.
+              }
+            }
           }}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={error ? errorId : props['aria-describedby']}
           className={clsx(
             'w-full bg-[--bg-surface] border rounded-xl px-4 py-2.5 text-sm text-[--text-primary] placeholder:text-[--text-tertiary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] transition-all',
             icon && !hasNativePicker ? 'pl-10' : '',
-            iconRight || hasNativePicker ? 'pr-12' : '',
+            iconRight ? 'pr-10' : '',
             error ? 'border-[--danger-border]' : 'border-[--border-default]',
             className,
           )}
           {...props}
         />
-        {hasNativePicker ? (
-          <button
-            type="button"
-            onClick={openDatePicker}
-            disabled={props.disabled || props.readOnly}
-            aria-label={`Abrir calendário: ${label || props['aria-label'] || 'Selecionar data'}`}
-            className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-[--text-secondary] hover:bg-[--bg-hover] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--brand-500] disabled:opacity-40"
-          >
-            <span aria-hidden="true" className="text-lg leading-none">{icon || '▦'}</span>
-          </button>
-        ) : (
-          iconRight && <div className="absolute right-3 top-1/2 -translate-y-1/2">{iconRight}</div>
-        )}
+        {iconRight && <div className="absolute right-3 top-1/2 -translate-y-1/2">{iconRight}</div>}
       </div>
       {error && (
         <p id={errorId} className="text-xs text-[--danger-text]">
