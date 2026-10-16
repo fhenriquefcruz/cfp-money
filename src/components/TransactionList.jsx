@@ -32,7 +32,7 @@ import {
   useTransactions,
 } from '../contexts/AppContext'
 import { useAuth } from '../contexts/AuthContext'
-import { Button, EmptyState, Modal } from './ui'
+import { Button, EmptyState, Input, Modal } from './ui'
 import TransactionForm from './TransactionForm'
 import TransactionSeriesModal from './TransactionSeriesModal'
 import TransactionCsvImportModal from './TransactionCsvImportModal'
@@ -1334,60 +1334,32 @@ export default function TransactionList() {
                   </select>
                 </div>
 
-                {/* Datas */}
+                {/* O seletor compartilhado evita dependência do calendário do navegador. */}
                 <div className="grid grid-cols-1 gap-2 min-[420px]:col-span-2 min-[420px]:grid-cols-2">
-                  <div>
-                    <label
-                      htmlFor="transaction-date-from"
-                      className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
-                    >
-                      De
-                    </label>
-                    <input
-                      id="transaction-date-from"
-                      type="date"
-                      onClick={(event) => {
-                        try {
-                          event.currentTarget.showPicker?.()
-                        } catch {
-                          /* Native fallback */
-                        }
-                      }}
-                      value={dateRange.from}
-                      onChange={(e) => {
-                        const from = e.target.value
-                        setDateRange({ from, to: defaultDateRangeEnd(from) })
-                        setPage(1)
-                      }}
-                      className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-2.5 py-2 text-xs text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="transaction-date-to"
-                      className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
-                    >
-                      Até
-                    </label>
-                    <input
-                      id="transaction-date-to"
-                      type="date"
-                      onClick={(event) => {
-                        try {
-                          event.currentTarget.showPicker?.()
-                        } catch {
-                          /* Native fallback */
-                        }
-                      }}
-                      value={dateRange.to}
-                      min={dateRange.from || undefined}
-                      onChange={(e) => {
-                        setDateRange((r) => ({ ...r, to: e.target.value }))
-                        setPage(1)
-                      }}
-                      className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-2.5 py-2 text-xs text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
-                    />
-                  </div>
+                  <Input
+                    id="transaction-date-from"
+                    label="De"
+                    type="date"
+                    value={dateRange.from}
+                    onChange={(event) => {
+                      const from = event.target.value
+                      setDateRange({ from, to: defaultDateRangeEnd(from) })
+                      setPage(1)
+                    }}
+                    className="text-xs"
+                  />
+                  <Input
+                    id="transaction-date-to"
+                    label="Até"
+                    type="date"
+                    value={dateRange.to}
+                    min={dateRange.from || undefined}
+                    onChange={(event) => {
+                      setDateRange((current) => ({ ...current, to: event.target.value }))
+                      setPage(1)
+                    }}
+                    className="text-xs"
+                  />
                 </div>
                 <div className="flex items-end justify-end sm:col-span-1">
                   <button
