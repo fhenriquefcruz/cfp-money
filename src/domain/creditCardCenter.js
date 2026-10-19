@@ -123,6 +123,74 @@ function sum(items, selector = (item) => item.amount) {
   return cents / 100
 }
 
+// Conciliação de leitura para registros antigos sem identificador estável de cartão.
+// Não altera transações no banco e nunca escolhe entre cartões ambíguos.
+function normalizeCardName(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+}
+
+function reconcileCardTransaction(transaction, creditCards) {
+  if (
+    transaction.type !== 'expense' ||
+    transaction.isSavings ||
+    transaction.paymentStatus === 'cancelled'
+  ) {
+    return transaction
+  }
+
+  const isCardPurchase = Boolean(
+    transaction.cardId ||
+    transaction.paymentMethod === 'credit_card' ||
+    transaction.isCreditPurchase,
+  )
+  if (!isCardPurchase || creditCards.some((card) => card.id === transaction.cardId)) {
+    return transaction
+  }
+
+  const last4 = String(transaction.cardLast4 || '')
+    .replace(/\D/g, '')
+    .slice(-4)
+  const recordedName = normalizeCardName(transaction.cardName)
+  const recordedIdAsName = normalizeCardName(transaction.cardId)
+  let match = null
+
+  if (last4.length === 4) {
+    const sameLast4 = creditCards.filter(
+      (card) =>
+        String(card.last4 || '')
+          .replace(/\D/g, '')
+          .slice(-4) === last4 &&
+        (!recordedName || normalizeCardName(card.name) === recordedName),
+    )
+    if (sameLast4.length === 1) match = sameLast4[0]
+  }
+
+  if (!match && (recordedName || recordedIdAsName)) {
+    const sameName = creditCards.filter((card) => {
+      const name = normalizeCardName(card.name)
+      return (
+        name &&
+        (name === recordedName || name === recordedIdAsName) &&
+        (!transaction.cardId || recordedIdAsName === name)
+      )
+    })
+    if (sameName.length === 1) match = sameName[0]
+  }
+
+  if (!match) return transaction
+  return {
+    ...transaction,
+    cardId: match.id,
+    cardName: match.name,
+    cardLast4: match.last4 || transaction.cardLast4 || '',
+  }
+}
+
 export function buildCreditCardCenter({
   transactions = [],
   creditCards = [],
@@ -131,8 +199,14 @@ export function buildCreditCardCenter({
   now = new Date(),
   forecastMonths = 6,
 }) {
-  const structured = transactions.filter(isStructuredCreditTransaction)
-  const legacy = transactions.filter(
+  const reconciledTransactions = transactions.map((transaction) =>
+    reconcileCardTransaction(transaction, creditCards),
+  )
+  const reconciledPurchaseCount = reconciledTransactions.filter(
+    (transaction, index) => transaction !== transactions[index],
+  ).length
+  const structured = reconciledTransactions.filter(isStructuredCreditTransaction)
+  const legacy = reconciledTransactions.filter(
     (transaction) =>
       transaction.type === 'expense' &&
       !transaction.isSavings &&
@@ -274,6 +348,7 @@ export function buildCreditCardCenter({
 
   return {
     selectedMonth,
+    reconciledPurchaseCount,
     unlinkedPurchaseCount: legacy.length,
     unlinkedPurchaseTotal: sum(legacy),
     selectedMonthLabel: labelForMonth(selectedMonth),

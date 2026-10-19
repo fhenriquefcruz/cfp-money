@@ -84,10 +84,9 @@ async function expectDashboardPremiumVisualization(page, projectName) {
     return
   }
 
-  expect(Math.abs(geometry.forecast.top - geometry.health.top)).toBeLessThanOrEqual(2)
-  expect(geometry.money.top).toBeGreaterThan(
-    Math.max(geometry.forecast.bottom, geometry.health.bottom),
-  )
+  // Em telas móveis, os cartões têm uma coluna: não reduzir a largura de cada quadro.
+  expect(geometry.health.top).toBeGreaterThanOrEqual(geometry.forecast.bottom)
+  expect(geometry.money.top).toBeGreaterThanOrEqual(geometry.health.bottom)
 }
 
 async function prepareVisualPage(page, route, selector) {

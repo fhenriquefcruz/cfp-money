@@ -15,12 +15,17 @@ const indexPath = join(distRoot, 'index.html')
 // lazy; o carregamento inicial e o maior chunk permanecem inalterados. Na
 // Phase 46, a Central de Reservas adiciona um chunk lazy de 3,39 KiB gzip;
 // o teto total recebe 5 KiB de margem dedicada, sem ampliar o bootstrap.
+// Na Fase 52, o calendário acessível é carregado sob demanda.
+// A medição das builds de 19/10/2026 registrou 242,31 KiB de JS inicial,
+// 723,73 KiB de JS total e 20,50 KiB de CSS (gzip). Os limites incluem
+// margem pequena e explícita para o seletor de datas visual, sem desativar
+// o bloqueio de regressões de performance.
 const limits = {
-  initialJavaScriptGzipBytes: 242 * 1024,
-  totalJavaScriptGzipBytes: 719 * 1024,
+  initialJavaScriptGzipBytes: 242 * 1024 + 512,
+  totalJavaScriptGzipBytes: 724 * 1024,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
-  initialCssGzipBytes: 20 * 1024 + 256,
+  initialCssGzipBytes: 20 * 1024 + 768,
 }
 
 // Builds idênticos podem variar alguns bytes no gzip entre jobs isolados.

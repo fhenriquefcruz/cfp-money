@@ -381,3 +381,110 @@ test('mostra compras sem cartão de outros meses para permitir conciliação', (
   expect(center.legacyCount).toBe(1)
   expect(center.selectedTotal).toBe(0)
 })
+
+test('reconcilia cartão antigo pelo nome sem gravar alterações na transação original', () => {
+  const source = {
+    id: 'imported-by-name',
+    type: 'expense',
+    paymentMethod: 'credit_card',
+    cardName: 'inter',
+    amount: 87.5,
+    purchaseDate: '2026-07-20',
+    date: '2026-07-20',
+  }
+  const center = buildCreditCardCenter({
+    transactions: [source],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+    now: new Date(2026, 6, 20),
+  })
+  expect(center.selectedTotal).toBe(87.5)
+  expect(center.reconciledPurchaseCount).toBe(1)
+  expect(center.unlinkedPurchaseCount).toBe(0)
+  expect(center.selectedTransactions[0].cardId).toBe('inter')
+  expect(source.cardId).toBeUndefined()
+})
+
+test('reconcilia pelo final do cartão quando não há nome, sem duplicar a fatura', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'last-four-only',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardLast4: '9876',
+        amount: 199,
+        date: '2026-07-20',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+  })
+  expect(center.invoices.find((invoice) => invoice.card.id === 'inter').purchaseTotal).toBe(199)
+  expect(center.selectedItemCount).toBe(1)
+  expect(center.reconciledPurchaseCount).toBe(1)
+})
+
+test('não associa final de cartão ambíguo automaticamente', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'ambiguous',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardLast4: '9876',
+        amount: 120,
+        date: '2026-07-20',
+      },
+    ],
+    creditCards: [cards[1], { ...cards[1], id: 'other', name: 'Outro cartão' }],
+    selectedMonth: '2026-08',
+  })
+  expect(center.selectedTotal).toBe(0)
+  expect(center.unlinkedPurchaseCount).toBe(1)
+  expect(center.reconciledPurchaseCount).toBe(0)
+})
+
+test('não relaciona compra PIX por coincidência de nome', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'ordinary-expense',
+        type: 'expense',
+        paymentMethod: 'pix',
+        cardName: 'Inter',
+        amount: 50,
+        date: '2026-08-10',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+  })
+  expect(center.selectedTotal).toBe(0)
+  expect(center.reconciledPurchaseCount).toBe(0)
+})
+
+test('mantém eventos de pagamento prevalecendo sobre status pago após conciliação', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'old-paid',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardName: 'Inter',
+        amount: 230,
+        invoiceMonth: '2026-08',
+        date: '2026-08-17',
+        paymentStatus: 'paid',
+      },
+    ],
+    invoiceEvents: [
+      { id: 'payment', cardId: 'inter', invoiceMonth: '2026-08', type: 'payment', amount: 100 },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+  })
+  expect(center.selectedTotal).toBe(230)
+  expect(center.selectedPaidTotal).toBe(100)
+  expect(center.selectedRemainingTotal).toBe(130)
+})

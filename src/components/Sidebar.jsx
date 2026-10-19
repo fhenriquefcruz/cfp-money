@@ -126,6 +126,32 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [avatarSrc, setAvatarSrc] = useState('')
+  const [profileName, setProfileName] = useState(user?.displayName?.trim() || 'Usuário')
+
+  useEffect(() => {
+    const refreshAvatar = () => {
+      let savedPhoto = ''
+      try {
+        savedPhoto =
+          localStorage.getItem(`meu_real_photo_${user?.uid}`) ||
+          localStorage.getItem(`cfp_photo_${user?.uid}`) ||
+          ''
+      } catch {
+        // A imagem do provedor continua disponível em navegação privada.
+      }
+      setAvatarSrc(savedPhoto || user?.photoURL || '')
+      setProfileName(user?.displayName?.trim() || 'Usuário')
+    }
+    refreshAvatar()
+    window.addEventListener('meu-real-profile-updated', refreshAvatar)
+    window.addEventListener('storage', refreshAvatar)
+    return () => {
+      window.removeEventListener('meu-real-profile-updated', refreshAvatar)
+      window.removeEventListener('storage', refreshAvatar)
+    }
+  }, [user?.uid, user?.photoURL])
+
   const mobileTriggerRef = React.useRef(null)
   const mobileDrawerRef = React.useRef(null)
   const allItems = isAdmin
@@ -266,26 +292,37 @@ export default function Sidebar() {
         </button>
       )}
 
-      <AnimatePresence>
-        {!collapsed && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="mx-3 mb-3 flex items-center gap-2.5 rounded-xl bg-[--bg-hover] p-2.5"
-          >
-            <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-[--brand-600] text-xs font-bold text-white">
-              {(user?.displayName || user?.email || 'U')[0].toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-semibold text-[--text-primary]">
-                {user?.displayName || 'Usuário'}
-              </p>
-              <p className="truncate text-[10px] text-[--text-tertiary]">{user?.email}</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className={clsx('mx-3 mb-3', collapsed && 'mx-auto')}>
+        <NavLink
+          to="/profile"
+          title={collapsed ? 'Abrir meu perfil' : undefined}
+          aria-label={`Abrir perfil de ${profileName}`}
+          className={clsx(
+            'group flex min-w-0 items-center rounded-2xl border border-[--border-subtle] bg-[--bg-surface] transition-colors hover:border-[--brand-300] hover:bg-[--brand-50] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--brand-500]',
+            collapsed ? 'h-11 w-11 justify-center p-1' : 'gap-2.5 p-2.5',
+          )}
+        >
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[--brand-200] bg-gradient-to-br from-[--brand-100] to-[--bg-elevated] text-xs font-black text-[--brand-700]">
+            {avatarSrc ? (
+              <img
+                src={avatarSrc}
+                alt="Foto de perfil"
+                className="h-full w-full object-cover"
+                onError={() => setAvatarSrc('')}
+              />
+            ) : (
+              <span aria-hidden="true">
+                {(user?.displayName || user?.email || 'U')[0].toUpperCase()}
+              </span>
+            )}
+          </div>
+          {!collapsed && (
+            <p className="min-w-0 flex-1 truncate text-xs font-bold text-[--text-primary]">
+              {profileName}
+            </p>
+          )}
+        </NavLink>
+      </div>
 
       <div className={clsx('px-3 pb-2', collapsed && 'flex justify-center')}>
         <button

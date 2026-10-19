@@ -3,7 +3,8 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
-import { CalendarDays, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+const CalendarDateField = React.lazy(() => import('./CalendarDateField'))
 
 export const Button = ({
   children,
@@ -45,7 +46,7 @@ export const Button = ({
   )
 }
 
-export const Input = ({ label, error, icon, iconRight, className, ...props }) => {
+const StandardInput = ({ label, error, icon, iconRight, className, ...props }) => {
   const generatedId = React.useId()
   const inputId = props.id || generatedId
   const errorId = `${inputId}-error`
@@ -97,7 +98,20 @@ export const Input = ({ label, error, icon, iconRight, className, ...props }) =>
             aria-label={props.type === 'month' ? 'Abrir seletor de mês' : 'Abrir calendário'}
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-[--text-secondary] hover:bg-[--bg-hover] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
           >
-            <CalendarDays size={16} />
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M7 3v4M17 3v4M3 10h18" />
+            </svg>
           </button>
         ) : iconRight ? (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">{iconRight}</div>
@@ -111,6 +125,16 @@ export const Input = ({ label, error, icon, iconRight, className, ...props }) =>
     </div>
   )
 }
+
+// Date fields share one visual calendar across forms; other inputs retain their native behavior.
+export const Input = (props) =>
+  props.type === 'date' ? (
+    <React.Suspense fallback={<StandardInput {...props} />}>
+      <CalendarDateField {...props} />
+    </React.Suspense>
+  ) : (
+    <StandardInput {...props} />
+  )
 
 export const Select = ({ label, error, children, className, ...props }) => {
   const generatedId = React.useId()
