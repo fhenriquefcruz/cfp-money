@@ -2664,11 +2664,7 @@ body {
 .dashboard-premium .dashboard-bento-grid > .aurora-card {
   border-top-color: color-mix(in srgb, var(--brand-400) 42%, var(--border-default));
   background:
-    linear-gradient(
-      150deg,
-      color-mix(in srgb, var(--brand-100) 18%, transparent),
-      transparent 60%
-    ),
+    linear-gradient(150deg, color-mix(in srgb, var(--brand-100) 18%, transparent), transparent 60%),
     var(--aurora-surface-elevated);
 }
 .dashboard-premium .dashboard-bento-grid .dashboard-forecast-card,
@@ -2700,5 +2696,7 @@ body {
   pointer-events: none;
 }
 .meu-real-calendar {
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.18),
+    0 4px 16px rgba(0, 0, 0, 0.08);
 }

@@ -145,14 +145,16 @@ function reconcileCardTransaction(transaction, creditCards) {
 
   const isCardPurchase = Boolean(
     transaction.cardId ||
-      transaction.paymentMethod === 'credit_card' ||
-      transaction.isCreditPurchase,
+    transaction.paymentMethod === 'credit_card' ||
+    transaction.isCreditPurchase,
   )
   if (!isCardPurchase || creditCards.some((card) => card.id === transaction.cardId)) {
     return transaction
   }
 
-  const last4 = String(transaction.cardLast4 || '').replace(/\D/g, '').slice(-4)
+  const last4 = String(transaction.cardLast4 || '')
+    .replace(/\D/g, '')
+    .slice(-4)
   const recordedName = normalizeCardName(transaction.cardName)
   const recordedIdAsName = normalizeCardName(transaction.cardId)
   let match = null
@@ -160,7 +162,9 @@ function reconcileCardTransaction(transaction, creditCards) {
   if (last4.length === 4) {
     const sameLast4 = creditCards.filter(
       (card) =>
-        String(card.last4 || '').replace(/\D/g, '').slice(-4) === last4 &&
+        String(card.last4 || '')
+          .replace(/\D/g, '')
+          .slice(-4) === last4 &&
         (!recordedName || normalizeCardName(card.name) === recordedName),
     )
     if (sameLast4.length === 1) match = sameLast4[0]

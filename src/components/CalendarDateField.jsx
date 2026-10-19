@@ -69,10 +69,7 @@ export default function CalendarDateField({
       })
     }
     const outside = (event) => {
-      if (
-        !anchorRef.current?.contains(event.target) &&
-        !popupRef.current?.contains(event.target)
-      ) {
+      if (!anchorRef.current?.contains(event.target) && !popupRef.current?.contains(event.target)) {
         setIsOpen(false)
       }
     }
@@ -168,7 +165,20 @@ export default function CalendarDateField({
           aria-controls={isOpen ? calendarId : undefined}
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-[--brand-700] transition-colors hover:bg-[--brand-100] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--brand-500] disabled:opacity-50"
         >
-          <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg>
+          <svg
+            aria-hidden="true"
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="3" y="5" width="18" height="16" rx="2" />
+            <path d="M7 3v4M17 3v4M3 10h18" />
+          </svg>
         </button>
       </div>
       {error && (
@@ -195,7 +205,9 @@ export default function CalendarDateField({
                 aria-label="Mês anterior"
                 className="flex h-9 w-9 items-center justify-center rounded-xl hover:bg-[--bg-hover]"
               >
-                <span aria-hidden="true" className="text-lg leading-none">‹</span>
+                <span aria-hidden="true" className="text-lg leading-none">
+                  ‹
+                </span>
               </button>
               <div className="flex min-w-0 items-center gap-1">
                 <select
@@ -205,17 +217,23 @@ export default function CalendarDateField({
                   className="min-w-0 rounded-lg bg-[--bg-subtle] px-1 py-2 text-xs font-bold capitalize"
                 >
                   {MONTHS.map((item, index) => (
-                    <option key={item} value={index}>{item}</option>
+                    <option key={item} value={index}>
+                      {item}
+                    </option>
                   ))}
                 </select>
                 <select
                   aria-label="Ano"
                   value={year}
-                  onChange={(event) => setMonth(new Date(Number(event.target.value), monthIndex, 1))}
+                  onChange={(event) =>
+                    setMonth(new Date(Number(event.target.value), monthIndex, 1))
+                  }
                   className="rounded-lg bg-[--bg-subtle] px-1 py-2 text-xs font-bold"
                 >
                   {years.map((item) => (
-                    <option key={item} value={item}>{item}</option>
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -225,7 +243,9 @@ export default function CalendarDateField({
                 aria-label="Próximo mês"
                 className="flex h-9 w-9 items-center justify-center rounded-xl hover:bg-[--bg-hover]"
               >
-                <span aria-hidden="true" className="text-lg leading-none">›</span>
+                <span aria-hidden="true" className="text-lg leading-none">
+                  ›
+                </span>
               </button>
             </div>
             <div className="grid grid-cols-7 gap-0.5 text-center">
@@ -259,7 +279,9 @@ export default function CalendarDateField({
                   >
                     {day}
                   </button>
-                ) : <span key={`empty-${index}`} aria-hidden="true" />
+                ) : (
+                  <span key={`empty-${index}`} aria-hidden="true" />
+                )
               })}
             </div>
             <div className="mt-3 flex items-center justify-between border-t border-[--border-subtle] pt-3">

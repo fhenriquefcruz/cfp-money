@@ -437,10 +437,7 @@ test('não associa final de cartão ambíguo automaticamente', () => {
         date: '2026-07-20',
       },
     ],
-    creditCards: [
-      cards[1],
-      { ...cards[1], id: 'other', name: 'Outro cartão' },
-    ],
+    creditCards: [cards[1], { ...cards[1], id: 'other', name: 'Outro cartão' }],
     selectedMonth: '2026-08',
   })
   expect(center.selectedTotal).toBe(0)

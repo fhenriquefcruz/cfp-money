@@ -98,7 +98,17 @@ const StandardInput = ({ label, error, icon, iconRight, className, ...props }) =
             aria-label={props.type === 'month' ? 'Abrir seletor de mês' : 'Abrir calendário'}
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-[--text-secondary] hover:bg-[--bg-hover] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
           >
-            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <rect x="3" y="5" width="18" height="16" rx="2" />
               <path d="M7 3v4M17 3v4M3 10h18" />
             </svg>
