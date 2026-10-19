@@ -1,6 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { clsx } from 'clsx'
 
 const MONTHS = Array.from({ length: 12 }, (_, month) =>
@@ -149,8 +148,6 @@ export default function CalendarDateField({
               openCalendar()
             }
           }}
-          aria-expanded={isOpen}
-          aria-controls={isOpen ? calendarId : undefined}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={error ? errorId : props['aria-describedby']}
           className={clsx(
@@ -171,7 +168,7 @@ export default function CalendarDateField({
           aria-controls={isOpen ? calendarId : undefined}
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-[--brand-700] transition-colors hover:bg-[--brand-100] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--brand-500] disabled:opacity-50"
         >
-          <CalendarDays size={17} />
+          <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg>
         </button>
       </div>
       {error && (
@@ -186,6 +183,7 @@ export default function CalendarDateField({
             id={calendarId}
             ref={popupRef}
             role="dialog"
+            data-meu-real-calendar
             aria-label={`Selecionar data${label ? `: ${label}` : ''}`}
             className="meu-real-calendar fixed z-[1100] w-[min(320px,calc(100vw-16px))] max-h-[calc(100dvh-16px)] overflow-y-auto rounded-2xl border border-[--border-default] bg-[--bg-elevated] p-3 text-[--text-primary] shadow-2xl"
             style={{ top: position.top, left: position.left }}
@@ -197,7 +195,7 @@ export default function CalendarDateField({
                 aria-label="Mês anterior"
                 className="flex h-9 w-9 items-center justify-center rounded-xl hover:bg-[--bg-hover]"
               >
-                <ChevronLeft size={18} />
+                <span aria-hidden="true" className="text-lg leading-none">‹</span>
               </button>
               <div className="flex min-w-0 items-center gap-1">
                 <select
@@ -227,7 +225,7 @@ export default function CalendarDateField({
                 aria-label="Próximo mês"
                 className="flex h-9 w-9 items-center justify-center rounded-xl hover:bg-[--bg-hover]"
               >
-                <ChevronRight size={18} />
+                <span aria-hidden="true" className="text-lg leading-none">›</span>
               </button>
             </div>
             <div className="grid grid-cols-7 gap-0.5 text-center">
