@@ -1,0 +1,41 @@
+name: Temporary Phase 52 visual baseline review
+on:
+  push:
+    branches:
+      - feat/phase-52-profile-calendar-dashboard
+    paths:
+      - .github/workflows/visual-baselines-pr-127.yml
+permissions:
+  contents: write
+
+jobs:
+  baselines:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      VITE_E2E_MODE: 'true'
+      VITE_FIREBASE_API_KEY: test-api-key
+      VITE_FIREBASE_AUTH_DOMAIN: test-project.firebaseapp.com
+      VITE_FIREBASE_PROJECT_ID: test-project
+      VITE_FIREBASE_STORAGE_BUCKET: test-project.firebasestorage.app
+      VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+      VITE_FIREBASE_APP_ID: '1:123456789:web:test'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Regenerate reviewed snapshots after intentional layout change
+        run: npm run test:visual:update
+      - name: Commit snapshot updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add e2e/visual/visual.spec.js-snapshots/
+          if ! git diff --cached --quiet; then
+            git commit -m "test: update reviewed phase 52 visual baselines"
+            git push
+          fi
