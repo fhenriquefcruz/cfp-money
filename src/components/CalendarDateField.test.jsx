@@ -18,6 +18,16 @@ describe('CalendarDateField', () => {
     expect(screen.queryByRole('dialog', { name: 'Selecionar data: Data da compra' })).not.toBeInTheDocument()
   })
 
+  test('associa expansão do calendário ao botão e não ao input de data', () => {
+    render(<CalendarDateField label="Vencimento" value="2026-10-16" onChange={vi.fn()} />)
+    const input = screen.getByLabelText('Vencimento')
+    const trigger = screen.getByRole('button', { name: 'Abrir calendário de Vencimento' })
+    expect(input).not.toHaveAttribute('aria-expanded')
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(trigger)
+    expect(trigger).toHaveAttribute('aria-expanded', 'true')
+  })
+
   test('respeita o mínimo e permite limpar uma data opcional', () => {
     const onChange = vi.fn()
     render(
