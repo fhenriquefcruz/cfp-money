@@ -1,0 +1,41 @@
+name: Temporary Prettier phase 52
+on:
+  push:
+    branches:
+      - feat/phase-52-profile-calendar-dashboard
+    paths:
+      - .github/workflows/format-pr-127.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Apply Prettier on review branch only
+        run: >
+          npx prettier --write
+          src/components/CalendarDateField.jsx
+          src/components/CalendarDateField.test.jsx
+          src/components/ui.jsx
+          src/domain/creditCardCenter.js
+          src/domain/creditCardCenter.test.js
+          src/index.css
+      - name: Commit formatting without secrets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/CalendarDateField.jsx src/components/CalendarDateField.test.jsx src/components/ui.jsx src/domain/creditCardCenter.js src/domain/creditCardCenter.test.js src/index.css
+          if ! git diff --cached --quiet; then
+            git commit -m "style: normalize phase 52 source with Prettier"
+            git push
+          fi
