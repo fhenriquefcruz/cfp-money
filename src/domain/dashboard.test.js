@@ -1,5 +1,6 @@
 import {
   buildCategoryBreakdown,
+  buildDashboardActionInsights,
   buildMonthAttentionSignals,
   buildPeriodResultInsight,
   getCalendarMonthBounds,
@@ -162,5 +163,91 @@ test('não força comparação quando o mês anterior não possui atividade', ()
   ).toMatchObject({
     comparisonDelta: null,
     comparisonTone: 'neutral',
+  })
+})
+
+test('gera leituras acionáveis com resultado, categoria e proteção financeira', () => {
+  const insights = buildDashboardActionInsights({
+    currentSummary: { income: 10000, expenses: 7000, balance: 3000, count: 8 },
+    previousSummary: { income: 9000, expenses: 7500, balance: 1500, count: 7 },
+    categoryBreakdown: [
+      {
+        categoryId: 'food',
+        categoryName: 'Alimentação',
+        total: 2100,
+        sharePercent: 30,
+        changePercent: 20,
+      },
+    ],
+    paymentSummary: {
+      overdueCount: 0,
+      dueNext7DaysCount: 0,
+    },
+    savingsOverview: {
+      totalBalance: 5000,
+      periodNet: 600,
+    },
+    budgetMonthKey: '2026-10',
+  })
+
+  expect(insights).toHaveLength(3)
+  expect(insights.map((item) => item.title)).toEqual([
+    'Resultado melhorou',
+    'Alimentação lidera os gastos',
+    'Reservas como proteção',
+  ])
+  expect(insights[0]).toMatchObject({
+    amount: 1500,
+  })
+  expect(insights[1]).toMatchObject({
+    title: 'Alimentação lidera os gastos',
+    amount: 2100,
+  })
+  expect(insights[2]).toMatchObject({
+    title: 'Reservas como proteção',
+    amount: 5000,
+  })
+})
+
+test('prioriza compromissos vencidos na leitura de proteção financeira', () => {
+  const insights = buildDashboardActionInsights({
+    currentSummary: { income: 5000, expenses: 5500, balance: -500, count: 6 },
+    previousSummary: { income: 5200, expenses: 5000, balance: 200, count: 5 },
+    categoryBreakdown: [],
+    paymentSummary: {
+      overdueCount: 2,
+      overdueAmount: 800,
+      dueNext7DaysCount: 1,
+      dueNext7DaysAmount: 200,
+    },
+    savingsOverview: {
+      totalBalance: 2000,
+      periodNet: 100,
+    },
+    budgetMonthKey: '2026-10',
+  })
+
+  expect(insights.map((item) => item.title)).toEqual([
+    'Resultado perdeu força',
+    '2 pagamentos atrasados',
+  ])
+  expect(insights[1]).toMatchObject({
+    amount: 800,
+  })
+})
+
+test('usa orçamento como próximo passo quando não há alerta de pagamentos nem reserva ativa', () => {
+  const insights = buildDashboardActionInsights({
+    currentSummary: { income: 3000, expenses: 2500, balance: 500, count: 3 },
+    previousSummary: {},
+    categoryBreakdown: [],
+    paymentSummary: {},
+    savingsOverview: {},
+    budgetMonthKey: '2026-10',
+  })
+
+  expect(insights.at(-1)).toMatchObject({
+    title: 'Planejamento do mês',
+    to: '/budgets?month=2026-10',
   })
 })

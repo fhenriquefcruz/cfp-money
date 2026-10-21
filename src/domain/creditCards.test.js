@@ -2,6 +2,7 @@ import {
   buildCreditTransaction,
   buildInstallmentTransactions,
   calculateInvoiceSchedule,
+  normalizeCreditCard,
   splitInstallmentAmounts,
 } from './creditCards'
 
@@ -91,5 +92,19 @@ test('cria parcelas em faturas mensais consecutivas', () => {
     installmentOf: 3,
     installmentGroupId: 'group-1',
     originalPurchaseDate: '2026-07-25',
+  })
+})
+
+test('normaliza limite opcional sem permitir valor negativo', () => {
+  expect(normalizeCreditCard({ ...card, limit: '8500.50' })).toMatchObject({
+    limit: 8500.5,
+  })
+
+  expect(normalizeCreditCard({ ...card, limit: -100 })).toMatchObject({
+    limit: 0,
+  })
+
+  expect(normalizeCreditCard({ ...card, limit: '' })).toMatchObject({
+    limit: 0,
   })
 })

@@ -22,12 +22,15 @@ const indexPath = join(distRoot, 'index.html')
 // o bloqueio de regressões de performance.
 const limits = {
   initialJavaScriptGzipBytes: 242 * 1024 + 512,
-  totalJavaScriptGzipBytes: 724 * 1024,
+  totalJavaScriptGzipBytes: 724 * 1024 + 256,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 20 * 1024 + 768,
 }
 
+// Fase 55: novas leituras do Dashboard e compromissos de cartões ocupam cerca de
+// 0,1 KiB gzip adicional na medição da CI. Acrescentamos somente 256 bytes ao
+// teto total, preservando os limites de carregamento inicial, CSS e Money.
 // Builds idênticos podem variar alguns bytes no gzip entre jobs isolados.
 // Mantemos o alvo nominal e toleramos somente ruído microscópico de medição.
 const measurementToleranceBytes = {

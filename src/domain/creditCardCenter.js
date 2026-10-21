@@ -295,6 +295,16 @@ export function buildCreditCardCenter({
       now,
     })
 
+    // Compromissos futuros derivam dos lançamentos conciliados, sem somar
+    // novamente compras já incluídas na fatura selecionada.
+    const futureCommitmentTotal = sum(
+      structured.filter(
+        (transaction) =>
+          transaction.cardId === card.id &&
+          resolveCreditTransactionInvoiceMonth(transaction, card) > selectedMonth,
+      ),
+    )
+
     return {
       card,
       items,
@@ -302,6 +312,7 @@ export function buildCreditCardCenter({
       purchaseTotal,
       itemCount: items.length,
       installmentCount: items.filter((item) => item.isInstallment).length,
+      futureCommitmentTotal,
       dates,
       events,
       lifecycle,
