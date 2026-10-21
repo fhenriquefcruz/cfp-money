@@ -187,3 +187,85 @@ export function buildPeriodResultInsight(current = {}, previous = {}) {
     story,
   }
 }
+
+export function buildDashboardActionInsights({
+  currentSummary = {},
+  previousSummary = {},
+  categoryBreakdown = [],
+  paymentSummary = {},
+  savingsOverview = {},
+  budgetMonthKey = '',
+} = {}) {
+  const insights = []
+  const balance = Number(currentSummary.balance) || 0
+  const previousBalance = Number(previousSummary.balance) || 0
+  const hasPrevious =
+    Number(previousSummary.count || previousSummary.income || previousSummary.expenses || 0) > 0
+
+  if (hasPrevious && balance !== previousBalance) {
+    const delta = balance - previousBalance
+    insights.push({
+      title: delta > 0 ? 'Resultado melhorou' : 'Resultado perdeu força',
+      amount: Math.abs(delta),
+      detail: delta > 0 ? 'Melhora frente ao mês anterior.' : 'Queda frente ao mês anterior.',
+      to: '/transactions',
+    })
+  }
+
+  const category = categoryBreakdown[0]
+  if (Number(category?.total || 0) > 0) {
+    const share = Number(category.sharePercent || 0)
+    const change = category.changePercent
+    insights.push({
+      title: `${category.categoryName} lidera os gastos`,
+      amount: Number(category.total),
+      detail:
+        change == null
+          ? `${share.toFixed(0)}% das despesas categorizadas.`
+          : `${share.toFixed(0)}% das despesas · ${Number(change) >= 0 ? '+' : ''}${Number(change).toFixed(0)}% vs. mês anterior.`,
+      to: `/transactions?category=${encodeURIComponent(category.categoryId || '')}`,
+    })
+  }
+
+  const overdue = Number(paymentSummary.overdueCount || 0)
+  const dueSoon = Number(paymentSummary.dueNext7DaysCount || 0)
+  if (overdue || dueSoon) {
+    const isOverdue = overdue > 0
+    insights.push({
+      title: `${isOverdue ? overdue : dueSoon} ${
+        isOverdue
+          ? overdue === 1
+            ? 'pagamento atrasado'
+            : 'pagamentos atrasados'
+          : dueSoon === 1
+            ? 'vencimento próximo'
+            : 'vencimentos próximos'
+      }`,
+      amount: Number(
+        isOverdue ? paymentSummary.overdueAmount || 0 : paymentSummary.dueNext7DaysAmount || 0,
+      ),
+      detail: isOverdue
+        ? 'Regularize para reduzir a pressão no mês.'
+        : 'Antecipe para proteger o resultado.',
+      to: '/transactions',
+    })
+  } else if (Number(savingsOverview.totalBalance || 0) > 0) {
+    insights.push({
+      title: 'Reservas como proteção',
+      amount: Number(savingsOverview.totalBalance),
+      detail:
+        Number(savingsOverview.periodNet || 0) >= 0
+          ? 'O patrimônio reservado não recuou neste período.'
+          : 'Houve retirada líquida das reservas neste período.',
+      to: '/savings',
+    })
+  } else if (budgetMonthKey) {
+    insights.push({
+      title: 'Planejamento do mês',
+      detail: 'Acompanhe os limites para proteger o resultado.',
+      to: `/budgets?month=${budgetMonthKey}`,
+    })
+  }
+
+  return insights.slice(0, 3)
+}
