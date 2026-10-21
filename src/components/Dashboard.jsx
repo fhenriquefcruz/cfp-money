@@ -20,7 +20,6 @@ import {
   Zap,
   ChevronLeft,
   ChevronRight,
-  Clock3,
   CheckCircle2,
   PiggyBank,
 } from 'lucide-react'
@@ -42,7 +41,7 @@ import { formatCurrency, formatRelativeDate } from '../utils'
 import { getMonthlyFinancialData } from '../domain/monthlyFinance'
 import {
   buildCategoryBreakdown,
-  buildMonthAttentionSignals,
+  buildDashboardActionInsights,
   buildPeriodResultInsight,
   getCalendarMonthBounds,
   getRecentDashboardTransactions,
@@ -138,9 +137,9 @@ function MonthAttentionCard({ items }) {
         <div>
           <div className="dashboard-attention-card__title">
             <Zap size={15} />
-            <h2>Prioridades do mês</h2>
+            <h2>Leituras do mês</h2>
           </div>
-          <p>O que merece sua atenção agora.</p>
+          <p>O que mudou e onde vale agir.</p>
         </div>
       </div>
 
@@ -150,22 +149,22 @@ function MonthAttentionCard({ items }) {
             <CheckCircle2 size={17} />
           </div>
           <div>
-            <p>Tudo sob controle</p>
-            <span>Sem alertas relevantes em pagamentos ou orçamentos neste mês.</span>
+            <p>Sem pressão relevante</p>
+            <span>O período não apresenta desvios que exijam ação imediata.</span>
           </div>
         </div>
       ) : (
         <div className="dashboard-attention-card__list">
-          {items.map(({ id, title, detail, actionLabel, to, icon: Icon }) => (
-            <Link key={id} to={to} className="dashboard-attention-card__item">
+          {items.map(({ title, detail, to }) => (
+            <Link key={title} to={to} className="dashboard-attention-card__item">
               <div className="dashboard-attention-card__item-icon">
-                <Icon size={16} />
+                <Zap size={16} />
               </div>
               <div className="dashboard-attention-card__item-copy">
                 <p>{title}</p>
                 <span>{detail}</span>
                 <strong>
-                  {actionLabel || 'Ver detalhes'}
+                  Abrir
                   <ChevronRight size={11} />
                 </strong>
               </div>
@@ -326,66 +325,27 @@ export default function Dashboard() {
     }
   }, [currentSummary, budgetOverview, paymentSummary.overdueCount, categoryReviewCount])
 
-  const monthAttention = useMemo(
+  const actionInsights = useMemo(
     () =>
-      buildMonthAttentionSignals({
+      buildDashboardActionInsights({
+        currentSummary,
+        previousSummary,
+        categoryBreakdown,
         paymentSummary,
-        budgetAlerts,
-        balance: currentSummary.balance,
-      }).map((signal) => {
-        if (signal.type === 'overdue') {
-          return {
-            id: 'overdue',
-            title: `${signal.count} ${
-              signal.count === 1 ? 'pagamento atrasado' : 'pagamentos atrasados'
-            }`,
-            detail: `${formatCurrency(signal.amount)} aguardando regularização.`,
-            to: '/transactions',
-            tone: 'danger',
-            icon: AlertTriangle,
-            actionLabel: 'Regularizar',
-          }
-        }
-
-        if (signal.type === 'due-soon') {
-          return {
-            id: 'due-soon',
-            title: `${signal.count} ${
-              signal.count === 1 ? 'vencimento próximo' : 'vencimentos próximos'
-            }`,
-            detail: `${formatCurrency(signal.amount)} vencem nos próximos 7 dias.`,
-            to: '/transactions',
-            tone: 'warning',
-            icon: Clock3,
-            actionLabel: 'Ver vencimentos',
-          }
-        }
-
-        if (signal.type === 'budget') {
-          return {
-            id: `budget-${signal.budgetId}`,
-            title: `${signal.categoryName} em atenção`,
-            detail: signal.isOver
-              ? `${formatCurrency(signal.excess)} acima do limite mensal.`
-              : `${signal.pct.toFixed(0)}% do limite mensal já foi utilizado.`,
-            to: `/budgets?month=${budgetOverview.monthKey}`,
-            tone: signal.pct >= 100 ? 'danger' : 'warning',
-            icon: Target,
-            actionLabel: 'Revisar orçamento',
-          }
-        }
-
-        return {
-          id: 'negative-balance',
-          title: 'Saldo do mês negativo',
-          detail: `${formatCurrency(signal.amount)} acima das receitas do período.`,
-          to: '/transactions',
-          tone: 'danger',
-          icon: Wallet,
-          actionLabel: 'Revisar gastos',
-        }
-      }),
-    [paymentSummary, budgetAlerts, currentSummary.balance, budgetOverview.monthKey],
+        savingsOverview,
+        budgetMonthKey: budgetOverview.monthKey,
+      }).map((item) => ({
+        ...item,
+        detail: item.amount ? `${formatCurrency(item.amount)} · ${item.detail}` : item.detail,
+      })),
+    [
+      currentSummary,
+      previousSummary,
+      categoryBreakdown,
+      paymentSummary,
+      savingsOverview,
+      budgetOverview.monthKey,
+    ],
   )
 
   const greeting = () => {
@@ -532,7 +492,7 @@ export default function Dashboard() {
         </motion.div>
 
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.075 }}>
-          <MonthAttentionCard items={monthAttention} />
+          <MonthAttentionCard items={actionInsights} />
         </motion.div>
       </div>
 
