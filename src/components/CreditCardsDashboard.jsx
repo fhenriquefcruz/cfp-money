@@ -136,9 +136,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
                   Comprometido a partir desta fatura
                 </span>
                 <strong
-                  className={
-                    limitExceeded ? 'text-[--danger-text]' : 'text-[--text-primary]'
-                  }
+                  className={limitExceeded ? 'text-[--danger-text]' : 'text-[--text-primary]'}
                 >
                   {limitUsage}%
                 </strong>
