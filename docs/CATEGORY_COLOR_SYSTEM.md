@@ -12,7 +12,8 @@ Distinguir **tipo de movimentação** (receita, despesa, transferência, reserva
 
 ## Regras de integridade
 
-- Categoria cadastrada com cor hexadecimal válida: respeitar essa escolha em todas as telas; não alterar registros antigos.
+- Categoria personalizada com cor hexadecimal válida: respeitar essa escolha em todas as telas; não alterar registros antigos.
+- Categorias globais legadas (`isDefault`) com nomes conhecidos: usar cor curada **somente na apresentação**, sem regravar a cor original no Firestore; categorias pessoais não são afetadas.
 - Sem cor: fallback determinístico baseado em ID/nome, sem variar com mês, ordem ou ranking.
 - Na composição, usar valores das despesas efetivas: excluir receitas, poupanças/reservas, transferências, canceladas, registros sem valor positivo e valores não numéricos.
 - Mesma fonte de registros: Dashboard reaproveita o cálculo mensal existente; Transações analisa o conjunto filtrado (mês, período, método, categoria e busca).
