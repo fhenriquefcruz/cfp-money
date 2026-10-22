@@ -35,6 +35,8 @@ import {
 import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
+import CategoryCompositionVisual from './CategoryCompositionVisual'
+import { categoryAccentStyle, decorateCategoryBreakdown } from '../domain/categoryComposition'
 import PaymentControlCard from './PaymentControlCard'
 import FinancialHealthScore from './FinancialHealthScore'
 import { formatCurrency, formatRelativeDate } from '../utils'
@@ -66,13 +68,6 @@ const formatAxisCurrency = (value) =>
     maximumFractionDigits: 1,
   }).format(Number(value) || 0)}`
 
-const formatVariation = (value) => {
-  if (value === null || value === undefined) return 'sem base anterior'
-  const formatted = Math.abs(value).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
-  if (value === 0) return 'sem variação'
-  return `${formatted}% ${value > 0 ? 'acima' : 'abaixo'} do mês anterior`
-}
-
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
@@ -96,8 +91,8 @@ const TxItem = ({ tx, categories }) => {
   return (
     <div className="flex items-center gap-3 py-3 border-b border-[--border-subtle] last:border-0">
       <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
-        style={{ background: tx.isSavings ? '#c49d6b15' : (cat?.color || '#c49d6b') + '18' }}
+        className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${cat && !tx.isSavings ? 'category-colored-avatar' : 'bg-[--brand-50]'}`}
+        style={cat && !tx.isSavings ? categoryAccentStyle(cat) : undefined}
       >
         {tx.isSavings ? '🐷' : cat?.icon || (isIncome ? '💰' : '💸')}
       </div>
@@ -217,8 +212,12 @@ export default function Dashboard() {
     [previousViewDate, transactions],
   )
   const categoryBreakdown = useMemo(
-    () => buildCategoryBreakdown(categoryTotals, previousCategoryTotals),
-    [categoryTotals, previousCategoryTotals],
+    () =>
+      decorateCategoryBreakdown(
+        buildCategoryBreakdown(categoryTotals, previousCategoryTotals),
+        categories,
+      ),
+    [categoryTotals, previousCategoryTotals, categories],
   )
   const availableMonthCount = useMemo(
     () =>
@@ -852,12 +851,7 @@ export default function Dashboard() {
                 <InfoTooltip text="Despesas do mês pela data da movimentação, ordenadas do maior para o menor gasto." />
               </div>
               <p className="mt-1 text-xs text-[--text-tertiary]">
-                Ranking · Top 3 concentram{' '}
-                {categoryBreakdown
-                  .slice(0, 3)
-                  .reduce((total, category) => total + category.sharePercent, 0)
-                  .toLocaleString('pt-BR', { maximumFractionDigits: 1 })}
-                % das despesas.
+                Mesmas categorias e cores em todos os lançamentos e gráficos.
               </p>
             </div>
 
@@ -882,58 +876,12 @@ export default function Dashboard() {
               </p>
             ) : (
               <>
-                <div className="space-y-2.5">
-                  {categoryBreakdown.slice(0, 6).map((cat, index) => {
-                    const width = Math.max(4, cat.sharePercent)
-                    const isOtherLarge =
-                      String(cat.categoryName || '').toLowerCase() === 'outros' &&
-                      cat.sharePercent >= 25
-
-                    return (
-                      <Link
-                        key={cat.categoryId || cat.categoryName}
-                        to={`/transactions?category=${encodeURIComponent(cat.categoryId || '')}&month=${budgetOverview.monthKey}`}
-                        className="group block rounded-xl border border-transparent p-1.5 transition-colors hover:border-[--border-default] hover:bg-[--bg-hover]"
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <span className="flex-shrink-0 text-[10px] font-black tabular-nums text-[--text-tertiary]">
-                            {String(index + 1).padStart(2, '0')}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="truncate text-xs font-bold text-[--text-primary]">
-                                  {cat.categoryName}
-                                </p>
-                                <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                                  {cat.sharePercent.toLocaleString('pt-BR', {
-                                    maximumFractionDigits: 1,
-                                  })}
-                                  % · {formatVariation(cat.changePercent)}
-                                </p>
-                              </div>
-                              <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
-                                {formatCurrency(cat.total)}
-                              </span>
-                            </div>
-                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[--bg-hover]">
-                              <div
-                                className="h-full rounded-full bg-[--brand-500] transition-[width]"
-                                style={{ width: `${Math.min(100, width)}%` }}
-                                aria-hidden="true"
-                              />
-                            </div>
-                            {isOtherLarge && (
-                              <p className="mt-1.5 text-[10px] font-semibold text-[--warning-text]">
-                                “Outros” concentra uma parcela relevante; revise a classificação.
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </Link>
-                    )
-                  })}
-                </div>
+                <CategoryCompositionVisual
+                  items={categoryBreakdown}
+                  getHref={(item) =>
+                    `/transactions?category=${encodeURIComponent(item.categoryId)}&month=${budgetOverview.monthKey}`
+                  }
+                />
               </>
             )}
           </Card>

@@ -20,12 +20,16 @@ const indexPath = join(distRoot, 'index.html')
 // 723,73 KiB de JS total e 20,50 KiB de CSS (gzip). Os limites incluem
 // margem pequena e explícita para o seletor de datas visual, sem desativar
 // o bloqueio de regressões de performance.
+// Fase 56: a barra proporcional, ranking expansível e legenda acessível de
+// categorias adicionam ~2,1 KiB JS gzip global e ~0,15 KiB CSS ao baseline.
+// Novos limites: 727 KiB global e 21 KiB CSS; o teto de JS inicial de
+// 242,5 KiB, da rota Money e do maior chunk permanecem inalterados.
 const limits = {
   initialJavaScriptGzipBytes: 242 * 1024 + 512,
-  totalJavaScriptGzipBytes: 724 * 1024 + 256,
+  totalJavaScriptGzipBytes: 727 * 1024,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
-  initialCssGzipBytes: 20 * 1024 + 768,
+  initialCssGzipBytes: 21 * 1024,
 }
 
 // Fase 55: novas leituras do Dashboard e compromissos de cartões ocupam cerca de

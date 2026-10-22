@@ -3,21 +3,10 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useCategories } from '../contexts/AppContext'
 import { Card, Button, Input, Modal } from './ui'
 import InfoTooltip from './InfoTooltip'
+import { CATEGORY_PALETTE, categoryAccentStyle } from '../domain/categoryComposition'
 
-const DEFAULT_COLORS = [
-  '#f97316',
-  '#3b82f6',
-  '#8b5cf6',
-  '#10b981',
-  '#06b6d4',
-  '#f59e0b',
-  '#6366f1',
-  '#ec4899',
-  '#6b7280',
-  '#22c55e',
-  '#ef4444',
-  '#0ea5e9',
-]
+// Paleta categórica oficial do Meu Real: personalizada apenas nos novos registros.
+const DEFAULT_COLORS = CATEGORY_PALETTE
 
 const EMOJI_LIST = [
   '🍔',
@@ -195,8 +184,8 @@ export default function Categories() {
       <div className="category-card__content flex items-center justify-between gap-2 p-3 sm:p-4">
         <div className="category-card__identity flex min-w-0 items-center gap-3">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-            style={{ background: cat.color + '20' }}
+            className="category-colored-avatar w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+            style={categoryAccentStyle(cat)}
           >
             {cat.icon}
           </div>
