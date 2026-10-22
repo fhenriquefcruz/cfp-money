@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useCategories } from '../contexts/AppContext'
 import { Card, Button, Input, Modal } from './ui'
 import InfoTooltip from './InfoTooltip'
-import { CATEGORY_PALETTE } from '../domain/categoryComposition'
+import { CATEGORY_PALETTE, categoryAccentStyle } from '../domain/categoryComposition'
 
 // Paleta categórica oficial do Meu Real: personalizada apenas nos novos registros.
 const DEFAULT_COLORS = CATEGORY_PALETTE
@@ -184,8 +184,8 @@ export default function Categories() {
       <div className="category-card__content flex items-center justify-between gap-2 p-3 sm:p-4">
         <div className="category-card__identity flex min-w-0 items-center gap-3">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-            style={{ background: cat.color + '20' }}
+            className="category-colored-avatar w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+            style={categoryAccentStyle(cat)}
           >
             {cat.icon}
           </div>
