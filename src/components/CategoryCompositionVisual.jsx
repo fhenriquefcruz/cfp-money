@@ -22,15 +22,19 @@ export default function CategoryCompositionVisual({
   const visible = expanded ? items : items.slice(0, maxVisible)
   const hidden = expanded ? [] : items.slice(maxVisible)
   const remainder = hidden.reduce((sum, item) => sum + Number(item.total || 0), 0)
-  const chartParts = remainder > 0
-    ? [...visible, {
-      categoryId: '__remaining__',
-      categoryName: `Demais categorias (${hidden.length})`,
-      total: remainder,
-      sharePercent: total ? (remainder / total) * 100 : 0,
-      color: UNCATEGORIZED_COLOR,
-    }]
-    : visible
+  const chartParts =
+    remainder > 0
+      ? [
+          ...visible,
+          {
+            categoryId: '__remaining__',
+            categoryName: `Demais categorias (${hidden.length})`,
+            total: remainder,
+            sharePercent: total ? (remainder / total) * 100 : 0,
+            color: UNCATEGORIZED_COLOR,
+          },
+        ]
+      : visible
 
   return (
     <div className="category-composition space-y-3">
@@ -44,7 +48,8 @@ export default function CategoryCompositionVisual({
           </p>
         </div>
         <p className="text-right text-[11px] text-[--text-secondary]">
-          Top 3 <strong className="text-[--text-primary]">{formatPercent(topThree)}%</strong> dos gastos
+          Top 3 <strong className="text-[--text-primary]">{formatPercent(topThree)}%</strong> dos
+          gastos
         </p>
       </div>
       <div
@@ -90,10 +95,19 @@ export default function CategoryCompositionVisual({
           const common = 'category-composition-item group'
           const key = item.categoryId || item.categoryName
           const href = item.categoryId && getHref?.(item)
-          if (href) return <Link key={key} to={href} className={common} style={style}>{content}</Link>
+          if (href)
+            return (
+              <Link key={key} to={href} className={common} style={style}>
+                {content}
+              </Link>
+            )
           if (item.categoryId && onSelect) {
             return (
-              <button key={key} type="button" className={common} style={style}
+              <button
+                key={key}
+                type="button"
+                className={common}
+                style={style}
                 aria-pressed={selectedCategoryId === item.categoryId}
                 onClick={() => onSelect(item.categoryId)}
               >
@@ -101,7 +115,11 @@ export default function CategoryCompositionVisual({
               </button>
             )
           }
-          return <div key={key} className={common} style={style}>{content}</div>
+          return (
+            <div key={key} className={common} style={style}>
+              {content}
+            </div>
+          )
         })}
       </div>
       {hidden.length > 0 && (
@@ -110,11 +128,16 @@ export default function CategoryCompositionVisual({
           onClick={() => setExpanded(true)}
           className="category-composition-expand"
         >
-          Ver mais {hidden.length} {hidden.length === 1 ? 'categoria' : 'categorias'} · {formatCurrency(remainder)}
+          Ver mais {hidden.length} {hidden.length === 1 ? 'categoria' : 'categorias'} ·{' '}
+          {formatCurrency(remainder)}
         </button>
       )}
       {expanded && items.length > maxVisible && (
-        <button type="button" onClick={() => setExpanded(false)} className="category-composition-expand">
+        <button
+          type="button"
+          onClick={() => setExpanded(false)}
+          className="category-composition-expand"
+        >
           Mostrar apenas as principais
         </button>
       )}

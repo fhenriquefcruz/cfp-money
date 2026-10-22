@@ -49,7 +49,8 @@ export function categoryCompositionFromTransactions(transactions = [], categorie
       transaction.paymentStatus === 'cancelled' ||
       transaction.flowType === 'transfer' ||
       transaction.kind === 'transfer'
-    ) continue
+    )
+      continue
 
     const amount = Number(transaction.amount)
     if (!Number.isFinite(amount) || amount <= 0) continue
@@ -74,7 +75,10 @@ export function categoryCompositionFromTransactions(transactions = [], categorie
   const total = [...buckets.values()].reduce((value, row) => value + row.total, 0)
   return [...buckets.values()]
     .map((row) => ({ ...row, sharePercent: total ? (row.total / total) * 100 : 0 }))
-    .sort((left, right) => right.total - left.total || left.categoryName.localeCompare(right.categoryName, 'pt-BR'))
+    .sort(
+      (left, right) =>
+        right.total - left.total || left.categoryName.localeCompare(right.categoryName, 'pt-BR'),
+    )
 }
 
 // O dashboard mantém seu cálculo financeiro existente e recebe apenas a
@@ -87,7 +91,10 @@ export function decorateCategoryBreakdown(breakdown = [], categories = []) {
       ...item,
       categoryName: saved?.name || item.categoryName || 'Sem categoria',
       icon: saved?.icon || item.icon || '◈',
-      color: getCategoryColor(saved || { color: item.color || item.categoryColor }, item.categoryId || item.categoryName),
+      color: getCategoryColor(
+        saved || { color: item.color || item.categoryColor },
+        item.categoryId || item.categoryName,
+      ),
     }
   })
 }

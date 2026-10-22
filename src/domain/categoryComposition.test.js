@@ -12,8 +12,9 @@ describe('Identidade cromática por categoria', () => {
     expect(getCategoryColor({ id: 'food', color: '#8A6251' })).toBe('#8A6251')
     expect(getCategoryColor({ id: 'food' })).toBe(getCategoryColor({ id: 'food' }))
     expect(CATEGORY_PALETTE).toContain(getCategoryColor({ id: 'food' }))
-    expect(getCategoryColor({ id: 'food', color: 'red; background: url(http://x)' }))
-      .toBe(getCategoryColor({ id: 'food' }))
+    expect(getCategoryColor({ id: 'food', color: 'red; background: url(http://x)' })).toBe(
+      getCategoryColor({ id: 'food' }),
+    )
     expect(categoryAccentStyle({ color: '#abc' })).toEqual({ '--category-accent': '#abc' })
   })
 
@@ -41,9 +42,27 @@ describe('Identidade cromática por categoria', () => {
   })
 
   it('usa o mesmo destaque do dashboard, sem alterar cálculos nem objetos de origem', () => {
-    const source = [{ categoryId: 'food', categoryName: 'Comidas', categoryColor: '#AC7B4E', total: 800, sharePercent: 80, changePercent: -10 }]
-    const decorated = decorateCategoryBreakdown(source, [{ id: 'food', name: 'Alimentação', color: '#4976A0', icon: '🥗' }])
-    expect(decorated[0]).toMatchObject({ total: 800, sharePercent: 80, changePercent: -10, color: '#4976A0', categoryName: 'Alimentação', icon: '🥗' })
+    const source = [
+      {
+        categoryId: 'food',
+        categoryName: 'Comidas',
+        categoryColor: '#AC7B4E',
+        total: 800,
+        sharePercent: 80,
+        changePercent: -10,
+      },
+    ]
+    const decorated = decorateCategoryBreakdown(source, [
+      { id: 'food', name: 'Alimentação', color: '#4976A0', icon: '🥗' },
+    ])
+    expect(decorated[0]).toMatchObject({
+      total: 800,
+      sharePercent: 80,
+      changePercent: -10,
+      color: '#4976A0',
+      categoryName: 'Alimentação',
+      icon: '🥗',
+    })
     expect(source[0].color).toBeUndefined()
     expect(decorateCategoryBreakdown(source, [])[0].color).toBe('#AC7B4E')
   })
@@ -52,6 +71,8 @@ describe('Identidade cromática por categoria', () => {
     const rows = categoryCompositionFromTransactions([
       { type: 'expense', categoryName: 'Serviços antigos', amount: 40, categoryColor: '#786C8D' },
     ])
-    expect(rows).toMatchObject([{ categoryName: 'Serviços antigos', total: 40, color: '#786C8D', sharePercent: 100 }])
+    expect(rows).toMatchObject([
+      { categoryName: 'Serviços antigos', total: 40, color: '#786C8D', sharePercent: 100 },
+    ])
   })
 })

@@ -212,7 +212,11 @@ export default function Dashboard() {
     [previousViewDate, transactions],
   )
   const categoryBreakdown = useMemo(
-    () => decorateCategoryBreakdown(buildCategoryBreakdown(categoryTotals, previousCategoryTotals), categories),
+    () =>
+      decorateCategoryBreakdown(
+        buildCategoryBreakdown(categoryTotals, previousCategoryTotals),
+        categories,
+      ),
     [categoryTotals, previousCategoryTotals, categories],
   )
   const availableMonthCount = useMemo(
@@ -874,7 +878,9 @@ export default function Dashboard() {
               <>
                 <CategoryCompositionVisual
                   items={categoryBreakdown}
-                  getHref={(item) => `/transactions?category=${encodeURIComponent(item.categoryId)}&month=${budgetOverview.monthKey}`}
+                  getHref={(item) =>
+                    `/transactions?category=${encodeURIComponent(item.categoryId)}&month=${budgetOverview.monthKey}`
+                  }
                 />
               </>
             )}

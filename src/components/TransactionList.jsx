@@ -38,7 +38,10 @@ import TransactionSeriesModal from './TransactionSeriesModal'
 import TransactionCsvImportModal from './TransactionCsvImportModal'
 import TransactionSavedViews from './TransactionSavedViews'
 import CategoryCompositionVisual from './CategoryCompositionVisual'
-import { categoryAccentStyle, categoryCompositionFromTransactions } from '../domain/categoryComposition'
+import {
+  categoryAccentStyle,
+  categoryCompositionFromTransactions,
+} from '../domain/categoryComposition'
 import {
   formatCurrency,
   getPaymentLabel,
@@ -275,7 +278,11 @@ function TxRow({
       style={categoryVisual}
     >
       <div className="transaction-kind-icon" data-kind={kind} aria-hidden="true">
-        {categoryVisual && resolvedCategory?.icon ? <span className="text-lg">{resolvedCategory.icon}</span> : <KindIcon size={17} />}
+        {categoryVisual && resolvedCategory?.icon ? (
+          <span className="text-lg">{resolvedCategory.icon}</span>
+        ) : (
+          <KindIcon size={17} />
+        )}
       </div>
 
       <div className="transaction-row-main">
@@ -297,10 +304,7 @@ function TxRow({
           </span>
 
           {resolvedCategory && !isSavings && !isTransfer && (
-            <span
-              className="transaction-category-badge"
-
-            >
+            <span className="transaction-category-badge">
               {resolvedCategory.icon ? `${resolvedCategory.icon} ` : ''}
               {resolvedCategory.name}
             </span>
@@ -1105,13 +1109,17 @@ export default function TransactionList() {
                 Onde estão os gastos
               </h2>
               <p className="mt-1 text-xs text-[--text-tertiary]">
-                Atualizado pelos filtros selecionados. Selecione uma categoria para ver seus lançamentos.
+                Atualizado pelos filtros selecionados. Selecione uma categoria para ver seus
+                lançamentos.
               </p>
             </div>
             {catFilter !== 'all' && (
               <button
                 type="button"
-                onClick={() => { setCatFilter('all'); setPage(1) }}
+                onClick={() => {
+                  setCatFilter('all')
+                  setPage(1)
+                }}
                 className="min-h-9 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
               >
                 Todas as categorias
@@ -1121,7 +1129,10 @@ export default function TransactionList() {
           <CategoryCompositionVisual
             items={expenseComposition}
             selectedCategoryId={catFilter}
-            onSelect={(categoryId) => { setCatFilter(categoryId); setPage(1) }}
+            onSelect={(categoryId) => {
+              setCatFilter(categoryId)
+              setPage(1)
+            }}
           />
         </section>
       )}
