@@ -37,6 +37,8 @@ import TransactionForm from './TransactionForm'
 import TransactionSeriesModal from './TransactionSeriesModal'
 import TransactionCsvImportModal from './TransactionCsvImportModal'
 import TransactionSavedViews from './TransactionSavedViews'
+import CategoryCompositionVisual from './CategoryCompositionVisual'
+import { categoryAccentStyle, categoryCompositionFromTransactions } from '../domain/categoryComposition'
 import {
   formatCurrency,
   getPaymentLabel,
@@ -237,6 +239,7 @@ function TxRow({
   categoryReview,
 }) {
   const kind = getKind(tx)
+  const categoryVisual = kind === 'expense' && cat ? categoryAccentStyle(cat) : undefined
   const isIncome = kind === 'income'
   const isSavings = kind === 'savings'
   const isTransfer = kind === 'transfer'
@@ -261,9 +264,11 @@ function TxRow({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -16 }}
       className="transaction-row transaction-row-refined group"
+      data-has-category={Boolean(categoryVisual)}
+      style={categoryVisual}
     >
       <div className="transaction-kind-icon" data-kind={kind} aria-hidden="true">
-        <KindIcon size={17} />
+        {categoryVisual && cat?.icon ? <span className="text-lg">{cat.icon}</span> : <KindIcon size={17} />}
       </div>
 
       <div className="transaction-row-main">
@@ -287,10 +292,7 @@ function TxRow({
           {cat && !isSavings && !isTransfer && (
             <span
               className="transaction-category-badge"
-              style={{
-                background: (cat.color || '#6366f1') + '15',
-                borderColor: (cat.color || '#6366f1') + '45',
-              }}
+
             >
               {cat.icon ? `${cat.icon} ` : ''}
               {cat.name}
@@ -601,6 +603,10 @@ export default function TransactionList() {
   }, [user?.uid])
 
   const summary = useMemo(() => summarizeTransactions(filtered), [filtered])
+  const expenseComposition = useMemo(
+    () => categoryCompositionFromTransactions(filtered, categories),
+    [filtered, categories],
+  )
 
   const grouped = useMemo(() => groupByDate(filtered.slice(0, page * PER_PAGE)), [filtered, page])
   const hasMore = filtered.length > page * PER_PAGE
@@ -1033,25 +1039,25 @@ export default function TransactionList() {
           {
             label: 'Receitas',
             value: summary.income,
-            color: '#10b981',
+            color: 'var(--success-icon)',
             icon: <TrendingUp size={13} />,
           },
           {
             label: 'Despesas',
             value: summary.expenses,
-            color: '#ef4444',
+            color: 'var(--danger-icon)',
             icon: <TrendingDown size={13} />,
           },
           {
             label: 'Saldo',
             value: summary.balance,
-            color: summary.balance >= 0 ? '#6366f1' : '#ef4444',
+            color: summary.balance >= 0 ? 'var(--brand-600)' : 'var(--danger-icon)',
             icon: <ArrowLeftRight size={13} />,
           },
           {
             label: 'Poupança no período',
             value: summary.savings,
-            color: '#6366f1',
+            color: 'var(--brand-600)',
             icon: <PiggyBank size={13} />,
           },
         ].map((s) => (
@@ -1077,6 +1083,41 @@ export default function TransactionList() {
           </div>
         ))}
       </div>
+
+      {expenseComposition.length > 0 && (
+        <section
+          aria-label="Composição dos gastos filtrados"
+          className="category-composition-panel rounded-3xl border border-[--border-default] bg-[--bg-surface] p-4 sm:p-5"
+        >
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-[--text-brand]">
+                Leitura do período
+              </p>
+              <h2 className="mt-1 text-base font-black text-[--text-primary]">
+                Onde estão os gastos
+              </h2>
+              <p className="mt-1 text-xs text-[--text-tertiary]">
+                Atualizado pelos filtros selecionados. Selecione uma categoria para ver seus lançamentos.
+              </p>
+            </div>
+            {catFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => { setCatFilter('all'); setPage(1) }}
+                className="min-h-9 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
+              >
+                Todas as categorias
+              </button>
+            )}
+          </div>
+          <CategoryCompositionVisual
+            items={expenseComposition}
+            selectedCategoryId={catFilter}
+            onSelect={(categoryId) => { setCatFilter(categoryId); setPage(1) }}
+          />
+        </section>
+      )}
 
       {categoryReviewQueue.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--warning-border] bg-[--warning-bg] px-3 py-2.5">
