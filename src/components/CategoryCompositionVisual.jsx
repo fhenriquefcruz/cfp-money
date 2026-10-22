@@ -141,6 +141,12 @@ export default function CategoryCompositionVisual({
           Mostrar apenas as principais
         </button>
       )}
+      {items.some((item) => /^(outros|sem categoria)$/i.test(String(item.categoryName || '').trim()) && Number(item.sharePercent) >= 25) && (
+        <p className="rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 py-2 text-[11px] font-semibold text-[--warning-text]">
+          Classificação em atenção: “Outros” ou “Sem categoria” concentra pelo menos 25% dos gastos.
+          Revise os lançamentos para obter uma leitura mais precisa.
+        </p>
+      )}
       <p className="text-[10px] leading-relaxed text-[--text-tertiary]">
         Cores identificam categorias; valores e percentuais mostram o peso de cada uma.
       </p>
