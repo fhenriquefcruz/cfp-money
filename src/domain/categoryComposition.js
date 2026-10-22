@@ -19,6 +19,29 @@ export const CATEGORY_PALETTE = Object.freeze([
 const VALID_HEX = /^#(?:[\da-f]{6}|[\da-f]{3})$/i
 export const UNCATEGORIZED_COLOR = '#747A80'
 
+// Os registros de categorias globais antigas usam cores saturadas do seed.
+// Eles não podem ser personalizados pela interface; harmonizar apenas a
+// apresentação evita uma migração desnecessária e preserva cores individuais.
+const DEFAULT_CATEGORY_COLORS = Object.freeze({
+  alimentacao: CATEGORY_PALETTE[0],
+  transporte: CATEGORY_PALETTE[1],
+  moradia: CATEGORY_PALETTE[5],
+  saude: CATEGORY_PALETTE[3],
+  educacao: CATEGORY_PALETTE[6],
+  lazer: CATEGORY_PALETTE[2],
+  roupas: CATEGORY_PALETTE[4],
+  vestuario: CATEGORY_PALETTE[4],
+  tecnologia: CATEGORY_PALETTE[10],
+  outros: UNCATEGORIZED_COLOR,
+})
+
+const categorySlug = (value) =>
+  String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+
 function stableHash(value) {
   return Array.from(String(value || 'categoria')).reduce(
     (hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0,
@@ -28,6 +51,10 @@ function stableHash(value) {
 
 // Cores já personalizadas prevalecem; jamais regravamos os dados do usuário.
 export function getCategoryColor(category = {}, fallbackKey = '') {
+  if (category?.isDefault && category?.type !== 'income') {
+    const curated = DEFAULT_CATEGORY_COLORS[categorySlug(category.name)]
+    if (curated) return curated
+  }
   if (VALID_HEX.test(category?.color || '')) return category.color
   const key = category?.id || category?.name || fallbackKey
   if (!key) return UNCATEGORIZED_COLOR
