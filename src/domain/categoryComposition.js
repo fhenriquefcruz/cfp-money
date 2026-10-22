@@ -87,7 +87,7 @@ export function decorateCategoryBreakdown(breakdown = [], categories = []) {
       ...item,
       categoryName: saved?.name || item.categoryName || 'Sem categoria',
       icon: saved?.icon || item.icon || '◈',
-      color: getCategoryColor(saved || { color: item.color }, item.categoryId || item.categoryName),
+      color: getCategoryColor(saved || { color: item.color || item.categoryColor }, item.categoryId || item.categoryName),
     }
   })
 }
