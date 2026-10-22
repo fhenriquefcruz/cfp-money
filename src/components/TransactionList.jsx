@@ -239,7 +239,14 @@ function TxRow({
   categoryReview,
 }) {
   const kind = getKind(tx)
-  const categoryVisual = kind === 'expense' && cat ? categoryAccentStyle(cat) : undefined
+  // Compras históricas permanecem identificáveis mesmo se a categoria foi removida.
+  const resolvedCategory =
+    cat ||
+    (tx.categoryName
+      ? { id: tx.categoryId, name: tx.categoryName, color: tx.categoryColor, icon: tx.categoryIcon }
+      : null)
+  const categoryVisual =
+    kind === 'expense' && resolvedCategory ? categoryAccentStyle(resolvedCategory) : undefined
   const isIncome = kind === 'income'
   const isSavings = kind === 'savings'
   const isTransfer = kind === 'transfer'
@@ -268,7 +275,7 @@ function TxRow({
       style={categoryVisual}
     >
       <div className="transaction-kind-icon" data-kind={kind} aria-hidden="true">
-        {categoryVisual && cat?.icon ? <span className="text-lg">{cat.icon}</span> : <KindIcon size={17} />}
+        {categoryVisual && resolvedCategory?.icon ? <span className="text-lg">{resolvedCategory.icon}</span> : <KindIcon size={17} />}
       </div>
 
       <div className="transaction-row-main">
@@ -289,13 +296,13 @@ function TxRow({
             {kindLabel}
           </span>
 
-          {cat && !isSavings && !isTransfer && (
+          {resolvedCategory && !isSavings && !isTransfer && (
             <span
               className="transaction-category-badge"
 
             >
-              {cat.icon ? `${cat.icon} ` : ''}
-              {cat.name}
+              {resolvedCategory.icon ? `${resolvedCategory.icon} ` : ''}
+              {resolvedCategory.name}
             </span>
           )}
 
