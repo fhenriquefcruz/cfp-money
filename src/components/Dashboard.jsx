@@ -261,7 +261,7 @@ export default function Dashboard() {
   )
 
   const monthTx = useMemo(
-    () => getRecentDashboardTransactions(transactions, monthBounds),
+    () => getRecentDashboardTransactions(transactions, monthBounds, 200),
     [transactions, monthBounds],
   )
 
@@ -361,7 +361,7 @@ export default function Dashboard() {
   return (
     <div
       data-tour="dashboard"
-      className="dashboard-premium mx-auto min-w-0 max-w-[1600px] space-y-4 pb-24 sm:space-y-5 lg:pb-6"
+      className="dashboard-premium dashboard-v58 mx-auto min-w-0 max-w-[1680px] space-y-5 pb-24 sm:space-y-6 lg:pb-6"
     >
       {/* Header — mês com destaque, saudação secundária */}
       <motion.div
@@ -502,7 +502,10 @@ export default function Dashboard() {
         </motion.div>
 
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.09 }}>
-          <Card variant="elevated" className="dashboard-savings-card h-full">
+          <Card
+            variant="elevated"
+            className="dashboard-savings-card dashboard-module--savings h-full"
+          >
             <div className="flex h-full flex-col gap-4">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -597,7 +600,7 @@ export default function Dashboard() {
       >
         <Card
           variant="elevated"
-          className="dashboard-forecast-card col-span-1 h-full shadow-sm xl:col-span-3"
+          className="dashboard-forecast-card dashboard-module--rhythm col-span-1 h-full shadow-sm xl:col-span-3"
         >
           <div className="flex h-full items-start justify-between gap-3">
             <div className="min-w-0">
@@ -625,7 +628,7 @@ export default function Dashboard() {
 
         <Card
           variant="elevated"
-          className="dashboard-health-card col-span-1 h-full shadow-sm xl:col-span-3"
+          className="dashboard-health-card dashboard-module--health col-span-1 h-full shadow-sm xl:col-span-3"
         >
           <div className="mb-2 flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5">
@@ -637,15 +640,15 @@ export default function Dashboard() {
           <FinancialHealthScore report={healthReport} />
         </Card>
 
-        <div className="dashboard-money-insight col-span-1 min-w-0 md:col-span-2 xl:col-span-6">
-          <MoneyInsightCard referenceDate={viewDate} />
+        <div className="dashboard-money-insight dashboard-module--money col-span-1 min-w-0 md:col-span-2 xl:col-span-6">
+          <MoneyInsightCard referenceDate={viewDate} compact />
         </div>
       </motion.div>
 
       {/* Análise principal: evolução e composição */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-3">
         <motion.div className="xl:col-span-2" {...fade} transition={{ delay: 0.15 }}>
-          <Card className="dashboard-finance-chart h-full overflow-hidden">
+          <Card className="dashboard-finance-chart dashboard-module--evolution h-full overflow-hidden">
             <div className="dashboard-finance-chart__header mb-4 flex flex-col gap-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -654,7 +657,8 @@ export default function Dashboard() {
                     <InfoTooltip text="Valores agrupados pela data da movimentação. Use o seletor de meses para detalhar um período." />
                   </div>
                   <p className="mt-1 text-xs text-[--text-tertiary]">
-                    Compare entradas e saídas ou isole o resultado líquido do período.
+                    Receitas e despesas em uma linha do tempo; toque nos meses para examinar o
+                    movimento.
                   </p>
                 </div>
 
@@ -711,8 +715,25 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="-mx-1 rounded-2xl">
-              <ResponsiveContainer width="100%" height={280}>
+            <div className="dashboard-evolution-legend mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-semibold text-[--text-secondary]">
+              {trendView === 'flow' ? (
+                <>
+                  <span className="inline-flex items-center gap-1.5">
+                    <i className="dashboard-series-dot dashboard-series-dot--income" /> Receitas
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <i className="dashboard-series-dot dashboard-series-dot--expense" /> Despesas
+                  </span>
+                </>
+              ) : (
+                <span className="inline-flex items-center gap-1.5">
+                  <i className="dashboard-series-dot dashboard-series-dot--result" /> Resultado
+                  líquido
+                </span>
+              )}
+            </div>
+            <div className="dashboard-evolution-chart -mx-1 rounded-2xl">
+              <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={monthlyData} margin={{ top: 12, right: 10, left: 4, bottom: 4 }}>
                   <defs>
                     <linearGradient id="dashboardIncomeGradient" x1="0" y1="0" x2="0" y2="1">
@@ -844,10 +865,10 @@ export default function Dashboard() {
         </motion.div>
 
         <motion.div {...fade} transition={{ delay: 0.2 }}>
-          <Card className="dashboard-spending-composition h-full overflow-hidden">
+          <Card className="dashboard-spending-composition dashboard-module--composition h-full overflow-hidden">
             <div className="mb-3">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-[--text-primary]">Composição dos gastos</h3>
+                <h3 className="text-sm font-bold text-[--text-primary]">Quem lidera os gastos</h3>
                 <InfoTooltip text="Despesas do mês pela data da movimentação, ordenadas do maior para o menor gasto." />
               </div>
               <p className="mt-1 text-xs text-[--text-tertiary]">
@@ -878,6 +899,8 @@ export default function Dashboard() {
               <>
                 <CategoryCompositionVisual
                   items={categoryBreakdown}
+                  maxVisible={5}
+                  showLeader
                   getHref={(item) =>
                     `/transactions?category=${encodeURIComponent(item.categoryId)}&month=${budgetOverview.monthKey}`
                   }
@@ -888,16 +911,114 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Linha inferior */}
-      <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-3">
-        <motion.div className="xl:col-span-2" {...fade} transition={{ delay: 0.25 }}>
+      {/* Planejamento sem competir com o gráfico: orçamentos e metas lado a lado */}
+      <div className="dashboard-support-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+        {budgetAlerts.length > 0 && (
+          <motion.div {...fade} transition={{ delay: 0.3 }}>
+            <Card>
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle size={14} className="text-[--warning-icon]" />
+                <h3 className="text-sm font-bold text-[--text-primary]">Alertas de orçamento</h3>
+                <InfoTooltip text="Categorias acima de 70% do limite mensal." />
+              </div>
+              <div className="space-y-3">
+                {budgetAlerts.map(({ budget, cat, spent }) => (
+                  <div key={budget.id} className="flex items-center gap-3">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
+                      style={{ background: (cat?.color || '#ef4444') + '20' }}
+                    >
+                      {cat?.icon || '📦'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="font-medium text-[--text-primary] truncate">
+                          {cat?.name}
+                        </span>
+                        <span
+                          className={
+                            spent > budget.amount
+                              ? 'text-[--danger-text] font-bold'
+                              : 'text-[--text-secondary]'
+                          }
+                        >
+                          {formatCurrency(spent, { compact: true })} /{' '}
+                          {formatCurrency(budget.amount, { compact: true })}
+                        </span>
+                      </div>
+                      <ProgressBar value={spent} max={budget.amount} animated />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Link
+                to="/budgets"
+                className="block mt-3 text-xs text-[--text-brand] hover:underline text-center"
+              >
+                Gerenciar orçamentos
+              </Link>
+            </Card>
+          </motion.div>
+        )}
+        <motion.div {...fade} transition={{ delay: 0.35 }}>
           <Card>
             <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Target size={14} className="text-[--brand-500]" />
+                <h3 className="text-sm font-bold text-[--text-primary]">Metas</h3>
+              </div>
+              <Link to="/goals" className="text-xs text-[--text-brand] hover:underline">
+                Ver todas
+              </Link>
+            </div>
+            {goals.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-xs text-[--text-tertiary] mb-2">Nenhuma meta</p>
+                <Link to="/goals">
+                  <Button variant="ghost" size="xs" icon={<Plus />}>
+                    Criar meta
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {goals.slice(0, 3).map((goal) => {
+                  const effectiveCurrent = getGoalEffectiveCurrent(goal, transactions)
+                  const pct = Math.min(100, (effectiveCurrent / goal.targetAmount) * 100)
+                  return (
+                    <div key={goal.id}>
+                      <div className="flex justify-between text-xs mb-1.5">
+                        <span className="font-semibold text-[--text-primary] truncate">
+                          {goal.emoji} {goal.name}
+                        </span>
+                        <span className="text-[--text-tertiary] ml-2 flex-shrink-0">
+                          {pct.toFixed(0)}%
+                        </span>
+                      </div>
+                      <ProgressBar value={effectiveCurrent} max={goal.targetAmount} animated />
+                      <div className="flex justify-between text-xs mt-1 text-[--text-tertiary]">
+                        <span>{formatCurrency(effectiveCurrent)}</span>
+                        <span>{formatCurrency(goal.targetAmount)}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Histórico no rodapé: o painel rola sem esticar os demais cards. */}
+      <div className="dashboard-history-area min-w-0">
+        <motion.div className="min-w-0" {...fade} transition={{ delay: 0.25 }}>
+          <Card className="dashboard-transactions-card dashboard-module--transactions">
+            <div className="flex items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-[--text-primary]">
                   Transações de {format(viewDate, 'MMMM', { locale: ptBR })}
                 </h3>
-                <InfoTooltip text="Últimas 6 transações do mês visualizado." />
+                <InfoTooltip text="Lançamentos do mês em lista com rolagem própria, operável com mouse, teclado ou toque." />
               </div>
               <Link
                 to="/transactions"
@@ -906,6 +1027,10 @@ export default function Dashboard() {
                 Ver todas <ArrowRight size={12} />
               </Link>
             </div>
+            <p className="mb-3 text-[11px] text-[--text-tertiary]">
+              {monthTx.length} {monthTx.length === 1 ? 'lançamento' : 'lançamentos'} neste período ·
+              role para percorrer
+            </p>
             {monthTx.length === 0 ? (
               <EmptyState
                 icon={<Wallet />}
@@ -920,107 +1045,19 @@ export default function Dashboard() {
                 }
               />
             ) : (
-              monthTx.map((tx) => <TxItem key={tx.id} tx={tx} categories={categories} />)
+              <div
+                className="dashboard-transactions-scroll"
+                role="region"
+                aria-label="Lista rolável de transações do mês"
+                tabIndex={0}
+              >
+                {monthTx.map((tx) => (
+                  <TxItem key={tx.id} tx={tx} categories={categories} />
+                ))}
+              </div>
             )}
           </Card>
         </motion.div>
-
-        <div className="space-y-4">
-          {budgetAlerts.length > 0 && (
-            <motion.div {...fade} transition={{ delay: 0.3 }}>
-              <Card>
-                <div className="flex items-center gap-2 mb-3">
-                  <AlertTriangle size={14} className="text-[--warning-icon]" />
-                  <h3 className="text-sm font-bold text-[--text-primary]">Alertas de orçamento</h3>
-                  <InfoTooltip text="Categorias acima de 70% do limite mensal." />
-                </div>
-                <div className="space-y-3">
-                  {budgetAlerts.map(({ budget, cat, spent }) => (
-                    <div key={budget.id} className="flex items-center gap-3">
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
-                        style={{ background: (cat?.color || '#ef4444') + '20' }}
-                      >
-                        {cat?.icon || '📦'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="font-medium text-[--text-primary] truncate">
-                            {cat?.name}
-                          </span>
-                          <span
-                            className={
-                              spent > budget.amount
-                                ? 'text-[--danger-text] font-bold'
-                                : 'text-[--text-secondary]'
-                            }
-                          >
-                            {formatCurrency(spent, { compact: true })} /{' '}
-                            {formatCurrency(budget.amount, { compact: true })}
-                          </span>
-                        </div>
-                        <ProgressBar value={spent} max={budget.amount} animated />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <Link
-                  to="/budgets"
-                  className="block mt-3 text-xs text-[--text-brand] hover:underline text-center"
-                >
-                  Gerenciar orçamentos
-                </Link>
-              </Card>
-            </motion.div>
-          )}
-          <motion.div {...fade} transition={{ delay: 0.35 }}>
-            <Card>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Target size={14} className="text-[--brand-500]" />
-                  <h3 className="text-sm font-bold text-[--text-primary]">Metas</h3>
-                </div>
-                <Link to="/goals" className="text-xs text-[--text-brand] hover:underline">
-                  Ver todas
-                </Link>
-              </div>
-              {goals.length === 0 ? (
-                <div className="text-center py-4">
-                  <p className="text-xs text-[--text-tertiary] mb-2">Nenhuma meta</p>
-                  <Link to="/goals">
-                    <Button variant="ghost" size="xs" icon={<Plus />}>
-                      Criar meta
-                    </Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {goals.slice(0, 3).map((goal) => {
-                    const effectiveCurrent = getGoalEffectiveCurrent(goal, transactions)
-                    const pct = Math.min(100, (effectiveCurrent / goal.targetAmount) * 100)
-                    return (
-                      <div key={goal.id}>
-                        <div className="flex justify-between text-xs mb-1.5">
-                          <span className="font-semibold text-[--text-primary] truncate">
-                            {goal.emoji} {goal.name}
-                          </span>
-                          <span className="text-[--text-tertiary] ml-2 flex-shrink-0">
-                            {pct.toFixed(0)}%
-                          </span>
-                        </div>
-                        <ProgressBar value={effectiveCurrent} max={goal.targetAmount} animated />
-                        <div className="flex justify-between text-xs mt-1 text-[--text-tertiary]">
-                          <span>{formatCurrency(effectiveCurrent)}</span>
-                          <span>{formatCurrency(goal.targetAmount)}</span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </Card>
-          </motion.div>
-        </div>
       </div>
     </div>
   )

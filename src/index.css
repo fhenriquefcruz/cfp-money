@@ -2845,3 +2845,298 @@ button.category-composition-item[aria-pressed='true'] {
     transition: none;
   }
 }
+
+/* Fase 58 — composição por informação, não por saturação.
+   Os fundos distinguem áreas; rótulos, cifras e ícones carregam o significado. */
+.dashboard-v58 {
+  min-width: 0;
+}
+.dashboard-v58 > *,
+.dashboard-v58 .dashboard-executive-grid > *,
+.dashboard-v58 .dashboard-chart-grid > *,
+.dashboard-v58 .dashboard-support-grid > * {
+  min-width: 0;
+}
+.dashboard-v58 .dashboard-chart-grid,
+.dashboard-v58 .dashboard-executive-grid {
+  align-items: stretch;
+}
+
+.dashboard-v58 .dashboard-period-hero {
+  border-top: 3px solid var(--brand-500);
+}
+.dashboard-v58 .dashboard-attention-card {
+  border-top: 3px solid var(--warning-icon);
+}
+.dashboard-v58 .payment-control-card {
+  height: 100%;
+  border-top: 3px solid #6383a1;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, #6383a1 8%, var(--bg-surface)),
+    var(--bg-surface) 56%
+  );
+}
+.dashboard-v58 .dashboard-savings-card {
+  border-top: 3px solid var(--success-icon);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--success-icon) 12%, var(--bg-surface)),
+    var(--bg-surface) 58%
+  );
+}
+.dashboard-v58 .dashboard-savings-card > div > div:first-child > div:first-child > div:first-child {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+.dashboard-v58 .dashboard-forecast-card,
+.dashboard-v58 .dashboard-health-card {
+  padding-block: clamp(0.85rem, 1.4vw, 1.1rem);
+  border-top: 3px solid var(--border-strong);
+  box-shadow: none;
+}
+.dashboard-v58 .dashboard-forecast-card {
+  border-top-color: #9e8256;
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, #9e8256 7%, var(--bg-surface)),
+    var(--bg-surface) 65%
+  );
+}
+.dashboard-v58 .dashboard-health-card {
+  border-top-color: #639186;
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, #639186 7%, var(--bg-surface)),
+    var(--bg-surface) 65%
+  );
+}
+.dashboard-v58 .dashboard-forecast-helper {
+  margin-top: 0.2rem;
+}
+.dashboard-v58 .dashboard-health-copy p:last-child {
+  line-height: 1.25;
+}
+.dashboard-v58 .dashboard-health-score > button {
+  margin-top: 0.4rem;
+}
+.dashboard-v58 .dashboard-money-insight {
+  min-width: 0;
+}
+.dashboard-v58 .money-insight-card {
+  border-top: 3px solid #6b7fa5;
+}
+.dashboard-v58 .money-insight-card--positive {
+  border-top-color: var(--success-icon);
+}
+.dashboard-v58 .money-insight-card--warning {
+  border-top-color: var(--warning-icon);
+}
+.dashboard-v58 .money-insight-card--neutral {
+  border-top-color: #6b7fa5;
+}
+.dashboard-v58 .money-insight-card__header {
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, #6b7fa5 11%, var(--bg-surface)),
+    var(--bg-surface)
+  );
+}
+.dashboard-v58 .money-insight-card--positive .money-insight-card__header {
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--success-icon) 11%, var(--bg-surface)),
+    var(--bg-surface)
+  );
+}
+.dashboard-v58 .money-insight-card--warning .money-insight-card__header {
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--warning-icon) 12%, var(--bg-surface)),
+    var(--bg-surface)
+  );
+}
+.dashboard-v58 .money-insight-card__content {
+  gap: 0.7rem;
+}
+.dashboard-v58 .money-insight-card__metrics {
+  min-width: 0;
+}
+.dashboard-v58 .money-insight-metric {
+  border-color: color-mix(in srgb, #6b7fa5 27%, var(--border-subtle));
+  background: color-mix(in srgb, #6b7fa5 5%, var(--bg-surface));
+}
+.dashboard-v58 .dashboard-finance-chart {
+  border-top: 3px solid #537ca0;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, #537ca0 5%, var(--bg-surface)),
+    var(--bg-surface) 43%
+  );
+}
+.dashboard-v58 .dashboard-spending-composition {
+  border-top: 3px solid #b47750;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, #b47750 6%, var(--bg-surface)),
+    var(--bg-surface) 50%
+  );
+}
+.dashboard-category-leader {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  min-width: 0;
+  padding: 0.9rem 0.8rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--category-accent) 42%, var(--border-default));
+  background: color-mix(in srgb, var(--category-accent) 10%, var(--bg-surface));
+}
+.dashboard-category-leader__medal {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--category-accent) 18%, var(--bg-surface));
+  border: 1px solid color-mix(in srgb, var(--category-accent) 35%, var(--border-default));
+  font-size: 1.35rem;
+}
+.dashboard-v58 .category-composition-item {
+  min-height: 3.35rem;
+}
+.dashboard-v58 .category-composition-item:nth-child(1) {
+  border-inline-start: 3px solid var(--category-accent);
+}
+.dashboard-v58 .category-composition-track {
+  height: 1.05rem;
+}
+
+.dashboard-v58 .dashboard-evolution-chart {
+  height: clamp(235px, 29vw, 325px);
+  min-width: 0;
+}
+.dashboard-v58 .dashboard-series-dot {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 0.22rem;
+}
+.dashboard-v58 .dashboard-series-dot--income {
+  background: var(--success-icon);
+}
+.dashboard-v58 .dashboard-series-dot--expense {
+  background: var(--danger-icon);
+}
+.dashboard-v58 .dashboard-series-dot--result {
+  background: var(--brand-500);
+}
+.dashboard-v58 .dashboard-support-grid {
+  align-items: start;
+}
+.dashboard-v58 .dashboard-support-grid > div > .aurora-card,
+.dashboard-v58 .dashboard-support-grid > div > div > .aurora-card {
+  height: 100%;
+}
+.dashboard-v58 .dashboard-support-grid > div {
+  min-width: 0;
+}
+.dashboard-v58 .dashboard-support-grid > div > div:last-child {
+  min-width: 0;
+}
+.dashboard-v58 .dashboard-support-grid .aurora-card {
+  border-top: 3px solid #8d76a2;
+}
+.dashboard-v58 .dashboard-transactions-card {
+  border-top: 3px solid #8a9187;
+  min-width: 0;
+}
+.dashboard-v58 .dashboard-transactions-scroll {
+  height: min(420px, 65vh);
+  max-height: 420px;
+  min-height: 180px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+  padding-inline-end: 0.65rem;
+}
+.dashboard-v58 .dashboard-transactions-scroll:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 3px;
+  border-radius: 0.65rem;
+}
+.dashboard-v58 .dashboard-transactions-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.dashboard-v58 .dashboard-transactions-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+.dashboard-v58 .payment-control-columns .payment-control-column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 5.15rem;
+  padding: 0.75rem 0.65rem;
+  border: 1px solid var(--border-subtle);
+  border-top: 3px solid var(--border-strong);
+  border-radius: 0.85rem;
+  background: var(--bg-surface);
+}
+.dashboard-v58 .payment-control-column--committed {
+  border-top-color: #6383a1;
+}
+.dashboard-v58 .payment-control-column--paid {
+  border-top-color: var(--success-icon);
+  background: color-mix(in srgb, var(--success-icon) 6%, var(--bg-surface));
+}
+.dashboard-v58 .payment-control-column--pending {
+  border-top-color: var(--warning-icon);
+  background: color-mix(in srgb, var(--warning-icon) 6%, var(--bg-surface));
+}
+.dashboard-v58 .payment-control-column--late {
+  border-top-color: var(--danger-icon);
+  background: color-mix(in srgb, var(--danger-icon) 6%, var(--bg-surface));
+}
+
+@media (max-width: 767px) {
+  .dashboard-v58 .dashboard-evolution-chart {
+    height: 245px;
+  }
+  .dashboard-v58 .dashboard-transactions-scroll {
+    height: min(360px, 48vh);
+    max-height: 360px;
+  }
+  .dashboard-v58 .dashboard-finance-chart__header {
+    gap: 0.65rem;
+  }
+  .dashboard-v58 .payment-control-columns .payment-control-column {
+    min-height: 4.65rem;
+  }
+  .dashboard-v58 .dashboard-health-card,
+  .dashboard-v58 .dashboard-forecast-card {
+    padding: 0.9rem;
+  }
+}
+@media (max-width: 390px) {
+  .dashboard-v58 .dashboard-evolution-chart {
+    height: 225px;
+  }
+  .dashboard-v58 .dashboard-category-leader {
+    padding: 0.65rem;
+  }
+  .dashboard-v58 .payment-control-columns .payment-control-column {
+    padding: 0.55rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-v58 .dashboard-finance-chart,
+  .dashboard-v58 .category-composition-item {
+    transition: none;
+  }
+}

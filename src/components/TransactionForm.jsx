@@ -158,21 +158,11 @@ const EMPTY_FORM = {
   // Cartão
   isCredit: false,
   cardId: '',
-  closingDay: '',
   isInstallment: false,
   installments: '2',
   // Recorrente (receita E despesa)
   isRecurring: false,
   recurringMonths: '12',
-}
-
-function getEffectiveDate(baseDate, closingDay) {
-  if (!closingDay) return baseDate
-  const d = new Date(baseDate + 'T00:00:00')
-  if (d.getDate() > parseInt(closingDay)) {
-    return format(addMonths(d, 1), 'yyyy-MM-dd')
-  }
-  return baseDate
 }
 
 export default function TransactionForm({
@@ -214,7 +204,6 @@ export default function TransactionForm({
         paymentMethod: transaction.cardId ? 'credit_card' : transaction.paymentMethod || 'pix',
         isCredit: Boolean(transaction.cardId) || transaction.paymentMethod === 'credit_card',
         cardId: transaction.cardId || '',
-        closingDay: transaction.cardClosingDay || '',
         notes: transaction.notes || '',
         savingsMovement: transaction.savingsMovement || 'deposit',
         savingsDestination:
@@ -404,7 +393,7 @@ export default function TransactionForm({
             return {
               ...baseData,
               amount,
-              date: getEffectiveDate(d, form.closingDay),
+              date: d,
               dueDate,
               isInstallment: true,
               installmentNum: i + 1,
@@ -463,12 +452,10 @@ export default function TransactionForm({
             }),
           )
         } else {
-          const effDate =
-            isExpense && form.isCredit ? getEffectiveDate(form.date, form.closingDay) : form.date
           await createTransaction({
             ...baseData,
             amount: baseAmount,
-            date: effDate,
+            date: form.date,
             dueDate: isExpense ? form.dueDate || '' : '',
           })
         }
@@ -786,15 +773,15 @@ export default function TransactionForm({
                 )}
                 {activeCreditCards.length === 0 && (
                   <p className="text-xs text-[--warning-text]">
-                    Cadastre um cartão em Cartões e faturas para vincular esta compra.
+                    Cadastre o cartão e defina seu fechamento e vencimento na área Cartões e
+                    faturas.
                   </p>
                 )}
 
                 {selectedCreditCard ? (
                   <div className="rounded-xl border border-[--brand-200] bg-white/50 p-3">
                     <p className="text-xs font-bold text-[--brand-700]">
-                      {selectedCreditCard.name} · fecha dia {selectedCreditCard.closingDay} · vence
-                      dia {selectedCreditCard.dueDay}
+                      {selectedCreditCard.name} · fechamento e vencimento configurados em Cartões
                     </p>
                     {invoicePreview && (
                       <p className="mt-1 text-xs leading-relaxed text-[--brand-600]">
@@ -803,26 +790,7 @@ export default function TransactionForm({
                       </p>
                     )}
                   </div>
-                ) : (
-                  <>
-                    <Input
-                      label="Dia de fechamento da fatura"
-                      type="number"
-                      min="1"
-                      max="31"
-                      placeholder="Ex: 5"
-                      value={form.closingDay}
-                      onChange={update('closingDay')}
-                      error={errors.closingDay}
-                    />
-                    {form.closingDay && (
-                      <p className="text-xs text-[--brand-600]">
-                        💡 Fluxo manual: compras após dia {form.closingDay} serão lançadas no mês
-                        seguinte.
-                      </p>
-                    )}
-                  </>
-                )}
+                ) : null}
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"

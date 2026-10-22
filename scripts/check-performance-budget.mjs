@@ -24,12 +24,19 @@ const indexPath = join(distRoot, 'index.html')
 // categorias adicionam ~2,1 KiB JS gzip global e ~0,15 KiB CSS ao baseline.
 // Novos limites: 727 KiB global e 21 KiB CSS; o teto de JS inicial de
 // 242,5 KiB, da rota Money e do maior chunk permanecem inalterados.
+// Fase 58: novo esquema responsivo e identidade por módulo acrescentam
+// ~0,9 KiB gzip em CSS, medidos na build da PR #131 (21,87 KiB).
+// Teto CSS limitado a 22,5 KiB. JS inicial e global permanecem intocados.
+// Fase 58: medição final da CI registrou 727,18 KiB JS gzip total.
+// A medição pós-correção do DOMPurify chegou a 727,52 KiB gzip; a
+// margem total de 768 bytes cobre o ranking e essa atualização de segurança.
+// limite de carregamento inicial, CSS, Money e chunks permanecem intactos.
 const limits = {
   initialJavaScriptGzipBytes: 242 * 1024 + 512,
-  totalJavaScriptGzipBytes: 727 * 1024,
+  totalJavaScriptGzipBytes: 727 * 1024 + 768,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
-  initialCssGzipBytes: 21 * 1024,
+  initialCssGzipBytes: 22 * 1024 + 512,
 }
 
 // Fase 55: novas leituras do Dashboard e compromissos de cartões ocupam cerca de

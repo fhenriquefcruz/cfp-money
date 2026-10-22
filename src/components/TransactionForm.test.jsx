@@ -265,6 +265,22 @@ describe('TransactionForm credit card integration', () => {
     active: true,
   }
 
+  it('não solicita dia de fechamento ao criar transação no cartão cadastrado', () => {
+    appMocks.creditCards = [
+      { id: 'nubank', name: 'Nubank', closingDay: 24, dueDay: 1, active: true },
+    ]
+    render(<TransactionForm isOpen onClose={vi.fn()} transaction={null} />)
+    fireEvent.change(screen.getByLabelText('Pagamento'), {
+      target: { value: 'credit_card' },
+    })
+    expect(screen.getByLabelText('Cartão cadastrado')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Cartão cadastrado'), {
+      target: { value: 'nubank' },
+    })
+    expect(screen.queryByLabelText('Dia de fechamento da fatura')).not.toBeInTheDocument()
+    expect(screen.getByText(/fechamento e vencimento configurados em Cartões/i)).toBeInTheDocument()
+  })
+
   it('estrutura uma transação antiga vinculada ao cartão ao salvar a edição', async () => {
     appMocks.creditCards = [nubank]
 
