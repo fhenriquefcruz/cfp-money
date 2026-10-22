@@ -19,11 +19,51 @@ describe('Identidade cromática por categoria', () => {
   })
 
   it('harmoniza categorias globais legadas sem sobrescrever personalizações individuais', () => {
-    expect(getCategoryColor({ id: 'food', name: 'Alimentação', type: 'expense', color: '#f97316', isDefault: true })).toBe(CATEGORY_PALETTE[0])
-    expect(getCategoryColor({ id: 'health', name: 'Saúde', type: 'expense', color: '#10b981', isDefault: true })).toBe(CATEGORY_PALETTE[3])
-    expect(getCategoryColor({ id: 'leisure', name: 'Lazer', type: 'expense', color: '#8b5cf6', isDefault: true })).toBe(CATEGORY_PALETTE[2])
-    expect(getCategoryColor({ id: 'custom', name: 'Saúde', color: '#10b981', type: 'expense', isDefault: false })).toBe('#10b981')
-    expect(getCategoryColor({ id: 'salary', name: 'Salário', color: '#22c55e', type: 'income', isDefault: true })).toBe('#22c55e')
+    expect(
+      getCategoryColor({
+        id: 'food',
+        name: 'Alimentação',
+        type: 'expense',
+        color: '#f97316',
+        isDefault: true,
+      }),
+    ).toBe(CATEGORY_PALETTE[0])
+    expect(
+      getCategoryColor({
+        id: 'health',
+        name: 'Saúde',
+        type: 'expense',
+        color: '#10b981',
+        isDefault: true,
+      }),
+    ).toBe(CATEGORY_PALETTE[3])
+    expect(
+      getCategoryColor({
+        id: 'leisure',
+        name: 'Lazer',
+        type: 'expense',
+        color: '#8b5cf6',
+        isDefault: true,
+      }),
+    ).toBe(CATEGORY_PALETTE[2])
+    expect(
+      getCategoryColor({
+        id: 'custom',
+        name: 'Saúde',
+        color: '#10b981',
+        type: 'expense',
+        isDefault: false,
+      }),
+    ).toBe('#10b981')
+    expect(
+      getCategoryColor({
+        id: 'salary',
+        name: 'Salário',
+        color: '#22c55e',
+        type: 'income',
+        isDefault: true,
+      }),
+    ).toBe('#22c55e')
   })
 
   it('agrega somente despesas efetivas e preserva uma cor por categoria', () => {
