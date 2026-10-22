@@ -63,6 +63,37 @@ describe('Visualização categórica compartilhada', () => {
     expect(screen.getByRole('button', { name: /Mostrar apenas/ })).toBeInTheDocument()
   })
 
+  it('apresenta Top 5 e identifica quem lidera os gastos com porcentagem e cor', () => {
+    const five = [
+      ...items,
+      {
+        categoryId: 'study',
+        categoryName: 'Educação',
+        icon: '📚',
+        total: 10,
+        sharePercent: 1,
+        color: '#4976A0',
+      },
+      {
+        categoryId: 'other',
+        categoryName: 'Outros',
+        icon: '📦',
+        total: 5,
+        sharePercent: 0.5,
+        color: '#747A80',
+      },
+    ]
+    render(
+      <MemoryRouter>
+        <CategoryCompositionVisual items={five} showLeader maxVisible={5} />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('Categoria que mais consome')).toBeInTheDocument()
+    expect(screen.getByText('Ranking das categorias · Top 5')).toBeInTheDocument()
+    expect(screen.getByText(/60% do total/)).toBeInTheDocument()
+    expect(screen.queryByText('Outros')).not.toBeInTheDocument()
+  })
+
   it('permite filtrar categorias sem depender somente da cor', () => {
     const select = vi.fn()
     render(

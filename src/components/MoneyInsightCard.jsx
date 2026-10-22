@@ -69,7 +69,7 @@ function MoneyMetric({ label, value, detail }) {
   )
 }
 
-function MoneyInsightContent({ referenceDate }) {
+function MoneyInsightContent({ referenceDate, compact = false }) {
   const { transactions, loading: transactionsLoading } = useTransactions()
   const { settings, isLoading: settingsLoading } = useMoney()
 
@@ -94,7 +94,10 @@ function MoneyInsightContent({ referenceDate }) {
   const isLoading = transactionsLoading || settingsLoading
 
   return (
-    <Card className="money-insight-card h-full overflow-hidden shadow-sm" padding={false}>
+    <Card
+      className={`money-insight-card money-insight-card--${tone} h-full overflow-hidden shadow-sm`}
+      padding={false}
+    >
       <div className="money-insight-card__header border-b border-[--border-subtle] bg-gradient-to-r from-[--brand-50] via-[--bg-surface] to-[--bg-surface] p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
@@ -135,16 +138,18 @@ function MoneyInsightContent({ referenceDate }) {
       </div>
 
       <div className="money-insight-card__content flex h-full flex-col gap-4 p-5">
-        <div className="money-insight-card__explainer flex items-start gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3.5">
-          <Info size={16} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
-          <div>
-            <p className="text-xs font-bold text-[--text-primary]">O que este painel mostra?</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-[--text-tertiary]">
-              O Money compara o período visualizado com a referência definida no seu ciclo
-              financeiro. Os valores são apenas analíticos e não alteram nenhum lançamento.
-            </p>
+        {!compact && (
+          <div className="money-insight-card__explainer flex items-start gap-3 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3.5">
+            <Info size={16} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
+            <div>
+              <p className="text-xs font-bold text-[--text-primary]">O que este painel mostra?</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-[--text-tertiary]">
+                O Money compara o período visualizado com a referência definida no seu ciclo
+                financeiro. Os valores são apenas analíticos e não alteram nenhum lançamento.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {isLoading ? (
           <div className="space-y-3">
@@ -188,12 +193,16 @@ function MoneyInsightContent({ referenceDate }) {
               </Link>
             )}
 
-            <div className="money-insight-card__metrics grid grid-cols-3 gap-2 sm:gap-3">
-              <MoneyMetric
-                label="Despesas"
-                value={formatCurrency(analysis.current.expenses)}
-                detail="No período analisado"
-              />
+            <div
+              className={`money-insight-card__metrics grid gap-2 sm:gap-3 ${compact ? 'grid-cols-1' : 'grid-cols-3'}`}
+            >
+              {!compact && (
+                <MoneyMetric
+                  label="Despesas"
+                  value={formatCurrency(analysis.current.expenses)}
+                  detail="No período analisado"
+                />
+              )}
               <MoneyMetric
                 label="Projeção"
                 value={
@@ -211,14 +220,16 @@ function MoneyInsightContent({ referenceDate }) {
                       : 'Ciclo fechado'
                 }
               />
-              <MoneyMetric
-                label="Período"
-                value={formatMoneyPeriodLabel(analysis.periods.current)}
-                detail="Intervalo utilizado"
-              />
+              {!compact && (
+                <MoneyMetric
+                  label="Período"
+                  value={formatMoneyPeriodLabel(analysis.periods.current)}
+                  detail="Intervalo utilizado"
+                />
+              )}
             </div>
 
-            {categoryInsight && (
+            {!compact && categoryInsight && (
               <div className="money-insight-card__movement mt-auto border-t border-[--border-subtle] pt-4">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-[--text-tertiary]">
                   Movimento de destaque
@@ -229,7 +240,9 @@ function MoneyInsightContent({ referenceDate }) {
               </div>
             )}
 
-            {categoryInsightsReliable && <SpendingLeakDiagnostic report={spendingLeakReport} />}
+            {!compact && categoryInsightsReliable && (
+              <SpendingLeakDiagnostic report={spendingLeakReport} />
+            )}
           </>
         )}
       </div>
@@ -237,7 +250,7 @@ function MoneyInsightContent({ referenceDate }) {
   )
 }
 
-export default function MoneyInsightCard({ referenceDate }) {
+export default function MoneyInsightCard({ referenceDate, compact = false }) {
   return (
     <PremiumGate
       variant="card"
@@ -250,7 +263,7 @@ export default function MoneyInsightCard({ referenceDate }) {
         'Acesso ao assistente conversacional',
       ]}
     >
-      <MoneyInsightContent referenceDate={referenceDate} />
+      <MoneyInsightContent referenceDate={referenceDate} compact={compact} />
     </PremiumGate>
   )
 }

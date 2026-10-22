@@ -64,15 +64,15 @@ export default function PaymentControlCard({ summary, loading = false }) {
         <div className="mt-4 h-24 animate-pulse rounded-2xl bg-[--bg-hover]" />
       ) : (
         <>
-          <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-4">
-            <div className="min-w-0">
+          <div className="payment-control-columns mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="payment-control-column payment-control-column--committed min-w-0">
               <p className="text-[10px] text-[--text-tertiary]">Comprometido</p>
               <p className="break-words text-sm font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere]">
                 {formatCurrency(committedAmount)}
               </p>
             </div>
 
-            <div className="min-w-0 border-l border-[--border-subtle] pl-3">
+            <div className="payment-control-column payment-control-column--paid min-w-0">
               <p className="flex items-center gap-1 text-[10px] text-[--success-text]">
                 <CheckCircle2 size={11} /> Pago
               </p>
@@ -81,7 +81,7 @@ export default function PaymentControlCard({ summary, loading = false }) {
               </p>
             </div>
 
-            <div className="min-w-0 sm:border-l sm:border-[--border-subtle] sm:pl-3">
+            <div className="payment-control-column payment-control-column--pending min-w-0">
               <p className="flex items-center gap-1 text-[10px] text-[--warning-text]">
                 <Clock3 size={11} /> A pagar
               </p>
@@ -90,7 +90,7 @@ export default function PaymentControlCard({ summary, loading = false }) {
               </p>
             </div>
 
-            <div className="min-w-0 border-l border-[--border-subtle] pl-3">
+            <div className="payment-control-column payment-control-column--late min-w-0">
               <p className="text-[10px] font-semibold text-[--danger-text]">Atrasado</p>
               <p className="break-words text-sm font-black tabular-nums text-[--danger-text] [overflow-wrap:anywhere]">
                 {formatCurrency(overdueAmount)}

@@ -9,7 +9,8 @@ const formatPercent = (value) =>
 // A mesma legenda e a mesma escala são usadas no Dashboard e nas Transações.
 export default function CategoryCompositionVisual({
   items = [],
-  maxVisible = 6,
+  maxVisible = 5,
+  showLeader = false,
   getHref,
   onSelect,
   selectedCategoryId = '',
@@ -24,6 +25,7 @@ export default function CategoryCompositionVisual({
       /^(outros|sem categoria)$/i.test(String(item.categoryName || '').trim()) &&
       Number(item.sharePercent) >= 25,
   )
+  const leader = items[0] || null
   const visible = expanded ? items : items.slice(0, maxVisible)
   const hidden = expanded ? [] : items.slice(maxVisible)
   const remainder = hidden.reduce((sum, item) => sum + Number(item.total || 0), 0)
@@ -57,6 +59,27 @@ export default function CategoryCompositionVisual({
           gastos
         </p>
       </div>
+      {showLeader && leader && (
+        <div
+          className="dashboard-category-leader"
+          style={{ '--category-accent': leader.color || UNCATEGORIZED_COLOR }}
+        >
+          <span className="dashboard-category-leader__medal" aria-hidden="true">
+            {leader.icon || '◈'}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+              Categoria que mais consome
+            </p>
+            <p className="truncate text-sm font-black text-[--text-primary]">
+              {leader.categoryName}
+            </p>
+            <p className="text-xs font-bold tabular-nums text-[--text-secondary]">
+              {formatPercent(leader.sharePercent)}% do total · {formatCurrency(leader.total)}
+            </p>
+          </div>
+        </div>
+      )}
       <div
         className="category-composition-track"
         role="img"
@@ -74,6 +97,9 @@ export default function CategoryCompositionVisual({
           />
         ))}
       </div>
+      <p className="text-[10px] font-black uppercase tracking-wide text-[--text-tertiary]">
+        Ranking das categorias · Top {Math.min(maxVisible, items.length)}
+      </p>
       <div className="category-composition-list">
         {visible.map((item, index) => {
           const content = (
