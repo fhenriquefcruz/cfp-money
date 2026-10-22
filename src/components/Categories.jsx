@@ -3,21 +3,10 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useCategories } from '../contexts/AppContext'
 import { Card, Button, Input, Modal } from './ui'
 import InfoTooltip from './InfoTooltip'
+import { CATEGORY_PALETTE, categoryAccentStyle } from '../domain/categoryComposition'
 
-const DEFAULT_COLORS = [
-  '#f97316',
-  '#3b82f6',
-  '#8b5cf6',
-  '#10b981',
-  '#06b6d4',
-  '#f59e0b',
-  '#6366f1',
-  '#ec4899',
-  '#6b7280',
-  '#22c55e',
-  '#ef4444',
-  '#0ea5e9',
-]
+// Paleta categórica oficial do Meu Real: personalizada apenas nos novos registros.
+const DEFAULT_COLORS = CATEGORY_PALETTE
 
 const EMOJI_LIST = [
   '🍔',
