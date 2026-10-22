@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useCategories } from '../contexts/AppContext'
 import { Card, Button, Input, Modal } from './ui'
 import InfoTooltip from './InfoTooltip'
-import { CATEGORY_PALETTE, categoryAccentStyle } from '../domain/categoryComposition'
+import { CATEGORY_PALETTE } from '../domain/categoryComposition'
 
 // Paleta categórica oficial do Meu Real: personalizada apenas nos novos registros.
 const DEFAULT_COLORS = CATEGORY_PALETTE
