@@ -1,0 +1,33 @@
+name: Temporary security lock and audit diagnosis
+on:
+  push:
+    branches: [feat/phase-58-dashboard-visual-hierarchy]
+    paths: [.github/workflows/phase-58-security-lock.yml]
+permissions:
+  contents: write
+jobs:
+  lock-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - run: npm ci
+      - name: Report exact production advisories without waivers
+        run: |
+          npm audit --omit=dev --json > /tmp/audit.json || true
+          node -e "const a=require('/tmp/audit.json');for(const [name,v] of Object.entries(a.vulnerabilities||{})){console.log(JSON.stringify({name,range:v.range,severity:v.severity,fixAvailable:v.fixAvailable,via:(v.via||[]).map(x=>typeof x==='string'?x:{name:x.name,url:x.url,range:x.range,severity:x.severity})}))}"
+      - run: npx prettier --write package.json scripts/check-performance-budget.mjs
+      - name: Commit patched lock
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json scripts/check-performance-budget.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "security: lock DOMPurify 3.4.17 and normalize final budget"
+            git push
+          fi
