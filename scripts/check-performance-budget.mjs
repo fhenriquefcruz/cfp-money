@@ -27,9 +27,12 @@ const indexPath = join(distRoot, 'index.html')
 // Fase 58: novo esquema responsivo e identidade por módulo acrescentam
 // ~0,9 KiB gzip em CSS, medidos na build da PR #131 (21,87 KiB).
 // Teto CSS limitado a 22,5 KiB. JS inicial e global permanecem intocados.
+// Fase 58: medição final da CI registrou 727,18 KiB JS gzip total.
+// O acréscimo de 256 bytes cobre o ranking e o refinamento de painéis;
+// limite de carregamento inicial, CSS, Money e chunks permanecem intactos.
 const limits = {
   initialJavaScriptGzipBytes: 242 * 1024 + 512,
-  totalJavaScriptGzipBytes: 727 * 1024,
+  totalJavaScriptGzipBytes: 727 * 1024 + 256,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 22 * 1024 + 512,
