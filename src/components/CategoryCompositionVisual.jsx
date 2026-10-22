@@ -19,6 +19,11 @@ export default function CategoryCompositionVisual({
 
   const total = items.reduce((sum, item) => sum + (Number(item.total) || 0), 0)
   const topThree = items.slice(0, 3).reduce((sum, item) => sum + Number(item.sharePercent || 0), 0)
+  const reviewClassification = items.some(
+    (item) =>
+      /^(outros|sem categoria)$/i.test(String(item.categoryName || '').trim()) &&
+      Number(item.sharePercent) >= 25,
+  )
   const visible = expanded ? items : items.slice(0, maxVisible)
   const hidden = expanded ? [] : items.slice(maxVisible)
   const remainder = hidden.reduce((sum, item) => sum + Number(item.total || 0), 0)
@@ -141,7 +146,7 @@ export default function CategoryCompositionVisual({
           Mostrar apenas as principais
         </button>
       )}
-      {items.some((item) => /^(outros|sem categoria)$/i.test(String(item.categoryName || '').trim()) && Number(item.sharePercent) >= 25) && (
+      {reviewClassification && (
         <p className="rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 py-2 text-[11px] font-semibold text-[--warning-text]">
           Classificação em atenção: “Outros” ou “Sem categoria” concentra pelo menos 25% dos gastos.
           Revise os lançamentos para obter uma leitura mais precisa.
