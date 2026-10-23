@@ -68,15 +68,6 @@ async function resume(uid) {
   for (const job of snapshot.docs) {
     const ids = job.data().txIds
     if (!Array.isArray(ids)) throw new Error('Fila de limpeza inválida.')
-    if (!ids.length) {
-      await runTransaction(db, async (operation) => {
-        const latest = await operation.get(job.ref)
-        if (latest.exists() && (!latest.data().txIds || !latest.data().txIds.length)) {
-          operation.delete(job.ref)
-        }
-      })
-      continue
-    }
     // Bounded work: nunca iniciar centenas de leituras em um login.
     for (const id of ids.slice(0, 8)) {
       if (await cleanOne(uid, job.ref, id)) completed++
