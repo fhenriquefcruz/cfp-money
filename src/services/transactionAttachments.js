@@ -170,16 +170,11 @@ export async function downloadTransactionAttachment(uid, txId, metadata) {
   }
   const blob = new Blob(parts, { type: 'application/octet-stream' })
   if (blob.size !== stored.size) throw new Error('Tamanho do comprovante inválido.')
-  if (stored.sha256) {
-    const bytes = new Uint8Array(stored.size)
-    let offset = 0
-    for (const part of parts) {
-      bytes.set(part, offset)
-      offset += part.length
-    }
-    if ((await sha256(bytes)) !== stored.sha256) {
-      throw new Error('Comprovante corrompido: SHA-256 divergente.')
-    }
+  if (
+    stored.sha256 &&
+    (await sha256(new Uint8Array(await blob.arrayBuffer()))) !== stored.sha256
+  ) {
+    throw new Error('Comprovante corrompido: SHA-256 divergente.')
   }
   // Arquivos legados sem SHA-256 continuam disponíveis com validação de
   // tamanho, vínculo à transação e sequência dos fragmentos.
