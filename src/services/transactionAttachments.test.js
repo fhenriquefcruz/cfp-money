@@ -47,29 +47,3 @@ describe('Comprovantes opcionais e limites de segurança', () => {
     expect(validateReceiptFile(file('nota\ncomprovante.pdf', 50)).name).toBe('nota_comprovante.pdf')
   })
 })
-
-// Diagnóstico temporário da formatação (remover após corrigir o arquivo).
-it('imprime diferenças do Prettier para o módulo de comprovantes', async () => {
-  const [{ readFile }, prettier] = await Promise.all([
-    import('node:fs/promises'),
-    import('prettier'),
-  ])
-  const original = await readFile('src/services/transactionAttachments.js', 'utf8')
-  const formatted = await prettier.format(original, {
-    parser: 'babel',
-    semi: false,
-    singleQuote: true,
-    trailingComma: 'all',
-    printWidth: 100,
-  })
-  const currentLines = original.split('\n')
-  const wantedLines = formatted.split('\n')
-  const differences = []
-  for (let i = 0; i < Math.max(currentLines.length, wantedLines.length); i++) {
-    if (currentLines[i] !== wantedLines[i]) {
-      differences.push({ line: i + 1, current: currentLines[i], expected: wantedLines[i] })
-    }
-    if (differences.length >= 8) break
-  }
-  console.info('PRETTIER_FULL_SOURCE', JSON.stringify(formatted))
-})
