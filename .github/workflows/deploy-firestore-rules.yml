@@ -43,8 +43,8 @@ jobs:
           NODE
       - name: Block deployment if Console rules diverged
         run: node scripts/verify-firestore-rules-release.mjs before
-      - name: Deploy ONLY Firestore rules
-        run: npx firebase deploy --only firestore:rules --project cfp-money --non-interactive
+      - name: Deploy ONLY Firestore rules via Firebase Rules Management API
+        run: node scripts/publish-firestore-rules-api.mjs
       - name: Verify deployed rules match source
         run: node scripts/verify-firestore-rules-release.mjs after
       - name: Remove ephemeral credentials
