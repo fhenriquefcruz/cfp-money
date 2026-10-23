@@ -71,5 +71,5 @@ it('imprime diferenças do Prettier para o módulo de comprovantes', async () =>
     }
     if (differences.length >= 8) break
   }
-  console.info('PRETTIER_DIAGNOSTIC', JSON.stringify(differences))
+  console.info('PRETTIER_FULL_SOURCE', JSON.stringify(formatted))
 })
