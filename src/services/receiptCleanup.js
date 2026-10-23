@@ -39,16 +39,15 @@ async function cleanOne(uid, jobRef, txId) {
       const ids = job.data().txIds
       if (!Array.isArray(ids) || !ids.includes(txId)) return true
       const parent = await operation.get(transactionRef(uid, txId))
-      const fragmentReads = await Promise.all(snapshot.docs.map((item) => operation.get(item.ref)))
 
       // Nunca apagar comprovantes se o lançamento ainda existir ou foi restaurado.
       if (parent.exists()) {
         finishJobItem(operation, jobRef, ids, txId)
         return true
       }
-      snapshot.docs.forEach((item, index) => {
-        if (fragmentReads[index].exists()) operation.delete(item.ref)
-      })
+      // Fragmentos são imutáveis; excluir duas vezes é seguro e não exige
+      // reler cada arquivo de até 256 KiB dentro da transação.
+      snapshot.docs.forEach((item) => operation.delete(item.ref))
       if (snapshot.docs.length < CHUNKS_PER_PASS) {
         finishJobItem(operation, jobRef, ids, txId)
         return true
