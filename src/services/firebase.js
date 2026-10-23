@@ -288,7 +288,7 @@ export const deleteTransactionBatch = async (uid, ids) => {
   const uniqueIds = [...new Set(ids.filter(Boolean))]
   if (!uniqueIds.length) return
 
-  if (uniqueIds.length > 450) throw new Error('Limite de 450 exclusões.')
+  if (uniqueIds.length > 450) throw new Error('Máximo: 450 exclusões.')
   const batch = writeBatch(db)
   uniqueIds.forEach((id) => {
     batch.delete(userDoc(uid, 'transactions', id))
