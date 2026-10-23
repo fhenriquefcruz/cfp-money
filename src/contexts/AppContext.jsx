@@ -468,6 +468,13 @@ function transactionsReducer(state, action) {
   }
 }
 
+// A fila está persistida no Firestore; falhas não anulam uma exclusão concluída.
+function recoverReceiptChunks(uid) {
+  import('../services/receiptCleanup')
+    .then(({ resumeReceiptCleanup }) => resumeReceiptCleanup(uid))
+    .catch((error) => console.warn('[Meu Real] Limpeza de comprovantes pendente:', error))
+}
+
 export const TransactionsProvider = ({ children }) => {
   const { user } = useAuth()
   const { budgets } = useBudgets()
@@ -494,6 +501,7 @@ export const TransactionsProvider = ({ children }) => {
       return
     }
     const uid = user.uid
+    recoverReceiptChunks(uid)
 
     // Categorias padrão são lidas da coleção global; sua criação é administrativa.
 
@@ -771,14 +779,7 @@ export const TransactionsProvider = ({ children }) => {
           dispatch({ type: 'E2E_REMOVE_TRANSACTION', payload: id })
         } else {
           await deleteTransaction(user.uid, id)
-          // Não bloquear a exclusão financeira se a coleta de lixo falhar.
-          import('../services/transactionAttachments')
-            .then(({ purgeTransactionAttachmentChunks }) =>
-              purgeTransactionAttachmentChunks(user.uid, id),
-            )
-            .catch((error) => {
-              console.error('[Meu Real] Limpeza pendente dos comprovantes:', error)
-            })
+          recoverReceiptChunks(user.uid)
         }
         showNotification('Transação removida.', 'info')
       } catch (e) {
@@ -794,22 +795,7 @@ export const TransactionsProvider = ({ children }) => {
       if (!user?.uid) return
       try {
         await fbDeleteBatch(user.uid, ids)
-        // Só consultar fragmentos quando havia metadados na transação.
-        ids
-          .filter((id) =>
-            stateRef.current.transactions.some(
-              (transaction) => transaction.id === id && transaction.attachments?.length,
-            ),
-          )
-          .forEach((id) => {
-            import('../services/transactionAttachments')
-              .then(({ purgeTransactionAttachmentChunks }) =>
-                purgeTransactionAttachmentChunks(user.uid, id),
-              )
-              .catch((error) => {
-                console.error('[Meu Real] Limpeza pendente da série:', error)
-              })
-          })
+        recoverReceiptChunks(user.uid)
         showNotification(ids.length > 1 ? 'Transações removidas.' : 'Transação removida.', 'info')
       } catch (e) {
         showNotification('Erro ao remover transações.', 'error')
@@ -827,21 +813,7 @@ export const TransactionsProvider = ({ children }) => {
 
       try {
         await fbCommitSeries(user.uid, operation)
-        ;(operation?.deletes || [])
-          .filter((id) =>
-            stateRef.current.transactions.some(
-              (transaction) => transaction.id === id && transaction.attachments?.length,
-            ),
-          )
-          .forEach((id) => {
-            import('../services/transactionAttachments')
-              .then(({ purgeTransactionAttachmentChunks }) =>
-                purgeTransactionAttachmentChunks(user.uid, id),
-              )
-              .catch((error) => {
-                console.error('[Meu Real] Limpeza pendente dos comprovantes da série:', error)
-              })
-          })
+        if (operation?.deletes?.length) recoverReceiptChunks(user.uid)
 
         const affected = operation?.summary?.affectedCount || 0
         const message =
