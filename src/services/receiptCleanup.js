@@ -7,9 +7,7 @@ const inFlight = new Map()
 
 async function recover(uid) {
   // Até 3 tarefas, 8 transações por tarefa, 7 blocos de 12 fragmentos.
-  const jobs = await getDocs(
-    query(collection(db, 'users', uid, 'attachmentCleanupJobs'), limit(3)),
-  )
+  const jobs = await getDocs(query(collection(db, 'users', uid, 'attachmentCleanupJobs'), limit(3)))
   for (const job of jobs.docs) {
     const pending = job.data().txIds
     if (!Array.isArray(pending)) continue
