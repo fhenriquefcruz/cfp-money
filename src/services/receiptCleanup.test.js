@@ -152,5 +152,5 @@ it('diagnostica formatação pendente do recuperador', async () => {
     if (a[i] !== b[i]) changes.push({ line: i + 1, current: a[i], expected: b[i] })
     if (changes.length === 12) break
   }
-  console.info('PRETTIER_DIAGNOSTIC_RECOVERY', JSON.stringify(changes))
+  console.info('PRETTIER_FULL_SOURCE', JSON.stringify(formatted))
 })
