@@ -1,15 +1,7 @@
 // Recuperação idempotente dos fragmentos após a exclusão de transações.
 // A fila foi salva junto com a exclusão financeira, portanto sobrevive
 // ao fechamento da aba e é retomada na próxima sessão autenticada.
-import {
-  collection,
-  doc,
-  getDocs,
-  limit,
-  query,
-  runTransaction,
-  where,
-} from 'firebase/firestore'
+import { collection, doc, getDocs, limit, query, runTransaction, where } from 'firebase/firestore'
 import { db } from './firebase'
 
 const CHUNKS_PER_PASS = 12
