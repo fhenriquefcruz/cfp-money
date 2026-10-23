@@ -11,7 +11,8 @@ Cloud Storage for Firebase exige o plano Blaze desde fevereiro de 2026; a produ�
 - Máximo: **2 MiB por arquivo**, até **6 anexos por transação**.
 - Formatos suportados: PDF; JPG, PNG, WebP, GIF, HEIC; CSV, XLS/XLSX, ODS; DOC/DOCX/ODT e TXT. Outros, scripts e executáveis são rejeitados.
 - Fragmentos: 192 KiB binários convertidos em Base64 (~256 KiB no documento), sob `users/{uid}/transactionAttachmentChunks`. Cada fragmento carrega identificador da transação, arquivo e ordem.
-- Acesso: regras atuais `users/{uid}/{collection}/{document=**}` permitem apenas o próprio `uid`. Outros usuários não podem ler ou alterar os fragmentos.
+- Acesso: a regra específica de `users/{uid}/transactionAttachmentChunks` autoriza somente o próprio usuário, exige transação existente, impõe limite por fragmento e proíbe alterações após a criação. Outros usuários não podem ler nem escrever esses dados.
+- Concorrência: a inclusão dos metadados utiliza transação atômica no Firestore para reapurar o limite de seis anexos quando duas abas ou dispositivos gravam ao mesmo tempo; em caso de rejeição, os fragmentos recém-enviados são descartados.
 - Índice/metadados: `attachments` na própria transação, contendo apenas nome, tipo, tamanho, tipo documental, ID do anexo, número de fragmentos e data. O arquivo não é misturado aos valores financeiros.
 - Download somente após ação explícita do usuário, com `application/octet-stream` e atributo `download`, evitando execução inline de conteúdo não confiável.
 - Remoção de um comprovante retira os metadados e apaga seus fragmentos. Na exclusão de transações, o código solicita a limpeza dos fragmentos associados.
