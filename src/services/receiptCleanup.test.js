@@ -134,3 +134,23 @@ describe('Recuperação dos comprovantes após exclusão', () => {
     expect(state.jobs.size).toBe(0)
   })
 })
+
+
+it('diagnostica formatação pendente do recuperador', async () => {
+  const [{ readFile }, prettier] = await Promise.all([
+    import('node:fs/promises'),
+    import('prettier'),
+  ])
+  const original = await readFile('src/services/receiptCleanup.js', 'utf8')
+  const formatted = await prettier.format(original, {
+    parser: 'babel', semi: false, singleQuote: true, trailingComma: 'all', printWidth: 100,
+  })
+  const a = original.split('\n')
+  const b = formatted.split('\n')
+  const changes = []
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if (a[i] !== b[i]) changes.push({ line: i + 1, current: a[i], expected: b[i] })
+    if (changes.length === 12) break
+  }
+  console.info('PRETTIER_DIAGNOSTIC_RECOVERY', JSON.stringify(changes))
+})
