@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { webcrypto } from 'node:crypto'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const state = vi.hoisted(() => ({
   attachments: [],
@@ -44,11 +45,14 @@ const fakeFile = {
 const existing = (count) => Array.from({ length: count }, (_, index) => ({ id: `saved-${index}` }))
 
 beforeEach(() => {
+  vi.stubGlobal('crypto', webcrypto)
   state.attachments = []
   state.committed = []
   state.failCommit = false
   state.exists = true
 })
+
+afterEach(() => vi.unstubAllGlobals())
 
 describe('Ciclo atômico de comprovantes', () => {
   it('bloqueia o sétimo arquivo sem gravar nenhum fragmento', async () => {
@@ -62,6 +66,7 @@ describe('Ciclo atômico de comprovantes', () => {
   it('adiciona fragmentos e metadados numa única transação', async () => {
     state.attachments = existing(5)
     const uploaded = await uploadTransactionAttachment('uid-1', 'tx-1', fakeFile)
+    expect(uploaded.sha256).toMatch(/^[a-f0-9]{64}$/)
     expect(state.committed).toHaveLength(1)
     const [change] = state.committed
     expect(change.sets).toHaveLength(1)
