@@ -70,7 +70,7 @@ describe('Integridade de downloads e comprovantes legados', () => {
     state.attachments[0].sha256 = await sha256(bytes)
     putChunk(new Uint8Array([1, 2, 4]))
     await expect(downloadTransactionAttachment('user-1', 'tx-1', metadata)).rejects.toThrow(
-      'verificação de integridade falhou',
+      'SHA-256 divergente',
     )
   })
 
@@ -100,7 +100,7 @@ describe('Integridade de downloads e comprovantes legados', () => {
   it('rejeita metadados persistidos com hash malformado', async () => {
     state.attachments[0].sha256 = 'hash-invalido'
     await expect(downloadTransactionAttachment('user-1', 'tx-1', metadata)).rejects.toThrow(
-      'verificação de integridade falhou',
+      'SHA-256 divergente',
     )
   })
 
