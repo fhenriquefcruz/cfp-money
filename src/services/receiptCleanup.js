@@ -12,11 +12,6 @@ const chunksRef = (uid) => collection(db, 'users', uid, 'transactionAttachmentCh
 const jobsRef = (uid) => collection(db, 'users', uid, 'attachmentCleanupJobs')
 const transactionRef = (uid, id) => doc(db, 'users', uid, 'transactions', id)
 
-function finishJobItem(operation, ref, ids, id) {
-  if (ids.length === 1) operation.delete(ref)
-  else operation.update(ref, { txIds: ids.filter((value) => value !== id) })
-}
-
 async function cleanOne(uid, jobRef, txId) {
   if (typeof txId !== 'string' || !txId) return
   for (let pass = 0; pass < PASSES_PER_TRANSACTION; pass++) {
@@ -31,19 +26,15 @@ async function cleanOne(uid, jobRef, txId) {
       if (!Array.isArray(ids) || !ids.includes(txId)) return true
       const parent = await operation.get(transactionRef(uid, txId))
 
-      // Nunca apagar comprovantes se o lançamento ainda existir ou foi restaurado.
-      if (parent.exists()) {
-        finishJobItem(operation, jobRef, ids, txId)
-        return true
+      // Nunca apagar fragmentos de transações ainda existentes ou restauradas.
+      const active = parent.exists()
+      if (!active) snapshot.docs.forEach((item) => operation.delete(item.ref))
+      const finished = active || snapshot.docs.length < CHUNKS_PER_PASS
+      if (finished) {
+        if (ids.length === 1) operation.delete(jobRef)
+        else operation.update(jobRef, { txIds: ids.filter((id) => id !== txId) })
       }
-      // Fragmentos são imutáveis; excluir duas vezes é seguro e não exige
-      // reler cada arquivo de até 256 KiB dentro da transação.
-      snapshot.docs.forEach((item) => operation.delete(item.ref))
-      if (snapshot.docs.length < CHUNKS_PER_PASS) {
-        finishJobItem(operation, jobRef, ids, txId)
-        return true
-      }
-      return false
+      return finished
     })
     if (complete) return
   }
