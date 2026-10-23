@@ -1,16 +1,7 @@
 // Comprovantes opcionais no plano Spark. O Firestore NÃO é armazenamento de
 // objetos: limite pequeno por arquivo para preservar cotas e custo previsível.
 // Substituir por R2/Cloud Storage privado quando houver provedor configurado.
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  runTransaction,
-  where,
-  writeBatch,
-} from 'firebase/firestore'
+import { collection, doc, getDoc, runTransaction } from 'firebase/firestore'
 import { db } from './firebase'
 
 export const ATTACHMENT_MAX_BYTES = 2 * 1024 * 1024
@@ -201,15 +192,4 @@ export async function removeTransactionAttachment(uid, txId, metadata) {
       attachments: current.filter((item) => item.id !== stored.id),
     })
   })
-}
-
-// Busca todos os fragmentos, inclusive de anexos que tiveram upload interrompido.
-// Chamar após excluir transações, para não bloquear a exclusão financeira.
-export async function purgeTransactionAttachmentChunks(uid, txId) {
-  const snapshot = await getDocs(query(chunkCollection(uid), where('txId', '==', txId)))
-  for (let offset = 0; offset < snapshot.docs.length; offset += 400) {
-    const batch = writeBatch(db)
-    snapshot.docs.slice(offset, offset + 400).forEach((item) => batch.delete(item.ref))
-    await batch.commit()
-  }
 }
