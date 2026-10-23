@@ -472,7 +472,7 @@ function transactionsReducer(state, action) {
 function recoverReceiptChunks(uid) {
   import('../services/receiptCleanup')
     .then(({ resumeReceiptCleanup }) => resumeReceiptCleanup(uid))
-    .catch((error) => console.warn('[Meu Real] Limpeza de comprovantes pendente:', error))
+    .catch((error) => console.warn('[Meu Real] Limpeza pendente:', error))
 }
 
 export const TransactionsProvider = ({ children }) => {
