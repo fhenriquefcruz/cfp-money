@@ -1,0 +1,328 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function admin() {
+      return signedIn()
+        && 'admin' in request.auth.token
+        && request.auth.token.admin == true;
+    }
+
+    function validInitialUser() {
+      return request.resource.data.keys().hasAll([
+          'email',
+          'displayName',
+          'plan',
+          'trialStart',
+          'premiumUntil',
+          'blocked',
+          'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'email',
+          'displayName',
+          'plan',
+          'trialStart',
+          'premiumUntil',
+          'blocked',
+          'createdAt'
+        ])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 120
+        && request.resource.data.plan == 'trial'
+        && request.resource.data.trialStart is timestamp
+        && request.resource.data.premiumUntil == null
+        && request.resource.data.blocked == false
+        && request.resource.data.createdAt is timestamp;
+    }
+
+    function validOwnerUserUpdate() {
+      let changed =
+        request.resource.data.diff(resource.data).affectedKeys();
+
+      return changed.hasOnly([
+          'displayName',
+          'email',
+          'updatedAt',
+          'moneySettings',
+          'moneySettingsUpdatedAt',
+          'lastSignInAt',
+          'lastSeenAt'
+        ])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 120
+        && request.resource.data.get('moneySettings', {}) is map
+        && request.resource.data.get(
+          'updatedAt',
+          request.time
+        ) is timestamp
+        && request.resource.data.get(
+          'moneySettingsUpdatedAt',
+          request.time
+        ) is timestamp
+        && request.resource.data.get(
+          'lastSignInAt',
+          request.time
+        ) is timestamp
+        && request.resource.data.get(
+          'lastSeenAt',
+          request.time
+        ) is timestamp
+        && (
+          !changed.hasAny(['lastSignInAt'])
+          || request.resource.data.lastSignInAt <= request.time
+        )
+        && (
+          !changed.hasAny(['lastSeenAt'])
+          || request.resource.data.lastSeenAt == request.time
+        );
+    }
+
+    function validAdminAccessUpdate() {
+      let changed =
+        request.resource.data.diff(resource.data).affectedKeys();
+
+      return changed.hasOnly([
+          'plan',
+          'premiumUntil',
+          'blocked',
+          'updatedAt',
+          'accessUpdatedAt',
+          'accessUpdatedBy'
+        ])
+        && changed.hasAny(['plan', 'premiumUntil', 'blocked'])
+        && request.resource.data.blocked is bool
+        && (
+          !changed.hasAny(['plan', 'premiumUntil'])
+          || (
+            request.resource.data.plan == 'premium'
+            && request.resource.data.premiumUntil is timestamp
+            && request.resource.data.blocked == false
+          )
+          || (
+            request.resource.data.plan == 'free'
+            && request.resource.data.premiumUntil == null
+          )
+        )
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.accessUpdatedAt is timestamp
+        && request.resource.data.accessUpdatedBy == request.auth.uid;
+    }
+
+    function ownsCustomCategory() {
+      return resource != null
+        && signedIn()
+        && resource.data.get('isDefault', true) == false
+        && resource.data.get('ownerUid', '') == request.auth.uid;
+    }
+
+    function validCustomCategoryOwner() {
+      return request.resource != null
+        && request.resource.data.get('isDefault', true) == false
+        && request.resource.data.get('ownerUid', '') == request.auth.uid;
+    }
+
+    function validCustomCategoryFields() {
+      return request.resource != null
+        && request.resource.data.get('name', '') is string
+        && request.resource.data.get('name', '').size() > 0
+        && request.resource.data.get('name', '').size() <= 120
+        && request.resource.data.get('icon', '') is string
+        && request.resource.data.get('icon', '').size() <= 20
+        && request.resource.data.get('color', '') is string
+        && request.resource.data.get('color', '').size() <= 40
+        && request.resource.data.get('type', '') is string
+        && (
+          request.resource.data.get('type', '') == 'income'
+          || request.resource.data.get('type', '') == 'expense'
+        );
+    }
+
+    function validSupportCreate(requestId) {
+      return request.resource.data.keys().hasAll([
+          'uid',
+          'email',
+          'protocol',
+          'category',
+          'subject',
+          'message',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'email',
+          'protocol',
+          'category',
+          'subject',
+          'message',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.protocol == requestId
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.category is string
+        && (
+          request.resource.data.category == 'support'
+          || request.resource.data.category == 'technical'
+          || request.resource.data.category == 'billing'
+          || request.resource.data.category == 'cancellation'
+          || request.resource.data.category == 'privacy'
+        )
+        && request.resource.data.subject is string
+        && request.resource.data.subject.size() >= 4
+        && request.resource.data.subject.size() <= 120
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 10
+        && request.resource.data.message.size() <= 4000
+        && request.resource.data.status == 'open'
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    function validSupportAdminUpdate() {
+      let changed =
+        request.resource.data.diff(resource.data).affectedKeys();
+
+      return changed.hasOnly([
+          'status',
+          'response',
+          'respondedAt',
+          'updatedAt',
+          'responderUid'
+        ])
+        && changed.hasAny(['status', 'response'])
+        && request.resource.data.status is string
+        && (
+          request.resource.data.status == 'open'
+          || request.resource.data.status == 'in_progress'
+          || request.resource.data.status == 'answered'
+          || request.resource.data.status == 'closed'
+        )
+        && request.resource.data.response is string
+        && request.resource.data.response.size() >= 2
+        && request.resource.data.response.size() <= 4000
+        && request.resource.data.respondedAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.responderUid == request.auth.uid;
+    }
+
+    function validNotificationSubscriber(uid) {
+      return request.resource.data.keys().hasOnly([
+          'uid',
+          'enabled',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'uid',
+          'enabled',
+          'updatedAt'
+        ])
+        && request.resource.data.uid == uid
+        && request.resource.data.enabled == true
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    match /users/{uid} {
+      allow read: if owner(uid) || admin();
+
+      allow create: if owner(uid) && validInitialUser();
+
+      allow update: if (owner(uid) && validOwnerUserUpdate()) || (admin() && validAdminAccessUpdate());
+
+      allow delete: if false;
+
+      match /{collection}/{document=**} {
+        allow read, write: if owner(uid);
+      }
+    }
+
+    match /categories/{categoryId} {
+      allow read: if admin()
+        || (
+          signedIn()
+          && (
+            resource.data.isDefault == true
+            || resource.data.ownerUid == request.auth.uid
+          )
+        );
+
+      allow create: if admin()
+        || (
+          signedIn()
+          && validCustomCategoryOwner()
+          && validCustomCategoryFields()
+        );
+
+      allow update: if admin()
+        || (
+          ownsCustomCategory()
+          && validCustomCategoryOwner()
+          && validCustomCategoryFields()
+        );
+
+      allow delete: if admin() || ownsCustomCategory();
+    }
+
+    match /adminAudit/{auditId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /supportRequests/{requestId} {
+      allow create: if signedIn() && validSupportCreate(requestId);
+      allow read: if signedIn()
+        && (resource.data.uid == request.auth.uid || admin());
+      allow update: if admin() && validSupportAdminUpdate();
+      allow delete: if false;
+    }
+
+    match /notificationSubscribers/{uid} {
+      allow read: if owner(uid);
+
+      allow create, update: if owner(uid)
+        && validNotificationSubscriber(uid);
+
+      allow delete: if owner(uid);
+    }
+
+    match /notificationDeliveries/{deliveryId} {
+      allow read, write: if false;
+    }
+
+    match /privacyConsents/{consentId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /accountDeletionRequests/{uid} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /privacyAudit/{auditId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
