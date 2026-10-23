@@ -19,6 +19,7 @@ import {
   getFirestore,
   runTransaction,
   setDoc,
+  writeBatch,
 } from 'firebase/firestore'
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions'
 
@@ -181,6 +182,34 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     })
     assert.equal((await getDoc(atomicChunk)).exists(), false)
     assert.deepEqual((await getDoc(receiptTransaction)).data().attachments, [])
+
+    // A exclusão e seu registro de limpeza são persistidos juntos.
+    const deletedTx = doc(database, 'users', uid, 'transactions', 'deleted-with-receipt')
+    const orphanChunk = doc(database, 'users', uid, 'transactionAttachmentChunks', 'orphan_0')
+    const cleanupJob = doc(database, 'users', uid, 'attachmentCleanupJobs', 'cleanup-test')
+    await setDoc(deletedTx, { type: 'expense', amount: 1, date: '2026-10-23' })
+    await setDoc(orphanChunk, {
+      txId: 'deleted-with-receipt',
+      attachmentId: 'orphan',
+      chunkIndex: 0,
+      data: 'cGRm',
+    })
+    const deleteWithQueue = writeBatch(database)
+    deleteWithQueue.delete(deletedTx)
+    deleteWithQueue.set(cleanupJob, { txIds: ['deleted-with-receipt'], queuedAt: now })
+    await deleteWithQueue.commit()
+    assert.equal((await getDoc(deletedTx)).exists(), false)
+    assert.deepEqual((await getDoc(cleanupJob)).data().txIds, ['deleted-with-receipt'])
+    assert.equal((await getDoc(orphanChunk)).exists(), true)
+
+    // Os fragmentos remanescentes podem ser removidos pelo titular, mesmo
+    // depois da exclusão do documento financeiro.
+    const recover = writeBatch(database)
+    recover.delete(orphanChunk)
+    recover.delete(cleanupJob)
+    await recover.commit()
+    assert.equal((await getDoc(orphanChunk)).exists(), false)
+    assert.equal((await getDoc(cleanupJob)).exists(), false)
 
     const getBackendStatus = httpsCallable(functions, 'getBackendStatus')
     const backendStatus = await getBackendStatus()
