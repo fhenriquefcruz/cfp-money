@@ -44,5 +44,6 @@ describe('Comprovantes opcionais e limites de segurança', () => {
       contentType: 'application/pdf',
       size: 50,
     })
+    expect(validateReceiptFile(file('nota\ncomprovante.pdf', 50)).name).toBe('nota_comprovante.pdf')
   })
 })
