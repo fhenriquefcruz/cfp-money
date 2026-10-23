@@ -57,10 +57,7 @@ vi.mock('firebase/firestore', () => ({
         state.deleted.push(id)
       } else {
         const data = collection.get(id)
-        collection.set(id, {
-          ...data,
-          txIds: data.txIds.filter((value) => value !== action.changes.txIds.removeId),
-        })
+        collection.set(id, { ...data, ...action.changes })
       }
     }
     return result
@@ -101,6 +98,14 @@ describe('Recuperação dos comprovantes após exclusão', () => {
     expect(state.jobs.get('job-1').txIds).toEqual(['tx-1'])
     state.failCommit = false
     await resumeReceiptCleanup('uid-1')
+    expect(state.jobs.size).toBe(0)
+  })
+
+  it('remove o item concluído e preserva os demais no mesmo job', async () => {
+    state.jobs.set('job-1', { txIds: ['tx-1', 'tx-2'] })
+    state.chunks.set('chunk-3', { txId: 'tx-2' })
+    await resumeReceiptCleanup('uid-1')
+    expect(state.chunks.size).toBe(0)
     expect(state.jobs.size).toBe(0)
   })
 
