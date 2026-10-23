@@ -1,0 +1,181 @@
+// Comprovantes opcionais no plano Spark. O Firestore NÃO é armazenamento de
+// objetos: limite pequeno por arquivo para preservar cotas e custo previsível.
+// Substituir por R2/Cloud Storage privado quando houver provedor configurado.
+import {
+  arrayRemove,
+  arrayUnion,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+  writeBatch,
+} from 'firebase/firestore'
+import { db } from './firebase'
+
+export const ATTACHMENT_MAX_BYTES = 2 * 1024 * 1024
+export const ATTACHMENTS_PER_TRANSACTION = 6
+const CHUNK_BYTES = 192 * 1024
+const EXTENSION_TYPES = {
+  pdf: 'application/pdf',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  heic: 'image/heic',
+  csv: 'text/csv',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ods: 'application/vnd.oasis.opendocument.spreadsheet',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  odt: 'application/vnd.oasis.opendocument.text',
+  txt: 'text/plain',
+}
+export const ATTACHMENT_ACCEPT = Object.keys(EXTENSION_TYPES)
+  .map((ext) => `.${ext}`)
+  .join(',')
+
+export function validateReceiptFile(file, currentCount = 0) {
+  if (!file?.name || !Number.isFinite(file.size) || file.size <= 0)
+    throw new Error('Selecione um arquivo válido.')
+  if (file.size > ATTACHMENT_MAX_BYTES)
+    throw new Error('O arquivo excede 2 MB. Reduza-o antes de anexar.')
+  if (currentCount >= ATTACHMENTS_PER_TRANSACTION)
+    throw new Error('Limite de seis arquivos por transação.')
+  const extension = String(file.name).split('.').at(-1)?.toLowerCase() || ''
+  if (!EXTENSION_TYPES[extension])
+    throw new Error('Formato não permitido. Use PDF, imagem, planilha ou documento.')
+  return {
+    name: file.name
+      .slice(0, 140)
+      .replace(/[\\/]/g, '_')
+      .split('')
+      .map((character) => (character.charCodeAt(0) < 32 ? '_' : character))
+      .join(''),
+    contentType: EXTENSION_TYPES[extension],
+    size: file.size,
+  }
+}
+
+const chunkCollection = (uid) => collection(db, 'users', uid, 'transactionAttachmentChunks')
+const transactionRef = (uid, txId) => doc(db, 'users', uid, 'transactions', txId)
+
+function asBase64(bytes) {
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += 0x4000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x4000))
+  }
+  return btoa(binary)
+}
+
+function fromBase64(encoded) {
+  const binary = atob(encoded)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i)
+  return bytes
+}
+
+async function eraseChunks(uid, txId, attachmentId, count) {
+  if (!count) return
+  const batch = writeBatch(db)
+  for (let index = 0; index < count; index++) {
+    batch.delete(doc(chunkCollection(uid), `${attachmentId}_${index}`))
+  }
+  await batch.commit()
+}
+
+export async function uploadTransactionAttachment(uid, txId, file, kind = 'transaction') {
+  if (!uid || !txId) throw new Error('Identificação da transação indisponível.')
+  if (!['transaction', 'payment'].includes(kind)) throw new Error('Tipo de comprovante inválido.')
+  const normalized = validateReceiptFile(file)
+  const parent = transactionRef(uid, txId)
+  const existing = await getDoc(parent)
+  if (!existing.exists()) throw new Error('A transação não existe.')
+  const attached = Array.isArray(existing.data().attachments) ? existing.data().attachments : []
+  validateReceiptFile(file, attached.length)
+  const attachmentId = doc(chunkCollection(uid)).id
+  const bytes = new Uint8Array(await file.arrayBuffer())
+  const count = Math.ceil(bytes.length / CHUNK_BYTES)
+  const metadata = {
+    id: attachmentId,
+    ...normalized,
+    kind,
+    chunkCount: count,
+    uploadedAt: new Date().toISOString(),
+  }
+  const batch = writeBatch(db)
+  for (let index = 0; index < count; index++) {
+    batch.set(doc(chunkCollection(uid), `${attachmentId}_${index}`), {
+      txId,
+      attachmentId,
+      chunkIndex: index,
+      data: asBase64(bytes.subarray(index * CHUNK_BYTES, (index + 1) * CHUNK_BYTES)),
+    })
+  }
+  await batch.commit()
+  try {
+    await updateDoc(parent, { attachments: arrayUnion(metadata) })
+  } catch (error) {
+    await eraseChunks(uid, txId, attachmentId, count).catch(() => {})
+    throw error
+  }
+  return metadata
+}
+
+export async function downloadTransactionAttachment(uid, txId, metadata) {
+  if (
+    !metadata?.id ||
+    !Number.isInteger(metadata.chunkCount) ||
+    metadata.chunkCount < 1 ||
+    metadata.chunkCount > 12
+  )
+    throw new Error('Arquivo com metadados inválidos.')
+  const parent = await getDoc(transactionRef(uid, txId))
+  if (
+    !parent.exists() ||
+    !(parent.data().attachments || []).some((item) => item.id === metadata.id)
+  )
+    throw new Error('Comprovante não encontrado nesta transação.')
+  const documents = await Promise.all(
+    Array.from({ length: metadata.chunkCount }, (_, index) =>
+      getDoc(doc(chunkCollection(uid), `${metadata.id}_${index}`)),
+    ),
+  )
+  if (
+    documents.some(
+      (item, index) =>
+        !item.exists() || item.data().txId !== txId || item.data().chunkIndex !== index,
+    )
+  )
+    throw new Error('Não foi possível reconstruir o arquivo.')
+  const parts = documents.map((item) => fromBase64(item.data().data))
+  const blob = new Blob(parts, { type: 'application/octet-stream' })
+  if (blob.size !== metadata.size)
+    throw new Error('O arquivo não passou na verificação de tamanho.')
+  return blob
+}
+
+export async function removeTransactionAttachment(uid, txId, metadata) {
+  const parent = transactionRef(uid, txId)
+  const exists = await getDoc(parent)
+  if (!exists.exists()) throw new Error('Transação não encontrada.')
+  const stored = (exists.data().attachments || []).find((item) => item.id === metadata.id)
+  if (!stored) return
+  await updateDoc(parent, { attachments: arrayRemove(stored) })
+  await eraseChunks(uid, txId, stored.id, stored.chunkCount)
+}
+
+// Busca todos os fragmentos, inclusive de anexos que tiveram upload interrompido.
+// Chamar após excluir transações, para não bloquear a exclusão financeira.
+export async function purgeTransactionAttachmentChunks(uid, txId) {
+  const snapshot = await getDocs(query(chunkCollection(uid), where('txId', '==', txId)))
+  for (let offset = 0; offset < snapshot.docs.length; offset += 400) {
+    const batch = writeBatch(db)
+    snapshot.docs.slice(offset, offset + 400).forEach((item) => batch.delete(item.ref))
+    await batch.commit()
+  }
+}

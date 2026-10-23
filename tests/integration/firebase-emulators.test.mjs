@@ -113,6 +113,48 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
       (error) => error?.code === 'permission-denied',
     )
 
+    // Comprovantes: acesso do titular, vínculo obrigatório e limite por fragmento.
+    const receiptTransaction = doc(database, 'users', uid, 'transactions', 'receipt-test')
+    await setDoc(receiptTransaction, {
+      date: '2026-10-22',
+      type: 'expense',
+      amount: 32,
+      description: 'Compra com comprovante',
+    })
+    const receiptChunk = doc(database, 'users', uid, 'transactionAttachmentChunks', 'receipt_0')
+    await setDoc(receiptChunk, {
+      txId: 'receipt-test',
+      attachmentId: 'receipt',
+      chunkIndex: 0,
+      data: 'cGRm',
+    })
+    assert.equal((await getDoc(receiptChunk)).data().data, 'cGRm')
+    await assert.rejects(
+      () =>
+        getDoc(doc(database, 'users', 'another-user', 'transactionAttachmentChunks', 'receipt_0')),
+      (error) => error?.code === 'permission-denied',
+    )
+    await assert.rejects(
+      () =>
+        setDoc(doc(database, 'users', uid, 'transactionAttachmentChunks', 'unbound_0'), {
+          txId: 'not-existing',
+          attachmentId: 'unbound',
+          chunkIndex: 0,
+          data: 'cGRm',
+        }),
+      (error) => error?.code === 'permission-denied',
+    )
+    await assert.rejects(
+      () =>
+        setDoc(doc(database, 'users', uid, 'transactionAttachmentChunks', 'huge_0'), {
+          txId: 'receipt-test',
+          attachmentId: 'huge',
+          chunkIndex: 0,
+          data: 'a'.repeat(270001),
+        }),
+      (error) => error?.code === 'permission-denied',
+    )
+
     const getBackendStatus = httpsCallable(functions, 'getBackendStatus')
     const backendStatus = await getBackendStatus()
     assert.equal(backendStatus.data.ok, true)

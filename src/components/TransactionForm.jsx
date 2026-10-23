@@ -12,6 +12,8 @@ import {
   Layers,
   PiggyBank,
   ChevronDown,
+  Paperclip,
+  X,
 } from 'lucide-react'
 import {
   useCategories,
@@ -21,6 +23,12 @@ import {
   useTransactions,
 } from '../contexts/AppContext'
 import { Modal, Button, Input } from './ui'
+import { useAuth } from '../contexts/AuthContext'
+import {
+  ATTACHMENT_ACCEPT,
+  uploadTransactionAttachment,
+  validateReceiptFile,
+} from '../services/transactionAttachments'
 import { PAYMENT_METHODS } from '../utils'
 import { format, addMonths } from 'date-fns'
 import {
@@ -176,6 +184,7 @@ export default function TransactionForm({
   initialGoalId = '',
 }) {
   const { createTransaction, editTransaction, addTransactionBatch } = useTransactions()
+  const { user } = useAuth()
   const { showNotification } = useNotifications()
   const { categories } = useCategories()
   const { creditCards } = useCreditCards()
@@ -183,6 +192,7 @@ export default function TransactionForm({
   const [form, setForm] = useState(EMPTY_FORM)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
+  const [attachmentFiles, setAttachmentFiles] = useState([])
   const [showAdvanced, setShowAdvanced] = useState(false)
   const isEditing = !!transaction
 
@@ -226,6 +236,7 @@ export default function TransactionForm({
       setShowAdvanced(false)
     }
     setErrors({})
+    setAttachmentFiles([])
   }, [
     transaction,
     isOpen,
@@ -302,6 +313,21 @@ export default function TransactionForm({
     return Object.keys(errs).length === 0
   }
 
+  const handleAttachmentSelection = (event) => {
+    const selected = Array.from(event.target.files || [])
+    event.target.value = ''
+    if (!selected.length) return
+    try {
+      const existing = Array.isArray(transaction?.attachments) ? transaction.attachments.length : 0
+      selected.forEach((file, index) =>
+        validateReceiptFile(file, existing + attachmentFiles.length + index),
+      )
+      setAttachmentFiles((files) => [...files, ...selected])
+    } catch (error) {
+      showNotification(error.message, 'error')
+    }
+  }
+
   const handleSubmit = async (e) => {
     e?.preventDefault()
     if (!validate()) return
@@ -339,6 +365,7 @@ export default function TransactionForm({
     }
 
     try {
+      let savedTransactionId = isEditing ? transaction.id : null
       if (isEditing) {
         let editData
 
@@ -380,7 +407,8 @@ export default function TransactionForm({
             card: selectedCreditCard,
             groupId,
           })
-          await addTransactionBatch(items)
+          const createdIds = await addTransactionBatch(items)
+          savedTransactionId = createdIds?.[0] || null
         } else {
           // Compatibilidade com o fluxo manual anterior, agora sem perda de centavos.
           const amounts = splitInstallmentAmounts(baseAmount, n)
@@ -402,7 +430,8 @@ export default function TransactionForm({
               originalAmount: baseAmount,
             }
           })
-          await addTransactionBatch(items)
+          const createdIds = await addTransactionBatch(items)
+          savedTransactionId = createdIds?.[0] || null
         }
       } else if (form.isRecurring) {
         // Recorrente (receita OU despesa)
@@ -440,10 +469,11 @@ export default function TransactionForm({
                 : '',
           }
         })
-        await addTransactionBatch(items)
+        const createdIds = await addTransactionBatch(items)
+        savedTransactionId = createdIds?.[0] || null
       } else {
         if (isExpense && form.paymentMethod === 'credit_card' && selectedCreditCard) {
-          await createTransaction(
+          savedTransactionId = await createTransaction(
             buildCreditTransaction({
               baseData,
               totalAmount: baseAmount,
@@ -452,12 +482,38 @@ export default function TransactionForm({
             }),
           )
         } else {
-          await createTransaction({
+          savedTransactionId = await createTransaction({
             ...baseData,
             amount: baseAmount,
             date: form.date,
             dueDate: isExpense ? form.dueDate || '' : '',
           })
+        }
+      }
+      if (attachmentFiles.length) {
+        if (!savedTransactionId || !user?.uid) {
+          showNotification(
+            'Transação salva, mas os anexos não foram enviados. Verifique o login.',
+            'warning',
+          )
+        } else {
+          let failures = 0
+          for (const file of attachmentFiles) {
+            try {
+              await uploadTransactionAttachment(user.uid, savedTransactionId, file, 'transaction')
+            } catch (error) {
+              failures += 1
+              console.error('Falha no comprovante:', error)
+            }
+          }
+          if (failures) {
+            showNotification(
+              `Transação salva. ${failures} ${failures === 1 ? 'anexo não foi enviado' : 'anexos não foram enviados'}. Adicione-o pelo clipe na lista.`,
+              'warning',
+            )
+          } else {
+            showNotification('Comprovantes salvos com a transação.')
+          }
         }
       }
       onClose()
@@ -510,6 +566,66 @@ export default function TransactionForm({
       }
     >
       <div className="space-y-4">
+        {/* Arquivos opcionais. Em séries, vinculados à primeira parcela. */}
+        <section className="rounded-xl border border-[--border-default] bg-[--bg-subtle] p-3">
+          <p className="flex items-center gap-2 text-xs font-bold text-[--text-primary]">
+            <Paperclip size={15} className="text-[--text-brand]" aria-hidden="true" />
+            Comprovantes (opcional)
+          </p>
+          <p className="mt-1 text-[11px] text-[--text-tertiary]">
+            PDF, foto, planilha ou documento. Até 2 MB por arquivo e seis por transação.
+            {!isEditing && (form.isInstallment || form.isRecurring)
+              ? ' Em séries, os arquivos ficam vinculados à primeira parcela ou ocorrência.'
+              : ''}
+          </p>
+          <label className="mt-2 flex min-h-10 cursor-pointer items-center justify-center rounded-lg border border-dashed border-[--border-strong] px-3 text-xs font-semibold text-[--text-brand] hover:bg-[--bg-hover]">
+            Selecionar arquivos
+            <input
+              type="file"
+              multiple
+              accept={ATTACHMENT_ACCEPT}
+              aria-label="Selecionar comprovantes da transação"
+              className="sr-only"
+              disabled={loading}
+              onChange={handleAttachmentSelection}
+            />
+          </label>
+          {attachmentFiles.length > 0 && (
+            <ul className="mt-2 space-y-1" aria-label="Arquivos aguardando envio">
+              {attachmentFiles.map((file, index) => (
+                <li
+                  key={`${file.name}-${index}`}
+                  className="flex min-w-0 items-center gap-2 text-[11px] text-[--text-secondary]"
+                >
+                  <Paperclip size={12} aria-hidden="true" />
+                  <span className="min-w-0 flex-1 truncate">{file.name}</span>
+                  <button
+                    type="button"
+                    aria-label={`Remover ${file.name}`}
+                    disabled={loading}
+                    onClick={() =>
+                      setAttachmentFiles((files) =>
+                        files.filter((_, position) => position !== index),
+                      )
+                    }
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-[--bg-hover]"
+                  >
+                    <X size={14} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {isEditing &&
+            Array.isArray(transaction.attachments) &&
+            transaction.attachments.length > 0 && (
+              <p className="mt-2 text-[11px] font-medium text-[--text-brand]">
+                {transaction.attachments.length} arquivo(s) já vinculado(s). Consulte ou remova pelo
+                clipe na lista.
+              </p>
+            )}
+        </section>
+
         {/* Tipo */}
         <div className="grid grid-cols-3 gap-2 p-1 bg-[--bg-hover] rounded-xl">
           {TX_TYPES.map(({ id, label, icon, color }) => (

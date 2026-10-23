@@ -771,6 +771,14 @@ export const TransactionsProvider = ({ children }) => {
           dispatch({ type: 'E2E_REMOVE_TRANSACTION', payload: id })
         } else {
           await deleteTransaction(user.uid, id)
+          // Não bloquear a exclusão financeira se a coleta de lixo falhar.
+          import('../services/transactionAttachments')
+            .then(({ purgeTransactionAttachmentChunks }) =>
+              purgeTransactionAttachmentChunks(user.uid, id),
+            )
+            .catch((error) => {
+              console.error('[Meu Real] Limpeza pendente dos comprovantes:', error)
+            })
         }
         showNotification('Transação removida.', 'info')
       } catch (e) {
@@ -786,6 +794,22 @@ export const TransactionsProvider = ({ children }) => {
       if (!user?.uid) return
       try {
         await fbDeleteBatch(user.uid, ids)
+        // Só consultar fragmentos quando havia metadados na transação.
+        ids
+          .filter((id) =>
+            stateRef.current.transactions.some(
+              (transaction) => transaction.id === id && transaction.attachments?.length,
+            ),
+          )
+          .forEach((id) => {
+            import('../services/transactionAttachments')
+              .then(({ purgeTransactionAttachmentChunks }) =>
+                purgeTransactionAttachmentChunks(user.uid, id),
+              )
+              .catch((error) => {
+                console.error('[Meu Real] Limpeza pendente da série:', error)
+              })
+          })
         showNotification(ids.length > 1 ? 'Transações removidas.' : 'Transação removida.', 'info')
       } catch (e) {
         showNotification('Erro ao remover transações.', 'error')
@@ -803,6 +827,21 @@ export const TransactionsProvider = ({ children }) => {
 
       try {
         await fbCommitSeries(user.uid, operation)
+        ;(operation?.deletes || [])
+          .filter((id) =>
+            stateRef.current.transactions.some(
+              (transaction) => transaction.id === id && transaction.attachments?.length,
+            ),
+          )
+          .forEach((id) => {
+            import('../services/transactionAttachments')
+              .then(({ purgeTransactionAttachmentChunks }) =>
+                purgeTransactionAttachmentChunks(user.uid, id),
+              )
+              .catch((error) => {
+                console.error('[Meu Real] Limpeza pendente dos comprovantes da série:', error)
+              })
+          })
 
         const affected = operation?.summary?.affectedCount || 0
         const message =

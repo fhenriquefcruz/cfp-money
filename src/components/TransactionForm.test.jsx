@@ -3,6 +3,17 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import TransactionForm from './TransactionForm'
 
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({ user: { uid: 'e2e-test-user' } }),
+}))
+
+vi.mock('../services/transactionAttachments', () => ({
+  ATTACHMENT_ACCEPT: '.pdf,.png,.jpg,.xlsx,.csv,.docx',
+  ATTACHMENTS_PER_TRANSACTION: 6,
+  validateReceiptFile: () => ({ name: 'comprovante.pdf', size: 5, contentType: 'application/pdf' }),
+  uploadTransactionAttachment: vi.fn().mockResolvedValue({ id: 'receipt-one' }),
+}))
+
 const appMocks = vi.hoisted(() => ({
   createTransaction: vi.fn(),
   editTransaction: vi.fn(),
@@ -389,5 +400,18 @@ describe('TransactionForm credit card integration', () => {
         invoiceMonth: '2026-11',
       }),
     )
+  })
+})
+
+describe('TransactionForm: comprovantes opcionais', () => {
+  it('permite selecionar e remover arquivos sem exigir anexo', () => {
+    render(<TransactionForm isOpen onClose={vi.fn()} transaction={null} />)
+    const picker = screen.getByLabelText('Selecionar comprovantes da transação')
+    expect(picker).toHaveAttribute('accept')
+    const file = new File(['pdf'], 'comprovante.pdf', { type: 'application/pdf' })
+    fireEvent.change(picker, { target: { files: [file] } })
+    expect(screen.getByText('comprovante.pdf')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Remover comprovante.pdf' }))
+    expect(screen.queryByText('comprovante.pdf')).not.toBeInTheDocument()
   })
 })

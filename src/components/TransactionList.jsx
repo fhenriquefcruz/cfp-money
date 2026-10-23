@@ -23,6 +23,8 @@ import {
   ArrowUpDown,
   CheckCircle2,
   Clock3,
+  Paperclip,
+  FilePlus2,
 } from 'lucide-react'
 import {
   useCategories,
@@ -34,6 +36,7 @@ import {
 import { useAuth } from '../contexts/AuthContext'
 import { Button, EmptyState, Input, Modal } from './ui'
 import TransactionForm from './TransactionForm'
+import TransactionAttachmentManager from './TransactionAttachmentManager'
 import TransactionSeriesModal from './TransactionSeriesModal'
 import TransactionCsvImportModal from './TransactionCsvImportModal'
 import TransactionSavedViews from './TransactionSavedViews'
@@ -234,6 +237,7 @@ function TxRow({
   cat,
   onEdit,
   onDelete,
+  onOpenAttachments,
   onTogglePayment,
   paymentUpdating,
   paymentState,
@@ -288,6 +292,16 @@ function TxRow({
       <div className="transaction-row-main">
         <div className="transaction-row-heading">
           <p className="transaction-row-title">{tx.description || cat?.name || kindLabel}</p>
+          {tx.attachments?.length > 0 && (
+            <span
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[--border-default] bg-[--bg-subtle] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[--text-brand]"
+              title={`${tx.attachments.length} comprovante(s) anexado(s)`}
+              aria-label={`${tx.attachments.length} comprovante(s) anexado(s)`}
+            >
+              <Paperclip size={12} aria-hidden="true" />
+              {tx.attachments.length}
+            </span>
+          )}
           {tx.isInstallment && (
             <span className="transaction-series-badge transaction-series-badge--installment">
               {tx.installmentNum}/{tx.installmentOf}x
@@ -411,6 +425,28 @@ function TxRow({
 
           <div className="transaction-row-actions">
             <button
+              type="button"
+              onClick={() => onOpenAttachments(tx)}
+              className="transaction-row-action flex min-h-9 min-w-9 items-center justify-center gap-1 rounded-lg border border-[--border-default] px-2 text-[--text-secondary] hover:bg-[--bg-hover]"
+              aria-label={
+                tx.attachments?.length
+                  ? `Ver ${tx.attachments.length} ${tx.attachments.length === 1 ? 'comprovante' : 'comprovantes'} de ${tx.description || 'transação'}`
+                  : `Anexar comprovante a ${tx.description || 'transação'}`
+              }
+              title={tx.attachments?.length ? 'Ver comprovantes anexados' : 'Anexar comprovante'}
+            >
+              {tx.attachments?.length ? (
+                <>
+                  <Paperclip size={15} className="text-[--text-brand]" aria-hidden="true" />
+                  <span className="text-[10px] font-bold tabular-nums">
+                    {tx.attachments.length}
+                  </span>
+                </>
+              ) : (
+                <FilePlus2 size={15} aria-hidden="true" />
+              )}
+            </button>
+            <button
               onClick={() => onEdit(tx)}
               className="transaction-row-action transaction-row-action--edit"
               aria-label={`Editar transação ${tx.description || cat?.name || ''}`.trim()}
@@ -460,6 +496,12 @@ export default function TransactionList() {
   const { invoiceEvents } = useInvoiceEvents()
 
   const [search, setSearch] = useState(() => searchParams.get('search') || '')
+  const [attachmentTransaction, setAttachmentTransaction] = useState(null)
+  const [attachmentKind, setAttachmentKind] = useState('transaction')
+  const openAttachmentManager = (transaction, kind = 'transaction') => {
+    setAttachmentKind(kind)
+    setAttachmentTransaction(transaction)
+  }
   const [typeFilter, setTypeFilter] = useState('all')
   const [catFilter, setCatFilter] = useState(() => searchParams.get('category') || 'all')
   const [payFilter, setPayFilter] = useState('all')
@@ -757,6 +799,11 @@ export default function TransactionList() {
     setPaymentUpdatingIds((current) => new Set(current).add(transaction.id))
     try {
       await setTransactionPaymentStatus(transaction.id, !isPaid)
+      if (!isPaid) {
+        // Oferecer o comprovante somente após confirmar que o pagamento foi salvo.
+        // O usuário pode fechar sem anexar; nada muda no status financeiro.
+        openAttachmentManager(transaction, 'payment')
+      }
     } finally {
       setPaymentUpdatingIds((current) => {
         const next = new Set(current)
@@ -1595,6 +1642,12 @@ export default function TransactionList() {
                           cat={categories.find((category) => category.id === tx.categoryId)}
                           onEdit={handleEdit}
                           onDelete={handleDeleteRequest}
+                          onOpenAttachments={(transaction) =>
+                            openAttachmentManager(
+                              transaction,
+                              isTransactionPaid(transaction) ? 'payment' : 'transaction',
+                            )
+                          }
                           onTogglePayment={handleTogglePayment}
                           paymentUpdating={paymentUpdatingIds.has(tx.id)}
                           paymentState={getTransactionPaymentState(tx, paymentStatusIndex)}
@@ -1636,6 +1689,13 @@ export default function TransactionList() {
       </button>
 
       <TransactionForm isOpen={modalOpen} onClose={handleClose} transaction={editingTx} />
+
+      <TransactionAttachmentManager
+        transaction={attachmentTransaction}
+        isOpen={Boolean(attachmentTransaction)}
+        initialKind={attachmentKind}
+        onClose={() => setAttachmentTransaction(null)}
+      />
 
       <TransactionSeriesModal
         isOpen={Boolean(seriesAction)}

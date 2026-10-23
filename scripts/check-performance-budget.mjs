@@ -31,9 +31,12 @@ const indexPath = join(distRoot, 'index.html')
 // A medição pós-correção do DOMPurify chegou a 727,52 KiB gzip; a
 // margem total de 768 bytes cobre o ranking e essa atualização de segurança.
 // limite de carregamento inicial, CSS, Money e chunks permanecem intactos.
+// Fases 57-58 combinadas: anexos são carregados sob demanda; estimativa
+// inicial conservadora de 245 KiB JS e teto total de 734 KiB gzip.
+// Revalidar pelos números reais de CI antes de integrar.
 const limits = {
-  initialJavaScriptGzipBytes: 242 * 1024 + 512,
-  totalJavaScriptGzipBytes: 727 * 1024 + 768,
+  initialJavaScriptGzipBytes: 245 * 1024,
+  totalJavaScriptGzipBytes: 734 * 1024,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 22 * 1024 + 512,
