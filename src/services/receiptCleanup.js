@@ -21,8 +21,7 @@ async function cleanOne(uid, jobRef, txId) {
     const complete = await runTransaction(db, async (operation) => {
       // Todas as leituras ocorrem antes de qualquer exclusão.
       const job = await operation.get(jobRef)
-      if (!job.exists()) return true
-      const ids = job.data().txIds
+      const ids = job.exists() && job.data().txIds
       if (!Array.isArray(ids) || !ids.includes(txId)) return true
       const parent = await operation.get(transactionRef(uid, txId))
 
@@ -52,8 +51,9 @@ async function resume(uid) {
 }
 
 export function resumeReceiptCleanup(uid) {
-  if (!uid) return Promise.resolve()
-  if (running.has(uid)) return running.get(uid)
+  if (!uid) return
+  const existing = running.get(uid)
+  if (existing) return existing
   const task = resume(uid).finally(() => running.delete(uid))
   running.set(uid, task)
   return task
