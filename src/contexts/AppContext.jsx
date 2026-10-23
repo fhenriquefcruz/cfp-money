@@ -469,11 +469,10 @@ function transactionsReducer(state, action) {
 }
 
 // A fila está persistida no Firestore; falhas não anulam uma exclusão concluída.
-function recoverReceiptChunks(uid) {
+const recoverReceiptChunks = (uid) =>
   import('../services/receiptCleanup')
-    .then(({ resumeReceiptCleanup }) => resumeReceiptCleanup(uid))
-    .catch((error) => console.warn('[Meu Real] Limpeza pendente:', error))
-}
+    .then((module) => module.resumeReceiptCleanup(uid))
+    .catch(console.warn)
 
 export const TransactionsProvider = ({ children }) => {
   const { user } = useAuth()
