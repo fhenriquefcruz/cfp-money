@@ -2,7 +2,6 @@
 // A fila foi salva junto com a exclusão financeira, portanto sobrevive
 // ao fechamento da aba e é retomada na próxima sessão autenticada.
 import {
-  arrayRemove,
   collection,
   doc,
   getDocs,
@@ -23,7 +22,7 @@ const transactionRef = (uid, id) => doc(db, 'users', uid, 'transactions', id)
 
 function finishJobItem(operation, ref, ids, id) {
   if (ids.length === 1) operation.delete(ref)
-  else operation.update(ref, { txIds: arrayRemove(id) })
+  else operation.update(ref, { txIds: ids.filter((value) => value !== id) })
 }
 
 async function cleanOne(uid, jobRef, txId) {
