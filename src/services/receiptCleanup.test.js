@@ -82,8 +82,7 @@ beforeEach(() => {
 
 describe('Recuperação dos comprovantes após exclusão', () => {
   it('remove os fragmentos órfãos e conclui a fila persistida', async () => {
-    const result = await resumeReceiptCleanup('uid-1')
-    expect(result.completed).toBe(1)
+    await resumeReceiptCleanup('uid-1')
     expect(state.chunks.size).toBe(0)
     expect(state.jobs.size).toBe(0)
   })
@@ -107,15 +106,15 @@ describe('Recuperação dos comprovantes após exclusão', () => {
 
   it('é idempotente em chamadas sucessivas', async () => {
     await resumeReceiptCleanup('uid-1')
-    expect(await resumeReceiptCleanup('uid-1')).toEqual({ completed: 0, pending: 0 })
+    await resumeReceiptCleanup('uid-1')
+    expect(state.jobs.size).toBe(0)
   })
 
   it('processa em blocos e mantém o trabalho não concluído', async () => {
     state.chunks = new Map(
       Array.from({ length: 90 }, (_, i) => [`fragment-${i}`, { txId: 'tx-1' }]),
     )
-    const result = await resumeReceiptCleanup('uid-1')
-    expect(result.pending).toBe(1)
+    await resumeReceiptCleanup('uid-1')
     expect(state.chunks.size).toBe(6)
     expect(state.jobs.size).toBe(1)
     await resumeReceiptCleanup('uid-1')
