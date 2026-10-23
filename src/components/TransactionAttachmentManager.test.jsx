@@ -132,7 +132,7 @@ describe('Comprovantes opcionais por transação', () => {
     expect(screen.queryByText('segundo.pdf')).not.toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('1 de 6 comprovantes')
     await waitFor(() =>
-      expect(mocks.notify).toHaveBeenCalledWith('1 salvo(s), 1 não enviado(s).', 'warning'),
+      expect(mocks.notify).toHaveBeenCalledWith('1 comprovante salvo; 1 não enviado.', 'warning'),
     )
   })
 
