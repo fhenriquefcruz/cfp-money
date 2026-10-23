@@ -223,13 +223,7 @@ export const updateTransactionPaymentStatuses = async (uid, operation = {}) => {
   await batch.commit()
 }
 
-export const deleteTransaction = async (uid, id) => {
-  if (!uid || !id) throw new Error('Transação inválida.')
-  const batch = writeBatch(db)
-  batch.delete(userDoc(uid, 'transactions', id))
-  queueReceiptCleanup(batch, uid, [id])
-  await batch.commit()
-}
+export const deleteTransaction = (uid, id) => deleteTransactionBatch(uid, [id])
 
 // ── INVOICE EVENTS ──
 export const onInvoiceEventsChange = (uid, callback) => {
