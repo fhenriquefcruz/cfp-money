@@ -26,7 +26,7 @@ function finishJobItem(operation, ref, ids, id) {
 }
 
 async function cleanOne(uid, jobRef, txId) {
-  if (typeof txId !== 'string' || !txId) throw new Error('Identificador inválido na fila.')
+  if (typeof txId !== 'string' || !txId) return
   for (let pass = 0; pass < PASSES_PER_TRANSACTION; pass++) {
     const snapshot = await getDocs(
       query(chunksRef(uid), where('txId', '==', txId), limit(CHUNKS_PER_PASS)),
@@ -62,7 +62,7 @@ async function resume(uid) {
   const snapshot = await getDocs(query(jobsRef(uid), limit(3)))
   for (const job of snapshot.docs) {
     const ids = job.data().txIds
-    if (!Array.isArray(ids)) throw new Error('Fila de limpeza inválida.')
+    if (!Array.isArray(ids)) continue
     // Limitar a execução para não exceder as cotas do Firestore Spark.
     for (const id of ids.slice(0, 8)) await cleanOne(uid, job.ref, id)
   }
