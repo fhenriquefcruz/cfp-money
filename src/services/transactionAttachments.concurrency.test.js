@@ -66,7 +66,7 @@ describe('Ciclo atômico de comprovantes', () => {
   it('adiciona fragmentos e metadados numa única transação', async () => {
     state.attachments = existing(5)
     const uploaded = await uploadTransactionAttachment('uid-1', 'tx-1', fakeFile)
-    expect(uploaded.sha256).toMatch(/^[a-f0-9]{64}$/)
+    expect(uploaded.sha256).toMatch(/^[A-Za-z0-9+/]{43}=$/)
     expect(state.committed).toHaveLength(1)
     const [change] = state.committed
     expect(change.sets).toHaveLength(1)
