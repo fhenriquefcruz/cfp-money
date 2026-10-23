@@ -9,7 +9,10 @@ const { GoogleAuth } = require('google-auth-library')
 
 const mode = process.argv[2]
 if (!['before', 'after'].includes(mode)) throw new Error('Expected before or after')
-const normalize = (input) => String(input || '').replace(/\r\n/g, '\n').trim()
+const normalize = (input) =>
+  String(input || '')
+    .replace(/\r\n/g, '\n')
+    .trim()
 const intended = normalize(readFileSync('firestore.rules', 'utf8'))
 const baseline =
   mode === 'before'
