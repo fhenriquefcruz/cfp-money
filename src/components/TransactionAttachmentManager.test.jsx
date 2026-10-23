@@ -99,4 +99,63 @@ describe('Comprovantes opcionais por transação', () => {
     await waitFor(() => expect(screen.queryByText('pagamento.pdf')).not.toBeInTheDocument())
     confirm.mockRestore()
   })
+
+  it('mostra o sucesso parcial quando um lote contém anexos que falharam', async () => {
+    mocks.upload
+      .mockResolvedValueOnce({
+        id: 'receipt-ok',
+        name: 'primeiro.pdf',
+        size: 2,
+        kind: 'payment',
+        chunkCount: 1,
+      })
+      .mockRejectedValueOnce(new Error('Conexão interrompida'))
+
+    render(<TransactionAttachmentManager transaction={transaction} isOpen onClose={vi.fn()} />)
+
+    fireEvent.change(screen.getByLabelText('Selecionar comprovantes'), {
+      target: {
+        files: [
+          new File(['A'], 'primeiro.pdf', { type: 'application/pdf' }),
+          new File(['B'], 'segundo.pdf', { type: 'application/pdf' }),
+        ],
+      },
+    })
+
+    await waitFor(() => expect(mocks.upload).toHaveBeenCalledTimes(2))
+    expect(await screen.findByText('primeiro.pdf')).toBeInTheDocument()
+    expect(screen.queryByText('segundo.pdf')).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('1 de 6 comprovantes')
+    await waitFor(() =>
+      expect(mocks.notify).toHaveBeenCalledWith('1 comprovante salvo; 1 não enviado.', 'warning'),
+    )
+  })
+
+  it('oculta imediatamente o anexo removido mesmo antes da atualização do Firestore', async () => {
+    const attached = {
+      id: 'persisted-1',
+      name: 'boleto.pdf',
+      size: 10,
+      kind: 'transaction',
+      chunkCount: 1,
+    }
+    mocks.remove.mockResolvedValue(undefined)
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    render(
+      <TransactionAttachmentManager
+        transaction={{ ...transaction, attachments: [attached] }}
+        isOpen
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('boleto.pdf')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Excluir boleto.pdf' }))
+    await waitFor(() =>
+      expect(mocks.remove).toHaveBeenCalledWith('receipt-test-user', 'expense-1', attached),
+    )
+    await waitFor(() => expect(screen.queryByText('boleto.pdf')).not.toBeInTheDocument())
+    expect(screen.getByRole('status')).toHaveTextContent('0 de 6 comprovantes')
+    confirm.mockRestore()
+  })
 })
