@@ -29,7 +29,9 @@ function finishJobItem(operation, ref, ids, id) {
 async function cleanOne(uid, jobRef, txId) {
   if (typeof txId !== 'string' || !txId) throw new Error('Identificador inválido na fila.')
   for (let pass = 0; pass < PASSES_PER_TRANSACTION; pass++) {
-    const snapshot = await getDocs(query(chunksRef(uid), where('txId', '==', txId), limit(CHUNKS_PER_PASS)))
+    const snapshot = await getDocs(
+      query(chunksRef(uid), where('txId', '==', txId), limit(CHUNKS_PER_PASS)),
+    )
     const complete = await runTransaction(db, async (operation) => {
       // Todas as leituras ocorrem antes de qualquer exclusão.
       const job = await operation.get(jobRef)
