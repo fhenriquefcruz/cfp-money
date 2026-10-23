@@ -1,0 +1,52 @@
+name: Deploy verified Firestore receipt rules
+on:
+  push:
+    branches: [main]
+    paths: [firestore.rules, .github/workflows/deploy-firestore-rules.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GOOGLE_CLIENT_EMAIL: ${{ secrets.GOOGLE_CLIENT_EMAIL }}
+      GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Prepare ephemeral authentication for read-only verification
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs')
+          const path = require('node:path')
+          const email = process.env.GOOGLE_CLIENT_EMAIL
+          const raw = process.env.GOOGLE_PRIVATE_KEY
+          if (!email || !raw) throw new Error('Credenciais existentes do Google não configuradas.')
+          const key = raw.replace(/\\n/g, '\n')
+          const target = path.join(process.env.RUNNER_TEMP, 'firebase-adc.json')
+          fs.writeFileSync(target, JSON.stringify({
+            type: 'service_account',
+            project_id: 'cfp-money',
+            client_email: email,
+            private_key: key,
+            token_uri: 'https://oauth2.googleapis.com/token',
+          }), { mode: 0o600 })
+          fs.appendFileSync(process.env.GITHUB_ENV, 'GOOGLE_APPLICATION_CREDENTIALS=' + target + '\n')
+          NODE
+      - name: Block deployment if Console rules diverged
+        run: node scripts/verify-firestore-rules-release.mjs before
+      - name: Deploy ONLY Firestore rules
+        run: npx firebase deploy --only firestore:rules --project cfp-money --non-interactive
+      - name: Verify deployed rules match source
+        run: node scripts/verify-firestore-rules-release.mjs after
+      - name: Remove ephemeral credentials
+        if: always()
+        run: rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
