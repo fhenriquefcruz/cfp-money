@@ -196,7 +196,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     })
     const deleteWithQueue = writeBatch(database)
     deleteWithQueue.delete(deletedTx)
-    deleteWithQueue.set(cleanupJob, { txIds: ['deleted-with-receipt'], createdAt: now })
+    deleteWithQueue.set(cleanupJob, { txIds: ['deleted-with-receipt'] })
     await deleteWithQueue.commit()
     assert.equal((await getDoc(deletedTx)).exists(), false)
     assert.deepEqual((await getDoc(cleanupJob)).data().txIds, ['deleted-with-receipt'])
