@@ -166,11 +166,7 @@ export async function removeTransactionAttachment(uid, txId, metadata) {
     const current = Array.isArray(snapshot.data().attachments) ? snapshot.data().attachments : []
     const stored = current.find((item) => item.id === metadata.id)
     if (!stored) return
-    if (
-      !Number.isInteger(stored.chunkCount) ||
-      stored.chunkCount < 1 ||
-      stored.chunkCount > 12
-    ) {
+    if (!Number.isInteger(stored.chunkCount) || stored.chunkCount < 1 || stored.chunkCount > 12) {
       throw new Error('Comprovante com metadados inválidos.')
     }
     for (let index = 0; index < stored.chunkCount; index++) {
