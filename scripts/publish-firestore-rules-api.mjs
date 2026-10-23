@@ -51,7 +51,16 @@ async function publishedRules() {
   return { name: release.rulesetName, source: normalize(source) }
 }
 
+// O preflight do workflow também compara as regras, mas o publicador valida
+// novamente o estado aprovado para impedir substituição de mudanças externas
+// ocorridas entre as duas etapas.
+const approvedBaseline = normalize(
+  readFileSync('scripts/firestore-rules-pre-attachments.rules', 'utf8'),
+)
 const previous = await publishedRules()
+if (previous.source !== approvedBaseline && previous.source !== normalize(expected)) {
+  throw new Error('Regras de produção divergiram do baseline aprovado; publicação bloqueada.')
+}
 if (previous.source === normalize(expected)) {
   console.log('Regras já estão publicadas; nenhuma alteração necessária.')
   process.exit(0)
