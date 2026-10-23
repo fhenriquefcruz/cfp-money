@@ -22,7 +22,9 @@ Cloud Storage for Firebase exige o plano Blaze desde fevereiro de 2026; a produ�
 ## Riscos e limites
 
 - Firestore não é armazenamento de objetos: limite de cota, mais gravações e leituras por arquivo; não carregar bytes na listagem.
-- Arquivos enviados por versões anteriores podem ter deixado fragmentos órfãos. A limpeza por transação e o monitoramento desses resíduos ainda são necessários para documentos legados e falhas de exclusão de transações.
+- Exclusões individuais, em lote e de séries agora registram, no mesmo commit, uma fila de recuperação em `users/{uid}/attachmentCleanupJobs`. No login e depois de exclusões, o cliente tenta limpar os fragmentos de transações que já não existem. A fila permanece até a confirmação e sobrevive ao fechamento da página. Fragmentos de lançamentos existentes nunca são eliminados pelo recuperador.
+- A recuperação tem limites de leitura por sessão para preservar custos no plano Spark. Ela é oportunista (login/nova exclusão), **não** é um worker permanente: usuários que não retornarem podem manter fragmentos até a próxima sessão ou uma manutenção autorizada. Fragmentos anteriores à criação da fila não são descobertos automaticamente e exigem auditoria específica.
+- Erros de rede não apagam o registro de limpeza; a tentativa pode ser repetida. Nenhuma informação financeira é alterada pelo recuperador.
 - Não existe antivírus no cliente; arquivos são baixados, não abertos automaticamente. Avaliar varredura de malware no backend ao migrar para R2/Storage.
 - Arquivos acima dos limites devem usar armazenamento de objetos autenticado (Cloudflare R2 ou Firebase Storage Blaze) após configuração e orçamento aprovados.
 - Testar upload, exclusão, reconstrução, autorização de proprietário e comportamento offline antes de liberação; transações Firestore exigem conexão ativa.
