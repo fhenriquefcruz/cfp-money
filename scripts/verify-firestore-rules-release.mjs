@@ -2,7 +2,10 @@
 // unexpected Console changes. Read-only check before and after Firebase CLI deploy.
 import { readFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
-import { GoogleAuth } from 'google-auth-library'
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
+const { GoogleAuth } = require('google-auth-library')
 
 const mode = process.argv[2]
 if (!['before', 'after'].includes(mode)) throw new Error('Expected before or after')
