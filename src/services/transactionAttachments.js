@@ -3,12 +3,12 @@
 // Substituir por R2/Cloud Storage privado quando houver provedor configurado.
 import {
   arrayRemove,
-  arrayUnion,
   collection,
   doc,
   getDoc,
   getDocs,
   query,
+  runTransaction,
   updateDoc,
   where,
   writeBatch,
@@ -118,7 +118,17 @@ export async function uploadTransactionAttachment(uid, txId, file, kind = 'trans
   }
   await batch.commit()
   try {
-    await updateDoc(parent, { attachments: arrayUnion(metadata) })
+    // O total também é conferido na transação atômica: duas abas abertas
+    // não podem ultrapassar o limite ao enviar comprovantes simultaneamente.
+    await runTransaction(db, async (operation) => {
+      const snapshot = await operation.get(parent)
+      if (!snapshot.exists()) throw new Error('A transação não existe.')
+      const current = Array.isArray(snapshot.data().attachments) ? snapshot.data().attachments : []
+      if (current.length >= ATTACHMENTS_PER_TRANSACTION) {
+        throw new Error('Limite de seis arquivos por transação.')
+      }
+      operation.update(parent, { attachments: [...current, metadata] })
+    })
   } catch (error) {
     await eraseChunks(uid, txId, attachmentId, count).catch(() => {})
     throw error
