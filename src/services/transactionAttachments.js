@@ -77,6 +77,13 @@ function fromBase64(encoded) {
   return bytes
 }
 
+async function sha256(bytes) {
+  const subtle = globalThis.crypto?.subtle
+  if (!subtle) throw new Error('Este navegador não oferece verificação segura de comprovantes.')
+  const digest = await subtle.digest('SHA-256', bytes)
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
 // O limite por arquivo mantém a transação abaixo de 10 MiB mesmo com a
 // codificação Base64. Geramos os fragmentos antes da transação para que
 // eventuais tentativas automáticas reutilizem exatamente os mesmos bytes.
@@ -86,6 +93,7 @@ export async function uploadTransactionAttachment(uid, txId, file, kind = 'trans
   const normalized = validateReceiptFile(file)
   const bytes = new Uint8Array(await file.arrayBuffer())
   if (bytes.length !== normalized.size) throw new Error('O arquivo foi alterado durante o envio.')
+  const checksum = await sha256(bytes)
   const chunkRefs = chunkCollection(uid)
   const attachmentId = doc(chunkRefs).id
   const chunks = []
@@ -95,6 +103,7 @@ export async function uploadTransactionAttachment(uid, txId, file, kind = 'trans
   const metadata = {
     id: attachmentId,
     ...normalized,
+    sha256: checksum,
     kind,
     chunkCount: chunks.length,
     uploadedAt: new Date().toISOString(),
@@ -124,36 +133,71 @@ export async function uploadTransactionAttachment(uid, txId, file, kind = 'trans
 }
 
 export async function downloadTransactionAttachment(uid, txId, metadata) {
-  if (
-    !metadata?.id ||
-    !Number.isInteger(metadata.chunkCount) ||
-    metadata.chunkCount < 1 ||
-    metadata.chunkCount > 12
-  )
-    throw new Error('Arquivo com metadados inválidos.')
+  if (!uid || !txId || typeof metadata?.id !== 'string' || !metadata.id) {
+    throw new Error('Comprovante inválido.')
+  }
   const parent = await getDoc(transactionRef(uid, txId))
+  const stored = parent.exists()
+    ? (parent.data().attachments || []).find((item) => item.id === metadata.id)
+    : null
+  if (!stored) throw new Error('Comprovante não encontrado nesta transação.')
+  // Metadados fornecidos pela interface podem estar desatualizados. O índice
+  // persistido é a fonte de verdade para tamanho, número de fragmentos e hash.
   if (
-    !parent.exists() ||
-    !(parent.data().attachments || []).some((item) => item.id === metadata.id)
-  )
-    throw new Error('Comprovante não encontrado nesta transação.')
+    !Number.isInteger(stored.chunkCount) ||
+    stored.chunkCount < 1 ||
+    stored.chunkCount > 12 ||
+    !Number.isSafeInteger(stored.size) ||
+    stored.size < 1 ||
+    stored.size > ATTACHMENT_MAX_BYTES
+  ) {
+    throw new Error('Arquivo com metadados inválidos.')
+  }
+  if (stored.sha256 != null && !/^[a-f0-9]{64}$/.test(stored.sha256)) {
+    throw new Error('Comprovante com verificação de integridade inválida.')
+  }
+
   const documents = await Promise.all(
-    Array.from({ length: metadata.chunkCount }, (_, index) =>
-      getDoc(doc(chunkCollection(uid), `${metadata.id}_${index}`)),
+    Array.from({ length: stored.chunkCount }, (_, index) =>
+      getDoc(doc(chunkCollection(uid), `${stored.id}_${index}`)),
     ),
   )
   if (
     documents.some(
       (item, index) =>
-        !item.exists() || item.data().txId !== txId || item.data().chunkIndex !== index,
+        !item.exists() ||
+        item.data().txId !== txId ||
+        item.data().attachmentId !== stored.id ||
+        item.data().chunkIndex !== index,
     )
-  )
+  ) {
     throw new Error('Não foi possível reconstruir o arquivo.')
-  const parts = documents.map((item) => fromBase64(item.data().data))
-  const blob = new Blob(parts, { type: 'application/octet-stream' })
-  if (blob.size !== metadata.size)
+  }
+
+  let parts
+  try {
+    parts = documents.map((item) => fromBase64(item.data().data))
+  } catch {
+    throw new Error('Comprovante corrompido: fragmento inválido.')
+  }
+  const total = parts.reduce((sum, part) => sum + part.length, 0)
+  if (total !== stored.size) {
     throw new Error('O arquivo não passou na verificação de tamanho.')
-  return blob
+  }
+  if (stored.sha256) {
+    const bytes = new Uint8Array(total)
+    let offset = 0
+    for (const part of parts) {
+      bytes.set(part, offset)
+      offset += part.length
+    }
+    if ((await sha256(bytes)) !== stored.sha256) {
+      throw new Error('Comprovante corrompido: verificação de integridade falhou.')
+    }
+  }
+  // Arquivos legados sem SHA-256 continuam disponíveis com validação de
+  // tamanho, vínculo à transação e sequência dos fragmentos.
+  return new Blob(parts, { type: 'application/octet-stream' })
 }
 
 export async function removeTransactionAttachment(uid, txId, metadata) {
