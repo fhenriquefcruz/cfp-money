@@ -38,7 +38,7 @@ const bytes = new Uint8Array([1, 2, 3])
 const metadata = { id: 'receipt-1', size: bytes.length, chunkCount: 1 }
 const sha256 = async (value) => {
   const hash = await webcrypto.subtle.digest('SHA-256', value)
-  return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, '0')).join('')
+  return btoa(String.fromCharCode(...new Uint8Array(hash)))
 }
 const putChunk = (value, extras = {}) => {
   state.chunks['receipt-1_0'] = {
@@ -100,7 +100,7 @@ describe('Integridade de downloads e comprovantes legados', () => {
   it('rejeita metadados persistidos com hash malformado', async () => {
     state.attachments[0].sha256 = 'hash-invalido'
     await expect(downloadTransactionAttachment('user-1', 'tx-1', metadata)).rejects.toThrow(
-      'verificação de integridade inválida',
+      'verificação de integridade falhou',
     )
   })
 
