@@ -71,17 +71,13 @@ function asBase64(bytes) {
 }
 
 function fromBase64(encoded) {
-  const binary = atob(encoded)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i)
-  return bytes
+  return Uint8Array.from(atob(encoded), (character) => character.charCodeAt(0))
 }
 
 async function sha256(bytes) {
   const subtle = globalThis.crypto?.subtle
   if (!subtle) throw new Error('Este navegador não oferece verificação segura de comprovantes.')
-  const digest = await subtle.digest('SHA-256', bytes)
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('')
+  return btoa(String.fromCharCode(...new Uint8Array(await subtle.digest('SHA-256', bytes))))
 }
 
 // O limite por arquivo mantém a transação abaixo de 10 MiB mesmo com a
@@ -153,10 +149,6 @@ export async function downloadTransactionAttachment(uid, txId, metadata) {
   ) {
     throw new Error('Arquivo com metadados inválidos.')
   }
-  if (stored.sha256 != null && !/^[a-f0-9]{64}$/.test(stored.sha256)) {
-    throw new Error('Comprovante com verificação de integridade inválida.')
-  }
-
   const documents = await Promise.all(
     Array.from({ length: stored.chunkCount }, (_, index) =>
       getDoc(doc(chunkCollection(uid), `${stored.id}_${index}`)),
@@ -180,12 +172,10 @@ export async function downloadTransactionAttachment(uid, txId, metadata) {
   } catch {
     throw new Error('Comprovante corrompido: fragmento inválido.')
   }
-  const total = parts.reduce((sum, part) => sum + part.length, 0)
-  if (total !== stored.size) {
-    throw new Error('O arquivo não passou na verificação de tamanho.')
-  }
+  const blob = new Blob(parts, { type: 'application/octet-stream' })
+  if (blob.size !== stored.size) throw new Error('Falha na verificação do tamanho do arquivo.')
   if (stored.sha256) {
-    const bytes = new Uint8Array(total)
+    const bytes = new Uint8Array(stored.size)
     let offset = 0
     for (const part of parts) {
       bytes.set(part, offset)
@@ -197,7 +187,7 @@ export async function downloadTransactionAttachment(uid, txId, metadata) {
   }
   // Arquivos legados sem SHA-256 continuam disponíveis com validação de
   // tamanho, vínculo à transação e sequência dos fragmentos.
-  return new Blob(parts, { type: 'application/octet-stream' })
+  return blob
 }
 
 export async function removeTransactionAttachment(uid, txId, metadata) {
