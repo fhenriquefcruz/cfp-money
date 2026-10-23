@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 5
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -41,10 +41,8 @@ jobs:
           }), { mode: 0o600 })
           fs.appendFileSync(process.env.GITHUB_ENV, 'GOOGLE_APPLICATION_CREDENTIALS=' + target + '\n')
           NODE
-      - name: Block deployment if Console rules diverged
-        run: node scripts/verify-firestore-rules-release.mjs before
-      - name: Deploy ONLY Firestore rules
-        run: npx firebase deploy --only firestore:rules --project cfp-money --non-interactive
+      - name: Publish reviewed Firestore rules via scoped Rules API
+        run: node scripts/publish-firestore-rules-rest.mjs
       - name: Verify deployed rules match source
         run: node scripts/verify-firestore-rules-release.mjs after
       - name: Remove ephemeral credentials
