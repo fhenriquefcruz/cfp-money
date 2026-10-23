@@ -95,7 +95,7 @@ describe('Integridade de downloads e comprovantes legados', () => {
   it('rejeita fragmentos que pertencem a outro comprovante', async () => {
     putChunk(bytes, { attachmentId: 'outro-arquivo' })
     await expect(downloadTransactionAttachment('user-1', 'tx-1', metadata)).rejects.toThrow(
-      'Não foi possível reconstruir o arquivo.',
+      'Comprovante incompleto.',
     )
   })
 
@@ -109,7 +109,7 @@ describe('Integridade de downloads e comprovantes legados', () => {
   it('rejeita arquivos cujo fragmento está ausente', async () => {
     state.chunks = {}
     await expect(downloadTransactionAttachment('user-1', 'tx-1', metadata)).rejects.toThrow(
-      'Não foi possível reconstruir o arquivo.',
+      'Comprovante incompleto.',
     )
   })
 })
