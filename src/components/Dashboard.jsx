@@ -22,6 +22,7 @@ import {
   ChevronRight,
   CheckCircle2,
   PiggyBank,
+  Paperclip,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -97,9 +98,20 @@ const TxItem = ({ tx, categories }) => {
         {tx.isSavings ? '🐷' : cat?.icon || (isIncome ? '💰' : '💸')}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-[--text-primary] truncate">
-          {tx.description || (tx.isSavings ? 'Poupança' : cat?.name) || 'Sem descrição'}
-        </p>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <p className="min-w-0 truncate text-sm font-semibold text-[--text-primary]">
+            {tx.description || (tx.isSavings ? 'Poupança' : cat?.name) || 'Sem descrição'}
+          </p>
+          {tx.attachments?.length > 0 && (
+            <span
+              title={`${tx.attachments.length} comprovante(s) anexado(s)`}
+              aria-label={`${tx.attachments.length} comprovante(s) anexado(s)`}
+              className="shrink-0 text-[--text-brand]"
+            >
+              <Paperclip size={13} aria-hidden="true" />
+            </span>
+          )}
+        </div>
         <p className="text-xs text-[--text-tertiary]">
           {formatRelativeDate(dateContext.activityDate)}
           {dateContext.hasSeparateAccountingDate ? ` · fatura ${dateContext.accountingLabel}` : ''}
