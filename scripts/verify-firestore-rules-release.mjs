@@ -1,5 +1,5 @@
 // Safety gate for publishing the checked-in Firestore rules without overwriting
-// unexpected Console changes. Read-only check before and after Firebase CLI deploy.
+// unexpected Console changes. Read-only check before and after Firebase Rules API deployment.
 import { readFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { createRequire } from 'node:module'
@@ -14,6 +14,9 @@ const normalize = (input) =>
     .replace(/\r\n/g, '\n')
     .trim()
 const intended = normalize(readFileSync('firestore.rules', 'utf8'))
+// Conjunto exato confirmado em produção antes da Fase 57; permite refazer
+// uma publicação bloqueada pela CLI sem ignorar mudanças externas.
+const priorVerified = normalize(readFileSync('scripts/firestore-rules-pre-attachments.rules', 'utf8'))
 const baseline =
   mode === 'before'
     ? normalize(execFileSync('git', ['show', 'HEAD^:firestore.rules'], { encoding: 'utf8' }))
@@ -45,10 +48,10 @@ const live = normalize(
 if (!live) throw new Error('Could not read published Firestore rules')
 
 if (mode === 'before') {
-  if (live !== baseline && live !== intended) {
+  if (live !== baseline && live !== priorVerified && live !== intended) {
     throw new Error('Live Firebase rules diverged from main baseline; deployment blocked')
   }
-  console.log('Guard: live rules match the previous main baseline or the intended release.')
+  console.log('Guard: live rules match an exact audited baseline or the intended release.')
 } else {
   if (live !== intended) throw new Error('Post-deployment rules do not match repository content')
   console.log('Verified: Firestore rules were published and match the reviewed source.')
