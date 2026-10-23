@@ -99,6 +99,7 @@ describe('Comprovantes opcionais por transação', () => {
     await waitFor(() => expect(screen.queryByText('pagamento.pdf')).not.toBeInTheDocument())
     confirm.mockRestore()
   })
+
   it('mostra o sucesso parcial quando um lote contém anexos que falharam', async () => {
     mocks.upload
       .mockResolvedValueOnce({
@@ -110,13 +111,7 @@ describe('Comprovantes opcionais por transação', () => {
       })
       .mockRejectedValueOnce(new Error('Conexão interrompida'))
 
-    render(
-      <TransactionAttachmentManager
-        transaction={transaction}
-        isOpen
-        onClose={vi.fn()}
-      />,
-    )
+    render(<TransactionAttachmentManager transaction={transaction} isOpen onClose={vi.fn()} />)
 
     fireEvent.change(screen.getByLabelText('Selecionar comprovantes'), {
       target: {
@@ -163,5 +158,4 @@ describe('Comprovantes opcionais por transação', () => {
     expect(screen.getByRole('status')).toHaveTextContent('0 de 6 comprovantes')
     confirm.mockRestore()
   })
-
 })
