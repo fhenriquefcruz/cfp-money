@@ -40,20 +40,15 @@ export const ATTACHMENT_ACCEPT = Object.keys(EXTENSION_TYPES)
 export function validateReceiptFile(file, currentCount = 0) {
   if (!file?.name || !Number.isFinite(file.size) || file.size <= 0)
     throw new Error('Selecione um arquivo válido.')
-  if (file.size > ATTACHMENT_MAX_BYTES)
-    throw new Error('O arquivo excede 2 MB. Reduza-o antes de anexar.')
+  if (file.size > ATTACHMENT_MAX_BYTES) throw new Error('Arquivo acima de 2 MB.')
   if (currentCount >= ATTACHMENTS_PER_TRANSACTION)
     throw new Error('Limite de seis arquivos por transação.')
-  const extension = String(file.name).split('.').at(-1)?.toLowerCase() || ''
+  const extension = file.name.split('.').pop().toLowerCase()
   if (!EXTENSION_TYPES[extension])
     throw new Error('Formato não permitido. Use PDF, imagem, planilha ou documento.')
   return {
-    name: file.name
-      .slice(0, 140)
-      .replace(/[\\/]/g, '_')
-      .split('')
-      .map((character) => (character.charCodeAt(0) < 32 ? '_' : character))
-      .join(''),
+    // eslint-disable-next-line no-control-regex -- remove controles do nome
+    name: file.name.slice(0, 140).replace(/[\\/\x00-\x1f]/g, '_'),
     contentType: EXTENSION_TYPES[extension],
     size: file.size,
   }
@@ -71,10 +66,18 @@ function asBase64(bytes) {
 }
 
 function fromBase64(encoded) {
-  const binary = atob(encoded)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i)
-  return bytes
+  return Uint8Array.from(atob(encoded), (character) => character.charCodeAt(0))
+}
+
+async function sha256(bytes) {
+  const subtle = globalThis.crypto?.subtle
+  if (!subtle) throw new Error('SHA-256 indisponível neste navegador.')
+  const digest = await subtle.digest('SHA-256', bytes)
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+}
+
+function validChunkCount(value) {
+  return Number.isInteger(value) && value > 0 && value <= 12
 }
 
 // O limite por arquivo mantém a transação abaixo de 10 MiB mesmo com a
@@ -85,7 +88,8 @@ export async function uploadTransactionAttachment(uid, txId, file, kind = 'trans
   if (!['transaction', 'payment'].includes(kind)) throw new Error('Tipo de comprovante inválido.')
   const normalized = validateReceiptFile(file)
   const bytes = new Uint8Array(await file.arrayBuffer())
-  if (bytes.length !== normalized.size) throw new Error('O arquivo foi alterado durante o envio.')
+  if (bytes.length !== normalized.size) throw new Error('Arquivo alterado durante o envio.')
+  const checksum = await sha256(bytes)
   const chunkRefs = chunkCollection(uid)
   const attachmentId = doc(chunkRefs).id
   const chunks = []
@@ -95,6 +99,7 @@ export async function uploadTransactionAttachment(uid, txId, file, kind = 'trans
   const metadata = {
     id: attachmentId,
     ...normalized,
+    sha256: checksum,
     kind,
     chunkCount: chunks.length,
     uploadedAt: new Date().toISOString(),
@@ -124,35 +129,55 @@ export async function uploadTransactionAttachment(uid, txId, file, kind = 'trans
 }
 
 export async function downloadTransactionAttachment(uid, txId, metadata) {
-  if (
-    !metadata?.id ||
-    !Number.isInteger(metadata.chunkCount) ||
-    metadata.chunkCount < 1 ||
-    metadata.chunkCount > 12
-  )
-    throw new Error('Arquivo com metadados inválidos.')
+  if (!uid || !txId || typeof metadata?.id !== 'string' || !metadata.id) {
+    throw new Error('Comprovante inválido.')
+  }
   const parent = await getDoc(transactionRef(uid, txId))
+  const stored = parent.exists()
+    ? (parent.data().attachments || []).find((item) => item.id === metadata.id)
+    : null
+  if (!stored) throw new Error('Comprovante não encontrado.')
+  // Metadados fornecidos pela interface podem estar desatualizados. O índice
+  // persistido é a fonte de verdade para tamanho, número de fragmentos e hash.
   if (
-    !parent.exists() ||
-    !(parent.data().attachments || []).some((item) => item.id === metadata.id)
-  )
-    throw new Error('Comprovante não encontrado nesta transação.')
+    !validChunkCount(stored.chunkCount) ||
+    !Number.isSafeInteger(stored.size) ||
+    stored.size < 1 ||
+    stored.size > ATTACHMENT_MAX_BYTES
+  ) {
+    throw new Error('Metadados do arquivo inválidos.')
+  }
   const documents = await Promise.all(
-    Array.from({ length: metadata.chunkCount }, (_, index) =>
-      getDoc(doc(chunkCollection(uid), `${metadata.id}_${index}`)),
+    Array.from({ length: stored.chunkCount }, (_, index) =>
+      getDoc(doc(chunkCollection(uid), `${stored.id}_${index}`)),
     ),
   )
   if (
     documents.some(
       (item, index) =>
-        !item.exists() || item.data().txId !== txId || item.data().chunkIndex !== index,
+        !item.exists() ||
+        item.data().txId !== txId ||
+        item.data().attachmentId !== stored.id ||
+        item.data().chunkIndex !== index,
     )
-  )
-    throw new Error('Não foi possível reconstruir o arquivo.')
-  const parts = documents.map((item) => fromBase64(item.data().data))
+  ) {
+    throw new Error('Comprovante incompleto.')
+  }
+
+  let parts
+  try {
+    parts = documents.map((item) => fromBase64(item.data().data))
+  } catch {
+    throw new Error('Fragmento inválido.')
+  }
   const blob = new Blob(parts, { type: 'application/octet-stream' })
-  if (blob.size !== metadata.size)
-    throw new Error('O arquivo não passou na verificação de tamanho.')
+  if (blob.size !== stored.size) throw new Error('Tamanho do comprovante inválido.')
+  if (stored.sha256) {
+    const checksum = await sha256(await blob.arrayBuffer())
+    if (checksum !== stored.sha256) throw new Error('SHA-256 divergente: arquivo corrompido.')
+  }
+  // Arquivos legados sem SHA-256 continuam disponíveis com validação de
+  // tamanho, vínculo à transação e sequência dos fragmentos.
   return blob
 }
 
@@ -166,8 +191,8 @@ export async function removeTransactionAttachment(uid, txId, metadata) {
     const current = Array.isArray(snapshot.data().attachments) ? snapshot.data().attachments : []
     const stored = current.find((item) => item.id === metadata.id)
     if (!stored) return
-    if (!Number.isInteger(stored.chunkCount) || stored.chunkCount < 1 || stored.chunkCount > 12) {
-      throw new Error('Comprovante com metadados inválidos.')
+    if (!validChunkCount(stored.chunkCount)) {
+      throw new Error('Metadados do arquivo inválidos.')
     }
     for (let index = 0; index < stored.chunkCount; index++) {
       operation.delete(doc(fragments, `${stored.id}_${index}`))
