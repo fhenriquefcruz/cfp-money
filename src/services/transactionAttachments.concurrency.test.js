@@ -1,46 +1,43 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const state = vi.hoisted(() => ({
-  initialAttachments: [],
-  concurrentAttachments: [],
-  updates: [],
-  deletions: [],
-  writes: [],
-  commits: 0,
+  attachments: [],
+  committed: [],
+  failCommit: false,
+  exists: true,
 }))
 
 vi.mock('./firebase', () => ({ db: {} }))
 
 vi.mock('firebase/firestore', () => ({
-  arrayRemove: vi.fn(),
   collection: () => ({ kind: 'chunks' }),
   doc: (...args) => (args.length === 1 ? { id: 'attachment-new' } : { args }),
-  getDoc: async () => ({
-    exists: () => true,
-    data: () => ({ attachments: state.initialAttachments }),
-  }),
+  getDoc: vi.fn(),
   getDocs: vi.fn(),
   query: vi.fn(),
-  updateDoc: vi.fn(),
   where: vi.fn(),
-  writeBatch: () => ({
-    set: (...args) => state.writes.push(args),
-    delete: (...args) => state.deletions.push(args),
-    commit: async () => {
-      state.commits += 1
-    },
-  }),
-  runTransaction: async (_db, callback) =>
-    callback({
+  writeBatch: vi.fn(),
+  runTransaction: async (_db, callback) => {
+    const operations = { sets: [], updates: [], deletes: [] }
+    const result = await callback({
       get: async () => ({
-        exists: () => true,
-        data: () => ({ attachments: state.concurrentAttachments }),
+        exists: () => state.exists,
+        data: () => ({ attachments: state.attachments }),
       }),
-      update: (...args) => state.updates.push(args),
-    }),
+      set: (...args) => operations.sets.push(args),
+      update: (...args) => operations.updates.push(args),
+      delete: (...args) => operations.deletes.push(args),
+    })
+    if (state.failCommit) throw new Error('Conexão interrompida')
+    state.committed.push(operations)
+    return result
+  },
 }))
 
-import { uploadTransactionAttachment } from './transactionAttachments'
+import {
+  removeTransactionAttachment,
+  uploadTransactionAttachment,
+} from './transactionAttachments'
 
 const fakeFile = {
   name: 'comprovante.pdf',
@@ -50,42 +47,58 @@ const fakeFile = {
 const existing = (count) => Array.from({ length: count }, (_, index) => ({ id: `saved-${index}` }))
 
 beforeEach(() => {
-  state.initialAttachments = []
-  state.concurrentAttachments = []
-  state.updates = []
-  state.deletions = []
-  state.writes = []
-  state.commits = 0
+  state.attachments = []
+  state.committed = []
+  state.failCommit = false
+  state.exists = true
 })
 
-describe('Limite atômico de comprovantes entre sessões', () => {
-  it('não publica o sétimo anexo se outra sessão ocupou a última vaga', async () => {
-    state.initialAttachments = existing(5)
-    state.concurrentAttachments = existing(6)
-
+describe('Ciclo atômico de comprovantes', () => {
+  it('bloqueia o sétimo arquivo sem gravar nenhum fragmento', async () => {
+    state.attachments = existing(6)
     await expect(uploadTransactionAttachment('uid-1', 'tx-1', fakeFile)).rejects.toThrow(
       'Limite de seis arquivos por transação.',
     )
-
-    expect(state.updates).toHaveLength(0)
-    expect(state.writes).toHaveLength(1)
-    expect(state.deletions).toHaveLength(1)
-    expect(state.commits).toBe(2)
+    expect(state.committed).toHaveLength(0)
   })
 
-  it('preserva a lista atualizada e acrescenta o sexto anexo uma única vez', async () => {
-    state.initialAttachments = existing(4)
-    state.concurrentAttachments = existing(5)
-
+  it('adiciona fragmentos e metadados numa única transação', async () => {
+    state.attachments = existing(5)
     const uploaded = await uploadTransactionAttachment('uid-1', 'tx-1', fakeFile)
+    expect(state.committed).toHaveLength(1)
+    const [change] = state.committed
+    expect(change.sets).toHaveLength(1)
+    expect(change.sets[0][1]).toMatchObject({ txId: 'tx-1', attachmentId: uploaded.id })
+    expect(change.updates).toHaveLength(1)
+    expect(change.updates[0][1].attachments).toEqual([...state.attachments, uploaded])
+    expect(change.deletes).toHaveLength(0)
+  })
 
-    expect(uploaded.id).toBe('attachment-new')
-    expect(state.updates).toHaveLength(1)
-    const [parent, updated] = state.updates[0]
-    expect(parent).toBeTruthy()
-    expect(updated.attachments).toHaveLength(6)
-    expect(updated.attachments.slice(0, 5)).toEqual(state.concurrentAttachments)
-    expect(updated.attachments[5]).toEqual(uploaded)
-    expect(state.deletions).toHaveLength(0)
+  it('não persiste fragmentos se a transação falhar', async () => {
+    state.failCommit = true
+    await expect(uploadTransactionAttachment('uid-1', 'tx-1', fakeFile)).rejects.toThrow(
+      'Conexão interrompida',
+    )
+    expect(state.committed).toHaveLength(0)
+  })
+
+  it('apaga os fragmentos e o registro juntos ao excluir um comprovante', async () => {
+    const stored = { id: 'attachment-1', chunkCount: 2, name: 'arquivo.pdf' }
+    state.attachments = [...existing(1), stored]
+    await removeTransactionAttachment('uid-1', 'tx-1', stored)
+    expect(state.committed).toHaveLength(1)
+    const [change] = state.committed
+    expect(change.deletes).toHaveLength(2)
+    expect(change.updates[0][1].attachments).toEqual(existing(1))
+    expect(change.sets).toHaveLength(0)
+  })
+
+  it('mantém os metadados quando a exclusão falha', async () => {
+    state.attachments = [{ id: 'attachment-1', chunkCount: 1 }]
+    state.failCommit = true
+    await expect(
+      removeTransactionAttachment('uid-1', 'tx-1', { id: 'attachment-1' }),
+    ).rejects.toThrow('Conexão interrompida')
+    expect(state.committed).toHaveLength(0)
   })
 })
