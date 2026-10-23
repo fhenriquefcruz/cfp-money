@@ -44,7 +44,7 @@ export function validateReceiptFile(file, currentCount = 0) {
     throw new Error('Arquivo acima de 2 MB.')
   if (currentCount >= ATTACHMENTS_PER_TRANSACTION)
     throw new Error('Limite de seis arquivos por transação.')
-  const extension = String(file.name).split('.').at(-1)?.toLowerCase() || ''
+  const extension = file.name.split('.').pop().toLowerCase()
   if (!EXTENSION_TYPES[extension])
     throw new Error('Formato não permitido. Use PDF, imagem, planilha ou documento.')
   return {
@@ -88,7 +88,7 @@ export async function uploadTransactionAttachment(uid, txId, file, kind = 'trans
   if (!['transaction', 'payment'].includes(kind)) throw new Error('Tipo de comprovante inválido.')
   const normalized = validateReceiptFile(file)
   const bytes = new Uint8Array(await file.arrayBuffer())
-  if (bytes.length !== normalized.size) throw new Error('O arquivo foi alterado durante o envio.')
+  if (bytes.length !== normalized.size) throw new Error('Arquivo alterado durante o envio.')
   const checksum = await sha256(bytes)
   const chunkRefs = chunkCollection(uid)
   const attachmentId = doc(chunkRefs).id
@@ -145,7 +145,7 @@ export async function downloadTransactionAttachment(uid, txId, metadata) {
     stored.size < 1 ||
     stored.size > ATTACHMENT_MAX_BYTES
   ) {
-    throw new Error('Arquivo com metadados inválidos.')
+    throw new Error('Metadados do arquivo inválidos.')
   }
   const documents = await Promise.all(
     Array.from({ length: stored.chunkCount }, (_, index) =>
@@ -191,7 +191,7 @@ export async function removeTransactionAttachment(uid, txId, metadata) {
     const stored = current.find((item) => item.id === metadata.id)
     if (!stored) return
     if (!validChunkCount(stored.chunkCount)) {
-      throw new Error('Comprovante com metadados inválidos.')
+      throw new Error('Metadados do arquivo inválidos.')
     }
     for (let index = 0; index < stored.chunkCount; index++) {
       operation.delete(doc(fragments, `${stored.id}_${index}`))
