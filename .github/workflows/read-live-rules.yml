@@ -1,0 +1,84 @@
+name: Read-only Firebase rules baseline
+on:
+  push:
+    branches: [chore/verify-firestore-live-rules]
+    paths: [.github/workflows/read-live-rules.yml]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GOOGLE_CLIENT_EMAIL: ${{ secrets.GOOGLE_CLIENT_EMAIL }}
+      GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Prepare ephemeral authentication for read-only verification
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs')
+          const path = require('node:path')
+          const email = process.env.GOOGLE_CLIENT_EMAIL
+          const raw = process.env.GOOGLE_PRIVATE_KEY
+          if (!email || !raw) throw new Error('Credenciais existentes do Google não configuradas.')
+          const key = raw.replace(/\\n/g, '\n')
+          const target = path.join(process.env.RUNNER_TEMP, 'firebase-adc.json')
+          fs.writeFileSync(target, JSON.stringify({
+            type: 'service_account',
+            project_id: 'cfp-money',
+            client_email: email,
+            private_key: key,
+            token_uri: 'https://oauth2.googleapis.com/token',
+          }), { mode: 0o600 })
+          fs.appendFileSync(process.env.GITHUB_ENV, 'GOOGLE_APPLICATION_CREDENTIALS=' + target + '\n')
+          NODE
+      - name: Compare published Firestore rules with repository baseline
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs')
+          const { GoogleAuth } = require('google-auth-library')
+          async function main() {
+            const auth = new GoogleAuth({
+              keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+              scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+            })
+            const token = await auth.getAccessToken()
+            async function request(url) {
+              const response = await fetch(url, {
+                headers: { Authorization: 'Bearer ' + token },
+              })
+              if (!response.ok) throw new Error('Firebase Rules API failed: HTTP ' + response.status)
+              return response.json()
+            }
+            const base = 'https://firebaserules.googleapis.com/v1/'
+            const release = await request(base + 'projects/cfp-money/releases/cloud.firestore')
+            if (!/^projects\/cfp-money\/rulesets\//.test(release.rulesetName || '')) {
+              throw new Error('A publicação atual de regras não foi identificada.')
+            }
+            const published = await request('https://firebaserules.googleapis.com/v1/' + release.rulesetName)
+            const source = published.source?.files?.find((file) =>
+              /firestore\.rules$/.test(file.name || ''),
+            )?.content || published.source?.files?.[0]?.content
+            if (!source) throw new Error('Não foi possível ler as regras em produção.')
+            const current = fs.readFileSync('firestore.rules', 'utf8')
+            const normalize = (value) => value.replace(/\r\n/g, '\n').trim()
+            const match = normalize(source) === normalize(current)
+            console.log('Projeto esperado: cfp-money')
+            console.log('Regras em produção acessíveis: sim')
+            console.log('Regras publicadas iguais ao baseline da main: ' + (match ? 'SIM' : 'NÃO'))
+            if (!match) process.exitCode = 2
+          }
+          main().catch((error) => {
+            console.error(error.message)
+            process.exitCode = 1
+          })
+          NODE
+      - name: Remove ephemeral credentials
+        if: always()
+        run: rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
