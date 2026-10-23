@@ -73,7 +73,8 @@ function fromBase64(encoded) {
 async function sha256(bytes) {
   const subtle = globalThis.crypto?.subtle
   if (!subtle) throw new Error('SHA-256 indisponível neste navegador.')
-  return btoa(String.fromCharCode(...new Uint8Array(await subtle.digest('SHA-256', bytes))))
+  const digest = await subtle.digest('SHA-256', bytes)
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
 }
 
 function validChunkCount(value) {
