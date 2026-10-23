@@ -91,6 +91,13 @@ describe('Recuperação dos comprovantes após exclusão', () => {
     expect(state.jobs.size).toBe(0)
   })
 
+  it('preserva os dados e ignora filas malformadas', async () => {
+    state.jobs.set('job-1', { txIds: 'inválido' })
+    await resumeReceiptCleanup('uid-1')
+    expect(state.chunks.size).toBe(2)
+    expect(state.jobs.size).toBe(1)
+  })
+
   it('mantém a fila quando uma gravação é interrompida', async () => {
     state.failCommit = true
     await expect(resumeReceiptCleanup('uid-1')).rejects.toThrow('offline')
