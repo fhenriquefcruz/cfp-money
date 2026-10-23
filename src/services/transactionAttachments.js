@@ -41,7 +41,7 @@ export function validateReceiptFile(file, currentCount = 0) {
   if (!file?.name || !Number.isFinite(file.size) || file.size <= 0)
     throw new Error('Selecione um arquivo válido.')
   if (file.size > ATTACHMENT_MAX_BYTES)
-    throw new Error('O arquivo excede 2 MB. Reduza-o antes de anexar.')
+    throw new Error('Arquivo acima de 2 MB.')
   if (currentCount >= ATTACHMENTS_PER_TRANSACTION)
     throw new Error('Limite de seis arquivos por transação.')
   const extension = String(file.name).split('.').at(-1)?.toLowerCase() || ''
@@ -74,6 +74,10 @@ async function sha256(bytes) {
   const subtle = globalThis.crypto?.subtle
   if (!subtle) throw new Error('SHA-256 indisponível neste navegador.')
   return btoa(String.fromCharCode(...new Uint8Array(await subtle.digest('SHA-256', bytes))))
+}
+
+function validChunkCount(value) {
+  return Number.isInteger(value) && value > 0 && value <= 12
 }
 
 // O limite por arquivo mantém a transação abaixo de 10 MiB mesmo com a
@@ -132,13 +136,11 @@ export async function downloadTransactionAttachment(uid, txId, metadata) {
   const stored = parent.exists()
     ? (parent.data().attachments || []).find((item) => item.id === metadata.id)
     : null
-  if (!stored) throw new Error('Comprovante não encontrado nesta transação.')
+  if (!stored) throw new Error('Comprovante não encontrado.')
   // Metadados fornecidos pela interface podem estar desatualizados. O índice
   // persistido é a fonte de verdade para tamanho, número de fragmentos e hash.
   if (
-    !Number.isInteger(stored.chunkCount) ||
-    stored.chunkCount < 1 ||
-    stored.chunkCount > 12 ||
+    !validChunkCount(stored.chunkCount) ||
     !Number.isSafeInteger(stored.size) ||
     stored.size < 1 ||
     stored.size > ATTACHMENT_MAX_BYTES
@@ -159,19 +161,19 @@ export async function downloadTransactionAttachment(uid, txId, metadata) {
         item.data().chunkIndex !== index,
     )
   ) {
-    throw new Error('Não foi possível reconstruir o arquivo.')
+    throw new Error('Comprovante incompleto.')
   }
 
   let parts
   try {
     parts = documents.map((item) => fromBase64(item.data().data))
   } catch {
-    throw new Error('Comprovante com fragmento inválido.')
+    throw new Error('Fragmento inválido.')
   }
   const blob = new Blob(parts, { type: 'application/octet-stream' })
   if (blob.size !== stored.size) throw new Error('Tamanho do comprovante inválido.')
   if (stored.sha256 && (await sha256(new Uint8Array(await blob.arrayBuffer()))) !== stored.sha256) {
-    throw new Error('Comprovante corrompido: SHA-256 divergente.')
+    throw new Error('SHA-256 divergente: arquivo corrompido.')
   }
   // Arquivos legados sem SHA-256 continuam disponíveis com validação de
   // tamanho, vínculo à transação e sequência dos fragmentos.
@@ -188,7 +190,7 @@ export async function removeTransactionAttachment(uid, txId, metadata) {
     const current = Array.isArray(snapshot.data().attachments) ? snapshot.data().attachments : []
     const stored = current.find((item) => item.id === metadata.id)
     if (!stored) return
-    if (!Number.isInteger(stored.chunkCount) || stored.chunkCount < 1 || stored.chunkCount > 12) {
+    if (!validChunkCount(stored.chunkCount)) {
       throw new Error('Comprovante com metadados inválidos.')
     }
     for (let index = 0; index < stored.chunkCount; index++) {
