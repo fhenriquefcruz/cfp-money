@@ -48,12 +48,7 @@ export function validateReceiptFile(file, currentCount = 0) {
   if (!EXTENSION_TYPES[extension])
     throw new Error('Formato não permitido. Use PDF, imagem, planilha ou documento.')
   return {
-    name: file.name
-      .slice(0, 140)
-      .replace(/[\\/]/g, '_')
-      .split('')
-      .map((character) => (character.charCodeAt(0) < 32 ? '_' : character))
-      .join(''),
+    name: file.name.slice(0, 140).replace(/[\\/\x00-\x1f]/g, '_'),
     contentType: EXTENSION_TYPES[extension],
     size: file.size,
   }
