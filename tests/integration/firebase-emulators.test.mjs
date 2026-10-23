@@ -17,6 +17,7 @@ import {
   doc,
   getDoc,
   getFirestore,
+  runTransaction,
   setDoc,
 } from 'firebase/firestore'
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions'
@@ -154,6 +155,32 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
         }),
       (error) => error?.code === 'permission-denied',
     )
+
+    // Fragmentos e índice devem coexistir na mesma transação, com Rules ativas.
+    const atomicChunk = doc(database, 'users', uid, 'transactionAttachmentChunks', 'atomic_0')
+    await runTransaction(database, async (operation) => {
+      const current = await operation.get(receiptTransaction)
+      assert.equal(current.exists(), true)
+      operation.set(atomicChunk, {
+        txId: 'receipt-test',
+        attachmentId: 'atomic',
+        chunkIndex: 0,
+        data: 'cGRm',
+      })
+      operation.update(receiptTransaction, {
+        attachments: [{ id: 'atomic', name: 'prova.pdf', size: 3, chunkCount: 1 }],
+      })
+    })
+    assert.equal((await getDoc(atomicChunk)).exists(), true)
+    assert.equal((await getDoc(receiptTransaction)).data().attachments.length, 1)
+    await runTransaction(database, async (operation) => {
+      const current = await operation.get(receiptTransaction)
+      assert.equal(current.exists(), true)
+      operation.delete(atomicChunk)
+      operation.update(receiptTransaction, { attachments: [] })
+    })
+    assert.equal((await getDoc(atomicChunk)).exists(), false)
+    assert.deepEqual((await getDoc(receiptTransaction)).data().attachments, [])
 
     const getBackendStatus = httpsCallable(functions, 'getBackendStatus')
     const backendStatus = await getBackendStatus()
