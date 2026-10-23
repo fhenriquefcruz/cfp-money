@@ -48,7 +48,6 @@ describe('Comprovantes opcionais e limites de segurança', () => {
   })
 })
 
-
 // Diagnóstico temporário da formatação (remover após corrigir o arquivo).
 it('imprime diferenças do Prettier para o módulo de comprovantes', async () => {
   const [{ readFile }, prettier] = await Promise.all([
@@ -63,8 +62,8 @@ it('imprime diferenças do Prettier para o módulo de comprovantes', async () =>
     trailingComma: 'all',
     printWidth: 100,
   })
-  const currentLines = original.split('\\n')
-  const wantedLines = formatted.split('\\n')
+  const currentLines = original.split('\n')
+  const wantedLines = formatted.split('\n')
   const differences = []
   for (let i = 0; i < Math.max(currentLines.length, wantedLines.length); i++) {
     if (currentLines[i] !== wantedLines[i]) {
