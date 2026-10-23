@@ -8,7 +8,10 @@ const require = createRequire(import.meta.url)
 const { GoogleAuth } = require('google-auth-library')
 
 const expected = readFileSync('firestore.rules', 'utf8')
-const normalize = (value) => String(value || '').replace(/\r\n/g, '\n').trim()
+const normalize = (value) =>
+  String(value || '')
+    .replace(/\r\n/g, '\n')
+    .trim()
 const project = 'cfp-money'
 const prefix = `https://firebaserules.googleapis.com/v1/projects/${project}`
 const releaseName = `projects/${project}/releases/cloud.firestore`

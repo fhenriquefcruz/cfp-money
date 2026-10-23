@@ -16,7 +16,9 @@ const normalize = (input) =>
 const intended = normalize(readFileSync('firestore.rules', 'utf8'))
 // Conjunto exato confirmado em produção antes da Fase 57; permite refazer
 // uma publicação bloqueada pela CLI sem ignorar mudanças externas.
-const priorVerified = normalize(readFileSync('scripts/firestore-rules-pre-attachments.rules', 'utf8'))
+const priorVerified = normalize(
+  readFileSync('scripts/firestore-rules-pre-attachments.rules', 'utf8'),
+)
 const baseline =
   mode === 'before'
     ? normalize(execFileSync('git', ['show', 'HEAD^:firestore.rules'], { encoding: 'utf8' }))
