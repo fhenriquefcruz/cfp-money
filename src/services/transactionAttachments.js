@@ -76,7 +76,7 @@ function fromBase64(encoded) {
 
 async function sha256(bytes) {
   const subtle = globalThis.crypto?.subtle
-  if (!subtle) throw new Error('Este navegador não oferece verificação segura de comprovantes.')
+  if (!subtle) throw new Error('SHA-256 indisponível neste navegador.')
   return btoa(String.fromCharCode(...new Uint8Array(await subtle.digest('SHA-256', bytes))))
 }
 
@@ -170,10 +170,10 @@ export async function downloadTransactionAttachment(uid, txId, metadata) {
   try {
     parts = documents.map((item) => fromBase64(item.data().data))
   } catch {
-    throw new Error('Comprovante corrompido: fragmento inválido.')
+    throw new Error('Comprovante com fragmento inválido.')
   }
   const blob = new Blob(parts, { type: 'application/octet-stream' })
-  if (blob.size !== stored.size) throw new Error('Falha na verificação do tamanho do arquivo.')
+  if (blob.size !== stored.size) throw new Error('Tamanho do comprovante inválido.')
   if (stored.sha256) {
     const bytes = new Uint8Array(stored.size)
     let offset = 0
@@ -182,7 +182,7 @@ export async function downloadTransactionAttachment(uid, txId, metadata) {
       offset += part.length
     }
     if ((await sha256(bytes)) !== stored.sha256) {
-      throw new Error('Comprovante corrompido: verificação de integridade falhou.')
+      throw new Error('Comprovante corrompido: SHA-256 divergente.')
     }
   }
   // Arquivos legados sem SHA-256 continuam disponíveis com validação de
