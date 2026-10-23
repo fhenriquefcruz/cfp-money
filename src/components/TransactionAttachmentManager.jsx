@@ -72,7 +72,7 @@ export default function TransactionAttachmentManager({
       }
       if (failed) {
         const summary = saved
-          ? `${saved} salvo(s), ${failed} não enviado(s).`
+          ? `${saved} ${saved === 1 ? 'comprovante salvo' : 'comprovantes salvos'}; ${failed} ${failed === 1 ? 'não enviado' : 'não enviados'}.`
           : `Nenhum arquivo foi enviado. ${lastError}`
         showNotification(summary, saved ? 'warning' : 'error')
       } else {
@@ -139,8 +139,10 @@ export default function TransactionAttachmentManager({
           2 MB cada. Os comprovantes são baixados apenas por quem acessa esta conta.
         </p>
         <p role="status" aria-live="polite" className="text-xs text-[--text-secondary]">
-          {attachments.length} de {ATTACHMENTS_PER_TRANSACTION} comprovantes vinculados.
-          {' '}{ATTACHMENTS_PER_TRANSACTION - attachments.length} vaga(s) disponível(is).
+          {attachments.length} de {ATTACHMENTS_PER_TRANSACTION} comprovantes vinculados.{' '}
+          {ATTACHMENTS_PER_TRANSACTION - attachments.length === 1
+            ? '1 vaga disponível.'
+            : `${ATTACHMENTS_PER_TRANSACTION - attachments.length} vagas disponíveis.`}
         </p>
         <div role="group" aria-label="Tipo de comprovante" className="grid grid-cols-2 gap-2">
           {[
