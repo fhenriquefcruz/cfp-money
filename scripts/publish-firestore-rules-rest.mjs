@@ -10,7 +10,10 @@ const { GoogleAuth } = require('google-auth-library')
 const project = 'cfp-money'
 const releaseName = 'projects/cfp-money/releases/cloud.firestore'
 const endpoint = 'https://firebaserules.googleapis.com/v1/'
-const normalize = (value) => String(value || '').replace(/\r\n/g, '\n').trim()
+const normalize = (value) =>
+  String(value || '')
+    .replace(/\r\n/g, '\n')
+    .trim()
 const intended = readFileSync('firestore.rules', 'utf8')
 const current = normalize(intended)
 const approvedPrevious = normalize(
