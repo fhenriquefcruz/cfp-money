@@ -30,9 +30,12 @@ export default function TransactionAttachmentManager({
   const [kind, setKind] = useState(initialKind)
   const [busy, setBusy] = useState(false)
   const [uploaded, setUploaded] = useState([])
+  const [removedIds, setRemovedIds] = useState([])
   const inputRef = useRef(null)
   const selected = transactions.find((item) => item.id === transaction?.id) || transaction
-  const persisted = Array.isArray(selected?.attachments) ? selected.attachments : []
+  const persisted = (Array.isArray(selected?.attachments) ? selected.attachments : []).filter(
+    (item) => !removedIds.includes(item.id),
+  )
   const attachments = [
     ...persisted,
     ...uploaded.filter((item) => !persisted.some((saved) => saved.id === item.id)),
@@ -42,6 +45,7 @@ export default function TransactionAttachmentManager({
     if (!isOpen) return
     setKind(initialKind)
     setUploaded([])
+    setRemovedIds([])
   }, [isOpen, transaction?.id, initialKind])
 
   const addFiles = async (event) => {
@@ -49,17 +53,31 @@ export default function TransactionAttachmentManager({
     event.target.value = ''
     if (!files.length || !user?.uid || !selected?.id) return
     setBusy(true)
+    let saved = 0
+    let failed = 0
+    let lastError = ''
+    let count = attachments.length
     try {
-      let count = attachments.length
       for (const file of files) {
-        validateReceiptFile(file, count)
-        const metadata = await uploadTransactionAttachment(user.uid, selected.id, file, kind)
-        setUploaded((current) => [...current, metadata])
-        count += 1
+        try {
+          validateReceiptFile(file, count)
+          const metadata = await uploadTransactionAttachment(user.uid, selected.id, file, kind)
+          setUploaded((current) => [...current, metadata])
+          saved += 1
+          count += 1
+        } catch (error) {
+          failed += 1
+          lastError = error.message || 'Falha no envio.'
+        }
       }
-      showNotification('Comprovante anexado à transação.')
-    } catch (error) {
-      showNotification(error.message || 'Não foi possível salvar o anexo.', 'error')
+      if (failed) {
+        const summary = saved
+          ? `${saved} salvo(s), ${failed} não enviado(s).`
+          : `Nenhum arquivo foi enviado. ${lastError}`
+        showNotification(summary, saved ? 'warning' : 'error')
+      } else {
+        showNotification(saved === 1 ? 'Comprovante anexado.' : `${saved} comprovantes anexados.`)
+      }
     } finally {
       setBusy(false)
     }
@@ -92,6 +110,7 @@ export default function TransactionAttachmentManager({
     try {
       await removeTransactionAttachment(user.uid, selected.id, metadata)
       setUploaded((current) => current.filter((item) => item.id !== metadata.id))
+      setRemovedIds((current) => [...current, metadata.id])
       showNotification('Comprovante removido.')
     } catch (error) {
       showNotification(error.message || 'Não foi possível excluir o comprovante.', 'error')
@@ -118,6 +137,10 @@ export default function TransactionAttachmentManager({
         <p className="text-xs leading-relaxed text-[--text-tertiary]">
           Arquivos privados vinculados ao lançamento. Até {ATTACHMENTS_PER_TRANSACTION} arquivos de
           2 MB cada. Os comprovantes são baixados apenas por quem acessa esta conta.
+        </p>
+        <p role="status" aria-live="polite" className="text-xs text-[--text-secondary]">
+          {attachments.length} de {ATTACHMENTS_PER_TRANSACTION} comprovantes vinculados.
+          {' '}{ATTACHMENTS_PER_TRANSACTION - attachments.length} vaga(s) disponível(is).
         </p>
         <div role="group" aria-label="Tipo de comprovante" className="grid grid-cols-2 gap-2">
           {[
