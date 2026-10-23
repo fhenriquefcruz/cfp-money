@@ -2,14 +2,12 @@
 // objetos: limite pequeno por arquivo para preservar cotas e custo previsível.
 // Substituir por R2/Cloud Storage privado quando houver provedor configurado.
 import {
-  arrayRemove,
   collection,
   doc,
   getDoc,
   getDocs,
   query,
   runTransaction,
-  updateDoc,
   where,
   writeBatch,
 } from 'firebase/firestore'
@@ -79,60 +77,49 @@ function fromBase64(encoded) {
   return bytes
 }
 
-async function eraseChunks(uid, txId, attachmentId, count) {
-  if (!count) return
-  const batch = writeBatch(db)
-  for (let index = 0; index < count; index++) {
-    batch.delete(doc(chunkCollection(uid), `${attachmentId}_${index}`))
-  }
-  await batch.commit()
-}
-
+// O limite por arquivo mantém a transação abaixo de 10 MiB mesmo com a
+// codificação Base64. Geramos os fragmentos antes da transação para que
+// eventuais tentativas automáticas reutilizem exatamente os mesmos bytes.
 export async function uploadTransactionAttachment(uid, txId, file, kind = 'transaction') {
   if (!uid || !txId) throw new Error('Identificação da transação indisponível.')
   if (!['transaction', 'payment'].includes(kind)) throw new Error('Tipo de comprovante inválido.')
   const normalized = validateReceiptFile(file)
-  const parent = transactionRef(uid, txId)
-  const existing = await getDoc(parent)
-  if (!existing.exists()) throw new Error('A transação não existe.')
-  const attached = Array.isArray(existing.data().attachments) ? existing.data().attachments : []
-  validateReceiptFile(file, attached.length)
-  const attachmentId = doc(chunkCollection(uid)).id
   const bytes = new Uint8Array(await file.arrayBuffer())
-  const count = Math.ceil(bytes.length / CHUNK_BYTES)
+  if (bytes.length !== normalized.size) throw new Error('O arquivo foi alterado durante o envio.')
+  const chunkRefs = chunkCollection(uid)
+  const attachmentId = doc(chunkRefs).id
+  const chunks = []
+  for (let index = 0; index < bytes.length; index += CHUNK_BYTES) {
+    chunks.push(asBase64(bytes.subarray(index, index + CHUNK_BYTES)))
+  }
   const metadata = {
     id: attachmentId,
     ...normalized,
     kind,
-    chunkCount: count,
+    chunkCount: chunks.length,
     uploadedAt: new Date().toISOString(),
   }
-  const batch = writeBatch(db)
-  for (let index = 0; index < count; index++) {
-    batch.set(doc(chunkCollection(uid), `${attachmentId}_${index}`), {
-      txId,
-      attachmentId,
-      chunkIndex: index,
-      data: asBase64(bytes.subarray(index * CHUNK_BYTES, (index + 1) * CHUNK_BYTES)),
+  const parent = transactionRef(uid, txId)
+
+  // Metadados e fragmentos são gravados juntos: falhas de rede e disputas
+  // pelo sexto arquivo não deixam arquivos órfãos nem itens incompletos.
+  await runTransaction(db, async (operation) => {
+    const snapshot = await operation.get(parent)
+    if (!snapshot.exists()) throw new Error('A transação não existe.')
+    const current = Array.isArray(snapshot.data().attachments) ? snapshot.data().attachments : []
+    if (current.length >= ATTACHMENTS_PER_TRANSACTION) {
+      throw new Error('Limite de seis arquivos por transação.')
+    }
+    chunks.forEach((data, index) => {
+      operation.set(doc(chunkRefs, `${attachmentId}_${index}`), {
+        txId,
+        attachmentId,
+        chunkIndex: index,
+        data,
+      })
     })
-  }
-  await batch.commit()
-  try {
-    // O total também é conferido na transação atômica: duas abas abertas
-    // não podem ultrapassar o limite ao enviar comprovantes simultaneamente.
-    await runTransaction(db, async (operation) => {
-      const snapshot = await operation.get(parent)
-      if (!snapshot.exists()) throw new Error('A transação não existe.')
-      const current = Array.isArray(snapshot.data().attachments) ? snapshot.data().attachments : []
-      if (current.length >= ATTACHMENTS_PER_TRANSACTION) {
-        throw new Error('Limite de seis arquivos por transação.')
-      }
-      operation.update(parent, { attachments: [...current, metadata] })
-    })
-  } catch (error) {
-    await eraseChunks(uid, txId, attachmentId, count).catch(() => {})
-    throw error
-  }
+    operation.update(parent, { attachments: [...current, metadata] })
+  })
   return metadata
 }
 
@@ -170,13 +157,29 @@ export async function downloadTransactionAttachment(uid, txId, metadata) {
 }
 
 export async function removeTransactionAttachment(uid, txId, metadata) {
+  if (!uid || !txId || !metadata?.id) throw new Error('Comprovante inválido.')
   const parent = transactionRef(uid, txId)
-  const exists = await getDoc(parent)
-  if (!exists.exists()) throw new Error('Transação não encontrada.')
-  const stored = (exists.data().attachments || []).find((item) => item.id === metadata.id)
-  if (!stored) return
-  await updateDoc(parent, { attachments: arrayRemove(stored) })
-  await eraseChunks(uid, txId, stored.id, stored.chunkCount)
+  const fragments = chunkCollection(uid)
+  await runTransaction(db, async (operation) => {
+    const snapshot = await operation.get(parent)
+    if (!snapshot.exists()) throw new Error('Transação não encontrada.')
+    const current = Array.isArray(snapshot.data().attachments) ? snapshot.data().attachments : []
+    const stored = current.find((item) => item.id === metadata.id)
+    if (!stored) return
+    if (
+      !Number.isInteger(stored.chunkCount) ||
+      stored.chunkCount < 1 ||
+      stored.chunkCount > 12
+    ) {
+      throw new Error('Comprovante com metadados inválidos.')
+    }
+    for (let index = 0; index < stored.chunkCount; index++) {
+      operation.delete(doc(fragments, `${stored.id}_${index}`))
+    }
+    operation.update(parent, {
+      attachments: current.filter((item) => item.id !== stored.id),
+    })
+  })
 }
 
 // Busca todos os fragmentos, inclusive de anexos que tiveram upload interrompido.
