@@ -54,30 +54,23 @@ async function cleanOne(uid, jobRef, txId) {
       }
       return false
     })
-    if (complete) return true
+    if (complete) return
   }
-  // Limite de leitura/gravação por sessão: o job permanece para retomada.
-  return false
+  // Limite de gravações por sessão: a tarefa permanece para retomada.
 }
 
 async function resume(uid) {
   const snapshot = await getDocs(query(jobsRef(uid), limit(3)))
-  let completed = 0
-  let pending = 0
   for (const job of snapshot.docs) {
     const ids = job.data().txIds
     if (!Array.isArray(ids)) throw new Error('Fila de limpeza inválida.')
-    // Bounded work: nunca iniciar centenas de leituras em um login.
-    for (const id of ids.slice(0, 8)) {
-      if (await cleanOne(uid, job.ref, id)) completed++
-      else pending++
-    }
+    // Limitar a execução para não exceder as cotas do Firestore Spark.
+    for (const id of ids.slice(0, 8)) await cleanOne(uid, job.ref, id)
   }
-  return { completed, pending }
 }
 
 export function resumeReceiptCleanup(uid) {
-  if (!uid) return Promise.resolve({ completed: 0, pending: 0 })
+  if (!uid) return Promise.resolve()
   if (running.has(uid)) return running.get(uid)
   const task = resume(uid).finally(() => running.delete(uid))
   running.set(uid, task)
