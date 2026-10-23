@@ -248,8 +248,32 @@ service cloud.firestore {
 
       allow delete: if false;
 
+      // Comprovantes fragmentados: isolados por usuário, imutáveis após gravação,
+      // com tamanho e vínculo a uma transação existente validados no servidor.
+      match /transactionAttachmentChunks/{chunkId} {
+        allow get, list: if owner(uid);
+        allow create: if owner(uid)
+          && request.resource.data.keys().hasAll(['txId', 'attachmentId', 'chunkIndex', 'data'])
+          && request.resource.data.keys().hasOnly(['txId', 'attachmentId', 'chunkIndex', 'data'])
+          && request.resource.data.txId is string
+          && request.resource.data.txId.size() > 0
+          && request.resource.data.txId.size() <= 128
+          && request.resource.data.attachmentId is string
+          && request.resource.data.attachmentId.size() > 0
+          && request.resource.data.attachmentId.size() <= 128
+          && request.resource.data.chunkIndex is int
+          && request.resource.data.chunkIndex >= 0
+          && request.resource.data.chunkIndex <= 12
+          && request.resource.data.data is string
+          && request.resource.data.data.size() > 0
+          && request.resource.data.data.size() <= 270000
+          && exists(/databases/$(database)/documents/users/$(uid)/transactions/$(request.resource.data.txId));
+        allow update: if false;
+        allow delete: if owner(uid);
+      }
+
       match /{collection}/{document=**} {
-        allow read, write: if owner(uid);
+        allow read, write: if owner(uid) && collection != 'transactionAttachmentChunks';
       }
     }
 
