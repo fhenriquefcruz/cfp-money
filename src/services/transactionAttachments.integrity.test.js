@@ -1,3 +1,4 @@
+import { Blob as NodeBlob } from 'node:buffer'
 import { webcrypto } from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -52,6 +53,7 @@ const putChunk = (value, extras = {}) => {
 
 beforeEach(() => {
   vi.stubGlobal('crypto', webcrypto)
+  vi.stubGlobal('Blob', NodeBlob)
   state.attachments = [{ ...metadata }]
   state.chunks = {}
   state.transactionExists = true
