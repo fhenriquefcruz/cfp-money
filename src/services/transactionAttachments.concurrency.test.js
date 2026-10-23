@@ -34,10 +34,7 @@ vi.mock('firebase/firestore', () => ({
   },
 }))
 
-import {
-  removeTransactionAttachment,
-  uploadTransactionAttachment,
-} from './transactionAttachments'
+import { removeTransactionAttachment, uploadTransactionAttachment } from './transactionAttachments'
 
 const fakeFile = {
   name: 'comprovante.pdf',
