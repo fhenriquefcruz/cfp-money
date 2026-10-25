@@ -39,3 +39,27 @@ test('seleção manual do mês atual não esconde a fatura do mês seguinte', as
   await page.getByRole('button', { name: 'Fatura do próximo mês' }).click()
   await expect(summary).toContainText('904,63')
 })
+
+test('histórico por cartão permanece visível quando a fatura selecionada está vazia', async ({
+  page,
+}) => {
+  await prepareE2EPage(page, '/cards')
+
+  const invoices = page.locator('.credit-cards-premium__grid')
+  await expect(invoices).toContainText('Nubank')
+
+  const historyTotals = async () => {
+    const labels = await invoices.locator('p').filter({ hasText: 'Histórico:' }).allTextContents()
+    return labels
+      .map((label) => label.match(/Histórico:\s*(R\$\s*[\d.,]+)/)?.[1])
+      .filter(Boolean)
+  }
+
+  const before = await historyTotals()
+  expect(before.length).toBeGreaterThan(0)
+  expect(before.some((value) => !/R\$\s*0,00$/.test(value))).toBe(true)
+
+  await page.getByRole('button', { name: 'Mês atual' }).click()
+  await expect(page.locator('.credit-cards-summary-grid')).toContainText('0,00')
+  await expect.poll(historyTotals).toEqual(before)
+})
