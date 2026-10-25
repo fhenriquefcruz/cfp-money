@@ -280,7 +280,6 @@ export function buildCreditCardCenter({
     })
 
   const invoices = cards.map((card) => {
-    const allCardPurchases = structured.filter((transaction) => transaction.cardId === card.id)
     const items = selectedTransactions.filter((transaction) => transaction.cardId === card.id)
     const dates = invoiceDatesForMonth(selectedMonth, card)
     const events = getInvoiceEvents(invoiceEvents, card.id, selectedMonth)
@@ -319,8 +318,7 @@ export function buildCreditCardCenter({
     return {
       card,
       items,
-      historicalPurchaseCount: allCardPurchases.length,
-      historicalPurchaseTotal: sum(allCardPurchases),
+      historicalPurchaseTotal: sum(structured.filter((tx) => tx.cardId === card.id)),
       total: lifecycle.invoiceTotal,
       purchaseTotal,
       itemCount: items.length,
