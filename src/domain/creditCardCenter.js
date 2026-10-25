@@ -317,7 +317,7 @@ export function buildCreditCardCenter({
     return {
       card,
       items,
-      historyTotal: sum(cardPurchases),
+      allTime: sum(cardPurchases),
       total: lifecycle.invoiceTotal,
       purchaseTotal,
       itemCount: items.length,
