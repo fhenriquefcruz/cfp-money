@@ -39,7 +39,7 @@ export function firstRelevantForecastMonth(forecast = [], selectedMonth = '') {
 
 // Prioriza o próximo vencimento registrado, inclusive fora da previsão de seis meses.
 export function firstRelevantRecordedMonth(months = [], selected = '') {
-  return months.find((month) => month > selected) || months.at(-1) || ''
+  return months.find((month) => month > selected) || months.findLast((month) => month < selected) || ''
 }
 
 export function labelForMonth(monthKey) {
