@@ -46,23 +46,9 @@ test('histórico por cartão permanece visível quando a fatura selecionada est�
   await prepareE2EPage(page, '/cards')
 
   const invoices = page.locator('.credit-cards-premium__grid')
-  await expect(invoices).toContainText('Nubank')
-
-  const historyTotals = async () => {
-    const labels = await invoices
-      .locator('p')
-      .filter({ hasText: 'Histórico:' })
-      .allTextContents()
-    return labels
-      .map((label) => label.match(/Histórico:\s*(R\$\s*[\d.,]+)/)?.[1])
-      .filter(Boolean)
-  }
-
-  const before = await historyTotals()
-  expect(before.length).toBeGreaterThan(0)
-  expect(before.some((value) => !/R\$\s*0,00$/.test(value))).toBe(true)
+  await expect(invoices).toContainText(/Histórico:\s*R\$\s*904,63/)
 
   await page.getByRole('button', { name: 'Mês atual' }).click()
   await expect(page.locator('.credit-cards-summary-grid')).toContainText('0,00')
-  await expect.poll(historyTotals).toEqual(before)
+  await expect(invoices).toContainText(/Histórico:\s*R\$\s*904,63/)
 })
