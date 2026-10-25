@@ -270,7 +270,7 @@ export function buildCreditCardCenter({
       ...invoiceEvents.filter((event) => event.cardId).map((event) => event.invoiceMonth),
     ]),
   ]
-    .filter((month) => /^\\d{4}-(0[1-9]|1[0-2])$/.test(month))
+    .filter((month) => /^\d{4}-(0[1-9]|1[0-2])$/.test(month))
     .sort()
 
   const selectedTransactions = structured
