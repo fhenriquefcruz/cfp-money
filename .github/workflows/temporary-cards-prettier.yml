@@ -1,0 +1,32 @@
+name: Temporary card invoice formatting
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'fix/phase-60-card-invoice-history-discovery'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts --no-fund
+      - name: Format exactly affected files
+        run: npx prettier --write src/components/CreditCardsDashboard.jsx src/domain/creditCardCenter.js src/domain/creditCardCenter.test.js
+      - name: Push formatter-only changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/CreditCardsDashboard.jsx src/domain/creditCardCenter.js src/domain/creditCardCenter.test.js
+          if ! git diff --cached --quiet; then
+            git commit -m 'style(cards): apply canonical Prettier formatting'
+            git push origin HEAD:refs/heads/fix/phase-60-card-invoice-history-discovery
+          fi
