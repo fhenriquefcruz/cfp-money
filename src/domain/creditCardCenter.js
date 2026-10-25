@@ -280,6 +280,7 @@ export function buildCreditCardCenter({
     })
 
   const invoices = cards.map((card) => {
+    const cardPurchases = structured.filter((transaction) => transaction.cardId === card.id)
     const items = selectedTransactions.filter((transaction) => transaction.cardId === card.id)
     const dates = invoiceDatesForMonth(selectedMonth, card)
     const events = getInvoiceEvents(invoiceEvents, card.id, selectedMonth)
@@ -308,17 +309,15 @@ export function buildCreditCardCenter({
     // Compromissos futuros derivam dos lançamentos conciliados, sem somar
     // novamente compras já incluídas na fatura selecionada.
     const futureCommitmentTotal = sum(
-      structured.filter(
-        (transaction) =>
-          transaction.cardId === card.id &&
-          resolveCreditTransactionInvoiceMonth(transaction, card) > selectedMonth,
+      cardPurchases.filter(
+        (transaction) => resolveCreditTransactionInvoiceMonth(transaction, card) > selectedMonth,
       ),
     )
 
     return {
       card,
       items,
-      historyTotal: sum(structured.filter((tx) => tx.cardId === card.id)),
+      historyTotal: sum(cardPurchases),
       total: lifecycle.invoiceTotal,
       purchaseTotal,
       itemCount: items.length,
