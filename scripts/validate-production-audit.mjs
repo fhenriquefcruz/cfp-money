@@ -25,11 +25,14 @@ if (packageJson.overrides?.undici !== '6.29.1') {
 if (packageJson.overrides?.zod !== '4.6.7') {
   fail('zod deve permanecer na versão corrigida 4.6.7.')
 }
-if (
-  packageJson.overrides?.['body-parser'] !== '1.20.9' ||
-  packageJson.overrides?.['@modelcontextprotocol/sdk']?.['body-parser'] !== '2.4.0'
-) {
-  fail('body-parser deve usar as versões corrigidas 1.20.9 e 2.4.0.')
+const lockedPackages = JSON.parse(readFileSync('package-lock.json', 'utf8')).packages ?? {}
+for (const [path, version] of Object.entries({
+  'node_modules/body-parser': '1.20.9',
+  'node_modules/@modelcontextprotocol/sdk/node_modules/body-parser': '2.4.0',
+})) {
+  if (lockedPackages[path]?.version !== version) {
+    fail(`body-parser inseguro ou ausente no lockfile: ${path}.`)
+  }
 }
 
 const deployWorkflow = readFileSync('.github/workflows/deploy.yml', 'utf8')
