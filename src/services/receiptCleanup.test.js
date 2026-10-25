@@ -11,7 +11,7 @@ const state = vi.hoisted(() => ({
 vi.mock('./firebase', () => ({ db: {} }))
 vi.mock('firebase/firestore', () => ({
   arrayRemove: (id) => ({ removeId: id }),
-  collection: (_db, ...parts) => ({ path: parts }),
+  collection: (parent, ...parts) => ({ path: parent?.path ? [...parent.path, ...parts] : parts }),
   doc: (parent, ...parts) => ({ path: parent?.path ? [...parent.path, ...parts] : parts }),
   where: (_field, _operator, value) => ({ txId: value }),
   limit: (count) => ({ count }),
