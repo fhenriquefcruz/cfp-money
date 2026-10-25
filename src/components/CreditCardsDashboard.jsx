@@ -14,12 +14,7 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
-import {
-  buildCreditCardCenter,
-  firstRelevantInvoiceMonth,
-  monthKeyFromDate,
-  shiftMonthKey,
-} from '../domain/creditCardCenter'
+import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
@@ -259,7 +254,9 @@ function CreditCardsCenterContent() {
       return
     }
 
-    const relevantMonth = firstRelevantInvoiceMonth(center.availableInvoiceMonths, selectedMonth)
+    const relevantMonth =
+      center.availableInvoiceMonths.find((month) => month > selectedMonth) ||
+      center.availableInvoiceMonths.findLast((month) => month < selectedMonth)
     if (!relevantMonth) return
 
     setSelectedMonth(relevantMonth)
@@ -397,7 +394,7 @@ function CreditCardsCenterContent() {
             </button>
           </div>
         </div>
-        {!loadingData && center.invoiceMonthActivity.length > 0 && (
+        {!loadingData && center.availableInvoiceMonths.length > 0 && (
           <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[--border-subtle] pt-3">
             <label
               htmlFor="credit-card-invoice-history"
@@ -412,9 +409,9 @@ function CreditCardsCenterContent() {
               className="min-h-11 min-w-0 flex-1 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-xs font-semibold text-[--text-primary] sm:max-w-xs"
             >
               <option value="" disabled>Escolha um período</option>
-              {center.invoiceMonthActivity.map((item) => (
-                <option key={item.month} value={item.month}>
-                  {item.label} · {item.itemCount} registro(s) · {formatCurrency(item.total)}
+              {center.availableInvoiceMonths.map((month) => (
+                <option key={month} value={month}>
+                  {month}
                 </option>
               ))}
             </select>
