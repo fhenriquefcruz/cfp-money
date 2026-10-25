@@ -583,13 +583,16 @@ test('descobre meses com eventos mesmo sem compras; ignora canceladas e sem cart
   const center = buildCreditCardCenter({
     transactions: [
       { type: 'expense', paymentMethod: 'credit_card', amount: 90, date: '2025-01-10' },
-      { type: 'expense', cardId: 'inter', paymentStatus: 'cancelled',
-        amount: 800, invoiceMonth: '2025-02' },
+      {
+        type: 'expense',
+        cardId: 'inter',
+        paymentStatus: 'cancelled',
+        amount: 800,
+        invoiceMonth: '2025-02',
+      },
     ],
     creditCards: cards,
-    invoiceEvents: [
-      { type: 'payment', cardId: 'inter', invoiceMonth: '2025-03', amount: 35 },
-    ],
+    invoiceEvents: [{ type: 'payment', cardId: 'inter', invoiceMonth: '2025-03', amount: 35 }],
     selectedMonth: '2026-10',
   })
   expect(center.availableInvoiceMonths).toEqual(['2025-03'])

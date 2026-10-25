@@ -259,9 +259,7 @@ export function buildCreditCardCenter({
   // Localiza competências reais em todo o histórico, não somente na previsão.
   const availableInvoiceMonths = [
     ...new Set([
-      ...structured.map((tx) =>
-        resolveCreditTransactionInvoiceMonth(tx, cardMap.get(tx.cardId)),
-      ),
+      ...structured.map((tx) => resolveCreditTransactionInvoiceMonth(tx, cardMap.get(tx.cardId))),
       ...invoiceEvents.filter((event) => event.cardId).map((event) => event.invoiceMonth),
     ]),
   ]
