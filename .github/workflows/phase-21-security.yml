@@ -42,6 +42,12 @@ jobs:
       - name: Validate production audit policy
         run: npm run validate:production-audit
 
+      - name: Audit Functions production dependencies
+        run: npm audit --prefix functions --omit=dev --audit-level=high
+
+      - name: Audit notification worker dependencies
+        run: npm audit --prefix worker/email-notifications --audit-level=high
+
       - name: Test App Check runtime
         run: npm run test:security-runtime
 

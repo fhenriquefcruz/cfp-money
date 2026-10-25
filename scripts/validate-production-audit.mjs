@@ -19,8 +19,20 @@ if (packageJson.dependencies?.firebase !== '10.14.1') {
   fail('firebase deve permanecer fixado em 10.14.1.')
 }
 
-if (packageJson.overrides?.undici !== '6.28.1') {
-  fail('undici deve permanecer sobrescrito para 6.28.1.')
+if (packageJson.overrides?.undici !== '6.29.1') {
+  fail('undici deve permanecer na versão corrigida 6.29.1.')
+}
+if (packageJson.overrides?.zod !== '4.6.7') {
+  fail('zod deve permanecer na versão corrigida 4.6.7.')
+}
+const lockedPackages = JSON.parse(readFileSync('package-lock.json', 'utf8')).packages ?? {}
+for (const [path, version] of Object.entries({
+  'node_modules/body-parser': '1.20.9',
+  'node_modules/@modelcontextprotocol/sdk/node_modules/body-parser': '2.4.0',
+})) {
+  if (lockedPackages[path]?.version !== version) {
+    fail(`body-parser inseguro ou ausente no lockfile: ${path}.`)
+  }
 }
 
 const deployWorkflow = readFileSync('.github/workflows/deploy.yml', 'utf8')

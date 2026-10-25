@@ -14,5 +14,9 @@
   "dependencies": {
     "firebase-admin": "^14.2.0",
     "firebase-functions": "^7.2.5"
+  },
+  "overrides": {
+    "body-parser": "1.20.9",
+    "@grpc/grpc-js": "1.14.5"
   }
 }
