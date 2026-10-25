@@ -379,11 +379,7 @@ function CreditCardsCenterContent() {
 
             <button
               type="button"
-              onClick={() => {
-                userSelectedMonthRef.current = true
-                setSelectedMonth(monthKeyFromDate())
-                setSelectedCardId('all')
-              }}
+              onClick={() => selectMonth(monthKeyFromDate())}
               className="min-h-11 rounded-xl border border-[--brand-200] bg-[--brand-50] px-3 text-xs font-bold text-[--brand-700]"
             >
               Mês atual
