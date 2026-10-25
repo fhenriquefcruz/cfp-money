@@ -628,7 +628,7 @@ test('expõe valor registrado por cartão mesmo ao visualizar outro mês sem com
   expect(center.availableInvoiceMonths).toEqual(['2026-04', '2026-06'])
   expect(center.invoices.find((invoice) => invoice.card.id === 'inter')).toMatchObject({
     itemCount: 0,
-    historyTotal: 409,
+    allTime: 409,
   })
 })
 
