@@ -9,6 +9,7 @@ async function recover(uid) {
   // Até 3 tarefas, 8 transações por tarefa, 7 blocos de 12 fragmentos.
   const jobs = await getDocs(query(collection(db, 'users', uid, 'attachmentCleanupJobs'), limit(3)))
   const chunks = collection(db, 'users', uid, 'transactionAttachmentChunks')
+  const transactions = collection(db, 'users', uid, 'transactions')
   for (const job of jobs.docs) {
     const pending = job.data().txIds
     if (!Array.isArray(pending)) continue
@@ -26,10 +27,11 @@ async function recover(uid) {
           const current = await operation.get(job.ref)
           const ids = current.exists() && current.data().txIds
           if (!Array.isArray(ids) || !ids.includes(txId)) return true
-          const exists = (await operation.get(doc(db, 'users', uid, 'transactions', txId))).exists()
+          const exists = (await operation.get(doc(transactions, txId))).exists()
           // Nunca apagar arquivos de uma transação existente ou restaurada.
-          if (!exists) fragments.docs.forEach((item) => operation.delete(item.ref))
-          const finished = exists || fragments.docs.length < 12
+          const documents = fragments.docs
+          if (!exists) documents.forEach((item) => operation.delete(item.ref))
+          const finished = exists || documents.length < 12
           if (finished) {
             if (ids.length === 1) operation.delete(job.ref)
             else operation.update(job.ref, { txIds: ids.filter((id) => id !== txId) })
