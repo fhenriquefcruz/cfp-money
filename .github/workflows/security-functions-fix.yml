@@ -1,0 +1,41 @@
+name: One-time Functions security remediation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'security/oct-2026-advisory-patches'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Patch vulnerable transitive Functions dependencies
+        run: npm audit fix --prefix functions --package-lock-only --ignore-scripts --no-fund
+      - name: Verify clean install and production vulnerability audit
+        run: |
+          npm ci --prefix functions --ignore-scripts --no-audit --no-fund
+          npm audit --prefix functions --omit=dev --audit-level=high
+      - name: Reject changes to backend dependency requirements
+        run: git diff --exit-code -- functions/package.json
+      - name: Commit audited Functions lockfile
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add functions/package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'fix(security): patch vulnerable Firebase Functions dependencies'
+            git push origin HEAD:refs/heads/security/oct-2026-advisory-patches
+          fi
