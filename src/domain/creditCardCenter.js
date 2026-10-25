@@ -33,15 +33,16 @@ export function shiftMonthKey(monthKey, amount) {
 // Localiza faturas em todo o histórico, inclusive as anteriores ao mês atual.
 // Uma fatura com um pagamento registrado também deve ser encontrada.
 export function firstRelevantInvoiceMonth(months = [], selectedMonth = '') {
-  const populated = months.filter((entry) => entry.month !== selectedMonth && entry.itemCount > 0)
-  if (!populated.length) return ''
   const distance = (month) => {
     const [year, index] = month.split('-').map(Number)
     const [currentYear, currentIndex] = selectedMonth.split('-').map(Number)
     return Math.abs((year - currentYear) * 12 + index - currentIndex)
   }
-  return populated.sort((a, b) => distance(a.month) - distance(b.month) || b.month.localeCompare(a.month))[0]
-    .month
+  return (
+    months
+      .filter((month) => month !== selectedMonth)
+      .sort((a, b) => distance(a) - distance(b) || b.localeCompare(a))[0] || ''
+  )
 }
 
 export function firstRelevantForecastMonth(forecast = [], selectedMonth = '') {
@@ -373,7 +374,7 @@ export function buildCreditCardCenter({
     current.itemCount += 1
     activityMap.set(month, current)
   })
-  const availableInvoiceMonths = [...activityMap.values()]
+  const invoiceMonthActivity = [...activityMap.values()]
     .map((item) => ({
       ...item,
       total: item.total / 100,
@@ -436,7 +437,7 @@ export function buildCreditCardCenter({
     futureInstallmentTotal: sum(futureInstallments),
     legacyCount: selectedLegacy.length,
     legacyTotal: sum(selectedLegacy),
-    availableInvoiceMonths,
+    invoiceMonthActivity,
     forecast,
     forecastMax: Math.max(1, ...forecast.map((item) => item.total)),
   }
