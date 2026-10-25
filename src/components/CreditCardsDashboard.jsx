@@ -287,8 +287,7 @@ function CreditCardsCenterContent() {
                 </span>
               </div>
               <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/70">
-                Acompanhe vencimentos, parcelas e compromissos futuros sem confundir a data da
-                compra com o mês da fatura.
+                Faturas, pagamentos e parcelas organizados pelo vencimento.
               </p>
             </div>
           </div>
@@ -405,13 +404,13 @@ function CreditCardsCenterContent() {
               icon={CreditCard}
               label="Total pago"
               value={formatCurrency(center.selectedPaidTotal)}
-              helper="Pagamentos líquidos, já descontados os estornos"
+              helper="Pagamentos líquidos, menos estornos"
             />
             <SummaryCard
               icon={ReceiptText}
               label="Saldo pendente"
               value={formatCurrency(center.selectedRemainingTotal)}
-              helper="Valor ainda necessário para liquidar as faturas"
+              helper="Restante a pagar nas faturas"
             />
             <SummaryCard
               icon={Layers3}
@@ -464,7 +463,7 @@ function CreditCardsCenterContent() {
                       Próximos compromissos
                     </h2>
                     <p className="mt-1 text-[10px] text-[--text-tertiary]">
-                      Previsão baseada nas compras já lançadas
+                      Compras já registradas
                     </p>
                   </div>
                   <Sparkles size={16} className="text-[--brand-600]" />
@@ -577,7 +576,7 @@ function CreditCardsCenterContent() {
                       Nenhuma compra nesta fatura
                     </p>
                     <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-                      Confira os meses com lançamentos acima. Compras sem cartão identificado precisam de revisão nas Transações.
+                      Navegue entre faturas ou revise compras sem cartão nas Transações.
                     </p>
                   </div>
                 ) : (
