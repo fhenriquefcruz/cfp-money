@@ -1,6 +1,7 @@
 import {
   buildCreditCardCenter,
   firstRelevantForecastMonth,
+  firstRelevantRecordedMonth,
   invoiceDatesForMonth,
   invoiceStatus,
   labelForMonth,
@@ -567,4 +568,57 @@ test('mantém eventos de pagamento prevalecendo sobre status pago após concilia
   expect(center.selectedTotal).toBe(230)
   expect(center.selectedPaidTotal).toBe(100)
   expect(center.selectedRemainingTotal).toBe(130)
+})
+
+test('encontra meses históricos com compras mesmo quando a fatura atual está vazia', () => {
+  const center = buildCreditCardCenter({
+    transactions,
+    creditCards: cards,
+    selectedMonth: '2026-10',
+    now: new Date(2026, 9, 25),
+  })
+
+  expect(center.selectedTotal).toBe(0)
+  expect(center.recordedPurchaseCount).toBe(3)
+  expect(center.recordedPurchaseTotal).toBe(400)
+  expect(center.availableInvoiceMonths).toEqual([
+    { month: '2026-09', itemCount: 1, eventCount: 0, total: 100 },
+    { month: '2026-08', itemCount: 2, eventCount: 0, total: 300 },
+  ])
+  expect(firstRelevantRecordedMonth(center.availableInvoiceMonths, '2026-10')).toBe('2026-09')
+})
+
+test('localiza a fatura mais próxima, inclusive anteriores e posteriores, sem limite de meses', () => {
+  const recorded = [
+    { month: '2027-09', itemCount: 2 },
+    { month: '2026-09', itemCount: 1 },
+    { month: '2026-11', itemCount: 1 },
+    { month: '2023-04', itemCount: 3 },
+  ]
+  expect(firstRelevantRecordedMonth(recorded, '2026-10')).toBe('2026-09')
+  expect(firstRelevantRecordedMonth(recorded, '2027-08')).toBe('2027-09')
+  expect(firstRelevantRecordedMonth([{ month: '2024-01', itemCount: 1 }], '2026-10')).toBe('2024-01')
+  expect(firstRelevantRecordedMonth([], '2026-10')).toBe('')
+})
+
+test('inclui meses com eventos financeiros mesmo sem compras e exclui créditos órfãos', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      { type: 'expense', paymentMethod: 'credit_card', amount: 90, date: '2025-01-10' },
+      {
+        type: 'expense', cardId: 'inter', paymentMethod: 'credit_card',
+        paymentStatus: 'cancelled', amount: 800, invoiceMonth: '2025-02',
+      },
+    ],
+    creditCards: cards,
+    invoiceEvents: [
+      { type: 'payment', cardId: 'inter', invoiceMonth: '2025-03', amount: 35 },
+    ],
+    selectedMonth: '2026-10',
+  })
+  expect(center.availableInvoiceMonths).toEqual([
+    { month: '2025-03', itemCount: 0, eventCount: 1, total: 0 },
+  ])
+  expect(center.unlinkedPurchaseCount).toBe(1)
+  expect(center.recordedPurchaseTotal).toBe(0)
 })
