@@ -53,7 +53,7 @@ export function firstRelevantRecordedMonth(months = [], selectedMonth = '') {
   }
   eligible.sort((first, second) => {
     const difference = distance(first.month) - distance(second.month)
-    return difference || second.month.localeCompare(first.month)
+    return difference || first.month.localeCompare(second.month)
   })
   return eligible[0]?.month || ''
 }
