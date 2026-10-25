@@ -37,9 +37,12 @@ export function firstRelevantForecastMonth(forecast = [], selectedMonth = '') {
   return relevant?.month || ''
 }
 
-// Preferir a última fatura anterior; se não existir, buscar a próxima.
+// Considera histórico e futuro, preferindo o período anterior em caso de empate.
 export function firstRelevantRecordedMonth(months = [], selected = '') {
-  return months.filter((month) => month < selected).at(-1) || months.find((month) => month > selected) || ''
+  const distance = (month) =>
+    Math.abs(Number(month.slice(0, 4)) * 12 + Number(month.slice(5)) -
+      Number(selected.slice(0, 4)) * 12 - Number(selected.slice(5)))
+  return months.filter((month) => month !== selected).sort((a, b) => distance(a) - distance(b))[0] || ''
 }
 
 export function labelForMonth(monthKey) {
