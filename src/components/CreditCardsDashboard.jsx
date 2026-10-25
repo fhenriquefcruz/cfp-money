@@ -336,7 +336,60 @@ function CreditCardsCenterContent() {
             <h2 className="mt-1 text-lg font-black text-[--text-primary]">
               {center.selectedMonthLabel}
             </h2>
-          </Card>
+          </div>
+
+          <div className="credit-cards-period flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => selectMonth(shiftMonthKey(selectedMonth, -1))}
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] bg-[--bg-surface] text-[--text-secondary] hover:bg-[--bg-hover]"
+              aria-label="Fatura do mês anterior"
+            >
+              <ChevronLeft size={17} />
+            </button>
+
+            <label className="relative">
+              <span className="sr-only">Selecionar mês da fatura</span>
+              <CalendarDays
+                size={15}
+                className="pointer-events-none absolute left-3 top-3.5 text-[--text-tertiary]"
+              />
+              <input
+                type="month"
+                onClick={(event) => {
+                  try {
+                    event.currentTarget.showPicker?.()
+                  } catch {
+                    /* Native fallback */
+                  }
+                }}
+                value={selectedMonth}
+                onChange={(event) => {
+                  selectMonth(event.target.value)
+                }}
+                className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-surface] pl-9 pr-3 text-xs font-semibold text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] sm:w-auto"
+              />
+            </label>
+
+            <button
+              type="button"
+              onClick={() => selectMonth(shiftMonthKey(selectedMonth, 1))}
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] bg-[--bg-surface] text-[--text-secondary] hover:bg-[--bg-hover]"
+              aria-label="Fatura do próximo mês"
+            >
+              <ChevronRight size={17} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => selectMonth(monthKeyFromDate())}
+              className="min-h-11 rounded-xl border border-[--brand-200] bg-[--brand-50] px-3 text-xs font-bold text-[--brand-700]"
+            >
+              Mês atual
+            </button>
+          </div>
+        </div>
+      </Card>
 
       {loadingData ? (
         <div className="credit-cards-summary-grid operational-summary-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
