@@ -318,7 +318,7 @@ export function buildCreditCardCenter({
     return {
       card,
       items,
-      historicalPurchaseTotal: sum(structured.filter((tx) => tx.cardId === card.id)),
+      historyTotal: sum(structured.filter((tx) => tx.cardId === card.id)),
       total: lifecycle.invoiceTotal,
       purchaseTotal,
       itemCount: items.length,
