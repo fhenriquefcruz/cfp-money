@@ -159,7 +159,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
 
           {card.historicalOnly && (
             <p className="mt-2 text-[9px] leading-relaxed text-[--warning-text]">
-              Cartão removido do cadastro; dados históricos preservados.
+              Cartão removido; histórico preservado.
             </p>
           )}
         </div>
@@ -429,7 +429,7 @@ function CreditCardsCenterContent() {
                 {center.reconciledPurchaseCount === 1 ? '' : 's'} antiga
                 {center.reconciledPurchaseCount === 1 ? '' : 's'} conciliada
                 {center.reconciledPurchaseCount === 1 ? '' : 's'} pelo nome ou final do cartão.
-                Confira o vínculo na lista de transações.
+                Revise o vínculo em Transações.
               </p>
               <Link to="/transactions" className="font-bold underline-offset-2 hover:underline">
                 Conferir
@@ -608,7 +608,7 @@ export default function CreditCardsDashboard() {
   return (
     <PremiumGate
       feature="Central de cartões e faturas"
-      description="Consolide faturas, parcelas e próximos vencimentos em uma visão segura e organizada."
+      description="Faturas, parcelas e vencimentos em um só lugar."
       benefits={[
         'Faturas agrupadas por cartão',
         'Previsão dos próximos meses',
