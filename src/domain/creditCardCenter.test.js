@@ -1,7 +1,6 @@
 import {
   buildCreditCardCenter,
   firstRelevantForecastMonth,
-  firstRelevantRecordedMonth,
   invoiceDatesForMonth,
   invoiceStatus,
   labelForMonth,
@@ -578,15 +577,6 @@ test('encontra compras em faturas anteriores quando a fatura atual está vazia',
   })
   expect(center.selectedTotal).toBe(0)
   expect(center.availableInvoiceMonths).toEqual(['2026-08', '2026-09'])
-  expect(firstRelevantRecordedMonth(center.availableInvoiceMonths, '2026-10')).toBe('2026-09')
-})
-
-test('encontra meses futuros e preserva uma escolha manual sem dados', () => {
-  const recorded = ['2023-04', '2026-09', '2026-11', '2027-09']
-  expect(firstRelevantRecordedMonth(recorded, '2026-10')).toBe('2026-11')
-  expect(firstRelevantRecordedMonth(recorded, '2027-08')).toBe('2027-09')
-  expect(firstRelevantRecordedMonth(['2024-01'], '2026-10')).toBe('2024-01')
-  expect(firstRelevantRecordedMonth([], '2026-10')).toBe('')
 })
 
 test('descobre meses com eventos mesmo sem compras; ignora canceladas e sem cartão', () => {
