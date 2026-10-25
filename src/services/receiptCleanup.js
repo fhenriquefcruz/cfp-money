@@ -7,31 +7,25 @@ const inFlight = new Map()
 
 async function recover(uid) {
   // Até 3 tarefas, 8 transações por tarefa, 7 blocos de 12 fragmentos.
-  const jobs = await getDocs(query(collection(db, 'users', uid, 'attachmentCleanupJobs'), limit(3)))
-  const chunks = collection(db, 'users', uid, 'transactionAttachmentChunks')
-  const transactions = collection(db, 'users', uid, 'transactions')
+  const owner = doc(db, 'users', uid)
+  const jobs = await getDocs(query(collection(owner, 'attachmentCleanupJobs'), limit(3)))
+  const chunks = collection(owner, 'transactionAttachmentChunks')
+  const transactions = collection(owner, 'transactions')
   for (const job of jobs.docs) {
     const pending = job.data().txIds
     if (!Array.isArray(pending)) continue
     for (const txId of pending.slice(0, 8)) {
       if (typeof txId !== 'string' || !txId) continue
       for (let round = 0; round < 7; round++) {
-        const fragments = await getDocs(
-          query(
-            chunks,
-            where('txId', '==', txId),
-            limit(12),
-          ),
-        )
+        const fragments = (await getDocs(query(chunks, where('txId', '==', txId), limit(12)))).docs
         const completed = await runTransaction(db, async (operation) => {
           const current = await operation.get(job.ref)
           const ids = current.data()?.txIds
           if (!Array.isArray(ids) || !ids.includes(txId)) return true
           const exists = (await operation.get(doc(transactions, txId))).exists()
           // Nunca apagar arquivos de uma transação existente ou restaurada.
-          const documents = fragments.docs
-          if (!exists) documents.forEach((item) => operation.delete(item.ref))
-          const finished = exists || documents.length < 12
+          if (!exists) fragments.forEach((item) => operation.delete(item.ref))
+          const finished = exists || fragments.length < 12
           if (finished) {
             if (ids.length === 1) operation.delete(job.ref)
             else operation.update(job.ref, { txIds: ids.filter((id) => id !== txId) })
