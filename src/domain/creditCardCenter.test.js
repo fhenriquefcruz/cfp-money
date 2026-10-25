@@ -1,6 +1,7 @@
 import {
   buildCreditCardCenter,
   firstRelevantForecastMonth,
+  firstRelevantInvoiceMonth,
   invoiceDatesForMonth,
   invoiceStatus,
   labelForMonth,
@@ -597,4 +598,70 @@ test('descobre meses com eventos mesmo sem compras; ignora canceladas e sem cart
   })
   expect(center.availableInvoiceMonths).toEqual(['2025-03'])
   expect(center.unlinkedPurchaseCount).toBe(1)
+})
+
+test('abre a fatura histórica mais próxima quando o mês atual está vazio', () => {
+  expect(firstRelevantInvoiceMonth(['2025-07', '2026-02', '2026-12'], '2026-10')).toBe(
+    '2026-12',
+  )
+  expect(firstRelevantInvoiceMonth(['2025-07', '2026-02'], '2026-10')).toBe('2026-02')
+  expect(firstRelevantInvoiceMonth([], '2026-10')).toBe('')
+})
+
+test('expõe valor registrado por cartão mesmo ao visualizar outro mês sem compras', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'old-purchase',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'inter',
+        amount: 259.9,
+        invoiceMonth: '2026-04',
+        date: '2026-04-17',
+      },
+      {
+        id: 'recent-purchase',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'inter',
+        amount: 149.1,
+        invoiceMonth: '2026-06',
+        date: '2026-06-17',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-10',
+  })
+  expect(center.selectedTotal).toBe(0)
+  expect(center.availableInvoiceMonths).toEqual(['2026-04', '2026-06'])
+  expect(center.invoiceMonthActivity.map((item) => [item.month, item.total])).toEqual([
+    ['2026-06', 149.1],
+    ['2026-04', 259.9],
+  ])
+  expect(center.invoices.find((invoice) => invoice.card.id === 'inter')).toMatchObject({
+    itemCount: 0,
+    historicalPurchaseCount: 2,
+    historicalPurchaseTotal: 409,
+  })
+})
+
+test('mostra competência com evento de fatura mesmo sem compras no mês', () => {
+  const center = buildCreditCardCenter({
+    transactions: [],
+    creditCards: cards,
+    invoiceEvents: [
+      {
+        id: 'payment',
+        cardId: 'inter',
+        type: 'payment',
+        amount: 100,
+        invoiceMonth: '2026-01',
+        eventDate: '2026-01-17',
+      },
+    ],
+    selectedMonth: '2026-10',
+  })
+  expect(center.availableInvoiceMonths).toEqual(['2026-01'])
+  expect(center.invoiceMonthActivity[0]).toMatchObject({ month: '2026-01', itemCount: 1 })
 })

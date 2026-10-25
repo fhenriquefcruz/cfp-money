@@ -14,7 +14,12 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
-import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
+import {
+  buildCreditCardCenter,
+  firstRelevantInvoiceMonth,
+  monthKeyFromDate,
+  shiftMonthKey,
+} from '../domain/creditCardCenter'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
@@ -94,6 +99,13 @@ function InvoiceCard({ invoice, selected, onSelect }) {
           <p className="mt-1 text-[10px] text-[--text-tertiary]">
             Fecha em {formatDate(dates.closingDate)} · vence em {formatDate(dates.dueDate)}
           </p>
+
+          {invoice.historicalPurchaseCount > 0 && (
+            <p className="mt-2 text-[10px] text-[--text-secondary]">
+              Histórico no cartão: {formatCurrency(invoice.historicalPurchaseTotal)} ·{' '}
+              {invoice.historicalPurchaseCount} compra(s) registradas
+            </p>
+          )}
 
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div>
@@ -247,9 +259,7 @@ function CreditCardsCenterContent() {
       return
     }
 
-    const relevantMonth =
-      center.availableInvoiceMonths.find((month) => month > selectedMonth) ||
-      center.availableInvoiceMonths.findLast((month) => month < selectedMonth)
+    const relevantMonth = firstRelevantInvoiceMonth(center.availableInvoiceMonths, selectedMonth)
     if (!relevantMonth) return
 
     setSelectedMonth(relevantMonth)
@@ -329,6 +339,11 @@ function CreditCardsCenterContent() {
             <h2 className="mt-1 text-lg font-black text-[--text-primary]">
               {center.selectedMonthLabel}
             </h2>
+            {!loadingData && center.availableInvoiceMonths.length > 0 && (
+              <p className="mt-1 text-[11px] text-[--text-tertiary]">
+                {center.availableInvoiceMonths.length} período(s) com registros
+              </p>
+            )}
           </div>
 
           <div className="credit-cards-period flex flex-wrap items-center gap-2">
@@ -382,6 +397,29 @@ function CreditCardsCenterContent() {
             </button>
           </div>
         </div>
+        {!loadingData && center.invoiceMonthActivity.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[--border-subtle] pt-3">
+            <label
+              htmlFor="credit-card-invoice-history"
+              className="text-xs font-bold text-[--text-secondary]"
+            >
+              Faturas com lançamentos
+            </label>
+            <select
+              id="credit-card-invoice-history"
+              value={center.availableInvoiceMonths.includes(selectedMonth) ? selectedMonth : ''}
+              onChange={(event) => selectMonth(event.target.value)}
+              className="min-h-11 min-w-0 flex-1 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-xs font-semibold text-[--text-primary] sm:max-w-xs"
+            >
+              <option value="" disabled>Escolha um período</option>
+              {center.invoiceMonthActivity.map((item) => (
+                <option key={item.month} value={item.month}>
+                  {item.label} · {item.itemCount} registro(s) · {formatCurrency(item.total)}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </Card>
 
       {loadingData ? (
@@ -514,7 +552,7 @@ function CreditCardsCenterContent() {
                       Nenhum cartão cadastrado
                     </p>
                     <p className="mt-1 text-xs text-[--text-tertiary]">
-                      Cadastre fechamento e vencimento no Perfil.
+                      Cadastre fechamento e vencimento em Meus cartões.
                     </p>
                   </Card>
                 ) : (
@@ -577,7 +615,7 @@ function CreditCardsCenterContent() {
                       Nenhuma compra nesta fatura
                     </p>
                     <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-                      Compras estruturadas aparecerão aqui conforme o vencimento calculado.
+                      Confira os meses com lançamentos acima. Compras sem cartão identificado precisam de revisão nas Transações.
                     </p>
                   </div>
                 ) : (
