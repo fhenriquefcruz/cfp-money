@@ -84,7 +84,7 @@ function validChunkCount(value) {
 // codificação Base64. Geramos os fragmentos antes da transação para que
 // eventuais tentativas automáticas reutilizem exatamente os mesmos bytes.
 export async function uploadTransactionAttachment(uid, txId, file, kind = 'transaction') {
-  if (!uid || !txId) throw new Error('Identificação da transação indisponível.')
+  if (!uid || !txId) throw new Error('Transação não identificada.')
   if (!['transaction', 'payment'].includes(kind)) throw new Error('Tipo de comprovante inválido.')
   const normalized = validateReceiptFile(file)
   const bytes = new Uint8Array(await file.arrayBuffer())
