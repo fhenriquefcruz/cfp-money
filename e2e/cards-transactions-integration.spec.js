@@ -26,3 +26,16 @@ test('Central de Cartões avança do mês vazio para a primeira fatura com lanç
   await expect(page.getByText('Combustível', { exact: true })).toBeVisible()
   await expect(page.getByText('Nenhuma compra nesta fatura')).toBeHidden()
 })
+
+test('seleção manual do mês atual não esconde a fatura do mês seguinte', async ({ page }) => {
+  await prepareE2EPage(page, '/cards')
+
+  const summary = page.locator('.credit-cards-summary-grid')
+  await expect(summary).toContainText('904,63')
+
+  await page.getByRole('button', { name: 'Mês atual' }).click()
+  await expect(summary).toContainText('0,00')
+
+  await page.getByRole('button', { name: 'Fatura do próximo mês' }).click()
+  await expect(summary).toContainText('904,63')
+})
