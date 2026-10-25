@@ -42,7 +42,7 @@ export function firstRelevantRecordedMonth(months = [], selectedMonth = '') {
   const current = String(selectedMonth).slice(0, 7)
   const eligible = months.filter(
     (item) =>
-      /^\\d{4}-(0[1-9]|1[0-2])$/.test(item.month) &&
+      /^\d{4}-(0[1-9]|1[0-2])$/.test(item.month) &&
       item.month !== current &&
       (item.itemCount > 0 || item.eventCount > 0),
   )
@@ -282,7 +282,7 @@ export function buildCreditCardCenter({
   const recordedMonths = new Map()
   structured.forEach((transaction) => {
     const month = resolveCreditTransactionInvoiceMonth(transaction, cardMap.get(transaction.cardId))
-    if (!/^\\d{4}-(0[1-9]|1[0-2])$/.test(month)) return
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return
     const entry = recordedMonths.get(month) || { month, itemCount: 0, eventCount: 0, total: 0 }
     entry.itemCount += 1
     entry.total = Math.round(entry.total * 100 + Number(transaction.amount || 0) * 100) / 100
@@ -290,7 +290,7 @@ export function buildCreditCardCenter({
   })
   invoiceEvents.forEach((event) => {
     const month = event.invoiceMonth
-    if (!event.cardId || !/^\\d{4}-(0[1-9]|1[0-2])$/.test(month)) return
+    if (!event.cardId || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return
     const entry = recordedMonths.get(month) || { month, itemCount: 0, eventCount: 0, total: 0 }
     entry.eventCount += 1
     recordedMonths.set(month, entry)
