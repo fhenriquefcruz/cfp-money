@@ -16,7 +16,7 @@ import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import {
   buildCreditCardCenter,
-  firstRelevantForecastMonth,
+  firstRelevantRecordedMonth,
   monthKeyFromDate,
   shiftMonthKey,
 } from '../domain/creditCardCenter'
@@ -252,13 +252,13 @@ function CreditCardsCenterContent() {
       return
     }
 
-    const relevantMonth = firstRelevantForecastMonth(center.forecast, selectedMonth)
+    const relevantMonth = firstRelevantRecordedMonth(center.availableInvoiceMonths, selectedMonth)
     if (!relevantMonth) return
 
     setSelectedMonth(relevantMonth)
     setSelectedCardId('all')
   }, [
-    center.forecast,
+    center.availableInvoiceMonths,
     center.selectedItemCount,
     center.selectedPaidTotal,
     center.selectedTotal,
@@ -379,6 +379,7 @@ function CreditCardsCenterContent() {
             <button
               type="button"
               onClick={() => {
+                userSelectedMonthRef.current = true
                 setSelectedMonth(monthKeyFromDate())
                 setSelectedCardId('all')
               }}
@@ -387,6 +388,36 @@ function CreditCardsCenterContent() {
               Mês atual
             </button>
           </div>
+        {!loadingData && center.availableInvoiceMonths.length > 0 && (
+          <div className="mt-4 border-t border-[--border-subtle] pt-3">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+              Faturas com lançamentos registrados
+            </p>
+            <div className="flex flex-wrap gap-2" aria-label="Meses com valores nos cartões">
+              {center.availableInvoiceMonths.slice(0, 8).map((period) => (
+                <button
+                  key={period.month}
+                  type="button"
+                  onClick={() => selectMonth(period.month)}
+                  aria-pressed={period.month === selectedMonth}
+                  className={`min-h-10 rounded-xl border px-3 py-2 text-left text-[11px] transition-colors ${
+                    period.month === selectedMonth
+                      ? 'border-[--brand-500] bg-[--brand-50] text-[--brand-700]'
+                      : 'border-[--border-default] bg-[--bg-surface] text-[--text-secondary] hover:bg-[--bg-hover]'
+                  }`}
+                >
+                  <strong className="block">{period.month.slice(5)}/{period.month.slice(0, 4)}</strong>
+                  <span className="block tabular-nums">{formatCurrency(period.total)}</span>
+                </button>
+              ))}
+            </div>
+            {center.availableInvoiceMonths.length > 8 && (
+              <p className="mt-2 text-[10px] text-[--text-tertiary]">
+                Mais meses disponíveis no seletor acima.
+              </p>
+            )}
+          </div>
+        )}
         </div>
       </Card>
 
@@ -428,6 +459,15 @@ function CreditCardsCenterContent() {
               } após este mês`}
             />
           </div>
+
+          {center.recordedPurchaseCount > 0 && (
+            <p className="rounded-xl border border-[--border-subtle] bg-[--bg-subtle] px-4 py-3 text-xs leading-relaxed text-[--text-secondary]">
+              No histórico completo dos cartões: <strong>{center.recordedPurchaseCount} compra(s)</strong>
+              {' · '}<strong>{formatCurrency(center.recordedPurchaseTotal)}</strong> em lançamentos.
+              Os indicadores acima mostram somente a fatura de {center.selectedMonthLabel}.
+              O histórico não representa o saldo atual devido.
+            </p>
+          )}
 
           {center.reconciledPurchaseCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--info-border] bg-[--info-bg] p-3 text-xs text-[--info-text]">
