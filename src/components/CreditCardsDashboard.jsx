@@ -389,15 +389,6 @@ function CreditCardsCenterContent() {
               Mês atual
             </button>
           </div>
-          {!loadingData && center.availableInvoiceMonths.length > 0 && (
-            <button
-              type="button"
-              onClick={() => selectMonth(center.availableInvoiceMonths.at(-1))}
-              className="mt-3 text-xs font-bold underline"
-            >
-              Última fatura
-            </button>
-          )}
         </div>
       </Card>
 
