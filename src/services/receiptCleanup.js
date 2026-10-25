@@ -8,6 +8,7 @@ const inFlight = new Map()
 async function recover(uid) {
   // Até 3 tarefas, 8 transações por tarefa, 7 blocos de 12 fragmentos.
   const jobs = await getDocs(query(collection(db, 'users', uid, 'attachmentCleanupJobs'), limit(3)))
+  const chunks = collection(db, 'users', uid, 'transactionAttachmentChunks')
   for (const job of jobs.docs) {
     const pending = job.data().txIds
     if (!Array.isArray(pending)) continue
@@ -16,7 +17,7 @@ async function recover(uid) {
       for (let round = 0; round < 7; round++) {
         const fragments = await getDocs(
           query(
-            collection(db, 'users', uid, 'transactionAttachmentChunks'),
+            chunks,
             where('txId', '==', txId),
             limit(12),
           ),
@@ -25,8 +26,7 @@ async function recover(uid) {
           const current = await operation.get(job.ref)
           const ids = current.exists() && current.data().txIds
           if (!Array.isArray(ids) || !ids.includes(txId)) return true
-          const transaction = await operation.get(doc(db, 'users', uid, 'transactions', txId))
-          const exists = transaction.exists()
+          const exists = (await operation.get(doc(db, 'users', uid, 'transactions', txId))).exists()
           // Nunca apagar arquivos de uma transação existente ou restaurada.
           if (!exists) fragments.docs.forEach((item) => operation.delete(item.ref))
           const finished = exists || fragments.docs.length < 12
