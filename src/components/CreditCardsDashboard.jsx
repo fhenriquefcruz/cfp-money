@@ -390,17 +390,13 @@ function CreditCardsCenterContent() {
             </button>
           </div>
           {!loadingData && center.availableInvoiceMonths.length > 0 && (
-            <select
-              aria-label="Escolher uma fatura com lançamentos"
-              value={center.availableInvoiceMonths.includes(selectedMonth) ? selectedMonth : ''}
-              onChange={(event) => selectMonth(event.target.value)}
-              className="mt-3 min-h-11 max-w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-xs font-bold text-[--text-primary]"
+            <button
+              type="button"
+              onClick={() => selectMonth(center.availableInvoiceMonths.at(-1))}
+              className="mt-3 text-xs font-bold text-[--text-brand] underline-offset-2 hover:underline"
             >
-              <option value="" disabled>Faturas com lançamentos</option>
-              {center.availableInvoiceMonths.map((month) => (
-                <option key={month} value={month}>{month.slice(5)}/{month.slice(0, 4)}</option>
-              ))}
-            </select>
+              Ver última fatura registrada
+            </button>
           )}
         </div>
       </Card>
