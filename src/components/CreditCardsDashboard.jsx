@@ -95,13 +95,6 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             Fecha em {formatDate(dates.closingDate)} · vence em {formatDate(dates.dueDate)}
           </p>
 
-          {invoice.historicalPurchaseCount > 0 && (
-            <p className="mt-2 text-[10px] text-[--text-secondary]">
-              Histórico no cartão: {formatCurrency(invoice.historicalPurchaseTotal)} ·{' '}
-              {invoice.historicalPurchaseCount} compra(s) registradas
-            </p>
-          )}
-
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div>
               <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
@@ -121,7 +114,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             </div>
           </div>
           <p className="mt-2 text-[10px] text-[--text-tertiary]">
-            Pago: {formatCurrency(lifecycle.paidAmount)} · {invoice.itemCount} lançamento
+            Pago: {formatCurrency(lifecycle.paidAmount)} · Histórico de compras: {formatCurrency(invoice.historicalPurchaseTotal)} · {invoice.itemCount} lançamento
             {invoice.itemCount === 1 ? '' : 's'}
           </p>
 
