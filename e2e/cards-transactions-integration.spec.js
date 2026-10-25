@@ -49,7 +49,10 @@ test('histórico por cartão permanece visível quando a fatura selecionada est�
   await expect(invoices).toContainText('Nubank')
 
   const historyTotals = async () => {
-    const labels = await invoices.locator('p').filter({ hasText: 'Histórico:' }).allTextContents()
+    const labels = await invoices
+      .locator('p')
+      .filter({ hasText: 'Histórico:' })
+      .allTextContents()
     return labels
       .map((label) => label.match(/Histórico:\s*(R\$\s*[\d.,]+)/)?.[1])
       .filter(Boolean)
