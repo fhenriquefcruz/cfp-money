@@ -37,12 +37,9 @@ export function firstRelevantForecastMonth(forecast = [], selectedMonth = '') {
   return relevant?.month || ''
 }
 
-// Considera histórico e futuro, preferindo o período anterior em caso de empate.
+// Prioriza o próximo vencimento registrado, inclusive fora da previsão de seis meses.
 export function firstRelevantRecordedMonth(months = [], selected = '') {
-  const distance = (month) =>
-    Math.abs(Number(month.slice(0, 4)) * 12 + Number(month.slice(5)) -
-      Number(selected.slice(0, 4)) * 12 - Number(selected.slice(5)))
-  return months.filter((month) => month !== selected).sort((a, b) => distance(a) - distance(b))[0] || ''
+  return months.find((month) => month > selected) || months.at(-1) || ''
 }
 
 export function labelForMonth(monthKey) {
