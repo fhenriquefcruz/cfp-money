@@ -25,7 +25,7 @@ async function recover(uid) {
         )
         const completed = await runTransaction(db, async (operation) => {
           const current = await operation.get(job.ref)
-          const ids = current.exists() && current.data().txIds
+          const ids = current.data()?.txIds
           if (!Array.isArray(ids) || !ids.includes(txId)) return true
           const exists = (await operation.get(doc(transactions, txId))).exists()
           // Nunca apagar arquivos de uma transação existente ou restaurada.
