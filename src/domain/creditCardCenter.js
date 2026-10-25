@@ -30,6 +30,20 @@ export function shiftMonthKey(monthKey, amount) {
   return monthKeyFromDate(new Date(year, month - 1 + amount, 1))
 }
 
+// Localiza faturas em todo o histórico, inclusive as anteriores ao mês atual.
+// Uma fatura com um pagamento registrado também deve ser encontrada.
+export function firstRelevantInvoiceMonth(months = [], selectedMonth = '') {
+  const populated = months.filter((entry) => entry.month !== selectedMonth && entry.itemCount > 0)
+  if (!populated.length) return ''
+  const distance = (month) => {
+    const [year, index] = month.split('-').map(Number)
+    const [currentYear, currentIndex] = selectedMonth.split('-').map(Number)
+    return Math.abs((year - currentYear) * 12 + index - currentIndex)
+  }
+  return populated.sort((a, b) => distance(a.month) - distance(b.month) || b.month.localeCompare(a.month))[0]
+    .month
+}
+
 export function firstRelevantForecastMonth(forecast = [], selectedMonth = '') {
   const relevant = forecast.find(
     (item) => item.month !== selectedMonth && Number(item.itemCount || 0) > 0,
@@ -335,6 +349,35 @@ export function buildCreditCardCenter({
     }
   })
 
+  // Navegação histórica baseada nas compras realmente carregadas, sem
+  // limitar a consulta aos seis meses exibidos no gráfico de previsão.
+  const activityMap = new Map()
+  structured.forEach((transaction) => {
+    const month = resolveCreditTransactionInvoiceMonth(
+      transaction,
+      cardMap.get(transaction.cardId),
+    )
+    if (!/^\\d{4}-\\d{2}$/.test(month)) return
+    const current = activityMap.get(month) || { month, itemCount: 0, total: 0 }
+    current.itemCount += 1
+    current.total += Math.round(Number(transaction.amount || 0) * 100)
+    activityMap.set(month, current)
+  })
+  invoiceEvents.forEach((event) => {
+    if (!/^\\d{4}-\\d{2}$/.test(event.invoiceMonth || '')) return
+    const month = event.invoiceMonth
+    const current = activityMap.get(month) || { month, itemCount: 0, total: 0 }
+    current.itemCount += 1
+    activityMap.set(month, current)
+  })
+  const availableInvoiceMonths = [...activityMap.values()]
+    .map((item) => ({
+      ...item,
+      total: item.total / 100,
+      label: labelForMonth(item.month),
+    }))
+    .sort((a, b) => b.month.localeCompare(a.month))
+
   const forecast = Array.from(
     {
       length: Math.max(1, forecastMonths),
@@ -390,6 +433,7 @@ export function buildCreditCardCenter({
     futureInstallmentTotal: sum(futureInstallments),
     legacyCount: selectedLegacy.length,
     legacyTotal: sum(selectedLegacy),
+    availableInvoiceMonths,
     forecast,
     forecastMax: Math.max(1, ...forecast.map((item) => item.total)),
   }
