@@ -18,8 +18,9 @@ async function recover(uid) {
       if (typeof txId !== 'string' || !txId) continue
       for (let round = 0; round < 7; round++) {
         const fragments = (await getDocs(query(chunks, where('txId', '==', txId), limit(12)))).docs
-        if (await runTransaction(db, async (operation) => {
-          const ids = (await operation.get(job.ref)).data()?.txIds
+        const completed = await runTransaction(db, async (operation) => {
+          const current = await operation.get(job.ref)
+          const ids = current.data()?.txIds
           if (!Array.isArray(ids) || !ids.includes(txId)) return true
           const exists = (await operation.get(doc(transactions, txId))).exists()
           // Nunca apagar arquivos de uma transação existente ou restaurada.
@@ -30,7 +31,8 @@ async function recover(uid) {
             else operation.update(job.ref, { txIds: ids.filter((id) => id !== txId) })
           }
           return finished
-        })) break
+        })
+        if (completed) break
       }
     }
   }
