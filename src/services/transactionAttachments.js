@@ -71,7 +71,7 @@ function fromBase64(encoded) {
 
 async function sha256(bytes) {
   const subtle = globalThis.crypto?.subtle
-  if (!subtle) throw new Error('SHA-256 indisponível neste navegador.')
+  if (!subtle) throw new Error('SHA-256 indisponível.')
   const digest = await subtle.digest('SHA-256', bytes)
   return btoa(String.fromCharCode(...new Uint8Array(digest)))
 }
@@ -88,7 +88,7 @@ export async function uploadTransactionAttachment(uid, txId, file, kind = 'trans
   if (!['transaction', 'payment'].includes(kind)) throw new Error('Tipo de comprovante inválido.')
   const normalized = validateReceiptFile(file)
   const bytes = new Uint8Array(await file.arrayBuffer())
-  if (bytes.length !== normalized.size) throw new Error('Arquivo alterado durante o envio.')
+  if (bytes.length !== normalized.size) throw new Error('Arquivo alterado no envio.')
   const checksum = await sha256(bytes)
   const chunkRefs = chunkCollection(uid)
   const attachmentId = doc(chunkRefs).id
