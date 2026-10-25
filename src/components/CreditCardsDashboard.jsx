@@ -393,9 +393,9 @@ function CreditCardsCenterContent() {
             <button
               type="button"
               onClick={() => selectMonth(center.availableInvoiceMonths.at(-1))}
-              className="mt-3 text-xs font-bold text-[--text-brand] underline-offset-2 hover:underline"
+              className="mt-3 text-xs font-bold underline"
             >
-              Ver última fatura registrada
+              Última fatura
             </button>
           )}
         </div>
