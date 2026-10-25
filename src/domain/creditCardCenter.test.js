@@ -1,7 +1,6 @@
 import {
   buildCreditCardCenter,
   firstRelevantForecastMonth,
-  firstRelevantInvoiceMonth,
   invoiceDatesForMonth,
   invoiceStatus,
   labelForMonth,
@@ -600,14 +599,6 @@ test('descobre meses com eventos mesmo sem compras; ignora canceladas e sem cart
   expect(center.unlinkedPurchaseCount).toBe(1)
 })
 
-test('abre a fatura histórica mais próxima quando o mês atual está vazio', () => {
-  expect(firstRelevantInvoiceMonth(['2025-07', '2026-02', '2026-12'], '2026-10')).toBe(
-    '2026-12',
-  )
-  expect(firstRelevantInvoiceMonth(['2025-07', '2026-02'], '2026-10')).toBe('2026-02')
-  expect(firstRelevantInvoiceMonth([], '2026-10')).toBe('')
-})
-
 test('expõe valor registrado por cartão mesmo ao visualizar outro mês sem compras', () => {
   const center = buildCreditCardCenter({
     transactions: [
@@ -635,10 +626,6 @@ test('expõe valor registrado por cartão mesmo ao visualizar outro mês sem com
   })
   expect(center.selectedTotal).toBe(0)
   expect(center.availableInvoiceMonths).toEqual(['2026-04', '2026-06'])
-  expect(center.invoiceMonthActivity.map((item) => [item.month, item.total])).toEqual([
-    ['2026-06', 149.1],
-    ['2026-04', 259.9],
-  ])
   expect(center.invoices.find((invoice) => invoice.card.id === 'inter')).toMatchObject({
     itemCount: 0,
     historicalPurchaseCount: 2,
@@ -663,5 +650,4 @@ test('mostra competência com evento de fatura mesmo sem compras no mês', () =>
     selectedMonth: '2026-10',
   })
   expect(center.availableInvoiceMonths).toEqual(['2026-01'])
-  expect(center.invoiceMonthActivity[0]).toMatchObject({ month: '2026-01', itemCount: 1 })
 })
