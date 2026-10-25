@@ -46,9 +46,8 @@ async function recover(uid) {
 
 export function resumeReceiptCleanup(uid) {
   if (!uid) return
-  const active = inFlight.get(uid)
-  if (active) return active
-  const task = recover(uid).finally(() => inFlight.delete(uid))
-  inFlight.set(uid, task)
-  return task
+  return (
+    inFlight.get(uid) ||
+    inFlight.set(uid, recover(uid).finally(() => inFlight.delete(uid))).get(uid)
+  )
 }
