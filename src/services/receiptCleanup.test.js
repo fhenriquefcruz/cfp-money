@@ -116,6 +116,14 @@ describe('Recuperação dos comprovantes após exclusão', () => {
     expect(state.jobs.size).toBe(0)
   })
 
+  it('compartilha a mesma execução entre chamadas simultâneas', async () => {
+    const first = resumeReceiptCleanup('uid-1')
+    const second = resumeReceiptCleanup('uid-1')
+    expect(second).toBe(first)
+    await first
+    expect(state.jobs.size).toBe(0)
+  })
+
   it('é idempotente em chamadas sucessivas', async () => {
     await resumeReceiptCleanup('uid-1')
     await resumeReceiptCleanup('uid-1')
