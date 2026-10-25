@@ -16,7 +16,6 @@ import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import {
   buildCreditCardCenter,
-  firstRelevantRecordedMonth,
   monthKeyFromDate,
   shiftMonthKey,
 } from '../domain/creditCardCenter'
@@ -252,7 +251,9 @@ function CreditCardsCenterContent() {
       return
     }
 
-    const relevantMonth = firstRelevantRecordedMonth(center.availableInvoiceMonths, selectedMonth)
+    const relevantMonth =
+      center.availableInvoiceMonths.find((month) => month > selectedMonth) ||
+      center.availableInvoiceMonths.findLast((month) => month < selectedMonth)
     if (!relevantMonth) return
 
     setSelectedMonth(relevantMonth)
