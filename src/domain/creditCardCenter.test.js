@@ -598,3 +598,55 @@ test('descobre meses com eventos mesmo sem compras; ignora canceladas e sem cart
   expect(center.availableInvoiceMonths).toEqual(['2025-03'])
   expect(center.unlinkedPurchaseCount).toBe(1)
 })
+
+test('expõe valor registrado por cartão mesmo ao visualizar outro mês sem compras', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'old-purchase',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'inter',
+        amount: 259.9,
+        invoiceMonth: '2026-04',
+        date: '2026-04-17',
+      },
+      {
+        id: 'recent-purchase',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'inter',
+        amount: 149.1,
+        invoiceMonth: '2026-06',
+        date: '2026-06-17',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-10',
+  })
+  expect(center.selectedTotal).toBe(0)
+  expect(center.availableInvoiceMonths).toEqual(['2026-04', '2026-06'])
+  expect(center.invoices.find((invoice) => invoice.card.id === 'inter')).toMatchObject({
+    itemCount: 0,
+    allTime: 409,
+  })
+})
+
+test('mostra competência com evento de fatura mesmo sem compras no mês', () => {
+  const center = buildCreditCardCenter({
+    transactions: [],
+    creditCards: cards,
+    invoiceEvents: [
+      {
+        id: 'payment',
+        cardId: 'inter',
+        type: 'payment',
+        amount: 100,
+        invoiceMonth: '2026-01',
+        eventDate: '2026-01-17',
+      },
+    ],
+    selectedMonth: '2026-10',
+  })
+  expect(center.availableInvoiceMonths).toEqual(['2026-01'])
+})

@@ -114,7 +114,8 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             </div>
           </div>
           <p className="mt-2 text-[10px] text-[--text-tertiary]">
-            Pago: {formatCurrency(lifecycle.paidAmount)} · {invoice.itemCount} lançamento
+            Pago: {formatCurrency(lifecycle.paidAmount)} · Histórico:{' '}
+            {formatCurrency(invoice.allTime)} · {invoice.itemCount} lançamento
             {invoice.itemCount === 1 ? '' : 's'}
           </p>
 
@@ -159,7 +160,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
 
           {card.historicalOnly && (
             <p className="mt-2 text-[9px] leading-relaxed text-[--warning-text]">
-              Cartão removido do cadastro; dados históricos preservados.
+              Cartão removido; histórico preservado.
             </p>
           )}
         </div>
@@ -287,8 +288,7 @@ function CreditCardsCenterContent() {
                 </span>
               </div>
               <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/70">
-                Acompanhe vencimentos, parcelas e compromissos futuros sem confundir a data da
-                compra com o mês da fatura.
+                Faturas, pagamentos e parcelas organizados pelo vencimento.
               </p>
             </div>
           </div>
@@ -405,13 +405,13 @@ function CreditCardsCenterContent() {
               icon={CreditCard}
               label="Total pago"
               value={formatCurrency(center.selectedPaidTotal)}
-              helper="Pagamentos líquidos, já descontados os estornos"
+              helper="Pagamentos líquidos, menos estornos"
             />
             <SummaryCard
               icon={ReceiptText}
               label="Saldo pendente"
               value={formatCurrency(center.selectedRemainingTotal)}
-              helper="Valor ainda necessário para liquidar as faturas"
+              helper="Restante a pagar nas faturas"
             />
             <SummaryCard
               icon={Layers3}
@@ -430,7 +430,7 @@ function CreditCardsCenterContent() {
                 {center.reconciledPurchaseCount === 1 ? '' : 's'} antiga
                 {center.reconciledPurchaseCount === 1 ? '' : 's'} conciliada
                 {center.reconciledPurchaseCount === 1 ? '' : 's'} pelo nome ou final do cartão.
-                Confira o vínculo na lista de transações.
+                Revise o vínculo em Transações.
               </p>
               <Link to="/transactions" className="font-bold underline-offset-2 hover:underline">
                 Conferir
@@ -464,7 +464,7 @@ function CreditCardsCenterContent() {
                       Próximos compromissos
                     </h2>
                     <p className="mt-1 text-[10px] text-[--text-tertiary]">
-                      Previsão baseada nas compras já lançadas
+                      Compras já registradas
                     </p>
                   </div>
                   <Sparkles size={16} className="text-[--brand-600]" />
@@ -514,7 +514,7 @@ function CreditCardsCenterContent() {
                       Nenhum cartão cadastrado
                     </p>
                     <p className="mt-1 text-xs text-[--text-tertiary]">
-                      Cadastre fechamento e vencimento no Perfil.
+                      Cadastre fechamento e vencimento em Meus cartões.
                     </p>
                   </Card>
                 ) : (
@@ -577,7 +577,7 @@ function CreditCardsCenterContent() {
                       Nenhuma compra nesta fatura
                     </p>
                     <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-                      Compras estruturadas aparecerão aqui conforme o vencimento calculado.
+                      Navegue entre faturas ou revise compras sem cartão nas Transações.
                     </p>
                   </div>
                 ) : (
@@ -609,7 +609,7 @@ export default function CreditCardsDashboard() {
   return (
     <PremiumGate
       feature="Central de cartões e faturas"
-      description="Consolide faturas, parcelas e próximos vencimentos em uma visão segura e organizada."
+      description="Faturas, parcelas e vencimentos em um só lugar."
       benefits={[
         'Faturas agrupadas por cartão',
         'Previsão dos próximos meses',
