@@ -568,3 +568,33 @@ test('mantém eventos de pagamento prevalecendo sobre status pago após concilia
   expect(center.selectedPaidTotal).toBe(100)
   expect(center.selectedRemainingTotal).toBe(130)
 })
+
+test('encontra compras em faturas anteriores quando a fatura atual está vazia', () => {
+  const center = buildCreditCardCenter({
+    transactions,
+    creditCards: cards,
+    selectedMonth: '2026-10',
+  })
+  expect(center.selectedTotal).toBe(0)
+  expect(center.availableInvoiceMonths).toEqual(['2026-08', '2026-09'])
+})
+
+test('descobre meses com eventos mesmo sem compras; ignora canceladas e sem cartão', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      { type: 'expense', paymentMethod: 'credit_card', amount: 90, date: '2025-01-10' },
+      {
+        type: 'expense',
+        cardId: 'inter',
+        paymentStatus: 'cancelled',
+        amount: 800,
+        invoiceMonth: '2025-02',
+      },
+    ],
+    creditCards: cards,
+    invoiceEvents: [{ type: 'payment', cardId: 'inter', invoiceMonth: '2025-03', amount: 35 }],
+    selectedMonth: '2026-10',
+  })
+  expect(center.availableInvoiceMonths).toEqual(['2025-03'])
+  expect(center.unlinkedPurchaseCount).toBe(1)
+})

@@ -14,12 +14,7 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
-import {
-  buildCreditCardCenter,
-  firstRelevantForecastMonth,
-  monthKeyFromDate,
-  shiftMonthKey,
-} from '../domain/creditCardCenter'
+import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
@@ -252,13 +247,15 @@ function CreditCardsCenterContent() {
       return
     }
 
-    const relevantMonth = firstRelevantForecastMonth(center.forecast, selectedMonth)
+    const relevantMonth =
+      center.availableInvoiceMonths.find((month) => month > selectedMonth) ||
+      center.availableInvoiceMonths.findLast((month) => month < selectedMonth)
     if (!relevantMonth) return
 
     setSelectedMonth(relevantMonth)
     setSelectedCardId('all')
   }, [
-    center.forecast,
+    center.availableInvoiceMonths,
     center.selectedItemCount,
     center.selectedPaidTotal,
     center.selectedTotal,
@@ -378,10 +375,7 @@ function CreditCardsCenterContent() {
 
             <button
               type="button"
-              onClick={() => {
-                setSelectedMonth(monthKeyFromDate())
-                setSelectedCardId('all')
-              }}
+              onClick={() => selectMonth(monthKeyFromDate())}
               className="min-h-11 rounded-xl border border-[--brand-200] bg-[--brand-50] px-3 text-xs font-bold text-[--brand-700]"
             >
               Mês atual

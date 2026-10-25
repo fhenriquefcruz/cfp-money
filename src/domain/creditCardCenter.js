@@ -256,6 +256,16 @@ export function buildCreditCardCenter({
     return String(first.name).localeCompare(String(second.name), 'pt-BR')
   })
 
+  // Localiza competências reais em todo o histórico, não somente na previsão.
+  const availableInvoiceMonths = [
+    ...new Set([
+      ...structured.map((tx) => resolveCreditTransactionInvoiceMonth(tx, cardMap.get(tx.cardId))),
+      ...invoiceEvents.filter((event) => event.cardId).map((event) => event.invoiceMonth),
+    ]),
+  ]
+    .filter((month) => /^\d{4}-(0[1-9]|1[0-2])$/.test(month))
+    .sort()
+
   const selectedTransactions = structured
     .filter(
       (transaction) =>
@@ -359,6 +369,7 @@ export function buildCreditCardCenter({
 
   return {
     selectedMonth,
+    availableInvoiceMonths,
     reconciledPurchaseCount,
     unlinkedPurchaseCount: legacy.length,
     unlinkedPurchaseTotal: sum(legacy),
