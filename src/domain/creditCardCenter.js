@@ -37,25 +37,9 @@ export function firstRelevantForecastMonth(forecast = [], selectedMonth = '') {
   return relevant?.month || ''
 }
 
-// Os lançamentos históricos também precisam ser localizáveis: a previsão só olha para frente.
-export function firstRelevantRecordedMonth(months = [], selectedMonth = '') {
-  const current = String(selectedMonth).slice(0, 7)
-  const eligible = months.filter(
-    (item) =>
-      /^\d{4}-(0[1-9]|1[0-2])$/.test(item.month) &&
-      item.month !== current &&
-      (item.itemCount > 0 || item.eventCount > 0),
-  )
-  const distance = (month) => {
-    const [year, number] = month.split('-').map(Number)
-    const [currentYear, currentNumber] = current.split('-').map(Number)
-    return Math.abs((year - currentYear) * 12 + number - currentNumber)
-  }
-  eligible.sort((first, second) => {
-    const difference = distance(first.month) - distance(second.month)
-    return difference || first.month.localeCompare(second.month)
-  })
-  return eligible[0]?.month || ''
+// Preferir a última fatura anterior; se não existir, buscar a próxima.
+export function firstRelevantRecordedMonth(months = [], selected = '') {
+  return months.filter((month) => month < selected).at(-1) || months.find((month) => month > selected) || ''
 }
 
 export function labelForMonth(monthKey) {
@@ -277,27 +261,17 @@ export function buildCreditCardCenter({
     return String(first.name).localeCompare(String(second.name), 'pt-BR')
   })
 
-  // Fonte única para encontrar meses efetivamente registrados, sem limite
-  // arbitrário de seis meses e sem presumir faturas de um cartão inexistente.
-  const recordedMonths = new Map()
-  structured.forEach((transaction) => {
-    const month = resolveCreditTransactionInvoiceMonth(transaction, cardMap.get(transaction.cardId))
-    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return
-    const entry = recordedMonths.get(month) || { month, itemCount: 0, eventCount: 0, total: 0 }
-    entry.itemCount += 1
-    entry.total = Math.round(entry.total * 100 + Number(transaction.amount || 0) * 100) / 100
-    recordedMonths.set(month, entry)
-  })
-  invoiceEvents.forEach((event) => {
-    const month = event.invoiceMonth
-    if (!event.cardId || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return
-    const entry = recordedMonths.get(month) || { month, itemCount: 0, eventCount: 0, total: 0 }
-    entry.eventCount += 1
-    recordedMonths.set(month, entry)
-  })
-  const availableInvoiceMonths = [...recordedMonths.values()].sort((a, b) =>
-    b.month.localeCompare(a.month),
-  )
+  // Localiza competências reais em todo o histórico, não somente na previsão.
+  const availableInvoiceMonths = [
+    ...new Set([
+      ...structured.map((tx) =>
+        resolveCreditTransactionInvoiceMonth(tx, cardMap.get(tx.cardId)),
+      ),
+      ...invoiceEvents.filter((event) => event.cardId).map((event) => event.invoiceMonth),
+    ]),
+  ]
+    .filter((month) => /^\\d{4}-(0[1-9]|1[0-2])$/.test(month))
+    .sort()
 
   const selectedTransactions = structured
     .filter(
@@ -403,8 +377,6 @@ export function buildCreditCardCenter({
   return {
     selectedMonth,
     availableInvoiceMonths,
-    recordedPurchaseCount: structured.length,
-    recordedPurchaseTotal: sum(structured),
     reconciledPurchaseCount,
     unlinkedPurchaseCount: legacy.length,
     unlinkedPurchaseTotal: sum(legacy),
