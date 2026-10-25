@@ -114,7 +114,8 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             </div>
           </div>
           <p className="mt-2 text-[10px] text-[--text-tertiary]">
-            Pago: {formatCurrency(lifecycle.paidAmount)} · Histórico: {formatCurrency(invoice.allTime)} · {invoice.itemCount} lançamento
+            Pago: {formatCurrency(lifecycle.paidAmount)} · Histórico:{' '}
+            {formatCurrency(invoice.allTime)} · {invoice.itemCount} lançamento
             {invoice.itemCount === 1 ? '' : 's'}
           </p>
 
