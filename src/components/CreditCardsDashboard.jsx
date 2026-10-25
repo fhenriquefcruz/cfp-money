@@ -414,7 +414,7 @@ function CreditCardsCenterContent() {
               <option value="" disabled>Escolha um período</option>
               {center.invoiceMonthActivity.map((item) => (
                 <option key={item.month} value={item.month}>
-                  {item.label} · {item.itemCount} lançamento(s)
+                  {item.label} · {item.itemCount} registro(s) · {formatCurrency(item.total)}
                 </option>
               ))}
             </select>
