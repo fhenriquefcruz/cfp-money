@@ -125,8 +125,7 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
             {pending.length} compra{pending.length === 1 ? '' : 's'} para revisar
           </span>
           <span className="rounded-full bg-[--success-bg] px-3 py-1.5 text-xs font-bold text-[--success-text]">
-            {reviewed.length} vínculo{reviewed.length === 1 ? '' : 's'} reversível
-            {reviewed.length === 1 ? '' : 'eis'}
+            {reviewed.length} {reviewed.length === 1 ? 'vínculo reversível' : 'vínculos reversíveis'}
           </span>
         </div>
 
