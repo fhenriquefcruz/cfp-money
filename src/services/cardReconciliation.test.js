@@ -126,3 +126,17 @@ test('não desfaz uma associação cujo cartão foi alterado por outra ação', 
   await expect(undoCardReconciliation('user-1', 'legacy')).rejects.toThrow('reversível')
   expect(state.transactions.get('legacy').cardId).toBe('different')
 })
+
+test('recusa desfazer se a competência do vínculo foi editada posteriormente', async () => {
+  await confirmCardReconciliation('user-1', 'legacy', 'real-id')
+  state.transactions.get('legacy').invoiceMonth = '2026-09'
+  await expect(undoCardReconciliation('user-1', 'legacy')).rejects.toThrow('reversível')
+  expect(state.transactions.get('legacy').invoiceMonth).toBe('2026-09')
+})
+
+test('exige nova confirmação se os dados de vencimento mudaram após a prévia', async () => {
+  await expect(confirmCardReconciliation('user-1', 'legacy', 'real-id', '2026-10')).rejects.toThrow(
+    'Competência alterada',
+  )
+  expect(state.writes).toHaveLength(0)
+})
