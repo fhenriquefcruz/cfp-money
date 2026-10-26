@@ -108,3 +108,15 @@ test('normaliza limite opcional sem permitir valor negativo', () => {
     limit: 0,
   })
 })
+
+test('não grava identificador nulo ao cadastrar novo cartão', () => {
+  const newCard = normalizeCreditCard({
+    name: 'Cartão teste',
+    last4: '1234',
+    closingDay: 5,
+    dueDay: 12,
+  })
+
+  expect(newCard).not.toHaveProperty('id')
+  expect(normalizeCreditCard(card).id).toBe('nubank')
+})
