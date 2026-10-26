@@ -43,8 +43,7 @@ function toIsoDate(value) {
 }
 
 function toMonthKey(value) {
-  const date = asLocalDate(value)
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+  return toIsoDate(value).slice(0, 7)
 }
 
 export function normalizeCreditCard(card = {}) {
