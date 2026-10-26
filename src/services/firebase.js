@@ -160,6 +160,12 @@ export const updateMoneySettings = async (uid, settings) =>
 const userCol = (uid, sub) => collection(db, 'users', uid, sub)
 const userDoc = (uid, sub, id) => doc(db, 'users', uid, sub, id)
 
+// A fila é gravada no MESMO commit que apaga os lançamentos financeiros.
+// Se o navegador fechar, os fragmentos continuam recuperáveis no próximo login.
+const queueReceiptCleanup = (batch, uid, ids) => {
+  if (ids.length) batch.set(doc(userCol(uid, 'attachmentCleanupJobs')), { txIds: ids })
+}
+
 // ── TRANSACTIONS ──
 export const getTransactions = async (uid) => {
   const snap = await getDocs(query(userCol(uid, 'transactions'), orderBy('date', 'desc')))
@@ -213,7 +219,7 @@ export const updateTransactionPaymentStatuses = async (uid, operation = {}) => {
   await batch.commit()
 }
 
-export const deleteTransaction = async (uid, id) => deleteDoc(userDoc(uid, 'transactions', id))
+export const deleteTransaction = (uid, id) => deleteTransactionBatch(uid, [id])
 
 // ── INVOICE EVENTS ──
 export const onInvoiceEventsChange = (uid, callback) => {
@@ -239,11 +245,10 @@ export const addInvoiceEvent = async (uid, data) => {
 }
 
 // ── CREDIT CARDS ──
-export const getCreditCards = async (uid) =>
-  (await getDocs(userCol(uid, 'creditCards'))).docs.map((item) => ({
-    ...item.data(),
-    id: item.id,
-  }))
+export const getCreditCards = async (uid) => {
+  const snap = await getDocs(userCol(uid, 'creditCards'))
+  return snap.docs.map((item) => ({ ...item.data(), id: item.id }))
+}
 
 export const addCreditCard = async (uid, data) => {
   const ref = await addDoc(userCol(uid, 'creditCards'), {
@@ -280,10 +285,10 @@ export const deleteTransactionBatch = async (uid, ids) => {
   const uniqueIds = [...new Set(ids.filter(Boolean))]
   if (!uniqueIds.length) return
 
+  if (uniqueIds.length > 450) throw new Error('Até 450 exclusões.')
   const batch = writeBatch(db)
-  uniqueIds.forEach((id) => {
-    batch.delete(userDoc(uid, 'transactions', id))
-  })
+  uniqueIds.forEach((id) => batch.delete(userDoc(uid, 'transactions', id)))
+  queueReceiptCleanup(batch, uid, uniqueIds)
   await batch.commit()
 }
 
@@ -305,7 +310,7 @@ export const commitTransactionSeriesOperation = async (
   const writeCount = updateMap.size + deleteIds.size
   if (!writeCount) return
   if (writeCount > 450) {
-    throw new Error('A série excede o limite seguro de alterações.')
+    throw new Error('Limite de 450 mudanças na série.')
   }
 
   const batch = writeBatch(db)
@@ -317,9 +322,8 @@ export const commitTransactionSeriesOperation = async (
     })
   })
 
-  deleteIds.forEach((id) => {
-    batch.delete(userDoc(uid, 'transactions', id))
-  })
+  deleteIds.forEach((id) => batch.delete(userDoc(uid, 'transactions', id)))
+  queueReceiptCleanup(batch, uid, [...deleteIds])
 
   await batch.commit()
 }
