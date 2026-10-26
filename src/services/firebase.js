@@ -245,10 +245,11 @@ export const addInvoiceEvent = async (uid, data) => {
 }
 
 // ── CREDIT CARDS ──
-export const getCreditCards = async (uid) => {
-  const snap = await getDocs(userCol(uid, 'creditCards'))
-  return snap.docs.map((item) => ({ ...item.data(), id: item.id }))
-}
+export const getCreditCards = async (uid) =>
+  (await getDocs(userCol(uid, 'creditCards'))).docs.map((item) => ({
+    ...item.data(),
+    id: item.id,
+  }))
 
 export const addCreditCard = async (uid, data) => {
   const ref = await addDoc(userCol(uid, 'creditCards'), {
