@@ -19,18 +19,17 @@ async function recover(uid) {
       for (let round = 0; round < 7; round++) {
         const fragments = (await getDocs(query(chunks, where('txId', '==', txId), limit(12)))).docs
         const completed = await runTransaction(db, async (operation) => {
-          const current = await operation.get(job.ref)
-          const ids = current.data()?.txIds
+          const ids = (await operation.get(job.ref)).data()?.txIds
           if (!Array.isArray(ids) || !ids.includes(txId)) return true
           const exists = (await operation.get(doc(transactions, txId))).exists()
           // Nunca apagar arquivos de uma transação existente ou restaurada.
           if (!exists) fragments.forEach((item) => operation.delete(item.ref))
-          const finished = exists || fragments.length < 12
-          if (finished) {
+          if (exists || fragments.length < 12) {
             if (ids.length === 1) operation.delete(job.ref)
             else operation.update(job.ref, { txIds: ids.filter((id) => id !== txId) })
+            return true
           }
-          return finished
+          return false
         })
         if (completed) break
       }
