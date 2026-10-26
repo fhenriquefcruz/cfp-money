@@ -1,0 +1,31 @@
+name: Temporary Phase 61 UI format
+on:
+  push:
+    branches:
+      - feat/phase-61-reconciliation-ui
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.repository == 'fhenriquefcruz/cfp-money'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts --no-fund
+      - run: npx prettier --write src/components/CardReconciliationModal.jsx src/components/CardReconciliationModal.test.jsx src/components/CreditCardsDashboard.jsx src/contexts/AppContext.jsx
+      - run: git diff --check
+      - name: Commit formatted source
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/CardReconciliationModal.jsx src/components/CardReconciliationModal.test.jsx src/components/CreditCardsDashboard.jsx src/contexts/AppContext.jsx
+          if ! git diff --cached --quiet; then
+            git commit -m 'style(cards): format reconciliation interface'
+            git push origin HEAD:refs/heads/feat/phase-61-reconciliation-ui
+          fi
