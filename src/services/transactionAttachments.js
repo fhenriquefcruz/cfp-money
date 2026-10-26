@@ -45,7 +45,7 @@ export function validateReceiptFile(file, currentCount = 0) {
     throw new Error('Limite de seis arquivos por transação.')
   const extension = file.name.split('.').pop().toLowerCase()
   if (!EXTENSION_TYPES[extension])
-    throw new Error('Formato não permitido. Use PDF, imagem, planilha ou documento.')
+    throw new Error('Formato não permitido: PDF, imagem, planilha ou documento.')
   return {
     // eslint-disable-next-line no-control-regex -- remove controles do nome
     name: file.name.slice(0, 140).replace(/[\\/\x00-\x1f]/g, '_'),
@@ -71,7 +71,7 @@ function fromBase64(encoded) {
 
 async function sha256(bytes) {
   const subtle = globalThis.crypto?.subtle
-  if (!subtle) throw new Error('SHA-256 indisponível neste navegador.')
+  if (!subtle) throw new Error('SHA-256 indisponível.')
   const digest = await subtle.digest('SHA-256', bytes)
   return btoa(String.fromCharCode(...new Uint8Array(digest)))
 }
@@ -84,11 +84,11 @@ function validChunkCount(value) {
 // codificação Base64. Geramos os fragmentos antes da transação para que
 // eventuais tentativas automáticas reutilizem exatamente os mesmos bytes.
 export async function uploadTransactionAttachment(uid, txId, file, kind = 'transaction') {
-  if (!uid || !txId) throw new Error('Identificação da transação indisponível.')
-  if (!['transaction', 'payment'].includes(kind)) throw new Error('Tipo de comprovante inválido.')
+  if (!uid || !txId) throw new Error('Transação indisponível.')
+  if (!['transaction', 'payment'].includes(kind)) throw new Error('Tipo de anexo inválido.')
   const normalized = validateReceiptFile(file)
   const bytes = new Uint8Array(await file.arrayBuffer())
-  if (bytes.length !== normalized.size) throw new Error('Arquivo alterado durante o envio.')
+  if (bytes.length !== normalized.size) throw new Error('Arquivo alterado no envio.')
   const checksum = await sha256(bytes)
   const chunkRefs = chunkCollection(uid)
   const attachmentId = doc(chunkRefs).id
@@ -145,7 +145,7 @@ export async function downloadTransactionAttachment(uid, txId, metadata) {
     stored.size < 1 ||
     stored.size > ATTACHMENT_MAX_BYTES
   ) {
-    throw new Error('Metadados do arquivo inválidos.')
+    throw new Error('Metadados inválidos.')
   }
   const documents = await Promise.all(
     Array.from({ length: stored.chunkCount }, (_, index) =>
@@ -171,10 +171,10 @@ export async function downloadTransactionAttachment(uid, txId, metadata) {
     throw new Error('Fragmento inválido.')
   }
   const blob = new Blob(parts, { type: 'application/octet-stream' })
-  if (blob.size !== stored.size) throw new Error('Tamanho do comprovante inválido.')
+  if (blob.size !== stored.size) throw new Error('Tamanho inválido.')
   if (stored.sha256) {
     const checksum = await sha256(await blob.arrayBuffer())
-    if (checksum !== stored.sha256) throw new Error('SHA-256 divergente: arquivo corrompido.')
+    if (checksum !== stored.sha256) throw new Error('SHA-256 divergente.')
   }
   // Arquivos legados sem SHA-256 continuam disponíveis com validação de
   // tamanho, vínculo à transação e sequência dos fragmentos.
@@ -192,7 +192,7 @@ export async function removeTransactionAttachment(uid, txId, metadata) {
     const stored = current.find((item) => item.id === metadata.id)
     if (!stored) return
     if (!validChunkCount(stored.chunkCount)) {
-      throw new Error('Metadados do arquivo inválidos.')
+      throw new Error('Metadados inválidos.')
     }
     for (let index = 0; index < stored.chunkCount; index++) {
       operation.delete(doc(fragments, `${stored.id}_${index}`))
