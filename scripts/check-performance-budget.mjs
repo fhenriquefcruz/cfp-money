@@ -34,9 +34,14 @@ const indexPath = join(distRoot, 'index.html')
 // Fases 57-58 combinadas: anexos são carregados sob demanda; estimativa
 // inicial conservadora de 245 KiB JS e teto total de 734 KiB gzip.
 // Revalidar pelos números reais de CI antes de integrar.
+// Fase 61.2: o fluxo de conciliação assistida adiciona um modal lazy,
+// confirmação dupla e reversão de vínculos. A PR #148 mediu 738,79 KiB
+// de JS total gzip, mantendo 244,08 KiB de JS inicial abaixo de 245 KiB.
+// Reservamos 5 KiB exclusivamente no total global (739 KiB), sem ampliar
+// os tetos de carregamento inicial, rota Money, maior chunk ou CSS.
 const limits = {
   initialJavaScriptGzipBytes: 245 * 1024,
-  totalJavaScriptGzipBytes: 734 * 1024,
+  totalJavaScriptGzipBytes: 739 * 1024,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 22 * 1024 + 512,
