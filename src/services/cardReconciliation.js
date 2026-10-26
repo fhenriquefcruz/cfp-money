@@ -13,7 +13,7 @@ const fields = [
 ]
 const ownedDoc = (uid, collection, id) => doc(db, 'users', uid, collection, id)
 
-export async function confirmCardReconciliation(uid, txId, cardId) {
+export async function confirmCardReconciliation(uid, txId, cardId, expectedMonth) {
   if (!uid || !txId || !cardId) throw new Error('Identificação incompleta.')
 
   return runTransaction(db, async (operation) => {
@@ -28,10 +28,14 @@ export async function confirmCardReconciliation(uid, txId, cardId) {
     }
 
     const original = transactionSnapshot.data()
+    if (original.cardReconciliation) throw new Error('Conciliação anterior ainda registrada.')
     const changes = previewCardReconciliation(original, {
       ...cardSnapshot.data(),
       id: cardSnapshot.id,
     })
+    if (expectedMonth && expectedMonth !== changes.invoiceMonth) {
+      throw new Error('Competência alterada. Revise a prévia antes de confirmar.')
+    }
     const previous = {}
     const absent = []
     for (const key of fields) {
@@ -41,7 +45,7 @@ export async function confirmCardReconciliation(uid, txId, cardId) {
 
     operation.update(transactionRef, {
       ...changes,
-      cardReconciliation: { version: 1, cardId, previous, absent },
+      cardReconciliation: { version: 1, cardId, previous, absent, applied: changes },
       updatedAt: serverTimestamp(),
     })
 
@@ -66,6 +70,8 @@ export async function undoCardReconciliation(uid, txId) {
       !Array.isArray(metadata.absent) ||
       !metadata.previous ||
       typeof metadata.previous !== 'object' ||
+      !metadata.applied ||
+      fields.some((key) => transaction[key] !== metadata.applied[key]) ||
       metadata.absent.some((key) => !fields.includes(key)) ||
       Object.keys(metadata.previous).some((key) => !fields.includes(key))
     ) {
