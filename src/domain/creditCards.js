@@ -43,12 +43,13 @@ function toIsoDate(value) {
 }
 
 function toMonthKey(value) {
-  return toIsoDate(value).slice(0, 7)
+  const date = asLocalDate(value)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
 export function normalizeCreditCard(card = {}) {
   return {
-    ...(card.id && { id: card.id }),
+    id: card.id || null,
     name: String(card.name || '').trim(),
     last4: String(card.last4 || '')
       .replace(/\D/g, '')
