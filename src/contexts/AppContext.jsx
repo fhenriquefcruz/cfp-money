@@ -866,7 +866,13 @@ export const TransactionsProvider = ({ children }) => {
               id: txId,
               data: {
                 ...changes,
-                cardReconciliation: { version: 1, cardId: card.id, previous, absent, applied: changes },
+                cardReconciliation: {
+                  version: 1,
+                  cardId: card.id,
+                  previous,
+                  absent,
+                  applied: changes,
+                },
               },
             },
           })
@@ -890,9 +896,12 @@ export const TransactionsProvider = ({ children }) => {
         if (E2E_MODE) {
           const transaction = stateRef.current.transactions.find((item) => item.id === txId)
           const metadata = transaction?.cardReconciliation
-          if (!metadata || Object.keys(metadata.applied || {}).some(
-            (key) => transaction[key] !== metadata.applied[key],
-          )) {
+          if (
+            !metadata ||
+            Object.keys(metadata.applied || {}).some(
+              (key) => transaction[key] !== metadata.applied[key],
+            )
+          ) {
             throw new Error('Esta conciliação não pode ser desfeita.')
           }
           const restored = { ...transaction, ...metadata.previous }

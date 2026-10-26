@@ -232,11 +232,12 @@ function CreditCardsCenterContent() {
     () => transactions.filter(isUnlinkedCreditPurchase),
     [transactions],
   )
-  const unlinkedTotal = unlinkedPurchases.reduce(
-    (sum, item) => sum + Math.round(Number(item.amount || 0) * 100),
-    0,
-  ) / 100
-  const reversibleCount = transactions.filter((item) => item.cardReconciliation?.version === 1).length
+  const unlinkedTotal =
+    unlinkedPurchases.reduce((sum, item) => sum + Math.round(Number(item.amount || 0) * 100), 0) /
+    100
+  const reversibleCount = transactions.filter(
+    (item) => item.cardReconciliation?.version === 1,
+  ).length
 
   const visibleInvoices =
     selectedCardId === 'all'
@@ -442,8 +443,8 @@ function CreditCardsCenterContent() {
               <p>
                 {center.reconciledPurchaseCount} compra
                 {center.reconciledPurchaseCount === 1 ? '' : 's'} antiga
-                {center.reconciledPurchaseCount === 1 ? '' : 's'} com possível correspondência
-                por nome ou final do cartão. A associação ainda não está salva.
+                {center.reconciledPurchaseCount === 1 ? '' : 's'} com possível correspondência por
+                nome ou final do cartão. A associação ainda não está salva.
               </p>
               <Link to="/transactions" className="font-bold underline-offset-2 hover:underline">
                 Conferir
@@ -457,12 +458,15 @@ function CreditCardsCenterContent() {
                 <p className="text-xs font-black text-[--text-primary]">Compras a conciliar</p>
                 <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
                   {unlinkedPurchases.length} compra(s) sem vínculo salvo,{' '}
-                  {formatCurrency(unlinkedTotal)} no histórico. Escolha o cartão de cada compra
-                  e confira a fatura antes de confirmar.
+                  {formatCurrency(unlinkedTotal)} no histórico. Escolha o cartão de cada compra e
+                  confira a fatura antes de confirmar.
                 </p>
               </div>
-              <button type="button" onClick={() => setReconciliationOpen(true)}
-                className="min-h-11 rounded-xl bg-[--brand-600] px-4 text-xs font-bold text-white">
+              <button
+                type="button"
+                onClick={() => setReconciliationOpen(true)}
+                className="min-h-11 rounded-xl bg-[--brand-600] px-4 text-xs font-bold text-white"
+              >
                 Conciliar compras
               </button>
             </div>
@@ -608,11 +612,14 @@ function CreditCardsCenterContent() {
       )}
 
       {reconciliationOpen && (
-        <React.Suspense fallback={<p role="status" className="text-xs">Abrindo conciliação…</p>}>
-          <CardReconciliationModal
-            isOpen
-            onClose={() => setReconciliationOpen(false)}
-          />
+        <React.Suspense
+          fallback={
+            <p role="status" className="text-xs">
+              Abrindo conciliação…
+            </p>
+          }
+        >
+          <CardReconciliationModal isOpen onClose={() => setReconciliationOpen(false)} />
         </React.Suspense>
       )}
 

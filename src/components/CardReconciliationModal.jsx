@@ -31,8 +31,11 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
     const query = filter.trim().toLocaleLowerCase('pt-BR')
     return query
       ? pending.filter((item) =>
-          [item.description, item.categoryName, item.date, item.amount]
-            .some((value) => String(value || '').toLocaleLowerCase('pt-BR').includes(query)),
+          [item.description, item.categoryName, item.date, item.amount].some((value) =>
+            String(value || '')
+              .toLocaleLowerCase('pt-BR')
+              .includes(query),
+          ),
         )
       : pending
   }, [filter, pending])
@@ -105,11 +108,16 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={saving ? () => {} : onClose} title="Conciliar compras antigas" size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={saving ? () => {} : onClose}
+      title="Conciliar compras antigas"
+      size="lg"
+    >
       <div className="space-y-5">
         <p className="text-xs leading-relaxed text-[--text-secondary]">
-          Escolha a compra e o cartão correto. A associação não cria outra despesa, não muda
-          o valor ou a data contábil e pode ser desfeita. Nada é salvo antes da sua confirmação.
+          Escolha a compra e o cartão correto. A associação não cria outra despesa, não muda o valor
+          ou a data contábil e pode ser desfeita. Nada é salvo antes da sua confirmação.
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -117,7 +125,8 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
             {pending.length} compra{pending.length === 1 ? '' : 's'} para revisar
           </span>
           <span className="rounded-full bg-[--success-bg] px-3 py-1.5 text-xs font-bold text-[--success-text]">
-            {reviewed.length} vínculo{reviewed.length === 1 ? '' : 's'} reversível{reviewed.length === 1 ? '' : 'eis'}
+            {reviewed.length} vínculo{reviewed.length === 1 ? '' : 's'} reversível
+            {reviewed.length === 1 ? '' : 'eis'}
           </span>
         </div>
 
@@ -134,7 +143,11 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
               />
             </label>
 
-            <div role="group" aria-label="Compras antigas sem cartão" className="max-h-48 space-y-2 overflow-y-auto">
+            <div
+              role="group"
+              aria-label="Compras antigas sem cartão"
+              className="max-h-48 space-y-2 overflow-y-auto"
+            >
               {visible.slice(0, 30).map((item) => (
                 <button
                   key={item.id}
@@ -148,10 +161,14 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
                   }`}
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-bold text-[--text-primary]">{item.description || 'Despesa no crédito'}</span>
+                    <span className="block truncate font-bold text-[--text-primary]">
+                      {item.description || 'Despesa no crédito'}
+                    </span>
                     <span className="mt-1 block text-[--text-tertiary]">
                       {formatDate(item.date)} · {item.categoryName || 'Sem categoria'}
-                      {item.isInstallment ? ` · parcela ${item.installmentNum || '?'} / ${item.installmentOf || '?'}` : ''}
+                      {item.isInstallment
+                        ? ` · parcela ${item.installmentNum || '?'} / ${item.installmentOf || '?'}`
+                        : ''}
                     </span>
                   </span>
                   <span className="flex-shrink-0 font-black tabular-nums text-[--text-primary]">
@@ -159,13 +176,27 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
                   </span>
                 </button>
               ))}
-              {!visible.length && <p className="py-4 text-center text-xs text-[--text-tertiary]">Nenhuma compra encontrada.</p>}
-              {visible.length > 30 && <p className="text-xs text-[--text-tertiary]">Mostrando 30 de {visible.length} compras. Utilize a busca para localizar outras.</p>}
+              {!visible.length && (
+                <p className="py-4 text-center text-xs text-[--text-tertiary]">
+                  Nenhuma compra encontrada.
+                </p>
+              )}
+              {visible.length > 30 && (
+                <p className="text-xs text-[--text-tertiary]">
+                  Mostrando 30 de {visible.length} compras. Utilize a busca para localizar outras.
+                </p>
+              )}
             </div>
 
             {transaction && (
-              <section className="space-y-3 rounded-2xl border border-[--border-default] bg-[--bg-subtle] p-4" aria-label="Prévia da conciliação">
-                <label htmlFor="legacy-card-selection" className="block text-xs font-bold text-[--text-secondary]">
+              <section
+                className="space-y-3 rounded-2xl border border-[--border-default] bg-[--bg-subtle] p-4"
+                aria-label="Prévia da conciliação"
+              >
+                <label
+                  htmlFor="legacy-card-selection"
+                  className="block text-xs font-bold text-[--text-secondary]"
+                >
                   Cartão ao qual esta compra pertence
                 </label>
                 <select
@@ -175,20 +206,43 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
                   className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm font-semibold text-[--text-primary]"
                 >
                   <option value="">Escolha um cartão</option>
-                  {creditCards.filter((item) => item.id).map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} {item.last4 ? `· final ${item.last4}` : ''}
-                    </option>
-                  ))}
+                  {creditCards
+                    .filter((item) => item.id)
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} {item.last4 ? `· final ${item.last4}` : ''}
+                      </option>
+                    ))}
                 </select>
-                {!creditCards.length && <p className="text-xs text-[--warning-text]">Cadastre o cartão em Meus cartões antes de conciliar.</p>}
+                {!creditCards.length && (
+                  <p className="text-xs text-[--warning-text]">
+                    Cadastre o cartão em Meus cartões antes de conciliar.
+                  </p>
+                )}
 
                 {preview && (
                   <div className="space-y-2 rounded-xl border border-[--brand-200] bg-[--bg-surface] p-3 text-xs">
-                    <p className="font-black text-[--text-primary]">Prévia sem alteração dos valores</p>
-                    <div className="flex justify-between gap-3 text-[--text-secondary]"><span>Compra registrada</span><strong className="text-[--text-primary]">{formatCurrency(transaction.amount)}</strong></div>
-                    <div className="flex justify-between gap-3 text-[--text-secondary]"><span>Data preservada</span><strong className="text-[--text-primary]">{formatDate(transaction.date)}</strong></div>
-                    <div className="flex justify-between gap-3 text-[--text-secondary]"><span>Fatura de destino</span><strong className="text-[--text-primary]">{labelForMonth(preview.invoiceMonth)}</strong></div>
+                    <p className="font-black text-[--text-primary]">
+                      Prévia sem alteração dos valores
+                    </p>
+                    <div className="flex justify-between gap-3 text-[--text-secondary]">
+                      <span>Compra registrada</span>
+                      <strong className="text-[--text-primary]">
+                        {formatCurrency(transaction.amount)}
+                      </strong>
+                    </div>
+                    <div className="flex justify-between gap-3 text-[--text-secondary]">
+                      <span>Data preservada</span>
+                      <strong className="text-[--text-primary]">
+                        {formatDate(transaction.date)}
+                      </strong>
+                    </div>
+                    <div className="flex justify-between gap-3 text-[--text-secondary]">
+                      <span>Fatura de destino</span>
+                      <strong className="text-[--text-primary]">
+                        {labelForMonth(preview.invoiceMonth)}
+                      </strong>
+                    </div>
                     <p className="leading-relaxed text-[--text-tertiary]">
                       {transaction.purchaseDate || transaction.originalPurchaseDate
                         ? 'Competência calculada a partir da data original da compra e do ciclo cadastrado.'
@@ -197,10 +251,20 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
                   </div>
                 )}
                 {previewError && <p className="text-xs text-[--danger-text]">{previewError}</p>}
-                <Button type="button" loading={saving} disabled={!preview} onClick={confirmLink} fullWidth>
+                <Button
+                  type="button"
+                  loading={saving}
+                  disabled={!preview}
+                  onClick={confirmLink}
+                  fullWidth
+                >
                   {confirmed ? 'Confirmar vínculo desta compra' : 'Revisar e vincular'}
                 </Button>
-                {confirmed && <p className="text-xs text-[--warning-text]">Confira o cartão e a competência acima. A segunda confirmação salvará o vínculo.</p>}
+                {confirmed && (
+                  <p className="text-xs text-[--warning-text]">
+                    Confira o cartão e a competência acima. A segunda confirmação salvará o vínculo.
+                  </p>
+                )}
               </section>
             )}
           </>
@@ -212,12 +276,21 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
 
         {reviewed.length > 0 && (
           <section className="space-y-2" aria-label="Conciliações reversíveis">
-            <h4 className="text-xs font-black text-[--text-primary]">Vínculos realizados nesta etapa</h4>
+            <h4 className="text-xs font-black text-[--text-primary]">
+              Vínculos realizados nesta etapa
+            </h4>
             {reviewed.slice(0, 10).map((item) => (
-              <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[--border-subtle] p-3">
+              <div
+                key={item.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[--border-subtle] p-3"
+              >
                 <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-[--text-primary]">{item.description || 'Compra no crédito'}</p>
-                  <p className="text-[10px] text-[--text-tertiary]">{item.cardName} · {formatCurrency(item.amount)}</p>
+                  <p className="truncate text-xs font-semibold text-[--text-primary]">
+                    {item.description || 'Compra no crédito'}
+                  </p>
+                  <p className="text-[10px] text-[--text-tertiary]">
+                    {item.cardName} · {formatCurrency(item.amount)}
+                  </p>
                 </div>
                 <Button
                   type="button"
@@ -233,7 +306,11 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
           </section>
         )}
 
-        {error && <p role="alert" className="rounded-xl bg-[--danger-bg] p-3 text-xs text-[--danger-text]">{error}</p>}
+        {error && (
+          <p role="alert" className="rounded-xl bg-[--danger-bg] p-3 text-xs text-[--danger-text]">
+            {error}
+          </p>
+        )}
       </div>
     </Modal>
   )
