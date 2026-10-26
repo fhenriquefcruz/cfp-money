@@ -42,6 +42,11 @@ export function resumeReceiptCleanup(uid) {
   if (!uid) return
   return (
     inFlight.get(uid) ||
-    inFlight.set(uid, recover(uid).finally(() => inFlight.delete(uid))).get(uid)
+    inFlight
+      .set(
+        uid,
+        recover(uid).finally(() => inFlight.delete(uid)),
+      )
+      .get(uid)
   )
 }
