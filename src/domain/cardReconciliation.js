@@ -1,6 +1,6 @@
 import { calculateInvoiceSchedule } from './creditCards'
 
-const MONTH = /^\\d{4}-(0[1-9]|1[0-2])$/
+const MONTH = /^[0-9]{4}-(0[1-9]|1[0-2])$/
 
 export function isUnlinkedCreditPurchase(transaction = {}) {
   return (
