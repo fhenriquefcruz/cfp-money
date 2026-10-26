@@ -456,6 +456,13 @@ function transactionsReducer(state, action) {
             : transaction,
         ),
       }
+    case 'E2E_REPLACE_TRANSACTION':
+      return {
+        ...state,
+        transactions: state.transactions.map((transaction) =>
+          transaction.id === action.payload.id ? action.payload : transaction,
+        ),
+      }
     case 'E2E_REMOVE_TRANSACTION':
       return {
         ...state,
@@ -833,6 +840,78 @@ export const TransactionsProvider = ({ children }) => {
     [user?.uid, showNotification],
   )
 
+  const reconcileLegacyCard = useCallback(
+    async (txId, card, expectedMonth) => {
+      if (!user?.uid || !card?.id || !expectedMonth) {
+        throw new Error('Confira a compra, o cartão e a competência.')
+      }
+
+      try {
+        if (E2E_MODE) {
+          const transaction = stateRef.current.transactions.find((item) => item.id === txId)
+          const { previewCardReconciliation } = await import('../domain/cardReconciliation')
+          const changes = previewCardReconciliation(transaction, card)
+          if (changes.invoiceMonth !== expectedMonth) {
+            throw new Error('A competência mudou. Confira novamente.')
+          }
+          const previous = {}
+          const absent = []
+          Object.keys(changes).forEach((key) => {
+            if (Object.hasOwn(transaction, key)) previous[key] = transaction[key]
+            else absent.push(key)
+          })
+          dispatch({
+            type: 'E2E_UPDATE_TRANSACTION',
+            payload: {
+              id: txId,
+              data: {
+                ...changes,
+                cardReconciliation: { version: 1, cardId: card.id, previous, absent, applied: changes },
+              },
+            },
+          })
+        } else {
+          const { confirmCardReconciliation } = await import('../services/cardReconciliation')
+          await confirmCardReconciliation(user.uid, txId, card.id, expectedMonth)
+        }
+        showNotification('Compra vinculada ao cartão com sucesso.')
+      } catch (error) {
+        showNotification(error.message || 'Não foi possível vincular a compra.', 'error')
+        throw error
+      }
+    },
+    [showNotification, user?.uid],
+  )
+
+  const undoLegacyCard = useCallback(
+    async (txId) => {
+      if (!user?.uid) throw new Error('Usuário não autenticado.')
+      try {
+        if (E2E_MODE) {
+          const transaction = stateRef.current.transactions.find((item) => item.id === txId)
+          const metadata = transaction?.cardReconciliation
+          if (!metadata || Object.keys(metadata.applied || {}).some(
+            (key) => transaction[key] !== metadata.applied[key],
+          )) {
+            throw new Error('Esta conciliação não pode ser desfeita.')
+          }
+          const restored = { ...transaction, ...metadata.previous }
+          metadata.absent.forEach((key) => delete restored[key])
+          delete restored.cardReconciliation
+          dispatch({ type: 'E2E_REPLACE_TRANSACTION', payload: restored })
+        } else {
+          const { undoCardReconciliation } = await import('../services/cardReconciliation')
+          await undoCardReconciliation(user.uid, txId)
+        }
+        showNotification('Vínculo desfeito; compra original preservada.', 'info')
+      } catch (error) {
+        showNotification(error.message || 'Não foi possível desfazer o vínculo.', 'error')
+        throw error
+      }
+    },
+    [showNotification, user?.uid],
+  )
+
   // ── CÁLCULOS DERIVADOS ──
   const getMonthTransactions = useCallback(
     (year, month) => transactionsForMonth(stateRef.current.transactions, year, month),
@@ -908,6 +987,8 @@ export const TransactionsProvider = ({ children }) => {
         loading: state.loading.transactions,
         createTransaction,
         editTransaction,
+        reconcileLegacyCard,
+        undoLegacyCard,
         setTransactionPaymentStatus,
         commitPaymentStatusOperation,
         removeTransaction,
