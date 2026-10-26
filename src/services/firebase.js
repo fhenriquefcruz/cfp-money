@@ -159,6 +159,7 @@ export const updateMoneySettings = async (uid, settings) =>
 // ══════════════════════════════════════════════════════════════
 const userCol = (uid, sub) => collection(db, 'users', uid, sub)
 const userDoc = (uid, sub, id) => doc(db, 'users', uid, sub, id)
+const documentData = (snapshot) => ({ ...snapshot.data(), id: snapshot.id })
 
 // A fila é gravada no MESMO commit que apaga os lançamentos financeiros.
 // Se o navegador fechar, os fragmentos continuam recuperáveis no próximo login.
@@ -169,12 +170,12 @@ const queueReceiptCleanup = (batch, uid, ids) => {
 // ── TRANSACTIONS ──
 export const getTransactions = async (uid) => {
   const snap = await getDocs(query(userCol(uid, 'transactions'), orderBy('date', 'desc')))
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+  return snap.docs.map(documentData)
 }
 
 export const onTransactionsChange = (uid, callback) => {
   const q = query(userCol(uid, 'transactions'), orderBy('date', 'desc'))
-  return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+  return onSnapshot(q, (snap) => callback(snap.docs.map(documentData)))
 }
 
 export const addTransaction = async (uid, data) => {
@@ -225,14 +226,7 @@ export const deleteTransaction = (uid, id) => deleteTransactionBatch(uid, [id])
 export const onInvoiceEventsChange = (uid, callback) => {
   const q = query(userCol(uid, 'invoiceEvents'), orderBy('eventDate', 'desc'))
 
-  return onSnapshot(q, (snapshot) =>
-    callback(
-      snapshot.docs.map((item) => ({
-        id: item.id,
-        ...item.data(),
-      })),
-    ),
-  )
+  return onSnapshot(q, (snapshot) => callback(snapshot.docs.map(documentData)))
 }
 
 export const addInvoiceEvent = async (uid, data) => {
@@ -246,10 +240,7 @@ export const addInvoiceEvent = async (uid, data) => {
 
 // ── CREDIT CARDS ──
 export const getCreditCards = async (uid) =>
-  (await getDocs(userCol(uid, 'creditCards'))).docs.map((item) => ({
-    ...item.data(),
-    id: item.id,
-  }))
+  (await getDocs(userCol(uid, 'creditCards'))).docs.map(documentData)
 
 export const addCreditCard = async (uid, data) => {
   const ref = await addDoc(userCol(uid, 'creditCards'), {
@@ -336,8 +327,8 @@ export const getCategories = async (uid) => {
     getDocs(query(collection(db, 'categories'), where('ownerUid', '==', uid))),
   ])
   return [
-    ...defSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
-    ...cusSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+    ...defSnap.docs.map(documentData),
+    ...cusSnap.docs.map(documentData),
   ]
 }
 
@@ -355,7 +346,7 @@ export const deleteCategory = async (_uid, id) => deleteDoc(doc(db, 'categories'
 // ── GOALS ──
 export const getGoals = async (uid) => {
   const snap = await getDocs(userCol(uid, 'goals'))
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+  return snap.docs.map(documentData)
 }
 
 export const addGoal = async (uid, data) =>
@@ -372,7 +363,7 @@ export const deleteGoal = async (uid, id) => deleteDoc(userDoc(uid, 'goals', id)
 // ── BUDGETS ──
 export const getBudgets = async (uid) => {
   const snap = await getDocs(userCol(uid, 'budgets'))
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+  return snap.docs.map(documentData)
 }
 
 export const setBudget = async (uid, categoryId, amount, monthKey) => {
