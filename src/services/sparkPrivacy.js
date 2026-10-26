@@ -40,10 +40,12 @@ function serialize(value) {
   return value
 }
 
-const exportDocument = (item) => ({ ...serialize(item.data()), id: item.id })
-
 async function readCollection(uid, name) {
-  return (await getDocs(collection(db, 'users', uid, name))).docs.map(exportDocument)
+  const snapshot = await getDocs(collection(db, 'users', uid, name))
+  return snapshot.docs.map((item) => ({
+    id: item.id,
+    ...serialize(item.data()),
+  }))
 }
 
 export async function getSparkPrivacyStatus(uid) {
@@ -107,8 +109,14 @@ export async function exportSparkData(uid) {
     notificationSubscription: subscriptionSnapshot.exists()
       ? serialize(subscriptionSnapshot.data())
       : null,
-    categories: categoriesSnapshot.docs.map(exportDocument),
-    supportRequests: supportRequestsSnapshot.docs.map(exportDocument),
+    categories: categoriesSnapshot.docs.map((item) => ({
+      id: item.id,
+      ...serialize(item.data()),
+    })),
+    supportRequests: supportRequestsSnapshot.docs.map((item) => ({
+      id: item.id,
+      ...serialize(item.data()),
+    })),
     collections: Object.fromEntries(knownCollections.map((name, index) => [name, groups[index]])),
   }
 }
