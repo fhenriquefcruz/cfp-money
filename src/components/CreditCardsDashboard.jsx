@@ -15,11 +15,14 @@ import {
 import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
+import { isUnlinkedCreditPurchase } from '../domain/cardReconciliation'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
 import CreditCardsSettingsCard from './CreditCardsSettingsCard'
 import PremiumGate from './PremiumGate'
+
+const CardReconciliationModal = React.lazy(() => import('./CardReconciliationModal'))
 
 const STATUS = {
   forming: ['Em formação', 'bg-[--brand-100] text-[--brand-700]'],
@@ -211,6 +214,7 @@ function CreditCardsCenterContent() {
   const [selectedCardId, setSelectedCardId] = useState('all')
   const [managingCardId, setManagingCardId] = useState(null)
   const [cardSettingsOpen, setCardSettingsOpen] = useState(false)
+  const [reconciliationOpen, setReconciliationOpen] = useState(false)
 
   const center = useMemo(
     () =>
@@ -223,6 +227,17 @@ function CreditCardsCenterContent() {
       }),
     [transactions, creditCards, invoiceEvents, selectedMonth],
   )
+
+  const unlinkedPurchases = useMemo(
+    () => transactions.filter(isUnlinkedCreditPurchase),
+    [transactions],
+  )
+  const unlinkedTotal =
+    unlinkedPurchases.reduce((sum, item) => sum + Math.round(Number(item.amount || 0) * 100), 0) /
+    100
+  const reversibleCount = transactions.filter(
+    (item) => item.cardReconciliation?.version === 1,
+  ).length
 
   const visibleInvoices =
     selectedCardId === 'all'
@@ -428,30 +443,36 @@ function CreditCardsCenterContent() {
               <p>
                 {center.reconciledPurchaseCount} compra
                 {center.reconciledPurchaseCount === 1 ? '' : 's'} antiga
-                {center.reconciledPurchaseCount === 1 ? '' : 's'} conciliada
-                {center.reconciledPurchaseCount === 1 ? '' : 's'} pelo nome ou final do cartão.
-                Revise o vínculo em Transações.
+                {center.reconciledPurchaseCount === 1 ? '' : 's'} com possível correspondência por
+                nome ou final do cartão. A associação ainda não está salva.
               </p>
-              <Link to="/transactions" className="font-bold underline-offset-2 hover:underline">
+              <button
+                type="button"
+                onClick={() => setReconciliationOpen(true)}
+                className="font-bold underline-offset-2 hover:underline"
+              >
                 Conferir
-              </Link>
+              </button>
             </div>
           )}
 
-          {center.unlinkedPurchaseCount > 0 && (
+          {(unlinkedPurchases.length > 0 || reversibleCount > 0) && (
             <div className="flex flex-col gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-xs font-black text-[--text-primary]">Compras sem cartão</p>
+                <p className="text-xs font-black text-[--text-primary]">Compras a conciliar</p>
                 <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
-                  Total sem vínculo: {center.unlinkedPurchaseCount} compra(s),{' '}
-                  {formatCurrency(center.unlinkedPurchaseTotal)} em todos os meses. Neste mês:{' '}
-                  {center.legacyCount} compra(s), {formatCurrency(center.legacyTotal)} fora das
-                  faturas.
+                  {unlinkedPurchases.length} compra(s) sem vínculo salvo,{' '}
+                  {formatCurrency(unlinkedTotal)} no histórico. Escolha o cartão de cada compra e
+                  confira a fatura antes de confirmar.
                 </p>
               </div>
-              <Link to="/transactions" className="text-xs font-bold text-[--text-brand]">
-                Revisar
-              </Link>
+              <button
+                type="button"
+                onClick={() => setReconciliationOpen(true)}
+                className="min-h-11 rounded-xl bg-[--brand-600] px-4 text-xs font-bold text-white"
+              >
+                Conciliar compras
+              </button>
             </div>
           )}
 
@@ -592,6 +613,18 @@ function CreditCardsCenterContent() {
             </Card>
           </div>
         </>
+      )}
+
+      {reconciliationOpen && (
+        <React.Suspense
+          fallback={
+            <p role="status" className="text-xs">
+              Abrindo conciliação…
+            </p>
+          }
+        >
+          <CardReconciliationModal isOpen onClose={() => setReconciliationOpen(false)} />
+        </React.Suspense>
       )}
 
       <InvoiceLifecycleModal
