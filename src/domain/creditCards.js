@@ -49,7 +49,7 @@ function toMonthKey(value) {
 
 export function normalizeCreditCard(card = {}) {
   return {
-    id: card.id || null,
+    ...(card.id ? { id: card.id } : {}),
     name: String(card.name || '').trim(),
     last4: String(card.last4 || '')
       .replace(/\D/g, '')
