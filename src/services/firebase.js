@@ -241,7 +241,7 @@ export const addInvoiceEvent = async (uid, data) => {
 // ── CREDIT CARDS ──
 export const getCreditCards = async (uid) => {
   const snap = await getDocs(userCol(uid, 'creditCards'))
-  return snap.docs.map((item) => ({ id: item.id, ...item.data() }))
+  return snap.docs.map((item) => ({ ...item.data(), id: item.id }))
 }
 
 export const addCreditCard = async (uid, data) => {
