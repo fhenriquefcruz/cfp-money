@@ -101,7 +101,7 @@ test('preserva atributos legados presentes antes da associação ao desfazer', a
 
 test('recusa reatribuição duplicada e não emite escrita', async () => {
   await confirmCardReconciliation('user-1', 'legacy', 'real-id')
-  await expect(confirmCardReconciliation('user-1', 'legacy', 'real-id')).rejects.toThrow('elegível')
+  await expect(confirmCardReconciliation('user-1', 'legacy', 'real-id')).rejects.toThrow('anterior')
   expect(state.writes).toHaveLength(1)
 })
 
