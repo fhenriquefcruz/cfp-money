@@ -43,8 +43,8 @@ function serialize(value) {
 async function readCollection(uid, name) {
   const snapshot = await getDocs(collection(db, 'users', uid, name))
   return snapshot.docs.map((item) => ({
-    id: item.id,
     ...serialize(item.data()),
+    id: item.id,
   }))
 }
 
