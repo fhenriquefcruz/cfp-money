@@ -326,10 +326,7 @@ export const getCategories = async (uid) => {
     getDocs(query(collection(db, 'categories'), where('isDefault', '==', true))),
     getDocs(query(collection(db, 'categories'), where('ownerUid', '==', uid))),
   ])
-  return [
-    ...defSnap.docs.map(documentData),
-    ...cusSnap.docs.map(documentData),
-  ]
+  return [...defSnap.docs.map(documentData), ...cusSnap.docs.map(documentData)]
 }
 
 export const addCategory = async (uid, data) =>
