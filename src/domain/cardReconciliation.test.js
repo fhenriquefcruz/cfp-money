@@ -42,10 +42,12 @@ test('preserva o mês contábil de registros sem data original de compra', () =>
 })
 
 test('respeita vencimento previamente registrado antes de recalcular a competência', () => {
-  expect(previewCardReconciliation({ ...legacy, dueDate: '2026-09-12' }, card).invoiceMonth)
-    .toBe('2026-09')
-  expect(previewCardReconciliation({ ...legacy, invoiceMonth: '2026-10' }, card).invoiceMonth)
-    .toBe('2026-10')
+  expect(previewCardReconciliation({ ...legacy, dueDate: '2026-09-12' }, card).invoiceMonth).toBe(
+    '2026-09',
+  )
+  expect(previewCardReconciliation({ ...legacy, invoiceMonth: '2026-10' }, card).invoiceMonth).toBe(
+    '2026-10',
+  )
 })
 
 test('calcula a competência pelo ciclo somente quando a data de compra é explícita', () => {

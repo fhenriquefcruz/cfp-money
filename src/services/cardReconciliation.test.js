@@ -41,10 +41,7 @@ import { confirmCardReconciliation, undoCardReconciliation } from './cardReconci
 
 beforeEach(() => {
   state.cards = new Map([
-    [
-      'real-id',
-      { id: null, name: 'Cartão legado', last4: '4321', closingDay: 8, dueDay: 15 },
-    ],
+    ['real-id', { id: null, name: 'Cartão legado', last4: '4321', closingDay: 8, dueDay: 15 }],
   ])
   state.transactions = new Map([
     [
@@ -109,7 +106,9 @@ test('recusa reatribuição duplicada e não emite escrita', async () => {
 })
 
 test('rejeita cartão inexistente sem alterar a transação', async () => {
-  await expect(confirmCardReconciliation('user-1', 'legacy', 'unknown')).rejects.toThrow('encontrado')
+  await expect(confirmCardReconciliation('user-1', 'legacy', 'unknown')).rejects.toThrow(
+    'encontrado',
+  )
   expect(state.transactions.get('legacy').cardId).toBeUndefined()
   expect(state.writes).toHaveLength(0)
 })
