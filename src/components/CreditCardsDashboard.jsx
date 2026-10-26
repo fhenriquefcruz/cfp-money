@@ -446,9 +446,10 @@ function CreditCardsCenterContent() {
                 {center.reconciledPurchaseCount === 1 ? '' : 's'} com possível correspondência por
                 nome ou final do cartão. A associação ainda não está salva.
               </p>
-              <Link to="/transactions" className="font-bold underline-offset-2 hover:underline">
+              <button type="button" onClick={() => setReconciliationOpen(true)}
+                className="font-bold underline-offset-2 hover:underline">
                 Conferir
-              </Link>
+              </button>
             </div>
           )}
 
