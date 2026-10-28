@@ -15,7 +15,6 @@ import {
 import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
-import { isUnlinkedCreditPurchase } from '../domain/cardReconciliation'
 import { summarizeCardLinks } from '../domain/cardLinkageSummary'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
@@ -229,16 +228,11 @@ function CreditCardsCenterContent() {
     [transactions, creditCards, invoiceEvents, selectedMonth],
   )
 
-  const [unlinkedPurchases, linkageAudit] = useMemo(
-    () => [
-      transactions.filter(isUnlinkedCreditPurchase),
-      summarizeCardLinks({ transactions, creditCards }),
-    ],
+  const linkageAudit = useMemo(
+    () => summarizeCardLinks({ transactions, creditCards }),
     [transactions, creditCards],
   )
-  const unlinkedTotal =
-    unlinkedPurchases.reduce((sum, item) => sum + Math.round(Number(item.amount || 0) * 100), 0) /
-    100
+  const { unlinkedPurchases, unlinkedTotal } = linkageAudit
   const hasReversible = transactions.some((item) => item.cardReconciliation?.version === 1)
 
   const visibleInvoices =
