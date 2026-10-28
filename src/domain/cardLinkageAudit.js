@@ -1,7 +1,4 @@
 // Diagnóstico local somente de leitura: não altera transações ou cartões.
-const toCents = (items) =>
-  items.reduce((total, item) => total + Math.round(Number(item.amount || 0) * 100), 0)
-
 const isCreditExpense = (transaction) =>
   transaction.type === 'expense' &&
   !transaction.isSavings &&
@@ -25,7 +22,6 @@ export function auditCardLinkage({ transactions = [], creditCards = [] } = {}) {
     savedLinkCount: creditPurchases.length - unlinked.length,
     historicalLinkCount: historical.length,
     unlinkedCount: unlinked.length,
-    unlinkedAmount: toCents(unlinked) / 100,
     paymentMethodReviewCount: reviewPaymentMethod.length,
   }
 }
