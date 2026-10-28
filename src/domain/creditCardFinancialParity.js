@@ -28,6 +28,16 @@ export function auditCreditCardFinancialParity({
   const findings = []
   const add = (code, severity, details = {}) => findings.push({ code, severity, ...details })
   const month = center.selectedMonth
+  const cardIds = new Set()
+  for (const card of creditCards) {
+    if (!card?.id) {
+      add('missing_card_registration_id', 'critical')
+    } else if (cardIds.has(card.id)) {
+      add('duplicate_card_registration_id', 'critical', { cardId: card.id })
+    } else {
+      cardIds.add(card.id)
+    }
+  }
   const seen = new Set()
   let sourcePurchaseCents = 0
 
