@@ -61,13 +61,6 @@ export function normalizeCreditCard(card = {}) {
   }
 }
 
-// IDs são identificadores do documento Firestore, nunca campos financeiros persistidos.
-export function creditCardFieldsForStorage(card = {}) {
-  const fields = { ...card }
-  delete fields.id
-  return fields
-}
-
 export function calculateInvoiceSchedule(purchaseDate, rawCard) {
   const purchase = asLocalDate(purchaseDate)
   const card = normalizeCreditCard(rawCard)
