@@ -1,4 +1,5 @@
 import { isUnlinkedCreditPurchase } from './cardReconciliation'
+import { isCreditExpense } from './cardLinkageSummary'
 
 // Leitura pura: grupos exclusivos por cartão, sem inferência e sem escrita.
 export function auditCreditCardIntegrity({ transactions = [], creditCards = [] } = {}) {
@@ -11,12 +12,7 @@ export function auditCreditCardIntegrity({ transactions = [], creditCards = [] }
   let reversibleCount = 0
 
   for (const tx of transactions) {
-    if (
-      tx?.type !== 'expense' ||
-      tx.isSavings ||
-      tx.paymentStatus === 'cancelled' ||
-      !(tx.paymentMethod === 'credit_card' || tx.isCreditPurchase === true || tx.cardId)
-    ) continue
+    if (!isCreditExpense(tx)) continue
 
     const group = !tx.cardId ? 1 : ids.has(tx.cardId) ? 0 : 2
     const amount = Number(tx.amount ?? 0)
