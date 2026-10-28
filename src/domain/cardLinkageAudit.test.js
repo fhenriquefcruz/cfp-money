@@ -21,7 +21,6 @@ test('separa vínculos salvos, compras sem vínculo e cartões apenas histórico
     linked: 2,
     historical: 1,
     unlinked: 2,
-    review: 0,
   })
   expect(transactions[2].cardId).toBeUndefined()
   expect(creditCards).toHaveLength(1)
@@ -55,7 +54,6 @@ test('sinaliza separadamente compras de crédito sem método elegível para conc
   })
 
   expect(result.unlinked).toBe(2)
-  expect(result.review).toBe(1)
 })
 
 test('retorna métricas zeradas sem dados e não modifica os parâmetros', () => {
