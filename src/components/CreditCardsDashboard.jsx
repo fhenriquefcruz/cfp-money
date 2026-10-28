@@ -63,7 +63,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
   const cardLimit = Math.max(0, Number(card.limit) || 0)
   const committed = lifecycle.remainingAmount + invoice.futureCommitmentTotal
   const limitUsage = cardLimit ? Math.round((committed / cardLimit) * 100) : 0
-  const limitExceeded = cardLimit > 0 && committed > cardLimit
+  const limitExceeded = committed > cardLimit
 
   return (
     <button
@@ -636,7 +636,7 @@ export default function CreditCardsDashboard() {
   return (
     <PremiumGate
       feature="Cartões e faturas"
-      description="Compras, parcelas e vencimentos reunidos."
+      description="Faturas, parcelas e prazos."
       benefits={['Faturas', 'Pagamentos', 'Parcelas', 'Histórico']}
     >
       <CreditCardsCenterContent />
