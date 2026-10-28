@@ -234,7 +234,8 @@ function CreditCardsContent() {
                 Como o Meu Real utilizará esses dados?
               </p>
               <p className="mt-1 text-[11px] leading-relaxed text-[--text-tertiary]">
-                A compra mantém sua data original; a fatura segue o vencimento. O histórico não muda.
+                A compra mantém sua data original; a fatura segue o vencimento. O histórico não
+                muda.
               </p>
             </div>
           </div>
