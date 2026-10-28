@@ -51,9 +51,7 @@ test('exporta IDs reais dos documentos, nunca nulos nem obsoletos', async () => 
   const result = await exportSparkData('owner')
 
   expect(result.mode).toBe('spark')
-  expect(result.collections.creditCards).toEqual([
-    { id: 'card-canonical', name: 'Cartão antigo' },
-  ])
+  expect(result.collections.creditCards).toEqual([{ id: 'card-canonical', name: 'Cartão antigo' }])
   expect(result.collections.transactions).toEqual([
     {
       id: 'transaction-canonical',
