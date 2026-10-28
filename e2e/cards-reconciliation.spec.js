@@ -11,7 +11,7 @@ test('concilia compra antiga após duas confirmações e desfaz sem duplicar fat
   await page.getByRole('button', { name: 'Mês atual' }).click()
   await expect(summary).toContainText('0,00')
 
-  const diagnostic = page.locator('section[aria-label="Diagnóstico de integridade dos cartões"]')
+  const diagnostic = page.locator('p[aria-label="Diagnóstico de integridade dos cartões"]')
   await expect(diagnostic).toContainText('2 salvos')
   await expect(diagnostic).toContainText('1 sem cartão')
 
