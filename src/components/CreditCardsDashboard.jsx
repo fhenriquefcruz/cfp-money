@@ -58,16 +58,6 @@ function SummaryCard({ icon: Icon, label, value, helper }) {
   )
 }
 
-function LinkageMetric({ label, value, helper }) {
-  return (
-    <div className="rounded-xl bg-[--bg-subtle] p-3">
-      <p className="font-semibold text-[--text-secondary]">{label}</p>
-      <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">{value}</p>
-      <p className="text-[10px] text-[--text-tertiary]">{helper}</p>
-    </div>
-  )
-}
-
 function InvoiceCard({ invoice, selected, onSelect }) {
   const [statusLabel, statusClass] = STATUS[invoice.status] || STATUS.empty
   const { card, dates, lifecycle } = invoice
@@ -461,22 +451,16 @@ function CreditCardsCenterContent() {
               Diagnóstico dos vínculos · {linkageAudit.savedLinkCount} salvos ·{' '}
               {linkageAudit.unlinkedCount} sem cartão
             </summary>
-            <div className="mt-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
-              <LinkageMetric
-                label="Compras com vínculo salvo"
-                value={linkageAudit.savedLinkCount}
-                helper={`${linkageAudit.registeredLinkCount} em cartões cadastrados`}
-              />
-              <LinkageMetric
-                label="Compras sem cartão vinculado"
-                value={linkageAudit.unlinkedCount}
-                helper={`${formatCurrency(linkageAudit.unlinkedAmount)} no histórico`}
-              />
-              <LinkageMetric
-                label="Compras de cartões históricos"
-                value={linkageAudit.historicalLinkCount}
-                helper="Não são reassociadas automaticamente"
-              />
+            <div className="mt-3 grid gap-2 text-xs sm:grid-cols-3">
+              <p className="rounded-xl bg-[--bg-subtle] p-3">
+                <strong>{linkageAudit.registeredLinkCount}</strong> compras em cartões cadastrados
+              </p>
+              <p className="rounded-xl bg-[--bg-subtle] p-3">
+                <strong>{formatCurrency(linkageAudit.unlinkedAmount)}</strong> sem vínculo salvo
+              </p>
+              <p className="rounded-xl bg-[--bg-subtle] p-3">
+                <strong>{linkageAudit.historicalLinkCount}</strong> compras de cartões históricos
+              </p>
             </div>
             {linkageAudit.paymentMethodReviewCount > 0 && (
               <p className="mt-3 text-xs leading-relaxed text-[--warning-text]">
@@ -484,8 +468,8 @@ function CreditCardsCenterContent() {
                 outro meio de pagamento registrado. Confira em Transações antes de conciliar.
               </p>
             )}
-            <p className="mt-3 text-[11px] leading-relaxed text-[--text-tertiary]">
-              Diagnóstico somente de leitura. Valores e lançamentos não são modificados.
+            <p className="mt-3 text-[11px] text-[--text-tertiary]">
+              Somente leitura. Cartões históricos não são reassociados.
             </p>
           </details>
 
