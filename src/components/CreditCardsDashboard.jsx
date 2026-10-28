@@ -232,8 +232,7 @@ function CreditCardsCenterContent() {
     [transactions, creditCards],
   )
   const { unlinkedPurchases, unlinkedTotal } = linkageAudit
-  const diagnosticText =
-    `${linkageAudit.saved} vínculos (${linkageAudit.historical} históricos) · ${linkageAudit.unlinked} sem cartão`
+  const diagnosticText = `${linkageAudit.saved} vínculos (${linkageAudit.historical} históricos) · ${linkageAudit.unlinked} sem cartão`
   const hasReversible = transactions.some((item) => item.cardReconciliation?.version === 1)
 
   const visibleInvoices =
@@ -568,9 +567,7 @@ function CreditCardsCenterContent() {
                       Lançamentos da fatura
                     </h2>
                     <p className="mt-1 text-[10px] text-[--text-tertiary]">
-                      {selectedCardId === 'all'
-                        ? 'Todos os cartões'
-                        : selectedInvoice?.card.name}
+                      {selectedCardId === 'all' ? 'Todos os cartões' : selectedInvoice?.card.name}
                     </p>
                   </div>
 
