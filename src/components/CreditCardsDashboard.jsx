@@ -447,8 +447,8 @@ function CreditCardsCenterContent() {
             aria-label="Diagnóstico de integridade dos cartões"
             className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-3"
           >
-            <p className="text-xs leading-relaxed text-[--text-secondary]">
-              <strong className="text-[--text-primary]">Integridade dos vínculos:</strong>{' '}
+            <p className="text-xs text-[--text-secondary]">
+              <strong className="text-[--text-primary]">Vínculos:</strong>{' '}
               {linkageAudit.linked} salvos · {linkageAudit.unlinked} sem cartão ·{' '}
               {linkageAudit.historical} históricos
             </p>
