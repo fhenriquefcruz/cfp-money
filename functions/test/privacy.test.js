@@ -6,6 +6,7 @@ const {
   buildDeletionSchedule,
   buildPortableExport,
   buildPrivacyStatus,
+  serializeFirestoreDocument,
   serializeFirestoreValue,
   validateDeletionConfirmation,
   validateLegalAcceptance,
@@ -88,4 +89,32 @@ test('monta exportação portátil sem segredos', () => {
   assert.equal(exported.data.transactions[0].amount, 100)
   assert.equal(exported.integration, null)
   assert.equal(exported.relatedData.privacyConsents[0].termsVersion, '1.0.0')
+})
+
+test('exportação backend preserva IDs de documentos mesmo com campos nulos ou desatualizados', () => {
+  const documents = [
+    { id: 'card-firestore-id', data: () => ({ id: null, name: 'Cartão' }) },
+    {
+      id: 'transaction-firestore-id',
+      data: () => ({
+        id: 'stale-transaction-id',
+        cardId: 'card-firestore-id',
+        amount: 125.39,
+      }),
+    },
+    { id: 'invoice-firestore-id', data: () => ({ id: null, type: 'payment' }) },
+  ]
+  const before = documents.map((document) => JSON.stringify(document.data()))
+  const result = documents.map(serializeFirestoreDocument)
+
+  assert.deepEqual(
+    result.map((item) => item.id),
+    ['card-firestore-id', 'transaction-firestore-id', 'invoice-firestore-id'],
+  )
+  assert.equal(result[1].cardId, result[0].id)
+  assert.equal(result[1].amount, 125.39)
+  assert.deepEqual(
+    documents.map((document) => JSON.stringify(document.data())),
+    before,
+  )
 })
