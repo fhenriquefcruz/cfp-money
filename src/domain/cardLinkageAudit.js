@@ -20,20 +20,14 @@ export function auditCardLinkage({ transactions = [], creditCards = [] } = {}) {
     (item) => item.cardId && !registeredIds.has(item.cardId),
   )
   const unlinked = creditPurchases.filter((item) => !item.cardId)
-  const reconcilable = unlinked.filter((item) => item.paymentMethod === 'credit_card')
   const reviewPaymentMethod = unlinked.filter((item) => item.paymentMethod !== 'credit_card')
 
   return {
-    creditPurchaseCount: creditPurchases.length,
     savedLinkCount: linked.length + historical.length,
     registeredLinkCount: linked.length,
     historicalLinkCount: historical.length,
-    historicalAmount: toCents(historical) / 100,
     unlinkedCount: unlinked.length,
     unlinkedAmount: toCents(unlinked) / 100,
-    reconcilableCount: reconcilable.length,
-    reconcilableAmount: toCents(reconcilable) / 100,
     paymentMethodReviewCount: reviewPaymentMethod.length,
-    paymentMethodReviewAmount: toCents(reviewPaymentMethod) / 100,
   }
 }
