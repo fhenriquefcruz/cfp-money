@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { after, before, beforeEach, test } from 'node:test'
 import {
@@ -7,9 +8,11 @@ import {
 } from '@firebase/rules-unit-testing'
 import {
   Timestamp,
+  deleteField,
   deleteDoc,
   doc,
   getDoc,
+  runTransaction,
   serverTimestamp,
   setDoc,
   updateDoc,
@@ -493,4 +496,82 @@ test('protege solicitações de suporte e permite resposta administrativa', asyn
       updatedAt: now,
     }),
   )
+})
+
+test('conciliação de cartão respeita titularidade e restaura dados sem duplicar despesas', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const transaction = doc(alice, 'users', 'alice', 'transactions', 'legacy-card-test')
+  const card = doc(alice, 'users', 'alice', 'creditCards', 'card-test')
+  const original = {
+    type: 'expense',
+    paymentMethod: 'credit_card',
+    amount: 92.41,
+    date: '2026-10-07',
+    installmentNum: 2,
+    installmentOf: 3,
+    categoryId: 'food',
+  }
+
+  await assertSucceeds(setDoc(transaction, original))
+  await assertSucceeds(
+    setDoc(card, { name: 'Cartão de teste', last4: '1234', closingDay: 5, dueDay: 12 }),
+  )
+  const forbidden = doc(bob, 'users', 'alice', 'transactions', 'legacy-card-test')
+  await assertFails(updateDoc(forbidden, { cardId: 'card-test' }))
+
+  await assertSucceeds(
+    runTransaction(alice, async (operation) => {
+      const [purchase, registeredCard] = await Promise.all([
+        operation.get(transaction),
+        operation.get(card),
+      ])
+      assert.equal(purchase.exists(), true)
+      assert.equal(registeredCard.exists(), true)
+      assert.equal(purchase.data().cardId, undefined)
+      const changes = {
+        cardId: registeredCard.id,
+        cardName: registeredCard.data().name,
+        cardLast4: registeredCard.data().last4,
+        cardClosingDay: registeredCard.data().closingDay,
+        cardDueDay: registeredCard.data().dueDay,
+        invoiceMonth: '2026-10',
+        isCreditPurchase: true,
+      }
+      operation.update(transaction, {
+        ...changes,
+        cardReconciliation: {
+          version: 1,
+          cardId: registeredCard.id,
+          previous: {},
+          absent: Object.keys(changes),
+          applied: changes,
+        },
+        updatedAt: serverTimestamp(),
+      })
+    }),
+  )
+
+  const linked = (await getDoc(transaction)).data()
+  assert.equal(linked.cardId, 'card-test')
+  assert.equal(linked.invoiceMonth, '2026-10')
+  for (const key of Object.keys(original)) assert.deepEqual(linked[key], original[key])
+  await assertFails(updateDoc(forbidden, { invoiceMonth: '2026-11' }))
+
+  await assertSucceeds(
+    runTransaction(alice, async (operation) => {
+      const snapshot = await operation.get(transaction)
+      const current = snapshot.data()
+      assert.equal(current.cardReconciliation.cardId, current.cardId)
+      operation.update(transaction, {
+        ...Object.fromEntries(current.cardReconciliation.absent.map((key) => [key, deleteField()])),
+        cardReconciliation: deleteField(),
+        updatedAt: serverTimestamp(),
+      })
+    }),
+  )
+  const restored = (await getDoc(transaction)).data()
+  for (const key of Object.keys(original)) assert.deepEqual(restored[key], original[key])
+  assert.equal(restored.cardId, undefined)
+  assert.equal(restored.cardReconciliation, undefined)
 })
