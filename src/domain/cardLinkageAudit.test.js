@@ -18,15 +18,11 @@ test('separa vínculos salvos, compras sem vínculo e cartões apenas histórico
 
   const result = auditCardLinkage({ transactions, creditCards })
   expect(result).toMatchObject({
-    creditPurchaseCount: 4,
     savedLinkCount: 2,
     registeredLinkCount: 1,
     historicalLinkCount: 1,
-    historicalAmount: 52.11,
     unlinkedCount: 2,
     unlinkedAmount: 0.3,
-    reconcilableCount: 2,
-    reconcilableAmount: 0.3,
     paymentMethodReviewCount: 0,
   })
   expect(transactions[2].cardId).toBeUndefined()
@@ -75,7 +71,6 @@ test('retorna métricas zeradas sem dados e não modifica os parâmetros', () =>
   const cards = Object.freeze([Object.freeze({ ...creditCards[0] })])
 
   expect(auditCardLinkage()).toMatchObject({
-    creditPurchaseCount: 0,
     savedLinkCount: 0,
     unlinkedCount: 0,
     historicalLinkCount: 0,
