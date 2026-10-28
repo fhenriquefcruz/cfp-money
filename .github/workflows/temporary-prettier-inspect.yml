@@ -1,5 +1,8 @@
 name: Temporary Prettier diff inspection
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - feat/phase-65-card-diagnostics-clean
