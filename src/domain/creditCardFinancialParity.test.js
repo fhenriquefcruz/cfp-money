@@ -189,3 +189,13 @@ test('mantém auditoria íntegra com dados ausentes sem inferir compras fictíci
     remainingTotal: 0,
   })
 })
+
+test('detecta cartões sem ID no backup e cadastros com ID duplicado', () => {
+  const result = check({
+    creditCards: [{ name: 'Antigo' }, { id: null, name: 'Outro' }, card, { ...card }],
+    transactions: [],
+  })
+  expect(result.status).toBe('critical')
+  expect(result.findings.filter((item) => item.code === 'missing_card_registration_id')).toHaveLength(2)
+  expect(result.findings.filter((item) => item.code === 'duplicate_card_registration_id')).toHaveLength(1)
+})
