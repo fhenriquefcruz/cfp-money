@@ -122,7 +122,7 @@ function CardForm({ initialValue, onSave, onCancel, loading }) {
         <span>
           <span className="block text-sm font-medium text-[--text-primary]">Cartão ativo</span>
           <span className="block text-xs text-[--text-tertiary]">
-            Cartões inativos permanecem no histórico, mas deixam de aparecer em novos lançamentos.
+            Cartões inativos ficam no histórico, não em novos lançamentos.
           </span>
         </span>
       </label>
@@ -210,7 +210,7 @@ function CreditCardsContent() {
                   Cartões e calendário de faturas
                 </h2>
                 <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-                  Centralize fechamento e vencimento para evitar lançamentos na competência errada.
+                  Defina fechamento e vencimento para manter cada compra na fatura correta.
                 </p>
               </div>
             </div>
@@ -234,8 +234,8 @@ function CreditCardsContent() {
                 Como o Meu Real utilizará esses dados?
               </p>
               <p className="mt-1 text-[11px] leading-relaxed text-[--text-tertiary]">
-                A data da compra será preservada, enquanto o lançamento financeiro será associado ao
-                vencimento da fatura. O histórico antigo não será recalculado.
+                A compra mantém sua data original; a fatura segue o vencimento. O histórico não
+                muda.
               </p>
             </div>
           </div>

@@ -42,6 +42,11 @@ function serializeFirestoreValue(value) {
   return value
 }
 
+// O ID do documento Firestore prevalece sobre campos antigos armazenados no próprio registro.
+function serializeFirestoreDocument(document) {
+  return { ...serializeFirestoreValue(document.data()), id: document.id }
+}
+
 function buildDeletionSchedule(now = new Date()) {
   return new Date(now.getTime() + DELETION_GRACE_DAYS * DAY_IN_MS)
 }
@@ -134,6 +139,7 @@ module.exports = {
   buildDeletionSchedule,
   buildPortableExport,
   buildPrivacyStatus,
+  serializeFirestoreDocument,
   serializeFirestoreValue,
   validateDeletionConfirmation,
   validateLegalAcceptance,

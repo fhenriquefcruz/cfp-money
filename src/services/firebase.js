@@ -21,6 +21,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   getDocs,
   getDoc,
   setDoc,
@@ -243,16 +244,15 @@ export const getCreditCards = async (uid) =>
   (await getDocs(userCol(uid, 'creditCards'))).docs.map(documentData)
 
 export const addCreditCard = async (uid, data) => {
-  const ref = await addDoc(userCol(uid, 'creditCards'), {
-    ...data,
-    createdAt: serverTimestamp(),
-  })
-  return ref.id
+  const fields = { ...data, createdAt: serverTimestamp() }
+  delete fields.id
+  return (await addDoc(userCol(uid, 'creditCards'), fields)).id
 }
 
 export const updateCreditCard = async (uid, id, data) =>
   updateDoc(userDoc(uid, 'creditCards', id), {
     ...data,
+    id: deleteField(),
     updatedAt: serverTimestamp(),
   })
 
