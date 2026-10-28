@@ -408,8 +408,18 @@ function CreditCardsCenterContent() {
                 center.selectedTotal,
                 `${center.selectedItemCount} lançamento${center.selectedItemCount === 1 ? '' : 's'} no período`,
               ],
-              [CreditCard, 'Total pago', center.selectedPaidTotal, 'Pagamentos líquidos, menos estornos'],
-              [ReceiptText, 'Saldo pendente', center.selectedRemainingTotal, 'Restante a pagar nas faturas'],
+              [
+                CreditCard,
+                'Total pago',
+                center.selectedPaidTotal,
+                'Pagamentos líquidos, menos estornos',
+              ],
+              [
+                ReceiptText,
+                'Saldo pendente',
+                center.selectedRemainingTotal,
+                'Restante a pagar nas faturas',
+              ],
               [
                 Layers3,
                 'Parcelas futuras',
@@ -428,7 +438,8 @@ function CreditCardsCenterContent() {
           </div>
           {(linkageAudit.unlinked || linkageAudit.historical) > 0 && (
             <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
-              {linkageAudit.saved} vínculos ({linkageAudit.historical} históricos) · {linkageAudit.unlinked} sem cartão
+              {linkageAudit.saved} vínculos ({linkageAudit.historical} históricos) ·{' '}
+              {linkageAudit.unlinked} sem cartão
             </p>
           )}
 
