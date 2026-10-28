@@ -401,36 +401,31 @@ function CreditCardsCenterContent() {
       ) : (
         <>
           <div className="credit-cards-summary-grid operational-summary-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
-            <SummaryCard
-              icon={CircleDollarSign}
-              label="Total das faturas"
-              value={formatCurrency(center.selectedTotal)}
-              helper={`${center.selectedItemCount} lançamento${
-                center.selectedItemCount === 1 ? '' : 's'
-              } no período`}
-            />
-            <SummaryCard
-              icon={CreditCard}
-              label="Total pago"
-              value={formatCurrency(center.selectedPaidTotal)}
-              helper="Pagamentos líquidos, menos estornos"
-            />
-            <SummaryCard
-              icon={ReceiptText}
-              label="Saldo pendente"
-              value={formatCurrency(center.selectedRemainingTotal)}
-              helper="Restante a pagar nas faturas"
-            />
-            <SummaryCard
-              icon={Layers3}
-              label="Parcelas futuras"
-              value={formatCurrency(center.futureInstallmentTotal)}
-              helper={`${center.futureInstallmentCount} parcela${
-                center.futureInstallmentCount === 1 ? '' : 's'
-              } após este mês`}
-            />
+            {[
+              [
+                CircleDollarSign,
+                'Total das faturas',
+                center.selectedTotal,
+                `${center.selectedItemCount} lançamento${center.selectedItemCount === 1 ? '' : 's'} no período`,
+              ],
+              [CreditCard, 'Total pago', center.selectedPaidTotal, 'Pagamentos líquidos, menos estornos'],
+              [ReceiptText, 'Saldo pendente', center.selectedRemainingTotal, 'Restante a pagar nas faturas'],
+              [
+                Layers3,
+                'Parcelas futuras',
+                center.futureInstallmentTotal,
+                `${center.futureInstallmentCount} parcela${center.futureInstallmentCount === 1 ? '' : 's'} após este mês`,
+              ],
+            ].map(([icon, label, amount, helper]) => (
+              <SummaryCard
+                key={label}
+                icon={icon}
+                label={label}
+                value={formatCurrency(amount)}
+                helper={helper}
+              />
+            ))}
           </div>
-
           {(linkageAudit.unlinked || linkageAudit.historical) > 0 && (
             <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
               {linkageAudit.saved} vínculos ({linkageAudit.historical} históricos) · {linkageAudit.unlinked} sem cartão
