@@ -97,7 +97,9 @@ export function auditCreditCardFinancialParity({
     }
     for (const event of invoice.events) {
       if (event.type !== 'reversal') continue
-      if (!invoice.events.some((item) => item.type === 'payment' && item.id === event.reversesEventId)) {
+      if (
+        !invoice.events.some((item) => item.type === 'payment' && item.id === event.reversesEventId)
+      ) {
         add('unmatched_payment_reversal', 'review', {
           cardId: invoice.card.id,
           invoiceMonth: month,
@@ -139,7 +141,8 @@ export function auditCreditCardFinancialParity({
     }
   })
 
-  const summed = (selector) => invoices.reduce((total, invoice) => total + toCents(selector(invoice)), 0)
+  const summed = (selector) =>
+    invoices.reduce((total, invoice) => total + toCents(selector(invoice)), 0)
   if (
     summed((invoice) => invoice.invoiceTotal) !== toCents(center.selectedTotal) ||
     summed((invoice) => invoice.paidTotal) !== toCents(center.selectedPaidTotal) ||
