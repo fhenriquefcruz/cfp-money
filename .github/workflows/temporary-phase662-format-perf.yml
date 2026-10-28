@@ -1,0 +1,22 @@
+name: Temporary Phase 66.2 format and budget inspection
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Show exact Prettier diff without committing files
+        run: |
+          npx prettier --write src/components/CreditCardsSettingsCard.jsx src/domain/creditCardFinancialParityCli.test.js src/domain/creditCards.test.js src/services/firebase.creditCards.test.js
+          git --no-pager diff -- src/components/CreditCardsSettingsCard.jsx src/domain/creditCardFinancialParityCli.test.js src/domain/creditCards.test.js src/services/firebase.creditCards.test.js
+      - name: Check unmodified compiled JavaScript budget
+        run: |
+          npm run build
+          npm run check:performance
