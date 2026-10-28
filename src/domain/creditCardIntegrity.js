@@ -1,85 +1,55 @@
 import { isUnlinkedCreditPurchase } from './cardReconciliation'
 
-const cents = (value) => {
-  const amount = Number(value ?? 0)
-  return Number.isFinite(amount) ? Math.round(amount * 100) : 0
-}
-
-const credit = (tx) =>
-  tx?.type === 'expense' &&
-  !tx.isSavings &&
-  tx.paymentStatus !== 'cancelled' &&
-  (tx.paymentMethod === 'credit_card' || tx.isCreditPurchase === true || Boolean(tx.cardId))
-
-const validInvoiceMonth = (month) => /^\d{4}-(0[1-9]|1[0-2])$/.test(month)
-
-// Diagnóstico puro e somente leitura: cada compra entra em exatamente um grupo.
-// Cartões históricos mantêm seu vínculo original; nunca atribuímos cartão por nome.
+// Leitura pura: grupos exclusivos por cartão, sem inferência e sem escrita.
 export function auditCreditCardIntegrity({ transactions = [], creditCards = [] } = {}) {
-  const cardIds = new Set(creditCards.map((card) => card?.id).filter(Boolean))
-  const totals = {
-    purchase: 0,
-    linked: 0,
-    unlinked: 0,
-    historical: 0,
-  }
-  const counts = {
-    purchases: 0,
-    linked: 0,
-    unlinked: 0,
-    historical: 0,
-    reconcilable: 0,
-    invalidMonth: 0,
-    reversible: 0,
-  }
+  const ids = new Set(creditCards.map((card) => card?.id).filter(Boolean))
+  const counts = [0, 0, 0] // cadastrado, sem vínculo, histórico
+  const totals = [0, 0, 0]
   const exceptions = { unlinked: [], missingCard: [], invalidMonth: [] }
+  let reconcilableCount = 0
+  let invalidMonthCount = 0
+  let reversibleCount = 0
 
   for (const tx of transactions) {
-    if (!credit(tx)) continue
+    if (
+      tx?.type !== 'expense' ||
+      tx.isSavings ||
+      tx.paymentStatus === 'cancelled' ||
+      !(tx.paymentMethod === 'credit_card' || tx.isCreditPurchase === true || tx.cardId)
+    ) continue
 
-    const amount = cents(tx.amount)
-    counts.purchases += 1
-    totals.purchase += amount
+    const group = !tx.cardId ? 1 : ids.has(tx.cardId) ? 0 : 2
+    const amount = Number(tx.amount ?? 0)
+    counts[group] += 1
+    totals[group] += Number.isFinite(amount) ? Math.round(amount * 100) : 0
 
-    if (!tx.cardId) {
-      counts.unlinked += 1
-      totals.unlinked += amount
+    if (group === 1) {
       if (tx.id) exceptions.unlinked.push(tx.id)
-      // O diagnóstico inclui compras marcadas como crédito; a conciliação
-      // assistida segue o critério mais restrito do domínio financeiro.
-      if (isUnlinkedCreditPurchase(tx)) counts.reconcilable += 1
-    } else if (cardIds.has(tx.cardId)) {
-      counts.linked += 1
-      totals.linked += amount
-    } else {
-      counts.historical += 1
-      totals.historical += amount
-      if (tx.id) exceptions.missingCard.push(tx.id)
-    }
+      if (isUnlinkedCreditPurchase(tx)) reconcilableCount += 1
+    } else if (group === 2 && tx.id) exceptions.missingCard.push(tx.id)
 
-    if (tx.invoiceMonth && !validInvoiceMonth(tx.invoiceMonth)) {
-      counts.invalidMonth += 1
+    if (tx.invoiceMonth && !/^\d{4}-(0[1-9]|1[0-2])$/.test(tx.invoiceMonth)) {
+      invalidMonthCount += 1
       if (tx.id) exceptions.invalidMonth.push(tx.id)
     }
-    if (tx.cardReconciliation?.version === 1) counts.reversible += 1
+    if (tx.cardReconciliation?.version === 1) reversibleCount += 1
   }
 
   return {
-    totalPurchases: counts.purchases,
-    purchaseTotal: totals.purchase / 100,
-    linkedCount: counts.linked,
-    linkedTotal: totals.linked / 100,
-    unlinkedCount: counts.unlinked,
-    unlinkedTotal: totals.unlinked / 100,
-    // Campos explícitos para evitar a ambiguidade: "salvos" inclui históricos.
-    historicalCount: counts.historical,
-    historicalTotal: totals.historical / 100,
-    savedLinkCount: counts.linked + counts.historical,
-    orphanedCardCount: counts.historical,
-    orphanedCardTotal: totals.historical / 100,
-    reconcilableCount: counts.reconcilable,
-    invalidMonthCount: counts.invalidMonth,
-    reversibleCount: counts.reversible,
+    totalPurchases: counts[0] + counts[1] + counts[2],
+    purchaseTotal: (totals[0] + totals[1] + totals[2]) / 100,
+    linkedCount: counts[0],
+    linkedTotal: totals[0] / 100,
+    unlinkedCount: counts[1],
+    unlinkedTotal: totals[1] / 100,
+    historicalCount: counts[2],
+    historicalTotal: totals[2] / 100,
+    savedLinkCount: counts[0] + counts[2],
+    orphanedCardCount: counts[2],
+    orphanedCardTotal: totals[2] / 100,
+    reconcilableCount,
+    invalidMonthCount,
+    reversibleCount,
     exceptions,
   }
 }
