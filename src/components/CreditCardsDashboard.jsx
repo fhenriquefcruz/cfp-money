@@ -443,10 +443,9 @@ function CreditCardsCenterContent() {
             />
           </div>
 
-          {(linkageAudit.unlinked > 0 || linkageAudit.historical > 0) && (
+          {(linkageAudit.unlinked || linkageAudit.historical) > 0 && (
             <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
-              Vínculos: {linkageAudit.saved} salvos ({linkageAudit.historical}{' '}
-              históricos) · {linkageAudit.unlinked} sem cartão
+              {linkageAudit.saved} vínculos ({linkageAudit.historical} históricos) · {linkageAudit.unlinked} sem cartão
             </p>
           )}
 
