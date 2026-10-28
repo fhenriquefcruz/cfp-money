@@ -5,12 +5,12 @@ import { resolve } from 'node:path'
 import { createServer } from 'vite'
 
 const args = process.argv.slice(2)
-const file = args.find((arg) => !arg.startsWith('--') && arg !== args[args.indexOf('--month') + 1])
+const file = args[0]
 const monthIndex = args.indexOf('--month')
 const month = monthIndex === -1 ? null : args[monthIndex + 1]
 
 async function main() {
-  if (!file || (month && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month))) {
+  if (!file || file.startsWith('--') || (month && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month))) {
     throw new Error('Uso: npm run audit:cards -- caminho/backup.json [--month AAAA-MM]')
   }
   const input = JSON.parse(await readFile(resolve(file), 'utf8'))
