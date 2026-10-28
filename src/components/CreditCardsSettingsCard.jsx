@@ -365,12 +365,12 @@ export default function CreditCardsSettingsCard() {
     <PremiumGate
       variant="card"
       feature="Cartões e calendário de faturas"
-      description="Fechamento, vencimento e parcelas em um só lugar."
+      description="Cadastre fechamento e vencimento para calcular compras e parcelas com segurança."
       benefits={[
         'Data da compra preservada',
-        'Faturas automáticas',
-        'Parcelas por mês',
-        'Histórico preservado',
+        'Fatura calculada automaticamente',
+        'Parcelas distribuídas por mês',
+        'Histórico anterior mantido',
       ]}
     >
       <CreditCardsContent />
