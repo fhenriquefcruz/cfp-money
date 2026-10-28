@@ -41,7 +41,7 @@ test('não trata cartão removido como compra sem vínculo nem força reassocia�
   expect(historical.cardId).toBe('archived-card')
 })
 
-test('sinaliza separadamente compras de crédito sem método elegível para conciliação', () => {
+test('conta compras sinalizadas como crédito mesmo com método de pagamento distinto', () => {
   const result = auditCardLinkage({
     creditCards,
     transactions: [
