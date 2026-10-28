@@ -108,4 +108,3 @@ test('normaliza limite opcional sem permitir valor negativo', () => {
     limit: 0,
   })
 })
-
