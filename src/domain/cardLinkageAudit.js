@@ -15,7 +15,6 @@ const isCreditExpense = (transaction) =>
 export function auditCardLinkage({ transactions = [], creditCards = [] } = {}) {
   const registeredIds = new Set(creditCards.map((card) => card.id).filter(Boolean))
   const creditPurchases = transactions.filter(isCreditExpense)
-  const linked = creditPurchases.filter((item) => item.cardId && registeredIds.has(item.cardId))
   const historical = creditPurchases.filter(
     (item) => item.cardId && !registeredIds.has(item.cardId),
   )
@@ -23,8 +22,7 @@ export function auditCardLinkage({ transactions = [], creditCards = [] } = {}) {
   const reviewPaymentMethod = unlinked.filter((item) => item.paymentMethod !== 'credit_card')
 
   return {
-    savedLinkCount: linked.length + historical.length,
-    registeredLinkCount: linked.length,
+    savedLinkCount: creditPurchases.length - unlinked.length,
     historicalLinkCount: historical.length,
     unlinkedCount: unlinked.length,
     unlinkedAmount: toCents(unlinked) / 100,
