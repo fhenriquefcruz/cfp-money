@@ -443,7 +443,10 @@ function CreditCardsCenterContent() {
             />
           </div>
 
-          <details className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-4" aria-label="Diagnóstico de integridade dos cartões">
+          <details
+            className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-4"
+            aria-label="Diagnóstico de integridade dos cartões"
+          >
             <summary className="cursor-pointer text-xs font-bold text-[--text-primary]">
               Diagnóstico dos vínculos · {linkageAudit.savedLinkCount} salvos ·{' '}
               {linkageAudit.unlinkedCount} sem cartão
@@ -459,7 +462,9 @@ function CreditCardsCenterContent() {
                 </p>
               </div>
               <div className="rounded-xl bg-[--bg-subtle] p-3">
-                <p className="font-semibold text-[--text-secondary]">Compras sem cartão vinculado</p>
+                <p className="font-semibold text-[--text-secondary]">
+                  Compras sem cartão vinculado
+                </p>
                 <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">
                   {linkageAudit.unlinkedCount}
                 </p>
@@ -481,9 +486,8 @@ function CreditCardsCenterContent() {
             </div>
             {linkageAudit.paymentMethodReviewCount > 0 && (
               <p className="mt-3 text-xs leading-relaxed text-[--warning-text]">
-                {linkageAudit.paymentMethodReviewCount} compra(s) marcada(s) como crédito, mas
-                com outro meio de pagamento registrado. Confira em Transações antes de
-                conciliar.
+                {linkageAudit.paymentMethodReviewCount} compra(s) marcada(s) como crédito, mas com
+                outro meio de pagamento registrado. Confira em Transações antes de conciliar.
               </p>
             )}
             <p className="mt-3 text-[11px] leading-relaxed text-[--text-tertiary]">

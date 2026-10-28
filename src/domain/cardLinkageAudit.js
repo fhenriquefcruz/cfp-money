@@ -8,8 +8,8 @@ const isCreditExpense = (transaction) =>
   transaction.paymentStatus !== 'cancelled' &&
   Boolean(
     transaction.cardId ||
-      transaction.paymentMethod === 'credit_card' ||
-      transaction.isCreditPurchase === true,
+    transaction.paymentMethod === 'credit_card' ||
+    transaction.isCreditPurchase === true,
   )
 
 export function auditCardLinkage({ transactions = [], creditCards = [] } = {}) {
