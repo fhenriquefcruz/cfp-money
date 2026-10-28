@@ -640,13 +640,13 @@ function CreditCardsCenterContent() {
 export default function CreditCardsDashboard() {
   return (
     <PremiumGate
-      feature="Central de cartões e faturas"
-      description="Faturas, parcelas e vencimentos em um só lugar."
+      feature="Cartões e faturas"
+      description="Compras, parcelas e vencimentos reunidos."
       benefits={[
-        'Faturas agrupadas por cartão',
-        'Previsão dos próximos meses',
-        'Parcelas futuras consolidadas',
-        'Histórico antigo preservado',
+        'Faturas por cartão',
+        'Projeção mensal',
+        'Parcelas futuras',
+        'Histórico preservado',
       ]}
     >
       <CreditCardsCenterContent />
