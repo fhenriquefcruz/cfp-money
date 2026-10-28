@@ -1,0 +1,29 @@
+name: Temporary Phase 63 final Prettier
+on:
+  push:
+    branches:
+      - feat/phase-63-card-linkage-diagnostics
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.repository == 'fhenriquefcruz/cfp-money'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts --no-fund
+      - run: npx prettier --write src/components/CreditCardsDashboard.jsx
+      - run: git diff --check
+      - name: Commit Prettier output
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/components/CreditCardsDashboard.jsx
+          if ! git diff --cached --quiet; then
+            git commit -m 'style(cards): format compact diagnostic'
+            git push origin HEAD:refs/heads/feat/phase-63-card-linkage-diagnostics
+          fi
