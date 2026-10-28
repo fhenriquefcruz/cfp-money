@@ -443,35 +443,22 @@ function CreditCardsCenterContent() {
             />
           </div>
 
-          <details
-            className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-4"
+          <section
             aria-label="Diagnóstico de integridade dos cartões"
+            className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-3"
           >
-            <summary className="cursor-pointer text-xs font-bold text-[--text-primary]">
-              Diagnóstico dos vínculos · {linkageAudit.savedLinkCount} salvos ·{' '}
-              {linkageAudit.unlinkedCount} sem cartão
-            </summary>
-            <div className="mt-3 grid gap-2 text-xs sm:grid-cols-3">
-              <p className="rounded-xl bg-[--bg-subtle] p-3">
-                <strong>{linkageAudit.registeredLinkCount}</strong> compras em cartões cadastrados
-              </p>
-              <p className="rounded-xl bg-[--bg-subtle] p-3">
-                <strong>{formatCurrency(linkageAudit.unlinkedAmount)}</strong> sem vínculo salvo
-              </p>
-              <p className="rounded-xl bg-[--bg-subtle] p-3">
-                <strong>{linkageAudit.historicalLinkCount}</strong> compras de cartões históricos
-              </p>
-            </div>
+            <p className="text-xs leading-relaxed text-[--text-secondary]">
+              <strong className="text-[--text-primary]">Integridade dos vínculos:</strong>{' '}
+              {linkageAudit.savedLinkCount} salvos · {linkageAudit.unlinkedCount} sem cartão ·{' '}
+              {linkageAudit.historicalLinkCount} históricos
+            </p>
             {linkageAudit.paymentMethodReviewCount > 0 && (
-              <p className="mt-3 text-xs leading-relaxed text-[--warning-text]">
-                {linkageAudit.paymentMethodReviewCount} compra(s) marcada(s) como crédito, mas com
-                outro meio de pagamento registrado. Confira em Transações antes de conciliar.
+              <p className="mt-1 text-xs text-[--warning-text]">
+                {linkageAudit.paymentMethodReviewCount} compra(s) requerem revisão do meio de
+                pagamento em Transações.
               </p>
             )}
-            <p className="mt-3 text-[11px] text-[--text-tertiary]">
-              Somente leitura. Cartões históricos não são reassociados.
-            </p>
-          </details>
+          </section>
 
           {center.reconciledPurchaseCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--info-border] bg-[--info-bg] p-3 text-xs text-[--info-text]">
