@@ -1,0 +1,18 @@
+name: Temporary Phase 66 formatter inspection
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  formatter-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Print exact formatting difference without modifying repository
+        run: |
+          npx prettier --write src/domain/creditCardFinancialParity.js src/domain/creditCardFinancialParity.test.js scripts/audit-credit-cards.mjs src/domain/creditCardCenter.js
+          git --no-pager diff -- src/domain/creditCardFinancialParity.js src/domain/creditCardFinancialParity.test.js scripts/audit-credit-cards.mjs src/domain/creditCardCenter.js
