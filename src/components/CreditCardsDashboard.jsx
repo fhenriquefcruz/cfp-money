@@ -239,9 +239,7 @@ function CreditCardsCenterContent() {
   const unlinkedTotal =
     unlinkedPurchases.reduce((sum, item) => sum + Math.round(Number(item.amount || 0) * 100), 0) /
     100
-  const reversibleCount = transactions.filter(
-    (item) => item.cardReconciliation?.version === 1,
-  ).length
+  const hasReversible = transactions.some((item) => item.cardReconciliation?.version === 1)
 
   const visibleInvoices =
     selectedCardId === 'all'
@@ -253,10 +251,7 @@ function CreditCardsCenterContent() {
       ? center.selectedTransactions
       : center.selectedTransactions.filter((transaction) => transaction.cardId === selectedCardId)
 
-  const selectedInvoice =
-    selectedCardId === 'all'
-      ? null
-      : center.invoices.find((invoice) => invoice.card.id === selectedCardId)
+  const selectedInvoice = selectedCardId === 'all' ? null : visibleInvoices[0]
   const managedInvoice = center.invoices.find((invoice) => invoice.card.id === managingCardId)
 
   const loadingData = transactionsLoading || creditCardsLoading || invoiceEventsLoading
@@ -466,7 +461,7 @@ function CreditCardsCenterContent() {
             </div>
           )}
 
-          {(unlinkedPurchases.length > 0 || reversibleCount > 0) && (
+          {(unlinkedPurchases.length > 0 || hasReversible) && (
             <div className="flex flex-col gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs font-black text-[--text-primary]">Compras a conciliar</p>
@@ -575,7 +570,7 @@ function CreditCardsCenterContent() {
                     <p className="mt-1 text-[10px] text-[--text-tertiary]">
                       {selectedCardId === 'all'
                         ? 'Todos os cartões'
-                        : center.cards.find((card) => card.id === selectedCardId)?.name}
+                        : selectedInvoice?.card.name}
                     </p>
                   </div>
 
