@@ -233,6 +233,8 @@ function CreditCardsCenterContent() {
     [transactions, creditCards],
   )
   const { unlinkedPurchases, unlinkedTotal } = linkageAudit
+  const diagnosticText =
+    `${linkageAudit.saved} vínculos (${linkageAudit.historical} históricos) · ${linkageAudit.unlinked} sem cartão`
   const hasReversible = transactions.some((item) => item.cardReconciliation?.version === 1)
 
   const visibleInvoices =
@@ -438,7 +440,7 @@ function CreditCardsCenterContent() {
           </div>
           {(linkageAudit.unlinked || linkageAudit.historical) > 0 && (
             <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
-              {`${linkageAudit.saved} vínculos (${linkageAudit.historical} históricos) · ${linkageAudit.unlinked} sem cartão`}
+              {diagnosticText}
             </p>
           )}
 
