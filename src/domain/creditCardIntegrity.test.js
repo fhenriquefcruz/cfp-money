@@ -163,12 +163,35 @@ test('o resumo leve coincide com a auditoria detalhada para todos os grupos', ()
   const input = { transactions, creditCards: [card] }
   const detailed = auditCreditCardIntegrity(input)
   const summary = summarizeCardLinks(input)
-  expect(summary).toEqual({
+  expect(summary).toMatchObject({
     saved: detailed.savedLinkCount,
     unlinked: detailed.unlinkedCount,
     historical: detailed.historicalCount,
+    unlinkedPurchases: [],
+    unlinkedTotal: 0,
   })
   expect(Math.round(detailed.purchaseTotal * 100)).toBe(
     Math.round((detailed.linkedTotal + detailed.unlinkedTotal + detailed.historicalTotal) * 100),
   )
+})
+
+test('resumo preserva compras realmente conciliáveis e soma valores em centavos', () => {
+  const transactions = [
+    { id: 'a', type: 'expense', paymentMethod: 'credit_card', amount: 0.1 },
+    { id: 'b', type: 'expense', paymentMethod: 'credit_card', amount: 0.2 },
+    { id: 'only-flag', type: 'expense', isCreditPurchase: true, amount: 100 },
+    {
+      id: 'cancelled',
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      paymentStatus: 'cancelled',
+      amount: 200,
+    },
+  ]
+  const original = JSON.stringify(transactions)
+  const result = summarizeCardLinks({ transactions })
+  expect(result.unlinked).toBe(3)
+  expect(result.unlinkedPurchases.map((item) => item.id)).toEqual(['a', 'b'])
+  expect(result.unlinkedTotal).toBe(0.3)
+  expect(JSON.stringify(transactions)).toBe(original)
 })

@@ -9,13 +9,12 @@ import {
   Plus,
   ReceiptText,
   Settings2,
-  Sparkles,
   WalletCards,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
-import { isUnlinkedCreditPurchase } from '../domain/cardReconciliation'
+import { summarizeCardLinks } from '../domain/cardLinkageSummary'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
@@ -63,7 +62,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
   const cardLimit = Math.max(0, Number(card.limit) || 0)
   const committed = lifecycle.remainingAmount + invoice.futureCommitmentTotal
   const limitUsage = cardLimit ? Math.round((committed / cardLimit) * 100) : 0
-  const limitExceeded = cardLimit > 0 && committed > cardLimit
+  const limitExceeded = committed > cardLimit
 
   return (
     <button
@@ -228,16 +227,13 @@ function CreditCardsCenterContent() {
     [transactions, creditCards, invoiceEvents, selectedMonth],
   )
 
-  const unlinkedPurchases = useMemo(
-    () => transactions.filter(isUnlinkedCreditPurchase),
-    [transactions],
+  const linkageAudit = useMemo(
+    () => summarizeCardLinks({ transactions, creditCards }),
+    [transactions, creditCards],
   )
-  const unlinkedTotal =
-    unlinkedPurchases.reduce((sum, item) => sum + Math.round(Number(item.amount || 0) * 100), 0) /
-    100
-  const reversibleCount = transactions.filter(
-    (item) => item.cardReconciliation?.version === 1,
-  ).length
+  const { unlinkedPurchases, unlinkedTotal } = linkageAudit
+  const diagnosticText = `${linkageAudit.saved} vínculos (${linkageAudit.historical} históricos) · ${linkageAudit.unlinked} sem cartão`
+  const hasReversible = transactions.some((item) => item.cardReconciliation?.version === 1)
 
   const visibleInvoices =
     selectedCardId === 'all'
@@ -249,10 +245,7 @@ function CreditCardsCenterContent() {
       ? center.selectedTransactions
       : center.selectedTransactions.filter((transaction) => transaction.cardId === selectedCardId)
 
-  const selectedInvoice =
-    selectedCardId === 'all'
-      ? null
-      : center.invoices.find((invoice) => invoice.card.id === selectedCardId)
+  const selectedInvoice = selectedCardId === 'all' ? null : visibleInvoices[0]
   const managedInvoice = center.invoices.find((invoice) => invoice.card.id === managingCardId)
 
   const loadingData = transactionsLoading || creditCardsLoading || invoiceEventsLoading
@@ -408,35 +401,46 @@ function CreditCardsCenterContent() {
       ) : (
         <>
           <div className="credit-cards-summary-grid operational-summary-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
-            <SummaryCard
-              icon={CircleDollarSign}
-              label="Total das faturas"
-              value={formatCurrency(center.selectedTotal)}
-              helper={`${center.selectedItemCount} lançamento${
-                center.selectedItemCount === 1 ? '' : 's'
-              } no período`}
-            />
-            <SummaryCard
-              icon={CreditCard}
-              label="Total pago"
-              value={formatCurrency(center.selectedPaidTotal)}
-              helper="Pagamentos líquidos, menos estornos"
-            />
-            <SummaryCard
-              icon={ReceiptText}
-              label="Saldo pendente"
-              value={formatCurrency(center.selectedRemainingTotal)}
-              helper="Restante a pagar nas faturas"
-            />
-            <SummaryCard
-              icon={Layers3}
-              label="Parcelas futuras"
-              value={formatCurrency(center.futureInstallmentTotal)}
-              helper={`${center.futureInstallmentCount} parcela${
-                center.futureInstallmentCount === 1 ? '' : 's'
-              } após este mês`}
-            />
+            {[
+              [
+                CircleDollarSign,
+                'Total das faturas',
+                center.selectedTotal,
+                `${center.selectedItemCount} lançamento${center.selectedItemCount === 1 ? '' : 's'} no período`,
+              ],
+              [
+                CreditCard,
+                'Total pago',
+                center.selectedPaidTotal,
+                'Pagamentos líquidos, menos estornos',
+              ],
+              [
+                ReceiptText,
+                'Saldo pendente',
+                center.selectedRemainingTotal,
+                'Restante a pagar nas faturas',
+              ],
+              [
+                Layers3,
+                'Parcelas futuras',
+                center.futureInstallmentTotal,
+                `${center.futureInstallmentCount} parcela${center.futureInstallmentCount === 1 ? '' : 's'} após este mês`,
+              ],
+            ].map(([icon, label, amount, helper]) => (
+              <SummaryCard
+                key={label}
+                icon={icon}
+                label={label}
+                value={formatCurrency(amount)}
+                helper={helper}
+              />
+            ))}
           </div>
+          {(linkageAudit.unlinked || linkageAudit.historical) > 0 && (
+            <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
+              {diagnosticText}
+            </p>
+          )}
 
           {center.reconciledPurchaseCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--info-border] bg-[--info-bg] p-3 text-xs text-[--info-text]">
@@ -456,7 +460,7 @@ function CreditCardsCenterContent() {
             </div>
           )}
 
-          {(unlinkedPurchases.length > 0 || reversibleCount > 0) && (
+          {(unlinkedPurchases.length > 0 || hasReversible) && (
             <div className="flex flex-col gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs font-black text-[--text-primary]">Compras a conciliar</p>
@@ -488,7 +492,7 @@ function CreditCardsCenterContent() {
                       Compras já registradas
                     </p>
                   </div>
-                  <Sparkles size={16} className="text-[--brand-600]" />
+                  <CalendarDays size={16} className="text-[--brand-600]" />
                 </div>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 xl:grid-cols-3 2xl:grid-cols-6">
@@ -563,9 +567,7 @@ function CreditCardsCenterContent() {
                       Lançamentos da fatura
                     </h2>
                     <p className="mt-1 text-[10px] text-[--text-tertiary]">
-                      {selectedCardId === 'all'
-                        ? 'Todos os cartões'
-                        : center.cards.find((card) => card.id === selectedCardId)?.name}
+                      {selectedCardId === 'all' ? 'Todos os cartões' : selectedInvoice?.card.name}
                     </p>
                   </div>
 
@@ -641,14 +643,9 @@ function CreditCardsCenterContent() {
 export default function CreditCardsDashboard() {
   return (
     <PremiumGate
-      feature="Central de cartões e faturas"
-      description="Faturas, parcelas e vencimentos em um só lugar."
-      benefits={[
-        'Faturas agrupadas por cartão',
-        'Previsão dos próximos meses',
-        'Parcelas futuras consolidadas',
-        'Histórico antigo preservado',
-      ]}
+      feature="Cartões e faturas"
+      description="Faturas, parcelas e prazos."
+      benefits={['Faturas', 'Pagamentos', 'Parcelas', 'Histórico']}
     >
       <CreditCardsCenterContent />
     </PremiumGate>
