@@ -2,6 +2,7 @@ import {
   buildCreditTransaction,
   buildInstallmentTransactions,
   calculateInvoiceSchedule,
+  creditCardFieldsForStorage,
   normalizeCreditCard,
   splitInstallmentAmounts,
 } from './creditCards'
@@ -107,4 +108,18 @@ test('normaliza limite opcional sem permitir valor negativo', () => {
   expect(normalizeCreditCard({ ...card, limit: '' })).toMatchObject({
     limit: 0,
   })
+})
+
+test('não persiste id do documento no cartão e preserva formulário original', () => {
+  const form = Object.freeze({ ...card, id: null, limit: 2500 })
+  const payload = creditCardFieldsForStorage(form)
+  expect(payload).toEqual({
+    name: 'Nubank',
+    last4: '1234',
+    closingDay: 24,
+    dueDay: 1,
+    limit: 2500,
+  })
+  expect(payload).not.toHaveProperty('id')
+  expect(form.id).toBeNull()
 })
