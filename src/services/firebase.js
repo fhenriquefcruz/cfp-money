@@ -21,6 +21,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   getDocs,
   getDoc,
   setDoc,
@@ -34,6 +35,7 @@ import {
 import { resolveFirebaseConfig } from '../config/firebaseConfig'
 import { securityRuntime } from '../config/securityRuntime'
 import { createPaymentPersistenceChange } from '../domain/paymentControl'
+import { creditCardFieldsForStorage } from '../domain/creditCards'
 
 const firebaseConfig = resolveFirebaseConfig(import.meta.env)
 
@@ -244,7 +246,7 @@ export const getCreditCards = async (uid) =>
 
 export const addCreditCard = async (uid, data) => {
   const ref = await addDoc(userCol(uid, 'creditCards'), {
-    ...data,
+    ...creditCardFieldsForStorage(data),
     createdAt: serverTimestamp(),
   })
   return ref.id
@@ -252,7 +254,8 @@ export const addCreditCard = async (uid, data) => {
 
 export const updateCreditCard = async (uid, id, data) =>
   updateDoc(userDoc(uid, 'creditCards', id), {
-    ...data,
+    ...creditCardFieldsForStorage(data),
+    id: deleteField(),
     updatedAt: serverTimestamp(),
   })
 
