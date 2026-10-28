@@ -63,7 +63,5 @@ test('edição remove id interno antigo sem mudar referência do documento', asy
 })
 
 test('leitura privilegia ID canônico do documento mesmo com id armazenado nulo', async () => {
-  expect(await getCreditCards('test-uid')).toEqual([
-    { id: 'canonical-card-id', name: 'Legado' },
-  ])
+  expect(await getCreditCards('test-uid')).toEqual([{ id: 'canonical-card-id', name: 'Legado' }])
 })
