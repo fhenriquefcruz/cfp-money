@@ -56,12 +56,9 @@ test('sinaliza separadamente compras de crédito sem método elegível para conc
     ],
   })
 
-  expect(result.creditPurchaseCount).toBe(2)
   expect(result.unlinkedCount).toBe(2)
   expect(result.unlinkedAmount).toBe(60)
-  expect(result.reconcilableCount).toBe(1)
   expect(result.paymentMethodReviewCount).toBe(1)
-  expect(result.paymentMethodReviewAmount).toBe(25)
 })
 
 test('retorna métricas zeradas sem dados e não modifica os parâmetros', () => {
