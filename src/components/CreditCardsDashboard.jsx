@@ -9,7 +9,6 @@ import {
   Plus,
   ReceiptText,
   Settings2,
-  Sparkles,
   WalletCards,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -494,7 +493,7 @@ function CreditCardsCenterContent() {
                       Compras já registradas
                     </p>
                   </div>
-                  <Sparkles size={16} className="text-[--brand-600]" />
+                  <CalendarDays size={16} className="text-[--brand-600]" />
                 </div>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 xl:grid-cols-3 2xl:grid-cols-6">
