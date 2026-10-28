@@ -564,9 +564,7 @@ test('conciliação de cartão respeita titularidade e restaura dados sem duplic
       const current = snapshot.data()
       assert.equal(current.cardReconciliation.cardId, current.cardId)
       operation.update(transaction, {
-        ...Object.fromEntries(
-          current.cardReconciliation.absent.map((key) => [key, deleteField()]),
-        ),
+        ...Object.fromEntries(current.cardReconciliation.absent.map((key) => [key, deleteField()])),
         cardReconciliation: deleteField(),
         updatedAt: serverTimestamp(),
       })
