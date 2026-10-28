@@ -58,6 +58,16 @@ function SummaryCard({ icon: Icon, label, value, helper }) {
   )
 }
 
+function LinkageMetric({ label, value, helper }) {
+  return (
+    <div className="rounded-xl bg-[--bg-subtle] p-3">
+      <p className="font-semibold text-[--text-secondary]">{label}</p>
+      <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">{value}</p>
+      <p className="text-[10px] text-[--text-tertiary]">{helper}</p>
+    </div>
+  )
+}
+
 function InvoiceCard({ invoice, selected, onSelect }) {
   const [statusLabel, statusClass] = STATUS[invoice.status] || STATUS.empty
   const { card, dates, lifecycle } = invoice
@@ -452,37 +462,21 @@ function CreditCardsCenterContent() {
               {linkageAudit.unlinkedCount} sem cartão
             </summary>
             <div className="mt-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
-              <div className="rounded-xl bg-[--bg-subtle] p-3">
-                <p className="font-semibold text-[--text-secondary]">Compras com vínculo salvo</p>
-                <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">
-                  {linkageAudit.savedLinkCount}
-                </p>
-                <p className="text-[10px] text-[--text-tertiary]">
-                  {linkageAudit.registeredLinkCount} em cartões cadastrados
-                </p>
-              </div>
-              <div className="rounded-xl bg-[--bg-subtle] p-3">
-                <p className="font-semibold text-[--text-secondary]">
-                  Compras sem cartão vinculado
-                </p>
-                <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">
-                  {linkageAudit.unlinkedCount}
-                </p>
-                <p className="text-[10px] text-[--text-tertiary]">
-                  {formatCurrency(linkageAudit.unlinkedAmount)} no histórico
-                </p>
-              </div>
-              <div className="rounded-xl bg-[--bg-subtle] p-3">
-                <p className="font-semibold text-[--text-secondary]">
-                  Compras de cartões históricos
-                </p>
-                <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">
-                  {linkageAudit.historicalLinkCount}
-                </p>
-                <p className="text-[10px] text-[--text-tertiary]">
-                  Cartões removidos não são reassociados automaticamente
-                </p>
-              </div>
+              <LinkageMetric
+                label="Compras com vínculo salvo"
+                value={linkageAudit.savedLinkCount}
+                helper={`${linkageAudit.registeredLinkCount} em cartões cadastrados`}
+              />
+              <LinkageMetric
+                label="Compras sem cartão vinculado"
+                value={linkageAudit.unlinkedCount}
+                helper={`${formatCurrency(linkageAudit.unlinkedAmount)} no histórico`}
+              />
+              <LinkageMetric
+                label="Compras de cartões históricos"
+                value={linkageAudit.historicalLinkCount}
+                helper="Não são reassociadas automaticamente"
+              />
             </div>
             {linkageAudit.paymentMethodReviewCount > 0 && (
               <p className="mt-3 text-xs leading-relaxed text-[--warning-text]">
