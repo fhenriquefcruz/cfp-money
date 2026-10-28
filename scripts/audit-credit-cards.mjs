@@ -25,7 +25,12 @@ async function main() {
   }
 
   // O carregador SSR do Vite resolve os imports de domínio sem carregar o aplicativo.
-  const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
+  const server = await createServer({
+    logLevel: 'silent',
+    server: { middlewareMode: true },
+    appType: 'custom',
+  })
+  let report
   try {
     const { auditCreditCardFinancialParity } = await server.ssrLoadModule(
       '/src/domain/creditCardFinancialParity.js',
@@ -41,25 +46,20 @@ async function main() {
       counts[item.code] = (counts[item.code] || 0) + 1
       return counts
     }, {})
-    console.log(
-      JSON.stringify(
-        {
-          source: 'local_export',
-          exportedAt: input.exportedAt || null,
-          readOnly: audit.readOnly,
-          invoiceMonth: audit.invoiceMonth,
-          status: audit.status,
-          counts: audit.counts,
-          totals: audit.totals,
-          findingCounts,
-        },
-        null,
-        2,
-      ),
-    )
+    report = {
+      source: 'local_export',
+      exportedAt: input.exportedAt || null,
+      readOnly: audit.readOnly,
+      invoiceMonth: audit.invoiceMonth,
+      status: audit.status,
+      counts: audit.counts,
+      totals: audit.totals,
+      findingCounts,
+    }
   } finally {
     await server.close()
   }
+  process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)
 }
 
 main().catch((error) => {
