@@ -449,13 +449,12 @@ function CreditCardsCenterContent() {
           >
             <p className="text-xs leading-relaxed text-[--text-secondary]">
               <strong className="text-[--text-primary]">Integridade dos vínculos:</strong>{' '}
-              {linkageAudit.savedLinkCount} salvos · {linkageAudit.unlinkedCount} sem cartão ·{' '}
-              {linkageAudit.historicalLinkCount} históricos
+              {linkageAudit.linked} salvos · {linkageAudit.unlinked} sem cartão ·{' '}
+              {linkageAudit.historical} históricos
             </p>
-            {linkageAudit.paymentMethodReviewCount > 0 && (
+            {linkageAudit.review > 0 && (
               <p className="mt-1 text-xs text-[--warning-text]">
-                {linkageAudit.paymentMethodReviewCount} compra(s) requerem revisão do meio de
-                pagamento em Transações.
+                {linkageAudit.review} pagamento(s) a revisar em Transações.
               </p>
             )}
           </section>
