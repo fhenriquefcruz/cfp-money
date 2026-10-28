@@ -443,16 +443,13 @@ function CreditCardsCenterContent() {
             />
           </div>
 
-          <section
+          <p
             aria-label="Diagnóstico de integridade dos cartões"
-            className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-3"
+            className="px-1 text-xs text-[--text-tertiary]"
           >
-            <p className="text-xs text-[--text-secondary]">
-              <strong className="text-[--text-primary]">Vínculos:</strong>{' '}
-              {linkageAudit.linked} salvos · {linkageAudit.unlinked} sem cartão ·{' '}
-              {linkageAudit.historical} históricos
-            </p>
-          </section>
+            Vínculos: {linkageAudit.linked} salvos · {linkageAudit.unlinked} sem cartão ·{' '}
+            {linkageAudit.historical} históricos
+          </p>
 
           {center.reconciledPurchaseCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--info-border] bg-[--info-bg] p-3 text-xs text-[--info-text]">
