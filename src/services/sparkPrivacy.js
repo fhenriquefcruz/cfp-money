@@ -40,12 +40,12 @@ function serialize(value) {
   return value
 }
 
+// O identificador do documento é a fonte canônica, mesmo em registros antigos com id: null.
+const serializeDocument = (item) => ({ ...serialize(item.data()), id: item.id })
+
 async function readCollection(uid, name) {
   const snapshot = await getDocs(collection(db, 'users', uid, name))
-  return snapshot.docs.map((item) => ({
-    id: item.id,
-    ...serialize(item.data()),
-  }))
+  return snapshot.docs.map(serializeDocument)
 }
 
 export async function getSparkPrivacyStatus(uid) {
@@ -109,14 +109,8 @@ export async function exportSparkData(uid) {
     notificationSubscription: subscriptionSnapshot.exists()
       ? serialize(subscriptionSnapshot.data())
       : null,
-    categories: categoriesSnapshot.docs.map((item) => ({
-      id: item.id,
-      ...serialize(item.data()),
-    })),
-    supportRequests: supportRequestsSnapshot.docs.map((item) => ({
-      id: item.id,
-      ...serialize(item.data()),
-    })),
+    categories: categoriesSnapshot.docs.map(serializeDocument),
+    supportRequests: supportRequestsSnapshot.docs.map(serializeDocument),
     collections: Object.fromEntries(knownCollections.map((name, index) => [name, groups[index]])),
   }
 }
