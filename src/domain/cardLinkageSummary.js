@@ -3,11 +3,11 @@ export const isCreditExpense = (tx) =>
   tx?.type === 'expense' &&
   !tx.isSavings &&
   tx.paymentStatus !== 'cancelled' &&
-  (tx.paymentMethod === 'credit_card' || tx.isCreditPurchase === true || Boolean(tx.cardId))
+  (tx.paymentMethod === 'credit_card' || tx.isCreditPurchase === true || !!tx.cardId)
 
 // Resumo enxuto para a tela de cartões: leitura somente, sem Firebase.
 export function summarizeCardLinks({ transactions = [], creditCards = [] } = {}) {
-  const ids = new Set(creditCards.map((card) => card?.id).filter(Boolean))
+  const ids = new Set(creditCards.map((card) => card?.id))
   let saved = 0
   let unlinked = 0
   let historical = 0
