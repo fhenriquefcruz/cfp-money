@@ -116,7 +116,7 @@ function cardSnapshotFromTransaction(transaction) {
 
 function sum(items, selector = (item) => item.amount) {
   const cents = items.reduce(
-    (total, item) => total + Math.round(Number(selector(item) || 0) * 100),
+    (total, item) => total + (Math.round(Number(selector(item)) * 100) || 0),
     0,
   )
 
