@@ -11,6 +11,10 @@ test('concilia compra antiga após duas confirmações e desfaz sem duplicar fat
   await page.getByRole('button', { name: 'Mês atual' }).click()
   await expect(summary).toContainText('0,00')
 
+  const diagnostic = page.locator('p[aria-label="Diagnóstico dos cartões"]')
+  await expect(diagnostic).toContainText('2 salvos')
+  await expect(diagnostic).toContainText('1 sem cartão')
+
   await page.getByRole('button', { name: 'Conciliar compras' }).click()
   const modal = page.getByRole('dialog', { name: 'Conciliar compras antigas' })
   await expect(modal).toBeVisible()
@@ -30,6 +34,7 @@ test('concilia compra antiga após duas confirmações e desfaz sem duplicar fat
   await modal.getByRole('button', { name: 'Confirmar vínculo desta compra' }).click()
   await expect(modal).toContainText('0 compras para revisar')
   await expect(summary).toContainText('92,41')
+  await expect(diagnostic).toHaveCount(0) // estado saudável não exibe aviso
 
   const undoButton = modal.getByRole('button', { name: 'Desfazer vínculo' })
   await undoButton.click()
@@ -40,4 +45,6 @@ test('concilia compra antiga após duas confirmações e desfaz sem duplicar fat
   await expect(modal).toContainText('1 compra para revisar')
   await expect(summary).toContainText('0,00')
   await expect(modal.getByRole('button', { name: 'Desfazer vínculo' })).toHaveCount(0)
+  await expect(diagnostic).toContainText('2 salvos')
+  await expect(diagnostic).toContainText('1 sem cartão')
 })
