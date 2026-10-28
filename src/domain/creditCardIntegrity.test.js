@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { auditCreditCardIntegrity } from './creditCardIntegrity'
+import { summarizeCardLinks } from './cardLinkageSummary'
 
 const card = { id: 'card-real', name: 'Cartão' }
 const purchase = {
@@ -149,4 +150,25 @@ test('retorna contadores zerados, sem NaN, quando não há dados', () => {
   })
   expect(result.purchaseTotal).toBe(0)
   expect(result.linkedTotal).toBe(0)
+})
+
+test('o resumo leve coincide com a auditoria detalhada para todos os grupos', () => {
+  const transactions = [
+    { ...purchase, id: 'linked', amount: 12.35 },
+    { ...purchase, id: 'historical', cardId: 'deleted', amount: 7.11 },
+    { id: 'unlinked', type: 'expense', isCreditPurchase: true, amount: 3.05 },
+    { id: 'cancelled', ...purchase, paymentStatus: 'cancelled' },
+    { id: 'income', type: 'income', cardId: 'card-real' },
+  ]
+  const input = { transactions, creditCards: [card] }
+  const detailed = auditCreditCardIntegrity(input)
+  const summary = summarizeCardLinks(input)
+  expect(summary).toEqual({
+    saved: detailed.savedLinkCount,
+    unlinked: detailed.unlinkedCount,
+    historical: detailed.historicalCount,
+  })
+  expect(Math.round(detailed.purchaseTotal * 100)).toBe(
+    Math.round((detailed.linkedTotal + detailed.unlinkedTotal + detailed.historicalTotal) * 100),
+  )
 })
