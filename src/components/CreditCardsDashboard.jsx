@@ -452,11 +452,6 @@ function CreditCardsCenterContent() {
               {linkageAudit.linked} salvos · {linkageAudit.unlinked} sem cartão ·{' '}
               {linkageAudit.historical} históricos
             </p>
-            {linkageAudit.review > 0 && (
-              <p className="mt-1 text-xs text-[--warning-text]">
-                {linkageAudit.review} pagamento(s) a revisar em Transações.
-              </p>
-            )}
           </section>
 
           {center.reconciledPurchaseCount > 0 && (
