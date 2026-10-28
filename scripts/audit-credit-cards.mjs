@@ -16,7 +16,9 @@ async function main() {
   const input = JSON.parse(await readFile(resolve(file), 'utf8'))
   const records = input.collections || input.data || input
   if (!Array.isArray(records.transactions) || !Array.isArray(records.creditCards)) {
-    throw new Error('O backup precisa conter transactions e creditCards no formato Spark ou backend.')
+    throw new Error(
+      'O backup precisa conter transactions e creditCards no formato Spark ou backend.',
+    )
   }
   const invoiceEvents = Array.isArray(records.invoiceEvents) ? records.invoiceEvents : []
   const selectedMonth = month || String(input.exportedAt || input.generatedAt || '').slice(0, 7)
