@@ -169,6 +169,24 @@ export function createE2EAppState() {
     },
   ]
 
+  // Caso de teste isolado: nunca habilitado sem sessionStorage do Playwright.
+  if (
+    typeof window !== 'undefined' &&
+    window.sessionStorage?.getItem('cfp_e2e_reconcile') === '1'
+  ) {
+    transactions.push({
+      id: 'legacy-reconcile-test',
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      amount: 92.41,
+      description: 'Compra antiga de homologação',
+      categoryId: 'cat-food',
+      categoryName: 'Alimentação',
+      date: dateInCurrentMonth(7),
+      createdAt: createdAt(),
+    })
+  }
+
   return {
     transactions,
     categories,
