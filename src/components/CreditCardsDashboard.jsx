@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { isUnlinkedCreditPurchase } from '../domain/cardReconciliation'
+import { summarizeCardLinks } from '../domain/cardLinkageSummary'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
@@ -232,6 +233,10 @@ function CreditCardsCenterContent() {
     () => transactions.filter(isUnlinkedCreditPurchase),
     [transactions],
   )
+  const linkageAudit = useMemo(
+    () => summarizeCardLinks({ transactions, creditCards }),
+    [transactions, creditCards],
+  )
   const unlinkedTotal =
     unlinkedPurchases.reduce((sum, item) => sum + Math.round(Number(item.amount || 0) * 100), 0) /
     100
@@ -437,6 +442,12 @@ function CreditCardsCenterContent() {
               } após este mês`}
             />
           </div>
+
+          {(linkageAudit.unlinked || linkageAudit.historical) > 0 && (
+            <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
+              {linkageAudit.saved} vínculos ({linkageAudit.historical} históricos) · {linkageAudit.unlinked} sem cartão
+            </p>
+          )}
 
           {center.reconciledPurchaseCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--info-border] bg-[--info-bg] p-3 text-xs text-[--info-text]">
