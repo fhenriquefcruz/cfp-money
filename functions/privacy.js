@@ -9,7 +9,7 @@ const {
   buildDeletionSchedule,
   buildPortableExport,
   buildPrivacyStatus,
-  serializeFirestoreValue,
+  serializeFirestoreDocument,
   validateDeletionConfirmation,
   validateLegalAcceptance,
 } = require('./lib/privacyDomain')
@@ -68,10 +68,7 @@ async function exportUserCollections(userRef) {
       )
     }
 
-    output[collectionRef.id] = snapshot.docs.map((document) => ({
-      id: document.id,
-      ...serializeFirestoreValue(document.data()),
-    }))
+    output[collectionRef.id] = snapshot.docs.map(serializeFirestoreDocument)
   }
 
   return output
@@ -203,25 +200,13 @@ function createPrivacyFunctions({ db, callableOptions }) {
         user: userSnapshot.data(),
         auth: authExport(authRecord),
         collections,
-        ownedCategories: categoriesSnapshot.docs.map((document) => ({
-          id: document.id,
-          ...document.data(),
-        })),
+        ownedCategories: categoriesSnapshot.docs.map(serializeFirestoreDocument),
         relatedData: {
-          privacyConsents: consentSnapshot.docs.map((document) => ({
-            id: document.id,
-            ...document.data(),
-          })),
+          privacyConsents: consentSnapshot.docs.map(serializeFirestoreDocument),
           accountDeletionRequest: deletionSnapshot.exists
-            ? {
-                id: deletionSnapshot.id,
-                ...deletionSnapshot.data(),
-              }
+            ? serializeFirestoreDocument(deletionSnapshot)
             : null,
-          supportRequests: supportSnapshot.docs.map((document) => ({
-            id: document.id,
-            ...document.data(),
-          })),
+          supportRequests: supportSnapshot.docs.map(serializeFirestoreDocument),
         },
       })
     },
