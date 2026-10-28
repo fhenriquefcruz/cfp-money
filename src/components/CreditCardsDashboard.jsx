@@ -25,18 +25,23 @@ import PremiumGate from './PremiumGate'
 
 const CardReconciliationModal = React.lazy(() => import('./CardReconciliationModal'))
 
+const STATUS_BRAND = 'bg-[--brand-100] text-[--brand-700]'
+const STATUS_DANGER = 'bg-[--danger-bg] text-[--danger-text]'
+const STATUS_SUCCESS = 'bg-[--success-bg] text-[--success-text]'
+const STATUS_MUTED = 'bg-[--bg-hover] text-[--text-tertiary]'
+
 const STATUS = {
-  forming: ['Em formação', 'bg-[--brand-100] text-[--brand-700]'],
+  forming: ['Em formação', STATUS_BRAND],
   closed: ['Fechada', 'bg-[--warning-bg] text-[--warning-text]'],
-  due_today: ['Vence hoje', 'bg-[--danger-bg] text-[--danger-text]'],
-  partially_paid: ['Parcial', 'bg-[--brand-100] text-[--brand-700]'],
-  paid: ['Paga', 'bg-[--success-bg] text-[--success-text]'],
-  overdue: ['Vencida', 'bg-[--danger-bg] text-[--danger-text]'],
-  overdue_partial: ['Vencida parcial', 'bg-[--danger-bg] text-[--danger-text]'],
-  overpaid: ['Crédito', 'bg-[--success-bg] text-[--success-text]'],
+  due_today: ['Vence hoje', STATUS_DANGER],
+  partially_paid: ['Parcial', STATUS_BRAND],
+  paid: ['Paga', STATUS_SUCCESS],
+  overdue: ['Vencida', STATUS_DANGER],
+  overdue_partial: ['Vencida parcial', STATUS_DANGER],
+  overpaid: ['Crédito', STATUS_SUCCESS],
   past_due: ['Vencimento passado', 'bg-[--bg-hover] text-[--text-secondary]'],
-  future: ['Futura', 'bg-[--bg-hover] text-[--text-tertiary]'],
-  empty: ['Sem lançamentos', 'bg-[--bg-hover] text-[--text-tertiary]'],
+  future: ['Futura', STATUS_MUTED],
+  empty: ['Sem lançamentos', STATUS_MUTED],
 }
 
 function SummaryCard({ icon: Icon, label, value, helper }) {
