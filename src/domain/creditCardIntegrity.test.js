@@ -180,7 +180,13 @@ test('resumo preserva compras realmente conciliáveis e soma valores em centavos
     { id: 'a', type: 'expense', paymentMethod: 'credit_card', amount: 0.1 },
     { id: 'b', type: 'expense', paymentMethod: 'credit_card', amount: 0.2 },
     { id: 'only-flag', type: 'expense', isCreditPurchase: true, amount: 100 },
-    { id: 'cancelled', type: 'expense', paymentMethod: 'credit_card', paymentStatus: 'cancelled', amount: 200 },
+    {
+      id: 'cancelled',
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      paymentStatus: 'cancelled',
+      amount: 200,
+    },
   ]
   const original = JSON.stringify(transactions)
   const result = summarizeCardLinks({ transactions })
