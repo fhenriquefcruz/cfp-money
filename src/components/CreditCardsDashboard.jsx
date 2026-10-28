@@ -444,8 +444,8 @@ function CreditCardsCenterContent() {
           </div>
 
           <p
-            aria-label="Diagnóstico de integridade dos cartões"
-            className="px-1 text-xs text-[--text-tertiary]"
+            aria-label="Diagnóstico dos cartões"
+            className="text-xs text-[--text-tertiary]"
           >
             Vínculos: {linkageAudit.linked} salvos · {linkageAudit.unlinked} sem cartão ·{' '}
             {linkageAudit.historical} históricos
