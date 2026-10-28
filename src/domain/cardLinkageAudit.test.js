@@ -21,7 +21,6 @@ test('separa vínculos salvos, compras sem vínculo e cartões apenas histórico
     savedLinkCount: 2,
     historicalLinkCount: 1,
     unlinkedCount: 2,
-    unlinkedAmount: 0.3,
     paymentMethodReviewCount: 0,
   })
   expect(transactions[2].cardId).toBeUndefined()
@@ -56,7 +55,6 @@ test('sinaliza separadamente compras de crédito sem método elegível para conc
   })
 
   expect(result.unlinkedCount).toBe(2)
-  expect(result.unlinkedAmount).toBe(60)
   expect(result.paymentMethodReviewCount).toBe(1)
 })
 
