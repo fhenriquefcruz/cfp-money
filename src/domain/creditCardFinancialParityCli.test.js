@@ -55,3 +55,40 @@ test('comando local audita backup JSON sem expor descrições ou IDs no relatór
     await rm(directory, { recursive: true, force: true })
   }
 })
+
+test('comando offline lê exportação backend versionada e contabiliza IDs ausentes sem expor dados', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'meu-real-backend-audit-'))
+  const file = join(directory, 'backend-export.json')
+  try {
+    await writeFile(
+      file,
+      JSON.stringify({
+        schemaVersion: '1.0.0',
+        generatedAt: '2026-10-22T12:00:00.000Z',
+        data: {
+          creditCards: [
+            { id: null, name: 'Cartão legado', closingDay: 5, dueDay: 12 },
+          ],
+          transactions: [],
+          invoiceEvents: [],
+        },
+      }),
+    )
+    const result = spawnSync(process.execPath, ['scripts/audit-credit-cards.mjs', file], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      timeout: 45_000,
+    })
+    expect(result.status, result.stderr).toBe(0)
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      exportFormat: 'backend',
+      invoiceMonth: '2026-10',
+      readOnly: true,
+      status: 'critical',
+      findingCounts: { missing_card_registration_id: 1 },
+    })
+    expect(result.stdout).not.toContain('Cartão legado')
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+})
