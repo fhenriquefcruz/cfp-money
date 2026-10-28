@@ -34,8 +34,7 @@ test('concilia compra antiga após duas confirmações e desfaz sem duplicar fat
   await modal.getByRole('button', { name: 'Confirmar vínculo desta compra' }).click()
   await expect(modal).toContainText('0 compras para revisar')
   await expect(summary).toContainText('92,41')
-  await expect(diagnostic).toContainText('3 salvos')
-  await expect(diagnostic).toContainText('0 sem cartão')
+  await expect(diagnostic).toHaveCount(0) // estado saudável não exibe aviso
 
   const undoButton = modal.getByRole('button', { name: 'Desfazer vínculo' })
   await undoButton.click()
