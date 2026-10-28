@@ -642,12 +642,7 @@ export default function CreditCardsDashboard() {
     <PremiumGate
       feature="Cartões e faturas"
       description="Compras, parcelas e vencimentos reunidos."
-      benefits={[
-        'Faturas por cartão',
-        'Projeção mensal',
-        'Parcelas futuras',
-        'Histórico preservado',
-      ]}
+      benefits={['Faturas', 'Pagamentos', 'Parcelas', 'Histórico']}
     >
       <CreditCardsCenterContent />
     </PremiumGate>
