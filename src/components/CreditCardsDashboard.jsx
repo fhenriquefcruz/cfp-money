@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { isUnlinkedCreditPurchase } from '../domain/cardReconciliation'
+import { auditCardLinkage } from '../domain/cardLinkageAudit'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
@@ -232,6 +233,10 @@ function CreditCardsCenterContent() {
     () => transactions.filter(isUnlinkedCreditPurchase),
     [transactions],
   )
+  const linkageAudit = useMemo(
+    () => auditCardLinkage({ transactions, creditCards }),
+    [transactions, creditCards],
+  )
   const unlinkedTotal =
     unlinkedPurchases.reduce((sum, item) => sum + Math.round(Number(item.amount || 0) * 100), 0) /
     100
@@ -437,6 +442,54 @@ function CreditCardsCenterContent() {
               } após este mês`}
             />
           </div>
+
+          <details className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-4" aria-label="Diagnóstico de integridade dos cartões">
+            <summary className="cursor-pointer text-xs font-bold text-[--text-primary]">
+              Diagnóstico dos vínculos · {linkageAudit.savedLinkCount} salvos ·{' '}
+              {linkageAudit.unlinkedCount} sem cartão
+            </summary>
+            <div className="mt-3 grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
+              <div className="rounded-xl bg-[--bg-subtle] p-3">
+                <p className="font-semibold text-[--text-secondary]">Compras com vínculo salvo</p>
+                <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">
+                  {linkageAudit.savedLinkCount}
+                </p>
+                <p className="text-[10px] text-[--text-tertiary]">
+                  {linkageAudit.registeredLinkCount} em cartões cadastrados
+                </p>
+              </div>
+              <div className="rounded-xl bg-[--bg-subtle] p-3">
+                <p className="font-semibold text-[--text-secondary]">Compras sem cartão vinculado</p>
+                <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">
+                  {linkageAudit.unlinkedCount}
+                </p>
+                <p className="text-[10px] text-[--text-tertiary]">
+                  {formatCurrency(linkageAudit.unlinkedAmount)} no histórico
+                </p>
+              </div>
+              <div className="rounded-xl bg-[--bg-subtle] p-3">
+                <p className="font-semibold text-[--text-secondary]">
+                  Compras de cartões históricos
+                </p>
+                <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">
+                  {linkageAudit.historicalLinkCount}
+                </p>
+                <p className="text-[10px] text-[--text-tertiary]">
+                  Cartões removidos não são reassociados automaticamente
+                </p>
+              </div>
+            </div>
+            {linkageAudit.paymentMethodReviewCount > 0 && (
+              <p className="mt-3 text-xs leading-relaxed text-[--warning-text]">
+                {linkageAudit.paymentMethodReviewCount} compra(s) marcada(s) como crédito, mas
+                com outro meio de pagamento registrado. Confira em Transações antes de
+                conciliar.
+              </p>
+            )}
+            <p className="mt-3 text-[11px] leading-relaxed text-[--text-tertiary]">
+              Diagnóstico somente de leitura. Valores e lançamentos não são modificados.
+            </p>
+          </details>
 
           {center.reconciledPurchaseCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--info-border] bg-[--info-bg] p-3 text-xs text-[--info-text]">
