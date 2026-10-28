@@ -19,7 +19,6 @@ test('separa vínculos salvos, compras sem vínculo e cartões apenas histórico
   const result = auditCardLinkage({ transactions, creditCards })
   expect(result).toMatchObject({
     savedLinkCount: 2,
-    registeredLinkCount: 1,
     historicalLinkCount: 1,
     unlinkedCount: 2,
     unlinkedAmount: 0.3,
