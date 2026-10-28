@@ -66,9 +66,7 @@ test('comando offline lê exportação backend versionada e contabiliza IDs ause
         schemaVersion: '1.0.0',
         generatedAt: '2026-10-22T12:00:00.000Z',
         data: {
-          creditCards: [
-            { id: null, name: 'Cartão legado', closingDay: 5, dueDay: 12 },
-          ],
+          creditCards: [{ id: null, name: 'Cartão legado', closingDay: 5, dueDay: 12 }],
           transactions: [],
           invoiceEvents: [],
         },
