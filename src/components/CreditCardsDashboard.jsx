@@ -443,10 +443,7 @@ function CreditCardsCenterContent() {
             />
           </div>
 
-          <p
-            aria-label="Diagnóstico dos cartões"
-            className="text-xs text-[--text-tertiary]"
-          >
+          <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
             Vínculos: {linkageAudit.linked} salvos · {linkageAudit.unlinked} sem cartão ·{' '}
             {linkageAudit.historical} históricos
           </p>
