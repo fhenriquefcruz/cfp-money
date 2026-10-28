@@ -3,11 +3,9 @@ const isCreditExpense = (transaction) =>
   transaction.type === 'expense' &&
   !transaction.isSavings &&
   transaction.paymentStatus !== 'cancelled' &&
-  Boolean(
-    transaction.cardId ||
+  (transaction.cardId ||
     transaction.paymentMethod === 'credit_card' ||
-    transaction.isCreditPurchase === true,
-  )
+    transaction.isCreditPurchase === true)
 
 export function auditCardLinkage({ transactions = [], creditCards = [] } = {}) {
   const registeredIds = new Set(creditCards.map((card) => card.id))
