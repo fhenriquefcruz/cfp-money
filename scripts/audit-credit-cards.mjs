@@ -14,12 +14,12 @@ async function main() {
     throw new Error('Uso: npm run audit:cards -- caminho/backup.json [--month AAAA-MM]')
   }
   const input = JSON.parse(await readFile(resolve(file), 'utf8'))
-  const records = input.collections || input
+  const records = input.collections || input.data || input
   if (!Array.isArray(records.transactions) || !Array.isArray(records.creditCards)) {
-    throw new Error('O arquivo precisa conter collections.transactions e collections.creditCards.')
+    throw new Error('O backup precisa conter transactions e creditCards no formato Spark ou backend.')
   }
   const invoiceEvents = Array.isArray(records.invoiceEvents) ? records.invoiceEvents : []
-  const selectedMonth = month || String(input.exportedAt || '').slice(0, 7)
+  const selectedMonth = month || String(input.exportedAt || input.generatedAt || '').slice(0, 7)
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(selectedMonth)) {
     throw new Error('Informe --month AAAA-MM ou utilize um backup com exportedAt válido.')
   }
@@ -48,7 +48,8 @@ async function main() {
     }, {})
     report = {
       source: 'local_export',
-      exportedAt: input.exportedAt || null,
+      exportFormat: input.mode === 'spark' ? 'spark' : input.schemaVersion ? 'backend' : 'unknown',
+      exportedAt: input.exportedAt || input.generatedAt || null,
       readOnly: audit.readOnly,
       invoiceMonth: audit.invoiceMonth,
       status: audit.status,
