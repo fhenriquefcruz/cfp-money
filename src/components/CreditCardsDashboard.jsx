@@ -16,7 +16,7 @@ import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { isUnlinkedCreditPurchase } from '../domain/cardReconciliation'
-import { auditCreditCardIntegrity } from '../domain/creditCardIntegrity'
+import { summarizeCardLinks } from '../domain/cardLinkageSummary'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
@@ -234,7 +234,7 @@ function CreditCardsCenterContent() {
     [transactions],
   )
   const linkageAudit = useMemo(
-    () => auditCreditCardIntegrity({ transactions, creditCards }),
+    () => summarizeCardLinks({ transactions, creditCards }),
     [transactions, creditCards],
   )
   const unlinkedTotal =
@@ -444,8 +444,8 @@ function CreditCardsCenterContent() {
           </div>
 
           <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
-            Vínculos: {linkageAudit.savedLinkCount} salvos ({linkageAudit.historicalCount}{' '}
-            históricos) · {linkageAudit.unlinkedCount} sem cartão
+            Vínculos: {linkageAudit.saved} salvos ({linkageAudit.historical}{' '}
+            históricos) · {linkageAudit.unlinked} sem cartão
           </p>
 
           {center.reconciledPurchaseCount > 0 && (
