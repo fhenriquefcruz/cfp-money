@@ -444,8 +444,8 @@ function CreditCardsCenterContent() {
           </div>
 
           <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
-            Vínculos: {linkageAudit.savedLinkCount} salvos · {linkageAudit.unlinkedCount} sem cartão ·{' '}
-            {linkageAudit.historicalCount} históricos
+            Vínculos: {linkageAudit.savedLinkCount} salvos ({linkageAudit.historicalCount}{' '}
+            históricos) · {linkageAudit.unlinkedCount} sem cartão
           </p>
 
           {center.reconciledPurchaseCount > 0 && (
