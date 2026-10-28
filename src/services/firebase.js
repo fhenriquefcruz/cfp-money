@@ -244,13 +244,9 @@ export const getCreditCards = async (uid) =>
   (await getDocs(userCol(uid, 'creditCards'))).docs.map(documentData)
 
 export const addCreditCard = async (uid, data) => {
-  const fields = { ...data }
+  const fields = { ...data, createdAt: serverTimestamp() }
   delete fields.id
-  const ref = await addDoc(userCol(uid, 'creditCards'), {
-    ...fields,
-    createdAt: serverTimestamp(),
-  })
-  return ref.id
+  return (await addDoc(userCol(uid, 'creditCards'), fields)).id
 }
 
 export const updateCreditCard = async (uid, id, data) =>
