@@ -206,3 +206,26 @@ test('preserva proveniência e não aceita arquivos invertidos ou formatos invá
     /incompatível/,
   )
 })
+
+test('não contabiliza alterações em salários e receitas como mudança de fatura', () => {
+  const before = {
+    exportedAt: '2026-09-01T00:00:00Z',
+    collections: {
+      creditCards: [],
+      transactions: [{ id: 'salary', type: 'income', amount: 1000 }],
+    },
+  }
+  const after = {
+    exportedAt: '2026-10-01T00:00:00Z',
+    collections: {
+      creditCards: [],
+      transactions: [{ id: 'salary', type: 'income', amount: 1500 }],
+    },
+  }
+  expect(compareCardSnapshots(before, after).sharedRecords).toEqual({
+    commonTransactions: 0,
+    unchangedCardReferences: 0,
+    changedCardReferences: 0,
+    changedAmounts: 0,
+  })
+})
