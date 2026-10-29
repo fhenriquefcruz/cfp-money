@@ -130,6 +130,7 @@ export function compareCardSnapshots(previousSnapshot, currentSnapshot) {
   for (const tx of newRecords.transactions) {
     if (newTransactionCounts.get(tx?.id) !== 1 || !oldUniqueById.has(tx.id)) continue
     const prior = oldUniqueById.get(tx.id)
+    if (!asCreditExpense(prior) && !asCreditExpense(tx)) continue
     commonTransactions++
     if ((prior.cardId || null) === (tx.cardId || null)) unchangedCardReferences++
     else changedCardReferences++
