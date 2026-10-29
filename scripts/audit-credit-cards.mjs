@@ -1,32 +1,62 @@
 #!/usr/bin/env node
-// Auditoria local, consultiva e sem rede/Firestore. Nunca escreve no arquivo de origem.
+// Auditoria local, consultiva, sem rede/Firestore ou gravação em dados de origem.
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { createServer } from 'vite'
+import {
+  compareCardSnapshots,
+  readSnapshotRecords,
+  snapshotDate,
+  summarizeSnapshotIdentity,
+} from './card-snapshot-comparison.mjs'
 
 const args = process.argv.slice(2)
-const file = args[0]
-const monthIndex = args.indexOf('--month')
-const month = monthIndex === -1 ? null : args[monthIndex + 1]
+const usage = 'Uso: npm run audit:cards -- atual.json [--month AAAA-MM] [--compare anterior.json]'
+
+function parseOptions(argv) {
+  if (!argv[0] || argv[0].startsWith('--')) throw new Error(usage)
+  let month = null
+  let compare = null
+  for (let i = 1; i < argv.length; i += 2) {
+    const flag = argv[i]
+    const value = argv[i + 1]
+    if (!value || value.startsWith('--')) throw new Error(usage)
+    if (flag === '--month' && month === null) month = value
+    else if (flag === '--compare' && compare === null) compare = value
+    else throw new Error(usage)
+  }
+  if (month && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw new Error(usage)
+  return { file: argv[0], month, compare }
+}
+
+async function readExport(file) {
+  let raw
+  try {
+    raw = await readFile(resolve(file), 'utf8')
+  } catch {
+    throw new Error('Não foi possível ler um dos arquivos de exportação.')
+  }
+  let value
+  try {
+    value = JSON.parse(raw)
+  } catch {
+    throw new Error('Uma das exportações não contém JSON válido.')
+  }
+  readSnapshotRecords(value)
+  return value
+}
 
 async function main() {
-  if (!file || file.startsWith('--') || (month && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month))) {
-    throw new Error('Uso: npm run audit:cards -- caminho/backup.json [--month AAAA-MM]')
-  }
-  const input = JSON.parse(await readFile(resolve(file), 'utf8'))
-  const records = input.collections || input.data || input
-  if (!Array.isArray(records.transactions) || !Array.isArray(records.creditCards)) {
-    throw new Error(
-      'O backup precisa conter transactions e creditCards no formato Spark ou backend.',
-    )
-  }
-  const invoiceEvents = Array.isArray(records.invoiceEvents) ? records.invoiceEvents : []
-  const selectedMonth = month || String(input.exportedAt || input.generatedAt || '').slice(0, 7)
-  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(selectedMonth)) {
-    throw new Error('Informe --month AAAA-MM ou utilize um backup com exportedAt válido.')
+  const { file, month, compare } = parseOptions(args)
+  const input = await readExport(file)
+  const previous = compare ? await readExport(compare) : null
+  const records = readSnapshotRecords(input)
+  const selectedMonth = month || snapshotDate(input)?.slice(0, 7)
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(selectedMonth || '')) {
+    throw new Error('Informe --month AAAA-MM ou use uma exportação com data válida.')
   }
 
-  // O carregador SSR do Vite resolve os imports de domínio sem carregar o aplicativo.
+  const comparison = previous ? compareCardSnapshots(previous, input) : null
   const server = await createServer({
     logLevel: 'silent',
     server: { middlewareMode: true },
@@ -38,12 +68,9 @@ async function main() {
       '/src/domain/creditCardFinancialParity.js',
     )
     const audit = auditCreditCardFinancialParity({
-      transactions: records.transactions,
-      creditCards: records.creditCards,
-      invoiceEvents,
+      ...records,
       selectedMonth,
     })
-    // Somente agregados: nunca imprimir nomes, documentos, contas, IDs ou transações brutas.
     const findingCounts = audit.findings.reduce((counts, item) => {
       counts[item.code] = (counts[item.code] || 0) + 1
       return counts
@@ -51,17 +78,20 @@ async function main() {
     report = {
       source: 'local_export',
       exportFormat: input.mode === 'spark' ? 'spark' : input.schemaVersion ? 'backend' : 'unknown',
-      exportedAt: input.exportedAt || input.generatedAt || null,
+      exportedAt: snapshotDate(input),
       readOnly: audit.readOnly,
       invoiceMonth: audit.invoiceMonth,
       status: audit.status,
       counts: audit.counts,
       totals: audit.totals,
       findingCounts,
+      identity: summarizeSnapshotIdentity(input),
+      ...(comparison ? { comparison } : {}),
     }
   } finally {
     await server.close()
   }
+  // Somente agregados; nunca imprimir nomes, IDs, descrições, caminhos ou documentos.
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)
 }
 
