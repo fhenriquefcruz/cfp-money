@@ -30,7 +30,7 @@ O programa retorna **somente um JSON agregado no terminal** e não envia requisi
 - `identity.counts.missingCardIds`: cartões exportados sem ID, que devem ser analisados antes de qualquer vínculo.
 - `identity.counts.orphanCardReferences`: compras com `cardId` que não aparece na lista exportada de cartões. **Isso também pode representar cartão removido intencionalmente.**
 - `comparison.previous/current/deltas`: mudanças agregadas entre dois snapshots, **não prova de migração, corrupção ou correção da mesma entidade**.
-- `comparison.sharedRecords`: apenas transações com ID individual válido e único presente nas duas exportações; compara referência de cartão e valor sem imprimir nenhum identificador.
+- `comparison.sharedRecords`: apenas transações relacionadas a cartões com ID válido e único presente nas duas exportações; compara referência de cartão e valor sem imprimir nenhum identificador.
 - `identityObservation: ids_present_in_new_export`: o arquivo atual não contém o problema de `id: null` observado no histórico. Não conclui que os documentos antigos foram modificados.
 
 As exportações podem ter estruturas Spark (`collections`) ou backend (`data`). A correção de exportação backend introduzida na Fase 66.2 pode exigir implantação específica das Cloud Functions se a conta estiver nesse modo; código integrado ao GitHub, sozinho, não comprova a implantação.
