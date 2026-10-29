@@ -90,3 +90,118 @@ test('comando offline lê exportação backend versionada e contabiliza IDs ause
     await rm(directory, { recursive: true, force: true })
   }
 })
+
+test('CLI compara exportações Spark antigas e backend atuais sem expor identificadores', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'meu-real-snapshot-compare-'))
+  const oldPath = join(directory, 'old.json')
+  const newPath = join(directory, 'new.json')
+  const secret = 'NEVER_OUTPUT_PRIVATE_CARD_NAME'
+  try {
+    await writeFile(
+      oldPath,
+      JSON.stringify({
+        exportedAt: '2026-09-28T10:00:00Z',
+        mode: 'spark',
+        collections: {
+          creditCards: [{ id: null, name: secret }],
+          transactions: [
+            {
+              id: 'private-transaction-id',
+              type: 'expense',
+              paymentMethod: 'credit_card',
+              cardId: 'private-canonical-card-id',
+              invoiceMonth: '2026-10',
+              amount: 11.99,
+            },
+          ],
+          invoiceEvents: [],
+        },
+      }),
+    )
+    await writeFile(
+      newPath,
+      JSON.stringify({
+        generatedAt: '2026-10-28T10:00:00Z',
+        schemaVersion: '1.0.0',
+        data: {
+          creditCards: [{ id: 'private-canonical-card-id', name: secret }],
+          transactions: [
+            {
+              id: 'private-transaction-id',
+              type: 'expense',
+              paymentMethod: 'credit_card',
+              cardId: 'private-canonical-card-id',
+              invoiceMonth: '2026-10',
+              amount: 11.99,
+            },
+          ],
+          invoiceEvents: [],
+        },
+      }),
+    )
+    const result = spawnSync(
+      process.execPath,
+      ['scripts/audit-credit-cards.mjs', newPath, '--month', '2026-10', '--compare', oldPath],
+      { cwd: process.cwd(), encoding: 'utf8', timeout: 45_000 },
+    )
+    expect(result.status, result.stderr).toBe(0)
+    const output = JSON.parse(result.stdout)
+    expect(output).toMatchObject({
+      readOnly: true,
+      exportFormat: 'backend',
+      invoiceMonth: '2026-10',
+      status: 'ok',
+      comparison: {
+        readOnly: true,
+        identityObservation: 'ids_present_in_new_export',
+        previous: { counts: { missingCardIds: 1, orphanCardReferences: 1 } },
+        current: { counts: { missingCardIds: 0, linkedPurchases: 1 } },
+        sharedRecords: {
+          commonTransactions: 1,
+          unchangedCardReferences: 1,
+          changedCardReferences: 0,
+          changedAmounts: 0,
+        },
+      },
+    })
+    expect(result.stdout).not.toContain(secret)
+    expect(result.stdout).not.toContain('private-transaction-id')
+    expect(result.stdout).not.toContain('private-canonical-card-id')
+    expect(result.stdout).not.toContain(oldPath)
+    expect(result.stderr).not.toContain(secret)
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+})
+
+test('CLI rejeita comparação cronologicamente invertida e mantém arquivos originais', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'meu-real-snapshot-order-'))
+  const earlier = join(directory, 'earlier.json')
+  const later = join(directory, 'later.json')
+  try {
+    await writeFile(
+      earlier,
+      JSON.stringify({
+        exportedAt: '2026-09-28T10:00:00Z',
+        collections: { creditCards: [], transactions: [] },
+      }),
+    )
+    await writeFile(
+      later,
+      JSON.stringify({
+        exportedAt: '2026-10-28T10:00:00Z',
+        collections: { creditCards: [], transactions: [] },
+      }),
+    )
+    const result = spawnSync(
+      process.execPath,
+      ['scripts/audit-credit-cards.mjs', earlier, '--compare', later],
+      { cwd: process.cwd(), encoding: 'utf8', timeout: 45_000 },
+    )
+    expect(result.status).not.toBe(0)
+    expect(result.stderr).toContain('anterior tem data posterior')
+    expect(result.stdout).toBe('')
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+})
