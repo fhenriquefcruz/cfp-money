@@ -73,11 +73,7 @@ export function summarizeSnapshotIdentity(snapshot) {
     counts.creditPurchases++
     const amount = cents(tx.amount)
     if (amount === null) counts.invalidCreditAmounts++
-    const type = !validId(tx.cardId)
-      ? 'unlinked'
-      : cardIds.has(tx.cardId)
-        ? 'linked'
-        : 'orphan'
+    const type = !validId(tx.cardId) ? 'unlinked' : cardIds.has(tx.cardId) ? 'linked' : 'orphan'
     counts[
       type === 'unlinked'
         ? 'unlinkedPurchases'
@@ -141,10 +137,7 @@ export function compareCardSnapshots(previousSnapshot, currentSnapshot) {
   }
 
   const deltas = Object.fromEntries(
-    Object.keys(current.counts).map((key) => [
-      key,
-      current.counts[key] - previous.counts[key],
-    ]),
+    Object.keys(current.counts).map((key) => [key, current.counts[key] - previous.counts[key]]),
   )
   return {
     readOnly: true,
