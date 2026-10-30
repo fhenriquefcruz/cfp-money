@@ -198,16 +198,9 @@ function CreditCardsContent() {
       <Card className="overflow-hidden shadow-sm" padding={false}>
         <div className="border-b border-[--border-subtle] bg-gradient-to-r from-[--brand-50] to-[--bg-surface] p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-white">
-                <CreditCard size={19} />
-              </div>
-              <div>
-                <h2 className="text-sm font-black text-[--text-primary]">
-                  Cartões e calendário de faturas
-                </h2>
-              </div>
-            </div>
+            <h2 className="text-sm font-black text-[--text-primary]">
+              Cartões e calendário de faturas
+            </h2>
 
             <Button
               variant="primary"
