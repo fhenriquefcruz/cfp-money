@@ -69,7 +69,7 @@ function MoneyMetric({ label, value, detail }) {
   )
 }
 
-function MoneyInsightContent({ referenceDate, compact = false, transactionsOverride }) {
+function MoneyInsightContent({ referenceDate, compact = false, micro = false, transactionsOverride }) {
   const { transactions: allTransactions, loading: transactionsLoading } = useTransactions()
   const transactions = transactionsOverride ?? allTransactions
   const { settings, isLoading: settingsLoading } = useMoney()
@@ -93,6 +93,39 @@ function MoneyInsightContent({ referenceDate, compact = false, transactionsOverr
     ? analysis.insights.find((insight) => insight.type === 'category_increase')
     : null
   const isLoading = transactionsLoading || settingsLoading
+
+  if (micro) {
+    const projection = analysis.projection
+    return (
+      <Card className="money-insight-card money-insight-micro overflow-hidden" padding={false}>
+        <div className="flex items-center justify-between gap-2 px-3 pt-3">
+          <span className="flex items-center gap-2 text-xs font-bold text-[--text-primary]">
+            <Bot size={15} className="text-[--brand-600]" />
+            Projeção Money
+          </span>
+          <Link to="/money" className="inline-flex min-h-9 items-center gap-1 text-[11px] font-semibold text-[--text-brand] hover:underline">
+            Análise completa <ArrowRight size={12} />
+          </Link>
+        </div>
+        <div className="px-3 pb-3">
+          <p className="mt-1 text-xl font-black tabular-nums tracking-tight text-[--text-primary]">
+            {isLoading
+              ? 'Analisando…'
+              : projection.isAvailable
+                ? formatCurrency(projection.expenses)
+                : 'Aguardando dados'}
+          </p>
+          <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-[--text-secondary]">
+            {isLoading
+              ? 'Calculando o fechamento estimado do ciclo.'
+              : projection.isAvailable
+                ? `Estimativa do período · confiança ${PROJECTION_CONFIDENCE_LABELS[projection.confidence] || 'inicial'}.`
+                : `Projeção disponível após ${projection.minimumElapsedDays} dias.`}
+          </p>
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <Card
@@ -251,7 +284,7 @@ function MoneyInsightContent({ referenceDate, compact = false, transactionsOverr
   )
 }
 
-export default function MoneyInsightCard({ referenceDate, compact = false, transactionsOverride }) {
+export default function MoneyInsightCard({ referenceDate, compact = false, micro = false, transactionsOverride }) {
   return (
     <PremiumGate
       variant="card"
@@ -267,6 +300,7 @@ export default function MoneyInsightCard({ referenceDate, compact = false, trans
       <MoneyInsightContent
         referenceDate={referenceDate}
         compact={compact}
+        micro={micro}
         transactionsOverride={transactionsOverride}
       />
     </PremiumGate>
