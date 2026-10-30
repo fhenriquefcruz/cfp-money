@@ -1,5 +1,4 @@
-import React, { useMemo, useState } from 'react'
-import { CreditCard, Info, ReceiptText } from 'lucide-react'
+import React, { useState } from 'react'
 import { useCreditCards } from '../contexts/AppContext'
 import { Button, Card, Input, Modal } from './ui'
 import PremiumGate from './PremiumGate'
@@ -148,15 +147,6 @@ function CreditCardsContent() {
   const [deleteCard, setDeleteCard] = useState(null)
   const [saving, setSaving] = useState(false)
 
-  const activeCards = useMemo(
-    () => creditCards.filter((card) => card.active !== false),
-    [creditCards],
-  )
-  const activeCardsLabel =
-    activeCards.length === 1
-      ? '1 cartão ativo para novos lançamentos.'
-      : `${activeCards.length} cartões ativos para novos lançamentos.`
-
   const openNew = () => {
     setEditingCard(null)
     setModalOpen(true)
@@ -198,22 +188,9 @@ function CreditCardsContent() {
       <Card className="overflow-hidden shadow-sm" padding={false}>
         <div className="border-b border-[--border-subtle] bg-gradient-to-r from-[--brand-50] to-[--bg-surface] p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-white">
-                <CreditCard size={19} />
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-[--brand-600]">
-                  Cartões Premium
-                </p>
-                <h2 className="mt-0.5 text-sm font-black text-[--text-primary]">
-                  Cartões e calendário de faturas
-                </h2>
-                <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-                  Defina fechamento e vencimento para manter cada compra na fatura correta.
-                </p>
-              </div>
-            </div>
+            <h2 className="text-sm font-black text-[--text-primary]">
+              Cartões e calendário de faturas
+            </h2>
 
             <Button
               variant="primary"
@@ -227,19 +204,6 @@ function CreditCardsContent() {
         </div>
 
         <div className="p-5">
-          <div className="mb-4 flex items-start gap-3 rounded-2xl border border-[--border-default] bg-[--bg-subtle] p-3.5">
-            <Info size={16} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
-            <div>
-              <p className="text-xs font-bold text-[--text-primary]">
-                Como o Meu Real utilizará esses dados?
-              </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-[--text-tertiary]">
-                A compra mantém sua data original; a fatura segue o vencimento. O histórico não
-                muda.
-              </p>
-            </div>
-          </div>
-
           {loading ? (
             <div className="space-y-3">
               <div className="h-20 animate-pulse rounded-2xl bg-[--bg-hover]" />
@@ -247,7 +211,6 @@ function CreditCardsContent() {
             </div>
           ) : creditCards.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[--border-default] bg-[--bg-subtle] p-6 text-center">
-              <ReceiptText size={26} className="mx-auto text-[--text-tertiary]" />
               <p className="mt-2 text-sm font-bold text-[--text-primary]">
                 Nenhum cartão cadastrado
               </p>
@@ -262,10 +225,6 @@ function CreditCardsContent() {
                   key={card.id}
                   className="flex items-center gap-3 rounded-2xl border border-[--border-default] bg-[--bg-surface] p-3.5"
                 >
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-100] text-[--brand-600]">
-                    <CreditCard size={17} />
-                  </div>
-
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-sm font-bold text-[--text-primary]">
@@ -303,8 +262,6 @@ function CreditCardsContent() {
                   </div>
                 </div>
               ))}
-
-              <p className="text-[10px] text-[--text-tertiary]">{activeCardsLabel}</p>
             </div>
           )}
         </div>

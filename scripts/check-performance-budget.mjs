@@ -39,9 +39,12 @@ const indexPath = join(distRoot, 'index.html')
 // de JS total gzip, mantendo 244,08 KiB de JS inicial abaixo de 245 KiB.
 // Reservamos 5 KiB exclusivamente no total global (739 KiB), sem ampliar
 // os tetos de carregamento inicial, rota Money, maior chunk ou CSS.
+// Fase 66.4: +2 KiB apenas no teto agregado (741 KiB) para a auditoria
+// consultiva de cartões; os demais limites, tolerâncias e barreiras de segurança
+// permanecem idênticos. Revisar métricas da CI no SHA final antes do merge.
 const limits = {
   initialJavaScriptGzipBytes: 245 * 1024,
-  totalJavaScriptGzipBytes: 739 * 1024,
+  totalJavaScriptGzipBytes: 741 * 1024,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 22 * 1024 + 512,

@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CalendarDays,
+  CircleDollarSign,
   ChevronLeft,
   ChevronRight,
-  CircleDollarSign,
   CreditCard,
-  Layers3,
   Plus,
   ReceiptText,
   Settings2,
@@ -15,6 +14,7 @@ import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { summarizeCardLinks } from '../domain/cardLinkageSummary'
+import { auditLoadedCardInvoices } from '../domain/cardInvoiceReadOnlyAudit'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
@@ -214,6 +214,7 @@ function CreditCardsCenterContent() {
   const [managingCardId, setManagingCardId] = useState(null)
   const [cardSettingsOpen, setCardSettingsOpen] = useState(false)
   const [reconciliationOpen, setReconciliationOpen] = useState(false)
+  const [auditOpen, setAuditOpen] = useState(false)
 
   const center = useMemo(
     () =>
@@ -249,6 +250,7 @@ function CreditCardsCenterContent() {
   const managedInvoice = center.invoices.find((invoice) => invoice.card.id === managingCardId)
 
   const loadingData = transactionsLoading || creditCardsLoading || invoiceEventsLoading
+  const auditResult = auditOpen && !loadingData ? auditLoadedCardInvoices(center.invoices) : null
 
   useEffect(() => {
     if (loadingData || userSelectedMonthRef.current) return
@@ -276,6 +278,7 @@ function CreditCardsCenterContent() {
     userSelectedMonthRef.current = true
     setSelectedMonth(month)
     setSelectedCardId('all')
+    setAuditOpen(false)
   }
 
   return (
@@ -421,7 +424,7 @@ function CreditCardsCenterContent() {
                 'Restante a pagar nas faturas',
               ],
               [
-                Layers3,
+                CalendarDays,
                 'Parcelas futuras',
                 center.futureInstallmentTotal,
                 `${center.futureInstallmentCount} parcela${center.futureInstallmentCount === 1 ? '' : 's'} após este mês`,
@@ -436,10 +439,49 @@ function CreditCardsCenterContent() {
               />
             ))}
           </div>
-          {(linkageAudit.unlinked || linkageAudit.historical) > 0 && (
-            <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
-              {diagnosticText}
-            </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {(linkageAudit.unlinked || linkageAudit.historical) > 0 && (
+              <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
+                {diagnosticText}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => setAuditOpen(true)}
+              className="min-h-11 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary]"
+            >
+              Auditar valores
+            </button>
+          </div>
+
+          {auditOpen && !loadingData && (
+            <section
+              aria-label="Resultado da auditoria financeira"
+              className="rounded-xl border border-[--border-default] bg-[--bg-surface] p-3"
+            >
+              <p role="status" className="text-xs font-bold text-[--text-primary]">
+                Conferência interna · {selectedMonth} ·{' '}
+                {auditResult.total
+                  ? `Conferidas: ${auditResult.checked} · Divergentes: ${auditResult.divergent} · Inconclusivas: ${auditResult.inconclusive}`
+                  : 'Nenhuma fatura com movimentação para conferir'}
+              </p>
+              <p className="mt-2 text-xs text-[--text-secondary]">
+                {linkageAudit.saved} vínculos salvos · Compras sem cartão salvo:{' '}
+                {linkageAudit.unlinked} · Sugestões: {center.reconciledPurchaseCount} · Históricos:{' '}
+                {linkageAudit.historical}
+              </p>
+              <p className="mt-2 text-[11px] text-[--text-tertiary]">
+                Cálculo sobre dados carregados nesta sessão, não é conciliação bancária. Nenhum
+                lançamento é corrigido automaticamente; confira seu extrato.
+              </p>
+              <button
+                type="button"
+                onClick={() => setAuditOpen(false)}
+                className="mt-2 min-h-11 rounded-lg border px-3 text-xs font-bold"
+              >
+                Concluir conferência
+              </button>
+            </section>
           )}
 
           {center.reconciledPurchaseCount > 0 && (
@@ -483,22 +525,11 @@ function CreditCardsCenterContent() {
           <div className="credit-cards-premium__grid grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,0.88fr)_minmax(380px,1.12fr)]">
             <div className="space-y-4">
               <Card className="shadow-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-sm font-black text-[--text-primary]">
-                      Próximos compromissos
-                    </h2>
-                    <p className="mt-1 text-[10px] text-[--text-tertiary]">
-                      Compras já registradas
-                    </p>
-                  </div>
-                  <CalendarDays size={16} className="text-[--brand-600]" />
-                </div>
+                <h2 className="text-sm font-black text-[--text-primary]">Próximos compromissos</h2>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 xl:grid-cols-3 2xl:grid-cols-6">
                   {center.forecast.map((item) => {
                     const height = Math.max(8, Math.round((item.total / center.forecastMax) * 62))
-                    const active = item.month === selectedMonth
 
                     return (
                       <button
@@ -507,24 +538,19 @@ function CreditCardsCenterContent() {
                         onClick={() => {
                           selectMonth(item.month)
                         }}
-                        className={`rounded-2xl border p-2 text-center transition-colors ${
-                          active
-                            ? 'border-[--brand-500] bg-[--brand-50]'
-                            : 'border-[--border-subtle] bg-[--bg-subtle] hover:border-[--brand-300]'
-                        }`}
+                        aria-pressed={item.month === selectedMonth}
+                        className="flex min-h-28 flex-col items-center justify-end rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-2 text-center hover:border-[--brand-300] aria-pressed:border-[--brand-500] aria-pressed:bg-[--brand-50]"
                       >
-                        <div className="flex h-16 items-end justify-center">
-                          <span
-                            className="w-5 rounded-t-lg bg-gradient-to-t from-[--brand-600] to-[--brand-300]"
-                            style={{ height }}
-                          />
-                        </div>
-                        <p className="mt-2 truncate text-[9px] font-bold text-[--text-secondary]">
+                        <span
+                          className="w-5 rounded-t-lg bg-gradient-to-t from-[--brand-600] to-[--brand-300]"
+                          style={{ height }}
+                        />
+                        <span className="mt-2 truncate text-[9px] font-bold text-[--text-secondary]">
                           {item.label.split(' de ')[0]}
-                        </p>
-                        <p className="mt-0.5 text-[9px] font-black text-[--text-primary]">
+                        </span>
+                        <span className="mt-0.5 text-[9px] font-black text-[--text-primary]">
                           {formatCurrency(item.total, { compact: true })}
-                        </p>
+                        </span>
                       </button>
                     )
                   })}
