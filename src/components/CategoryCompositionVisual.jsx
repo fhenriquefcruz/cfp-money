@@ -137,11 +137,16 @@ export default function CategoryCompositionVisual({
           const href = item.categoryId && getHref?.(item)
           if (href)
             return (
-              <Link key={key} to={href} className={common} style={style}
+              <Link
+                key={key}
+                to={href}
+                className={common}
+                style={style}
                 onMouseEnter={() => onHoverCategory?.(item.categoryId)}
                 onMouseLeave={() => onHoverCategory?.('')}
                 onFocus={() => onHoverCategory?.(item.categoryId)}
-                onBlur={() => onHoverCategory?.('')}>
+                onBlur={() => onHoverCategory?.('')}
+              >
                 {content}
               </Link>
             )
@@ -164,9 +169,13 @@ export default function CategoryCompositionVisual({
             )
           }
           return (
-            <div key={key} className={common} style={style}
+            <div
+              key={key}
+              className={common}
+              style={style}
               onMouseEnter={() => onHoverCategory?.(item.categoryId)}
-              onMouseLeave={() => onHoverCategory?.('')}>
+              onMouseLeave={() => onHoverCategory?.('')}
+            >
               {content}
             </div>
           )
