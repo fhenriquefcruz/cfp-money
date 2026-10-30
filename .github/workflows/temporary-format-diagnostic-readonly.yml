@@ -1,5 +1,8 @@
 name: Temporary readonly Prettier diff diagnostic
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - feat/phase-66-4-in-app-financial-audit
