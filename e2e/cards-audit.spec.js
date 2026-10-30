@@ -17,7 +17,7 @@ test('abre auditoria somente leitura dos dados já carregados e fecha sem altera
   const audit = page.getByRole('region', { name: 'Resultado da auditoria financeira' })
   await expect(audit).toBeVisible()
   await expect(audit).toContainText('Conferência interna')
-  await expect(audit).toContainText('Conferidas:')
+  await expect(audit).toContainText('Nenhuma fatura com movimentação para conferir')
   await expect(audit).toContainText('2 vínculos salvos')
   await expect(audit).toContainText('Compras sem cartão salvo')
   await expect(audit).toContainText('Nenhum lançamento é')
@@ -41,7 +41,6 @@ test('auditoria de cartões cabe na largura de celular sem alterar fatura', asyn
   await audit.getByRole('button', { name: 'Concluir conferência' }).click()
   await expect(audit).toHaveCount(0)
 })
-
 
 test('trocar de mes encerra a auditoria do periodo anterior', async ({ page }) => {
   await prepareE2EPage(page, '/cards')
