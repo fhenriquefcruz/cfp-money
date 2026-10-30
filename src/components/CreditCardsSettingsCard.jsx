@@ -203,15 +203,9 @@ function CreditCardsContent() {
                 <CreditCard size={19} />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-[--brand-600]">
-                  Cartões Premium
-                </p>
-                <h2 className="mt-0.5 text-sm font-black text-[--text-primary]">
+                <h2 className="text-sm font-black text-[--text-primary]">
                   Cartões e calendário de faturas
                 </h2>
-                <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-                  Defina fechamento e vencimento para manter cada compra na fatura correta.
-                </p>
               </div>
             </div>
 
