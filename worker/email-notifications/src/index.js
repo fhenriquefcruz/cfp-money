@@ -1,4 +1,5 @@
 import {
+  getGoalEffectiveCurrent,
   goalAlertCandidates,
   isPremiumUser,
   isReportDue,
@@ -135,9 +136,9 @@ async function readTransactions(env, uid) {
   return listCollection(env, `users/${uid}/transactions`, { limit: 3000 })
 }
 
-function goalAlertMessage(goal, candidate) {
+function goalAlertMessage(goal, candidate, transactions = []) {
   const target = Number(goal.targetAmount || 0)
-  const current = Number(goal.currentAmount || 0)
+  const current = getGoalEffectiveCurrent(goal, transactions)
   const remaining = Math.max(0, target - current)
   const name = goal.name || 'Meta'
 
@@ -243,7 +244,7 @@ async function collectQueueAlerts({ env, user, settings, local }) {
   return pending
 }
 
-async function collectGoalAlerts({ env, user, settings, now, local }) {
+async function collectGoalAlerts({ env, user, settings, now, local, transactions }) {
   if (
     !settings.goalAlerts ||
     local.hour !== Number(settings.reportHour || 8) ||
@@ -252,11 +253,15 @@ async function collectGoalAlerts({ env, user, settings, now, local }) {
     return []
   }
 
+  const goalTransactions = transactions ?? (await readTransactions(env, user.id))
+  // A consulta possui limite de 3.000 movimentos: com truncamento potencial,
+  // não enviar alerta de progresso que pode estar matematicamente incompleto.
+  if (goalTransactions.length >= 3000) return []
   const goals = await listCollection(env, `users/${user.id}/goals`, { limit: 500 })
   const pending = []
 
   for (const goal of goals) {
-    const candidates = goalAlertCandidates(goal, now).filter((candidate) => {
+    const candidates = goalAlertCandidates(goal, now, goalTransactions).filter((candidate) => {
       if (candidate.startsWith('progress-')) {
         const threshold = Number(candidate.split('-').pop())
         return (settings.goalProgressThresholds || []).includes(threshold)
@@ -279,7 +284,7 @@ async function collectGoalAlerts({ env, user, settings, now, local }) {
       pending.push({
         key: `goal:${goal.id}:${candidate}`,
         deliveryKey,
-        ...goalAlertMessage(goal, candidate),
+        ...goalAlertMessage(goal, candidate, goalTransactions),
       })
     }
   }
@@ -439,6 +444,7 @@ async function processUser({ env, user, now }) {
       settings,
       now,
       local,
+      transactions,
     })),
   ]
   const alertCount = await sendAlerts({
