@@ -2,37 +2,21 @@
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
 export function moneyToCents(value) {
-  if (typeof value === 'number') {
-    if (!Number.isFinite(value)) return 0
-    // Converter pela representação decimal evita 1.005 * 100 = 100.4999…
-    const raw = String(Math.abs(value))
-    if (!/^\d+(?:\.\d+)?$/.test(raw)) return 0
-    const [whole, fraction = ''] = raw.split('.')
-    const cents =
-      Number(whole) * 100 +
-      Number(fraction.slice(0, 2).padEnd(2, '0')) +
-      (Number(fraction[2] || '0') >= 5 ? 1 : 0)
-    return Number.isSafeInteger(cents) ? (value < 0 ? -cents : cents) : 0
-  }
-  if (typeof value !== 'string') return 0
-  let text = value.trim().replace(/^R\$\s*/i, '').replace(/\s/g, '')
-  if (!text) return 0
+  if (value == null) return 0
+  const numeric = typeof value === 'number'
+  if (numeric && !Number.isFinite(value)) return 0
+  const text = String(value).trim().replace(/^R\$\s*/i, '').replace(/\s/g, '')
   const negative = text.startsWith('-')
-  text = text.replace(/^[+-]/, '')
-  if (/^\d{1,3}(?:\.\d{3})+,\d{1,2}$/.test(text)) {
-    text = text.replace(/\./g, '').replace(',', '.')
-  } else if (/^\d{1,3}(?:,\d{3})+\.\d{1,2}$/.test(text)) {
-    text = text.replace(/,/g, '')
-  } else if (/^\d{1,3}(?:\.\d{3})+$/.test(text)) {
-    text = text.replace(/\./g, '')
-  } else if (/^\d{1,3}(?:,\d{3})+$/.test(text)) {
-    text = text.replace(/,/g, '')
-  } else if (/^\d+,\d{1,2}$/.test(text)) {
-    text = text.replace(',', '.')
-  }
-  if (!/^\d+(?:\.\d{1,2})?$/.test(text)) return 0
-  const [units, fraction = ''] = text.split('.')
-  const cents = Number(units) * 100 + Number(fraction.padEnd(2, '0'))
+  const unsigned = text.replace(/^[+-]/, '')
+  const match = numeric
+    ? unsigned.match(/^(\d+)(?:\.(\d+))?$/)
+    : unsigned.match(/^(\d{1,3}(?:\.\d{3})+|\d{1,3}(?:,\d{3})+|\d+)(?:[.,](\d{1,2}))?$/)
+  if (!match) return 0
+  const fraction = (match[2] || '').padEnd(3, '0')
+  const cents =
+    Number(match[1].replace(/[.,]/g, '')) * 100 +
+    Number(fraction.slice(0, 2)) +
+    (numeric && fraction[2] >= '5' ? 1 : 0)
   return Number.isSafeInteger(cents) ? (negative ? -cents : cents) : 0
 }
 
