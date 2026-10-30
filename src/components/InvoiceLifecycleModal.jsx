@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, History, LockKeyhole, Receipt, RotateCcw, Scale, Wallet } from 'lucide-react'
 import {
   createAdjustmentEvent,
@@ -7,6 +7,7 @@ import {
   createReversalEvent,
   getPaymentReversibleAmount,
 } from '../domain/invoiceLifecycle'
+import { createInvoiceOperationId } from '../domain/invoiceOperation'
 import { formatCurrency, formatDate } from '../utils'
 import { Button, Modal } from './ui'
 
@@ -121,6 +122,8 @@ export default function InvoiceLifecycleModal({
   const [direction, setDirection] = useState('credit')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const pendingOperation = useRef(null)
+  const submitting = useRef(false)
 
   const lifecycle = invoice?.lifecycle
   const events = lifecycle?.events || []
@@ -135,7 +138,10 @@ export default function InvoiceLifecycleModal({
     setNotes('')
     setDirection('credit')
     setError('')
-  }, [invoice?.card?.id, invoiceMonth, isOpen, lifecycle?.remainingAmount])
+    // Um novo modal/fatura inicia uma operação independente. Atualizações do
+    // saldo via onSnapshot não substituem a chave pendente de um retry.
+    pendingOperation.current = null
+  }, [invoice?.card?.id, invoiceMonth, isOpen])
 
   const paymentSummary = useMemo(
     () => ({
@@ -148,20 +154,33 @@ export default function InvoiceLifecycleModal({
   )
 
   const submitEvent = async (event) => {
+    if (submitting.current) return
+    submitting.current = true
     setLoading(true)
     setError('')
 
+    const fingerprint = JSON.stringify(event)
+    if (!pendingOperation.current || pendingOperation.current.fingerprint !== fingerprint) {
+      pendingOperation.current = {
+        fingerprint,
+        operationId: createInvoiceOperationId(),
+      }
+    }
+
     try {
-      await onCreateEvent(event)
+      await onCreateEvent({ ...event, operationId: pendingOperation.current.operationId })
+      pendingOperation.current = null
       setNotes('')
       if (event.type === 'payment') {
         setAmount('')
         setSourceAccount('')
       }
     } catch (submitError) {
+      // Preserva a operationId após erro/timeout; reenviar não cria outro fato.
       setError(submitError?.message || 'Não foi possível registrar o evento.')
       throw submitError
     } finally {
+      submitting.current = false
       setLoading(false)
     }
   }
