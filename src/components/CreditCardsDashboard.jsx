@@ -485,49 +485,40 @@ function CreditCardsCenterContent() {
 
           {auditOpen && !loadingData && (
             <section
-              role="region"
               aria-label="Resultado da auditoria financeira"
-              className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-4 shadow-sm"
+              className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-3 shadow-sm"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h2 className="text-sm font-black text-[--text-primary]">
-                    Conferência financeira dos cartões
-                  </h2>
-                  <p className="mt-1 text-xs text-[--text-secondary]">
-                    Competência {selectedMonth} · {center.invoices.length} fatura(s) ·{' '}
-                    {linkageAudit.saved} vínculos salvos
-                  </p>
-                </div>
+                <h2 className="text-sm font-black text-[--text-primary]">
+                  Conferência financeira dos cartões
+                </h2>
                 <button
                   type="button"
                   onClick={() => setAuditOpen(false)}
-                  className="min-h-11 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-primary]"
+                  className="min-h-11 rounded-xl border border-[--border-default] px-3 text-xs font-bold"
                 >
                   Concluir conferência
                 </button>
               </div>
-              <p role="status" className="mt-3 text-xs font-semibold text-[--text-primary]">
-                {auditFindings.length
-                  ? `${auditFindings.length} tipos de ocorrência para conferência`
-                  : 'Nenhuma divergência detectada'}
+              <p className="mt-2 text-xs text-[--text-secondary]">
+                {selectedMonth} · {center.invoices.length} faturas · {linkageAudit.saved} vínculos
+                salvos
+              </p>
+              <p role="status" className="mt-2 text-xs font-bold">
+                {auditFindings.length ? `${auditFindings.length} pontos para conferir` : 'Nenhuma divergência detectada'}
               </p>
               {auditFindings.length > 0 && (
-                <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+                <ul className="mt-2 flex flex-wrap gap-2">
                   {auditFindings.map(([label, count]) => (
-                    <li
-                      key={label}
-                      className="flex flex-wrap justify-between gap-2 rounded-xl bg-[--bg-subtle] p-3 text-xs text-[--text-secondary]"
-                    >
-                      <span>{label}</span>
-                      <strong>{count} ocorrência(s)</strong>
+                    <li key={label} className="rounded-xl bg-[--bg-subtle] p-2 text-xs">
+                      {count} · {label}
                     </li>
                   ))}
                 </ul>
               )}
-              <p className="mt-3 text-[11px] leading-relaxed text-[--text-tertiary]">
+              <p className="mt-2 text-[11px] text-[--text-tertiary]">
                 Cálculo sobre dados carregados nesta sessão. Nenhum lançamento é corrigido
-                automaticamente. Cartões históricos podem ser legítimos; confira o extrato do banco.
+                automaticamente. Vínculos antigos podem ser legítimos; confira o banco.
               </p>
             </section>
           )}
