@@ -116,7 +116,7 @@ function SavingRateBadge({ rate }) {
 }
 
 function ReportsContent() {
-  const { transactions, getSummary } = useTransactions()
+  const { transactions } = useTransactions()
   const [searchParams] = useSearchParams()
   const requestedMonth = searchParams.get('month')
   const initialMonth = /^\d{4}-\d{2}$/.test(requestedMonth || '')
