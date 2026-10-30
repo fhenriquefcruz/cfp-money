@@ -1,25 +1,18 @@
-const asAmount = (value) => (Number.isFinite(Number(value)) ? Math.abs(Number(value)) : 0)
+import {
+  centsToMoney,
+  getFinancialActivityDate,
+  getGoalEffectiveCents,
+  getSavingsSignedCents,
+} from './financialCore'
 
-const isEffective = (transaction = {}) =>
-  transaction.paymentStatus !== 'cancelled' &&
-  transaction.flowType !== 'transfer' &&
-  transaction.kind !== 'transfer'
-
-const activityDate = (transaction = {}) =>
-  transaction.purchaseDate ||
-  transaction.originalPurchaseDate ||
-  transaction.date ||
-  transaction.dueDate ||
-  ''
+const activityDate = getFinancialActivityDate
 
 export const SAVINGS_DEPOSIT = 'deposit'
 export const SAVINGS_WITHDRAWAL = 'withdrawal'
 export const UNCLASSIFIED_SAVINGS_DESTINATION = 'Reserva não classificada'
 
 export function getSavingsSignedAmount(transaction = {}) {
-  if (!transaction.isSavings || !isEffective(transaction)) return 0
-  const amount = asAmount(transaction.amount)
-  return transaction.savingsMovement === SAVINGS_WITHDRAWAL ? -amount : amount
+  return centsToMoney(getSavingsSignedCents(transaction))
 }
 
 export function getSavingsDestinationLabel(transaction = {}) {
@@ -51,8 +44,7 @@ export function getGoalSavingsAmount(transactions = [], goalId = '') {
 }
 
 export function getGoalEffectiveCurrent(goal = {}, transactions = []) {
-  const openingBalance = Number(goal.currentAmount) || 0
-  return Math.max(0, openingBalance + getGoalSavingsAmount(transactions, goal.id))
+  return centsToMoney(getGoalEffectiveCents(goal, transactions))
 }
 
 export function buildSavingsOverview(transactions = [], bounds = {}) {
