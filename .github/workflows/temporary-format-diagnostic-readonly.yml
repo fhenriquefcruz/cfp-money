@@ -1,0 +1,22 @@
+name: Temporary readonly Prettier diff diagnostic
+on:
+  push:
+    branches:
+      - feat/phase-66-4-in-app-financial-audit
+permissions:
+  contents: read
+jobs:
+  show-format-diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Compute local-only Prettier suggestions
+        run: npx prettier --write src/domain/cardInvoiceReadOnlyAudit.js
+      - name: Show suggested diff without committing
+        run: git --no-pager diff -- src/domain/cardInvoiceReadOnlyAudit.js
