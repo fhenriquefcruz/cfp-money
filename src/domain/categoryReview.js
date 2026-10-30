@@ -55,6 +55,11 @@ export function reviewTransactionCategory(transaction = {}, categories = []) {
       .join(' '),
   )
   if (!inferred) return null
+  if (
+    transaction.categoryReviewApprovedFamily === inferred.id &&
+    transaction.categoryReviewApprovedCategoryId === transaction.categoryId
+  )
+    return null
 
   const currentCategory = categories.find((category) => category.id === transaction.categoryId)
   const currentFamily = categoryFamily(currentCategory || { name: transaction.categoryName })

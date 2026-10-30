@@ -63,13 +63,7 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
       <span className="relative flex-shrink-0">
         <Icon size={18} />
         {premium && collapsed && (
-          <Crown
-            size={9}
-            className={clsx(
-              'absolute -right-1.5 -top-1.5',
-              isActive ? 'text-yellow-300' : 'text-yellow-500',
-            )}
-          />
+          <Crown size={9} className={clsx('absolute -right-1.5 -top-1.5', 'text-amber-300')} />
         )}
       </span>
 
@@ -90,8 +84,7 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
       {premium && !collapsed && (
         <span
           className={clsx(
-            'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide',
-            isActive ? 'bg-white/15 text-yellow-200' : 'bg-yellow-100 text-yellow-800',
+            'inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300',
           )}
         >
           <Crown size={9} />
@@ -387,13 +380,19 @@ export default function Sidebar() {
       <motion.aside
         animate={{ width: collapsed ? 68 : 232 }}
         transition={{ duration: 0.2 }}
-        className="aurora-sidebar sticky top-0 hidden h-screen flex-shrink-0 flex-col overflow-hidden border-r border-[--border-subtle] bg-[--bg-sidebar] lg:flex"
+        className={clsx(
+          'aurora-sidebar sticky top-0 hidden h-screen flex-shrink-0 flex-col overflow-hidden border-r border-[--border-subtle] bg-[--bg-sidebar] lg:flex',
+          location.pathname === '/dashboard' && 'dashboard-sidebar-dark',
+        )}
       >
         {sidebarContent}
       </motion.aside>
 
       <nav
-        className="aurora-bottom-nav fixed bottom-0 left-0 right-0 z-[70] grid grid-cols-5 items-stretch overflow-x-clip border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
+        className={clsx(
+          'aurora-bottom-nav fixed bottom-0 left-0 right-0 z-[70] grid grid-cols-5 items-stretch overflow-x-clip border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden',
+          location.pathname === '/dashboard' && 'dashboard-bottom-nav-dark',
+        )}
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
       >
         {mobilePrimaryItems.map(({ to, icon: Icon, label, premium }) => (

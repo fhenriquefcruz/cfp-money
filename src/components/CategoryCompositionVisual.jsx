@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatCurrency } from '../utils'
 import { UNCATEGORIZED_COLOR } from '../domain/categoryComposition'
+import BentoCategoryIcon from './dashboard/BentoCategoryIcon'
 
 const formatPercent = (value) =>
   Number(value || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
@@ -14,6 +15,8 @@ export default function CategoryCompositionVisual({
   getHref,
   onSelect,
   selectedCategoryId = '',
+  vectorIcons = false,
+  onHoverCategory,
 }) {
   const [expanded, setExpanded] = useState(false)
   if (!items.length) return null
@@ -64,9 +67,13 @@ export default function CategoryCompositionVisual({
           className="dashboard-category-leader"
           style={{ '--category-accent': leader.color || UNCATEGORIZED_COLOR }}
         >
-          <span className="dashboard-category-leader__medal" aria-hidden="true">
-            {leader.icon || '◈'}
-          </span>
+          {vectorIcons ? (
+            <BentoCategoryIcon category={leader} />
+          ) : (
+            <span className="dashboard-category-leader__medal" aria-hidden="true">
+              {leader.icon || '◈'}
+            </span>
+          )}
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
               Categoria que mais consome
@@ -110,7 +117,9 @@ export default function CategoryCompositionVisual({
               </span>
               <span className="category-composition-copy">
                 <span className="category-composition-name">
-                  <span aria-hidden="true">{item.icon || '◈'}</span> {item.categoryName}
+                  {vectorIcons && <BentoCategoryIcon category={item} size={15} />}
+                  {!vectorIcons && <span aria-hidden="true">{item.icon || '◈'}</span>}
+                  {item.categoryName}
                 </span>
                 <span className="category-composition-detail">
                   {formatPercent(item.sharePercent)}% dos gastos
@@ -128,7 +137,16 @@ export default function CategoryCompositionVisual({
           const href = item.categoryId && getHref?.(item)
           if (href)
             return (
-              <Link key={key} to={href} className={common} style={style}>
+              <Link
+                key={key}
+                to={href}
+                className={common}
+                style={style}
+                onMouseEnter={() => onHoverCategory?.(item.categoryId)}
+                onMouseLeave={() => onHoverCategory?.('')}
+                onFocus={() => onHoverCategory?.(item.categoryId)}
+                onBlur={() => onHoverCategory?.('')}
+              >
                 {content}
               </Link>
             )
@@ -140,6 +158,10 @@ export default function CategoryCompositionVisual({
                 className={common}
                 style={style}
                 aria-pressed={selectedCategoryId === item.categoryId}
+                onMouseEnter={() => onHoverCategory?.(item.categoryId)}
+                onMouseLeave={() => onHoverCategory?.('')}
+                onFocus={() => onHoverCategory?.(item.categoryId)}
+                onBlur={() => onHoverCategory?.('')}
                 onClick={() => onSelect(item.categoryId)}
               >
                 {content}
@@ -147,7 +169,13 @@ export default function CategoryCompositionVisual({
             )
           }
           return (
-            <div key={key} className={common} style={style}>
+            <div
+              key={key}
+              className={common}
+              style={style}
+              onMouseEnter={() => onHoverCategory?.(item.categoryId)}
+              onMouseLeave={() => onHoverCategory?.('')}
+            >
               {content}
             </div>
           )

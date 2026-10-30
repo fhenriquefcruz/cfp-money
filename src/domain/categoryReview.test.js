@@ -78,3 +78,19 @@ test('ignora cancelamentos e monta uma fila de revisão', () => {
   expect(queue).toHaveLength(1)
   expect(queue[0].transactionId).toBe('review')
 })
+
+test('aprovação explícita da categoria atual é respeitada e invalidada após mudança de categoria', () => {
+  const tx = {
+    id: 'approved',
+    type: 'expense',
+    description: 'Uber centro',
+    categoryId: 'fuel',
+    categoryReviewApprovedFamily: 'ride_hailing',
+    categoryReviewApprovedCategoryId: 'fuel',
+  }
+  expect(reviewTransactionCategory(tx, categories)).toBeNull()
+  expect(reviewTransactionCategory({ ...tx, categoryId: 'loan' }, categories)).not.toBeNull()
+  expect(
+    reviewTransactionCategory({ ...tx, categoryReviewApprovedFamily: null }, categories),
+  ).not.toBeNull()
+})

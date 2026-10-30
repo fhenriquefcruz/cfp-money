@@ -58,35 +58,39 @@ async function expectDashboardPremiumVisualization(page, projectName) {
   await expect(chartAreas).toHaveCount(2)
 
   const geometry = await page.evaluate(() => {
-    const forecast = document.querySelector('.dashboard-forecast-card')?.getBoundingClientRect()
-    const health = document.querySelector('.dashboard-health-card')?.getBoundingClientRect()
-    const money = document.querySelector('.dashboard-money-insight')?.getBoundingClientRect()
-
-    const compact = (rect) =>
-      rect ? { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right } : null
-
+    const rect = (selector) => {
+      const value = document.querySelector(selector)?.getBoundingClientRect()
+      return value
+        ? { top: value.top, bottom: value.bottom, left: value.left, right: value.right }
+        : null
+    }
     return {
-      forecast: compact(forecast),
-      health: compact(health),
-      money: compact(money),
+      hero: rect('.dashboard-period-hero'),
+      decisions: rect('.dashboard-decision-card'),
+      payments: rect('.payment-control-card'),
+      savings: rect('.dashboard-savings-card'),
+      rhythm: rect('.dashboard-forecast-card'),
+      analytics: rect('.dashboard-bento-analytics'),
+      feed: rect('.dashboard-bento-feed'),
     }
   })
 
-  expect(geometry.forecast).not.toBeNull()
-  expect(geometry.health).not.toBeNull()
-  expect(geometry.money).not.toBeNull()
+  Object.values(geometry).forEach((rect) => expect(rect).not.toBeNull())
 
   if (projectName === 'visual-desktop-chromium') {
-    expect(Math.abs(geometry.forecast.top - geometry.health.top)).toBeLessThanOrEqual(2)
-    expect(Math.abs(geometry.forecast.top - geometry.money.top)).toBeLessThanOrEqual(2)
-    expect(geometry.forecast.right).toBeLessThanOrEqual(geometry.health.left)
-    expect(geometry.health.right).toBeLessThanOrEqual(geometry.money.left)
+    // 8:4, 5:4:3 e 7:5 no mesmo Bento Grid de doze colunas.
+    expect(Math.abs(geometry.hero.top - geometry.decisions.top)).toBeLessThanOrEqual(2)
+    expect(geometry.hero.right).toBeLessThanOrEqual(geometry.decisions.left)
+    expect(Math.abs(geometry.payments.top - geometry.savings.top)).toBeLessThanOrEqual(2)
+    expect(Math.abs(geometry.savings.top - geometry.rhythm.top)).toBeLessThanOrEqual(2)
+    expect(Math.abs(geometry.analytics.top - geometry.feed.top)).toBeLessThanOrEqual(2)
+    expect(geometry.analytics.right).toBeLessThanOrEqual(geometry.feed.left)
     return
   }
 
-  // Em telas móveis, os cartões têm uma coluna: não reduzir a largura de cada quadro.
-  expect(geometry.health.top).toBeGreaterThanOrEqual(geometry.forecast.bottom)
-  expect(geometry.money.top).toBeGreaterThanOrEqual(geometry.health.bottom)
+  expect(geometry.decisions.top).toBeGreaterThanOrEqual(geometry.hero.bottom)
+  expect(geometry.savings.top).toBeGreaterThanOrEqual(geometry.payments.bottom)
+  expect(geometry.feed.top).toBeGreaterThanOrEqual(geometry.analytics.bottom)
 }
 
 async function prepareVisualPage(page, route, selector) {
