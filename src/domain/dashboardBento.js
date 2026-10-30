@@ -11,6 +11,7 @@ export function getDashboardTransactionTags(transaction = {}) {
 }
 
 export function isDashboardThirdParty(transaction = {}) {
+  if (transaction.type && transaction.type !== 'expense') return false
   const explicit =
     transaction.isThirdParty === true ||
     transaction.isReimbursable === true ||
