@@ -534,17 +534,9 @@ function CreditCardsCenterContent() {
           <div className="credit-cards-premium__grid grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,0.88fr)_minmax(380px,1.12fr)]">
             <div className="space-y-4">
               <Card className="shadow-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-sm font-black text-[--text-primary]">
-                      Próximos compromissos
-                    </h2>
-                    <p className="mt-1 text-[10px] text-[--text-tertiary]">
-                      Compras já registradas
-                    </p>
-                  </div>
-                  <CalendarDays size={16} className="text-[--brand-600]" />
-                </div>
+                <h2 className="text-sm font-black text-[--text-primary]">
+                  Próximos compromissos
+                </h2>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 xl:grid-cols-3 2xl:grid-cols-6">
                   {center.forecast.map((item) => {
