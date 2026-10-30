@@ -69,8 +69,9 @@ function MoneyMetric({ label, value, detail }) {
   )
 }
 
-function MoneyInsightContent({ referenceDate, compact = false }) {
-  const { transactions, loading: transactionsLoading } = useTransactions()
+function MoneyInsightContent({ referenceDate, compact = false, transactionsOverride }) {
+  const { transactions: allTransactions, loading: transactionsLoading } = useTransactions()
+  const transactions = transactionsOverride ?? allTransactions
   const { settings, isLoading: settingsLoading } = useMoney()
 
   const analysisDate = useMemo(() => resolveAnalysisDate(referenceDate), [referenceDate])
@@ -250,7 +251,7 @@ function MoneyInsightContent({ referenceDate, compact = false }) {
   )
 }
 
-export default function MoneyInsightCard({ referenceDate, compact = false }) {
+export default function MoneyInsightCard({ referenceDate, compact = false, transactionsOverride }) {
   return (
     <PremiumGate
       variant="card"
@@ -263,7 +264,7 @@ export default function MoneyInsightCard({ referenceDate, compact = false }) {
         'Acesso ao assistente conversacional',
       ]}
     >
-      <MoneyInsightContent referenceDate={referenceDate} compact={compact} />
+      <MoneyInsightContent referenceDate={referenceDate} compact={compact} transactionsOverride={transactionsOverride} />
     </PremiumGate>
   )
 }
