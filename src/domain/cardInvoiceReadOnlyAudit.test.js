@@ -75,9 +75,18 @@ describe('auditLoadedCardInvoices', () => {
     const missingPayment = invoice({ events: [{ type: 'payment' }] })
     const notFinite = invoice({ items: [{ amount: Infinity }] })
     const emptyValue = invoice({ items: [{ amount: '' }] })
-    expect(auditLoadedCardInvoices([invalidAmount, missingPayment, notFinite, emptyValue])).toEqual(
-      { total: 4, checked: 0, divergent: 0, inconclusive: 4 },
-    )
+    const booleanValue = invoice({ items: [{ amount: false }] })
+    const unsafeCents = invoice({ items: [{ amount: Number.MAX_SAFE_INTEGER }] })
+    expect(
+      auditLoadedCardInvoices([
+        invalidAmount,
+        missingPayment,
+        notFinite,
+        emptyValue,
+        booleanValue,
+        unsafeCents,
+      ]),
+    ).toEqual({ total: 6, checked: 0, divergent: 0, inconclusive: 6 })
   })
 
   it('classifica tipos de eventos desconhecidos como inconclusivos', () => {
