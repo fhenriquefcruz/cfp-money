@@ -1,0 +1,21 @@
+name: Temporary Gate 2.2 formatting patch
+on:
+  pull_request:
+    branches:
+      - fix/gate-2-invoice-idempotency-rules
+permissions:
+  contents: read
+jobs:
+  format:
+    if: github.event.pull_request.head.ref == 'fix/gate-2-2-reversal-concurrency'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write src/domain/invoiceLifecycle.test.js tests/security/firestore.rules.test.js
+      - run: git --no-pager diff -- src/domain/invoiceLifecycle.test.js tests/security/firestore.rules.test.js
