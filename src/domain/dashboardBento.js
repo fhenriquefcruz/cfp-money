@@ -19,7 +19,7 @@ export function isDashboardThirdParty(transaction = {}) {
   return explicit || getDashboardTransactionTags(transaction).includes('Cartão Mãe')
 }
 
-export function filterDashboardFeed(transactions = [], filter = 'all', ownOnly = false) {
+export function filterDashboardFeed(transactions = [], filter = 'all', ownOnly = false, creditCards = []) {
   return transactions.filter((transaction) => {
     if (ownOnly && isDashboardThirdParty(transaction)) return false
     if (filter === 'own') return !isDashboardThirdParty(transaction)
@@ -27,7 +27,8 @@ export function filterDashboardFeed(transactions = [], filter = 'all', ownOnly =
     if (filter === 'card-5186') {
       return (
         getDashboardTransactionTags(transaction).includes('Cartão 5186') ||
-        String(transaction.cardLast4 || '') === '5186'
+        String(transaction.cardLast4 || '') === '5186' ||
+        creditCards.some((card) => card.last4 === '5186' && card.id === transaction.cardId)
       )
     }
     if (filter === 'recurring') {
