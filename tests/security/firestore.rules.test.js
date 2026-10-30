@@ -760,11 +760,11 @@ test('Gate 2.2: duas sessões concorrentes estornam integralmente só uma vez', 
   assert.equal(await persistInvoiceEventOnce(aliceB, 'alice', reversal), reversal.operationId)
   const all = await getDocs(collection(aliceA, 'users', 'alice', 'invoiceEvents'))
   assert.equal(all.size, 2)
-  const stored = (await getDoc(doc(aliceA, 'users', 'alice', 'invoiceEvents', reversal.operationId))).data()
+  const stored = (
+    await getDoc(doc(aliceA, 'users', 'alice', 'invoiceEvents', reversal.operationId))
+  ).data()
   assert.equal(stored.amount, payment.amount)
-  await assert.rejects(
-    persistInvoiceEventOnce(aliceA, 'alice', { ...reversal, amount: 10 }),
-  )
+  await assert.rejects(persistInvoiceEventOnce(aliceA, 'alice', { ...reversal, amount: 10 }))
 })
 
 test('Gate 2.2: bypass por ID diferente, valor maior, fatura ou pagamento inexistente é negado', async () => {
@@ -786,25 +786,33 @@ test('Gate 2.2: bypass por ID diferente, valor maior, fatura ou pagamento inexis
       ...event,
       createdAt: Timestamp.now(),
     })
-  await assertFails(syntheticWrite({
-    ...reversal,
-    operationId: 'evt_123e4567-e89b-42d3-a456-426614174080',
-  }))
+  await assertFails(
+    syntheticWrite({
+      ...reversal,
+      operationId: 'evt_123e4567-e89b-42d3-a456-426614174080',
+    }),
+  )
   await assertFails(syntheticWrite({ ...reversal, amount: 600 }))
-  await assertFails(syntheticWrite({
-    ...reversal,
-    invoiceMonth: '2026-11',
-    invoiceKey: 'card-demo:2026-11',
-  }))
-  await assertFails(syntheticWrite({
-    ...reversal,
-    operationId: 'rev_evt_123e4567-e89b-42d3-a456-426614174011',
-    reversesEventId: 'evt_123e4567-e89b-42d3-a456-426614174011',
-  }))
-  await assertFails(setDoc(
-    doc(bob, 'users', 'alice', 'invoiceEvents', reversal.operationId),
-    { ...reversal, createdAt: Timestamp.now() },
-  ))
+  await assertFails(
+    syntheticWrite({
+      ...reversal,
+      invoiceMonth: '2026-11',
+      invoiceKey: 'card-demo:2026-11',
+    }),
+  )
+  await assertFails(
+    syntheticWrite({
+      ...reversal,
+      operationId: 'rev_evt_123e4567-e89b-42d3-a456-426614174011',
+      reversesEventId: 'evt_123e4567-e89b-42d3-a456-426614174011',
+    }),
+  )
+  await assertFails(
+    setDoc(doc(bob, 'users', 'alice', 'invoiceEvents', reversal.operationId), {
+      ...reversal,
+      createdAt: Timestamp.now(),
+    }),
+  )
   await assertSucceeds(syntheticWrite(reversal))
   await assertFails(syntheticWrite(reversal))
 })
@@ -826,8 +834,10 @@ test('Gate 2.2: pagamento legado não recebe novo estorno automático', async ()
     reversesEventId: 'old-pay',
   }
   delete attempted.paymentDate
-  await assertFails(setDoc(
-    doc(alice, 'users', 'alice', 'invoiceEvents', attempted.operationId),
-    { ...attempted, createdAt: Timestamp.now() },
-  ))
+  await assertFails(
+    setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', attempted.operationId), {
+      ...attempted,
+      createdAt: Timestamp.now(),
+    }),
+  )
 })
