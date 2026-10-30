@@ -115,3 +115,16 @@ test('comparação sem IDs compartilhados ou cronologia comprovada é limitada',
   )
   expect(evidence.bankReconciliation).toBe(false)
 })
+
+test('evento de fatura sem cartão cadastrado exige revisão sem expor o identificador', () => {
+  const source = complete()
+  source.collections.invoiceEvents.push({
+    cardId: 'event-card-private',
+    type: 'payment',
+    amount: 12.34,
+  })
+  const evidence = assessCardSnapshotEvidence(source, { now })
+  expect(evidence.level).toBe('limited')
+  expect(evidence.warnings).toContain('invoice_events_without_registered_card')
+  expect(JSON.stringify(evidence)).not.toContain('event-card-private')
+})
