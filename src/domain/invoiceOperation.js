@@ -1,3 +1,6 @@
+import { reversalOperationId } from './invoiceReversalKey'
+export { reversalOperationId } from './invoiceReversalKey'
+
 // Contrato de escrita da fatura: somente dados, sem Firebase ou efeitos colaterais.
 const FIELDS = [
   'operationId',
@@ -31,15 +34,6 @@ export function createInvoiceOperationId() {
     throw new Error('Operação segura indisponível.')
   }
   return 'evt_' + globalThis.crypto.randomUUID()
-}
-
-// Apenas pagamentos escritos pelo contrato novo são elegíveis a estorno
-// automático. Eventos legados precisam de conciliação histórica supervisionada.
-export function reversalOperationId(paymentId) {
-  if (!/^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(paymentId || '')) {
-    throw new Error('Pagamento histórico: estorno exige revisão.')
-  }
-  return 'rev_' + paymentId
 }
 
 export function validateInvoiceOperation(value) {
