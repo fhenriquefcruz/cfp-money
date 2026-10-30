@@ -22,6 +22,7 @@ import CreditCardsSettingsCard from './CreditCardsSettingsCard'
 import PremiumGate from './PremiumGate'
 
 const CardReconciliationModal = React.lazy(() => import('./CardReconciliationModal'))
+const CardFinancialAuditModal = React.lazy(() => import('./CardFinancialAuditModal'))
 
 const STATUS = {
   forming: ['Em formação', 'bg-[--brand-100] text-[--brand-700]'],
@@ -214,6 +215,7 @@ function CreditCardsCenterContent() {
   const [managingCardId, setManagingCardId] = useState(null)
   const [cardSettingsOpen, setCardSettingsOpen] = useState(false)
   const [reconciliationOpen, setReconciliationOpen] = useState(false)
+  const [auditOpen, setAuditOpen] = useState(false)
 
   const center = useMemo(
     () =>
@@ -436,11 +438,23 @@ function CreditCardsCenterContent() {
               />
             ))}
           </div>
-          {(linkageAudit.unlinked || linkageAudit.historical) > 0 && (
-            <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
-              {diagnosticText}
-            </p>
-          )}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {(linkageAudit.unlinked || linkageAudit.historical) > 0 ? (
+              <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
+                {diagnosticText}
+              </p>
+            ) : (
+              <span className="text-xs text-[--text-tertiary]">Conferência sob demanda</span>
+            )}
+            <button
+              type="button"
+              onClick={() => setAuditOpen(true)}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
+            >
+              <ReceiptText size={15} />
+              Auditar valores
+            </button>
+          </div>
 
           {center.reconciledPurchaseCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--info-border] bg-[--info-bg] p-3 text-xs text-[--info-text]">
@@ -615,6 +629,18 @@ function CreditCardsCenterContent() {
             </Card>
           </div>
         </>
+      )}
+
+      {auditOpen && !loadingData && (
+        <React.Suspense fallback={<p role="status">Abrindo auditoria…</p>}>
+          <CardFinancialAuditModal
+            selectedMonth={selectedMonth}
+            transactions={transactions}
+            creditCards={creditCards}
+            invoiceEvents={invoiceEvents}
+            onClose={() => setAuditOpen(false)}
+          />
+        </React.Suspense>
       )}
 
       {reconciliationOpen && (
