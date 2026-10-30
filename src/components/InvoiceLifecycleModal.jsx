@@ -5,6 +5,7 @@ import {
   createManualCloseEvent,
   createPaymentEvent,
   createReversalEvent,
+  canAutoReversePayment,
   getPaymentReversibleAmount,
 } from '../domain/invoiceLifecycle'
 import { createInvoiceOperationId } from '../domain/invoiceOperation'
@@ -92,7 +93,7 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
           </p>
         )}
 
-        {reversible > 0 && (
+        {reversible > 0 && canAutoReversePayment(event, allEvents) && (
           <button
             type="button"
             disabled={loading}
@@ -101,6 +102,11 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
           >
             Estornar
           </button>
+        )}
+        {reversible > 0 && !canAutoReversePayment(event, allEvents) && (
+          <p className="max-w-28 text-right text-[10px] text-[--text-tertiary]">
+            Estorno requer revisão
+          </p>
         )}
       </div>
     </div>
@@ -167,7 +173,7 @@ export default function InvoiceLifecycleModal({
       if (!pendingOperation.current || pendingOperation.current.fingerprint !== fingerprint) {
         pendingOperation.current = {
           fingerprint,
-          operationId: createInvoiceOperationId(),
+          operationId: event.operationId || createInvoiceOperationId(),
         }
       }
       await onCreateEvent({ ...event, operationId: pendingOperation.current.operationId })
