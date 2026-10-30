@@ -11,7 +11,7 @@ function sumCents(items, selector) {
   return items.reduce((total, item) => total + toCents(selector(item)), 0)
 }
 
-function todayIso(now = new Date()) {
+export function todayIso(now = new Date()) {
   return [
     now.getFullYear(),
     String(now.getMonth() + 1).padStart(2, '0'),
