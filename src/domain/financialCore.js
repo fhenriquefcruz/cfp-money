@@ -5,7 +5,10 @@ export function moneyToCents(value) {
   if (value == null) return 0
   const numeric = typeof value === 'number'
   if (numeric && !Number.isFinite(value)) return 0
-  const text = String(value).trim().replace(/^R\$\s*/i, '').replace(/\s/g, '')
+  const text = String(value)
+    .trim()
+    .replace(/^R\$\s*/i, '')
+    .replace(/\s/g, '')
   const negative = text.startsWith('-')
   const unsigned = text.replace(/^[+-]/, '')
   const match = numeric
