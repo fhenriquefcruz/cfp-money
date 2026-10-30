@@ -26,22 +26,16 @@ export function buildInvoiceKey(cardId, invoiceMonth) {
 export function getInvoiceEvents(events = [], cardId, invoiceMonth) {
   const invoiceKey = buildInvoiceKey(cardId, invoiceMonth)
 
+  const date = (event) =>
+    String(event.eventDate || event.paymentDate || event.createdAt?.toDate?.()?.toISOString?.() || '')
+
   return events
     .filter(
       (event) =>
         event.invoiceKey === invoiceKey ||
         (event.cardId === cardId && event.invoiceMonth === invoiceMonth),
     )
-    .sort((first, second) => {
-      const date = (event) =>
-        String(
-          event.eventDate ||
-            event.paymentDate ||
-            event.createdAt?.toDate?.()?.toISOString?.() ||
-            '',
-        )
-      return date(second).localeCompare(date(first))
-    })
+    .sort((first, second) => date(second).localeCompare(date(first)))
 }
 
 export function getPaymentReversibleAmount(payment, invoiceEvents = []) {
