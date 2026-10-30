@@ -550,24 +550,22 @@ function CreditCardsCenterContent() {
                         onClick={() => {
                           selectMonth(item.month)
                         }}
-                        className={`rounded-2xl border p-2 text-center transition-colors ${
+                        className={`flex min-h-28 flex-col items-center justify-end rounded-2xl border p-2 text-center transition-colors ${
                           active
                             ? 'border-[--brand-500] bg-[--brand-50]'
                             : 'border-[--border-subtle] bg-[--bg-subtle] hover:border-[--brand-300]'
                         }`}
                       >
-                        <div className="flex h-16 items-end justify-center">
-                          <span
-                            className="w-5 rounded-t-lg bg-gradient-to-t from-[--brand-600] to-[--brand-300]"
-                            style={{ height }}
-                          />
-                        </div>
-                        <p className="mt-2 truncate text-[9px] font-bold text-[--text-secondary]">
+                        <span
+                          className="w-5 rounded-t-lg bg-gradient-to-t from-[--brand-600] to-[--brand-300]"
+                          style={{ height }}
+                        />
+                        <span className="mt-2 truncate text-[9px] font-bold text-[--text-secondary]">
                           {item.label.split(' de ')[0]}
-                        </p>
-                        <p className="mt-0.5 text-[9px] font-black text-[--text-primary]">
+                        </span>
+                        <span className="mt-0.5 text-[9px] font-black text-[--text-primary]">
                           {formatCurrency(item.total, { compact: true })}
-                        </p>
+                        </span>
                       </button>
                     )
                   })}
