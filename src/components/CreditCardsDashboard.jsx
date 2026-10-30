@@ -541,7 +541,6 @@ function CreditCardsCenterContent() {
                 <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 xl:grid-cols-3 2xl:grid-cols-6">
                   {center.forecast.map((item) => {
                     const height = Math.max(8, Math.round((item.total / center.forecastMax) * 62))
-                    const active = item.month === selectedMonth
 
                     return (
                       <button
@@ -550,11 +549,8 @@ function CreditCardsCenterContent() {
                         onClick={() => {
                           selectMonth(item.month)
                         }}
-                        className={`flex min-h-28 flex-col items-center justify-end rounded-2xl border p-2 text-center transition-colors ${
-                          active
-                            ? 'border-[--brand-500] bg-[--brand-50]'
-                            : 'border-[--border-subtle] bg-[--bg-subtle] hover:border-[--brand-300]'
-                        }`}
+                        aria-pressed={item.month === selectedMonth}
+                        className="flex min-h-28 flex-col items-center justify-end rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-2 text-center hover:border-[--brand-300] aria-pressed:border-[--brand-500] aria-pressed:bg-[--brand-50]"
                       >
                         <span
                           className="w-5 rounded-t-lg bg-gradient-to-t from-[--brand-600] to-[--brand-300]"
