@@ -505,7 +505,9 @@ function CreditCardsCenterContent() {
                 salvos
               </p>
               <p role="status" className="mt-2 text-xs font-bold">
-                {auditFindings.length ? `${auditFindings.length} pontos para conferir` : 'Nenhuma divergência detectada'}
+                {auditFindings.length
+                  ? `${auditFindings.length} pontos para conferir`
+                  : 'Nenhuma divergência detectada'}
               </p>
               {auditFindings.length > 0 && (
                 <ul className="mt-2 flex flex-wrap gap-2">
