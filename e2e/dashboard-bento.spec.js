@@ -11,8 +11,8 @@ test('Dashboard Bento preserva mês, ações e filtros sem alterar dados', async
   await expect(dashboard.getByText('Saúde & Money')).toBeVisible()
   await expect(dashboard.getByText('Controle de pagamentos')).toBeVisible()
 
-  const width = await dashboard.evaluate((element) =>
-    getComputedStyle(element).gridTemplateColumns.split(' ').length,
+  const width = await dashboard.evaluate(
+    (element) => getComputedStyle(element).gridTemplateColumns.split(' ').length,
   )
   expect(width).toBe(12)
 
