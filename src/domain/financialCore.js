@@ -3,9 +3,16 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
 export function moneyToCents(value) {
   if (typeof value === 'number') {
-    return Number.isFinite(value) && Number.isSafeInteger(Math.round(value * 100))
-      ? Math.round(value * 100)
-      : 0
+    if (!Number.isFinite(value)) return 0
+    // Converter pela representação decimal evita 1.005 * 100 = 100.4999…
+    const raw = String(Math.abs(value))
+    if (!/^\\d+(?:\\.\\d+)?$/.test(raw)) return 0
+    const [whole, fraction = ''] = raw.split('.')
+    const cents =
+      Number(whole) * 100 +
+      Number(fraction.slice(0, 2).padEnd(2, '0')) +
+      (Number(fraction[2] || '0') >= 5 ? 1 : 0)
+    return Number.isSafeInteger(cents) ? (value < 0 ? -cents : cents) : 0
   }
   if (typeof value !== 'string') return 0
   let text = value.trim().replace(/^R\$\s*/i, '').replace(/\s/g, '')
@@ -39,6 +46,14 @@ export function isFinanciallyEffectiveTransaction(transaction = {}) {
   )
 }
 
+function isCalendarDate(value) {
+  if (typeof value !== 'string' || !ISO_DATE.test(value)) return false
+  const [year, month, day] = value.split('-').map(Number)
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false
+  const utc = new Date(Date.UTC(year, month - 1, day))
+  return !Number.isNaN(utc.getTime()) && utc.toISOString().slice(0, 10) === value
+}
+
 export function getFinancialActivityDate(transaction = {}) {
   const structured =
     transaction.type === 'expense' &&
@@ -47,7 +62,7 @@ export function getFinancialActivityDate(transaction = {}) {
   const candidate = structured
     ? transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date
     : transaction.date || transaction.dueDate
-  return typeof candidate === 'string' && ISO_DATE.test(candidate) ? candidate : ''
+  return isCalendarDate(candidate) ? candidate : ''
 }
 
 export function selectActivityRange(transactions = [], start = '', end = '') {
