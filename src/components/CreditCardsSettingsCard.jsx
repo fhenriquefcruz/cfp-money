@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import { useCreditCards } from '../contexts/AppContext'
 import { Button, Card, Input, Modal } from './ui'
 import PremiumGate from './PremiumGate'
@@ -147,15 +147,6 @@ function CreditCardsContent() {
   const [deleteCard, setDeleteCard] = useState(null)
   const [saving, setSaving] = useState(false)
 
-  const activeCards = useMemo(
-    () => creditCards.filter((card) => card.active !== false),
-    [creditCards],
-  )
-  const activeCardsLabel =
-    activeCards.length === 1
-      ? '1 cartão ativo para novos lançamentos.'
-      : `${activeCards.length} cartões ativos para novos lançamentos.`
-
   const openNew = () => {
     setEditingCard(null)
     setModalOpen(true)
@@ -272,7 +263,6 @@ function CreditCardsContent() {
                 </div>
               ))}
 
-              <p className="text-[10px] text-[--text-tertiary]">{activeCardsLabel}</p>
             </div>
           )}
         </div>
