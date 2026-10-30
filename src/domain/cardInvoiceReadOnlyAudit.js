@@ -21,9 +21,7 @@ export function auditLoadedCardInvoices(invoices = []) {
     const entries = events.filter((event) => event?.type !== 'manual_close')
     const values = [
       ...items.map((item) => item?.amount),
-      ...entries.map((event) =>
-        event.type === 'adjustment' ? event.signedAmount : event.amount,
-      ),
+      ...entries.map((event) => (event.type === 'adjustment' ? event.signedAmount : event.amount)),
       invoice.purchaseTotal,
       invoice.total,
       lifecycle.paidAmount,
