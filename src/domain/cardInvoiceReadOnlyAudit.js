@@ -1,73 +1,68 @@
-// Conferencia local e somente leitura: valores invalidos nunca equivalem a zero.
-function cents(raw) {
+// Auditoria aritmetica local: sem Firebase e sem escrita.
+function cents(value) {
   if (
-    (typeof raw !== 'string' && typeof raw !== 'number') ||
-    (typeof raw === 'string' && !raw.trim())
+    !['string', 'number'].includes(typeof value) ||
+    (typeof value === 'string' && !value.trim())
   ) return null
-  const value = Math.round(Number(raw) * 100)
-  return Number.isSafeInteger(value) ? value : null
-}
-
-function total(values) {
-  let result = 0
-  for (const value of values) {
-    const amount = cents(value)
-    if (amount === null) return null
-    result += amount
-  }
-  return Number.isSafeInteger(result) ? result : null
+  const n = Math.round(Number(value) * 100)
+  return Number.isSafeInteger(n) ? n : null
 }
 
 export function auditLoadedCardInvoices(invoices = []) {
-  const result = { total: 0, checked: 0, divergent: 0, inconclusive: 0 }
+  const summary = { total: 0, checked: 0, divergent: 0, inconclusive: 0 }
   for (const invoice of invoices) {
     const { items, events, lifecycle } = invoice || {}
     if (Array.isArray(items) && Array.isArray(events) && !items.length && !events.length) {
       continue
     }
-    result.total++
+    summary.total++
     if (
       !Array.isArray(items) ||
       !Array.isArray(events) ||
       !lifecycle ||
       events.some((event) => !['payment', 'reversal', 'adjustment', 'manual_close'].includes(event?.type))
     ) {
-      result.inconclusive++
+      summary.inconclusive++
       continue
     }
 
-    const purchase = total(items.map((item) => item?.amount))
-    const [adjustments, payments, reversals] = ['adjustment', 'payment', 'reversal'].map(
-      (type) =>
-        total(
-          events
-            .filter((event) => event.type === type)
-            .map((event) => event[type === 'adjustment' ? 'signedAmount' : 'amount']),
-        ),
-    )
-    const baseline = cents(lifecycle.baselinePaidAmount)
-    const reported = [
+    const movements = events.filter((event) => event.type !== 'manual_close')
+    const values = [
+      ...items.map((item) => item?.amount),
+      ...movements.map((event) =>
+        event.type === 'adjustment' ? event.signedAmount : event.amount,
+      ),
       invoice.purchaseTotal,
       invoice.total,
       lifecycle.paidAmount,
       lifecycle.remainingAmount,
       lifecycle.creditAmount,
+      lifecycle.baselinePaidAmount,
     ].map(cents)
-    if ([purchase, adjustments, payments, reversals, baseline, ...reported].includes(null)) {
-      result.inconclusive++
+    if (values.includes(null)) {
+      summary.inconclusive++
       continue
     }
 
-    const invoiceTotal = Math.max(0, purchase + adjustments)
-    const paid = Math.max(0, baseline + payments - reversals)
-    const expected = [
-      purchase,
-      invoiceTotal,
-      paid,
-      Math.max(0, invoiceTotal - paid),
-      Math.max(0, paid - invoiceTotal),
-    ]
-    result[reported.some((value, index) => value !== expected[index]) ? 'divergent' : 'checked']++
+    const purchase = values.slice(0, items.length).reduce((sum, value) => sum + value, 0)
+    const totals = { adjustment: 0, payment: 0, reversal: 0 }
+    movements.forEach((event, index) => {
+      totals[event.type] += values[items.length + index]
+    })
+    const [recordedPurchase, recordedTotal, paid, remaining, credit, baseline] = values.slice(-6)
+    const due = Math.max(0, purchase + totals.adjustment)
+    const expectedPaid = Math.max(0, baseline + totals.payment - totals.reversal)
+    if (![purchase, due, expectedPaid].every(Number.isSafeInteger)) {
+      summary.inconclusive++
+      continue
+    }
+    const consistent =
+      recordedPurchase === purchase &&
+      recordedTotal === due &&
+      paid === expectedPaid &&
+      remaining === Math.max(0, due - paid) &&
+      credit === Math.max(0, paid - due)
+    summary[consistent ? 'checked' : 'divergent']++
   }
-  return result
+  return summary
 }
