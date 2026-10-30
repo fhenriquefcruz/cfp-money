@@ -262,7 +262,6 @@ function CreditCardsContent() {
                   </div>
                 </div>
               ))}
-
             </div>
           )}
         </div>
