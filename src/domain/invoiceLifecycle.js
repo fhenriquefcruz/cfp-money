@@ -33,15 +33,14 @@ export function getInvoiceEvents(events = [], cardId, invoiceMonth) {
         (event.cardId === cardId && event.invoiceMonth === invoiceMonth),
     )
     .sort((first, second) => {
-      const firstDate =
-        first.eventDate || first.paymentDate || first.createdAt?.toDate?.()?.toISOString?.() || ''
-      const secondDate =
-        second.eventDate ||
-        second.paymentDate ||
-        second.createdAt?.toDate?.()?.toISOString?.() ||
-        ''
-
-      return String(secondDate).localeCompare(String(firstDate))
+      const date = (event) =>
+        String(
+          event.eventDate ||
+            event.paymentDate ||
+            event.createdAt?.toDate?.()?.toISOString?.() ||
+            '',
+        )
+      return date(second).localeCompare(date(first))
     })
 }
 
