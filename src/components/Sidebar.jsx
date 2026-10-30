@@ -67,7 +67,7 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
             size={9}
             className={clsx(
               'absolute -right-1.5 -top-1.5',
-              isActive ? 'text-yellow-300' : 'text-yellow-500',
+              'text-amber-300',
             )}
           />
         )}
@@ -90,8 +90,7 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
       {premium && !collapsed && (
         <span
           className={clsx(
-            'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide',
-            isActive ? 'bg-white/15 text-yellow-200' : 'bg-yellow-100 text-yellow-800',
+            'inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300',
           )}
         >
           <Crown size={9} />
