@@ -1,5 +1,5 @@
-import { reversalOperationId } from './invoiceReversalKey'
-export { reversalOperationId } from './invoiceReversalKey'
+import { reversalOperationId } from './invoiceReversalKey.js'
+export { reversalOperationId } from './invoiceReversalKey.js'
 
 // Contrato de escrita da fatura: somente dados, sem Firebase ou efeitos colaterais.
 const FIELDS = [
