@@ -559,6 +559,25 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
+            <div className="dashboard-bento-segments mt-4">
+              <div className="dashboard-bento-segment-track" role="img"
+                aria-label={`Despesas do período: ${formatCurrency(currentSummary.expenses)}; poupança líquida: ${formatCurrency(savingsOverview.periodNet)}; receitas: ${formatCurrency(currentSummary.income)}.`}>
+                <span className="dashboard-bento-segment dashboard-bento-segment--expense"
+                  style={{ width: `${currentSummary.income > 0 ? Math.min(100, currentSummary.expenses / currentSummary.income * 100) : 0}%` }} />
+                <span className="dashboard-bento-segment dashboard-bento-segment--reserve"
+                  style={{ width: `${currentSummary.income > 0 ? Math.min(100 - Math.min(100, currentSummary.expenses / currentSummary.income * 100), Math.max(0, savingsOverview.periodNet) / currentSummary.income * 100) : 0}%` }} />
+              </div>
+              <p className="mt-1 text-[10px] text-[--text-tertiary]">Despesas e reservas como parcelas das receitas, sem dupla contagem na barra.</p>
+            </div>
+            <div className="dashboard-bento-month-chips mt-4">
+              {actionInsights.length ? actionInsights.map((item) => (
+                <Link key={item.title} to={item.to} title={item.detail} className="dashboard-bento-insight-chip">
+                  <Zap size={13} aria-hidden="true" />
+                  <span className="truncate">{item.title}</span>
+                  <ChevronRight size={12} aria-hidden="true" />
+                </Link>
+              )) : <span className="dashboard-bento-insight-chip"><CheckCircle2 size={14} /> Sem alertas imediatos</span>}
+            </div>
           </Card>
         </motion.div>
 
@@ -659,11 +678,43 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
+            <div className="dashboard-asset-goals mt-4 border-t border-white/[0.07] pt-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-xs font-semibold text-[--text-primary]">
+                  <Target size={14} className="text-emerald-400" /> Metas em andamento
+                </h3>
+                <Link to="/goals" className="text-[11px] text-[--text-brand] hover:underline">Ver metas</Link>
+              </div>
+              {goals.length === 0 ? (
+                <p className="text-xs text-[--text-secondary]">Nenhuma meta cadastrada.</p>
+              ) : (
+                <div className="space-y-3">
+                  {goals.slice(0, 2).map((goal) => {
+                    const current = getGoalEffectiveCurrent(goal, transactions)
+                    const target = Number(goal.targetAmount || 0)
+                    return (
+                      <div key={goal.id}>
+                        <div className="flex min-w-0 items-center justify-between gap-2 text-[11px]">
+                          <span className="min-w-0 truncate font-semibold">{goal.name}</span>
+                          <span className="shrink-0 tabular-nums text-[--text-secondary]">
+                            {formatCurrency(current)} / {formatCurrency(target)}
+                          </span>
+                        </div>
+                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
+                          <div className="h-full rounded-full bg-emerald-400 transition-all duration-200"
+                            style={{ width: `${target > 0 ? Math.min(100, current / target * 100) : 0}%` }} />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </Card>
         </motion.div>
       </div>
 
-      {/* Inteligência executiva: ritmo, saúde e Money em uma faixa coerente */}
+      {/* Termômetro do ritmo para a linha de obrigações e patrimônio */}
       <motion.div
         className="dashboard-bento-grid dashboard-bento-rhythm-row"
         initial={{ opacity: 0 }}
@@ -691,6 +742,14 @@ export default function Dashboard() {
               <p className="dashboard-forecast-helper mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
                 Média dos últimos 3 meses para orientar o planejamento.
               </p>
+              <p className="mt-3 text-xs tabular-nums text-[--text-secondary]">
+                Gasto atual <strong className="text-[--text-primary]">{formatCurrency(currentSummary.expenses)}</strong>
+              </p>
+              {forecast > 0 && (
+                <p className={`mt-1 text-[11px] font-semibold ${currentSummary.expenses <= forecast ? 'text-emerald-400' : 'text-amber-300'}`}>
+                  {Math.abs((currentSummary.expenses / forecast - 1) * 100).toFixed(1)}% {currentSummary.expenses <= forecast ? 'abaixo' : 'acima'} da referência
+                </p>
+              )}
             </div>
             <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
               <Zap size={16} />
@@ -698,23 +757,6 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card
-          variant="elevated"
-          className="dashboard-health-card dashboard-module--health col-span-1 h-full shadow-sm xl:col-span-3"
-        >
-          <div className="mb-2 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 size={14} className="text-[--brand-600]" />
-              <p className="text-xs font-semibold text-[--text-tertiary]">Saúde financeira</p>
-              <InfoTooltip text="Indicador de 0 a 100 baseado em equilíbrio do período, reserva, aderência a orçamentos, atrasos e relação despesas/receitas. Não representa diagnóstico financeiro completo." />
-            </div>
-          </div>
-          <FinancialHealthScore report={healthReport} />
-        </Card>
-
-        <div className="dashboard-money-insight dashboard-module--money col-span-1 min-w-0 md:col-span-2 xl:col-span-6">
-          <MoneyInsightCard referenceDate={viewDate} compact />
-        </div>
       </motion.div>
 
       {/* Análise principal: evolução e composição */}
@@ -948,21 +990,6 @@ export default function Dashboard() {
               </p>
             </div>
 
-            {categoryReviewCount > 0 && (
-              <Link
-                to="/transactions?review=categories&scope=all"
-                className="mb-3 flex min-h-10 items-center justify-between gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-[10px] font-bold text-[--warning-text]"
-              >
-                <span>
-                  {categoryReviewCount}{' '}
-                  {categoryReviewCount === 1
-                    ? 'classificação para revisar'
-                    : 'classificações para revisar'}
-                </span>
-                <ArrowRight size={12} />
-              </Link>
-            )}
-
             {categoryBreakdown.length === 0 ? (
               <p className="py-8 text-center text-xs text-[--text-tertiary]">
                 Nenhuma despesa no mês
@@ -973,6 +1000,8 @@ export default function Dashboard() {
                   items={categoryBreakdown}
                   maxVisible={5}
                   showLeader
+                  vectorIcons
+                  onHoverCategory={setActiveCategory}
                   getHref={(item) =>
                     `/transactions?category=${encodeURIComponent(item.categoryId)}&month=${budgetOverview.monthKey}`
                   }
@@ -1032,53 +1061,7 @@ export default function Dashboard() {
             </Card>
           </motion.div>
         )}
-        <motion.div {...fade} transition={{ delay: 0.35 }}>
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Target size={14} className="text-[--brand-500]" />
-                <h3 className="text-sm font-bold text-[--text-primary]">Metas</h3>
-              </div>
-              <Link to="/goals" className="text-xs text-[--text-brand] hover:underline">
-                Ver todas
-              </Link>
-            </div>
-            {goals.length === 0 ? (
-              <div className="text-center py-4">
-                <p className="text-xs text-[--text-tertiary] mb-2">Nenhuma meta</p>
-                <Link to="/goals">
-                  <Button variant="ghost" size="xs" icon={<Plus />}>
-                    Criar meta
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {goals.slice(0, 3).map((goal) => {
-                  const effectiveCurrent = getGoalEffectiveCurrent(goal, transactions)
-                  const pct = Math.min(100, (effectiveCurrent / goal.targetAmount) * 100)
-                  return (
-                    <div key={goal.id}>
-                      <div className="flex justify-between text-xs mb-1.5">
-                        <span className="font-semibold text-[--text-primary] truncate">
-                          {goal.emoji} {goal.name}
-                        </span>
-                        <span className="text-[--text-tertiary] ml-2 flex-shrink-0">
-                          {pct.toFixed(0)}%
-                        </span>
-                      </div>
-                      <ProgressBar value={effectiveCurrent} max={goal.targetAmount} animated />
-                      <div className="flex justify-between text-xs mt-1 text-[--text-tertiary]">
-                        <span>{formatCurrency(effectiveCurrent)}</span>
-                        <span>{formatCurrency(goal.targetAmount)}</span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </Card>
-        </motion.div>
+
       </div>
 
       {/* Histórico no rodapé: o painel rola sem esticar os demais cards. */}
