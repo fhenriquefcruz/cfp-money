@@ -1,3 +1,5 @@
+import { reversalOperationId } from './invoiceOperation'
+
 function toCents(value) {
   const amount = Number(value)
   return Number.isFinite(amount) ? Math.round(amount * 100) : 0
@@ -219,6 +221,17 @@ export function createManualCloseEvent({ card, invoiceMonth, eventDate, notes = 
   })
 }
 
+export function canAutoReversePayment(payment, invoiceEvents = []) {
+  return (
+    payment?.type === 'payment' &&
+    /^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(payment.id || '') &&
+    !invoiceEvents.some(
+      (event) => event.type === 'reversal' && event.reversesEventId === payment.id,
+    ) &&
+    getPaymentReversibleAmount(payment, invoiceEvents) > 0
+  )
+}
+
 export function createReversalEvent({
   card,
   invoiceMonth,
@@ -227,13 +240,20 @@ export function createReversalEvent({
   eventDate,
   notes = '',
 }) {
-  const reversibleAmount = getPaymentReversibleAmount(payment, invoiceEvents)
-
-  if (reversibleAmount <= 0) {
-    throw new Error('Este pagamento já foi totalmente estornado.')
+  const operationId = reversalOperationId(payment?.id)
+  if (!canAutoReversePayment(payment, invoiceEvents)) {
+    throw new Error('Pagamento já estornado ou pendente de revisão histórica.')
   }
+  if (
+    payment.invoiceKey !== buildInvoiceKey(card?.id, invoiceMonth) ||
+    payment.cardId !== card.id
+  ) {
+    throw new Error('Pagamento pertence a outra fatura.')
+  }
+  const reversibleAmount = fromCents(toCents(payment.amount))
 
   return {
+    operationId,
     ...createInvoiceEventBase({
       card,
       invoiceMonth,
