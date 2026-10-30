@@ -145,48 +145,57 @@ const TxItem = ({ tx, categories }) => {
   )
 }
 
-function MonthAttentionCard({ items }) {
+function UnifiedDashboardIntelligence({ healthReport, referenceDate, reviewItem, onReview, saving }) {
   return (
-    <Card variant="elevated" className="dashboard-attention-card">
-      <div>
-        <div>
-          <div className="dashboard-attention-card__title">
-            <Zap size={15} />
-            <h2>Leituras do mês</h2>
-          </div>
-          <p>O que mudou e onde vale agir.</p>
+    <Card variant="elevated" className="dashboard-decision-card h-full">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Sparkles size={17} className="text-amber-300" />
+          <h2 className="text-sm font-bold text-[--text-primary]">Saúde & Money</h2>
         </div>
+        <span className="dashboard-bento-pro">Money PRO</span>
       </div>
-
-      {items.length === 0 ? (
-        <div className="dashboard-attention-card__empty">
-          <div className="dashboard-attention-card__empty-icon">
-            <CheckCircle2 size={17} />
-          </div>
-          <div>
-            <p>Sem pressão relevante</p>
-            <span>O período não apresenta desvios que exijam ação imediata.</span>
+      {reviewItem ? (
+        <div className="dashboard-review-inline rounded-2xl p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-amber-300">
+            Ação necessária · classificação para revisar
+          </p>
+          <p className="mt-1 truncate text-xs font-semibold" title={reviewItem.description}>
+            {reviewItem.description}
+          </p>
+          <p className="mt-1 text-[11px] text-[--text-secondary]">
+            {reviewItem.currentCategoryName} · sugestão: {reviewItem.suggestedCategoryName}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button type="button" disabled={saving} onClick={() => onReview('approve')}
+              className="dashboard-review-action rounded-lg px-2.5 py-2 text-[11px] font-semibold disabled:opacity-50">
+              Aprovar atual
+            </button>
+            {reviewItem.suggestedCategoryId ? (
+              <button type="button" disabled={saving} onClick={() => onReview('correct')}
+                className="dashboard-review-action dashboard-review-action--accent rounded-lg px-2.5 py-2 text-[11px] font-semibold disabled:opacity-50">
+                Corrigir categoria
+              </button>
+            ) : (
+              <Link to="/transactions?review=categories&scope=all"
+                className="dashboard-review-action dashboard-review-action--accent rounded-lg px-2.5 py-2 text-[11px] font-semibold">
+                Escolher categoria
+              </Link>
+            )}
           </div>
         </div>
       ) : (
-        <div className="dashboard-attention-card__list">
-          {items.map(({ title, detail, to }) => (
-            <Link key={title} to={to} className="dashboard-attention-card__item">
-              <div className="dashboard-attention-card__item-icon">
-                <Zap size={16} />
-              </div>
-              <div className="dashboard-attention-card__item-copy">
-                <p>{title}</p>
-                <span>{detail}</span>
-                <strong>
-                  Abrir
-                  <ChevronRight size={11} />
-                </strong>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <p className="mb-3 flex items-center gap-2 text-xs text-[--text-secondary]">
+          <CheckCircle2 size={14} className="text-emerald-400" />
+          Nenhuma classificação suspeita neste mês
+        </p>
       )}
+      <div className="dashboard-decision-health">
+        <FinancialHealthScore report={healthReport} />
+      </div>
+      <div className="dashboard-decision-money mt-3">
+        <MoneyInsightCard referenceDate={referenceDate} compact />
+      </div>
     </Card>
   )
 }
@@ -431,62 +440,55 @@ export default function Dashboard() {
   return (
     <div
       data-tour="dashboard"
-      className="dashboard-premium dashboard-v58 mx-auto min-w-0 max-w-[1680px] space-y-5 pb-24 sm:space-y-6 lg:pb-6"
+      className="dashboard-premium dashboard-v58 dashboard-fintech-bento mx-auto grid min-w-0 max-w-[1800px] grid-cols-12 gap-5 pb-24 lg:pb-6"
     >
-      {/* Header — mês com destaque, saudação secundária */}
-      <motion.div
-        className="dashboard-premium__toolbar flex flex-wrap items-start justify-between gap-3"
-        {...fade}
-      >
-        <div className="min-w-0 flex-1">
-          {/* Mês é o destaque principal */}
-          <div className="dashboard-month-nav mb-0.5 flex min-w-0 flex-nowrap items-center gap-1">
-            <button
-              onClick={() => setViewDate((d) => subMonths(d, 1))}
-              className="w-11 h-11 -ml-3 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
-              aria-label="Visualizar mês anterior"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <h1 className="min-w-0 truncate text-base font-black text-[--text-primary] min-[390px]:text-lg sm:text-2xl">
-              <span className="sm:hidden">{compactMonthLabel}</span>
-              <span className="hidden sm:inline">{monthLabel}</span>
-            </h1>
-            <button
-              onClick={() => setViewDate((d) => addMonths(d, 1))}
-              className="w-11 h-11 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
-              aria-label="Visualizar próximo mês"
-            >
-              <ChevronRight size={16} />
-            </button>
-            {!isCurrentMonth && (
-              <button
-                onClick={() => setViewDate(new Date())}
-                className="dashboard-today min-h-11 px-2 text-xs text-[--text-brand] hover:underline"
-              >
-                Hoje
-              </button>
-            )}
-          </div>
-          {/* Saudação secundária */}
-          <p className="dashboard-greeting text-xs text-[--text-tertiary]">
+      <motion.div className="dashboard-premium__toolbar dashboard-bento-topbar" {...fade}>
+        <div className="dashboard-bento-greeting">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[--text-tertiary]">Meu Real · visão geral</p>
+          <p className="mt-1 text-sm font-semibold text-[--text-primary]">
             {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'}
           </p>
         </div>
-        <Link to="/transactions" className="dashboard-quick-add w-auto flex-shrink-0">
-          <Button
-            variant="primary"
-            icon={<Plus />}
-            size="sm"
-            aria-label="Nova transação"
-            className="dashboard-quick-add__button"
-          >
-            <span className="dashboard-quick-add__label">Nova transação</span>
-          </Button>
-        </Link>
+        <div className="dashboard-month-nav dashboard-bento-month-nav" role="group" aria-label="Navegar pelos meses">
+          <button type="button" onClick={() => setViewDate((date) => subMonths(date, 1))}
+            aria-label="Visualizar mês anterior" className="dashboard-bento-icon-button">
+            <ChevronLeft size={17} />
+          </button>
+          <div className="min-w-0 text-center">
+            <h1 className="truncate text-sm font-bold tabular-nums text-[--text-primary]">
+              {compactMonthLabel}
+            </h1>
+            {!isCurrentMonth && (
+              <button type="button" onClick={() => setViewDate(new Date())}
+                className="text-[10px] text-[--text-brand] hover:underline">Voltar a hoje</button>
+            )}
+          </div>
+          <button type="button" onClick={() => setViewDate((date) => addMonths(date, 1))}
+            aria-label="Visualizar próximo mês" className="dashboard-bento-icon-button">
+            <ChevronRight size={17} />
+          </button>
+        </div>
+        <div className="dashboard-bento-toolbar-actions">
+          <button type="button" role="switch" aria-checked={onlyOwn}
+            onClick={() => { setOnlyOwn((current) => !current); setFeedFilter('all') }}
+            className="dashboard-bento-filter rounded-xl px-3 py-2 text-[11px] font-medium transition-all duration-200"
+            title="Oculta lançamentos sinalizados como de terceiros ou reembolsáveis; não altera nenhum dado salvo">
+            <span className="dashboard-bento-filter-switch" aria-hidden="true" />
+            Apenas meus gastos
+          </button>
+          <button type="button" className="dashboard-bento-search rounded-xl px-3 py-2 text-xs"
+            aria-label="Abrir busca global"
+            onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))}>
+            <Search size={15} /> <span className="hidden xl:inline">Buscar</span>
+            <kbd className="hidden 2xl:inline">Ctrl K</kbd>
+          </button>
+          <Link to="/transactions" className="dashboard-bento-new rounded-xl px-3 py-2 text-xs font-bold">
+            <Plus size={15} /> Nova transação
+          </Link>
+        </div>
       </motion.div>
 
-      <div className="dashboard-executive-grid">
+      <div className="dashboard-executive-grid dashboard-bento-pulse">
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.05 }}>
           <Card variant="hero" className="dashboard-period-summary dashboard-period-hero h-full">
             <div className="dashboard-period-hero__main">
@@ -561,12 +563,12 @@ export default function Dashboard() {
         </motion.div>
 
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.075 }}>
-          <MonthAttentionCard items={actionInsights} />
+          <UnifiedDashboardIntelligence healthReport={healthReport} referenceDate={viewDate} reviewItem={reviewItem} onReview={saveReview} saving={reviewSaving} />
         </motion.div>
       </div>
 
-      {/* Faixa operacional: compromissos do mês + patrimônio reservado */}
-      <div className="dashboard-executive-grid">
+      {/* Obrigações, patrimônio e ritmo lado a lado */}
+      <div className="dashboard-executive-grid dashboard-bento-operations">
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.08 }}>
           <PaymentControlCard summary={paymentSummary} loading={isLoading} />
         </motion.div>
@@ -663,7 +665,7 @@ export default function Dashboard() {
 
       {/* Inteligência executiva: ritmo, saúde e Money em uma faixa coerente */}
       <motion.div
-        className="dashboard-bento-grid grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12"
+        className="dashboard-bento-grid dashboard-bento-rhythm-row"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
@@ -716,7 +718,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Análise principal: evolução e composição */}
-      <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-3">
+      <div className="dashboard-chart-grid dashboard-bento-analytics grid min-w-0 grid-cols-1 gap-5">
         <motion.div className="xl:col-span-2" {...fade} transition={{ delay: 0.15 }}>
           <Card className="dashboard-finance-chart dashboard-module--evolution h-full overflow-hidden">
             <div className="dashboard-finance-chart__header mb-4 flex flex-col gap-4">
@@ -982,7 +984,7 @@ export default function Dashboard() {
       </div>
 
       {/* Planejamento sem competir com o gráfico: orçamentos e metas lado a lado */}
-      <div className="dashboard-support-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="dashboard-support-grid dashboard-bento-support grid min-w-0 grid-cols-1 gap-4">
         {budgetAlerts.length > 0 && (
           <motion.div {...fade} transition={{ delay: 0.3 }}>
             <Card>
@@ -1080,7 +1082,7 @@ export default function Dashboard() {
       </div>
 
       {/* Histórico no rodapé: o painel rola sem esticar os demais cards. */}
-      <div className="dashboard-history-area min-w-0">
+      <div className="dashboard-history-area dashboard-bento-feed min-w-0">
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.25 }}>
           <Card className="dashboard-transactions-card dashboard-module--transactions">
             <div className="flex items-center justify-between gap-3 mb-4">
