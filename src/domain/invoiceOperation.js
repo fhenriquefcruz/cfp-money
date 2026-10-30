@@ -45,8 +45,14 @@ export function validateInvoiceOperation(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error('Evento de fatura inválido.')
   }
-  if (Object.keys(value).some((key) => !FIELDS.includes(key))) {
-    throw new Error('Evento de fatura contém campos inesperados.')
+  const allowed = {
+    payment: [...FIELDS.slice(0, 9), 'amount', 'paymentDate', 'sourceAccount'],
+    adjustment: [...FIELDS.slice(0, 9), 'direction', 'signedAmount'],
+    reversal: [...FIELDS.slice(0, 9), 'amount', 'reversesEventId', 'sourceAccount'],
+    manual_close: FIELDS.slice(0, 9),
+  }[value.type]
+  if (!allowed || Object.keys(value).some((key) => !allowed.includes(key))) {
+    throw new Error('Evento de fatura contém campos incompatíveis com o tipo.')
   }
   if (
     !/^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value.operationId || '') ||
