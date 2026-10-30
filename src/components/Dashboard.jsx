@@ -327,7 +327,7 @@ export default function Dashboard() {
           return activityDate >= monthBounds.start && activityDate <= monthBounds.end
         }),
         categories,
-      ).length,
+      ),
     [visibleTransactions, categories, monthBounds],
   )
   const categoryReviewCount = categoryReviewQueue.length
