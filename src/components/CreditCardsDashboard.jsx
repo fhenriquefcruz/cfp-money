@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { summarizeCardLinks } from '../domain/cardLinkageSummary'
+import { auditLoadedCardInvoices } from '../domain/cardInvoiceReadOnlyAudit'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
@@ -249,17 +250,7 @@ function CreditCardsCenterContent() {
   const managedInvoice = center.invoices.find((invoice) => invoice.card.id === managingCardId)
 
   const loadingData = transactionsLoading || creditCardsLoading || invoiceEventsLoading
-  const mismatchedInvoices = auditOpen
-    ? center.invoices.filter((invoice) => {
-        const amount = (value) => Math.round((Number(value) || 0) * 100)
-        return (
-          invoice.items.reduce((sum, tx) => sum + amount(tx.amount), 0) !==
-            amount(invoice.purchaseTotal) ||
-          amount(invoice.lifecycle.remainingAmount) !==
-            Math.max(0, amount(invoice.total) - amount(invoice.lifecycle.paidAmount))
-        )
-      }).length
-    : 0
+  const auditResult = auditOpen && !loadingData ? auditLoadedCardInvoices(center.invoices) : null
 
   useEffect(() => {
     if (loadingData || userSelectedMonthRef.current) return
@@ -287,6 +278,7 @@ function CreditCardsCenterContent() {
     userSelectedMonthRef.current = true
     setSelectedMonth(month)
     setSelectedCardId('all')
+    setAuditOpen(false)
   }
 
   return (
@@ -468,18 +460,28 @@ function CreditCardsCenterContent() {
               className="rounded-xl border border-[--border-default] bg-[--bg-surface] p-3"
             >
               <p role="status" className="text-xs font-bold text-[--text-primary]">
-                Conferência financeira · {selectedMonth}:{' '}
-                {mismatchedInvoices
-                  ? `${mismatchedInvoices} fatura(s) divergentes`
-                  : 'Cálculos das faturas consistentes'}
+                Conferência interna · {selectedMonth}:{' '}
+                {auditResult.inconclusive > 0
+                  ? `${auditResult.inconclusive} fatura(s) exigem revisão dos valores`
+                  : auditResult.divergent > 0
+                    ? `${auditResult.divergent} fatura(s) com divergência interna`
+                    : auditResult.total === 0
+                      ? 'Nenhuma fatura com movimentação para conferir'
+                      : `${auditResult.checked} fatura(s) com cálculos internos consistentes`}
               </p>
+              {auditResult.total > 0 && (
+                <p className="mt-1 text-[11px] text-[--text-secondary]">
+                  Conferidas: {auditResult.checked} · Divergentes: {auditResult.divergent} ·
+                  Inconclusivas: {auditResult.inconclusive}
+                </p>
+              )}
               <p className="mt-2 text-xs text-[--text-secondary]">
                 {linkageAudit.saved} vínculos salvos · Compras sem cartão salvo:{' '}
                 {linkageAudit.unlinked} · Sugestões: {center.reconciledPurchaseCount} · Históricos:{' '}
                 {linkageAudit.historical}
               </p>
               <p className="mt-2 text-[11px] text-[--text-tertiary]">
-                Cálculo sobre dados carregados nesta sessão. Nenhum lançamento é corrigido
+                Cálculo sobre dados carregados nesta sessão, não é conciliação bancária. Nenhum lançamento é corrigido
                 automaticamente; confira seu extrato.
               </p>
               <button
