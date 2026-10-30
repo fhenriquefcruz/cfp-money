@@ -43,6 +43,7 @@ import {
   transactionsForMonth,
   getFinancialActivityDate,
 } from '../domain/finance'
+import { centsToMoney, moneyToCents } from '../domain/financialCore'
 import { enqueueBudgetNotification } from '../services/notificationService'
 import { E2E_MODE } from '../e2e/runtime'
 import { createE2EAppState } from '../e2e/fixtures'
@@ -938,7 +939,7 @@ export const TransactionsProvider = ({ children }) => {
     (year, month) => {
       const totals = {}
       getMonthTransactions(year, month)
-        .filter((t) => t.type === 'expense')
+        .filter((t) => t.type === 'expense' && !t.isSavings)
         .forEach((t) => {
           if (!totals[t.categoryId])
             totals[t.categoryId] = {
@@ -949,7 +950,9 @@ export const TransactionsProvider = ({ children }) => {
               total: 0,
               count: 0,
             }
-          totals[t.categoryId].total += t.amount
+          totals[t.categoryId].total = centsToMoney(
+            moneyToCents(totals[t.categoryId].total) + moneyToCents(t.amount),
+          )
           totals[t.categoryId].count++
         })
       return Object.values(totals).sort((a, b) => b.total - a.total)
