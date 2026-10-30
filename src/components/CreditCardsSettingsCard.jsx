@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { CreditCard, Info, ReceiptText } from 'lucide-react'
+import { CreditCard, ReceiptText } from 'lucide-react'
 import { useCreditCards } from '../contexts/AppContext'
 import { Button, Card, Input, Modal } from './ui'
 import PremiumGate from './PremiumGate'
@@ -227,19 +227,6 @@ function CreditCardsContent() {
         </div>
 
         <div className="p-5">
-          <div className="mb-4 flex items-start gap-3 rounded-2xl border border-[--border-default] bg-[--bg-subtle] p-3.5">
-            <Info size={16} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
-            <div>
-              <p className="text-xs font-bold text-[--text-primary]">
-                Como o Meu Real utilizará esses dados?
-              </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-[--text-tertiary]">
-                A compra mantém sua data original; a fatura segue o vencimento. O histórico não
-                muda.
-              </p>
-            </div>
-          </div>
-
           {loading ? (
             <div className="space-y-3">
               <div className="h-20 animate-pulse rounded-2xl bg-[--bg-hover]" />
