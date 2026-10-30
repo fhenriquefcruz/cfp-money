@@ -64,6 +64,31 @@ export default function PaymentControlCard({ summary, loading = false }) {
         <div className="mt-4 h-24 animate-pulse rounded-2xl bg-[--bg-hover]" />
       ) : (
         <>
+          <div className="dashboard-payment-overview mt-4 flex flex-wrap items-center gap-4">
+            <div className="dashboard-payment-ring relative h-20 w-20 shrink-0"
+              role="img" aria-label={`${Number(summary.progress || 0).toFixed(0)}% do valor comprometido já foi pago`}>
+              <svg viewBox="0 0 80 80" aria-hidden="true" className="h-full w-full -rotate-90">
+                <circle cx="40" cy="40" r="33" fill="none" stroke="#242937" strokeWidth="7" />
+                <circle cx="40" cy="40" r="33" fill="none" stroke="#34d399" strokeWidth="7"
+                  strokeDasharray={`${Math.max(0, Math.min(100, summary.progress || 0)) * 2.073} 207.3`}
+                  strokeLinecap="round" />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold tabular-nums text-[--text-primary]">
+                {(summary.progress ?? 0).toFixed(0)}%
+              </span>
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-[11px] text-[--text-secondary]">{summary.paidCount} / {summary.totalCount} obrigações pagas</p>
+              <p className="text-xs font-semibold text-emerald-400">Pago: {formatCurrency(paidAmount)}</p>
+              <p className="text-xs font-semibold text-amber-300">A pagar: {formatCurrency(toPayAmount)}</p>
+              {toPayCount > 0 && (
+                <Link to="/transactions?status=pending"
+                  className="dashboard-payment-quick inline-flex min-h-9 items-center rounded-lg px-3 text-xs font-bold">
+                  Dar baixa <span className="ml-1" aria-hidden="true">→</span>
+                </Link>
+              )}
+            </div>
+          </div>
           <div className="payment-control-columns mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div className="payment-control-column payment-control-column--committed min-w-0">
               <p className="text-[10px] text-[--text-tertiary]">Comprometido</p>
