@@ -222,7 +222,7 @@ export function canAutoReversePayment(payment, invoiceEvents = []) {
     !invoiceEvents.some(
       (event) => event.type === 'reversal' && event.reversesEventId === payment.id,
     ) &&
-    getPaymentReversibleAmount(payment, invoiceEvents) > 0
+    toCents(payment.amount) > 0
   )
 }
 
