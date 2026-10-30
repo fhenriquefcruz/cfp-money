@@ -1,10 +1,6 @@
 import { expect, test } from 'vitest'
 import { buildInstallmentTransactions, splitInstallmentAmounts } from './creditCards'
-import {
-  moneyToCents,
-  selectActivityMonth,
-  summarizeActivityTransactions,
-} from './financialCore'
+import { moneyToCents, selectActivityMonth, summarizeActivityTransactions } from './financialCore'
 import { summarizeTransactions, transactionsForMonth } from './finance'
 import { getMonthlyFinancialData } from './monthlyFinance'
 import { buildMoneyAssistantResponse } from './moneyAssistant'
@@ -27,9 +23,29 @@ const installments = buildInstallmentTransactions({
 const rows = [
   ...installments,
   { type: 'income', amount: '2.000,00', date: '2026-10-05' },
-  { type: 'expense', amount: '100,50', date: '2026-10-15', categoryId: 'food', categoryName: 'Alimentação' },
-  { type: 'income', isSavings: true, savingsMovement: 'deposit', goalId: 'goal-1', amount: '200,00', date: '2026-10-18' },
-  { type: 'income', isSavings: true, savingsMovement: 'withdrawal', goalId: 'goal-1', amount: 50, date: '2026-10-19' },
+  {
+    type: 'expense',
+    amount: '100,50',
+    date: '2026-10-15',
+    categoryId: 'food',
+    categoryName: 'Alimentação',
+  },
+  {
+    type: 'income',
+    isSavings: true,
+    savingsMovement: 'deposit',
+    goalId: 'goal-1',
+    amount: '200,00',
+    date: '2026-10-18',
+  },
+  {
+    type: 'income',
+    isSavings: true,
+    savingsMovement: 'withdrawal',
+    goalId: 'goal-1',
+    amount: 50,
+    date: '2026-10-19',
+  },
   { type: 'expense', amount: 900, date: '2026-10-20', paymentStatus: 'cancelled' },
   { type: 'expense', amount: 999, date: '2026-10-24', flowType: 'transfer' },
 ]
@@ -37,7 +53,10 @@ const rows = [
 test('Gate 0: compra em 21/10 fecha no ciclo seguinte e compõe faturas dez–mar', () => {
   expect(installments).toHaveLength(4)
   expect(installments.map((tx) => tx.invoiceMonth)).toEqual([
-    '2026-12', '2027-01', '2027-02', '2027-03',
+    '2026-12',
+    '2027-01',
+    '2027-02',
+    '2027-03',
   ])
   expect(installments.map((tx) => tx.purchaseDate)).toEqual(Array(4).fill('2026-10-21'))
   expect(installments.reduce((sum, tx) => sum + moneyToCents(tx.amount), 0)).toBe(120000)
@@ -106,8 +125,8 @@ test('Gate 1: Money por ciclo usa atividade, cancelamento, transferência e mont
 test('Gate 1: progresso de meta é saldo legado + aportes - retiradas nos dois consumidores', () => {
   const goal = { id: 'goal-1', currentAmount: 650, targetAmount: 1000 }
   expect(getGoalEffectiveCurrent(goal, rows)).toBe(800)
-  expect(goalAlertCandidates(goal, new Date('2026-10-30T12:00:00Z'), rows))
-    .toContain('progress-80')
-  expect(goalAlertCandidates(goal, new Date('2026-10-30T12:00:00Z'), []))
-    .not.toContain('progress-80')
+  expect(goalAlertCandidates(goal, new Date('2026-10-30T12:00:00Z'), rows)).toContain('progress-80')
+  expect(goalAlertCandidates(goal, new Date('2026-10-30T12:00:00Z'), [])).not.toContain(
+    'progress-80',
+  )
 })
