@@ -323,8 +323,16 @@ export default function InvoiceLifecycleModal({
                 <p className="mb-2 text-xs font-black text-[--text-secondary]">Tipo de ajuste</p>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    ['credit', 'Crédito / desconto', 'border-[--success-border] bg-[--success-bg] text-[--success-text]'],
-                    ['charge', 'Acréscimo', 'border-[--warning-border] bg-[--warning-bg] text-[--warning-text]'],
+                    [
+                      'credit',
+                      'Crédito / desconto',
+                      'border-[--success-border] bg-[--success-bg] text-[--success-text]',
+                    ],
+                    [
+                      'charge',
+                      'Acréscimo',
+                      'border-[--warning-border] bg-[--warning-bg] text-[--warning-text]',
+                    ],
                   ].map(([value, label, selectedClass]) => (
                     <button
                       key={value}
