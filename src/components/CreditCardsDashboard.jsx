@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CalendarDays,
+  CircleDollarSign,
   ChevronLeft,
   ChevronRight,
   CreditCard,
@@ -405,7 +406,7 @@ function CreditCardsCenterContent() {
           <div className="credit-cards-summary-grid operational-summary-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
             {[
               [
-                WalletCards,
+                CircleDollarSign,
                 'Total das faturas',
                 center.selectedTotal,
                 `${center.selectedItemCount} lançamento${center.selectedItemCount === 1 ? '' : 's'} no período`,
