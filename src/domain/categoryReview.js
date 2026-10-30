@@ -58,7 +58,8 @@ export function reviewTransactionCategory(transaction = {}, categories = []) {
   if (
     transaction.categoryReviewApprovedFamily === inferred.id &&
     transaction.categoryReviewApprovedCategoryId === transaction.categoryId
-  ) return null
+  )
+    return null
 
   const currentCategory = categories.find((category) => category.id === transaction.categoryId)
   const currentFamily = categoryFamily(currentCategory || { name: transaction.categoryName })
