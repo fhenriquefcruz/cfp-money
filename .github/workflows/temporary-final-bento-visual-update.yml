@@ -1,0 +1,35 @@
+name: Temporary final Bento visual and formatting update
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  update:
+    if: github.event.pull_request.head.ref == 'feat/dashboard-asymmetric-bento-dark' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/dashboard-asymmetric-bento-dark
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format only touched source and E2E files
+        run: npx prettier --write src/components/Dashboard.jsx src/components/Sidebar.jsx src/components/MoneyInsightCard.jsx src/components/FinancialHealthScore.jsx src/components/dashboard-bento.css src/domain/dashboardBento.js src/domain/dashboardBento.test.js
+      - run: npx playwright install --with-deps chromium
+      - name: Regenerate approved screenshots with compact Money panel
+        run: npx playwright test --config=playwright.visual.config.js --update-snapshots
+      - name: Commit only inspected source set and visual baselines
+        run: |
+          git add src/components/Dashboard.jsx src/components/Sidebar.jsx src/components/MoneyInsightCard.jsx src/components/FinancialHealthScore.jsx src/components/dashboard-bento.css src/domain/dashboardBento.js src/domain/dashboardBento.test.js e2e/visual/visual.spec.js-snapshots
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'style(dashboard): finalize compact Bento layout and visual baselines'
+            git push origin HEAD:feat/dashboard-asymmetric-bento-dark
+          fi
