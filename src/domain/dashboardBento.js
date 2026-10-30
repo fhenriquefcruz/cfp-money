@@ -32,9 +32,9 @@ export function filterDashboardFeed(transactions = [], filter = 'all', ownOnly =
     if (filter === 'recurring') {
       return Boolean(
         transaction.isRecurring ||
-          transaction.recurring ||
-          transaction.recurringId ||
-          transaction.recurrence,
+        transaction.recurring ||
+        transaction.recurringId ||
+        transaction.recurrence,
       )
     }
     return true
