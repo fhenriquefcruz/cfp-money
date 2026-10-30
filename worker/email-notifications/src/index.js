@@ -1,3 +1,4 @@
+import { centsToMoney, moneyToCents } from '../../../src/domain/financialCore.js'
 import {
   getGoalEffectiveCurrent,
   goalAlertCandidates,
@@ -137,9 +138,11 @@ async function readTransactions(env, uid) {
 }
 
 function goalAlertMessage(goal, candidate, transactions = []) {
-  const target = Number(goal.targetAmount || 0)
+  const target = centsToMoney(moneyToCents(goal.targetAmount))
   const current = getGoalEffectiveCurrent(goal, transactions)
-  const remaining = Math.max(0, target - current)
+  const remaining = centsToMoney(
+    Math.max(0, moneyToCents(target) - moneyToCents(current)),
+  )
   const name = goal.name || 'Meta'
 
   if (candidate === 'progress-100') {
