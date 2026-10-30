@@ -513,3 +513,44 @@ main:has(.dashboard-fintech-bento) {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Navigation inherits the Bento dark treatment only on the Dashboard route. */
+.dashboard-sidebar-dark {
+  --bg-sidebar: #0d0f15;
+  --bg-surface: #171a24;
+  --bg-elevated: #202430;
+  --bg-hover: #252a37;
+  --bg-subtle: #171a24;
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --text-primary: #f8fafc;
+  --text-secondary: #b2bbcc;
+  --text-tertiary: #8e9aad;
+  --brand-50: #29251f;
+  --brand-100: #3a3025;
+  --brand-600: #c9a477;
+  --brand-700: #e0bb8c;
+  background: #0d0f15 !important;
+  border-right-color: rgba(255, 255, 255, 0.07) !important;
+}
+.dashboard-sidebar-dark nav a:hover { background: rgba(255, 255, 255, 0.045); }
+.dashboard-sidebar-dark .aurora-brand-mark { background: #b99367 !important; }
+.dashboard-bottom-nav-dark {
+  --bg-surface: #11131a;
+  --bg-hover: #252a37;
+  --brand-600: #d6af7e;
+  --brand-100: #2d2822;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --text-tertiary: #a5b0c3;
+  background: rgba(17, 19, 26, 0.96) !important;
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dashboard-fintech-bento .dashboard-decision-card .money-insight-micro {
+  min-height: 118px;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: #171a24 !important;
+}
+.dashboard-fintech-bento .dashboard-period-hero {
+  align-self: start;
+  min-height: 360px;
+}
