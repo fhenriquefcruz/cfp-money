@@ -236,10 +236,6 @@ function CreditCardsContent() {
                   key={card.id}
                   className="flex items-center gap-3 rounded-2xl border border-[--border-default] bg-[--bg-surface] p-3.5"
                 >
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-100] text-[--brand-600]">
-                    <CreditCard size={17} />
-                  </div>
-
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-sm font-bold text-[--text-primary]">
