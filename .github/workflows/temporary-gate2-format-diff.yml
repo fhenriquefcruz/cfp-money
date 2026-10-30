@@ -1,0 +1,22 @@
+name: Temporary Gate 2 Prettier diff
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  diff:
+    if: github.event.pull_request.head.ref == 'fix/gate-2-invoice-idempotency-rules'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Prepare exact formatter output in runner only
+        run: npx prettier --write docs/GATE_2_SAFE_WRITES.md src/components/InvoiceLifecycleModal.jsx src/domain/invoiceOperation.js src/domain/invoiceOperation.test.js src/services/firebase.js src/services/invoiceEventsRepository.js tests/security/firestore.rules.test.js
+      - name: Show formatting patch
+        run: git --no-pager diff -- docs/GATE_2_SAFE_WRITES.md src/components/InvoiceLifecycleModal.jsx src/domain/invoiceOperation.js src/domain/invoiceOperation.test.js src/services/firebase.js src/services/invoiceEventsRepository.js tests/security/firestore.rules.test.js
