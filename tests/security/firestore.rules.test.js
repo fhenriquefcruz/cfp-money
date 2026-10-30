@@ -8,6 +8,8 @@ import {
 } from '@firebase/rules-unit-testing'
 import {
   Timestamp,
+  collection,
+  getDocs,
   deleteField,
   deleteDoc,
   doc,
@@ -17,6 +19,7 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore'
+import { persistInvoiceEventOnce } from '../../src/services/invoiceEventsRepository.js'
 
 const PROJECT_ID = 'demo-cfp-money-security'
 
@@ -574,4 +577,164 @@ test('conciliação de cartão respeita titularidade e restaura dados sem duplic
   for (const key of Object.keys(original)) assert.deepEqual(restored[key], original[key])
   assert.equal(restored.cardId, undefined)
   assert.equal(restored.cardReconciliation, undefined)
+})
+
+const syntheticInvoicePayment = (changes = {}) => ({
+  operationId: 'evt_123e4567-e89b-42d3-a456-426614174000',
+  type: 'payment',
+  invoiceKey: 'card-demo:2026-10',
+  cardId: 'card-demo',
+  cardName: 'Cartão de teste',
+  cardLast4: '5186',
+  invoiceMonth: '2026-10',
+  eventDate: '2026-10-30',
+  notes: '',
+  amount: 300,
+  paymentDate: '2026-10-30',
+  sourceAccount: 'Conta fictícia',
+  ...changes,
+})
+
+test('Gate 2: retry e duas sessões concorrentes com mesma operação criam um único pagamento', async () => {
+  const first = environment.authenticatedContext('alice').firestore()
+  const second = environment.authenticatedContext('alice').firestore()
+  const event = syntheticInvoicePayment()
+
+  const results = await Promise.all([
+    persistInvoiceEventOnce(first, 'alice', event),
+    persistInvoiceEventOnce(second, 'alice', event),
+  ])
+  assert.deepEqual(results, [event.operationId, event.operationId])
+  assert.equal(await persistInvoiceEventOnce(first, 'alice', event), event.operationId)
+
+  const events = await getDocs(collection(first, 'users', 'alice', 'invoiceEvents'))
+  assert.equal(events.size, 1)
+  assert.equal(events.docs[0].data().amount, 300)
+  assert.ok(events.docs[0].data().createdAt)
+})
+
+test('Gate 2: chave repetida com outro valor rejeita colisão e preserva pagamento original', async () => {
+  const database = environment.authenticatedContext('alice').firestore()
+  const event = syntheticInvoicePayment()
+  await persistInvoiceEventOnce(database, 'alice', event)
+  await assert.rejects(
+    persistInvoiceEventOnce(database, 'alice', { ...event, amount: 450 }),
+    /Chave de operação já utilizada/,
+  )
+  const stored = await getDoc(doc(database, 'users', 'alice', 'invoiceEvents', event.operationId))
+  assert.equal(stored.data().amount, 300)
+})
+
+test('Gate 2: Firestore impede evento inválido, alteração e acesso cruzado', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const event = syntheticInvoicePayment()
+  const path = ['users', 'alice', 'invoiceEvents', event.operationId]
+
+  await assertFails(
+    setDoc(doc(alice, ...path), { ...event, amount: -100, createdAt: Timestamp.now() }),
+  )
+  await assertFails(
+    setDoc(doc(alice, ...path), { ...event, amount: '300', createdAt: Timestamp.now() }),
+  )
+  await assertFails(
+    setDoc(doc(alice, ...path), { ...event, invoiceKey: 'wrong', createdAt: Timestamp.now() }),
+  )
+  await assertFails(
+    setDoc(doc(alice, ...path), { ...event, operationId: 'different', createdAt: Timestamp.now() }),
+  )
+  await assertFails(setDoc(doc(bob, ...path), { ...event, createdAt: Timestamp.now() }))
+
+  await persistInvoiceEventOnce(alice, 'alice', event)
+  await assertFails(getDoc(doc(bob, ...path)))
+  await assertFails(updateDoc(doc(alice, ...path), { amount: 900 }))
+  await assertFails(deleteDoc(doc(alice, ...path)))
+})
+
+test('Gate 2: titular lê fatura legada, mas não altera documento histórico', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'alice', 'invoiceEvents', 'old-payment'), {
+      type: 'payment',
+      cardId: 'legacy-card',
+      invoiceMonth: '2025-12',
+      invoiceKey: 'legacy-card:2025-12',
+      amount: 100,
+    })
+  })
+  const ref = doc(alice, 'users', 'alice', 'invoiceEvents', 'old-payment')
+  assert.equal((await assertSucceeds(getDoc(ref))).data().amount, 100)
+  await assertFails(updateDoc(ref, { amount: 300 }))
+})
+
+test('Gate 2: novas transações exigem amount numérico, sem bloquear correção de legado', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const path = ['users', 'alice', 'transactions', 'synthetic-finance-record']
+  await assertFails(setDoc(doc(alice, ...path), { type: 'expense', amount: '100.50' }))
+  await assertFails(setDoc(doc(alice, ...path), { type: 'expense', amount: 1000000000 }))
+  await assertSucceeds(
+    setDoc(doc(alice, ...path), { type: 'expense', amount: 100.5, date: '2026-10-30' }),
+  )
+  await assertFails(updateDoc(doc(alice, ...path), { amount: '200.00' }))
+  await assertFails(setDoc(doc(bob, ...path), { type: 'expense', amount: 10 }))
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'alice', 'transactions', 'legacy-textual'), {
+      type: 'expense',
+      amount: '100.50',
+      categoryId: 'old',
+    })
+  })
+  const legacy = doc(alice, 'users', 'alice', 'transactions', 'legacy-textual')
+  await assertSucceeds(updateDoc(legacy, { categoryId: 'new' }))
+  await assertFails(updateDoc(legacy, { amount: '105.50' }))
+  await assertSucceeds(updateDoc(legacy, { amount: 105.5 }))
+})
+
+test('Gate 2: ajuste, estorno e fechamento manual usam contratos específicos', async () => {
+  const database = environment.authenticatedContext('alice').firestore()
+  const base = syntheticInvoicePayment()
+  const adjustment = {
+    ...base,
+    operationId: 'evt_123e4567-e89b-42d3-a456-426614174001',
+    type: 'adjustment',
+    notes: 'Crédito documental sintético',
+    direction: 'credit',
+    signedAmount: -15.5,
+  }
+  delete adjustment.amount
+  delete adjustment.paymentDate
+  delete adjustment.sourceAccount
+
+  const reversal = {
+    ...base,
+    operationId: 'evt_123e4567-e89b-42d3-a456-426614174002',
+    type: 'reversal',
+    amount: 30,
+    reversesEventId: base.operationId,
+  }
+  delete reversal.paymentDate
+
+  const closing = {
+    ...base,
+    operationId: 'evt_123e4567-e89b-42d3-a456-426614174003',
+    type: 'manual_close',
+  }
+  delete closing.amount
+  delete closing.paymentDate
+  delete closing.sourceAccount
+
+  await persistInvoiceEventOnce(database, 'alice', base)
+  await persistInvoiceEventOnce(database, 'alice', adjustment)
+  await persistInvoiceEventOnce(database, 'alice', reversal)
+  await persistInvoiceEventOnce(database, 'alice', closing)
+
+  const all = await getDocs(collection(database, 'users', 'alice', 'invoiceEvents'))
+  assert.equal(all.size, 4)
+  const badAdjustment = {
+    ...adjustment,
+    operationId: 'evt_123e4567-e89b-42d3-a456-426614174004',
+    signedAmount: 20,
+  }
+  await assert.rejects(persistInvoiceEventOnce(database, 'alice', badAdjustment))
 })
