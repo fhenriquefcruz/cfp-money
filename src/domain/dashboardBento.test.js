@@ -16,7 +16,7 @@ test('extrai etiquetas apenas para apresentação, sem alterar o lançamento ori
 test('filtros preservam transações sem marcador e respeitam propriedade explícita', () => {
   const rows = [
     { id: 'personal', description: 'Mercado' },
-    { id: 'third', isThirdParty: true },
+    { id: 'third', type: 'expense', isThirdParty: true },
     { id: 'card', description: 'Compra Cartão 5186' },
     { id: 'recurring', isRecurring: true },
   ]
@@ -41,4 +41,10 @@ test('feed agrupa datas da movimentação sem transformar competência de cartã
     ['2026-10-21', 2],
     ['2026-10-17', 1],
   ])
+})
+
+test('marcador de terceiro não oculta receita que não é gasto', () => {
+  const income = { id: 'income', type: 'income', isThirdParty: true }
+  expect(isDashboardThirdParty(income)).toBe(false)
+  expect(filterDashboardFeed([income], 'all', true)).toEqual([income])
 })
