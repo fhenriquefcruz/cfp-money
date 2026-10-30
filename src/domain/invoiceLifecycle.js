@@ -1,5 +1,3 @@
-import { reversalOperationId } from './invoiceReversalKey.js'
-
 function toCents(value) {
   const amount = Number(value)
   return Number.isFinite(amount) ? Math.round(amount * 100) : 0
@@ -240,7 +238,6 @@ export function createReversalEvent({
   eventDate,
   notes = '',
 }) {
-  const operationId = reversalOperationId(payment?.id)
   if (!canAutoReversePayment(payment, invoiceEvents)) {
     throw new Error('Pagamento já estornado ou pendente de revisão histórica.')
   }
@@ -253,7 +250,7 @@ export function createReversalEvent({
   const reversibleAmount = fromCents(toCents(payment.amount))
 
   return {
-    operationId,
+    operationId: 'rev_' + payment.id,
     ...createInvoiceEventBase({
       card,
       invoiceMonth,
