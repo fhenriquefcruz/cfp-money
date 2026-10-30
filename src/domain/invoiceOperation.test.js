@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { webcrypto } from 'node:crypto'
+import { describe, expect, it, vi } from 'vitest'
 import {
   createInvoiceOperationId,
   sameInvoiceOperation,
@@ -23,9 +24,14 @@ const payment = (changes = {}) => ({
 
 describe('Gate 2 — operação de fatura', () => {
   it('gera operação de identidade segura, sem dados financeiros no identificador', () => {
-    const id = createInvoiceOperationId()
-    expect(id).toMatch(/^evt_[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/)
-    expect(createInvoiceOperationId()).not.toBe(id)
+    vi.stubGlobal('crypto', webcrypto)
+    try {
+      const id = createInvoiceOperationId()
+      expect(id).toMatch(/^evt_[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/)
+      expect(createInvoiceOperationId()).not.toBe(id)
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it('valida pagamento parcial e rejeita negativos, strings e mais de dois decimais', () => {
