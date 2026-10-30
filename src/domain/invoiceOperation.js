@@ -35,22 +35,10 @@ const centsExact = (value) =>
   Math.abs(value) <= 100000000
 
 export function createInvoiceOperationId() {
-  const crypto = globalThis.crypto
-  if (typeof crypto?.randomUUID === 'function') return 'evt_' + crypto.randomUUID()
-  if (typeof crypto?.getRandomValues !== 'function') {
-    throw new Error('Este navegador não oferece geração segura de IDs de operação.')
+  if (typeof globalThis.crypto?.randomUUID !== 'function') {
+    throw new Error('Navegador sem geração segura de identificadores.')
   }
-  const bytes = crypto.getRandomValues(new Uint8Array(16))
-  bytes[6] = (bytes[6] & 15) | 64
-  bytes[8] = (bytes[8] & 63) | 128
-  const hex = [...bytes].map((part) => part.toString(16).padStart(2, '0')).join('')
-  return 'evt_' + [
-    hex.slice(0, 8),
-    hex.slice(8, 12),
-    hex.slice(12, 16),
-    hex.slice(16, 20),
-    hex.slice(20),
-  ].join('-')
+  return 'evt_' + globalThis.crypto.randomUUID()
 }
 
 export function validateInvoiceOperation(value) {
@@ -105,23 +93,13 @@ export function validateInvoiceOperation(value) {
   ) {
     throw new Error('Estorno de pagamento inválido.')
   }
-  if (
-    (value.type === 'manual_close' && ('amount' in value || 'signedAmount' in value)) ||
-    (value.type !== 'payment' && value.type !== 'reversal' && 'amount' in value) ||
-    (value.type !== 'adjustment' && 'signedAmount' in value)
-  ) {
-    throw new Error('Montante incompatível com o tipo de evento.')
-  }
   return value
 }
 
 export function sameInvoiceOperation(saved, candidate) {
-  const savedKeys = Object.keys(saved).filter((key) => key !== 'createdAt')
-  const candidateKeys = Object.keys(candidate)
+  const keys = Object.keys(saved).filter((key) => key !== 'createdAt')
   return (
-    savedKeys.length === candidateKeys.length &&
-    candidateKeys.every(
-      (key) => savedKeys.includes(key) && saved[key] === candidate[key],
-    )
+    keys.length === Object.keys(candidate).length &&
+    keys.every((key) => saved[key] === candidate[key])
   )
 }
