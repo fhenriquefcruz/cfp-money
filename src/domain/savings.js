@@ -37,10 +37,13 @@ export function getUnclassifiedSavingsTransactions(transactions = []) {
 export function getGoalSavingsAmount(transactions = [], goalId = '') {
   if (!goalId) return 0
 
-  return transactions.reduce((total, transaction) => {
-    if (transaction.goalId !== goalId) return total
-    return total + getSavingsSignedAmount(transaction)
-  }, 0)
+  return centsToMoney(
+    transactions.reduce(
+      (total, transaction) =>
+        total + (transaction.goalId === goalId ? getSavingsSignedCents(transaction) : 0),
+      0,
+    ),
+  )
 }
 
 export function getGoalEffectiveCurrent(goal = {}, transactions = []) {
@@ -49,15 +52,14 @@ export function getGoalEffectiveCurrent(goal = {}, transactions = []) {
 
 export function buildSavingsOverview(transactions = [], bounds = {}) {
   const destinations = new Map()
-  let totalBalance = 0
-  let periodDeposits = 0
-  let periodWithdrawals = 0
+  let totalCents = 0
+  let depositsCents = 0
+  let withdrawalsCents = 0
 
   transactions.forEach((transaction) => {
-    const signedAmount = getSavingsSignedAmount(transaction)
-    if (!signedAmount) return
-
-    totalBalance += signedAmount
+    const signedCents = getSavingsSignedCents(transaction)
+    if (!signedCents) return
+    totalCents += signedCents
 
     const label = getSavingsDestinationLabel(transaction)
     const current = destinations.get(label) || {
@@ -65,31 +67,30 @@ export function buildSavingsOverview(transactions = [], bounds = {}) {
       destination:
         String(transaction.savingsDestination || '').trim() || UNCLASSIFIED_SAVINGS_DESTINATION,
       institution: String(transaction.savingsInstitution || '').trim(),
-      balance: 0,
+      balanceCents: 0,
       goalIds: new Set(),
     }
-    current.balance += signedAmount
+    current.balanceCents += signedCents
     if (transaction.goalId) current.goalIds.add(transaction.goalId)
     destinations.set(label, current)
 
     const date = activityDate(transaction)
     const insidePeriod =
       (!bounds.start || date >= bounds.start) && (!bounds.end || date <= bounds.end)
-
     if (!insidePeriod) return
-    if (signedAmount > 0) periodDeposits += signedAmount
-    else periodWithdrawals += Math.abs(signedAmount)
+    if (signedCents > 0) depositsCents += signedCents
+    else withdrawalsCents += Math.abs(signedCents)
   })
 
   return {
-    totalBalance,
-    periodDeposits,
-    periodWithdrawals,
-    periodNet: periodDeposits - periodWithdrawals,
+    totalBalance: centsToMoney(totalCents),
+    periodDeposits: centsToMoney(depositsCents),
+    periodWithdrawals: centsToMoney(withdrawalsCents),
+    periodNet: centsToMoney(depositsCents - withdrawalsCents),
     destinations: [...destinations.values()]
-      .map((item) => ({
+      .map(({ balanceCents, ...item }) => ({
         ...item,
-        balance: Math.max(0, item.balance),
+        balance: centsToMoney(Math.max(0, balanceCents)),
         goalIds: [...item.goalIds],
       }))
       .filter((item) => item.balance > 0)
