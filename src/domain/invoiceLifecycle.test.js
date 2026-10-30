@@ -107,8 +107,10 @@ test('aplica crédito e acréscimo ao total da fatura', () => {
 
 test('estorno reduz o valor pago sem apagar o pagamento', () => {
   const payment = {
-    id: 'pay-1',
+    id: 'evt_123e4567-e89b-42d3-a456-426614174000',
     type: 'payment',
+    cardId: card.id,
+    invoiceKey: 'nubank:2026-08',
     amount: 300,
     sourceAccount: 'Banco',
   }
@@ -128,7 +130,8 @@ test('estorno reduz o valor pago sem apagar o pagamento', () => {
   expect(reversal).toMatchObject({
     type: 'reversal',
     amount: 300,
-    reversesEventId: 'pay-1',
+    reversesEventId: payment.id,
+    operationId: 'rev_evt_123e4567-e89b-42d3-a456-426614174000',
   })
   expect(lifecycle.paidAmount).toBe(0)
   expect(getPaymentReversibleAmount(payment, [payment, reversal])).toBe(0)
@@ -202,4 +205,32 @@ test('aceita valor pago derivado das transações quando não há evento manual'
     remainingAmount: 300,
     status: 'partially_paid',
   })
+})
+
+// Estorno automático só para fatos novos com ID verificável. Eventos legados
+// podem já conter estornos parciais e não podem ser duplicados sem conciliação.
+test('bloqueia estorno automático de pagamento histórico e segunda reversão', () => {
+  const payment = {
+    id: 'evt_123e4567-e89b-42d3-a456-426614174000',
+    type: 'payment',
+    cardId: card.id,
+    invoiceKey: 'nubank:2026-08',
+    amount: 100,
+    sourceAccount: 'Banco',
+  }
+  const args = {
+    card,
+    invoiceMonth: '2026-08',
+    payment,
+    invoiceEvents: [payment],
+    eventDate: '2026-08-06',
+  }
+  expect(() =>
+    createReversalEvent({ ...args, payment: { ...payment, id: 'legacy-pay' } }),
+  ).toThrow(/revisão/)
+  const reversal = createReversalEvent(args)
+  expect(() => createReversalEvent({ ...args, invoiceEvents: [payment, reversal] })).toThrow()
+  expect(() =>
+    createReversalEvent({ ...args, invoiceMonth: '2026-09' }),
+  ).toThrow(/outra fatura/)
 })
