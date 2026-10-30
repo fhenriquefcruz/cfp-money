@@ -380,13 +380,19 @@ export default function Sidebar() {
       <motion.aside
         animate={{ width: collapsed ? 68 : 232 }}
         transition={{ duration: 0.2 }}
-        className="aurora-sidebar sticky top-0 hidden h-screen flex-shrink-0 flex-col overflow-hidden border-r border-[--border-subtle] bg-[--bg-sidebar] lg:flex"
+        className={clsx(
+          'aurora-sidebar sticky top-0 hidden h-screen flex-shrink-0 flex-col overflow-hidden border-r border-[--border-subtle] bg-[--bg-sidebar] lg:flex',
+          location.pathname === '/dashboard' && 'dashboard-sidebar-dark',
+        )}
       >
         {sidebarContent}
       </motion.aside>
 
       <nav
-        className="aurora-bottom-nav fixed bottom-0 left-0 right-0 z-[70] grid grid-cols-5 items-stretch overflow-x-clip border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
+        className={clsx(
+          'aurora-bottom-nav fixed bottom-0 left-0 right-0 z-[70] grid grid-cols-5 items-stretch overflow-x-clip border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden',
+          location.pathname === '/dashboard' && 'dashboard-bottom-nav-dark',
+        )}
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
       >
         {mobilePrimaryItems.map(({ to, icon: Icon, label, premium }) => (
