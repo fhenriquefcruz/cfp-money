@@ -8,6 +8,7 @@ import {
   canAutoReversePayment,
   getPaymentReversibleAmount,
 } from '../domain/invoiceLifecycle'
+import { createInvoiceOperationId } from '../domain/invoiceOperation'
 import { formatCurrency, formatDate } from '../utils'
 import { Button, Modal } from './ui'
 
@@ -160,10 +161,10 @@ export default function InvoiceLifecycleModal({
     try {
       const fingerprint = JSON.stringify(event)
       if (!pendingOperation.current || pendingOperation.current.fingerprint !== fingerprint) {
-        const operationId =
-          event.operationId ||
-          (await import('../domain/invoiceOperation')).createInvoiceOperationId()
-        pendingOperation.current = { fingerprint, operationId }
+        pendingOperation.current = {
+          fingerprint,
+          operationId: event.operationId || createInvoiceOperationId(),
+        }
       }
       await onCreateEvent({ ...event, operationId: pendingOperation.current.operationId })
       pendingOperation.current = null
