@@ -2,6 +2,7 @@ import { webcrypto } from 'node:crypto'
 import { describe, expect, it, vi } from 'vitest'
 import {
   createInvoiceOperationId,
+  reversalOperationId,
   sameInvoiceOperation,
   validateInvoiceOperation,
 } from './invoiceOperation'
@@ -69,11 +70,30 @@ describe('Gate 2 — operação de fatura', () => {
       validateInvoiceOperation({
         ...closing,
         type: 'reversal',
-        amount: 30,
-        reversesEventId: 'previous-payment',
+        operationId: reversalOperationId(payment().operationId),
+        amount: 300,
+        reversesEventId: payment().operationId,
         sourceAccount: 'Conta sintética',
       }),
     ).toBeTruthy()
+  })
+
+  it('exige chave única do estorno integral do mesmo pagamento', () => {
+    const reversal = {
+      ...payment(),
+      type: 'reversal',
+      operationId: reversalOperationId(payment().operationId),
+      reversesEventId: payment().operationId,
+    }
+    delete reversal.paymentDate
+    expect(validateInvoiceOperation(reversal)).toBeTruthy()
+    expect(() =>
+      validateInvoiceOperation({
+        ...reversal,
+        operationId: 'evt_123e4567-e89b-42d3-a456-426614174099',
+      }),
+    ).toThrow()
+    expect(() => reversalOperationId('old-payment')).toThrow(/revisão/)
   })
 
   it('confirma retry idêntico e rejeita reutilização de chave com payload diferente', () => {
