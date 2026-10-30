@@ -670,7 +670,8 @@ function CreditCardsCenterContent() {
                 Conferência financeira dos cartões
               </h2>
               <p className="mt-1 text-xs text-[--text-secondary]">
-                Competência {selectedMonth} · {center.invoices.length} fatura(s)
+                Competência {selectedMonth} · {center.invoices.length} fatura(s) ·{' '}
+                {linkageAudit.saved} vínculos salvos
               </p>
             </div>
             <button
