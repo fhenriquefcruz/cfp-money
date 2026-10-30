@@ -22,7 +22,6 @@ import CreditCardsSettingsCard from './CreditCardsSettingsCard'
 import PremiumGate from './PremiumGate'
 
 const CardReconciliationModal = React.lazy(() => import('./CardReconciliationModal'))
-const CardFinancialAuditModal = React.lazy(() => import('./CardFinancialAuditModal'))
 
 const STATUS = {
   forming: ['Em formação', 'bg-[--brand-100] text-[--brand-700]'],
@@ -251,6 +250,34 @@ function CreditCardsCenterContent() {
   const managedInvoice = center.invoices.find((invoice) => invoice.card.id === managingCardId)
 
   const loadingData = transactionsLoading || creditCardsLoading || invoiceEventsLoading
+  const inconsistentInvoices = auditOpen
+    ? center.invoices.filter((invoice) => {
+        const cents = (value) => Math.round(Number(value || 0) * 100) || 0
+        const purchases = invoice.items.reduce((total, tx) => total + cents(tx.amount), 0)
+        return (
+          purchases !== cents(invoice.purchaseTotal) ||
+          cents(invoice.lifecycle.remainingAmount) !==
+            Math.max(0, cents(invoice.lifecycle.invoiceTotal) - cents(invoice.lifecycle.paidAmount))
+        )
+      }).length
+    : 0
+  const auditFindings = auditOpen
+    ? [
+        ['Compras sem cartão salvo', linkageAudit.unlinked],
+        ['Associações sugeridas, ainda não salvas', center.reconciledPurchaseCount],
+        ['Vínculos históricos', linkageAudit.historical],
+        ['Faturas com cálculo divergente', inconsistentInvoices],
+        ['Cartões sem identificador', creditCards.filter((card) => !card.id).length],
+        [
+          'Pagamentos manuais e status pago coexistem',
+          center.invoices.filter(
+            (invoice) =>
+              invoice.paymentSource === 'invoice_events' &&
+              invoice.items.some((tx) => tx.paymentStatus === 'paid' || tx.isPaid === true),
+          ).length,
+        ],
+      ].filter(([, count]) => count > 0)
+    : []
 
   useEffect(() => {
     if (loadingData || userSelectedMonthRef.current) return
@@ -632,14 +659,51 @@ function CreditCardsCenterContent() {
       )}
 
       {auditOpen && !loadingData && (
-        <React.Suspense fallback={<p role="status">Abrindo auditoria…</p>}>
-          <CardFinancialAuditModal
-            center={center}
-            linkageAudit={linkageAudit}
-            creditCards={creditCards}
-            onClose={() => setAuditOpen(false)}
-          />
-        </React.Suspense>
+        <section
+          role="region"
+          aria-label="Resultado da auditoria financeira"
+          className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-4 shadow-sm"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-black text-[--text-primary]">
+                Conferência financeira dos cartões
+              </h2>
+              <p className="mt-1 text-xs text-[--text-secondary]">
+                Competência {selectedMonth} · {center.invoices.length} fatura(s)
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAuditOpen(false)}
+              className="min-h-11 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-primary]"
+            >
+              Concluir conferência
+            </button>
+          </div>
+          <p role="status" className="mt-3 text-xs font-semibold text-[--text-primary]">
+            {auditFindings.length
+              ? `${auditFindings.length} tipos de ocorrência para conferência`
+              : 'Nenhuma divergência detectada'}
+          </p>
+          {auditFindings.length > 0 && (
+            <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+              {auditFindings.map(([label, count]) => (
+                <li
+                  key={label}
+                  className="flex flex-wrap justify-between gap-2 rounded-xl bg-[--bg-subtle] p-3 text-xs text-[--text-secondary]"
+                >
+                  <span>{label}</span>
+                  <strong>{count} ocorrência(s)</strong>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-3 text-[11px] leading-relaxed text-[--text-tertiary]">
+            Cálculo sobre dados carregados nesta sessão. Nenhum lançamento é corrigido
+            automaticamente. Cartões históricos podem ser legítimos; confira o extrato do banco.
+          </p>
+        </section>
       )}
 
       {reconciliationOpen && (
