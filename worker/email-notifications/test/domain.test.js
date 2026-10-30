@@ -134,8 +134,20 @@ test('Gate 1: atividade de compra no crédito, cancelamento, transferência e re
       ...installments,
       { type: 'income', date: '2026-10-02', amount: '2.000,00' },
       { type: 'expense', date: '2026-10-03', amount: '100,50', categoryName: 'Alimentação' },
-      { type: 'income', isSavings: true, savingsMovement: 'deposit', amount: 200, date: '2026-10-10' },
-      { type: 'income', isSavings: true, savingsMovement: 'withdrawal', amount: 50, date: '2026-10-11' },
+      {
+        type: 'income',
+        isSavings: true,
+        savingsMovement: 'deposit',
+        amount: 200,
+        date: '2026-10-10',
+      },
+      {
+        type: 'income',
+        isSavings: true,
+        savingsMovement: 'withdrawal',
+        amount: 50,
+        date: '2026-10-11',
+      },
       { type: 'expense', date: '2026-10-08', amount: 900, paymentStatus: 'cancelled' },
       { type: 'expense', date: '2026-10-09', amount: 999, kind: 'transfer' },
     ],
@@ -153,10 +165,24 @@ test('Gate 1: meta por ID utiliza saldo inicial, aporte e retirada e ignora canc
   const goal = { id: 'synthetic-goal', targetAmount: 1000, currentAmount: 650 }
   const rows = [
     { type: 'income', isSavings: true, goalId: 'synthetic-goal', amount: 200 },
-    { type: 'income', isSavings: true, goalId: 'synthetic-goal', savingsMovement: 'withdrawal', amount: 50 },
-    { type: 'income', isSavings: true, goalId: 'synthetic-goal', amount: 900, paymentStatus: 'cancelled' },
+    {
+      type: 'income',
+      isSavings: true,
+      goalId: 'synthetic-goal',
+      savingsMovement: 'withdrawal',
+      amount: 50,
+    },
+    {
+      type: 'income',
+      isSavings: true,
+      goalId: 'synthetic-goal',
+      amount: 900,
+      paymentStatus: 'cancelled',
+    },
     { type: 'income', isSavings: true, goalId: 'other', amount: 999 },
   ]
-  assert.deepEqual(goalAlertCandidates(goal, new Date('2026-10-30T12:00:00Z'), rows), ['progress-80'])
+  assert.deepEqual(goalAlertCandidates(goal, new Date('2026-10-30T12:00:00Z'), rows), [
+    'progress-80',
+  ])
   assert.deepEqual(goalAlertCandidates(goal, new Date('2026-10-30T12:00:00Z'), []), [])
 })
