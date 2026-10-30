@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react'
-import { CreditCard } from 'lucide-react'
 import { useCreditCards } from '../contexts/AppContext'
 import { Button, Card, Input, Modal } from './ui'
 import PremiumGate from './PremiumGate'
@@ -221,7 +220,6 @@ function CreditCardsContent() {
             </div>
           ) : creditCards.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[--border-default] bg-[--bg-subtle] p-6 text-center">
-              <CreditCard size={26} className="mx-auto text-[--text-tertiary]" />
               <p className="mt-2 text-sm font-bold text-[--text-primary]">
                 Nenhum cartão cadastrado
               </p>
