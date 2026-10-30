@@ -55,21 +55,25 @@ describe('Gate 2 — operação de fatura', () => {
     delete closing.amount
     delete closing.paymentDate
     delete closing.sourceAccount
-    expect(validateInvoiceOperation({
-      ...closing,
-      type: 'adjustment',
-      direction: 'credit',
-      signedAmount: -35,
-      notes: 'Crédito comprovado',
-    })).toBeTruthy()
+    expect(
+      validateInvoiceOperation({
+        ...closing,
+        type: 'adjustment',
+        direction: 'credit',
+        signedAmount: -35,
+        notes: 'Crédito comprovado',
+      }),
+    ).toBeTruthy()
     expect(validateInvoiceOperation({ ...closing, type: 'manual_close' })).toBeTruthy()
-    expect(validateInvoiceOperation({
-      ...closing,
-      type: 'reversal',
-      amount: 30,
-      reversesEventId: 'previous-payment',
-      sourceAccount: 'Conta sintética',
-    })).toBeTruthy()
+    expect(
+      validateInvoiceOperation({
+        ...closing,
+        type: 'reversal',
+        amount: 30,
+        reversesEventId: 'previous-payment',
+        sourceAccount: 'Conta sintética',
+      }),
+    ).toBeTruthy()
   })
 
   it('confirma retry idêntico e rejeita reutilização de chave com payload diferente', () => {
