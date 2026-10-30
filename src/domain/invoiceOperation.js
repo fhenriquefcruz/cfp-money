@@ -38,10 +38,10 @@ export function validateInvoiceOperation(value) {
     throw new Error('Evento de fatura inválido.')
   }
   const allowed = {
-    payment: [...FIELDS.slice(0, 9), 'amount', 'paymentDate', 'sourceAccount'],
-    adjustment: [...FIELDS.slice(0, 9), 'direction', 'signedAmount'],
-    reversal: [...FIELDS.slice(0, 9), 'amount', 'reversesEventId', 'sourceAccount'],
-    manual_close: FIELDS.slice(0, 9),
+    payment: [...FIELDS, 'amount', 'paymentDate', 'sourceAccount'],
+    adjustment: [...FIELDS, 'direction', 'signedAmount'],
+    reversal: [...FIELDS, 'amount', 'reversesEventId', 'sourceAccount'],
+    manual_close: FIELDS,
   }[value.type]
   if (!allowed || Object.keys(value).some((key) => !allowed.includes(key))) {
     throw new Error('Campos incompatíveis com o evento.')
