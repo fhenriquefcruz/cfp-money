@@ -11,6 +11,13 @@ function sumCents(items, selector) {
   return items.reduce((total, item) => total + toCents(selector(item)), 0)
 }
 
+export function createInvoiceOperationId() {
+  if (typeof globalThis.crypto?.randomUUID !== 'function') {
+    throw new Error('Operação segura indisponível.')
+  }
+  return 'evt_' + globalThis.crypto.randomUUID()
+}
+
 export function todayIso(now = new Date()) {
   return [
     now.getFullYear(),
