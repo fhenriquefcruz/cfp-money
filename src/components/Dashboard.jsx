@@ -44,7 +44,7 @@ import './dashboard-bento.css'
 import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
 import CategoryCompositionVisual from './CategoryCompositionVisual'
-import { categoryAccentStyle, decorateCategoryBreakdown } from '../domain/categoryComposition'
+import { decorateCategoryBreakdown } from '../domain/categoryComposition'
 import PaymentControlCard from './PaymentControlCard'
 import FinancialHealthScore from './FinancialHealthScore'
 import { formatCurrency, formatRelativeDate } from '../utils'
@@ -75,6 +75,23 @@ const formatAxisCurrency = (value) =>
     compactDisplay: 'long',
     maximumFractionDigits: 1,
   }).format(Number(value) || 0)}`
+
+function BentoMoney({ amount, loading = false }) {
+  if (loading) return '—'
+  const formatted = formatCurrency(amount)
+  const match = /^(-?R\\$)[\\s\\u00a0]*/.exec(formatted)
+  if (!match) return formatted
+  return (
+    <span className="dashboard-money-value inline-flex flex-wrap items-baseline tabular-nums">
+      <span className="mr-1 text-xs font-normal tracking-normal text-slate-400">
+        {match[1]}
+      </span>
+      <span className="font-inherit tracking-tight text-[#F8FAFC]">
+        {formatted.slice(match[0].length)}
+      </span>
+    </span>
+  )
+}
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -230,8 +247,6 @@ export default function Dashboard() {
   )
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
-  const rawMonthLabel = format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })
-  const monthLabel = rawMonthLabel.charAt(0).toUpperCase() + rawMonthLabel.slice(1)
   const rawCompactMonthLabel = format(viewDate, 'MMMM yyyy', { locale: ptBR })
   const compactMonthLabel =
     rawCompactMonthLabel.charAt(0).toUpperCase() + rawCompactMonthLabel.slice(1)
@@ -431,6 +446,8 @@ export default function Dashboard() {
           ? { categoryId: reviewItem.suggestedCategoryId, categoryReviewApprovedFamily: null, categoryReviewApprovedCategoryId: null }
           : { categoryReviewApprovedFamily: reviewItem.suggestedFamily, categoryReviewApprovedCategoryId: original.categoryId }),
       })
+    } catch {
+      // O contexto de transações já apresenta uma notificação de erro.
     } finally {
       setReviewSaving(false)
     }
@@ -498,7 +515,7 @@ export default function Dashboard() {
                   <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
                 </div>
                 <p className="dashboard-period-hero__value">
-                  {isLoading ? '—' : formatCurrency(currentSummary.balance)}
+                  <BentoMoney amount={currentSummary.balance} loading={isLoading} />
                 </p>
                 <div className="dashboard-period-hero__context">
                   <span className="dashboard-period-hero__status" data-tone={periodInsight.tone}>
@@ -555,7 +572,7 @@ export default function Dashboard() {
                     <span aria-hidden="true" />
                     {label}
                   </p>
-                  <p className="dashboard-period-metric__value">{formatCurrency(value)}</p>
+                  <p className="dashboard-period-metric__value"><BentoMoney amount={value} loading={isLoading} /></p>
                 </div>
               ))}
             </div>
@@ -617,7 +634,7 @@ export default function Dashboard() {
                 </div>
 
                 <p className="mt-4 text-3xl font-black tabular-nums text-[--text-primary]">
-                  {formatCurrency(savingsOverview.totalBalance)}
+                  <BentoMoney amount={savingsOverview.totalBalance} />
                 </p>
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[--text-tertiary]">
                   <span>
@@ -1029,7 +1046,7 @@ export default function Dashboard() {
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
                       style={{ background: (cat?.color || '#ef4444') + '20' }}
                     >
-                      {cat?.icon || '📦'}
+                      <BentoCategoryIcon category={cat} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between text-xs mb-1">
