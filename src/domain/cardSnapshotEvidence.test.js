@@ -67,6 +67,18 @@ test('exportação antiga com IDs ambíguos, valores ilegíveis e horário futur
     cardId: 'private-card',
     amount: 'INVÁLIDO_PRIVADO',
   })
+  source.collections.transactions.push({
+    id: 'boolean-amount',
+    type: 'expense',
+    paymentMethod: 'credit_card',
+    amount: false,
+  })
+  source.collections.transactions.push({
+    id: 'blank-amount',
+    type: 'expense',
+    paymentMethod: 'credit_card',
+    amount: '   ',
+  })
   const evidence = assessCardSnapshotEvidence(source, { now })
   expect(evidence.level).toBe('limited')
   expect(evidence.warnings).toEqual(
@@ -77,6 +89,7 @@ test('exportação antiga com IDs ambíguos, valores ilegíveis e horário futur
       'invalid_credit_amounts',
     ]),
   )
+  expect(evidence.collections.transactions).toBe(4)
   expect(JSON.stringify(evidence)).not.toContain('INVÁLIDO_PRIVADO')
 
   source.exportedAt = '2026-11-01T12:00:00.000Z'
