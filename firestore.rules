@@ -245,7 +245,22 @@ service cloud.firestore {
         && request.resource.data.amount < 100000000;
     }
 
-    function validInvoiceEvent(eventId) {
+    // Um estorno automático integral tem chave determinística por pagamento.
+    // O documento de pagamento original é imutável e precisa ser do mesmo UID/fatura.
+    function validFullReversal(uid) {
+      let data = request.resource.data;
+      let source = /databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversesEventId);
+      return data.reversesEventId.matches('^evt_[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$')
+        && data.operationId == 'rev_' + data.reversesEventId
+        && exists(source)
+        && get(source).data.type == 'payment'
+        && get(source).data.cardId == data.cardId
+        && get(source).data.invoiceKey == data.invoiceKey
+        && get(source).data.amount == data.amount
+        && get(source).data.get('sourceAccount', '') == data.sourceAccount;
+    }
+
+    function validInvoiceEvent(eventId, uid) {
       let data = request.resource.data;
       let keys = data.keys();
       let common = [
@@ -255,7 +270,199 @@ service cloud.firestore {
       return keys.hasAll(common)
         && data.operationId is string
         && data.operationId == eventId
-        && data.operationId.matches('^evt_[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$')
+        && data.operationId.matches('^(rev_)?evt_[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}
+        && data.cardId is string
+        && data.cardId.size() > 0
+        && data.cardId.size() <= 128
+        && !data.cardId.matches('.*[/].*')
+        && data.cardName is string
+        && data.cardName.size() <= 120
+        && data.cardLast4 is string
+        && data.cardLast4.size() <= 8
+        && data.invoiceMonth is string
+        && data.invoiceMonth.matches('^(19|20)[0-9]{2}-(0[1-9]|1[0-2])$')
+        && data.invoiceKey == data.cardId + ':' + data.invoiceMonth
+        && data.eventDate is string
+        && data.eventDate.matches('^(19|20)[0-9]{2}-[0-9]{2}-[0-9]{2}$')
+        && data.notes is string
+        && data.notes.size() <= 1000
+        && data.createdAt is timestamp
+        && (
+          (
+            data.type == 'payment'
+            && keys.hasOnly(common.concat(['amount', 'paymentDate', 'sourceAccount']))
+            && keys.hasAll(['amount', 'paymentDate', 'sourceAccount'])
+            && data.amount is number
+            && data.amount > 0
+            && data.amount <= 100000000
+            && data.paymentDate == data.eventDate
+            && data.sourceAccount is string
+            && data.sourceAccount.size() <= 120
+          ) || (
+            data.type == 'adjustment'
+            && keys.hasOnly(common.concat(['direction', 'signedAmount']))
+            && keys.hasAll(['direction', 'signedAmount'])
+            && data.direction in ['charge', 'credit']
+            && data.signedAmount is number
+            && data.signedAmount >= -100000000
+            && data.signedAmount <= 100000000
+            && (
+              (data.direction == 'charge' && data.signedAmount > 0)
+              || (data.direction == 'credit' && data.signedAmount < 0)
+            )
+            && data.notes.size() > 0
+          ) || (
+            data.type == 'reversal'
+            && keys.hasOnly(common.concat(['amount', 'reversesEventId', 'sourceAccount']))
+            && keys.hasAll(['amount', 'reversesEventId', 'sourceAccount'])
+            && data.amount is number
+            && data.amount > 0
+            && data.amount <= 100000000
+            && data.reversesEventId is string
+            && data.reversesEventId.size() > 0
+            && data.reversesEventId.size() <= 128
+            && validFullReversal(uid)
+            && data.sourceAccount is string
+            && data.sourceAccount.size() <= 120
+          ) || (
+            data.type == 'manual_close'
+            && keys.hasOnly(common)
+          )
+        );
+    }
+
+    match /users/{uid} {
+      allow read: if owner(uid) || admin();
+
+      allow create: if owner(uid) && validInitialUser();
+
+      allow update: if (owner(uid) && validOwnerUserUpdate()) || (admin() && validAdminAccessUpdate());
+
+      allow delete: if false;
+
+      // Comprovantes fragmentados: isolados por usuário, imutáveis após gravação,
+      // com tamanho e vínculo a uma transação existente validados no servidor.
+      match /transactionAttachmentChunks/{chunkId} {
+        allow get, list: if owner(uid);
+        allow create: if owner(uid)
+          && request.resource.data.keys().hasAll(['txId', 'attachmentId', 'chunkIndex', 'data'])
+          && request.resource.data.keys().hasOnly(['txId', 'attachmentId', 'chunkIndex', 'data'])
+          && request.resource.data.txId is string
+          && request.resource.data.txId.size() > 0
+          && request.resource.data.txId.size() <= 128
+          && request.resource.data.attachmentId is string
+          && request.resource.data.attachmentId.size() > 0
+          && request.resource.data.attachmentId.size() <= 128
+          && request.resource.data.chunkIndex is int
+          && request.resource.data.chunkIndex >= 0
+          && request.resource.data.chunkIndex <= 12
+          && request.resource.data.data is string
+          && request.resource.data.data.size() > 0
+          && request.resource.data.data.size() <= 270000
+          && exists(/databases/$(database)/documents/users/$(uid)/transactions/$(request.resource.data.txId));
+        allow update: if false;
+        allow delete: if owner(uid);
+      }
+
+      match /invoiceEvents/{eventId} {
+        allow read: if owner(uid);
+        allow create: if owner(uid) && validInvoiceEvent(eventId, uid);
+        allow update, delete: if false;
+      }
+
+      match /transactions/{transactionId} {
+        allow read, delete: if owner(uid);
+        allow create: if owner(uid) && validTransactionAmount();
+        allow update: if owner(uid)
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['amount'])
+            || validTransactionAmount()
+          );
+      }
+
+      match /{collection}/{document=**} {
+        allow read, write: if owner(uid)
+          && collection != 'transactionAttachmentChunks'
+          && collection != 'invoiceEvents'
+          && collection != 'transactions';
+      }
+    }
+
+    match /categories/{categoryId} {
+      allow read: if admin()
+        || (
+          signedIn()
+          && (
+            resource.data.isDefault == true
+            || resource.data.ownerUid == request.auth.uid
+          )
+        );
+
+      allow create: if admin()
+        || (
+          signedIn()
+          && validCustomCategoryOwner()
+          && validCustomCategoryFields()
+        );
+
+      allow update: if admin()
+        || (
+          ownsCustomCategory()
+          && validCustomCategoryOwner()
+          && validCustomCategoryFields()
+        );
+
+      allow delete: if admin() || ownsCustomCategory();
+    }
+
+    match /adminAudit/{auditId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /supportRequests/{requestId} {
+      allow create: if signedIn() && validSupportCreate(requestId);
+      allow read: if signedIn()
+        && (resource.data.uid == request.auth.uid || admin());
+      allow update: if admin() && validSupportAdminUpdate();
+      allow delete: if false;
+    }
+
+    match /notificationSubscribers/{uid} {
+      allow read: if owner(uid);
+
+      allow create, update: if owner(uid)
+        && validNotificationSubscriber(uid);
+
+      allow delete: if owner(uid);
+    }
+
+    match /notificationDeliveries/{deliveryId} {
+      allow read, write: if false;
+    }
+
+    match /privacyConsents/{consentId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /accountDeletionRequests/{uid} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /privacyAudit/{auditId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+)
+        && (data.type == 'reversal' || !data.operationId.matches('^rev_.*'))
         && data.cardId is string
         && data.cardId.size() > 0
         && data.cardId.size() <= 128
