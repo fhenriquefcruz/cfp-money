@@ -460,21 +460,11 @@ function CreditCardsCenterContent() {
               className="rounded-xl border border-[--border-default] bg-[--bg-surface] p-3"
             >
               <p role="status" className="text-xs font-bold text-[--text-primary]">
-                Conferência interna · {selectedMonth}:{' '}
-                {auditResult.inconclusive > 0
-                  ? `${auditResult.inconclusive} fatura(s) exigem revisão dos valores`
-                  : auditResult.divergent > 0
-                    ? `${auditResult.divergent} fatura(s) com divergência interna`
-                    : auditResult.total === 0
-                      ? 'Nenhuma fatura com movimentação para conferir'
-                      : `${auditResult.checked} fatura(s) com cálculos internos consistentes`}
+                Conferência interna · {selectedMonth} ·{' '}
+                {auditResult.total
+                  ? `Conferidas: ${auditResult.checked} · Divergentes: ${auditResult.divergent} · Inconclusivas: ${auditResult.inconclusive}`
+                  : 'Nenhuma fatura com movimentação para conferir'}
               </p>
-              {auditResult.total > 0 && (
-                <p className="mt-1 text-[11px] text-[--text-secondary]">
-                  Conferidas: {auditResult.checked} · Divergentes: {auditResult.divergent} ·
-                  Inconclusivas: {auditResult.inconclusive}
-                </p>
-              )}
               <p className="mt-2 text-xs text-[--text-secondary]">
                 {linkageAudit.saved} vínculos salvos · Compras sem cartão salvo:{' '}
                 {linkageAudit.unlinked} · Sugestões: {center.reconciledPurchaseCount} · Históricos:{' '}
