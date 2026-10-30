@@ -1,5 +1,4 @@
 // Contrato de escrita da fatura: somente dados, sem Firebase ou efeitos colaterais.
-const EVENT_TYPES = ['payment', 'adjustment', 'reversal', 'manual_close']
 const FIELDS = [
   'operationId',
   'type',
@@ -36,7 +35,7 @@ const centsExact = (value) =>
 
 export function createInvoiceOperationId() {
   if (typeof globalThis.crypto?.randomUUID !== 'function') {
-    throw new Error('Navegador sem geração segura de identificadores.')
+    throw new Error('Operação segura indisponível.')
   }
   return 'evt_' + globalThis.crypto.randomUUID()
 }
@@ -52,11 +51,10 @@ export function validateInvoiceOperation(value) {
     manual_close: FIELDS.slice(0, 9),
   }[value.type]
   if (!allowed || Object.keys(value).some((key) => !allowed.includes(key))) {
-    throw new Error('Evento de fatura contém campos incompatíveis com o tipo.')
+    throw new Error('Campos incompatíveis com o evento.')
   }
   if (
     !/^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value.operationId || '') ||
-    !EVENT_TYPES.includes(value.type) ||
     !limitedText(value.cardId, 128) ||
     !value.cardId ||
     value.cardId.includes('/') ||
@@ -67,14 +65,14 @@ export function validateInvoiceOperation(value) {
     !limitedText(value.cardLast4, 8) ||
     !limitedText(value.notes, 1000)
   ) {
-    throw new Error('Dados de identificação ou competência da fatura inválidos.')
+    throw new Error('Fatura ou competência inválida.')
   }
   if (
     value.type === 'payment' &&
     (!centsExact(value.amount) || value.amount <= 0 ||
       value.paymentDate !== value.eventDate || !limitedText(value.sourceAccount, 120))
   ) {
-    throw new Error('Valor ou data do pagamento inválidos.')
+    throw new Error('Pagamento inválido.')
   }
   if (
     value.type === 'adjustment' &&
@@ -83,7 +81,7 @@ export function validateInvoiceOperation(value) {
       (value.direction === 'credit' ? value.signedAmount >= 0 : value.signedAmount <= 0) ||
       !value.notes.trim())
   ) {
-    throw new Error('Ajuste de fatura inválido.')
+    throw new Error('Ajuste inválido.')
   }
   if (
     value.type === 'reversal' &&
@@ -91,7 +89,7 @@ export function validateInvoiceOperation(value) {
       !limitedText(value.reversesEventId, 128) || !value.reversesEventId ||
       !limitedText(value.sourceAccount, 120))
   ) {
-    throw new Error('Estorno de pagamento inválido.')
+    throw new Error('Estorno inválido.')
   }
   return value
 }
