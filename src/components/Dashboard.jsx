@@ -479,8 +479,8 @@ export default function Dashboard() {
     [currentSummary, previousSummary],
   )
   const filteredFeed = useMemo(
-    () => filterDashboardFeed(monthTx, feedFilter, onlyOwn),
-    [monthTx, feedFilter, onlyOwn],
+    () => filterDashboardFeed(monthTx, feedFilter, onlyOwn, creditCards),
+    [monthTx, feedFilter, onlyOwn, creditCards],
   )
   const groupedFeed = useMemo(() => groupDashboardFeedByDate(filteredFeed), [filteredFeed])
   const reviewItem = categoryReviewQueue[0] || null
