@@ -1,3 +1,7 @@
+import { getFinancialActivityDate as getTransactionActivityDate } from './financialCore'
+
+export { getTransactionActivityDate }
+
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
 function validIsoDate(value) {
@@ -27,13 +31,6 @@ export function getTransactionPurchaseDate(transaction = {}) {
 export function getTransactionAccountingDate(transaction = {}) {
   const candidate = transaction.dueDate || transaction.date
   return validIsoDate(candidate) ? candidate : ''
-}
-
-export function getTransactionActivityDate(transaction = {}) {
-  if (isStructuredCreditPurchase(transaction)) return getTransactionPurchaseDate(transaction)
-  return validIsoDate(transaction.date)
-    ? transaction.date
-    : getTransactionAccountingDate(transaction)
 }
 
 export function getTransactionDateContext(transaction = {}) {
