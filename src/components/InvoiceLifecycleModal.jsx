@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { CheckCircle2, History, LockKeyhole, Receipt, RotateCcw, Scale, Wallet } from 'lucide-react'
 import {
   createAdjustmentEvent,
@@ -151,16 +151,6 @@ export default function InvoiceLifecycleModal({
     pendingOperation.current = null
   }, [invoice?.card?.id, invoiceMonth, isOpen])
 
-  const paymentSummary = useMemo(
-    () => ({
-      total: lifecycle?.invoiceTotal || 0,
-      paid: lifecycle?.paidAmount || 0,
-      remaining: lifecycle?.remainingAmount || 0,
-      credit: lifecycle?.creditAmount || 0,
-    }),
-    [lifecycle],
-  )
-
   const submitEvent = async (event) => {
     if (submitting.current) return
     submitting.current = true
@@ -289,10 +279,10 @@ export default function InvoiceLifecycleModal({
       <div className="space-y-5">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
-            ['Total', paymentSummary.total],
-            ['Pago', paymentSummary.paid],
-            ['Pendente', paymentSummary.remaining],
-            ['Crédito', paymentSummary.credit],
+            ['Total', lifecycle?.invoiceTotal || 0],
+            ['Pago', lifecycle?.paidAmount || 0],
+            ['Pendente', lifecycle?.remainingAmount || 0],
+            ['Crédito', lifecycle?.creditAmount || 0],
           ].map(([label, value]) => (
             <div
               key={label}
