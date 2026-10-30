@@ -631,10 +631,18 @@ test('Gate 2: Firestore impede evento inválido, alteração e acesso cruzado', 
   const event = syntheticInvoicePayment()
   const path = ['users', 'alice', 'invoiceEvents', event.operationId]
 
-  await assertFails(setDoc(doc(alice, ...path), { ...event, amount: -100, createdAt: Timestamp.now() }))
-  await assertFails(setDoc(doc(alice, ...path), { ...event, amount: '300', createdAt: Timestamp.now() }))
-  await assertFails(setDoc(doc(alice, ...path), { ...event, invoiceKey: 'wrong', createdAt: Timestamp.now() }))
-  await assertFails(setDoc(doc(alice, ...path), { ...event, operationId: 'different', createdAt: Timestamp.now() }))
+  await assertFails(
+    setDoc(doc(alice, ...path), { ...event, amount: -100, createdAt: Timestamp.now() }),
+  )
+  await assertFails(
+    setDoc(doc(alice, ...path), { ...event, amount: '300', createdAt: Timestamp.now() }),
+  )
+  await assertFails(
+    setDoc(doc(alice, ...path), { ...event, invoiceKey: 'wrong', createdAt: Timestamp.now() }),
+  )
+  await assertFails(
+    setDoc(doc(alice, ...path), { ...event, operationId: 'different', createdAt: Timestamp.now() }),
+  )
   await assertFails(setDoc(doc(bob, ...path), { ...event, createdAt: Timestamp.now() }))
 
   await persistInvoiceEventOnce(alice, 'alice', event)
@@ -665,12 +673,16 @@ test('Gate 2: novas transações exigem amount numérico, sem bloquear correçã
   const path = ['users', 'alice', 'transactions', 'synthetic-finance-record']
   await assertFails(setDoc(doc(alice, ...path), { type: 'expense', amount: '100.50' }))
   await assertFails(setDoc(doc(alice, ...path), { type: 'expense', amount: 1000000000 }))
-  await assertSucceeds(setDoc(doc(alice, ...path), { type: 'expense', amount: 100.5, date: '2026-10-30' }))
+  await assertSucceeds(
+    setDoc(doc(alice, ...path), { type: 'expense', amount: 100.5, date: '2026-10-30' }),
+  )
   await assertFails(updateDoc(doc(alice, ...path), { amount: '200.00' }))
   await assertFails(setDoc(doc(bob, ...path), { type: 'expense', amount: 10 }))
   await environment.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), 'users', 'alice', 'transactions', 'legacy-textual'), {
-      type: 'expense', amount: '100.50', categoryId: 'old',
+      type: 'expense',
+      amount: '100.50',
+      categoryId: 'old',
     })
   })
   const legacy = doc(alice, 'users', 'alice', 'transactions', 'legacy-textual')
