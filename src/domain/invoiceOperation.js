@@ -35,10 +35,22 @@ const centsExact = (value) =>
   Math.abs(value) <= 100000000
 
 export function createInvoiceOperationId() {
-  if (typeof globalThis.crypto?.randomUUID !== 'function') {
+  const crypto = globalThis.crypto
+  if (typeof crypto?.randomUUID === 'function') return 'evt_' + crypto.randomUUID()
+  if (typeof crypto?.getRandomValues !== 'function') {
     throw new Error('Este navegador não oferece geração segura de IDs de operação.')
   }
-  return 'evt_' + globalThis.crypto.randomUUID()
+  const bytes = crypto.getRandomValues(new Uint8Array(16))
+  bytes[6] = (bytes[6] & 15) | 64
+  bytes[8] = (bytes[8] & 63) | 128
+  const hex = [...bytes].map((part) => part.toString(16).padStart(2, '0')).join('')
+  return 'evt_' + [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20),
+  ].join('-')
 }
 
 export function validateInvoiceOperation(value) {
