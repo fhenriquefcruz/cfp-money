@@ -1,5 +1,5 @@
 import { doc, runTransaction, serverTimestamp } from 'firebase/firestore'
-import { sameInvoiceOperation, validateInvoiceOperation } from '../domain/invoiceOperation'
+import { sameInvoiceOperation, validateInvoiceOperation } from '../domain/invoiceOperation.js'
 
 // A mesma operationId é um único fato financeiro, mesmo sob retry e concorrência.
 // A leitura e criação ocorrem na mesma transação Firestore; nunca usar addDoc aqui.
