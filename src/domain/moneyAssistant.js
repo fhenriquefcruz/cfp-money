@@ -377,7 +377,7 @@ export function buildMoneyAssistantResponse({
 
   if (intent.type === 'category_report') {
     periodTransactions = periodTransactions.filter((transaction) => {
-      if (transaction.type !== 'expense') return false
+      if (transaction.type !== 'expense' || transaction.isSavings) return false
       if (intent.category.id && transaction.categoryId === intent.category.id) return true
       return normalizeText(transaction.categoryName) === normalizeText(intent.category.name)
     })
