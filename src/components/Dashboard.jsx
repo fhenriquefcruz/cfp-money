@@ -177,6 +177,7 @@ function UnifiedDashboardIntelligence({
   reviewItem,
   onReview,
   saving,
+  transactions,
 }) {
   return (
     <Card variant="elevated" className="dashboard-decision-card h-full">
@@ -236,7 +237,7 @@ function UnifiedDashboardIntelligence({
         <FinancialHealthScore report={healthReport} />
       </div>
       <div className="dashboard-decision-money mt-3">
-        <MoneyInsightCard referenceDate={referenceDate} compact />
+        <MoneyInsightCard referenceDate={referenceDate} compact transactionsOverride={transactions} />
       </div>
     </Card>
   )
@@ -719,6 +720,7 @@ export default function Dashboard() {
             reviewItem={reviewItem}
             onReview={saveReview}
             saving={reviewSaving}
+            transactions={visibleTransactions}
           />
         </motion.div>
       </div>
