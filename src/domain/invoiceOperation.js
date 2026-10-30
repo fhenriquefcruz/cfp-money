@@ -26,12 +26,7 @@ const centsExact = (value) =>
   Math.abs(value * 100 - Math.round(value * 100)) < 0.000001 &&
   Math.abs(value) <= 100000000
 
-export function createInvoiceOperationId() {
-  if (typeof globalThis.crypto?.randomUUID !== 'function') {
-    throw new Error('Operação segura indisponível.')
-  }
-  return 'evt_' + globalThis.crypto.randomUUID()
-}
+export { createInvoiceOperationId } from './invoiceLifecycle.js'
 
 export function reversalOperationId(paymentId) {
   if (!/^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(paymentId || '')) {
