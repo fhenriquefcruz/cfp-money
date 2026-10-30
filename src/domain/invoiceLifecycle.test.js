@@ -225,12 +225,10 @@ test('bloqueia estorno automático de pagamento histórico e segunda reversão',
     invoiceEvents: [payment],
     eventDate: '2026-08-06',
   }
-  expect(() =>
-    createReversalEvent({ ...args, payment: { ...payment, id: 'legacy-pay' } }),
-  ).toThrow(/revisão/)
+  expect(() => createReversalEvent({ ...args, payment: { ...payment, id: 'legacy-pay' } })).toThrow(
+    /revisão/,
+  )
   const reversal = createReversalEvent(args)
   expect(() => createReversalEvent({ ...args, invoiceEvents: [payment, reversal] })).toThrow()
-  expect(() =>
-    createReversalEvent({ ...args, invoiceMonth: '2026-09' }),
-  ).toThrow(/outra fatura/)
+  expect(() => createReversalEvent({ ...args, invoiceMonth: '2026-09' })).toThrow(/outra fatura/)
 })
