@@ -6,7 +6,7 @@ export function moneyToCents(value) {
     if (!Number.isFinite(value)) return 0
     // Converter pela representação decimal evita 1.005 * 100 = 100.4999…
     const raw = String(Math.abs(value))
-    if (!/^\\d+(?:\\.\\d+)?$/.test(raw)) return 0
+    if (!/^\d+(?:\.\d+)?$/.test(raw)) return 0
     const [whole, fraction = ''] = raw.split('.')
     const cents =
       Number(whole) * 100 +
