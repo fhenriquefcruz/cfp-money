@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronDown } from 'lucide-react'
 import { ProgressBar } from './ui'
 
-export default function FinancialHealthScore({ report }) {
+export default function FinancialHealthScore({ report, hideNextAction = false }) {
   const [expanded, setExpanded] = useState(false)
   const scoreAvailable = report?.score !== null && Number.isFinite(Number(report?.score))
   const score = scoreAvailable ? Number(report.score) : 0
@@ -49,7 +49,7 @@ export default function FinancialHealthScore({ report }) {
           <p className="mt-0.5 text-xs text-[--text-tertiary]">
             {report?.summary || 'Revise os fatores do indicador.'}
           </p>
-          {report?.nextAction && (
+          {report?.nextAction && !hideNextAction && (
             <p className="mt-1 text-[10px] font-semibold text-[--text-secondary]">
               {scoreAvailable
                 ? `Maior oportunidade: ${report.nextAction.label} (+${report.nextAction.missingPoints} pts)`
@@ -59,7 +59,7 @@ export default function FinancialHealthScore({ report }) {
         </div>
       </div>
 
-      {!scoreAvailable && report?.nextAction?.to && (
+      {!hideNextAction && !scoreAvailable && report?.nextAction?.to && (
         <Link
           to={report.nextAction.to}
           className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-1 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-xs font-bold text-[--warning-text]"
