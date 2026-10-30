@@ -708,9 +708,9 @@ test('Gate 2: ajuste, estorno e fechamento manual usam contratos específicos', 
 
   const reversal = {
     ...base,
-    operationId: 'evt_123e4567-e89b-42d3-a456-426614174002',
+    operationId: 'rev_' + base.operationId,
     type: 'reversal',
-    amount: 30,
+    amount: base.amount,
     reversesEventId: base.operationId,
   }
   delete reversal.paymentDate
@@ -737,4 +737,97 @@ test('Gate 2: ajuste, estorno e fechamento manual usam contratos específicos', 
     signedAmount: 20,
   }
   await assert.rejects(persistInvoiceEventOnce(database, 'alice', badAdjustment))
+})
+
+test('Gate 2.2: duas sessões concorrentes estornam integralmente só uma vez', async () => {
+  const aliceA = environment.authenticatedContext('alice').firestore()
+  const aliceB = environment.authenticatedContext('alice').firestore()
+  const payment = syntheticInvoicePayment()
+  await persistInvoiceEventOnce(aliceA, 'alice', payment)
+  const reversal = {
+    ...payment,
+    operationId: 'rev_' + payment.operationId,
+    type: 'reversal',
+    reversesEventId: payment.operationId,
+  }
+  delete reversal.paymentDate
+
+  const result = await Promise.all([
+    persistInvoiceEventOnce(aliceA, 'alice', reversal),
+    persistInvoiceEventOnce(aliceB, 'alice', reversal),
+  ])
+  assert.deepEqual(result, [reversal.operationId, reversal.operationId])
+  assert.equal(await persistInvoiceEventOnce(aliceB, 'alice', reversal), reversal.operationId)
+  const all = await getDocs(collection(aliceA, 'users', 'alice', 'invoiceEvents'))
+  assert.equal(all.size, 2)
+  const stored = (await getDoc(doc(aliceA, 'users', 'alice', 'invoiceEvents', reversal.operationId))).data()
+  assert.equal(stored.amount, payment.amount)
+  await assert.rejects(
+    persistInvoiceEventOnce(aliceA, 'alice', { ...reversal, amount: 10 }),
+  )
+})
+
+test('Gate 2.2: bypass por ID diferente, valor maior, fatura ou pagamento inexistente é negado', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const payment = syntheticInvoicePayment()
+  await persistInvoiceEventOnce(alice, 'alice', payment)
+
+  const reversal = {
+    ...payment,
+    operationId: 'rev_' + payment.operationId,
+    type: 'reversal',
+    reversesEventId: payment.operationId,
+  }
+  delete reversal.paymentDate
+
+  const syntheticWrite = async (event) =>
+    setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', event.operationId), {
+      ...event,
+      createdAt: Timestamp.now(),
+    })
+  await assertFails(syntheticWrite({
+    ...reversal,
+    operationId: 'evt_123e4567-e89b-42d3-a456-426614174080',
+  }))
+  await assertFails(syntheticWrite({ ...reversal, amount: 600 }))
+  await assertFails(syntheticWrite({
+    ...reversal,
+    invoiceMonth: '2026-11',
+    invoiceKey: 'card-demo:2026-11',
+  }))
+  await assertFails(syntheticWrite({
+    ...reversal,
+    operationId: 'rev_evt_123e4567-e89b-42d3-a456-426614174011',
+    reversesEventId: 'evt_123e4567-e89b-42d3-a456-426614174011',
+  }))
+  await assertFails(setDoc(
+    doc(bob, 'users', 'alice', 'invoiceEvents', reversal.operationId),
+    { ...reversal, createdAt: Timestamp.now() },
+  ))
+  await assertSucceeds(syntheticWrite(reversal))
+  await assertFails(syntheticWrite(reversal))
+})
+
+test('Gate 2.2: pagamento legado não recebe novo estorno automático', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'alice', 'invoiceEvents', 'old-pay'), {
+      type: 'payment',
+      cardId: 'card-demo',
+      invoiceKey: 'card-demo:2026-10',
+      amount: 300,
+    })
+  })
+  const attempted = {
+    ...syntheticInvoicePayment(),
+    operationId: 'rev_old-pay',
+    type: 'reversal',
+    reversesEventId: 'old-pay',
+  }
+  delete attempted.paymentDate
+  await assertFails(setDoc(
+    doc(alice, 'users', 'alice', 'invoiceEvents', attempted.operationId),
+    { ...attempted, createdAt: Timestamp.now() },
+  ))
 })
