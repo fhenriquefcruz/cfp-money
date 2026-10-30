@@ -264,7 +264,11 @@ export default function MoneyInsightCard({ referenceDate, compact = false, trans
         'Acesso ao assistente conversacional',
       ]}
     >
-      <MoneyInsightContent referenceDate={referenceDate} compact={compact} transactionsOverride={transactionsOverride} />
+      <MoneyInsightContent
+        referenceDate={referenceDate}
+        compact={compact}
+        transactionsOverride={transactionsOverride}
+      />
     </PremiumGate>
   )
 }
