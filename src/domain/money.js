@@ -1,4 +1,9 @@
-import { getTransactionActivityDate } from './transactionDates'
+import {
+  centsToMoney,
+  moneyToCents,
+  selectActivityRange,
+  summarizeActivityTransactions,
+} from './financialCore'
 import { buildCategoryReviewQueue } from './categoryReview'
 
 const DEFAULT_SETTINGS = Object.freeze({
@@ -11,10 +16,6 @@ const DEFAULT_SETTINGS = Object.freeze({
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const MIN_PROJECTION_ELAPSED_DAYS = 7
-const isEffective = (transaction) =>
-  transaction.paymentStatus !== 'cancelled' &&
-  transaction.flowType !== 'transfer' &&
-  transaction.kind !== 'transfer'
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
@@ -68,31 +69,17 @@ function differenceInCalendarDays(later, earlier) {
   return Math.round((utcA - utcB) / 86400000)
 }
 
-function isWithin(dateValue, startValue, endValue) {
-  const date = asIsoDate(dateValue)
-  return date >= asIsoDate(startValue) && date <= asIsoDate(endValue)
-}
-
-function toAmount(value) {
-  const amount = Number(value)
-  return Number.isFinite(amount) ? amount : 0
-}
-
 function safePercentChange(current, previous) {
   if (previous === 0) return current === 0 ? 0 : null
   return ((current - previous) / previous) * 100
 }
 
 function sumExpenses(transactions) {
-  return transactions
-    .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
-    .reduce((total, transaction) => total + toAmount(transaction.amount), 0)
+  return summarizeActivityTransactions(transactions).expenses
 }
 
 function sumIncome(transactions) {
-  return transactions
-    .filter((transaction) => transaction.type === 'income' && !transaction.isSavings)
-    .reduce((total, transaction) => total + toAmount(transaction.amount), 0)
+  return summarizeActivityTransactions(transactions).income
 }
 
 export function normalizeMoneySettings(settings = {}) {
@@ -184,14 +171,10 @@ export function getEquivalentPeriods(referenceDate = new Date(), settings = {}) 
 
 export function filterTransactionsForPeriod(transactions = [], period, settings = {}) {
   const normalized = normalizeMoneySettings(settings)
-
-  return transactions.filter((transaction) => {
-    if (!isEffective(transaction)) return false
-    const activityDate = getTransactionActivityDate(transaction)
-    if (!activityDate || !isWithin(activityDate, period.start, period.end)) return false
-    if (normalized.excludeSavings && transaction.isSavings) return false
-    return true
-  })
+  const included = selectActivityRange(transactions, period.start, period.end)
+  return normalized.excludeSavings
+    ? included.filter((transaction) => !transaction.isSavings)
+    : included
 }
 
 export function calculateCategoryChanges(currentTransactions = [], previousTransactions = []) {
@@ -199,7 +182,7 @@ export function calculateCategoryChanges(currentTransactions = [], previousTrans
     const totals = new Map()
 
     transactions
-      .filter((transaction) => transaction.type === 'expense')
+      .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
       .forEach((transaction) => {
         const key = transaction.categoryId || transaction.categoryName || 'without-category'
         const existing = totals.get(key) || {
@@ -207,7 +190,9 @@ export function calculateCategoryChanges(currentTransactions = [], previousTrans
           categoryName: transaction.categoryName || 'Sem categoria',
           total: 0,
         }
-        existing.total += toAmount(transaction.amount)
+        existing.total = centsToMoney(
+          moneyToCents(existing.total) + moneyToCents(transaction.amount),
+        )
         totals.set(key, existing)
       })
 

@@ -1,3 +1,10 @@
+import {
+  centsToMoney,
+  moneyToCents,
+  selectActivityRange,
+  summarizeActivityTransactions,
+} from './financialCore'
+
 const MONTHS = [
   ['janeiro', 'jan'],
   ['fevereiro', 'fev'],
@@ -105,20 +112,6 @@ function getCurrentCycleLabel(periods) {
   return `${formatDate(periods.current.start)} a ${formatDate(periods.current.end)}`
 }
 
-function summarize(transactions) {
-  return transactions.reduce(
-    (summary, transaction) => {
-      const amount = Number(transaction.amount) || 0
-      if (transaction.type === 'income') summary.income += amount
-      if (transaction.type === 'expense') summary.expenses += amount
-      summary.balance = summary.income - summary.expenses
-      summary.count += 1
-      return summary
-    },
-    { income: 0, expenses: 0, balance: 0, count: 0 },
-  )
-}
-
 function findCategory(normalizedMessage, categories = [], transactions = []) {
   const candidates = new Map()
 
@@ -150,12 +143,8 @@ function findCategory(normalizedMessage, categories = [], transactions = []) {
 }
 
 function filterMonthTransactions(transactions, period, excludeSavings = true) {
-  return transactions.filter((transaction) => {
-    if (!transaction?.date) return false
-    if (transaction.date < period.start || transaction.date > period.end) return false
-    if (excludeSavings && transaction.isSavings) return false
-    return true
-  })
+  const effective = selectActivityRange(transactions, period.start, period.end)
+  return excludeSavings ? effective.filter((transaction) => !transaction.isSavings) : effective
 }
 
 function formatVariation(value) {
@@ -369,8 +358,8 @@ export function buildMoneyAssistantResponse({
 
   if (intent.type === 'top') {
     const expenses = periodTransactions
-      .filter((transaction) => transaction.type === 'expense')
-      .sort((a, b) => b.amount - a.amount)
+      .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
+      .sort((a, b) => moneyToCents(b.amount) - moneyToCents(a.amount))
       .slice(0, 5)
 
     return {
@@ -380,7 +369,7 @@ export function buildMoneyAssistantResponse({
         expenses
           .map(
             (transaction) =>
-              `${transaction.description || transaction.categoryName}: ${currencyFormatter.format(transaction.amount)}`,
+              `${transaction.description || transaction.categoryName}: ${currencyFormatter.format(centsToMoney(moneyToCents(transaction.amount)))}`,
           )
           .join(' · ') || 'Nenhuma.',
     }
@@ -388,14 +377,13 @@ export function buildMoneyAssistantResponse({
 
   if (intent.type === 'category_report') {
     periodTransactions = periodTransactions.filter((transaction) => {
-      if (transaction.type !== 'expense') return false
+      if (transaction.type !== 'expense' || transaction.isSavings) return false
       if (intent.category.id && transaction.categoryId === intent.category.id) return true
       return normalizeText(transaction.categoryName) === normalizeText(intent.category.name)
     })
 
-    const total = periodTransactions.reduce(
-      (sum, transaction) => sum + (Number(transaction.amount) || 0),
-      0,
+    const total = centsToMoney(
+      periodTransactions.reduce((sum, transaction) => sum + moneyToCents(transaction.amount), 0),
     )
 
     return {
@@ -417,7 +405,7 @@ export function buildMoneyAssistantResponse({
     }
   }
 
-  const summary = summarize(periodTransactions)
+  const summary = summarizeActivityTransactions(periodTransactions)
 
   return {
     type: 'monthly_report',

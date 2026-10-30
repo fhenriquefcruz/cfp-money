@@ -1,3 +1,11 @@
+import {
+  centsToMoney,
+  getGoalEffectiveCents,
+  moneyToCents,
+  selectActivityRange,
+  summarizeActivityTransactions,
+} from '../../../src/domain/financialCore.js'
+
 export const TRIAL_DAYS = 7
 const DAY_MS = 86_400_000
 
@@ -100,10 +108,14 @@ export function highestBudgetAlert({ percentage, thresholds = [70, 90, 100], ove
   return reached[0] || null
 }
 
-export function goalAlertCandidates(goal, now = new Date()) {
+export function getGoalEffectiveCurrent(goal, transactions = []) {
+  return centsToMoney(getGoalEffectiveCents(goal, transactions))
+}
+
+export function goalAlertCandidates(goal, now = new Date(), transactions = []) {
   const result = []
-  const target = Number(goal.targetAmount || 0)
-  const current = Number(goal.currentAmount || 0)
+  const target = moneyToCents(goal.targetAmount)
+  const current = getGoalEffectiveCents(goal, transactions)
   const progress = target > 0 ? (current / target) * 100 : 0
 
   if (progress >= 100) result.push('progress-100')
@@ -141,40 +153,24 @@ export function reportRange(frequency, now = new Date()) {
   return { start, end }
 }
 
-export function summarizeTransactions(transactions, range) {
-  const included = transactions.filter((item) => {
-    const date = toDate(item.date ? `${item.date}T12:00:00.000Z` : item.createdAt)
-    return date && date >= range.start && date <= range.end
-  })
-
-  let income = 0
-  let expenses = 0
+export function summarizeTransactions(transactions = [], range) {
+  // Competência diária no calendário UTC do relatório; nunca usar createdAt.
+  const start = range?.start instanceof Date ? range.start.toISOString().slice(0, 10) : ''
+  const end = range?.end instanceof Date ? range.end.toISOString().slice(0, 10) : ''
+  const included = selectActivityRange(transactions, start, end)
+  const totals = summarizeActivityTransactions(included)
   const categories = new Map()
 
   for (const item of included) {
-    const amount = Number(item.amount || 0)
-    if (item.type === 'income' && !item.isSavings) {
-      income += amount
-      continue
-    }
-
-    if (item.type === 'expense') {
-      expenses += amount
-      const name = item.categoryName || item.category || 'Outros'
-      categories.set(name, (categories.get(name) || 0) + amount)
-    }
+    if (item.type !== 'expense' || item.isSavings) continue
+    const name = item.categoryName || item.category || 'Outros'
+    categories.set(name, (categories.get(name) || 0) + moneyToCents(item.amount))
   }
 
   return {
-    income,
-    expenses,
-    balance: income - expenses,
-    count: included.length,
+    ...totals,
     topCategories: [...categories.entries()]
-      .map(([name, amount]) => ({
-        name,
-        amount,
-      }))
+      .map(([name, cents]) => ({ name, amount: centsToMoney(cents) }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 5),
   }

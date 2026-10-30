@@ -1,60 +1,18 @@
-import { getSavingsSignedAmount } from './savings'
+import {
+  centsToMoney,
+  moneyToCents,
+  selectActivityMonth,
+  summarizeActivityTransactions,
+} from './financialCore'
 
-const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
+export { getFinancialActivityDate, isFinanciallyEffectiveTransaction } from './financialCore'
 
-export const getFinancialActivityDate = (transaction = {}) =>
-  transaction.type === 'expense' &&
-  transaction.paymentMethod === 'credit_card' &&
-  transaction.isCreditPurchase
-    ? transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date || ''
-    : transaction.date || transaction.dueDate || ''
+export const summarizeTransactions = summarizeActivityTransactions
 
-export const isFinanciallyEffectiveTransaction = (transaction = {}) =>
-  transaction.paymentStatus !== 'cancelled' &&
-  transaction.flowType !== 'transfer' &&
-  transaction.kind !== 'transfer'
+export const calculateCurrentBalance = (transactions = []) =>
+  summarizeActivityTransactions(transactions).balance
 
-export function summarizeTransactions(transactions = []) {
-  return transactions.reduce(
-    (summary, transaction) => {
-      if (!isFinanciallyEffectiveTransaction(transaction)) return summary
-      const amount = asAmount(transaction.amount)
-
-      if (transaction.isSavings) {
-        summary.savings += getSavingsSignedAmount(transaction)
-      } else if (transaction.type === 'income') {
-        summary.income += amount
-      } else if (transaction.type === 'expense') {
-        summary.expenses += amount
-      }
-
-      summary.balance = summary.income - summary.expenses
-      summary.count += 1
-      return summary
-    },
-    {
-      income: 0,
-      expenses: 0,
-      savings: 0,
-      balance: 0,
-      count: 0,
-    },
-  )
-}
-
-export function calculateCurrentBalance(transactions = []) {
-  return summarizeTransactions(transactions).balance
-}
-
-export function transactionsForMonth(transactions = [], year, month) {
-  return transactions.filter((transaction) => {
-    if (!isFinanciallyEffectiveTransaction(transaction)) return false
-    const activityDate = getFinancialActivityDate(transaction)
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(activityDate || '')) return false
-    const date = new Date(activityDate + 'T00:00:00')
-    return date.getFullYear() === year && date.getMonth() === month
-  })
-}
+export const transactionsForMonth = selectActivityMonth
 
 export function defaultDateRangeEnd(startDate, days = 30) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate || '')) return ''
@@ -72,29 +30,24 @@ export function defaultDateRangeEnd(startDate, days = 30) {
 }
 
 export function calculateBudgetUsage(transactions = [], budget, referenceDate = new Date()) {
-  if (!budget || asAmount(budget.amount) <= 0) {
-    return { spent: 0, percent: 0 }
-  }
+  const budgetCents = moneyToCents(budget?.amount)
+  if (!budget || budgetCents <= 0) return { spent: 0, percent: 0 }
 
-  const spent = transactions
-    .filter((transaction) => {
-      const activityDate = getFinancialActivityDate(transaction)
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(activityDate || '')) return false
-      const date = new Date(activityDate + 'T00:00:00')
-
-      return (
-        isFinanciallyEffectiveTransaction(transaction) &&
+  const spentCents = selectActivityMonth(
+    transactions,
+    referenceDate.getFullYear(),
+    referenceDate.getMonth(),
+  )
+    .filter(
+      (transaction) =>
         transaction.type === 'expense' &&
         !transaction.isSavings &&
-        transaction.categoryId === budget.categoryId &&
-        date.getFullYear() === referenceDate.getFullYear() &&
-        date.getMonth() === referenceDate.getMonth()
-      )
-    })
-    .reduce((total, transaction) => total + asAmount(transaction.amount), 0)
+        transaction.categoryId === budget.categoryId,
+    )
+    .reduce((sum, transaction) => sum + moneyToCents(transaction.amount), 0)
 
   return {
-    spent,
-    percent: (spent / asAmount(budget.amount)) * 100,
+    spent: centsToMoney(spentCents),
+    percent: (spentCents / budgetCents) * 100,
   }
 }
