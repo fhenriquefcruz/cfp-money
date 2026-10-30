@@ -23,6 +23,8 @@ import {
   CheckCircle2,
   PiggyBank,
   Paperclip,
+  Search,
+  Sparkles,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -34,6 +36,11 @@ import {
   useTransactions,
 } from '../contexts/AppContext'
 import { Card, Button, ProgressBar, EmptyState } from './ui'
+import BentoCategoryIcon from './dashboard/BentoCategoryIcon'
+import { filterDashboardFeed, groupDashboardFeedByDate, isDashboardThirdParty, getDashboardTransactionTags } from '../domain/dashboardBento'
+import { categoryCompositionFromTransactions } from '../domain/categoryComposition'
+import { summarizeTransactions, transactionsForMonth } from '../domain/finance'
+import './dashboard-bento.css'
 import InfoTooltip from './InfoTooltip'
 import MoneyInsightCard from './MoneyInsightCard'
 import CategoryCompositionVisual from './CategoryCompositionVisual'
@@ -88,20 +95,21 @@ const ChartTooltip = ({ active, payload, label }) => {
 const TxItem = ({ tx, categories }) => {
   const cat = categories.find((c) => c.id === tx.categoryId)
   const isIncome = tx.type === 'income' && !tx.isSavings
+  const tags = getDashboardTransactionTags(tx)
   const dateContext = getTransactionDateContext(tx)
   return (
     <div className="flex items-center gap-3 py-3 border-b border-[--border-subtle] last:border-0">
-      <div
-        className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${cat && !tx.isSavings ? 'category-colored-avatar' : 'bg-[--brand-50]'}`}
-        style={cat && !tx.isSavings ? categoryAccentStyle(cat) : undefined}
-      >
-        {tx.isSavings ? '🐷' : cat?.icon || (isIncome ? '💰' : '💸')}
-      </div>
+      <BentoCategoryIcon category={cat} name={tx.isSavings ? 'Reservas' : cat?.name || (isIncome ? 'Receita' : 'Despesa')} />
       <div className="flex-1 min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
           <p className="min-w-0 truncate text-sm font-semibold text-[--text-primary]">
             {tx.description || (tx.isSavings ? 'Poupança' : cat?.name) || 'Sem descrição'}
           </p>
+          {tags.map((tag) => (
+            <span key={tag} className="dashboard-feed-tag shrink-0 rounded-full px-2 py-0.5 text-[10px]">
+              {tag}
+            </span>
+          ))}
           {tx.attachments?.length > 0 && (
             <span
               title={`${tx.attachments.length} comprovante(s) anexado(s)`}
@@ -191,6 +199,7 @@ export default function Dashboard() {
     getSummary,
     getCategoryTotals,
     getSpendingForecast,
+    editTransaction,
   } = useTransactions()
   const { budgets } = useBudgets()
   const { categories } = useCategories()
@@ -202,6 +211,14 @@ export default function Dashboard() {
   const [trendMonths, setTrendMonths] = useState(6)
   const [trendView, setTrendView] = useState('flow')
   const [selectedMonthKey, setSelectedMonthKey] = useState('')
+  const [onlyOwn, setOnlyOwn] = useState(false)
+  const [feedFilter, setFeedFilter] = useState('all')
+  const [activeCategory, setActiveCategory] = useState('')
+  const [reviewSaving, setReviewSaving] = useState(false)
+  const visibleTransactions = useMemo(
+    () => onlyOwn ? transactions.filter((tx) => !isDashboardThirdParty(tx)) : transactions,
+    [transactions, onlyOwn],
+  )
   const year = viewDate.getFullYear()
   const month = viewDate.getMonth()
   const rawMonthLabel = format(viewDate, "MMMM 'de' yyyy", { locale: ptBR })
@@ -211,17 +228,31 @@ export default function Dashboard() {
     rawCompactMonthLabel.charAt(0).toUpperCase() + rawCompactMonthLabel.slice(1)
   const isCurrentMonth = year === new Date().getFullYear() && month === new Date().getMonth()
 
-  const currentSummary = useMemo(() => getSummary(year, month), [year, month, transactions])
-  const categoryTotals = useMemo(() => getCategoryTotals(year, month), [year, month, transactions])
+  const currentSummary = useMemo(
+    () => onlyOwn
+      ? summarizeTransactions(transactionsForMonth(visibleTransactions, year, month))
+      : getSummary(year, month),
+    [year, month, visibleTransactions, onlyOwn, getSummary],
+  )
+  const categoryTotals = useMemo(
+    () => onlyOwn
+      ? categoryCompositionFromTransactions(transactionsForMonth(visibleTransactions, year, month), categories)
+      : getCategoryTotals(year, month),
+    [year, month, visibleTransactions, categories, onlyOwn, getCategoryTotals],
+  )
   const previousViewDate = useMemo(() => subMonths(viewDate, 1), [year, month])
   const previousSummary = useMemo(
-    () => getSummary(previousViewDate.getFullYear(), previousViewDate.getMonth()),
-    [previousViewDate, transactions],
+    () => onlyOwn
+      ? summarizeTransactions(transactionsForMonth(visibleTransactions, previousViewDate.getFullYear(), previousViewDate.getMonth()))
+      : getSummary(previousViewDate.getFullYear(), previousViewDate.getMonth()),
+    [previousViewDate, visibleTransactions, onlyOwn, getSummary],
   )
   const previousMonthLabel = format(previousViewDate, 'MMMM', { locale: ptBR })
   const previousCategoryTotals = useMemo(
-    () => getCategoryTotals(previousViewDate.getFullYear(), previousViewDate.getMonth()),
-    [previousViewDate, transactions],
+    () => onlyOwn
+      ? categoryCompositionFromTransactions(transactionsForMonth(visibleTransactions, previousViewDate.getFullYear(), previousViewDate.getMonth()), categories)
+      : getCategoryTotals(previousViewDate.getFullYear(), previousViewDate.getMonth()),
+    [previousViewDate, visibleTransactions, onlyOwn, getCategoryTotals, categories],
   )
   const categoryBreakdown = useMemo(
     () =>
@@ -234,63 +265,67 @@ export default function Dashboard() {
   const availableMonthCount = useMemo(
     () =>
       new Set(
-        transactions
+        visibleTransactions
           .map((transaction) => getTransactionActivityDate(transaction)?.slice(0, 7))
           .filter(Boolean),
       ).size,
-    [transactions],
+    [visibleTransactions],
   )
   const monthlyData = useMemo(
-    () => getMonthlyFinancialData(transactions, trendMonths, viewDate),
-    [transactions, trendMonths, viewDate],
+    () => getMonthlyFinancialData(visibleTransactions, trendMonths, viewDate),
+    [visibleTransactions, trendMonths, viewDate],
   )
   const selectedTrend =
     monthlyData.find((item) => item.monthKey === selectedMonthKey) || monthlyData.at(-1) || null
-  const forecast = useMemo(() => getSpendingForecast(), [transactions])
+  const forecast = useMemo(() => {
+    if (!onlyOwn) return getSpendingForecast()
+    const history = getMonthlyFinancialData(visibleTransactions, 3, subMonths(viewDate, 1))
+    return history.reduce((sum, item) => sum + item.expenses, 0) / history.length
+  }, [getSpendingForecast, visibleTransactions, onlyOwn, viewDate])
 
   const monthBounds = useMemo(() => getCalendarMonthBounds(viewDate), [year, month])
   const paymentSummary = useMemo(
     () =>
       buildPaymentControlOverview({
-        transactions,
+        transactions: visibleTransactions,
         creditCards,
         invoiceEvents,
         bounds: monthBounds,
       }),
-    [transactions, creditCards, invoiceEvents, monthBounds],
+    [visibleTransactions, creditCards, invoiceEvents, monthBounds],
   )
 
-  const categoryReviewCount = useMemo(
+  const categoryReviewQueue = useMemo(
     () =>
       buildCategoryReviewQueue(
-        transactions.filter((transaction) => {
+        visibleTransactions.filter((transaction) => {
           const activityDate = getTransactionActivityDate(transaction)
           return activityDate >= monthBounds.start && activityDate <= monthBounds.end
         }),
         categories,
       ).length,
-    [transactions, categories, monthBounds],
+    [visibleTransactions, categories, monthBounds],
   )
-
+  const categoryReviewCount = categoryReviewQueue.length
   const monthTx = useMemo(
-    () => getRecentDashboardTransactions(transactions, monthBounds, 200),
-    [transactions, monthBounds],
+    () => getRecentDashboardTransactions(visibleTransactions, monthBounds, 200),
+    [visibleTransactions, monthBounds],
   )
 
   const savingsOverview = useMemo(
-    () => buildSavingsOverview(transactions, monthBounds),
-    [transactions, monthBounds],
+    () => buildSavingsOverview(visibleTransactions, monthBounds),
+    [visibleTransactions, monthBounds],
   )
 
   const budgetOverview = useMemo(
     () =>
       buildMonthlyBudgetOverview({
         budgets,
-        transactions,
+        transactions: visibleTransactions,
         monthKey: budgetMonthKey(viewDate),
         currentMonthKey: budgetMonthKey(),
       }),
-    [budgets, transactions, viewDate],
+    [budgets, visibleTransactions, viewDate],
   )
 
   const budgetAlerts = useMemo(
@@ -368,6 +403,29 @@ export default function Dashboard() {
     () => buildPeriodResultInsight(currentSummary, previousSummary),
     [currentSummary, previousSummary],
   )
+  const filteredFeed = useMemo(
+    () => filterDashboardFeed(monthTx, feedFilter, onlyOwn),
+    [monthTx, feedFilter, onlyOwn],
+  )
+  const groupedFeed = useMemo(() => groupDashboardFeedByDate(filteredFeed), [filteredFeed])
+  const reviewItem = categoryReviewQueue[0] || null
+  const saveReview = async (mode) => {
+    if (!reviewItem || reviewSaving) return
+    const original = transactions.find((tx) => tx.id === reviewItem.transactionId)
+    if (!original) return
+    if (mode === 'correct' && !reviewItem.suggestedCategoryId) return
+    setReviewSaving(true)
+    try {
+      await editTransaction(reviewItem.transactionId, {
+        ...original,
+        ...(mode === 'correct'
+          ? { categoryId: reviewItem.suggestedCategoryId, categoryReviewApprovedFamily: null, categoryReviewApprovedCategoryId: null }
+          : { categoryReviewApprovedFamily: reviewItem.suggestedFamily, categoryReviewApprovedCategoryId: original.categoryId }),
+      })
+    } finally {
+      setReviewSaving(false)
+    }
+  }
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
