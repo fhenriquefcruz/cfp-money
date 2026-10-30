@@ -79,7 +79,7 @@ const formatAxisCurrency = (value) =>
 function BentoMoney({ amount, loading = false }) {
   if (loading) return '—'
   const formatted = formatCurrency(amount)
-  const match = /^(-?R\\$)[\\s\\u00a0]*/.exec(formatted)
+  const match = /^(-?R\$)[\s\u00a0]*/.exec(formatted)
   if (!match) return formatted
   return (
     <span className="dashboard-money-value inline-flex flex-wrap items-baseline tabular-nums">
