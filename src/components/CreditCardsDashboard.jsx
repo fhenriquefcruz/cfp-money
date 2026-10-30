@@ -250,34 +250,17 @@ function CreditCardsCenterContent() {
   const managedInvoice = center.invoices.find((invoice) => invoice.card.id === managingCardId)
 
   const loadingData = transactionsLoading || creditCardsLoading || invoiceEventsLoading
-  const inconsistentInvoices = auditOpen
+  const mismatchedInvoices = auditOpen
     ? center.invoices.filter((invoice) => {
-        const cents = (value) => Math.round(Number(value || 0) * 100) || 0
-        const purchases = invoice.items.reduce((total, tx) => total + cents(tx.amount), 0)
+        const amount = (value) => Math.round((Number(value) || 0) * 100)
         return (
-          purchases !== cents(invoice.purchaseTotal) ||
-          cents(invoice.lifecycle.remainingAmount) !==
-            Math.max(0, cents(invoice.lifecycle.invoiceTotal) - cents(invoice.lifecycle.paidAmount))
+          invoice.items.reduce((sum, tx) => sum + amount(tx.amount), 0) !==
+            amount(invoice.purchaseTotal) ||
+          amount(invoice.lifecycle.remainingAmount) !==
+            Math.max(0, amount(invoice.total) - amount(invoice.lifecycle.paidAmount))
         )
       }).length
     : 0
-  const auditFindings = auditOpen
-    ? [
-        ['Compras sem cartão salvo', linkageAudit.unlinked],
-        ['Associações sugeridas, ainda não salvas', center.reconciledPurchaseCount],
-        ['Vínculos históricos', linkageAudit.historical],
-        ['Faturas com cálculo divergente', inconsistentInvoices],
-        ['Cartões sem identificador', creditCards.filter((card) => !card.id).length],
-        [
-          'Pagamentos manuais e status pago coexistem',
-          center.invoices.filter(
-            (invoice) =>
-              invoice.paymentSource === 'invoice_events' &&
-              invoice.items.some((tx) => tx.paymentStatus === 'paid' || tx.isPaid === true),
-          ).length,
-        ],
-      ].filter(([, count]) => count > 0)
-    : []
 
   useEffect(() => {
     if (loadingData || userSelectedMonthRef.current) return
@@ -466,12 +449,10 @@ function CreditCardsCenterContent() {
             ))}
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            {(linkageAudit.unlinked || linkageAudit.historical) > 0 ? (
+            {(linkageAudit.unlinked || linkageAudit.historical) > 0 && (
               <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
                 {diagnosticText}
               </p>
-            ) : (
-              <span className="text-xs text-[--text-tertiary]">Conferência sob demanda</span>
             )}
             <button
               type="button"
@@ -501,26 +482,20 @@ function CreditCardsCenterContent() {
                 </button>
               </div>
               <p className="mt-2 text-xs text-[--text-secondary]">
-                {selectedMonth} · {center.invoices.length} faturas · {linkageAudit.saved} vínculos
-                salvos
+                Competência {selectedMonth} · {linkageAudit.saved} vínculos salvos no histórico
               </p>
-              <p role="status" className="mt-2 text-xs font-bold">
-                {auditFindings.length
-                  ? `${auditFindings.length} pontos para conferir`
-                  : 'Nenhuma divergência detectada'}
+              <p role="status" className="mt-2 text-xs font-semibold">
+                {mismatchedInvoices
+                  ? `${mismatchedInvoices} fatura(s) com cálculos divergentes`
+                  : 'Cálculos de faturas consistentes'}
               </p>
-              {auditFindings.length > 0 && (
-                <ul className="mt-2 flex flex-wrap gap-2">
-                  {auditFindings.map(([label, count]) => (
-                    <li key={label} className="rounded-xl bg-[--bg-subtle] p-2 text-xs">
-                      {count} · {label}
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <p className="mt-1 text-xs text-[--text-secondary]">
+                Compras sem cartão salvo: {linkageAudit.unlinked} · Sugestões não salvas:{' '}
+                {center.reconciledPurchaseCount} · Vínculos históricos: {linkageAudit.historical}
+              </p>
               <p className="mt-2 text-[11px] text-[--text-tertiary]">
                 Cálculo sobre dados carregados nesta sessão. Nenhum lançamento é corrigido
-                automaticamente. Vínculos antigos podem ser legítimos; confira o banco.
+                automaticamente; confira o extrato do banco.
               </p>
             </section>
           )}
