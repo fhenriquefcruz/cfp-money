@@ -457,9 +457,8 @@ function CreditCardsCenterContent() {
             <button
               type="button"
               onClick={() => setAuditOpen(true)}
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
+              className="min-h-11 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary]"
             >
-              <ReceiptText size={15} />
               Auditar valores
             </button>
           </div>
@@ -467,36 +466,30 @@ function CreditCardsCenterContent() {
           {auditOpen && !loadingData && (
             <section
               aria-label="Resultado da auditoria financeira"
-              className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-3 shadow-sm"
+              className="rounded-xl border border-[--border-default] bg-[--bg-surface] p-3"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-sm font-black text-[--text-primary]">
-                  Conferência financeira dos cartões
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setAuditOpen(false)}
-                  className="min-h-11 rounded-xl border border-[--border-default] px-3 text-xs font-bold"
-                >
-                  Concluir conferência
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-[--text-secondary]">
-                Competência {selectedMonth} · {linkageAudit.saved} vínculos salvos no histórico
-              </p>
-              <p role="status" className="mt-2 text-xs font-semibold">
+              <p role="status" className="text-xs font-bold text-[--text-primary]">
+                Conferência financeira · {selectedMonth}:{' '}
                 {mismatchedInvoices
-                  ? `${mismatchedInvoices} fatura(s) com cálculos divergentes`
-                  : 'Cálculos de faturas consistentes'}
+                  ? `${mismatchedInvoices} fatura(s) divergentes`
+                  : 'Cálculos das faturas consistentes'}
               </p>
-              <p className="mt-1 text-xs text-[--text-secondary]">
-                Compras sem cartão salvo: {linkageAudit.unlinked} · Sugestões não salvas:{' '}
-                {center.reconciledPurchaseCount} · Vínculos históricos: {linkageAudit.historical}
+              <p className="mt-2 text-xs text-[--text-secondary]">
+                {linkageAudit.saved} vínculos salvos · Compras sem cartão salvo:{' '}
+                {linkageAudit.unlinked} · Sugestões: {center.reconciledPurchaseCount} · Históricos:{' '}
+                {linkageAudit.historical}
               </p>
               <p className="mt-2 text-[11px] text-[--text-tertiary]">
                 Cálculo sobre dados carregados nesta sessão. Nenhum lançamento é corrigido
-                automaticamente; confira o extrato do banco.
+                automaticamente; confira seu extrato.
               </p>
+              <button
+                type="button"
+                onClick={() => setAuditOpen(false)}
+                className="mt-2 min-h-11 rounded-lg border px-3 text-xs font-bold"
+              >
+                Concluir conferência
+              </button>
             </section>
           )}
 
