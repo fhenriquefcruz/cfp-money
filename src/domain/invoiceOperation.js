@@ -9,12 +9,6 @@ const FIELDS = [
   'invoiceMonth',
   'eventDate',
   'notes',
-  'amount',
-  'paymentDate',
-  'sourceAccount',
-  'direction',
-  'signedAmount',
-  'reversesEventId',
 ]
 
 const validMonth = (value) => /^(?:19|20)\d{2}-(0[1-9]|1[0-2])$/.test(value || '')
