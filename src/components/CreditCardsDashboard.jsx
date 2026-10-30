@@ -471,8 +471,8 @@ function CreditCardsCenterContent() {
                 {linkageAudit.historical}
               </p>
               <p className="mt-2 text-[11px] text-[--text-tertiary]">
-                Cálculo sobre dados carregados nesta sessão, não é conciliação bancária. Nenhum lançamento é corrigido
-                automaticamente; confira seu extrato.
+                Cálculo sobre dados carregados nesta sessão, não é conciliação bancária. Nenhum
+                lançamento é corrigido automaticamente; confira seu extrato.
               </p>
               <button
                 type="button"
