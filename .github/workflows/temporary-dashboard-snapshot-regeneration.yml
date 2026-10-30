@@ -1,13 +1,13 @@
 name: Temporary dashboard snapshot regeneration
 on:
-  push:
+  pull_request:
     branches:
-      - feat/dashboard-asymmetric-bento-dark
+      - main
 permissions:
   contents: write
 jobs:
   regenerate:
-    if: github.ref == 'refs/heads/feat/dashboard-asymmetric-bento-dark'
+    if: github.event.pull_request.head.ref == 'feat/dashboard-asymmetric-bento-dark' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
