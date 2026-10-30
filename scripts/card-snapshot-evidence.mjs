@@ -38,6 +38,7 @@ export function assessCardSnapshotEvidence(
     identity.counts.missingTransactionIds > 0 || identity.counts.duplicateTransactionIds > 0,
   )
   add('invalid_credit_amounts', identity.counts.invalidCreditAmounts > 0)
+  add('invoice_events_without_registered_card', identity.counts.orphanInvoiceEvents > 0)
 
   if (comparison) {
     add(
