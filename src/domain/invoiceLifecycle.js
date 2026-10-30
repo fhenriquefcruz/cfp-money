@@ -1,4 +1,4 @@
-import { reversalOperationId } from './invoiceOperation'
+import { reversalOperationId } from './invoiceReversalKey'
 
 function toCents(value) {
   const amount = Number(value)
