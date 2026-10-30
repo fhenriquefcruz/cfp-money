@@ -2,7 +2,7 @@ import React from 'react'
 import {
   CarFront,
   HeartPulse,
-  House,
+  Home,
   Landmark,
   Laptop2,
   MoreHorizontal,
@@ -19,7 +19,7 @@ const iconForCategory = (name = '') => {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-  if (/moradia|casa|aluguel/.test(normalized)) return House
+  if (/moradia|casa|aluguel/.test(normalized)) return Home
   if (/consorcio|banco|financiamento|investimento/.test(normalized)) return Landmark
   if (/roupa|vestuario|moda/.test(normalized)) return Shirt
   if (/saude|farmacia|medic/.test(normalized)) return HeartPulse
