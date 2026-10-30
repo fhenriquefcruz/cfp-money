@@ -32,13 +32,13 @@ import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
 import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { getTransactionActivityDate } from '../domain/transactionDates'
+import {
+  centsToMoney,
+  moneyToCents,
+  selectActivityRange,
+  summarizeActivityTransactions,
+} from '../domain/financialCore'
 import { buildSavingsOverview, getSavingsSignedAmount } from '../domain/savings'
-
-const isEffective = (transaction) =>
-  transaction.paymentStatus !== 'cancelled' &&
-  transaction.flowType !== 'transfer' &&
-  transaction.kind !== 'transfer'
 
 const COLORS = [
   '#c49d6b',
@@ -134,12 +134,7 @@ function ReportsContent() {
   const periodStart = format(startOfMonth(subMonths(referenceDate, period - 1)), 'yyyy-MM-dd')
   const periodEnd = format(endOfMonth(referenceDate), 'yyyy-MM-dd')
   const reportTransactions = useMemo(
-    () =>
-      transactions.filter((transaction) => {
-        if (!isEffective(transaction)) return false
-        const activityDate = getTransactionActivityDate(transaction)
-        return activityDate >= periodStart && activityDate <= periodEnd
-      }),
+    () => selectActivityRange(transactions, periodStart, periodEnd),
     [transactions, periodStart, periodEnd],
   )
 
@@ -153,32 +148,19 @@ function ReportsContent() {
   )
 
   const periodTotals = useMemo(() => {
-    let income = 0
-    let expenses = 0
-
-    for (let index = 0; index < period; index += 1) {
-      const date = subMonths(referenceDate, index)
-      const summary = getSummary(date.getFullYear(), date.getMonth())
-      income += summary.income
-      expenses += summary.expenses
-    }
-
+    const { income, expenses, balance } = summarizeActivityTransactions(reportTransactions)
     const savings = savingsOverview.periodNet
-    const balance = income - expenses
-    const avg = expenses / (period || 1)
-    const savingRate = income > 0 ? (savings / income) * 100 : 0
-
     return {
       income,
       expenses,
       balance,
-      avg,
-      savingRate,
+      avg: expenses / (period || 1),
+      savingRate: income > 0 ? (savings / income) * 100 : 0,
       savings,
       savingsDeposits: savingsOverview.periodDeposits,
       savingsWithdrawals: savingsOverview.periodWithdrawals,
     }
-  }, [period, getSummary, referenceDate, savingsOverview])
+  }, [reportTransactions, period, savingsOverview])
 
   const monthlyData = useMemo(
     () => getMonthlyFinancialData(transactions, period, referenceDate),
@@ -194,9 +176,8 @@ function ReportsContent() {
       const to = format(new Date(d.getFullYear(), d.getMonth() + 1, 0), 'yyyy-MM-dd')
       const value = transactions
         .filter((t) => {
-          if (!t.isSavings || !isEffective(t)) return false
-          const activityDate = getTransactionActivityDate(t)
-          return activityDate >= from && activityDate <= to
+          if (!t.isSavings) return false
+          return selectActivityRange([t], from, to).length > 0
         })
         .reduce((s, t) => s + getSavingsSignedAmount(t), 0)
       return { month: label, value }
@@ -217,7 +198,9 @@ function ReportsContent() {
             count: 0,
             color: transaction.categoryColor || '#c49d6b',
           }
-        totals[categoryKey].value += transaction.amount
+        totals[categoryKey].value = centsToMoney(
+          moneyToCents(totals[categoryKey].value) + moneyToCents(transaction.amount),
+        )
         totals[categoryKey].count += 1
       })
 
