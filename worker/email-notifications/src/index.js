@@ -140,9 +140,7 @@ async function readTransactions(env, uid) {
 function goalAlertMessage(goal, candidate, transactions = []) {
   const target = centsToMoney(moneyToCents(goal.targetAmount))
   const current = getGoalEffectiveCurrent(goal, transactions)
-  const remaining = centsToMoney(
-    Math.max(0, moneyToCents(target) - moneyToCents(current)),
-  )
+  const remaining = centsToMoney(Math.max(0, moneyToCents(target) - moneyToCents(current)))
   const name = goal.name || 'Meta'
 
   if (candidate === 'progress-100') {
