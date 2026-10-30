@@ -63,13 +63,7 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
       <span className="relative flex-shrink-0">
         <Icon size={18} />
         {premium && collapsed && (
-          <Crown
-            size={9}
-            className={clsx(
-              'absolute -right-1.5 -top-1.5',
-              'text-amber-300',
-            )}
-          />
+          <Crown size={9} className={clsx('absolute -right-1.5 -top-1.5', 'text-amber-300')} />
         )}
       </span>
 
