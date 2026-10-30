@@ -634,10 +634,9 @@ function CreditCardsCenterContent() {
       {auditOpen && !loadingData && (
         <React.Suspense fallback={<p role="status">Abrindo auditoria…</p>}>
           <CardFinancialAuditModal
-            selectedMonth={selectedMonth}
-            transactions={transactions}
+            center={center}
+            linkageAudit={linkageAudit}
             creditCards={creditCards}
-            invoiceEvents={invoiceEvents}
             onClose={() => setAuditOpen(false)}
           />
         </React.Suspense>
