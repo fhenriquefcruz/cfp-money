@@ -23,11 +23,11 @@ test('abre auditoria somente leitura dos dados já carregados e fecha sem altera
   await expect(modal).toContainText('Nenhum lançamento é')
   await expect(modal).not.toContainText('Compra antiga de homologação')
   await expect(modal).not.toContainText('card-nubank')
-  await expect(summary).toHaveText(before)
+  expect(await summary.innerText()).toBe(before)
 
   await modal.getByRole('button', { name: 'Concluir conferência' }).click()
   await expect(modal).toHaveCount(0)
-  await expect(summary).toHaveText(before)
+  expect(await summary.innerText()).toBe(before)
 })
 
 test('auditoria de cartões cabe na largura de celular sem alterar fatura', async ({ page }) => {
