@@ -37,7 +37,12 @@ import {
 } from '../contexts/AppContext'
 import { Card, Button, ProgressBar, EmptyState } from './ui'
 import BentoCategoryIcon from './dashboard/BentoCategoryIcon'
-import { filterDashboardFeed, groupDashboardFeedByDate, isDashboardThirdParty, getDashboardTransactionTags } from '../domain/dashboardBento'
+import {
+  filterDashboardFeed,
+  groupDashboardFeedByDate,
+  isDashboardThirdParty,
+  getDashboardTransactionTags,
+} from '../domain/dashboardBento'
 import { categoryCompositionFromTransactions } from '../domain/categoryComposition'
 import { summarizeTransactions, transactionsForMonth } from '../domain/finance'
 import './dashboard-bento.css'
@@ -83,9 +88,7 @@ function BentoMoney({ amount, loading = false }) {
   if (!match) return formatted
   return (
     <span className="dashboard-money-value inline-flex flex-wrap items-baseline tabular-nums">
-      <span className="mr-1 text-xs font-normal tracking-normal text-slate-400">
-        {match[1]}
-      </span>
+      <span className="mr-1 text-xs font-normal tracking-normal text-slate-400">{match[1]}</span>
       <span className="font-inherit tracking-tight text-[#F8FAFC]">
         {formatted.slice(match[0].length)}
       </span>
@@ -116,14 +119,20 @@ const TxItem = ({ tx, categories }) => {
   const dateContext = getTransactionDateContext(tx)
   return (
     <div className="flex items-center gap-3 py-3 border-b border-[--border-subtle] last:border-0">
-      <BentoCategoryIcon category={cat} name={tx.isSavings ? 'Reservas' : cat?.name || (isIncome ? 'Receita' : 'Despesa')} />
+      <BentoCategoryIcon
+        category={cat}
+        name={tx.isSavings ? 'Reservas' : cat?.name || (isIncome ? 'Receita' : 'Despesa')}
+      />
       <div className="flex-1 min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
           <p className="min-w-0 truncate text-sm font-semibold text-[--text-primary]">
             {tx.description || (tx.isSavings ? 'Poupança' : cat?.name) || 'Sem descrição'}
           </p>
           {tags.map((tag) => (
-            <span key={tag} className="dashboard-feed-tag shrink-0 rounded-full px-2 py-0.5 text-[10px]">
+            <span
+              key={tag}
+              className="dashboard-feed-tag shrink-0 rounded-full px-2 py-0.5 text-[10px]"
+            >
               {tag}
             </span>
           ))}
@@ -162,7 +171,13 @@ const TxItem = ({ tx, categories }) => {
   )
 }
 
-function UnifiedDashboardIntelligence({ healthReport, referenceDate, reviewItem, onReview, saving }) {
+function UnifiedDashboardIntelligence({
+  healthReport,
+  referenceDate,
+  reviewItem,
+  onReview,
+  saving,
+}) {
   return (
     <Card variant="elevated" className="dashboard-decision-card h-full">
       <div className="mb-3 flex items-center justify-between gap-2">
@@ -184,18 +199,28 @@ function UnifiedDashboardIntelligence({ healthReport, referenceDate, reviewItem,
             {reviewItem.currentCategoryName} · sugestão: {reviewItem.suggestedCategoryName}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <button type="button" disabled={saving} onClick={() => onReview('approve')}
-              className="dashboard-review-action rounded-lg px-2.5 py-2 text-[11px] font-semibold disabled:opacity-50">
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => onReview('approve')}
+              className="dashboard-review-action rounded-lg px-2.5 py-2 text-[11px] font-semibold disabled:opacity-50"
+            >
               Aprovar atual
             </button>
             {reviewItem.suggestedCategoryId ? (
-              <button type="button" disabled={saving} onClick={() => onReview('correct')}
-                className="dashboard-review-action dashboard-review-action--accent rounded-lg px-2.5 py-2 text-[11px] font-semibold disabled:opacity-50">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => onReview('correct')}
+                className="dashboard-review-action dashboard-review-action--accent rounded-lg px-2.5 py-2 text-[11px] font-semibold disabled:opacity-50"
+              >
                 Corrigir categoria
               </button>
             ) : (
-              <Link to="/transactions?review=categories&scope=all"
-                className="dashboard-review-action dashboard-review-action--accent rounded-lg px-2.5 py-2 text-[11px] font-semibold">
+              <Link
+                to="/transactions?review=categories&scope=all"
+                className="dashboard-review-action dashboard-review-action--accent rounded-lg px-2.5 py-2 text-[11px] font-semibold"
+              >
                 Escolher categoria
               </Link>
             )}
@@ -242,7 +267,7 @@ export default function Dashboard() {
   const [activeCategory, setActiveCategory] = useState('')
   const [reviewSaving, setReviewSaving] = useState(false)
   const visibleTransactions = useMemo(
-    () => onlyOwn ? transactions.filter((tx) => !isDashboardThirdParty(tx)) : transactions,
+    () => (onlyOwn ? transactions.filter((tx) => !isDashboardThirdParty(tx)) : transactions),
     [transactions, onlyOwn],
   )
   const year = viewDate.getFullYear()
@@ -253,29 +278,49 @@ export default function Dashboard() {
   const isCurrentMonth = year === new Date().getFullYear() && month === new Date().getMonth()
 
   const currentSummary = useMemo(
-    () => onlyOwn
-      ? summarizeTransactions(transactionsForMonth(visibleTransactions, year, month))
-      : getSummary(year, month),
+    () =>
+      onlyOwn
+        ? summarizeTransactions(transactionsForMonth(visibleTransactions, year, month))
+        : getSummary(year, month),
     [year, month, visibleTransactions, onlyOwn, getSummary],
   )
   const categoryTotals = useMemo(
-    () => onlyOwn
-      ? categoryCompositionFromTransactions(transactionsForMonth(visibleTransactions, year, month), categories)
-      : getCategoryTotals(year, month),
+    () =>
+      onlyOwn
+        ? categoryCompositionFromTransactions(
+            transactionsForMonth(visibleTransactions, year, month),
+            categories,
+          )
+        : getCategoryTotals(year, month),
     [year, month, visibleTransactions, categories, onlyOwn, getCategoryTotals],
   )
   const previousViewDate = useMemo(() => subMonths(viewDate, 1), [year, month])
   const previousSummary = useMemo(
-    () => onlyOwn
-      ? summarizeTransactions(transactionsForMonth(visibleTransactions, previousViewDate.getFullYear(), previousViewDate.getMonth()))
-      : getSummary(previousViewDate.getFullYear(), previousViewDate.getMonth()),
+    () =>
+      onlyOwn
+        ? summarizeTransactions(
+            transactionsForMonth(
+              visibleTransactions,
+              previousViewDate.getFullYear(),
+              previousViewDate.getMonth(),
+            ),
+          )
+        : getSummary(previousViewDate.getFullYear(), previousViewDate.getMonth()),
     [previousViewDate, visibleTransactions, onlyOwn, getSummary],
   )
   const previousMonthLabel = format(previousViewDate, 'MMMM', { locale: ptBR })
   const previousCategoryTotals = useMemo(
-    () => onlyOwn
-      ? categoryCompositionFromTransactions(transactionsForMonth(visibleTransactions, previousViewDate.getFullYear(), previousViewDate.getMonth()), categories)
-      : getCategoryTotals(previousViewDate.getFullYear(), previousViewDate.getMonth()),
+    () =>
+      onlyOwn
+        ? categoryCompositionFromTransactions(
+            transactionsForMonth(
+              visibleTransactions,
+              previousViewDate.getFullYear(),
+              previousViewDate.getMonth(),
+            ),
+            categories,
+          )
+        : getCategoryTotals(previousViewDate.getFullYear(), previousViewDate.getMonth()),
     [previousViewDate, visibleTransactions, onlyOwn, getCategoryTotals, categories],
   )
   const categoryBreakdown = useMemo(
@@ -443,8 +488,15 @@ export default function Dashboard() {
       await editTransaction(reviewItem.transactionId, {
         ...original,
         ...(mode === 'correct'
-          ? { categoryId: reviewItem.suggestedCategoryId, categoryReviewApprovedFamily: null, categoryReviewApprovedCategoryId: null }
-          : { categoryReviewApprovedFamily: reviewItem.suggestedFamily, categoryReviewApprovedCategoryId: original.categoryId }),
+          ? {
+              categoryId: reviewItem.suggestedCategoryId,
+              categoryReviewApprovedFamily: null,
+              categoryReviewApprovedCategoryId: null,
+            }
+          : {
+              categoryReviewApprovedFamily: reviewItem.suggestedFamily,
+              categoryReviewApprovedCategoryId: original.categoryId,
+            }),
       })
     } catch {
       // O contexto de transações já apresenta uma notificação de erro.
@@ -461,14 +513,24 @@ export default function Dashboard() {
     >
       <motion.div className="dashboard-premium__toolbar dashboard-bento-topbar" {...fade}>
         <div className="dashboard-bento-greeting">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[--text-tertiary]">Meu Real · visão geral</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-[--text-tertiary]">
+            Meu Real · visão geral
+          </p>
           <p className="mt-1 text-sm font-semibold text-[--text-primary]">
             {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'}
           </p>
         </div>
-        <div className="dashboard-month-nav dashboard-bento-month-nav" role="group" aria-label="Navegar pelos meses">
-          <button type="button" onClick={() => setViewDate((date) => subMonths(date, 1))}
-            aria-label="Visualizar mês anterior" className="dashboard-bento-icon-button">
+        <div
+          className="dashboard-month-nav dashboard-bento-month-nav"
+          role="group"
+          aria-label="Navegar pelos meses"
+        >
+          <button
+            type="button"
+            onClick={() => setViewDate((date) => subMonths(date, 1))}
+            aria-label="Visualizar mês anterior"
+            className="dashboard-bento-icon-button"
+          >
             <ChevronLeft size={17} />
           </button>
           <div className="min-w-0 text-center">
@@ -476,30 +538,56 @@ export default function Dashboard() {
               {compactMonthLabel}
             </h1>
             {!isCurrentMonth && (
-              <button type="button" onClick={() => setViewDate(new Date())}
-                className="text-[10px] text-[--text-brand] hover:underline">Voltar a hoje</button>
+              <button
+                type="button"
+                onClick={() => setViewDate(new Date())}
+                className="text-[10px] text-[--text-brand] hover:underline"
+              >
+                Voltar a hoje
+              </button>
             )}
           </div>
-          <button type="button" onClick={() => setViewDate((date) => addMonths(date, 1))}
-            aria-label="Visualizar próximo mês" className="dashboard-bento-icon-button">
+          <button
+            type="button"
+            onClick={() => setViewDate((date) => addMonths(date, 1))}
+            aria-label="Visualizar próximo mês"
+            className="dashboard-bento-icon-button"
+          >
             <ChevronRight size={17} />
           </button>
         </div>
         <div className="dashboard-bento-toolbar-actions">
-          <button type="button" role="switch" aria-checked={onlyOwn}
-            onClick={() => { setOnlyOwn((current) => !current); setFeedFilter('all') }}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={onlyOwn}
+            onClick={() => {
+              setOnlyOwn((current) => !current)
+              setFeedFilter('all')
+            }}
             className="dashboard-bento-filter rounded-xl px-3 py-2 text-[11px] font-medium transition-all duration-200"
-            title="Oculta lançamentos sinalizados como de terceiros ou reembolsáveis; não altera nenhum dado salvo">
+            title="Oculta lançamentos sinalizados como de terceiros ou reembolsáveis; não altera nenhum dado salvo"
+          >
             <span className="dashboard-bento-filter-switch" aria-hidden="true" />
             Apenas meus gastos
           </button>
-          <button type="button" className="dashboard-bento-search rounded-xl px-3 py-2 text-xs"
+          <button
+            type="button"
+            className="dashboard-bento-search rounded-xl px-3 py-2 text-xs"
             aria-label="Abrir busca global"
-            onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))}>
+            onClick={() =>
+              document.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }),
+              )
+            }
+          >
             <Search size={15} /> <span className="hidden xl:inline">Buscar</span>
             <kbd className="hidden 2xl:inline">Ctrl K</kbd>
           </button>
-          <Link to="/transactions" className="dashboard-bento-new rounded-xl px-3 py-2 text-xs font-bold">
+          <Link
+            to="/transactions"
+            className="dashboard-bento-new rounded-xl px-3 py-2 text-xs font-bold"
+          >
             <Plus size={15} /> Nova transação
           </Link>
         </div>
@@ -572,34 +660,66 @@ export default function Dashboard() {
                     <span aria-hidden="true" />
                     {label}
                   </p>
-                  <p className="dashboard-period-metric__value"><BentoMoney amount={value} loading={isLoading} /></p>
+                  <p className="dashboard-period-metric__value">
+                    <BentoMoney amount={value} loading={isLoading} />
+                  </p>
                 </div>
               ))}
             </div>
             <div className="dashboard-bento-segments mt-4">
-              <div className="dashboard-bento-segment-track" role="img"
-                aria-label={`Despesas do período: ${formatCurrency(currentSummary.expenses)}; poupança líquida: ${formatCurrency(savingsOverview.periodNet)}; receitas: ${formatCurrency(currentSummary.income)}.`}>
-                <span className="dashboard-bento-segment dashboard-bento-segment--expense"
-                  style={{ width: `${currentSummary.income > 0 ? Math.min(100, currentSummary.expenses / currentSummary.income * 100) : 0}%` }} />
-                <span className="dashboard-bento-segment dashboard-bento-segment--reserve"
-                  style={{ width: `${currentSummary.income > 0 ? Math.min(100 - Math.min(100, currentSummary.expenses / currentSummary.income * 100), Math.max(0, savingsOverview.periodNet) / currentSummary.income * 100) : 0}%` }} />
+              <div
+                className="dashboard-bento-segment-track"
+                role="img"
+                aria-label={`Despesas do período: ${formatCurrency(currentSummary.expenses)}; poupança líquida: ${formatCurrency(savingsOverview.periodNet)}; receitas: ${formatCurrency(currentSummary.income)}.`}
+              >
+                <span
+                  className="dashboard-bento-segment dashboard-bento-segment--expense"
+                  style={{
+                    width: `${currentSummary.income > 0 ? Math.min(100, (currentSummary.expenses / currentSummary.income) * 100) : 0}%`,
+                  }}
+                />
+                <span
+                  className="dashboard-bento-segment dashboard-bento-segment--reserve"
+                  style={{
+                    width: `${currentSummary.income > 0 ? Math.min(100 - Math.min(100, (currentSummary.expenses / currentSummary.income) * 100), (Math.max(0, savingsOverview.periodNet) / currentSummary.income) * 100) : 0}%`,
+                  }}
+                />
               </div>
-              <p className="mt-1 text-[10px] text-[--text-tertiary]">Despesas e reservas como parcelas das receitas, sem dupla contagem na barra.</p>
+              <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                Despesas e reservas como parcelas das receitas, sem dupla contagem na barra.
+              </p>
             </div>
             <div className="dashboard-bento-month-chips mt-4">
-              {actionInsights.length ? actionInsights.map((item) => (
-                <Link key={item.title} to={item.to} title={item.detail} className="dashboard-bento-insight-chip">
-                  <Zap size={13} aria-hidden="true" />
-                  <span className="truncate">{item.title}</span>
-                  <ChevronRight size={12} aria-hidden="true" />
-                </Link>
-              )) : <span className="dashboard-bento-insight-chip"><CheckCircle2 size={14} /> Sem alertas imediatos</span>}
+              {actionInsights.length ? (
+                actionInsights.map((item) => (
+                  <Link
+                    key={item.title}
+                    to={item.to}
+                    title={item.detail}
+                    className="dashboard-bento-insight-chip"
+                  >
+                    <Zap size={13} aria-hidden="true" />
+                    <span className="truncate">{item.title}</span>
+                    <ChevronRight size={12} aria-hidden="true" />
+                  </Link>
+                ))
+              ) : (
+                <span className="dashboard-bento-insight-chip">
+                  <CheckCircle2 size={14} /> Sem alertas imediatos
+                </span>
+              )}
             </div>
           </Card>
         </motion.div>
 
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.075 }}>
-          <UnifiedDashboardIntelligence healthReport={healthReport} referenceDate={viewDate} reviewItem={reviewItem} onReview={saveReview} saving={reviewSaving} />
+          <UnifiedDashboardIntelligence
+            healthReport={healthReport}
+            referenceDate={viewDate}
+            reviewItem={reviewItem}
+            onReview={saveReview}
+            saving={reviewSaving}
+          />
         </motion.div>
       </div>
 
@@ -700,7 +820,9 @@ export default function Dashboard() {
                 <h3 className="flex items-center gap-2 text-xs font-semibold text-[--text-primary]">
                   <Target size={14} className="text-emerald-400" /> Metas em andamento
                 </h3>
-                <Link to="/goals" className="text-[11px] text-[--text-brand] hover:underline">Ver metas</Link>
+                <Link to="/goals" className="text-[11px] text-[--text-brand] hover:underline">
+                  Ver metas
+                </Link>
               </div>
               {goals.length === 0 ? (
                 <p className="text-xs text-[--text-secondary]">Nenhuma meta cadastrada.</p>
@@ -718,8 +840,12 @@ export default function Dashboard() {
                           </span>
                         </div>
                         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
-                          <div className="h-full rounded-full bg-emerald-400 transition-all duration-200"
-                            style={{ width: `${target > 0 ? Math.min(100, current / target * 100) : 0}%` }} />
+                          <div
+                            className="h-full rounded-full bg-emerald-400 transition-all duration-200"
+                            style={{
+                              width: `${target > 0 ? Math.min(100, (current / target) * 100) : 0}%`,
+                            }}
+                          />
                         </div>
                       </div>
                     )
@@ -760,11 +886,17 @@ export default function Dashboard() {
                 Média dos últimos 3 meses para orientar o planejamento.
               </p>
               <p className="mt-3 text-xs tabular-nums text-[--text-secondary]">
-                Gasto atual <strong className="text-[--text-primary]">{formatCurrency(currentSummary.expenses)}</strong>
+                Gasto atual{' '}
+                <strong className="text-[--text-primary]">
+                  {formatCurrency(currentSummary.expenses)}
+                </strong>
               </p>
               {forecast > 0 && (
-                <p className={`mt-1 text-[11px] font-semibold ${currentSummary.expenses <= forecast ? 'text-emerald-400' : 'text-amber-300'}`}>
-                  {Math.abs((currentSummary.expenses / forecast - 1) * 100).toFixed(1)}% {currentSummary.expenses <= forecast ? 'abaixo' : 'acima'} da referência
+                <p
+                  className={`mt-1 text-[11px] font-semibold ${currentSummary.expenses <= forecast ? 'text-emerald-400' : 'text-amber-300'}`}
+                >
+                  {Math.abs((currentSummary.expenses / forecast - 1) * 100).toFixed(1)}%{' '}
+                  {currentSummary.expenses <= forecast ? 'abaixo' : 'acima'} da referência
                 </p>
               )}
             </div>
@@ -773,7 +905,6 @@ export default function Dashboard() {
             </div>
           </div>
         </Card>
-
       </motion.div>
 
       {/* Análise principal: evolução e composição */}
@@ -1078,7 +1209,6 @@ export default function Dashboard() {
             </Card>
           </motion.div>
         )}
-
       </div>
 
       {/* Histórico no rodapé: o painel rola sem esticar os demais cards. */}
@@ -1100,10 +1230,14 @@ export default function Dashboard() {
               </Link>
             </div>
             <p className="mb-3 text-[11px] text-[--text-tertiary]">
-              {filteredFeed.length} {filteredFeed.length === 1 ? 'lançamento' : 'lançamentos'} no filtro ·
-              role para percorrer
+              {filteredFeed.length} {filteredFeed.length === 1 ? 'lançamento' : 'lançamentos'} no
+              filtro · role para percorrer
             </p>
-            <div className="dashboard-feed-filters mb-4 flex flex-wrap gap-1.5" role="group" aria-label="Filtrar transações">
+            <div
+              className="dashboard-feed-filters mb-4 flex flex-wrap gap-1.5"
+              role="group"
+              aria-label="Filtrar transações"
+            >
               {[
                 ['all', 'Todos'],
                 ['own', 'Meus gastos'],
@@ -1111,9 +1245,13 @@ export default function Dashboard() {
                 ['card-5186', 'Cartão 5186'],
                 ['recurring', 'Recorrentes'],
               ].map(([value, label]) => (
-                <button type="button" key={value} onClick={() => setFeedFilter(value)}
+                <button
+                  type="button"
+                  key={value}
+                  onClick={() => setFeedFilter(value)}
                   aria-pressed={feedFilter === value}
-                  className="dashboard-feed-filter min-h-9 rounded-full px-3 text-[11px] font-medium transition-all duration-200">
+                  className="dashboard-feed-filter min-h-9 rounded-full px-3 text-[11px] font-medium transition-all duration-200"
+                >
                   {label}
                 </button>
               ))}
@@ -1146,7 +1284,14 @@ export default function Dashboard() {
                         : format(new Date(`${group.date}T12:00:00`), 'dd MMM', { locale: ptBR })}
                     </p>
                     {group.items.map((tx) => (
-                      <div key={tx.id} className={activeCategory && tx.categoryId !== activeCategory ? 'opacity-35 transition-opacity duration-200' : 'transition-opacity duration-200'}>
+                      <div
+                        key={tx.id}
+                        className={
+                          activeCategory && tx.categoryId !== activeCategory
+                            ? 'opacity-35 transition-opacity duration-200'
+                            : 'transition-opacity duration-200'
+                        }
+                      >
                         <TxItem tx={tx} categories={categories} />
                       </div>
                     ))}
