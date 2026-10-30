@@ -16,9 +16,7 @@ test('abre auditoria somente leitura dos dados já carregados e fecha sem altera
 
   const audit = page.getByRole('region', { name: 'Resultado da auditoria financeira' })
   await expect(audit).toBeVisible()
-  await expect(audit).toBeVisible()
   await expect(audit).toContainText('2 vínculos salvos')
-  await expect(audit).toContainText('Compras sem cartão salvo')
   await expect(audit).toContainText('Compras sem cartão salvo')
   await expect(audit).toContainText('Nenhum lançamento é')
   await expect(audit).not.toContainText('Compra antiga de homologação')
