@@ -38,6 +38,7 @@ const EVENT_LABELS = {
 
 function EventRow({ event, allEvents, invoice, onReverse, loading }) {
   const reversible = event.type === 'payment' ? getPaymentReversibleAmount(event, allEvents) : 0
+  const canReverse = reversible > 0 && canAutoReversePayment(event, allEvents)
 
   const value =
     event.type === 'adjustment'
@@ -85,7 +86,7 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
           </p>
         )}
 
-        {reversible > 0 && canAutoReversePayment(event, allEvents) && (
+        {canReverse && (
           <button
             type="button"
             disabled={loading}
@@ -95,7 +96,7 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
             Estornar
           </button>
         )}
-        {reversible > 0 && !canAutoReversePayment(event, allEvents) && (
+        {reversible > 0 && !canReverse && (
           <p className="max-w-28 text-right text-[10px] text-[--text-tertiary]">
             Estorno requer revisão
           </p>
