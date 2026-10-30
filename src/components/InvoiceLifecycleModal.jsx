@@ -6,10 +6,10 @@ import {
   createPaymentEvent,
   createReversalEvent,
   canAutoReversePayment,
+  createInvoiceOperationId,
   getPaymentReversibleAmount,
   todayIso,
 } from '../domain/invoiceLifecycle'
-import { createInvoiceOperationId } from '../domain/invoiceOperation'
 import { formatCurrency, formatDate } from '../utils'
 import { Button, Modal } from './ui'
 
