@@ -483,6 +483,55 @@ function CreditCardsCenterContent() {
             </button>
           </div>
 
+          {auditOpen && !loadingData && (
+            <section
+              role="region"
+              aria-label="Resultado da auditoria financeira"
+              className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-4 shadow-sm"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-sm font-black text-[--text-primary]">
+                    Conferência financeira dos cartões
+                  </h2>
+                  <p className="mt-1 text-xs text-[--text-secondary]">
+                    Competência {selectedMonth} · {center.invoices.length} fatura(s) ·{' '}
+                    {linkageAudit.saved} vínculos salvos
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAuditOpen(false)}
+                  className="min-h-11 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-primary]"
+                >
+                  Concluir conferência
+                </button>
+              </div>
+              <p role="status" className="mt-3 text-xs font-semibold text-[--text-primary]">
+                {auditFindings.length
+                  ? `${auditFindings.length} tipos de ocorrência para conferência`
+                  : 'Nenhuma divergência detectada'}
+              </p>
+              {auditFindings.length > 0 && (
+                <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {auditFindings.map(([label, count]) => (
+                    <li
+                      key={label}
+                      className="flex flex-wrap justify-between gap-2 rounded-xl bg-[--bg-subtle] p-3 text-xs text-[--text-secondary]"
+                    >
+                      <span>{label}</span>
+                      <strong>{count} ocorrência(s)</strong>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="mt-3 text-[11px] leading-relaxed text-[--text-tertiary]">
+                Cálculo sobre dados carregados nesta sessão. Nenhum lançamento é corrigido
+                automaticamente. Cartões históricos podem ser legítimos; confira o extrato do banco.
+              </p>
+            </section>
+          )}
+
           {center.reconciledPurchaseCount > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--info-border] bg-[--info-bg] p-3 text-xs text-[--info-text]">
               <p>
@@ -656,55 +705,6 @@ function CreditCardsCenterContent() {
             </Card>
           </div>
         </>
-      )}
-
-      {auditOpen && !loadingData && (
-        <section
-          role="region"
-          aria-label="Resultado da auditoria financeira"
-          className="rounded-2xl border border-[--border-default] bg-[--bg-surface] p-4 shadow-sm"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="text-sm font-black text-[--text-primary]">
-                Conferência financeira dos cartões
-              </h2>
-              <p className="mt-1 text-xs text-[--text-secondary]">
-                Competência {selectedMonth} · {center.invoices.length} fatura(s) ·{' '}
-                {linkageAudit.saved} vínculos salvos
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setAuditOpen(false)}
-              className="min-h-11 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-primary]"
-            >
-              Concluir conferência
-            </button>
-          </div>
-          <p role="status" className="mt-3 text-xs font-semibold text-[--text-primary]">
-            {auditFindings.length
-              ? `${auditFindings.length} tipos de ocorrência para conferência`
-              : 'Nenhuma divergência detectada'}
-          </p>
-          {auditFindings.length > 0 && (
-            <ul className="mt-2 grid gap-2 sm:grid-cols-2">
-              {auditFindings.map(([label, count]) => (
-                <li
-                  key={label}
-                  className="flex flex-wrap justify-between gap-2 rounded-xl bg-[--bg-subtle] p-3 text-xs text-[--text-secondary]"
-                >
-                  <span>{label}</span>
-                  <strong>{count} ocorrência(s)</strong>
-                </li>
-              ))}
-            </ul>
-          )}
-          <p className="mt-3 text-[11px] leading-relaxed text-[--text-tertiary]">
-            Cálculo sobre dados carregados nesta sessão. Nenhum lançamento é corrigido
-            automaticamente. Cartões históricos podem ser legítimos; confira o extrato do banco.
-          </p>
-        </section>
       )}
 
       {reconciliationOpen && (
