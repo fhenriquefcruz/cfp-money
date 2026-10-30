@@ -322,28 +322,23 @@ export default function InvoiceLifecycleModal({
               <div>
                 <p className="mb-2 text-xs font-black text-[--text-secondary]">Tipo de ajuste</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setDirection('credit')}
-                    className={`min-h-11 rounded-xl border text-xs font-bold ${
-                      direction === 'credit'
-                        ? 'border-[--success-border] bg-[--success-bg] text-[--success-text]'
-                        : 'border-[--border-default] text-[--text-secondary]'
-                    }`}
-                  >
-                    Crédito / desconto
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDirection('charge')}
-                    className={`min-h-11 rounded-xl border text-xs font-bold ${
-                      direction === 'charge'
-                        ? 'border-[--warning-border] bg-[--warning-bg] text-[--warning-text]'
-                        : 'border-[--border-default] text-[--text-secondary]'
-                    }`}
-                  >
-                    Acréscimo
-                  </button>
+                  {[
+                    ['credit', 'Crédito / desconto', 'border-[--success-border] bg-[--success-bg] text-[--success-text]'],
+                    ['charge', 'Acréscimo', 'border-[--warning-border] bg-[--warning-bg] text-[--warning-text]'],
+                  ].map(([value, label, selectedClass]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setDirection(value)}
+                      className={`min-h-11 rounded-xl border text-xs font-bold ${
+                        direction === value
+                          ? selectedClass
+                          : 'border-[--border-default] text-[--text-secondary]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
