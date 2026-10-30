@@ -21,20 +21,30 @@ export function auditLoadedCardInvoices(invoices = []) {
     const entries = events.filter((event) => event?.type !== 'manual_close')
     const values = [
       ...items.map((item) => item?.amount),
-      ...entries.map((event) => event.type === 'adjustment' ? event.signedAmount : event.amount),
-      invoice.purchaseTotal, invoice.total, lifecycle.paidAmount,
-      lifecycle.remainingAmount, lifecycle.creditAmount, lifecycle.baselinePaidAmount,
+      ...entries.map((event) =>
+        event.type === 'adjustment' ? event.signedAmount : event.amount,
+      ),
+      invoice.purchaseTotal,
+      invoice.total,
+      lifecycle.paidAmount,
+      lifecycle.remainingAmount,
+      lifecycle.creditAmount,
+      lifecycle.baselinePaidAmount,
     ].map(cents)
     if (
       values.includes(null) ||
-      events.some((event) => !['payment', 'reversal', 'adjustment', 'manual_close'].includes(event?.type))
+      events.some(
+        (event) => !['payment', 'reversal', 'adjustment', 'manual_close'].includes(event?.type),
+      )
     ) {
       result.inconclusive++
       continue
     }
     const purchase = values.slice(0, items.length).reduce((sum, amount) => sum + amount, 0)
     const totals = { adjustment: 0, payment: 0, reversal: 0 }
-    entries.forEach((event, i) => { totals[event.type] += values[items.length + i] })
+    entries.forEach((event, i) => {
+      totals[event.type] += values[items.length + i]
+    })
     const [recordedPurchase, total, paid, remaining, credit, baseline] = values.slice(-6)
     const expectedTotal = Math.max(0, purchase + totals.adjustment)
     const expectedPaid = Math.max(0, baseline + totals.payment - totals.reversal)
@@ -42,8 +52,11 @@ export function auditLoadedCardInvoices(invoices = []) {
       result.inconclusive++
       continue
     }
-    const valid = recordedPurchase === purchase && total === expectedTotal &&
-      paid === expectedPaid && remaining === Math.max(0, total - paid) &&
+    const valid =
+      recordedPurchase === purchase &&
+      total === expectedTotal &&
+      paid === expectedPaid &&
+      remaining === Math.max(0, total - paid) &&
       credit === Math.max(0, paid - total)
     result[valid ? 'checked' : 'divergent']++
   }
