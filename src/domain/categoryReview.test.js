@@ -90,5 +90,7 @@ test('aprovação explícita da categoria atual é respeitada e invalidada após
   }
   expect(reviewTransactionCategory(tx, categories)).toBeNull()
   expect(reviewTransactionCategory({ ...tx, categoryId: 'loan' }, categories)).not.toBeNull()
-  expect(reviewTransactionCategory({ ...tx, categoryReviewApprovedFamily: null }, categories)).not.toBeNull()
+  expect(
+    reviewTransactionCategory({ ...tx, categoryReviewApprovedFamily: null }, categories),
+  ).not.toBeNull()
 })
