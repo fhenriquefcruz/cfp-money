@@ -35,6 +35,7 @@ Sem comparação histórica, omita `--compare`. Se a exportação possuir data c
 - `ambiguous_card_identifiers`: cartões sem ID canônico ou com IDs duplicados.
 - `ambiguous_transaction_identifiers`: transações com IDs ausentes ou repetidos.
 - `invalid_credit_amounts`: valor de compra de crédito não analisável.
+- `invoice_events_without_registered_card`: evento de fatura aponta para cartão sem cadastro atual; pode ser histórico e exige conferência, não correção automática.
 - `comparison_chronology_unverified`: um dos arquivos comparados não possui data verificável.
 - `no_shared_unique_credit_transactions`: arquivos com compras de crédito, mas sem IDs únicos compartilhados.
 - `no_credit_activity_in_export`: exportação sem atividade de cartão para embasar a conferência.
