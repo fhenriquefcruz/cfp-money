@@ -3,7 +3,6 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
-  CircleDollarSign,
   CreditCard,
   Plus,
   ReceiptText,
@@ -406,7 +405,7 @@ function CreditCardsCenterContent() {
           <div className="credit-cards-summary-grid operational-summary-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
             {[
               [
-                CircleDollarSign,
+                WalletCards,
                 'Total das faturas',
                 center.selectedTotal,
                 `${center.selectedItemCount} lançamento${center.selectedItemCount === 1 ? '' : 's'} no período`,
