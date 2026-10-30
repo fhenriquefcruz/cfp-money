@@ -182,7 +182,7 @@ export function calculateCategoryChanges(currentTransactions = [], previousTrans
     const totals = new Map()
 
     transactions
-      .filter((transaction) => transaction.type === 'expense')
+      .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
       .forEach((transaction) => {
         const key = transaction.categoryId || transaction.categoryName || 'without-category'
         const existing = totals.get(key) || {
