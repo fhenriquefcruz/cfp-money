@@ -234,12 +234,13 @@ function UnifiedDashboardIntelligence({
         </p>
       )}
       <div className="dashboard-decision-health">
-        <FinancialHealthScore report={healthReport} />
+        <FinancialHealthScore report={healthReport} hideNextAction />
       </div>
       <div className="dashboard-decision-money mt-3">
         <MoneyInsightCard
           referenceDate={referenceDate}
           compact
+          micro
           transactionsOverride={transactions}
         />
       </div>
