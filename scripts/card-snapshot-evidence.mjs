@@ -5,10 +5,7 @@ import {
 } from './card-snapshot-comparison.mjs'
 
 // Qualidade da evidencia, nunca comprovacao de saldo bancario ou migracao.
-export function assessCardSnapshotEvidence(
-  snapshot,
-  { comparison = null, now = new Date() } = {},
-) {
+export function assessCardSnapshotEvidence(snapshot, { comparison = null, now = new Date() } = {}) {
   const records = readSnapshotRecords(snapshot)
   const identity = summarizeSnapshotIdentity(snapshot)
   const exportedAt = snapshotDate(snapshot)
@@ -21,9 +18,7 @@ export function assessCardSnapshotEvidence(
   const hasInvoiceEvents = Array.isArray(rawCollections?.invoiceEvents)
   const clock = now instanceof Date ? now.getTime() : new Date(now).getTime()
   const ageDays =
-    exportedAt && Number.isFinite(clock)
-      ? (clock - Date.parse(exportedAt)) / 86_400_000
-      : null
+    exportedAt && Number.isFinite(clock) ? (clock - Date.parse(exportedAt)) / 86_400_000 : null
 
   add('export_timestamp_missing', !exportedAt)
   add('export_timestamp_in_future', ageDays !== null && ageDays < -5 / 1440)
