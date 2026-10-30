@@ -1083,13 +1083,28 @@ export default function Dashboard() {
               </Link>
             </div>
             <p className="mb-3 text-[11px] text-[--text-tertiary]">
-              {monthTx.length} {monthTx.length === 1 ? 'lançamento' : 'lançamentos'} neste período ·
+              {filteredFeed.length} {filteredFeed.length === 1 ? 'lançamento' : 'lançamentos'} no filtro ·
               role para percorrer
             </p>
-            {monthTx.length === 0 ? (
+            <div className="dashboard-feed-filters mb-4 flex flex-wrap gap-1.5" role="group" aria-label="Filtrar transações">
+              {[
+                ['all', 'Todos'],
+                ['own', 'Meus gastos'],
+                ['third-party', 'Terceiros / Mãe'],
+                ['card-5186', 'Cartão 5186'],
+                ['recurring', 'Recorrentes'],
+              ].map(([value, label]) => (
+                <button type="button" key={value} onClick={() => setFeedFilter(value)}
+                  aria-pressed={feedFilter === value}
+                  className="dashboard-feed-filter min-h-9 rounded-full px-3 text-[11px] font-medium transition-all duration-200">
+                  {label}
+                </button>
+              ))}
+            </div>
+            {filteredFeed.length === 0 ? (
               <EmptyState
                 icon={<Wallet />}
-                title="Nenhuma transação no mês"
+                title="Nenhuma transação neste filtro"
                 description="Adicione transações para visualizar aqui."
                 action={
                   <Link to="/transactions">
@@ -1106,8 +1121,19 @@ export default function Dashboard() {
                 aria-label="Lista rolável de transações do mês"
                 tabIndex={0}
               >
-                {monthTx.map((tx) => (
-                  <TxItem key={tx.id} tx={tx} categories={categories} />
+                {groupedFeed.map((group) => (
+                  <section key={group.date} className="dashboard-feed-date-group">
+                    <p className="dashboard-feed-date-label">
+                      {group.date === 'unknown'
+                        ? 'Data não informada'
+                        : format(new Date(`${group.date}T12:00:00`), 'dd MMM', { locale: ptBR })}
+                    </p>
+                    {group.items.map((tx) => (
+                      <div key={tx.id} className={activeCategory && tx.categoryId !== activeCategory ? 'opacity-35 transition-opacity duration-200' : 'transition-opacity duration-200'}>
+                        <TxItem tx={tx} categories={categories} />
+                      </div>
+                    ))}
+                  </section>
                 ))}
               </div>
             )}
