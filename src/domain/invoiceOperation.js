@@ -25,8 +25,7 @@ const validDate = (value) => {
   const [year, month, day] = value.split('-').map(Number)
   return new Date(Date.UTC(year, month - 1, day)).toISOString().slice(0, 10) === value
 }
-const limitedText = (value, maximum) =>
-  typeof value === 'string' && value.length <= maximum
+const limitedText = (value, maximum) => typeof value === 'string' && value.length <= maximum
 const centsExact = (value) =>
   typeof value === 'number' &&
   Number.isFinite(value) &&
@@ -69,14 +68,17 @@ export function validateInvoiceOperation(value) {
   }
   if (
     value.type === 'payment' &&
-    (!centsExact(value.amount) || value.amount <= 0 ||
-      value.paymentDate !== value.eventDate || !limitedText(value.sourceAccount, 120))
+    (!centsExact(value.amount) ||
+      value.amount <= 0 ||
+      value.paymentDate !== value.eventDate ||
+      !limitedText(value.sourceAccount, 120))
   ) {
     throw new Error('Pagamento inválido.')
   }
   if (
     value.type === 'adjustment' &&
-    (!centsExact(value.signedAmount) || value.signedAmount === 0 ||
+    (!centsExact(value.signedAmount) ||
+      value.signedAmount === 0 ||
       !['credit', 'charge'].includes(value.direction) ||
       (value.direction === 'credit' ? value.signedAmount >= 0 : value.signedAmount <= 0) ||
       !value.notes.trim())
@@ -85,8 +87,10 @@ export function validateInvoiceOperation(value) {
   }
   if (
     value.type === 'reversal' &&
-    (!centsExact(value.amount) || value.amount <= 0 ||
-      !limitedText(value.reversesEventId, 128) || !value.reversesEventId ||
+    (!centsExact(value.amount) ||
+      value.amount <= 0 ||
+      !limitedText(value.reversesEventId, 128) ||
+      !value.reversesEventId ||
       !limitedText(value.sourceAccount, 120))
   ) {
     throw new Error('Estorno inválido.')
