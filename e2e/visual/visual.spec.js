@@ -91,7 +91,6 @@ async function expectDashboardPremiumVisualization(page, projectName) {
   expect(geometry.decisions.top).toBeGreaterThanOrEqual(geometry.hero.bottom)
   expect(geometry.savings.top).toBeGreaterThanOrEqual(geometry.payments.bottom)
   expect(geometry.feed.top).toBeGreaterThanOrEqual(geometry.analytics.bottom)
-
 }
 
 async function prepareVisualPage(page, route, selector) {
