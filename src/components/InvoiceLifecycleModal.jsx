@@ -159,15 +159,14 @@ export default function InvoiceLifecycleModal({
     setLoading(true)
     setError('')
 
-    const fingerprint = JSON.stringify(event)
-    if (!pendingOperation.current || pendingOperation.current.fingerprint !== fingerprint) {
-      pendingOperation.current = {
-        fingerprint,
-        operationId: createInvoiceOperationId(),
-      }
-    }
-
     try {
+      const fingerprint = JSON.stringify(event)
+      if (!pendingOperation.current || pendingOperation.current.fingerprint !== fingerprint) {
+        pendingOperation.current = {
+          fingerprint,
+          operationId: createInvoiceOperationId(),
+        }
+      }
       await onCreateEvent({ ...event, operationId: pendingOperation.current.operationId })
       pendingOperation.current = null
       setNotes('')
