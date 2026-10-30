@@ -17,11 +17,11 @@ import { summarizeCardLinks } from '../domain/cardLinkageSummary'
 import { auditLoadedCardInvoices } from '../domain/cardInvoiceReadOnlyAudit'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
-import InvoiceLifecycleModal from './InvoiceLifecycleModal'
 import CreditCardsSettingsCard from './CreditCardsSettingsCard'
 import PremiumGate from './PremiumGate'
 
 const CardReconciliationModal = React.lazy(() => import('./CardReconciliationModal'))
+const InvoiceLifecycleModal = React.lazy(() => import('./InvoiceLifecycleModal'))
 
 const STATUS = {
   forming: ['Em formação', 'bg-[--brand-100] text-[--brand-700]'],
@@ -655,13 +655,19 @@ function CreditCardsCenterContent() {
         </React.Suspense>
       )}
 
-      <InvoiceLifecycleModal
-        isOpen={Boolean(managingCardId)}
-        invoice={managedInvoice}
-        invoiceMonth={selectedMonth}
-        onCreateEvent={createInvoiceEvent}
-        onClose={() => setManagingCardId(null)}
-      />
+      {managingCardId && (
+        <React.Suspense
+          fallback={<p role="status" className="text-xs">Abrindo fatura…</p>}
+        >
+          <InvoiceLifecycleModal
+            isOpen
+            invoice={managedInvoice}
+            invoiceMonth={selectedMonth}
+            onCreateEvent={createInvoiceEvent}
+            onClose={() => setManagingCardId(null)}
+          />
+        </React.Suspense>
+      )}
     </div>
   )
 }
