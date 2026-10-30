@@ -41,13 +41,19 @@ main:has(.dashboard-fintech-bento) {
   font-variant-numeric: tabular-nums;
 }
 .dashboard-fintech-bento :is(button, a) {
-  transition: background-color 200ms, border-color 200ms, color 200ms, opacity 200ms, transform 200ms;
+  transition:
+    background-color 200ms,
+    border-color 200ms,
+    color 200ms,
+    opacity 200ms,
+    transform 200ms;
 }
 .dashboard-fintech-bento :is(button, a):focus-visible {
   outline: 2px solid #d6af7e;
   outline-offset: 3px;
 }
-.dashboard-fintech-bento > :is(.dashboard-bento-pulse, .dashboard-bento-operations, .dashboard-bento-rhythm-row) {
+.dashboard-fintech-bento
+  > :is(.dashboard-bento-pulse, .dashboard-bento-operations, .dashboard-bento-rhythm-row) {
   display: contents !important;
 }
 .dashboard-fintech-bento > .dashboard-bento-pulse > :first-child {
@@ -129,7 +135,7 @@ main:has(.dashboard-fintech-bento) {
 .dashboard-bento-icon-button:hover,
 .dashboard-bento-search:hover {
   background: #242936;
-  border-color: rgba(255,255,255,.15);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 .dashboard-bento-toolbar-actions {
   display: flex;
@@ -143,13 +149,13 @@ main:has(.dashboard-fintech-bento) {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   background: #171a24;
   color: #b7c1d2;
   min-height: 40px;
 }
-.dashboard-bento-filter[aria-checked="true"] {
-  border-color: rgba(52, 211, 153, .35);
+.dashboard-bento-filter[aria-checked='true'] {
+  border-color: rgba(52, 211, 153, 0.35);
   color: #a7f3d0;
 }
 .dashboard-bento-filter-switch {
@@ -162,7 +168,7 @@ main:has(.dashboard-fintech-bento) {
   background: #464c5c;
 }
 .dashboard-bento-filter-switch::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 3px;
   left: 3px;
@@ -172,10 +178,10 @@ main:has(.dashboard-fintech-bento) {
   background: #f8fafc;
   transition: transform 200ms;
 }
-.dashboard-bento-filter[aria-checked="true"] .dashboard-bento-filter-switch {
+.dashboard-bento-filter[aria-checked='true'] .dashboard-bento-filter-switch {
   background: #047857;
 }
-.dashboard-bento-filter[aria-checked="true"] .dashboard-bento-filter-switch::after {
+.dashboard-bento-filter[aria-checked='true'] .dashboard-bento-filter-switch::after {
   transform: translateX(13px);
 }
 .dashboard-bento-new {
@@ -188,42 +194,56 @@ main:has(.dashboard-fintech-bento) {
   color: #12141a;
   white-space: nowrap;
 }
-.dashboard-bento-new:hover { background: #eccba5; }
-.dashboard-fintech-bento :is(
-  .dashboard-period-hero, .dashboard-decision-card, .payment-control-card,
-  .dashboard-savings-card, .dashboard-forecast-card, .dashboard-finance-chart,
-  .dashboard-spending-composition, .dashboard-transactions-card
-) {
+.dashboard-bento-new:hover {
+  background: #eccba5;
+}
+.dashboard-fintech-bento
+  :is(
+    .dashboard-period-hero,
+    .dashboard-decision-card,
+    .payment-control-card,
+    .dashboard-savings-card,
+    .dashboard-forecast-card,
+    .dashboard-finance-chart,
+    .dashboard-spending-composition,
+    .dashboard-transactions-card
+  ) {
   position: relative;
   overflow: hidden;
   height: 100%;
   background: #11131a !important;
   color: #f8fafc;
-  border: 1px solid rgba(255,255,255,.06) !important;
-  border-top-color: rgba(255,255,255,.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-top-color: rgba(255, 255, 255, 0.1) !important;
   border-radius: 22px !important;
-  box-shadow: 0 12px 32px rgba(0,0,0,.09) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.09) !important;
 }
 .dashboard-fintech-bento :is(.dashboard-savings-card, .dashboard-decision-card)::before {
-  content: "";
+  content: '';
   position: absolute;
   z-index: 0;
   inset: 0;
-  background: radial-gradient(circle at top left, rgba(16,185,129,.10), transparent 55%);
+  background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.1), transparent 55%);
   pointer-events: none;
 }
 .dashboard-fintech-bento .dashboard-decision-card::before {
-  background: radial-gradient(circle at top left, rgba(245,158,11,.10), transparent 55%);
+  background: radial-gradient(circle at top left, rgba(245, 158, 11, 0.1), transparent 55%);
 }
 .dashboard-fintech-bento .dashboard-decision-card > *,
 .dashboard-fintech-bento .dashboard-savings-card > * {
   position: relative;
   z-index: 1;
 }
-.dashboard-fintech-bento :is(.dashboard-period-metric, .payment-control-column,
-.dashboard-finance-chart__selected, .dashboard-review-inline, .dashboard-feed-filter) {
+.dashboard-fintech-bento
+  :is(
+    .dashboard-period-metric,
+    .payment-control-column,
+    .dashboard-finance-chart__selected,
+    .dashboard-review-inline,
+    .dashboard-feed-filter
+  ) {
   background: #171a24;
-  border-color: rgba(255,255,255,.05) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
 }
 .dashboard-fintech-bento .dashboard-period-hero__value {
   color: #f8fafc !important;
@@ -242,16 +262,24 @@ main:has(.dashboard-fintech-bento) {
   flex-shrink: 0;
   transition: width 350ms ease;
 }
-.dashboard-bento-segment--expense { background: #b99167; }
-.dashboard-bento-segment--reserve { background: #34d399; }
-.dashboard-bento-month-chips { display:flex; flex-wrap:wrap; gap:8px; }
+.dashboard-bento-segment--expense {
+  background: #b99167;
+}
+.dashboard-bento-segment--reserve {
+  background: #34d399;
+}
+.dashboard-bento-month-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .dashboard-bento-insight-chip {
   display: inline-flex;
   align-items: center;
   max-width: 100%;
   min-height: 34px;
   gap: 7px;
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
   padding: 6px 10px;
   background: #171a24;
@@ -259,126 +287,172 @@ main:has(.dashboard-fintech-bento) {
   font-size: 10px;
   font-weight: 600;
 }
-.dashboard-bento-insight-chip:hover { background: #242936; border-color: rgba(255,255,255,.15); }
+.dashboard-bento-insight-chip:hover {
+  background: #242936;
+  border-color: rgba(255, 255, 255, 0.15);
+}
 .dashboard-bento-pro {
   display: inline-flex;
-  align-items:center;
-  border: 1px solid rgba(245, 158, 11, .2);
-  border-radius:999px;
-  background:rgba(245, 158, 11, .1);
-  padding:4px 8px;
-  color:#fcd34d;
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:.08em;
-  text-transform:uppercase;
+  align-items: center;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 4px 8px;
+  color: #fcd34d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
-.dashboard-review-inline { border: 1px solid rgba(245,158,11,.15) !important; }
+.dashboard-review-inline {
+  border: 1px solid rgba(245, 158, 11, 0.15) !important;
+}
 .dashboard-review-action {
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  border:1px solid rgba(255,255,255,.08);
-  background:#242936;
-  color:#e4e9f1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #242936;
+  color: #e4e9f1;
 }
-.dashboard-review-action--accent { border-color:rgba(245,158,11,.25); color:#fcd34d; }
-.dashboard-review-action:hover { background:#303748; }
+.dashboard-review-action--accent {
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #fcd34d;
+}
+.dashboard-review-action:hover {
+  background: #303748;
+}
 .dashboard-decision-card .dashboard-health-score {
   background: #171a24;
-  border-radius:16px;
-  padding:12px;
+  border-radius: 16px;
+  padding: 12px;
 }
 .dashboard-decision-card .money-insight-card {
   border: none !important;
-  border-radius:16px !important;
-  background:#171a24 !important;
-  box-shadow:none !important;
+  border-radius: 16px !important;
+  background: #171a24 !important;
+  box-shadow: none !important;
 }
 .dashboard-decision-card .money-insight-card__header {
-  padding:12px !important;
-  background:none !important;
+  padding: 12px !important;
+  background: none !important;
 }
-.dashboard-decision-card .money-insight-card__content { padding:12px !important; gap:10px !important; }
-.dashboard-decision-card .money-insight-card__metrics { gap:8px !important; }
-.dashboard-decision-card .money-insight-card__metrics > * { border:none !important; background:#212533 !important; }
-.dashboard-decision-card .money-insight-card a[href*="review=categories"] { display:none !important; }
+.dashboard-decision-card .money-insight-card__content {
+  padding: 12px !important;
+  gap: 10px !important;
+}
+.dashboard-decision-card .money-insight-card__metrics {
+  gap: 8px !important;
+}
+.dashboard-decision-card .money-insight-card__metrics > * {
+  border: none !important;
+  background: #212533 !important;
+}
+.dashboard-decision-card .money-insight-card a[href*='review=categories'] {
+  display: none !important;
+}
 .dashboard-fintech-bento .dashboard-savings-card,
 .dashboard-fintech-bento .dashboard-health-card,
 .dashboard-fintech-bento .dashboard-money-insight,
 .dashboard-fintech-bento .dashboard-forecast-card {
-  border-left-color: rgba(255,255,255,.06) !important;
-  border-right-color: rgba(255,255,255,.06) !important;
+  border-left-color: rgba(255, 255, 255, 0.06) !important;
+  border-right-color: rgba(255, 255, 255, 0.06) !important;
 }
-.dashboard-payment-overview { padding:12px; border-radius:16px; background:#171a24; }
-.dashboard-payment-quick { background:#2a2520; color:#f4ce9b; border:1px solid rgba(214,175,126,.18); }
-.dashboard-payment-quick:hover { background:#3b3025; }
-.dashboard-fintech-bento .payment-control-columns { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
-.dashboard-fintech-bento .payment-control-column { border-radius:12px; padding:10px !important; }
-.dashboard-fintech-bento .dashboard-savings-card :is(.border-\[--warning-border\], .border-\[--success-border\]) {
-  border-color:rgba(255,255,255,.06);
+.dashboard-payment-overview {
+  padding: 12px;
+  border-radius: 16px;
+  background: #171a24;
+}
+.dashboard-payment-quick {
+  background: #2a2520;
+  color: #f4ce9b;
+  border: 1px solid rgba(214, 175, 126, 0.18);
+}
+.dashboard-payment-quick:hover {
+  background: #3b3025;
+}
+.dashboard-fintech-bento .payment-control-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+.dashboard-fintech-bento .payment-control-column {
+  border-radius: 12px;
+  padding: 10px !important;
+}
+.dashboard-fintech-bento
+  .dashboard-savings-card
+  :is(.border-\[--warning-border\], .border-\[--success-border\]) {
+  border-color: rgba(255, 255, 255, 0.06);
 }
 .dashboard-fintech-bento .dashboard-forecast-card {
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
-.dashboard-fintech-bento .dashboard-forecast-card > div { flex-direction:column; }
-.dashboard-fintech-bento .dashboard-evolution-chart { min-height:240px; }
+.dashboard-fintech-bento .dashboard-forecast-card > div {
+  flex-direction: column;
+}
+.dashboard-fintech-bento .dashboard-evolution-chart {
+  min-height: 240px;
+}
 .dashboard-fintech-bento .dashboard-transactions-scroll {
   max-height: 620px !important;
-  overflow-y:auto !important;
-  overscroll-behavior:contain;
-  scrollbar-color:#3b4354 transparent;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-color: #3b4354 transparent;
 }
 .dashboard-fintech-bento .dashboard-feed-filter {
-  border:1px solid rgba(255,255,255,.06);
-  color:#aeb8c9;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #aeb8c9;
 }
-.dashboard-fintech-bento .dashboard-feed-filter[aria-pressed="true"] {
-  background:#34302d;
-  border-color:rgba(214,175,126,.35) !important;
-  color:#ecd0aa;
+.dashboard-fintech-bento .dashboard-feed-filter[aria-pressed='true'] {
+  background: #34302d;
+  border-color: rgba(214, 175, 126, 0.35) !important;
+  color: #ecd0aa;
 }
 .dashboard-feed-tag {
-  background:rgba(255,255,255,.07);
-  color:#b9c3d4;
-  white-space:nowrap;
+  background: rgba(255, 255, 255, 0.07);
+  color: #b9c3d4;
+  white-space: nowrap;
 }
 .dashboard-feed-date-label {
-  position:sticky;
-  top:0;
-  z-index:2;
-  padding:7px 0;
-  background:#11131a;
-  color:#c4ccda;
-  font-size:10px;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  font-weight:800;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 7px 0;
+  background: #11131a;
+  color: #c4ccda;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 800;
 }
 .dashboard-fintech-bento .category-composition-item:hover {
-  border-color:rgba(255,255,255,.15);
-  background:rgba(255,255,255,.03);
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.03);
 }
 .dashboard-fintech-bento .category-composition-name {
-  display:flex;
-  align-items:center;
-  gap:8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.dashboard-fintech-bento .category-composition-name .inline-flex { width:32px; height:32px; }
-.dashboard-fintech-bento .dashboard-transactions-card { align-self:stretch; }
-.dashboard-fintech-bento :is(.dashboard-savings-card,.dashboard-health-card) {
-  background-color:#11131a !important;
+.dashboard-fintech-bento .category-composition-name .inline-flex {
+  width: 32px;
+  height: 32px;
+}
+.dashboard-fintech-bento .dashboard-transactions-card {
+  align-self: stretch;
+}
+.dashboard-fintech-bento :is(.dashboard-savings-card, .dashboard-health-card) {
+  background-color: #11131a !important;
 }
 @media (max-width: 1279px) {
   .dashboard-fintech-bento > .dashboard-bento-topbar {
     grid-template-columns: auto 1fr;
   }
   .dashboard-bento-toolbar-actions {
-    grid-column:1/-1;
-    justify-self:stretch;
-    justify-content:space-between;
+    grid-column: 1/-1;
+    justify-self: stretch;
+    justify-content: space-between;
   }
 }
 @media (max-width: 1023px) {
@@ -387,32 +461,55 @@ main:has(.dashboard-fintech-bento) {
   .dashboard-fintech-bento > .dashboard-bento-feed {
     grid-column: 1/-1 !important;
   }
-  .dashboard-fintech-bento > .dashboard-bento-operations > * { grid-column:span 6 !important; }
-  .dashboard-fintech-bento > .dashboard-bento-rhythm-row > .dashboard-forecast-card { grid-column:1/-1; }
+  .dashboard-fintech-bento > .dashboard-bento-operations > * {
+    grid-column: span 6 !important;
+  }
+  .dashboard-fintech-bento > .dashboard-bento-rhythm-row > .dashboard-forecast-card {
+    grid-column: 1/-1;
+  }
 }
 @media (max-width: 639px) {
   .dashboard-fintech-bento {
-    padding:12px;
-    gap:12px;
-    border-radius:0;
+    padding: 12px;
+    gap: 12px;
+    border-radius: 0;
   }
   .dashboard-fintech-bento > .dashboard-bento-topbar {
-    position:relative;
-    grid-template-columns:1fr;
-    gap:10px;
-    padding:12px;
+    position: relative;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
   }
-  .dashboard-bento-month-nav { justify-self:start; }
-  .dashboard-bento-toolbar-actions { grid-column:1; justify-content:flex-start; }
-  .dashboard-bento-filter { flex:1; }
-  .dashboard-bento-new { flex:1; }
-  .dashboard-fintech-bento > .dashboard-bento-operations > * { grid-column:1/-1 !important; }
-  .dashboard-fintech-bento .dashboard-period-hero__value { font-size:clamp(26px,8vw,40px) !important; }
-  .dashboard-fintech-bento .dashboard-period-hero__metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .dashboard-bento-search kbd { display:none; }
+  .dashboard-bento-month-nav {
+    justify-self: start;
+  }
+  .dashboard-bento-toolbar-actions {
+    grid-column: 1;
+    justify-content: flex-start;
+  }
+  .dashboard-bento-filter {
+    flex: 1;
+  }
+  .dashboard-bento-new {
+    flex: 1;
+  }
+  .dashboard-fintech-bento > .dashboard-bento-operations > * {
+    grid-column: 1/-1 !important;
+  }
+  .dashboard-fintech-bento .dashboard-period-hero__value {
+    font-size: clamp(26px, 8vw, 40px) !important;
+  }
+  .dashboard-fintech-bento .dashboard-period-hero__metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dashboard-bento-search kbd {
+    display: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .dashboard-fintech-bento *,
   .dashboard-fintech-bento *::before,
-  .dashboard-fintech-bento *::after { transition-duration:0.01ms !important; }
+  .dashboard-fintech-bento *::after {
+    transition-duration: 0.01ms !important;
+  }
 }
