@@ -678,3 +678,51 @@ test('Gate 2: novas transações exigem amount numérico, sem bloquear correçã
   await assertFails(updateDoc(legacy, { amount: '105.50' }))
   await assertSucceeds(updateDoc(legacy, { amount: 105.5 }))
 })
+
+test('Gate 2: ajuste, estorno e fechamento manual usam contratos específicos', async () => {
+  const database = environment.authenticatedContext('alice').firestore()
+  const base = syntheticInvoicePayment()
+  const adjustment = {
+    ...base,
+    operationId: 'evt_123e4567-e89b-42d3-a456-426614174001',
+    type: 'adjustment',
+    notes: 'Crédito documental sintético',
+    direction: 'credit',
+    signedAmount: -15.5,
+  }
+  delete adjustment.amount
+  delete adjustment.paymentDate
+  delete adjustment.sourceAccount
+
+  const reversal = {
+    ...base,
+    operationId: 'evt_123e4567-e89b-42d3-a456-426614174002',
+    type: 'reversal',
+    amount: 30,
+    reversesEventId: base.operationId,
+  }
+  delete reversal.paymentDate
+
+  const closing = {
+    ...base,
+    operationId: 'evt_123e4567-e89b-42d3-a456-426614174003',
+    type: 'manual_close',
+  }
+  delete closing.amount
+  delete closing.paymentDate
+  delete closing.sourceAccount
+
+  await persistInvoiceEventOnce(database, 'alice', base)
+  await persistInvoiceEventOnce(database, 'alice', adjustment)
+  await persistInvoiceEventOnce(database, 'alice', reversal)
+  await persistInvoiceEventOnce(database, 'alice', closing)
+
+  const all = await getDocs(collection(database, 'users', 'alice', 'invoiceEvents'))
+  assert.equal(all.size, 4)
+  const badAdjustment = {
+    ...adjustment,
+    operationId: 'evt_123e4567-e89b-42d3-a456-426614174004',
+    signedAmount: 20,
+  }
+  await assert.rejects(persistInvoiceEventOnce(database, 'alice', badAdjustment))
+})
