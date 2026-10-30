@@ -18,10 +18,7 @@ export function assessCardSnapshotEvidence(
     if (condition) warnings.push(code)
   }
 
-  const hasInvoiceEvents = Object.prototype.hasOwnProperty.call(
-    rawCollections || {},
-    'invoiceEvents',
-  )
+  const hasInvoiceEvents = Array.isArray(rawCollections?.invoiceEvents)
   const clock = now instanceof Date ? now.getTime() : new Date(now).getTime()
   const ageDays =
     exportedAt && Number.isFinite(clock)
@@ -60,6 +57,7 @@ export function assessCardSnapshotEvidence(
 
   return {
     level,
+    scope: 'full_export',
     warnings: !hasCreditEvidence ? [...warnings, 'no_credit_activity_in_export'] : warnings,
     collections: {
       creditCards: records.creditCards.length,
