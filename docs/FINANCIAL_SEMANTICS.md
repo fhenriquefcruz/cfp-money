@@ -273,3 +273,71 @@ Orçamentos mensais são tratados como **versões com início de vigência**, n�
 
 Exemplo: R$ 500 em outubro continua válido em novembro e dezembro. Se janeiro for alterado para
 R$ 650, outubro–dezembro permanecem em R$ 500 e janeiro em diante passa a usar R$ 650.
+
+## Gates 0–1: contrato financeiro comum (30/10/2026)
+
+Fonte de cálculo pura: `src/domain/financialCore.js`, compartilhada entre
+Dashboard, Reports, Money e Worker. **Dados sintéticos, não registros de usuários.**
+
+| Conceito | Competência e regra | Invariante |
+| --- | --- | --- |
+| Receita | `income` por atividade, sem `isSavings` | Cancelamento/transferência excluídos |
+| Despesa | `expense` por atividade, sem `isSavings` | Não contar liquidação da fatura outra vez |
+| Compra estruturada | `purchaseDate` / `originalPurchaseDate`, `cardId` | Compra reconhecida pelo mês de atividade |
+| Parcela | `installmentGroupId` e `amount` | Centavos recompõem o total original |
+| Obrigação/fatura | `dueDate` e `invoiceMonth` | Vencimento separado da compra |
+| Pagamento/liquidação | `paidAt` manual ou `invoiceEvents` | Não gera segunda despesa econômica |
+| Cancelado | `paymentStatus=cancelled` | Não agrega valor nem contagem |
+| Transferência | `kind/flowType=transfer` | Não é receita ou gasto operacional |
+| Reserva/aporte/retirada | `isSavings` e `savingsMovement` | Patrimônio, não consumo |
+| Meta | Saldo legado + aporte − retirada por `goalId` | Não duplicar patrimônio |
+| Orçamento | Compra na atividade, vigência do limite | Não contar parcelas novamente no vencimento |
+| Estorno | Evento/estado específico | Evitar receita fictícia e duplicação |
+| Reembolso/terceiros | Dados estruturados sob confirmação | Título é só pista |
+
+**BRL:** `moneyToCents` normaliza quantias numéricas e legadas
+(`"100.50"`, `"100,50"`, `"R$ 1.234,56"`) e soma centavos inteiros.
+Montante inválido/NaN vira zero **somente na leitura compatível**; o Gate 2
+deverá rejeitar escritas inválidas. Datas são dias civis ISO válidos;
+`createdAt` não define competência. `selectActivityRange` aplica
+exatamente os filtros canônicos; os consumidores só podem ser comparados
+com **mesmo período, regime e filtros**. A janela de relatório do Worker
+continua em UTC; hora/fuso de agendamento é política separada.
+
+### Cenário de aceite obrigatório — exclusivamente sintético
+
+Compra de R$ 1.200,00 em **21/10/2026**, cartão com fechamento **dia 20**
+e vencimento **dia 10**, quatro parcelas de **R$ 300,00**:
+
+| Parcela | Atividade | Fatura | Vencimento |
+| --- | --- | --- | --- |
+| 1 | out/2026 | dez/2026 | 10/12/2026 |
+| 2 | out/2026 | jan/2027 | 10/01/2027 |
+| 3 | out/2026 | fev/2027 | 10/02/2027 |
+| 4 | out/2026 | mar/2027 | 10/03/2027 |
+
+A atividade reconhece a compra integral em outubro; cada fatura tem
+obrigação separada. Esse caso não define todos os ciclos: testar
+fechamento exato, virada de ano, fevereiro, centavos indivisíveis e
+alteração posterior da configuração do cartão.
+
+Somando receita de R$ 2.000,00, despesa avulsa de R$ 100,50, aporte de
+R$ 200,00, retirada de R$ 50,00, despesa **cancelada** de R$ 900,00 e
+**transferência** de R$ 999,00:
+
+| Métrica | Antes: risco confirmado no código | Contrato esperado |
+| --- | --- | ---: |
+| Receitas | Money/Worker com filtros próprios | R$ 2.000,00 |
+| Despesas | Vencimento podia substituir atividade | R$ 1.300,50 |
+| Reserva líquida | Aporte podia virar despesa do Worker | R$ 150,00 |
+| Resultado (não saldo bancário) | Somas discrepantes | R$ 699,50 |
+| Movimentos efetivos | Cancelado/transferência contados | 8 |
+
+Os valores “antes” não são métricas reais: descrevem causas no código.
+Prova automatizável em `src/domain/financialParity.test.js`. Ao comparar
+a contagem do Money com Worker, usar `excludeSavings=false`.
+
+**Fora destes gates:** MR-003 (idempotência), MR-007 (schema Firestore),
+reconciliação histórica e mutações financeiras. Alertas de meta do Worker
+são suprimidos se a consulta atingir o limite de 3.000 movimentos, pois
+o saldo efetivo poderia estar truncado.
