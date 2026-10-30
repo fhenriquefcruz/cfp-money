@@ -69,7 +69,12 @@ function MoneyMetric({ label, value, detail }) {
   )
 }
 
-function MoneyInsightContent({ referenceDate, compact = false, micro = false, transactionsOverride }) {
+function MoneyInsightContent({
+  referenceDate,
+  compact = false,
+  micro = false,
+  transactionsOverride,
+}) {
   const { transactions: allTransactions, loading: transactionsLoading } = useTransactions()
   const transactions = transactionsOverride ?? allTransactions
   const { settings, isLoading: settingsLoading } = useMoney()
@@ -103,7 +108,10 @@ function MoneyInsightContent({ referenceDate, compact = false, micro = false, tr
             <Bot size={15} className="text-[--brand-600]" />
             Projeção Money
           </span>
-          <Link to="/money" className="inline-flex min-h-9 items-center gap-1 text-[11px] font-semibold text-[--text-brand] hover:underline">
+          <Link
+            to="/money"
+            className="inline-flex min-h-9 items-center gap-1 text-[11px] font-semibold text-[--text-brand] hover:underline"
+          >
             Análise completa <ArrowRight size={12} />
           </Link>
         </div>
@@ -284,7 +292,12 @@ function MoneyInsightContent({ referenceDate, compact = false, micro = false, tr
   )
 }
 
-export default function MoneyInsightCard({ referenceDate, compact = false, micro = false, transactionsOverride }) {
+export default function MoneyInsightCard({
+  referenceDate,
+  compact = false,
+  micro = false,
+  transactionsOverride,
+}) {
   return (
     <PremiumGate
       variant="card"

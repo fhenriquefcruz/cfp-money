@@ -19,7 +19,12 @@ export function isDashboardThirdParty(transaction = {}) {
   return explicit || getDashboardTransactionTags(transaction).includes('Cartão Mãe')
 }
 
-export function filterDashboardFeed(transactions = [], filter = 'all', ownOnly = false, creditCards = []) {
+export function filterDashboardFeed(
+  transactions = [],
+  filter = 'all',
+  ownOnly = false,
+  creditCards = [],
+) {
   return transactions.filter((transaction) => {
     if (ownOnly && isDashboardThirdParty(transaction)) return false
     if (filter === 'own') return !isDashboardThirdParty(transaction)

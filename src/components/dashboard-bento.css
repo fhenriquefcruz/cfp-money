@@ -533,8 +533,12 @@ main:has(.dashboard-fintech-bento) {
   background: #0d0f15 !important;
   border-right-color: rgba(255, 255, 255, 0.07) !important;
 }
-.dashboard-sidebar-dark nav a:hover { background: rgba(255, 255, 255, 0.045); }
-.dashboard-sidebar-dark .aurora-brand-mark { background: #b99367 !important; }
+.dashboard-sidebar-dark nav a:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+.dashboard-sidebar-dark .aurora-brand-mark {
+  background: #b99367 !important;
+}
 .dashboard-bottom-nav-dark {
   --bg-surface: #11131a;
   --bg-hover: #252a37;
