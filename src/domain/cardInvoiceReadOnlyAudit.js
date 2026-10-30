@@ -1,8 +1,15 @@
 // Conferencia aritmetica interna de faturas ja carregadas. Nao consulta nem altera o Firebase.
 function toCents(value) {
-  if (value == null || (typeof value === 'string' && value.trim() === '')) return null
+  if (
+    (typeof value !== 'string' && typeof value !== 'number') ||
+    (typeof value === 'string' && value.trim() === '')
+  ) {
+    return null
+  }
   const numeric = Number(value)
-  return Number.isFinite(numeric) ? Math.round(numeric * 100) : null
+  if (!Number.isFinite(numeric)) return null
+  const cents = Math.round(numeric * 100)
+  return Number.isSafeInteger(cents) ? cents : null
 }
 
 function sumCents(items, selector) {
@@ -11,6 +18,7 @@ function sumCents(items, selector) {
     const cents = toCents(selector(item))
     if (cents === null) return null
     total += cents
+    if (!Number.isSafeInteger(total)) return null
   }
   return total
 }
@@ -31,7 +39,12 @@ export function auditLoadedCardInvoices(invoices = []) {
     if (items.length === 0 && events.length === 0) continue
     summary.total++
 
-    if (events.some((event) => !['payment', 'reversal', 'adjustment', 'manual_close'].includes(event?.type))) {
+    if (
+      events.some(
+        (event) =>
+          !['payment', 'reversal', 'adjustment', 'manual_close'].includes(event?.type),
+      )
+    ) {
       summary.inconclusive++
       continue
     }
