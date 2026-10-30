@@ -5,7 +5,6 @@ import {
   ChevronRight,
   CircleDollarSign,
   CreditCard,
-  Layers3,
   Plus,
   ReceiptText,
   Settings2,
@@ -433,7 +432,7 @@ function CreditCardsCenterContent() {
                 'Restante a pagar nas faturas',
               ],
               [
-                Layers3,
+                CalendarDays,
                 'Parcelas futuras',
                 center.futureInstallmentTotal,
                 `${center.futureInstallmentCount} parcela${center.futureInstallmentCount === 1 ? '' : 's'} após este mês`,
