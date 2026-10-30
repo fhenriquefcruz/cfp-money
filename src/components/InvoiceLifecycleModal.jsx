@@ -7,19 +7,11 @@ import {
   createReversalEvent,
   canAutoReversePayment,
   getPaymentReversibleAmount,
+  todayIso,
 } from '../domain/invoiceLifecycle'
 import { createInvoiceOperationId } from '../domain/invoiceOperation'
 import { formatCurrency, formatDate } from '../utils'
 import { Button, Modal } from './ui'
-
-function todayIso() {
-  const now = new Date()
-  return [
-    now.getFullYear(),
-    String(now.getMonth() + 1).padStart(2, '0'),
-    String(now.getDate()).padStart(2, '0'),
-  ].join('-')
-}
 
 function maskCurrency(raw) {
   const digits = String(raw || '').replace(/\D/g, '')
