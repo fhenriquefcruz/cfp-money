@@ -69,13 +69,6 @@ function differenceInCalendarDays(later, earlier) {
   return Math.round((utcA - utcB) / 86400000)
 }
 
-function isWithin(dateValue, startValue, endValue) {
-  const date = asIsoDate(dateValue)
-  return date >= asIsoDate(startValue) && date <= asIsoDate(endValue)
-}
-
-const toAmount = (value) => centsToMoney(moneyToCents(value))
-
 function safePercentChange(current, previous) {
   if (previous === 0) return current === 0 ? 0 : null
   return ((current - previous) / previous) * 100
