@@ -45,20 +45,17 @@ describe('Gate 2 — operação de fatura', () => {
   })
 
   it('mantém ajuste, fechamento e estorno no schema correto', () => {
-    expect(validateInvoiceOperation({
-      ...payment(),
-      type: 'adjustment',
-      amount: undefined,
-      paymentDate: undefined,
-      sourceAccount: undefined,
-      direction: 'credit',
-      signedAmount: -35,
-      notes: 'Crédito comprovado',
-    })).toBeTruthy()
     const closing = payment()
     delete closing.amount
     delete closing.paymentDate
     delete closing.sourceAccount
+    expect(validateInvoiceOperation({
+      ...closing,
+      type: 'adjustment',
+      direction: 'credit',
+      signedAmount: -35,
+      notes: 'Crédito comprovado',
+    })).toBeTruthy()
     expect(validateInvoiceOperation({ ...closing, type: 'manual_close' })).toBeTruthy()
     expect(validateInvoiceOperation({
       ...closing,
