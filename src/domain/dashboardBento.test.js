@@ -27,6 +27,14 @@ test('filtros preservam transações sem marcador e respeitam propriedade explí
   ])
   expect(filterDashboardFeed(rows, 'third-party').map((tx) => tx.id)).toEqual(['third'])
   expect(filterDashboardFeed(rows, 'card-5186').map((tx) => tx.id)).toEqual(['card'])
+  expect(
+    filterDashboardFeed(
+      [{ id: 'saved-card', cardId: 'card-linked', description: 'Compra sem etiqueta' }],
+      'card-5186',
+      false,
+      [{ id: 'card-linked', last4: '5186' }],
+    ).map((tx) => tx.id),
+  ).toEqual(['saved-card'])
   expect(filterDashboardFeed(rows, 'recurring').map((tx) => tx.id)).toEqual(['recurring'])
   expect(filterDashboardFeed(rows, 'all', true)).toHaveLength(3)
 })
