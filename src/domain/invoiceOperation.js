@@ -39,6 +39,15 @@ export function createInvoiceOperationId() {
   return 'evt_' + globalThis.crypto.randomUUID()
 }
 
+// Apenas pagamentos escritos pelo contrato novo são elegíveis a estorno
+// automático. Eventos legados precisam de conciliação histórica supervisionada.
+export function reversalOperationId(paymentId) {
+  if (!/^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(paymentId || '')) {
+    throw new Error('Pagamento histórico: estorno exige revisão.')
+  }
+  return 'rev_' + paymentId
+}
+
 export function validateInvoiceOperation(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error('Evento de fatura inválido.')
@@ -53,7 +62,12 @@ export function validateInvoiceOperation(value) {
     throw new Error('Campos incompatíveis com o evento.')
   }
   if (
-    !/^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value.operationId || '') ||
+    !/^(?:evt|rev_evt)_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(
+      value.operationId || '',
+    ) ||
+    (value.type === 'reversal'
+      ? value.operationId !== reversalOperationId(value.reversesEventId)
+      : value.operationId.startsWith('rev_')) ||
     !limitedText(value.cardId, 128) ||
     !value.cardId ||
     value.cardId.includes('/') ||
