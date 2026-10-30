@@ -129,7 +129,7 @@ export default function InvoiceLifecycleModal({
   const events = lifecycle?.events || []
 
   useEffect(() => {
-    if (!isOpen || !invoice) return
+    if (!isOpen || !invoice || pendingOperation.current) return
 
     setTab('payment')
     setAmount(maskCurrency(String(Math.round(Number(lifecycle?.remainingAmount || 0) * 100))))
@@ -138,8 +138,11 @@ export default function InvoiceLifecycleModal({
     setNotes('')
     setDirection('credit')
     setError('')
-    // Um novo modal/fatura inicia uma operação independente. Atualizações do
-    // saldo via onSnapshot não substituem a chave pendente de um retry.
+  }, [invoice?.card?.id, invoiceMonth, isOpen, lifecycle?.remainingAmount])
+
+  useEffect(() => {
+    // Mudar de fatura/modal inicia uma operação independente.
+    // Atualização de saldo não invalida um retry da mesma intenção.
     pendingOperation.current = null
   }, [invoice?.card?.id, invoiceMonth, isOpen])
 
