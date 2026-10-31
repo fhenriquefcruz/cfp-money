@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { History, LockKeyhole, RotateCcw, Scale, Wallet } from 'lucide-react'
+import { History, LockKeyhole, Scale, Wallet } from 'lucide-react'
 import {
   createAdjustmentEvent,
   createManualCloseEvent,
@@ -31,7 +31,7 @@ function parseCurrency(masked) {
 
 const EVENT_INFO = {
   payment: ['Pagamento', Wallet],
-  reversal: ['Estorno', RotateCcw],
+  reversal: ['Estorno', History],
   adjustment: ['Ajuste', Scale],
   manual_close: ['Fechamento manual', LockKeyhole],
 }
