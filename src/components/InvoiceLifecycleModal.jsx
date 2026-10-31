@@ -29,22 +29,17 @@ function parseCurrency(masked) {
   return Number(String(masked).replace(/\./g, '').replace(',', '.')) || 0
 }
 
-const EVENT_LABELS = {
-  payment: 'Pagamento',
-  reversal: 'Estorno',
-  adjustment: 'Ajuste',
-  manual_close: 'Fechamento manual',
-}
-const EVENT_ICONS = {
-  payment: Wallet,
-  reversal: RotateCcw,
-  adjustment: Scale,
+const EVENT_INFO = {
+  payment: ['Pagamento', Wallet],
+  reversal: ['Estorno', RotateCcw],
+  adjustment: ['Ajuste', Scale],
+  manual_close: ['Fechamento manual', LockKeyhole],
 }
 
 function EventRow({ event, allEvents, onReverse, loading }) {
   const reversible = event.type === 'payment' ? getPaymentReversibleAmount(event, allEvents) : 0
   const canReverse = reversible > 0 && canAutoReversePayment(event, allEvents)
-  const EventIcon = EVENT_ICONS[event.type] || LockKeyhole
+  const [eventLabel, EventIcon] = EVENT_INFO[event.type] || ['Evento', LockKeyhole]
 
   const value =
     event.type === 'adjustment'
@@ -61,7 +56,7 @@ function EventRow({ event, allEvents, onReverse, loading }) {
 
       <div className="min-w-0 flex-1">
         <p className="text-xs font-black text-[--text-primary]">
-          {EVENT_LABELS[event.type] || 'Evento'}
+          {eventLabel}
         </p>
         <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
           {formatDate(event.eventDate || event.paymentDate)}
@@ -414,9 +409,7 @@ export default function InvoiceLifecycleModal({
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 placeholder={
-                  tab === 'adjustment'
-                    ? 'O motivo é obrigatório para ajustes.'
-                    : 'Informação opcional.'
+                  tab === 'adjustment' ? 'Motivo obrigatório' : 'Opcional'
                 }
                 className="w-full resize-none rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 py-2.5 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
               />
@@ -440,8 +433,7 @@ export default function InvoiceLifecycleModal({
           <div>
             <div className="flex items-center gap-2 rounded-xl bg-[--brand-50] p-3 text-[10px] leading-relaxed text-[--brand-700]">
               <History size={14} className="flex-shrink-0" />
-              Pagamentos ficam fora de Transações para não duplicar despesas já contabilizadas pelas
-              compras.
+              Pagamentos de faturas não são novas despesas. As compras já foram contabilizadas.
             </div>
 
             <div className="mt-3 max-h-[360px] overflow-y-auto">
