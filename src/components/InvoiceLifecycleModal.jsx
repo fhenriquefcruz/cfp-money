@@ -1,24 +1,20 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { CheckCircle2, History, LockKeyhole, Receipt, RotateCcw, Scale, Wallet } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
+import { History, LockKeyhole, Scale, Wallet } from 'lucide-react'
 import {
   createAdjustmentEvent,
   createManualCloseEvent,
   createPaymentEvent,
   createReversalEvent,
+  canAutoReversePayment,
+  createInvoiceOperationId,
   getPaymentReversibleAmount,
+  todayIso,
 } from '../domain/invoiceLifecycle'
-import { createInvoiceOperationId } from '../domain/invoiceOperation'
 import { formatCurrency, formatDate } from '../utils'
 import { Button, Modal } from './ui'
 
-function todayIso() {
-  const now = new Date()
-  return [
-    now.getFullYear(),
-    String(now.getMonth() + 1).padStart(2, '0'),
-    String(now.getDate()).padStart(2, '0'),
-  ].join('-')
-}
+const NATIVE_INPUT_CLASS =
+  'min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]'
 
 function maskCurrency(raw) {
   const digits = String(raw || '').replace(/\D/g, '')
@@ -36,15 +32,17 @@ function parseCurrency(masked) {
   return Number(String(masked).replace(/\./g, '').replace(',', '.')) || 0
 }
 
-const EVENT_LABELS = {
-  payment: 'Pagamento',
-  reversal: 'Estorno',
-  adjustment: 'Ajuste',
-  manual_close: 'Fechamento manual',
+const EVENT_INFO = {
+  payment: ['Pagamento', Wallet],
+  reversal: ['Estorno', History],
+  adjustment: ['Ajuste', Scale],
+  manual_close: ['Fechamento manual', LockKeyhole],
 }
 
-function EventRow({ event, allEvents, invoice, onReverse, loading }) {
+function EventRow({ event, allEvents, onReverse, loading }) {
   const reversible = event.type === 'payment' ? getPaymentReversibleAmount(event, allEvents) : 0
+  const canReverse = reversible > 0 && canAutoReversePayment(event, allEvents)
+  const [eventLabel, EventIcon] = EVENT_INFO[event.type] || ['Evento', LockKeyhole]
 
   const value =
     event.type === 'adjustment'
@@ -56,20 +54,12 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
   return (
     <div className="flex items-start gap-3 border-b border-[--border-subtle] py-3 last:border-b-0">
       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[--bg-hover] text-[--text-secondary]">
-        {event.type === 'payment' ? (
-          <CheckCircle2 size={15} />
-        ) : event.type === 'reversal' ? (
-          <RotateCcw size={15} />
-        ) : event.type === 'adjustment' ? (
-          <Scale size={15} />
-        ) : (
-          <LockKeyhole size={15} />
-        )}
+        <EventIcon size={15} />
       </div>
 
       <div className="min-w-0 flex-1">
         <p className="text-xs font-black text-[--text-primary]">
-          {EVENT_LABELS[event.type] || 'Evento'}
+          {eventLabel}
         </p>
         <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
           {formatDate(event.eventDate || event.paymentDate)}
@@ -92,15 +82,20 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
           </p>
         )}
 
-        {reversible > 0 && (
+        {canReverse && (
           <button
             type="button"
             disabled={loading}
-            onClick={() => onReverse(event, invoice)}
+            onClick={() => onReverse(event)}
             className="min-h-8 rounded-lg px-2 text-[9px] font-black text-[--danger-text] hover:bg-[--danger-bg] disabled:opacity-50"
           >
             Estornar
           </button>
+        )}
+        {reversible > 0 && !canReverse && (
+          <p className="max-w-28 text-right text-[10px] text-[--text-tertiary]">
+            Estorno requer revisão
+          </p>
         )}
       </div>
     </div>
@@ -146,16 +141,6 @@ export default function InvoiceLifecycleModal({
     pendingOperation.current = null
   }, [invoice?.card?.id, invoiceMonth, isOpen])
 
-  const paymentSummary = useMemo(
-    () => ({
-      total: lifecycle?.invoiceTotal || 0,
-      paid: lifecycle?.paidAmount || 0,
-      remaining: lifecycle?.remainingAmount || 0,
-      credit: lifecycle?.creditAmount || 0,
-    }),
-    [lifecycle],
-  )
-
   const submitEvent = async (event) => {
     if (submitting.current) return
     submitting.current = true
@@ -167,7 +152,7 @@ export default function InvoiceLifecycleModal({
       if (!pendingOperation.current || pendingOperation.current.fingerprint !== fingerprint) {
         pendingOperation.current = {
           fingerprint,
-          operationId: createInvoiceOperationId(),
+          operationId: event.operationId || createInvoiceOperationId(),
         }
       }
       await onCreateEvent({ ...event, operationId: pendingOperation.current.operationId })
@@ -179,7 +164,7 @@ export default function InvoiceLifecycleModal({
       }
     } catch (submitError) {
       // Preserva a operationId após erro/timeout; reenviar não cria outro fato.
-      setError(submitError?.message || 'Não foi possível registrar o evento.')
+      setError(submitError?.message || 'Não foi possível salvar.')
       throw submitError
     } finally {
       submitting.current = false
@@ -191,29 +176,16 @@ export default function InvoiceLifecycleModal({
     if (!invoice) return
 
     try {
-      if (tab === 'payment') {
-        await submitEvent(
-          createPaymentEvent({
-            card: invoice.card,
-            invoiceMonth,
-            amount: parseCurrency(amount),
-            paymentDate: eventDate,
-            sourceAccount,
-            notes,
-          }),
-        )
-        return
+      const common = {
+        card: invoice.card,
+        invoiceMonth,
+        amount: parseCurrency(amount),
+        notes,
       }
-
       await submitEvent(
-        createAdjustmentEvent({
-          card: invoice.card,
-          invoiceMonth,
-          amount: parseCurrency(amount),
-          direction,
-          eventDate,
-          notes,
-        }),
+        tab === 'payment'
+          ? createPaymentEvent({ ...common, paymentDate: eventDate, sourceAccount })
+          : createAdjustmentEvent({ ...common, direction, eventDate }),
       )
     } catch {
       // O erro já foi exibido.
@@ -284,10 +256,10 @@ export default function InvoiceLifecycleModal({
       <div className="space-y-5">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
-            ['Total', paymentSummary.total],
-            ['Pago', paymentSummary.paid],
-            ['Pendente', paymentSummary.remaining],
-            ['Crédito', paymentSummary.credit],
+            ['Total', lifecycle?.invoiceTotal || 0],
+            ['Pago', lifecycle?.paidAmount || 0],
+            ['Pendente', lifecycle?.remainingAmount || 0],
+            ['Crédito', lifecycle?.creditAmount || 0],
           ].map(([label, value]) => (
             <div
               key={label}
@@ -334,28 +306,31 @@ export default function InvoiceLifecycleModal({
               <div>
                 <p className="mb-2 text-xs font-black text-[--text-secondary]">Tipo de ajuste</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setDirection('credit')}
-                    className={`min-h-11 rounded-xl border text-xs font-bold ${
-                      direction === 'credit'
-                        ? 'border-[--success-border] bg-[--success-bg] text-[--success-text]'
-                        : 'border-[--border-default] text-[--text-secondary]'
-                    }`}
-                  >
-                    Crédito / desconto
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDirection('charge')}
-                    className={`min-h-11 rounded-xl border text-xs font-bold ${
-                      direction === 'charge'
-                        ? 'border-[--warning-border] bg-[--warning-bg] text-[--warning-text]'
-                        : 'border-[--border-default] text-[--text-secondary]'
-                    }`}
-                  >
-                    Acréscimo
-                  </button>
+                  {[
+                    [
+                      'credit',
+                      'Crédito / desconto',
+                      'border-[--success-border] bg-[--success-bg] text-[--success-text]',
+                    ],
+                    [
+                      'charge',
+                      'Acréscimo',
+                      'border-[--warning-border] bg-[--warning-bg] text-[--warning-text]',
+                    ],
+                  ].map(([value, label, selectedClass]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setDirection(value)}
+                      className={`min-h-11 rounded-xl border text-xs font-bold ${
+                        direction === value
+                          ? selectedClass
+                          : 'border-[--border-default] text-[--text-secondary]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
@@ -401,7 +376,7 @@ export default function InvoiceLifecycleModal({
                 }}
                 value={eventDate}
                 onChange={(event) => setEventDate(event.target.value)}
-                className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+                className={NATIVE_INPUT_CLASS}
               />
             </div>
 
@@ -418,8 +393,8 @@ export default function InvoiceLifecycleModal({
                   type="text"
                   value={sourceAccount}
                   onChange={(event) => setSourceAccount(event.target.value)}
-                  placeholder="Ex.: Banco do Brasil"
-                  className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+                  placeholder="Instituição ou conta"
+                  className={NATIVE_INPUT_CLASS}
                 />
               </div>
             )}
@@ -437,9 +412,7 @@ export default function InvoiceLifecycleModal({
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 placeholder={
-                  tab === 'adjustment'
-                    ? 'O motivo é obrigatório para ajustes.'
-                    : 'Informação opcional.'
+                  tab === 'adjustment' ? 'Motivo obrigatório' : 'Opcional'
                 }
                 className="w-full resize-none rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 py-2.5 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
               />
@@ -462,9 +435,8 @@ export default function InvoiceLifecycleModal({
         {tab === 'history' && (
           <div>
             <div className="flex items-center gap-2 rounded-xl bg-[--brand-50] p-3 text-[10px] leading-relaxed text-[--brand-700]">
-              <Receipt size={14} className="flex-shrink-0" />
-              Pagamentos ficam fora de Transações para não duplicar despesas já contabilizadas pelas
-              compras.
+              <History size={14} className="flex-shrink-0" />
+              Pagamentos de faturas não são novas despesas. As compras já foram contabilizadas.
             </div>
 
             <div className="mt-3 max-h-[360px] overflow-y-auto">
@@ -474,7 +446,6 @@ export default function InvoiceLifecycleModal({
                     key={event.id || `${event.type}-${index}`}
                     event={event}
                     allEvents={events}
-                    invoice={invoice}
                     onReverse={handleReverse}
                     loading={loading}
                   />
@@ -483,7 +454,7 @@ export default function InvoiceLifecycleModal({
                 <div className="py-10 text-center">
                   <History size={28} className="mx-auto text-[--text-tertiary]" />
                   <p className="mt-2 text-sm font-black text-[--text-primary]">
-                    Nenhum evento registrado
+                    Nenhum evento
                   </p>
                 </div>
               )}

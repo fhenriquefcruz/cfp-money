@@ -7,11 +7,14 @@ function fromCents(value) {
   return value / 100
 }
 
-function sumCents(items, selector) {
-  return items.reduce((total, item) => total + toCents(selector(item)), 0)
+export function createInvoiceOperationId() {
+  if (typeof globalThis.crypto?.randomUUID !== 'function') {
+    throw new Error('Operação segura indisponível.')
+  }
+  return 'evt_' + globalThis.crypto.randomUUID()
 }
 
-function todayIso(now = new Date()) {
+export function todayIso(now = new Date()) {
   return [
     now.getFullYear(),
     String(now.getMonth() + 1).padStart(2, '0'),
@@ -26,33 +29,29 @@ export function buildInvoiceKey(cardId, invoiceMonth) {
 export function getInvoiceEvents(events = [], cardId, invoiceMonth) {
   const invoiceKey = buildInvoiceKey(cardId, invoiceMonth)
 
+  const date = (event) =>
+    String(
+      event.eventDate || event.paymentDate || event.createdAt?.toDate?.()?.toISOString?.() || '',
+    )
+
   return events
     .filter(
       (event) =>
         event.invoiceKey === invoiceKey ||
         (event.cardId === cardId && event.invoiceMonth === invoiceMonth),
     )
-    .sort((first, second) => {
-      const firstDate =
-        first.eventDate || first.paymentDate || first.createdAt?.toDate?.()?.toISOString?.() || ''
-      const secondDate =
-        second.eventDate ||
-        second.paymentDate ||
-        second.createdAt?.toDate?.()?.toISOString?.() ||
-        ''
-
-      return String(secondDate).localeCompare(String(firstDate))
-    })
+    .sort((first, second) => date(second).localeCompare(date(first)))
 }
 
 export function getPaymentReversibleAmount(payment, invoiceEvents = []) {
   if (!payment || payment.type !== 'payment') return 0
 
-  const reversedCents = sumCents(
-    invoiceEvents.filter(
-      (event) => event.type === 'reversal' && event.reversesEventId === payment.id,
-    ),
-    (event) => event.amount,
+  const reversedCents = invoiceEvents.reduce(
+    (cents, event) =>
+      event.type === 'reversal' && event.reversesEventId === payment.id
+        ? cents + toCents(event.amount)
+        : cents,
+    0,
   )
 
   return fromCents(Math.max(0, toCents(payment.amount) - reversedCents))
@@ -67,25 +66,28 @@ export function buildInvoiceLifecycle({
   temporalStatus = 'forming',
   now = new Date(),
 }) {
-  const adjustmentCents = sumCents(
-    events.filter((event) => event.type === 'adjustment'),
-    (event) => event.signedAmount,
-  )
-  const paymentCents = sumCents(
-    events.filter((event) => event.type === 'payment'),
-    (event) => event.amount,
-  )
-  const reversalCents = sumCents(
-    events.filter((event) => event.type === 'reversal'),
-    (event) => event.amount,
-  )
+  let adjustmentCents = 0
+  let paymentCents = 0
+  let reversalCents = 0
+  let paymentCount = 0
+  let reversalCount = 0
+  let manuallyClosed = false
+  for (const event of events) {
+    if (event.type === 'adjustment') adjustmentCents += toCents(event.signedAmount)
+    else if (event.type === 'payment') {
+      paymentCents += toCents(event.amount)
+      paymentCount++
+    } else if (event.type === 'reversal') {
+      reversalCents += toCents(event.amount)
+      reversalCount++
+    } else if (event.type === 'manual_close') manuallyClosed = true
+  }
 
   const invoiceTotalCents = Math.max(0, toCents(purchaseTotal) + adjustmentCents)
   const baselinePaidCents = Math.max(0, toCents(baselinePaidAmount))
   const paidCents = Math.max(0, baselinePaidCents + paymentCents - reversalCents)
   const remainingCents = Math.max(0, invoiceTotalCents - paidCents)
   const creditCents = Math.max(0, paidCents - invoiceTotalCents)
-  const manuallyClosed = events.some((event) => event.type === 'manual_close')
   const today = todayIso(now)
   const isClosed =
     manuallyClosed ||
@@ -122,8 +124,8 @@ export function buildInvoiceLifecycle({
     paidAmount: fromCents(paidCents),
     remainingAmount: fromCents(remainingCents),
     creditAmount: fromCents(creditCents),
-    paymentCount: events.filter((event) => event.type === 'payment').length,
-    reversalCount: events.filter((event) => event.type === 'reversal').length,
+    paymentCount,
+    reversalCount,
     manuallyClosed,
     isClosed,
     overdue,
@@ -219,6 +221,17 @@ export function createManualCloseEvent({ card, invoiceMonth, eventDate, notes = 
   })
 }
 
+export function canAutoReversePayment(payment, invoiceEvents = []) {
+  return (
+    payment?.type === 'payment' &&
+    /^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(payment.id || '') &&
+    !invoiceEvents.some(
+      (event) => event.type === 'reversal' && event.reversesEventId === payment.id,
+    ) &&
+    toCents(payment.amount) > 0
+  )
+}
+
 export function createReversalEvent({
   card,
   invoiceMonth,
@@ -227,13 +240,19 @@ export function createReversalEvent({
   eventDate,
   notes = '',
 }) {
-  const reversibleAmount = getPaymentReversibleAmount(payment, invoiceEvents)
-
-  if (reversibleAmount <= 0) {
-    throw new Error('Este pagamento já foi totalmente estornado.')
+  if (!canAutoReversePayment(payment, invoiceEvents)) {
+    throw new Error('Pagamento já estornado ou pendente de revisão histórica.')
   }
+  if (
+    payment.invoiceKey !== buildInvoiceKey(card?.id, invoiceMonth) ||
+    payment.cardId !== card.id
+  ) {
+    throw new Error('Pagamento pertence a outra fatura.')
+  }
+  const reversibleAmount = fromCents(toCents(payment.amount))
 
   return {
+    operationId: 'rev_' + payment.id,
     ...createInvoiceEventBase({
       card,
       invoiceMonth,
