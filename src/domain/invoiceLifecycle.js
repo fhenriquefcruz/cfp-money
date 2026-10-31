@@ -7,10 +7,6 @@ function fromCents(value) {
   return value / 100
 }
 
-function sumCents(items, selector) {
-  return items.reduce((total, item) => total + toCents(selector(item)), 0)
-}
-
 export function createInvoiceOperationId() {
   if (typeof globalThis.crypto?.randomUUID !== 'function') {
     throw new Error('Operação segura indisponível.')
@@ -50,11 +46,12 @@ export function getInvoiceEvents(events = [], cardId, invoiceMonth) {
 export function getPaymentReversibleAmount(payment, invoiceEvents = []) {
   if (!payment || payment.type !== 'payment') return 0
 
-  const reversedCents = sumCents(
-    invoiceEvents.filter(
-      (event) => event.type === 'reversal' && event.reversesEventId === payment.id,
-    ),
-    (event) => event.amount,
+  const reversedCents = invoiceEvents.reduce(
+    (cents, event) =>
+      event.type === 'reversal' && event.reversesEventId === payment.id
+        ? cents + toCents(event.amount)
+        : cents,
+    0,
   )
 
   return fromCents(Math.max(0, toCents(payment.amount) - reversedCents))
