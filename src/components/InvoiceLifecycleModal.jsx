@@ -41,7 +41,7 @@ const EVENT_ICONS = {
   adjustment: Scale,
 }
 
-function EventRow({ event, allEvents, invoice, onReverse, loading }) {
+function EventRow({ event, allEvents, onReverse, loading }) {
   const reversible = event.type === 'payment' ? getPaymentReversibleAmount(event, allEvents) : 0
   const canReverse = reversible > 0 && canAutoReversePayment(event, allEvents)
   const EventIcon = EVENT_ICONS[event.type] || LockKeyhole
@@ -88,7 +88,7 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
           <button
             type="button"
             disabled={loading}
-            onClick={() => onReverse(event, invoice)}
+            onClick={() => onReverse(event)}
             className="min-h-8 rounded-lg px-2 text-[9px] font-black text-[--danger-text] hover:bg-[--danger-bg] disabled:opacity-50"
           >
             Estornar
@@ -451,7 +451,6 @@ export default function InvoiceLifecycleModal({
                     key={event.id || `${event.type}-${index}`}
                     event={event}
                     allEvents={events}
-                    invoice={invoice}
                     onReverse={handleReverse}
                     loading={loading}
                   />
