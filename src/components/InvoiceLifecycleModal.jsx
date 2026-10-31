@@ -35,10 +35,16 @@ const EVENT_LABELS = {
   adjustment: 'Ajuste',
   manual_close: 'Fechamento manual',
 }
+const EVENT_ICONS = {
+  payment: CheckCircle2,
+  reversal: RotateCcw,
+  adjustment: Scale,
+}
 
 function EventRow({ event, allEvents, invoice, onReverse, loading }) {
   const reversible = event.type === 'payment' ? getPaymentReversibleAmount(event, allEvents) : 0
   const canReverse = reversible > 0 && canAutoReversePayment(event, allEvents)
+  const EventIcon = EVENT_ICONS[event.type] || LockKeyhole
 
   const value =
     event.type === 'adjustment'
@@ -50,15 +56,7 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
   return (
     <div className="flex items-start gap-3 border-b border-[--border-subtle] py-3 last:border-b-0">
       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[--bg-hover] text-[--text-secondary]">
-        {event.type === 'payment' ? (
-          <CheckCircle2 size={15} />
-        ) : event.type === 'reversal' ? (
-          <RotateCcw size={15} />
-        ) : event.type === 'adjustment' ? (
-          <Scale size={15} />
-        ) : (
-          <LockKeyhole size={15} />
-        )}
+        <EventIcon size={15} />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -180,29 +178,16 @@ export default function InvoiceLifecycleModal({
     if (!invoice) return
 
     try {
-      if (tab === 'payment') {
-        await submitEvent(
-          createPaymentEvent({
-            card: invoice.card,
-            invoiceMonth,
-            amount: parseCurrency(amount),
-            paymentDate: eventDate,
-            sourceAccount,
-            notes,
-          }),
-        )
-        return
+      const common = {
+        card: invoice.card,
+        invoiceMonth,
+        amount: parseCurrency(amount),
+        notes,
       }
-
       await submitEvent(
-        createAdjustmentEvent({
-          card: invoice.card,
-          invoiceMonth,
-          amount: parseCurrency(amount),
-          direction,
-          eventDate,
-          notes,
-        }),
+        tab === 'payment'
+          ? createPaymentEvent({ ...common, paymentDate: eventDate, sourceAccount })
+          : createAdjustmentEvent({ ...common, direction, eventDate }),
       )
     } catch {
       // O erro já foi exibido.
