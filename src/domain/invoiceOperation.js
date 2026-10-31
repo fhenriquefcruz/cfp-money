@@ -11,6 +11,7 @@ const FIELDS = [
   'notes',
 ]
 
+const PAYMENT_ID_PATTERN = /^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i
 const validMonth = (value) => /^(?:19|20)\d{2}-(0[1-9]|1[0-2])$/.test(value || '')
 const validDate = (value) => {
   if (typeof value !== 'string' || !/^(?:19|20)\d{2}-\d{2}-\d{2}$/.test(value)) {
@@ -29,7 +30,7 @@ const centsExact = (value) =>
 export { createInvoiceOperationId } from './invoiceLifecycle.js'
 
 export function reversalOperationId(paymentId) {
-  if (!/^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(paymentId || '')) {
+  if (!PAYMENT_ID_PATTERN.test(paymentId || '')) {
     throw new Error('Pagamento histórico: estorno exige revisão.')
   }
   return 'rev_' + paymentId
@@ -49,12 +50,9 @@ export function validateInvoiceOperation(value) {
     throw new Error('Campos incompatíveis com o evento.')
   }
   if (
-    !/^(?:evt|rev_evt)_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(
-      value.operationId || '',
-    ) ||
     (value.type === 'reversal'
       ? value.operationId !== reversalOperationId(value.reversesEventId)
-      : value.operationId.startsWith('rev_')) ||
+      : !PAYMENT_ID_PATTERN.test(value.operationId || '')) ||
     !limitedText(value.cardId, 128) ||
     !value.cardId ||
     value.cardId.includes('/') ||
