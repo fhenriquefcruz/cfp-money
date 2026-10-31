@@ -13,6 +13,9 @@ import {
 import { formatCurrency, formatDate } from '../utils'
 import { Button, Modal } from './ui'
 
+const NATIVE_INPUT_CLASS =
+  'min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]'
+
 function maskCurrency(raw) {
   const digits = String(raw || '').replace(/\D/g, '')
   if (!digits) return ''
@@ -161,7 +164,7 @@ export default function InvoiceLifecycleModal({
       }
     } catch (submitError) {
       // Preserva a operationId após erro/timeout; reenviar não cria outro fato.
-      setError(submitError?.message || 'Não foi possível registrar o evento.')
+      setError(submitError?.message || 'Não foi possível salvar.')
       throw submitError
     } finally {
       submitting.current = false
@@ -373,7 +376,7 @@ export default function InvoiceLifecycleModal({
                 }}
                 value={eventDate}
                 onChange={(event) => setEventDate(event.target.value)}
-                className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+                className={NATIVE_INPUT_CLASS}
               />
             </div>
 
@@ -390,8 +393,8 @@ export default function InvoiceLifecycleModal({
                   type="text"
                   value={sourceAccount}
                   onChange={(event) => setSourceAccount(event.target.value)}
-                  placeholder="Ex.: Banco do Brasil"
-                  className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+                  placeholder="Instituição ou conta"
+                  className={NATIVE_INPUT_CLASS}
                 />
               </div>
             )}
@@ -451,7 +454,7 @@ export default function InvoiceLifecycleModal({
                 <div className="py-10 text-center">
                   <History size={28} className="mx-auto text-[--text-tertiary]" />
                   <p className="mt-2 text-sm font-black text-[--text-primary]">
-                    Nenhum evento registrado
+                    Nenhum evento
                   </p>
                 </div>
               )}
