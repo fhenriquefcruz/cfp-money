@@ -34,7 +34,12 @@ export function getInvoiceEvents(events = [], cardId, invoiceMonth) {
   const invoiceKey = buildInvoiceKey(cardId, invoiceMonth)
 
   const date = (event) =>
-    String(event.eventDate || event.paymentDate || event.createdAt?.toDate?.()?.toISOString?.() || '')
+    String(
+      event.eventDate ||
+        event.paymentDate ||
+        event.createdAt?.toDate?.()?.toISOString?.() ||
+        '',
+    )
 
   return events
     .filter(
