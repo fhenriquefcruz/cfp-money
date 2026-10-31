@@ -1,0 +1,66 @@
+name: Financial stacked integration preflight
+
+on:
+  pull_request:
+    branches:
+      - fix/gate-2-invoice-idempotency-rules
+    paths:
+      - .github/workflows/financial-stacked-preflight.yml
+      - .github/workflows/gate2-invoice-invariants.yml
+      - firestore.rules
+      - src/**
+      - tests/**
+      - scripts/**
+      - worker/**
+      - package.json
+      - package-lock.json
+
+permissions:
+  contents: read
+
+jobs:
+  combined-financial-gates:
+    name: Gates 0–2 combined (synthetic only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Checkout candidate PR head without deploying
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Merge prerequisite branch tips only in disposable runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            fix/gate-2-invoice-idempotency-rules \
+            fix/financial-gates-0-1-parity
+          git -c user.name='CI Preflight' -c user.email='ci-preflight@example.invalid' \
+            merge --no-edit origin/fix/gate-2-invoice-idempotency-rules
+          git -c user.name='CI Preflight' -c user.email='ci-preflight@example.invalid' \
+            merge --no-edit origin/fix/financial-gates-0-1-parity
+          printf 'Temporary merged SHA: '
+          git rev-parse HEAD
+          git status --short
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install frontend, Functions and Worker dependencies
+        run: |
+          npm ci
+          npm ci --prefix functions
+          npm ci --prefix worker/email-notifications
+      - name: Run combined application, Functions, Worker and bundle gates
+        run: npm run validate:all
+      - name: Check formatting across combined sources
+        run: npm run format:check
+      - name: Verify UID isolation, payment retry and reversal in Firestore Emulator
+        run: npm run test:rules
