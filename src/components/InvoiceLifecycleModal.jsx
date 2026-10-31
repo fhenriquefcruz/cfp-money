@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { CheckCircle2, History, LockKeyhole, Receipt, RotateCcw, Scale, Wallet } from 'lucide-react'
+import { History, LockKeyhole, RotateCcw, Scale, Wallet } from 'lucide-react'
 import {
   createAdjustmentEvent,
   createManualCloseEvent,
@@ -36,7 +36,7 @@ const EVENT_LABELS = {
   manual_close: 'Fechamento manual',
 }
 const EVENT_ICONS = {
-  payment: CheckCircle2,
+  payment: Wallet,
   reversal: RotateCcw,
   adjustment: Scale,
 }
@@ -439,7 +439,7 @@ export default function InvoiceLifecycleModal({
         {tab === 'history' && (
           <div>
             <div className="flex items-center gap-2 rounded-xl bg-[--brand-50] p-3 text-[10px] leading-relaxed text-[--brand-700]">
-              <Receipt size={14} className="flex-shrink-0" />
+              <History size={14} className="flex-shrink-0" />
               Pagamentos ficam fora de Transações para não duplicar despesas já contabilizadas pelas
               compras.
             </div>
