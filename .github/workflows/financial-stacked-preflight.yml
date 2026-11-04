@@ -60,7 +60,24 @@ jobs:
           npm ci --prefix worker/email-notifications
       - name: Run combined application, Functions, Worker and bundle gates
         run: npm run validate:all
+      - name: Diagnose largest JavaScript chunks without changing budgets
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          if [ ! -d dist/assets ]; then exit 0; fi
+          node --input-type=module <<'NODE'
+          import { readFileSync, readdirSync } from 'node:fs'
+          import { gzipSync } from 'node:zlib'
+          const assets = readdirSync('dist/assets').filter((file) => file.endsWith('.js'))
+            .map((file) => ({ file, bytes: gzipSync(readFileSync('dist/assets/' + file)).length }))
+            .sort((first, second) => second.bytes - first.bytes)
+          console.log('Maiores chunks JavaScript gzip (somente diagnóstico):')
+          console.table(assets.slice(0, 15))
+          console.log('JS total gzip:', assets.reduce((sum, asset) => sum + asset.bytes, 0))
+          NODE
       - name: Check formatting across combined sources
+        if: ${{ !cancelled() }}
         run: npm run format:check
       - name: Verify UID isolation, payment retry and reversal in Firestore Emulator
+        if: ${{ !cancelled() }}
         run: npm run test:rules
