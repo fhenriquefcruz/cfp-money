@@ -1,0 +1,59 @@
+name: Temporary combined bundle inventory
+
+on:
+  push:
+    branches:
+      - fix/gate-2-2-reversal-concurrency
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Measure PR branch alone
+        shell: bash
+        run: |
+          npm run build
+          node --input-type=module <<'NODE'
+          import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
+          import { gzipSync } from 'node:zlib'
+          const root = 'dist/assets/'
+          const sizes = Object.fromEntries(readdirSync(root).filter(n => n.endsWith('.js')).map(n => [n.replace(/-[A-Za-z0-9_-]+\.js$/, '.js'), gzipSync(readFileSync(root+n)).length]))
+          writeFileSync('/tmp/pr-chunks.json', JSON.stringify(sizes))
+          console.log('PR branch JS total bytes:', Object.values(sizes).reduce((a,b)=>a+b,0))
+          NODE
+      - name: Merge prerequisite tips only in disposable runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin fix/gate-2-invoice-idempotency-rules fix/financial-gates-0-1-parity
+          git -c user.name='CI Diagnostic' -c user.email='ci-diagnostic@example.invalid' merge --no-edit origin/fix/gate-2-invoice-idempotency-rules
+          git -c user.name='CI Diagnostic' -c user.email='ci-diagnostic@example.invalid' merge --no-edit origin/fix/financial-gates-0-1-parity
+      - name: Compare compiled chunks without publishing
+        shell: bash
+        run: |
+          npm run build
+          node --input-type=module <<'NODE'
+          import { readdirSync, readFileSync } from 'node:fs'
+          import { gzipSync } from 'node:zlib'
+          const root = 'dist/assets/'
+          const base = JSON.parse(readFileSync('/tmp/pr-chunks.json','utf8'))
+          const current = Object.fromEntries(readdirSync(root).filter(n => n.endsWith('.js')).map(n => [n.replace(/-[A-Za-z0-9_-]+\.js$/, '.js'), gzipSync(readFileSync(root+n)).length]))
+          const sum = o => Object.values(o).reduce((a,b)=>a+b,0)
+          console.log('PR alone bytes:',sum(base),'combined bytes:',sum(current),'difference:',sum(current)-sum(base))
+          const all = [...new Set([...Object.keys(base),...Object.keys(current)])]
+          const changes = all.map(k=>({chunk:k,pr:base[k]||0,combined:current[k]||0,delta:(current[k]||0)-(base[k]||0)})).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta))
+          console.table(changes.slice(0,30))
+          NODE
