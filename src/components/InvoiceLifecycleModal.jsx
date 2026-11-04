@@ -20,10 +20,7 @@ function maskCurrency(raw) {
   const digits = String(raw || '').replace(/\D/g, '')
   if (!digits) return ''
 
-  return new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(digits) / 100)
+  return formatCurrency(Number(digits) / 100).replace(/^R\$\s*/, '')
 }
 
 function parseCurrency(masked) {
@@ -58,9 +55,7 @@ function EventRow({ event, allEvents, onReverse, loading }) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-black text-[--text-primary]">
-          {eventLabel}
-        </p>
+        <p className="text-xs font-black text-[--text-primary]">{eventLabel}</p>
         <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
           {formatDate(event.eventDate || event.paymentDate)}
           {event.sourceAccount ? ` · ${event.sourceAccount}` : ''}
@@ -411,9 +406,7 @@ export default function InvoiceLifecycleModal({
                 rows={3}
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                placeholder={
-                  tab === 'adjustment' ? 'Motivo obrigatório' : 'Opcional'
-                }
+                placeholder={tab === 'adjustment' ? 'Motivo obrigatório' : 'Opcional'}
                 className="w-full resize-none rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 py-2.5 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
               />
             </div>
