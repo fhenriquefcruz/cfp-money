@@ -1,5 +1,3 @@
-import { PAYMENT_ID_PATTERN } from './invoiceLifecycle.js'
-
 // Contrato de escrita da fatura: somente dados, sem Firebase ou efeitos colaterais.
 const FIELDS = [
   'operationId',
@@ -13,6 +11,7 @@ const FIELDS = [
   'notes',
 ]
 
+const PAYMENT_ID_PATTERN = /^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i
 const validMonth = (value) => /^(?:19|20)\d{2}-(0[1-9]|1[0-2])$/.test(value || '')
 const validDate = (value) => {
   if (typeof value !== 'string' || !/^(?:19|20)\d{2}-\d{2}-\d{2}$/.test(value)) {
