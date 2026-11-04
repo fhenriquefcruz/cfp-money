@@ -123,28 +123,33 @@ export default function CategoryCompositionVisual({
             </>
           )
           const style = { '--category-accent': item.color || UNCATEGORIZED_COLOR }
+          const common = 'category-composition-item group'
           const key = item.categoryId || item.categoryName
           const href = item.categoryId && getHref?.(item)
-          const selectable = Boolean(item.categoryId && onSelect)
-          const Element = href ? Link : selectable ? 'button' : 'div'
-          const interaction = href
-            ? { to: href }
-            : selectable
-              ? {
-                  type: 'button',
-                  'aria-pressed': selectedCategoryId === item.categoryId,
-                  onClick: () => onSelect(item.categoryId),
-                }
-              : {}
+          if (href)
+            return (
+              <Link key={key} to={href} className={common} style={style}>
+                {content}
+              </Link>
+            )
+          if (item.categoryId && onSelect) {
+            return (
+              <button
+                key={key}
+                type="button"
+                className={common}
+                style={style}
+                aria-pressed={selectedCategoryId === item.categoryId}
+                onClick={() => onSelect(item.categoryId)}
+              >
+                {content}
+              </button>
+            )
+          }
           return (
-            <Element
-              key={key}
-              className="category-composition-item group"
-              style={style}
-              {...interaction}
-            >
+            <div key={key} className={common} style={style}>
               {content}
-            </Element>
+            </div>
           )
         })}
       </div>
