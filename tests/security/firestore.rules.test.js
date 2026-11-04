@@ -8,6 +8,7 @@ import {
 } from '@firebase/rules-unit-testing'
 import {
   Timestamp,
+  addDoc,
   collection,
   getDocs,
   deleteField,
@@ -665,6 +666,22 @@ test('Gate 2: titular lê fatura legada, mas não altera documento histórico', 
   const ref = doc(alice, 'users', 'alice', 'invoiceEvents', 'old-payment')
   assert.equal((await assertSucceeds(getDoc(ref))).data().amount, 100)
   await assertFails(updateDoc(ref, { amount: 300 }))
+})
+
+test('Gate 2: cliente legado simulado não grava evento sem operationId', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const events = collection(alice, 'users', 'alice', 'invoiceEvents')
+  const payment = syntheticInvoicePayment()
+  const legacyPayload = { ...payment }
+  delete legacyPayload.operationId
+
+  await assertFails(addDoc(events, { ...legacyPayload, createdAt: serverTimestamp() }))
+  assert.equal((await getDocs(events)).size, 0)
+
+  assert.equal(await persistInvoiceEventOnce(alice, 'alice', payment), payment.operationId)
+  const stored = await getDocs(events)
+  assert.equal(stored.size, 1)
+  assert.equal(stored.docs[0].id, payment.operationId)
 })
 
 test('Gate 2: novas transações exigem amount numérico, sem bloquear correção de legado', async () => {
