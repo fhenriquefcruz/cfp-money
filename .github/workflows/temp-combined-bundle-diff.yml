@@ -57,3 +57,18 @@ jobs:
           const changes = all.map(k=>({chunk:k,pr:base[k]||0,combined:current[k]||0,delta:(current[k]||0)-(base[k]||0)})).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta))
           console.table(changes.slice(0,30))
           NODE
+      - name: Experiment with grouping finance modules (runner only)
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs'
+          const file = 'vite.config.js'
+          const before = readFileSync(file, 'utf8')
+          const needle = 'groups: ['
+          if (before.split(needle).length !== 2) throw new Error('Unexpected groups config')
+          const insert = `groups: [
+            { name: 'finance', test: /(?:financialCore|savings)\\.js$/ },`
+          writeFileSync(file, before.replace(needle, insert))
+          NODE
+          npm run build
+          npm run check:performance || true
