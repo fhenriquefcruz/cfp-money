@@ -3,7 +3,6 @@ import {
   CalendarDays,
   CircleDollarSign,
   ChevronLeft,
-  ChevronRight,
   CreditCard,
   Plus,
   ReceiptText,
@@ -381,7 +380,7 @@ function CreditCardsCenterContent() {
               className="flex h-11 w-11 items-center justify-center rounded-xl border border-[--border-default] bg-[--bg-surface] text-[--text-secondary] hover:bg-[--bg-hover]"
               aria-label="Fatura do próximo mês"
             >
-              <ChevronRight size={17} />
+              <ChevronLeft size={17} className="rotate-180" />
             </button>
 
             <button
