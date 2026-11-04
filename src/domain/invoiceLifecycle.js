@@ -1,3 +1,5 @@
+export const PAYMENT_ID_PATTERN = /^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i
+
 function toCents(value) {
   const amount = Number(value)
   return Number.isFinite(amount) ? Math.round(amount * 100) : 0
@@ -224,7 +226,7 @@ export function createManualCloseEvent({ card, invoiceMonth, eventDate, notes = 
 export function canAutoReversePayment(payment, invoiceEvents = []) {
   return (
     payment?.type === 'payment' &&
-    /^evt_[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(payment.id || '') &&
+    PAYMENT_ID_PATTERN.test(payment.id || '') &&
     !invoiceEvents.some(
       (event) => event.type === 'reversal' && event.reversesEventId === payment.id,
     ) &&
