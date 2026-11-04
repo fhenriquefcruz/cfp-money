@@ -13,6 +13,8 @@ import {
 import { formatCurrency, formatDate } from '../utils'
 import { Button, Modal } from './ui'
 
+const FIELD_LABEL_CLASS = 'mb-1.5 block text-sm font-medium text-[--text-secondary]'
+
 const NATIVE_INPUT_CLASS =
   'min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]'
 
@@ -120,7 +122,7 @@ export default function InvoiceLifecycleModal({
     if (!isOpen || !invoice || pendingOperation.current) return
 
     setTab('payment')
-    setAmount(maskCurrency(String(Math.round(Number(lifecycle?.remainingAmount || 0) * 100))))
+    setAmount(maskCurrency(Math.round(Number(lifecycle?.remainingAmount || 0) * 100)))
     setEventDate(todayIso())
     setSourceAccount('')
     setNotes('')
@@ -310,7 +312,7 @@ export default function InvoiceLifecycleModal({
             <div>
               <label
                 htmlFor="invoice-event-amount"
-                className="mb-1.5 block text-sm font-medium text-[--text-secondary]"
+                className={FIELD_LABEL_CLASS}
               >
                 {tab === 'payment' ? 'Valor pago' : 'Valor do ajuste'}
               </label>
@@ -332,7 +334,7 @@ export default function InvoiceLifecycleModal({
             <div>
               <label
                 htmlFor="invoice-event-date"
-                className="mb-1.5 block text-sm font-medium text-[--text-secondary]"
+                className={FIELD_LABEL_CLASS}
               >
                 Data do evento
               </label>
@@ -356,7 +358,7 @@ export default function InvoiceLifecycleModal({
               <div>
                 <label
                   htmlFor="invoice-source-account"
-                  className="mb-1.5 block text-sm font-medium text-[--text-secondary]"
+                  className={FIELD_LABEL_CLASS}
                 >
                   Conta utilizada
                 </label>
@@ -374,7 +376,7 @@ export default function InvoiceLifecycleModal({
             <div>
               <label
                 htmlFor="invoice-event-notes"
-                className="mb-1.5 block text-sm font-medium text-[--text-secondary]"
+                className={FIELD_LABEL_CLASS}
               >
                 Observações
               </label>
