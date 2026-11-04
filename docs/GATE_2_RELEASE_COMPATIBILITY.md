@@ -22,16 +22,16 @@ issue #165.
 
 ## Matriz de compatibilidade obrigatória
 
-| Cliente e condição | Com regra antiga | Com regra nova | Aceite |
-| --- | --- | --- | --- |
-| App novo, online | Pode criar evento com ID estável | Deve criar uma vez | Retry idêntico retorna mesmo ID |
-| App novo, timeout após commit | Pode reenviar mesmo ID | Deve ser idempotente | Sem segunda liquidação |
-| App antigo, aba aberta | Pode usar `addDoc` legado | Escrita pode ser negada | Aviso claro e atualização, sem novo ID automático |
-| PWA antigo, cache offline | Pode guardar UI antiga | Pode falhar ao reconectar | Recuperação sem apagar histórico |
-| App novo, pagamento legado | Leitura preservada | Leitura preservada | Estorno automático indisponível quando ambíguo |
-| Duas sessões, mesmo `operationId` | Concorrência a verificar | Somente um evento | Emulator + duas instâncias |
-| Duas operações com IDs distintos | Dois fatos possíveis | Dois fatos possíveis | Nunca alegar deduplicação bancária |
-| UID de outro titular | Acesso negado | Acesso negado | Emulator sem vazamento entre contas |
+| Cliente e condição                | Com regra antiga                 | Com regra nova            | Aceite                                            |
+| --------------------------------- | -------------------------------- | ------------------------- | ------------------------------------------------- |
+| App novo, online                  | Pode criar evento com ID estável | Deve criar uma vez        | Retry idêntico retorna mesmo ID                   |
+| App novo, timeout após commit     | Pode reenviar mesmo ID           | Deve ser idempotente      | Sem segunda liquidação                            |
+| App antigo, aba aberta            | Pode usar `addDoc` legado        | Escrita pode ser negada   | Aviso claro e atualização, sem novo ID automático |
+| PWA antigo, cache offline         | Pode guardar UI antiga           | Pode falhar ao reconectar | Recuperação sem apagar histórico                  |
+| App novo, pagamento legado        | Leitura preservada               | Leitura preservada        | Estorno automático indisponível quando ambíguo    |
+| Duas sessões, mesmo `operationId` | Concorrência a verificar         | Somente um evento         | Emulator + duas instâncias                        |
+| Duas operações com IDs distintos  | Dois fatos possíveis             | Dois fatos possíveis      | Nunca alegar deduplicação bancária                |
+| UID de outro titular              | Acesso negado                    | Acesso negado             | Emulator sem vazamento entre contas               |
 
 ## Portões anteriores à publicação
 
