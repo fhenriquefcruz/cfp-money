@@ -157,69 +157,59 @@ export default function InvoiceLifecycleModal({
         setAmount('')
         setSourceAccount('')
       }
-    } catch (submitError) {
-      // Preserva a operationId após erro/timeout; reenviar não cria outro fato.
-      setError(submitError?.message || 'Não foi possível salvar.')
-      throw submitError
     } finally {
+      // A operationId permanece estável se a escrita falhar ou expirar.
       submitting.current = false
       setLoading(false)
     }
   }
 
-  const handleSubmit = async () => {
-    if (!invoice) return
-
+  const submitSafely = async (buildEvent) => {
     try {
-      const common = {
+      await submitEvent(buildEvent())
+    } catch (submitError) {
+      setError(submitError?.message || 'Não foi possível salvar.')
+    }
+  }
+
+  const handleSubmit = () => {
+    if (!invoice) return
+    const common = {
+      card: invoice.card,
+      invoiceMonth,
+      amount: parseCurrency(amount),
+      notes,
+    }
+    return submitSafely(() =>
+      tab === 'payment'
+        ? createPaymentEvent({ ...common, paymentDate: eventDate, sourceAccount })
+        : createAdjustmentEvent({ ...common, direction, eventDate }),
+    )
+  }
+
+  const handleManualClose = () => {
+    if (!invoice) return
+    return submitSafely(() =>
+      createManualCloseEvent({
         card: invoice.card,
         invoiceMonth,
-        amount: parseCurrency(amount),
+        eventDate,
         notes,
-      }
-      await submitEvent(
-        tab === 'payment'
-          ? createPaymentEvent({ ...common, paymentDate: eventDate, sourceAccount })
-          : createAdjustmentEvent({ ...common, direction, eventDate }),
-      )
-    } catch {
-      // O erro já foi exibido.
-    }
+      }),
+    )
   }
 
-  const handleManualClose = async () => {
-    if (!invoice) return
-
-    try {
-      await submitEvent(
-        createManualCloseEvent({
-          card: invoice.card,
-          invoiceMonth,
-          eventDate,
-          notes,
-        }),
-      )
-    } catch {
-      // O erro já foi exibido.
-    }
-  }
-
-  const handleReverse = async (payment) => {
-    try {
-      await submitEvent(
-        createReversalEvent({
-          card: invoice.card,
-          invoiceMonth,
-          payment,
-          invoiceEvents: events,
-          eventDate: todayIso(),
-          notes: `Estorno do pagamento de ${formatCurrency(payment.amount)}.`,
-        }),
-      )
-    } catch {
-      // O erro já foi exibido.
-    }
-  }
+  const handleReverse = (payment) =>
+    submitSafely(() =>
+      createReversalEvent({
+        card: invoice.card,
+        invoiceMonth,
+        payment,
+        invoiceEvents: events,
+        eventDate: todayIso(),
+        notes: `Estorno do pagamento de ${formatCurrency(payment.amount)}.`,
+      }),
+    )
 
   if (!invoice) return null
 
