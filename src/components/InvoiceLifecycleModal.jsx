@@ -18,11 +18,13 @@ const NATIVE_INPUT_CLASS =
 
 function maskCurrency(raw) {
   const digits = String(raw || '').replace(/\D/g, '')
-  return digits ? formatCurrency(Number(digits) / 100).replace(/^R\$\s*/, '') : ''
+  if (!digits) return ''
+
+  return formatCurrency(Number(digits) / 100).replace(/^R\$\s*/, '')
 }
 
 function parseCurrency(masked) {
-  return Number(String(masked || '').replace(/\D/g, '')) / 100
+  return Number(String(masked || '').replace(/\D/g, '')) / 100 || 0
 }
 
 const EVENT_INFO = {
@@ -37,8 +39,12 @@ function EventRow({ event, allEvents, onReverse, loading }) {
   const canReverse = reversible > 0 && canAutoReversePayment(event, allEvents)
   const [eventLabel, EventIcon] = EVENT_INFO[event.type] || ['Evento', LockKeyhole]
 
-  const rawValue = event.type === 'adjustment' ? event.signedAmount : event.amount
-  const value = Number(rawValue || 0) * (event.type === 'reversal' ? -1 : 1)
+  const value =
+    event.type === 'adjustment'
+      ? Number(event.signedAmount || 0)
+      : event.type === 'reversal'
+        ? -Number(event.amount || 0)
+        : Number(event.amount || 0)
 
   return (
     <div className="flex items-start gap-3 border-b border-[--border-subtle] py-3 last:border-b-0">
