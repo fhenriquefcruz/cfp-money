@@ -24,9 +24,7 @@ function maskCurrency(raw) {
 }
 
 function parseCurrency(masked) {
-  if (!masked) return 0
-
-  return Number(String(masked).replace(/\./g, '').replace(',', '.')) || 0
+  return Number(String(masked || '').replace(/\D/g, '')) / 100 || 0
 }
 
 const EVENT_INFO = {
@@ -172,38 +170,27 @@ export default function InvoiceLifecycleModal({
     }
   }
 
+  const eventBase = { card: invoice?.card, invoiceMonth, eventDate, notes }
+
   const handleSubmit = () => {
     if (!invoice) return
-    const common = {
-      card: invoice.card,
-      invoiceMonth,
-      amount: parseCurrency(amount),
-      notes,
-    }
+    const common = { ...eventBase, amount: parseCurrency(amount) }
     return submitSafely(() =>
       tab === 'payment'
         ? createPaymentEvent({ ...common, paymentDate: eventDate, sourceAccount })
-        : createAdjustmentEvent({ ...common, direction, eventDate }),
+        : createAdjustmentEvent({ ...common, direction }),
     )
   }
 
   const handleManualClose = () => {
     if (!invoice) return
-    return submitSafely(() =>
-      createManualCloseEvent({
-        card: invoice.card,
-        invoiceMonth,
-        eventDate,
-        notes,
-      }),
-    )
+    return submitSafely(() => createManualCloseEvent(eventBase))
   }
 
   const handleReverse = (payment) =>
     submitSafely(() =>
       createReversalEvent({
-        card: invoice.card,
-        invoiceMonth,
+        ...eventBase,
         payment,
         invoiceEvents: events,
         eventDate: todayIso(),
