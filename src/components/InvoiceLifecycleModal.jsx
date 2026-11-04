@@ -436,9 +436,7 @@ export default function InvoiceLifecycleModal({
               ) : (
                 <div className="py-10 text-center">
                   <History size={28} className="mx-auto text-[--text-tertiary]" />
-                  <p className="mt-2 text-sm font-black text-[--text-primary]">
-                    Nenhum evento
-                  </p>
+                  <p className="mt-2 text-sm font-black text-[--text-primary]">Nenhum evento</p>
                 </div>
               )}
             </div>
