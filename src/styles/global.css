@@ -385,34 +385,3 @@ img {
     color: black;
   }
 }
-
-/* Estados de fatura: nomes curtos no bundle e cores guiadas pelos tokens do tema. */
-.credit-card-badge--brand {
-  background-color: var(--brand-100);
-  color: var(--brand-700);
-}
-
-.credit-card-badge--warning {
-  background-color: var(--warning-bg);
-  color: var(--warning-text);
-}
-
-.credit-card-badge--danger {
-  background-color: var(--danger-bg);
-  color: var(--danger-text);
-}
-
-.credit-card-badge--success {
-  background-color: var(--success-bg);
-  color: var(--success-text);
-}
-
-.credit-card-badge--secondary {
-  background-color: var(--bg-hover);
-  color: var(--text-secondary);
-}
-
-.credit-card-badge--tertiary {
-  background-color: var(--bg-hover);
-  color: var(--text-tertiary);
-}
