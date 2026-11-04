@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -70,8 +71,31 @@ if (sourceWorker.includes('cache.put(request, copy)')) {
 const generatedWorkerPath = join(root, 'dist/sw.js')
 const metadataPath = join(root, 'dist/pwa-build.json')
 
+let generatedPrecacheUrls = null
+
 if (existsSync(generatedWorkerPath)) {
   const generatedWorker = readFileSync(generatedWorkerPath, 'utf8')
+
+  try {
+    execFileSync(process.execPath, ['--check', generatedWorkerPath], { stdio: 'pipe' })
+  } catch {
+    fail('dist/sw.js contém sintaxe JavaScript inválida')
+  }
+
+  const listMarker = 'const PRECACHE_URLS = '
+  const listStart = generatedWorker.indexOf(listMarker)
+  const listEnd = generatedWorker.indexOf('\nconst PRECACHE_URL_SET', listStart)
+  if (listStart < 0 || listEnd < 0) {
+    fail('dist/sw.js não contém o manifesto de precache')
+  } else {
+    try {
+      generatedPrecacheUrls = JSON.parse(
+        generatedWorker.slice(listStart + listMarker.length, listEnd).trim(),
+      )
+    } catch {
+      fail('dist/sw.js contém manifesto de precache inválido')
+    }
+  }
 
   if (
     generatedWorker.includes('__SW_VERSION__') ||
@@ -103,6 +127,13 @@ if (existsSync(metadataPath)) {
 
     if (!Array.isArray(metadata.precacheUrls) || metadata.precacheUrls.length === 0) {
       fail('pwa-build.json não contém assets para precache')
+    }
+
+    if (
+      generatedPrecacheUrls &&
+      JSON.stringify(generatedPrecacheUrls) !== JSON.stringify(metadata.precacheUrls)
+    ) {
+      fail('manifesto de precache difere do inventário da PWA')
     }
 
     if (
