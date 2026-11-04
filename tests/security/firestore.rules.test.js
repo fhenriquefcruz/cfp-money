@@ -15,12 +15,15 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  orderBy,
+  query,
   runTransaction,
   serverTimestamp,
   setDoc,
   updateDoc,
 } from 'firebase/firestore'
 import { persistInvoiceEventOnce } from '../../src/services/invoiceEventsRepository.js'
+import { getInvoiceEvents } from '../../src/domain/invoiceLifecycle.js'
 
 const PROJECT_ID = 'demo-cfp-money-security'
 
@@ -666,6 +669,32 @@ test('Gate 2: titular lê fatura legada, mas não altera documento histórico', 
   const ref = doc(alice, 'users', 'alice', 'invoiceEvents', 'old-payment')
   assert.equal((await assertSucceeds(getDoc(ref))).data().amount, 100)
   await assertFails(updateDoc(ref, { amount: 300 }))
+})
+
+test('Gate 2: pagamento legado sem eventDate permanece na leitura e usa paymentDate', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const invoiceEvents = collection(alice, 'users', 'alice', 'invoiceEvents')
+  const legacyId = 'legacy-payment-date-only'
+
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'alice', 'invoiceEvents', legacyId), {
+      type: 'payment',
+      cardId: 'legacy-card',
+      invoiceMonth: '2025-12',
+      invoiceKey: 'legacy-card:2025-12',
+      paymentDate: '2025-12-15',
+      amount: 100,
+    })
+  })
+
+  // Firestore orderBy exclui documentos sem o campo, mesmo quando o documento é legível.
+  assert.equal((await getDocs(query(invoiceEvents, orderBy('eventDate', 'desc')))).size, 0)
+
+  // A consulta do aplicativo não deve depender de eventDate para preservar o histórico.
+  const documents = await assertSucceeds(getDocs(invoiceEvents))
+  assert.equal(documents.size, 1)
+  const events = documents.docs.map((entry) => ({ id: entry.id, ...entry.data() }))
+  assert.equal(getInvoiceEvents(events, 'legacy-card', '2025-12')[0].id, legacyId)
 })
 
 test('Gate 2: cliente legado simulado não grava evento sem operationId', async () => {
