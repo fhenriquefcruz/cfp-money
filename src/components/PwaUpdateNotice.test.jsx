@@ -5,9 +5,7 @@ import PwaUpdateNotice from './PwaUpdateNotice'
 
 function announceUpdate(registration) {
   act(() => {
-    window.dispatchEvent(
-      new CustomEvent('meu-real:pwa-update', { detail: { registration } }),
-    )
+    window.dispatchEvent(new CustomEvent('meu-real:pwa-update', { detail: { registration } }))
   })
 }
 
@@ -62,8 +60,6 @@ describe('Aviso de atualização PWA — compatibilidade de clientes', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Atualizar agora' }))
     expect(oldRegistration.waiting.postMessage).not.toHaveBeenCalled()
-    expect(latestRegistration.waiting.postMessage).toHaveBeenCalledWith({
-      type: 'SKIP_WAITING',
-    })
+    expect(latestRegistration.waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' })
   })
 })
