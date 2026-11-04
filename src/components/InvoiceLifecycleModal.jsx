@@ -122,7 +122,7 @@ export default function InvoiceLifecycleModal({
     if (!isOpen || !invoice || pendingOperation.current) return
 
     setTab('payment')
-    setAmount(maskCurrency(Math.round(Number(lifecycle?.remainingAmount || 0) * 100)))
+    setAmount(maskCurrency(String(Math.round(Number(lifecycle?.remainingAmount || 0) * 100))))
     setEventDate(todayIso())
     setSourceAccount('')
     setNotes('')
