@@ -15,10 +15,10 @@ const SHELL_URLS = [
 ]
 
 const PRECACHE_URLS = /* __PRECACHE_MANIFEST__ */ []
-const SHELL_URL_SET = new Set(SHELL_URLS)
 const PRECACHE_URL_SET = new Set(
   PRECACHE_URLS.map((url) => new URL(url, self.registration.scope).pathname),
 )
+const SHELL_URL_SET = new Set(SHELL_URLS)
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
