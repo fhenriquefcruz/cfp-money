@@ -275,6 +275,12 @@ test('mantém a versão atual até o usuário confirmar a atualização do servi
   )
 
   await evaluateStable(page, async () => {
+    await caches.open('meu-real-shell-obsolete-synthetic')
+    await caches.open('unrelated-synthetic-cache')
+    return true
+  })
+
+  await evaluateStable(page, async () => {
     const registration = await navigator.serviceWorker.getRegistration()
     const nextScript = new URL(registration.active.scriptURL)
     nextScript.searchParams.set('pwa-test-upgrade', 'candidate')
@@ -316,4 +322,8 @@ test('mantém a versão atual até o usuário confirmar a atualização do servi
       { timeout: 25_000 },
     )
     .toBe(true)
+
+  const cacheNames = await evaluateStable(page, () => caches.keys())
+  expect(cacheNames).not.toContain('meu-real-shell-obsolete-synthetic')
+  expect(cacheNames).toContain('unrelated-synthetic-cache')
 })
