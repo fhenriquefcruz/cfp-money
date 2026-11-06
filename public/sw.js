@@ -64,14 +64,12 @@ self.addEventListener('message', (event) => {
   }
 })
 
-const isBlockedRequest = (request, url) => {
-  if (request.method !== 'GET') return true
-  if (url.origin !== self.location.origin) return true
-  if (!url.pathname.startsWith(BASE_PATH)) return true
-  if (request.headers.has('authorization')) return true
-
-  return /^(?:api|__|functions|firestore)\//.test(url.pathname.slice(BASE_PATH.length))
-}
+const isBlockedRequest = (request, url) =>
+  request.method !== 'GET' ||
+  url.origin !== self.location.origin ||
+  !url.pathname.startsWith(BASE_PATH) ||
+  request.headers.has('authorization') ||
+  /^(?:api|__|functions|firestore)\//.test(url.pathname.slice(BASE_PATH.length))
 
 const cacheForPath = (pathname) => {
   if (SHELL_URL_SET.has(pathname)) return SHELL_CACHE
