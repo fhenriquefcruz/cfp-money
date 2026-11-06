@@ -3,7 +3,6 @@ const BASE_PATH = new URL(self.registration.scope).pathname
 const OFFLINE_PATH = `${BASE_PATH}offline.html`
 const SHELL_CACHE = `meu-real-shell-${SW_VERSION}`
 const ASSET_CACHE = `meu-real-assets-${SW_VERSION}`
-const CACHE_PREFIXES = ['meu-real-shell-', 'meu-real-assets-']
 
 const SHELL_URLS = [
   BASE_PATH,
@@ -18,7 +17,6 @@ const PRECACHE_URLS = /* __PRECACHE_MANIFEST__ */ []
 const PRECACHE_URL_SET = new Set(
   PRECACHE_URLS.map((url) => new URL(url, self.registration.scope).pathname),
 )
-const SHELL_URL_SET = new Set(SHELL_URLS)
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -38,7 +36,7 @@ self.addEventListener('activate', (event) => {
           keys
             .filter(
               (key) =>
-                CACHE_PREFIXES.some((prefix) => key.startsWith(prefix)) &&
+                /^meu-real-(?:shell|assets)-/.test(key) &&
                 key !== SHELL_CACHE &&
                 key !== ASSET_CACHE,
             )
@@ -64,25 +62,12 @@ self.addEventListener('message', (event) => {
   }
 })
 
-const isBlockedRequest = (request, url) => {
-  if (request.method !== 'GET') return true
-  if (url.origin !== self.location.origin) return true
-  if (!url.pathname.startsWith(BASE_PATH)) return true
-  if (request.headers.has('authorization')) return true
-
-  return [
-    `${BASE_PATH}api/`,
-    `${BASE_PATH}__/`,
-    `${BASE_PATH}functions/`,
-    `${BASE_PATH}firestore/`,
-  ].some((prefix) => url.pathname.startsWith(prefix))
-}
-
-const cacheForPath = (pathname) => {
-  if (SHELL_URL_SET.has(pathname)) return SHELL_CACHE
-  if (PRECACHE_URL_SET.has(pathname)) return ASSET_CACHE
-  return null
-}
+const isBlockedRequest = (request, url) =>
+  request.method !== 'GET' ||
+  url.origin !== self.location.origin ||
+  !url.pathname.startsWith(BASE_PATH) ||
+  request.headers.has('authorization') ||
+  /^(?:api|__|functions|firestore)\//.test(url.pathname.slice(BASE_PATH.length))
 
 const respondToNavigation = async (request) => {
   try {
@@ -124,7 +109,9 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  const cacheName = cacheForPath(url.pathname)
+  const cacheName = SHELL_URLS.includes(url.pathname)
+    ? SHELL_CACHE
+    : PRECACHE_URL_SET.has(url.pathname) && ASSET_CACHE
   if (!cacheName) return
 
   event.respondWith(respondToStaticAsset(request, cacheName))

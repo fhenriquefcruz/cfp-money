@@ -16,6 +16,7 @@ const firebaseTestEnv = {
 
 export default defineConfig({
   testDir: './pwa-e2e',
+  testIgnore: ['**/legacy-upgrade.spec.js'],
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,

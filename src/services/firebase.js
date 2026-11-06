@@ -224,11 +224,10 @@ export const updateTransactionPaymentStatuses = async (uid, operation = {}) => {
 export const deleteTransaction = (uid, id) => deleteTransactionBatch(uid, [id])
 
 // ── INVOICE EVENTS ──
-export const onInvoiceEventsChange = (uid, callback) => {
-  const q = query(userCol(uid, 'invoiceEvents'), orderBy('eventDate', 'desc'))
-
-  return onSnapshot(q, (snapshot) => callback(snapshot.docs.map(documentData)))
-}
+// Lê também eventos legados que têm paymentDate, mas não eventDate.
+// O seletor getInvoiceEvents ordena cada fatura por data com os fallbacks históricos.
+export const onInvoiceEventsChange = (uid, callback) =>
+  onSnapshot(userCol(uid, 'invoiceEvents'), (snapshot) => callback(snapshot.docs.map(documentData)))
 
 export const addInvoiceEvent = async (uid, data) => {
   const { persistInvoiceEventOnce } = await import('./invoiceEventsRepository')

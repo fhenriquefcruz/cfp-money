@@ -1,0 +1,53 @@
+name: Gate 2 invoice write invariants
+
+on:
+  pull_request:
+    branches:
+      - main
+      - fix/gate-2-invoice-idempotency-rules
+    paths:
+      - firestore.rules
+      - src/domain/invoiceLifecycle.js
+      - src/domain/invoiceOperation.js
+      - src/services/invoiceEventsRepository.js
+      - src/services/firebase.js
+      - src/components/InvoiceLifecycleModal.jsx
+      - tests/security/firestore.rules.test.js
+      - src/domain/invoiceLifecycle.test.js
+      - src/domain/invoiceOperation.test.js
+      - .github/workflows/gate2-invoice-invariants.yml
+  push:
+    branches:
+      - main
+    paths:
+      - firestore.rules
+      - src/domain/invoiceLifecycle.js
+      - src/domain/invoiceOperation.js
+      - src/services/invoiceEventsRepository.js
+      - src/services/firebase.js
+      - tests/security/firestore.rules.test.js
+      - .github/workflows/gate2-invoice-invariants.yml
+
+permissions:
+  contents: read
+
+jobs:
+  invoice-integrity:
+    name: Invoice payment/reversal safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Check invoice and reversal contracts
+        run: npx vitest run src/domain/invoiceLifecycle.test.js src/domain/invoiceOperation.test.js
+      - name: Verify rules in an isolated synthetic Firestore Emulator
+        run: npm run test:rules

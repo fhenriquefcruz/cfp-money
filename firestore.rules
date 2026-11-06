@@ -245,7 +245,21 @@ service cloud.firestore {
         && request.resource.data.amount < 100000000;
     }
 
-    function validInvoiceEvent(eventId) {
+    // Estorno integral único; a origem é imutável e sempre pertence ao UID.
+    function validFullReversal(uid) {
+      let data = request.resource.data;
+      let source = /databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversesEventId);
+      return data.reversesEventId.matches('^evt_[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$')
+        && data.operationId == 'rev_' + data.reversesEventId
+        && exists(source)
+        && get(source).data.type == 'payment'
+        && get(source).data.cardId == data.cardId
+        && get(source).data.invoiceKey == data.invoiceKey
+        && get(source).data.amount == data.amount
+        && get(source).data.get('sourceAccount', '') == data.sourceAccount;
+    }
+
+    function validInvoiceEvent(eventId, uid) {
       let data = request.resource.data;
       let keys = data.keys();
       let common = [
@@ -255,7 +269,8 @@ service cloud.firestore {
       return keys.hasAll(common)
         && data.operationId is string
         && data.operationId == eventId
-        && data.operationId.matches('^evt_[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$')
+        && data.operationId.matches('^(rev_)?evt_[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$')
+        && (data.type == 'reversal' || !data.operationId.matches('^rev_.*'))
         && data.cardId is string
         && data.cardId.size() > 0
         && data.cardId.size() <= 128
@@ -306,6 +321,7 @@ service cloud.firestore {
             && data.reversesEventId is string
             && data.reversesEventId.size() > 0
             && data.reversesEventId.size() <= 128
+            && validFullReversal(uid)
             && data.sourceAccount is string
             && data.sourceAccount.size() <= 120
           ) || (
@@ -350,7 +366,7 @@ service cloud.firestore {
 
       match /invoiceEvents/{eventId} {
         allow read: if owner(uid);
-        allow create: if owner(uid) && validInvoiceEvent(eventId);
+        allow create: if owner(uid) && validInvoiceEvent(eventId, uid);
         allow update, delete: if false;
       }
 
