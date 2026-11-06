@@ -1,0 +1,92 @@
+name: Historical PWA client compatibility
+
+on:
+  pull_request:
+    branches:
+      - fix/gate-2-invoice-idempotency-rules
+    paths:
+      - .github/workflows/legacy-pwa-upgrade.yml
+      - playwright.legacy-pwa.config.js
+      - pwa-e2e/**
+      - scripts/**
+      - src/**
+      - public/**
+      - package.json
+      - package-lock.json
+
+permissions:
+  contents: read
+
+jobs:
+  historical-upgrade:
+    name: Historical main to Gate 2 candidate (synthetic data only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      LEGACY_SHA: be06bfb35de0831acad754e9f486daaf93c71fa9
+      VITE_E2E_MODE: 'true'
+      VITE_FIREBASE_API_KEY: test-api-key
+      VITE_FIREBASE_AUTH_DOMAIN: test-project.firebaseapp.com
+      VITE_FIREBASE_PROJECT_ID: test-project
+      VITE_FIREBASE_STORAGE_BUCKET: test-project.firebasestorage.app
+      VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+      VITE_FIREBASE_APP_ID: '1:123456789:web:test'
+      PWA_LEGACY_DIST: ${{ runner.temp }}/meu-real-legacy/dist
+      PWA_CANDIDATE_DIST: ${{ github.workspace }}/dist
+
+    steps:
+      - name: Checkout candidate without credentials or deploying
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install candidate dependencies
+        run: npm ci
+
+      - name: Build candidate with synthetic Firebase configuration
+        run: npm run build
+
+      - name: Build historical main in a disposable worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "${LEGACY_SHA}^{commit}"
+          git worktree add --detach "${RUNNER_TEMP}/meu-real-legacy" "${LEGACY_SHA}"
+          if ! cmp -s package-lock.json "${RUNNER_TEMP}/meu-real-legacy/package-lock.json"; then
+            echo 'Dependency lock changed; install legacy dependencies independently before replay.' >&2
+            exit 1
+          fi
+          ln -s "${GITHUB_WORKSPACE}/node_modules" "${RUNNER_TEMP}/meu-real-legacy/node_modules"
+          (cd "${RUNNER_TEMP}/meu-real-legacy" && npm run build)
+          test -s "${PWA_LEGACY_DIST}/sw.js"
+          test -s "${PWA_CANDIDATE_DIST}/sw.js"
+          if cmp -s "${PWA_LEGACY_DIST}/sw.js" "${PWA_CANDIDATE_DIST}/sw.js"; then
+            echo 'Historical and candidate workers are unexpectedly identical.' >&2
+            exit 1
+          fi
+          printf 'Historical source SHA: %s\n' "${LEGACY_SHA}"
+          printf 'Candidate source SHA: %s\n' "$(git rev-parse HEAD)"
+
+      - name: Install Chromium for release transition
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify real historical source upgrade in a loopback browser
+        run: npx playwright test --config=playwright.legacy-pwa.config.js
+
+      - name: Upload isolated compatibility results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-pwa-compatibility
+          path: |
+            playwright-legacy-pwa-report
+            test-results-legacy-pwa
+          if-no-files-found: ignore
+          retention-days: 7
