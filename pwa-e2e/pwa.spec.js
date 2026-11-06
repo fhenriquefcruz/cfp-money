@@ -1,6 +1,11 @@
 import { test, expect } from '@playwright/test'
 
-const PRIVATE_ROUTE = './api/private-financial-data.json'
+const PRIVATE_ROUTES = [
+  './api/private-financial-data.json',
+  './__/firebase/init.json',
+  './functions/private-action',
+  './firestore/users/alice',
+]
 
 const isTransientNavigationError = (error) =>
   /Execution context was destroyed|Cannot find context|Target page, context or browser has been closed|Not attached to an active page|Frame was detached|Navigation interrupted by another one/i.test(
@@ -236,19 +241,18 @@ test('mantém o aplicativo disponível durante navegação offline', async ({ pa
 test('não adiciona rotas privadas ou arbitrárias ao cache', async ({ page }) => {
   await waitForServiceWorkerControl(page)
 
-  await evaluateStable(
-    page,
-    async (privateRoute) => {
-      await fetch(privateRoute).catch(() => {})
-      return true
-    },
-    PRIVATE_ROUTE,
-  )
+  await evaluateStable(page, async (privateRoutes) => {
+    await Promise.all(privateRoutes.map((route) => fetch(route).catch(() => {})))
+    return true
+  }, PRIVATE_ROUTES)
 
   const cached = await evaluateStable(
     page,
-    async (privateRoute) => Boolean(await caches.match(privateRoute)),
-    PRIVATE_ROUTE,
+    async (privateRoutes) => {
+      const matches = await Promise.all(privateRoutes.map((route) => caches.match(route)))
+      return matches.some(Boolean)
+    },
+    PRIVATE_ROUTES,
   )
 
   expect(cached).toBe(false)
