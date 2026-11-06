@@ -27,9 +27,12 @@ test('atualiza um build real anterior sem substituir a aba até confirmação', 
 }) => {
   await page.goto('./', { waitUntil: 'domcontentloaded' })
   await expect
-    .poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller)).catch(() => false), {
-      timeout: 30_000,
-    })
+    .poll(
+      () => page.evaluate(() => Boolean(navigator.serviceWorker.controller)).catch(() => false),
+      {
+        timeout: 30_000,
+      },
+    )
     .toBe(true)
 
   const legacyVersion = await readWorkerVersion(page)
@@ -52,10 +55,14 @@ test('atualiza um build real anterior sem substituir a aba até confirmação', 
   })
 
   await expect
-    .poll(() => page.evaluate(async () => {
-      const registration = await navigator.serviceWorker.getRegistration()
-      return Boolean(registration?.waiting)
-    }), { timeout: 30_000 })
+    .poll(
+      () =>
+        page.evaluate(async () => {
+          const registration = await navigator.serviceWorker.getRegistration()
+          return Boolean(registration?.waiting)
+        }),
+      { timeout: 30_000 },
+    )
     .toBe(true)
 
   const candidateVersion = await readWorkerVersion(page, 'waiting')
