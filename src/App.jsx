@@ -86,9 +86,6 @@ const AppRoutes = () => {
               <Onboarding />
               <LegalGate />
               <NotificationStack />
-              <Suspense fallback={null}>
-                <PwaUpdateNotice />
-              </Suspense>
             </div>
           </GoalsProvider>
         </InvoiceEventsProvider>
@@ -109,6 +106,9 @@ export default function App() {
                   <PlanProvider>
                     <MoneyProvider>
                       <AppRoutes />
+                      <Suspense fallback={null}>
+                        <PwaUpdateNotice />
+                      </Suspense>
                     </MoneyProvider>
                   </PlanProvider>
                 </TransactionsProvider>
