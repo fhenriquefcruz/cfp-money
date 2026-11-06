@@ -57,9 +57,45 @@ async function main() {
     active: true,
   })
 
+  // Eventos sintéticos: preservar IDs idempotentes, vínculos e histórico legado.
+  const paymentId = 'evt_123e4567-e89b-42d3-a456-426614174000'
+  const reversalId = 'rev_' + paymentId
+  await db.doc('users/alice/invoiceEvents/' + paymentId).set({
+    operationId: paymentId,
+    type: 'payment',
+    cardId: 'card-synthetic',
+    invoiceKey: 'card-synthetic:2026-08',
+    invoiceMonth: '2026-08',
+    eventDate: '2026-08-09',
+    paymentDate: '2026-08-09',
+    amount: 125.5,
+    sourceAccount: 'Conta fictícia',
+    createdAt,
+  })
+  await db.doc('users/alice/invoiceEvents/' + reversalId).set({
+    operationId: reversalId,
+    type: 'reversal',
+    reversesEventId: paymentId,
+    cardId: 'card-synthetic',
+    invoiceKey: 'card-synthetic:2026-08',
+    invoiceMonth: '2026-08',
+    eventDate: '2026-08-09',
+    amount: 125.5,
+    sourceAccount: 'Conta fictícia',
+    createdAt,
+  })
+  await db.doc('users/alice/invoiceEvents/legacy-no-event-date').set({
+    type: 'payment',
+    cardId: 'legacy-card',
+    invoiceKey: 'legacy-card:2025-12',
+    invoiceMonth: '2025-12',
+    paymentDate: '2025-12-15',
+    amount: 50.25,
+  })
+
   const original = await buildFirestoreBackup(db, PROJECT_ID)
 
-  assert.equal(original.documentCount, 3)
+  assert.equal(original.documentCount, 6)
 
   const encrypted = encryptJson(original, PASSPHRASE)
 
@@ -75,11 +111,19 @@ async function main() {
 
   const restoredCount = await restoreFirestoreBackup(db, decrypted)
 
-  assert.equal(restoredCount, 3)
+  assert.equal(restoredCount, 6)
 
   const restored = await buildFirestoreBackup(db, PROJECT_ID)
 
   assert.deepEqual(normalize(restored), normalize(original))
+  const payment = await db.doc('users/alice/invoiceEvents/' + paymentId).get()
+  const reversal = await db.doc('users/alice/invoiceEvents/' + reversalId).get()
+  const legacy = await db.doc('users/alice/invoiceEvents/legacy-no-event-date').get()
+  assert.equal(payment.data().operationId, paymentId)
+  assert.equal(reversal.data().reversesEventId, paymentId)
+  assert.equal(reversal.data().amount, payment.data().amount)
+  assert.equal(legacy.data().eventDate, undefined)
+  assert.equal(legacy.data().paymentDate, '2025-12-15')
 
   console.log(
     `Backup/recovery: round-trip criptografado aprovado no Firestore Emulator (${restoredCount}/${original.documentCount} docs).`,
