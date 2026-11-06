@@ -287,9 +287,9 @@ test('mantém a versão atual até o usuário confirmar a atualização do servi
 
   await expect(page.getByRole('button', { name: 'Atualizar agora' })).toBeVisible()
 
-  expect(
-    await evaluateStable(page, () => navigator.serviceWorker.controller?.scriptURL),
-  ).toBe(originalController)
+  expect(await evaluateStable(page, () => navigator.serviceWorker.controller?.scriptURL)).toBe(
+    originalController,
+  )
 
   await page.getByRole('button', { name: 'Atualizar agora' }).click()
 
