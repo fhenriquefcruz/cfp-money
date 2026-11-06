@@ -241,10 +241,14 @@ test('mantém o aplicativo disponível durante navegação offline', async ({ pa
 test('não adiciona rotas privadas ou arbitrárias ao cache', async ({ page }) => {
   await waitForServiceWorkerControl(page)
 
-  await evaluateStable(page, async (privateRoutes) => {
-    await Promise.all(privateRoutes.map((route) => fetch(route).catch(() => {})))
-    return true
-  }, PRIVATE_ROUTES)
+  await evaluateStable(
+    page,
+    async (privateRoutes) => {
+      await Promise.all(privateRoutes.map((route) => fetch(route).catch(() => {})))
+      return true
+    },
+    PRIVATE_ROUTES,
+  )
 
   const cached = await evaluateStable(
     page,
