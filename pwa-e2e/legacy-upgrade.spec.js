@@ -38,7 +38,7 @@ test('atualiza um build real anterior sem substituir a aba até confirmação', 
   // O usuário de teste entra pela primeira vez: conclua o tour antes de operar
   // um controle coberto pelo backdrop, sem forçar eventos nem ignorar a UI.
   await expect(page.getByRole('heading', { name: /Bem-vindo ao Meu Real!/ })).toBeVisible()
-  await page.getByRole('button', { name: 'Próximo' }).click()
+  await page.getByRole('button', { name: 'Próximo', exact: true }).click()
   await page.getByRole('button', { name: 'Pular tour' }).click()
   await expect(page.getByRole('button', { name: 'Pular tour' })).toBeHidden()
 
