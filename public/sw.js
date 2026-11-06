@@ -18,7 +18,6 @@ const PRECACHE_URLS = /* __PRECACHE_MANIFEST__ */ []
 const PRECACHE_URL_SET = new Set(
   PRECACHE_URLS.map((url) => new URL(url, self.registration.scope).pathname),
 )
-const SHELL_URL_SET = new Set(SHELL_URLS)
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -79,7 +78,7 @@ const isBlockedRequest = (request, url) => {
 }
 
 const cacheForPath = (pathname) => {
-  if (SHELL_URL_SET.has(pathname)) return SHELL_CACHE
+  if (SHELL_URLS.includes(pathname)) return SHELL_CACHE
   if (PRECACHE_URL_SET.has(pathname)) return ASSET_CACHE
   return null
 }
