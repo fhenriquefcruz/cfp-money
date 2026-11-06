@@ -15,6 +15,7 @@ const SHELL_URLS = [
 ]
 
 const PRECACHE_URLS = /* __PRECACHE_MANIFEST__ */ []
+const SHELL_URL_SET = new Set(SHELL_URLS)
 const PRECACHE_URL_SET = new Set(
   PRECACHE_URLS.map((url) => new URL(url, self.registration.scope).pathname),
 )
@@ -69,16 +70,11 @@ const isBlockedRequest = (request, url) => {
   if (!url.pathname.startsWith(BASE_PATH)) return true
   if (request.headers.has('authorization')) return true
 
-  return [
-    `${BASE_PATH}api/`,
-    `${BASE_PATH}__/`,
-    `${BASE_PATH}functions/`,
-    `${BASE_PATH}firestore/`,
-  ].some((prefix) => url.pathname.startsWith(prefix))
+  return /^(?:api|__|functions|firestore)\//.test(url.pathname.slice(BASE_PATH.length))
 }
 
 const cacheForPath = (pathname) => {
-  if (SHELL_URLS.includes(pathname)) return SHELL_CACHE
+  if (SHELL_URL_SET.has(pathname)) return SHELL_CACHE
   if (PRECACHE_URL_SET.has(pathname)) return ASSET_CACHE
   return null
 }
