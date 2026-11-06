@@ -18,7 +18,6 @@ const PRECACHE_URLS = /* __PRECACHE_MANIFEST__ */ []
 const PRECACHE_URL_SET = new Set(
   PRECACHE_URLS.map((url) => new URL(url, self.registration.scope).pathname),
 )
-const SHELL_URL_SET = new Set(SHELL_URLS)
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -71,12 +70,6 @@ const isBlockedRequest = (request, url) =>
   request.headers.has('authorization') ||
   /^(?:api|__|functions|firestore)\//.test(url.pathname.slice(BASE_PATH.length))
 
-const cacheForPath = (pathname) => {
-  if (SHELL_URL_SET.has(pathname)) return SHELL_CACHE
-  if (PRECACHE_URL_SET.has(pathname)) return ASSET_CACHE
-  return null
-}
-
 const respondToNavigation = async (request) => {
   try {
     const response = await fetch(request)
@@ -117,7 +110,9 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  const cacheName = cacheForPath(url.pathname)
+  const cacheName = SHELL_URLS.includes(url.pathname)
+    ? SHELL_CACHE
+    : PRECACHE_URL_SET.has(url.pathname) && ASSET_CACHE
   if (!cacheName) return
 
   event.respondWith(respondToStaticAsset(request, cacheName))
