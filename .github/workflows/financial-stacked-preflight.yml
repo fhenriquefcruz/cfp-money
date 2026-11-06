@@ -81,3 +81,6 @@ jobs:
       - name: Verify UID isolation, payment retry and reversal in Firestore Emulator
         if: ${{ !cancelled() }}
         run: npm run test:rules
+      - name: Verify encrypted backup and invoice-history restore in isolated Emulator
+        if: ${{ !cancelled() }}
+        run: npm run test:backup-recovery
