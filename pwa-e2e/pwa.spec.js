@@ -253,3 +253,59 @@ test('não adiciona rotas privadas ou arbitrárias ao cache', async ({ page }) =
 
   expect(cached).toBe(false)
 })
+
+// Ensaio sintético: a query da URL força uma nova instalação com o mesmo código
+// do SW atual. Não representa um build legado real já publicado.
+test('mantém a versão atual até o usuário confirmar a atualização do service worker', async ({
+  page,
+}) => {
+  await waitForServiceWorkerControl(page)
+
+  const originalController = await evaluateStable(
+    page,
+    () => navigator.serviceWorker.controller?.scriptURL,
+  )
+
+  await evaluateStable(page, async () => {
+    const registration = await navigator.serviceWorker.getRegistration()
+    const nextScript = new URL(registration.active.scriptURL)
+    nextScript.searchParams.set('pwa-test-upgrade', 'candidate')
+    await navigator.serviceWorker.register(nextScript.href, { scope: registration.scope })
+    return true
+  })
+
+  await expect
+    .poll(
+      () =>
+        page.evaluate(async () => {
+          const registration = await navigator.serviceWorker.getRegistration()
+          return Boolean(registration?.waiting)
+        }),
+      { timeout: 20_000 },
+    )
+    .toBe(true)
+
+  await expect(page.getByRole('button', { name: 'Atualizar agora' })).toBeVisible()
+
+  expect(
+    await evaluateStable(page, () => navigator.serviceWorker.controller?.scriptURL),
+  ).toBe(originalController)
+
+  await page.getByRole('button', { name: 'Atualizar agora' }).click()
+
+  await expect
+    .poll(
+      async () => {
+        try {
+          return await page.evaluate(() =>
+            Boolean(navigator.serviceWorker.controller?.scriptURL.includes('pwa-test-upgrade')),
+          )
+        } catch (error) {
+          if (isTransientNavigationError(error)) return false
+          throw error
+        }
+      },
+      { timeout: 25_000 },
+    )
+    .toBe(true)
+})
