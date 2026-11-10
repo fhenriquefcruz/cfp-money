@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react'
-import { ArrowDownRight, ArrowUpRight, Trash2 } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Paperclip, Search, Trash2 } from 'lucide-react'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { useGoals, useTransactions } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
+import TransactionAttachmentManager from './TransactionAttachmentManager'
 import {
   buildSavingsOverview,
   getSavingsDestinationLabel,
@@ -12,6 +13,12 @@ import {
   UNCLASSIFIED_SAVINGS_DESTINATION,
 } from '../domain/savings'
 import { buildSavingsInsights } from '../domain/savingsInsights'
+import {
+  buildSavingsHistory,
+  getSavingsHistoryDestinations,
+  savingsMovementDate,
+  SAVINGS_HISTORY_PAGE_SIZE,
+} from '../domain/savingsHistory'
 import {
   getFinancialActivityDate,
   isFinanciallyEffectiveTransaction,
@@ -27,12 +34,13 @@ const currentMonthBounds = () => {
   }
 }
 
-const transactionDate = (transaction) =>
-  transaction.purchaseDate ||
-  transaction.originalPurchaseDate ||
-  transaction.date ||
-  transaction.dueDate ||
-  ''
+const historyMonthLabel = (month) => {
+  if (!month) return 'Data não informada'
+  const [year, number] = month.split('-').map(Number)
+  return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(
+    new Date(year, number - 1, 1),
+  )
+}
 
 export default function Savings() {
   const { transactions, removeTransaction } = useTransactions()
@@ -41,6 +49,12 @@ export default function Savings() {
   const [editingMovement, setEditingMovement] = useState(null)
   const [deleteMovement, setDeleteMovement] = useState(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [attachmentMovement, setAttachmentMovement] = useState(null)
+  const [historyType, setHistoryType] = useState('all')
+  const [historyDestination, setHistoryDestination] = useState('all')
+  const [historySearch, setHistorySearch] = useState('')
+  const [historyWithAttachments, setHistoryWithAttachments] = useState(false)
+  const [historyLimit, setHistoryLimit] = useState(SAVINGS_HISTORY_PAGE_SIZE)
 
   const monthBounds = useMemo(currentMonthBounds, [])
 
@@ -71,12 +85,27 @@ export default function Savings() {
   const patrimonyChange =
     (balanceHistory[balanceHistory.length - 1]?.balance || 0) - (balanceHistory[0]?.balance || 0)
 
-  const movements = useMemo(
-    () =>
-      transactions
-        .filter((transaction) => transaction.isSavings && getSavingsSignedAmount(transaction) !== 0)
-        .sort((first, second) => transactionDate(second).localeCompare(transactionDate(first))),
+  const historyDestinations = useMemo(
+    () => getSavingsHistoryDestinations(transactions),
     [transactions],
+  )
+  const savingsHistory = useMemo(
+    () =>
+      buildSavingsHistory(transactions, {
+        type: historyType,
+        destination: historyDestination,
+        search: historySearch,
+        attachmentsOnly: historyWithAttachments,
+        limit: historyLimit,
+      }),
+    [
+      transactions,
+      historyType,
+      historyDestination,
+      historySearch,
+      historyWithAttachments,
+      historyLimit,
+    ],
   )
 
   const legacyUnclassified = useMemo(
@@ -268,7 +297,7 @@ export default function Savings() {
         )}
       </Card>
 
-      <section className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+      <section className="grid min-w-0 grid-cols-1 gap-5">
         <Card>
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
@@ -291,7 +320,7 @@ export default function Savings() {
               }
             />
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {overview.destinations.map((destination) => {
                 return (
                   <article
@@ -339,86 +368,201 @@ export default function Savings() {
         </Card>
 
         <Card>
-          <div className="mb-4">
-            <h2 className="text-base font-black text-[--text-primary]">Movimentos recentes</h2>
-            <p className="mt-0.5 text-xs text-[--text-tertiary]">
-              Histórico de aportes e retiradas das reservas.
-            </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-base font-black text-[--text-primary]">Histórico das reservas</h2>
+              <p className="mt-1 text-xs text-[--text-tertiary]">
+                Consulte aportes, retiradas, destino, instituição e comprovantes do lançamento.
+              </p>
+            </div>
+            <span className="text-xs font-bold tabular-nums text-[--text-secondary]">
+              {savingsHistory.total} {savingsHistory.total === 1 ? 'movimento' : 'movimentos'}
+            </span>
           </div>
 
-          {movements.length === 0 ? (
-            <p className="py-10 text-center text-sm text-[--text-tertiary]">
-              Nenhum movimento de poupança registrado.
-            </p>
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_170px_minmax(190px,0.85fr)]">
+            <label className="block min-w-0">
+              <span className="mb-1 block text-xs font-semibold text-[--text-secondary]">Buscar</span>
+              <span className="flex min-h-11 items-center gap-2 rounded-xl border border-[--border-default] bg-[--bg-subtle] px-3 focus-within:border-[--brand-500]">
+                <Search size={15} className="shrink-0 text-[--text-tertiary]" aria-hidden="true" />
+                <input
+                  type="search"
+                  value={historySearch}
+                  onChange={(event) => {
+                    setHistorySearch(event.target.value)
+                    setHistoryLimit(SAVINGS_HISTORY_PAGE_SIZE)
+                  }}
+                  placeholder="Descrição, reserva ou banco"
+                  className="w-full min-w-0 bg-transparent text-sm text-[--text-primary] outline-none placeholder:text-[--text-tertiary]"
+                />
+              </span>
+            </label>
+            <label className="block min-w-0">
+              <span className="mb-1 block text-xs font-semibold text-[--text-secondary]">Tipo</span>
+              <select
+                value={historyType}
+                onChange={(event) => {
+                  setHistoryType(event.target.value)
+                  setHistoryLimit(SAVINGS_HISTORY_PAGE_SIZE)
+                }}
+                className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-subtle] px-3 text-sm text-[--text-primary] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[--brand-500]"
+              >
+                <option value="all">Todos os tipos</option>
+                <option value="deposit">Aportes</option>
+                <option value="withdrawal">Retiradas</option>
+              </select>
+            </label>
+            <label className="block min-w-0">
+              <span className="mb-1 block text-xs font-semibold text-[--text-secondary]">Reserva / instituição</span>
+              <select
+                value={historyDestination}
+                onChange={(event) => {
+                  setHistoryDestination(event.target.value)
+                  setHistoryLimit(SAVINGS_HISTORY_PAGE_SIZE)
+                }}
+                className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-subtle] px-3 text-sm text-[--text-primary] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[--brand-500]"
+              >
+                <option value="all">Todas as reservas</option>
+                {historyDestinations.map((destination) => (
+                  <option key={destination} value={destination}>
+                    {destination}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-xs font-medium text-[--text-secondary]">
+              <input
+                type="checkbox"
+                checked={historyWithAttachments}
+                onChange={(event) => {
+                  setHistoryWithAttachments(event.target.checked)
+                  setHistoryLimit(SAVINGS_HISTORY_PAGE_SIZE)
+                }}
+                className="h-4 w-4 accent-[--brand-500]"
+              />
+              <Paperclip size={14} aria-hidden="true" />
+              Somente com comprovante
+            </label>
+            <span className="text-xs tabular-nums text-[--text-tertiary]">
+              Exibindo {savingsHistory.shown} de {savingsHistory.total}
+            </span>
+          </div>
+
+          {savingsHistory.total === 0 ? (
+            <div className="mt-4 rounded-xl border border-dashed border-[--border-default] px-4 py-10 text-center">
+              <p className="text-sm text-[--text-tertiary]">
+                Nenhum movimento encontrado para os filtros selecionados.
+              </p>
+              <button
+                type="button"
+                className="mt-3 min-h-10 rounded-xl px-3 text-xs font-bold text-[--text-brand] hover:bg-[--bg-hover]"
+                onClick={() => {
+                  setHistoryType('all')
+                  setHistoryDestination('all')
+                  setHistorySearch('')
+                  setHistoryWithAttachments(false)
+                  setHistoryLimit(SAVINGS_HISTORY_PAGE_SIZE)
+                }}
+              >
+                Limpar filtros
+              </button>
+            </div>
           ) : (
-            <div className="divide-y divide-[--border-subtle]">
-              {movements.slice(0, 12).map((movement) => {
-                const signedAmount = getSavingsSignedAmount(movement)
-                const linkedGoal = movement.goalId ? goalById.get(movement.goalId) : null
-                return (
-                  <div
-                    key={movement.id}
-                    className="flex items-start gap-3 py-3 first:pt-0 last:pb-0"
-                  >
-                    <div
-                      className={`mt-0.5 rounded-xl p-2 ${
-                        signedAmount >= 0
-                          ? 'bg-[--success-bg] text-[--success-text]'
-                          : 'bg-[--danger-bg] text-[--danger-text]'
-                      }`}
-                    >
-                      {signedAmount >= 0 ? (
-                        <ArrowUpRight size={14} />
-                      ) : (
-                        <ArrowDownRight size={14} />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-bold text-[--text-primary]">
-                        {getSavingsDestinationLabel(movement)}
-                      </p>
-                      <p className="mt-0.5 truncate text-[10px] text-[--text-tertiary]">
-                        {movement.description || (signedAmount >= 0 ? 'Aporte' : 'Retirada')}
-                        {linkedGoal ? ` · ${linkedGoal.emoji || '🎯'} ${linkedGoal.name}` : ''}
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-                        {formatDate(transactionDate(movement))}
-                      </p>
-                    </div>
-                    <div className="flex flex-shrink-0 items-center gap-2">
-                      <span
-                        className={`text-xs font-black tabular-nums ${
-                          signedAmount >= 0 ? 'text-[--success-text]' : 'text-[--danger-text]'
-                        }`}
-                      >
-                        {signedAmount >= 0 ? '+' : '−'}
-                        {formatCurrency(Math.abs(signedAmount))}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setEditingMovement(movement)}
-                        className="min-h-9 rounded-xl px-2 text-[10px] font-bold text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
-                        aria-label={`Editar movimento ${
-                          movement.description || getSavingsDestinationLabel(movement)
-                        }`}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteMovement(movement)}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
-                        aria-label={`Excluir movimento ${
-                          movement.description || getSavingsDestinationLabel(movement)
-                        }`}
-                        title="Excluir movimento"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+            <div className="mt-4 space-y-5">
+              {savingsHistory.groups.map((group) => (
+                <section key={group.month || 'no-date'} aria-label={historyMonthLabel(group.month)}>
+                  <h3 className="border-b border-[--border-default] pb-2 text-xs font-black capitalize text-[--text-secondary]">
+                    {historyMonthLabel(group.month)}
+                  </h3>
+                  <div className="divide-y divide-[--border-subtle]">
+                    {group.movements.map((movement) => {
+                      const amount = getSavingsSignedAmount(movement)
+                      const deposit = amount > 0
+                      const goal = movement.goalId ? goalById.get(movement.goalId) : null
+                      const files = Array.isArray(movement.attachments)
+                        ? movement.attachments.length
+                        : 0
+                      const name =
+                        movement.description ||
+                        getSavingsDestinationLabel(movement)
+                      const date = savingsMovementDate(movement)
+                      const unclassified = !String(movement.savingsDestination || '').trim()
+                      return (
+                        <article key={movement.id} className="flex min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-4">
+                          <div className="flex min-w-0 flex-1 items-start gap-3">
+                            <span
+                              className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${deposit ? 'bg-[--success-bg] text-[--success-text]' : 'bg-[--danger-bg] text-[--danger-text]'}`}
+                              aria-hidden="true"
+                            >
+                              {deposit ? <ArrowUpRight size={17} /> : <ArrowDownRight size={17} />}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="break-words text-sm font-bold text-[--text-primary]">{name}</p>
+                              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[--text-tertiary]">
+                                <span className={deposit ? 'font-semibold text-[--success-text]' : 'font-semibold text-[--danger-text]'}>
+                                  {deposit ? 'Aporte' : 'Retirada'}
+                                </span>
+                                <span className={unclassified ? 'text-[--warning-text]' : ''}>
+                                  {getSavingsDestinationLabel(movement)}
+                                </span>
+                                {goal && <span>Meta: {goal.name}</span>}
+                                <time>{date ? formatDate(date) : 'Data não informada'}</time>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap items-center justify-end gap-2 sm:shrink-0">
+                            <span className={`mr-auto text-sm font-black tabular-nums sm:mr-2 ${deposit ? 'text-[--success-text]' : 'text-[--danger-text]'}`}>
+                              {deposit ? '+' : '−'}{formatCurrency(Math.abs(amount))}
+                            </span>
+                            {files > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setAttachmentMovement(movement)}
+                                className="inline-flex min-h-10 items-center gap-1 rounded-xl border border-[--border-default] bg-[--bg-subtle] px-3 text-xs font-bold text-[--text-brand] hover:bg-[--bg-hover] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[--brand-500]"
+                                aria-label={`Ver ${files} ${files === 1 ? 'comprovante' : 'comprovantes'} de ${name}`}
+                                title="Visualizar comprovantes"
+                              >
+                                <Paperclip size={15} aria-hidden="true" />
+                                {files}
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setEditingMovement(movement)}
+                              className="min-h-10 rounded-xl px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover] hover:text-[--text-primary]"
+                              aria-label={`${unclassified ? 'Classificar' : 'Editar'} movimento ${name}`}
+                            >
+                              {unclassified ? 'Classificar' : 'Editar'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteMovement(movement)}
+                              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-[--text-tertiary] hover:bg-[--danger-bg] hover:text-[--danger-text]"
+                              aria-label={`Excluir movimento ${name}`}
+                              title="Excluir movimento"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </article>
+                      )
+                    })}
                   </div>
-                )
-              })}
+                </section>
+              ))}
+              {savingsHistory.shown < savingsHistory.total && (
+                <div className="text-center">
+                  <Button
+                    variant="secondary"
+                    onClick={() => setHistoryLimit((current) => current + SAVINGS_HISTORY_PAGE_SIZE)}
+                  >
+                    Mostrar mais movimentos
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </Card>
@@ -434,6 +578,16 @@ export default function Savings() {
           initialSavingsDestination={movementPreset.destination}
           initialSavingsInstitution={movementPreset.institution}
           initialGoalId={movementPreset.goalId}
+        />
+      )}
+
+      {attachmentMovement && (
+        <TransactionAttachmentManager
+          transaction={attachmentMovement}
+          isOpen
+          readOnly
+          title="Comprovantes da reserva"
+          onClose={() => setAttachmentMovement(null)}
         />
       )}
 
