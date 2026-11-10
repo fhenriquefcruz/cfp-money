@@ -116,6 +116,11 @@ export default function Savings() {
 
   const goalById = useMemo(() => new Map(goals.map((goal) => [goal.id, goal])), [goals])
 
+  const setHistoryFilter = (setter, checkbox = false) => (event) => {
+    setter(checkbox ? event.target.checked : event.target.value)
+    setHistoryLimit(SAVINGS_HISTORY_PAGE_SIZE)
+  }
+
   const openMovement = (movement, destination = null) => {
     setMovementPreset({
       movement,
@@ -390,10 +395,7 @@ export default function Savings() {
                 <input
                   type="search"
                   value={historySearch}
-                  onChange={(event) => {
-                    setHistorySearch(event.target.value)
-                    setHistoryLimit(SAVINGS_HISTORY_PAGE_SIZE)
-                  }}
+                  onChange={setHistoryFilter(setHistorySearch)}
                   placeholder="Descrição, reserva ou banco"
                   className="w-full min-w-0 bg-transparent text-sm text-[--text-primary] outline-none placeholder:text-[--text-tertiary]"
                 />
@@ -403,10 +405,7 @@ export default function Savings() {
               <span className="mb-1 block text-xs font-semibold text-[--text-secondary]">Tipo</span>
               <select
                 value={historyType}
-                onChange={(event) => {
-                  setHistoryType(event.target.value)
-                  setHistoryLimit(SAVINGS_HISTORY_PAGE_SIZE)
-                }}
+                onChange={setHistoryFilter(setHistoryType)}
                 className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-subtle] px-3 text-sm text-[--text-primary] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[--brand-500]"
               >
                 <option value="all">Todos os tipos</option>
@@ -420,10 +419,7 @@ export default function Savings() {
               </span>
               <select
                 value={historyDestination}
-                onChange={(event) => {
-                  setHistoryDestination(event.target.value)
-                  setHistoryLimit(SAVINGS_HISTORY_PAGE_SIZE)
-                }}
+                onChange={setHistoryFilter(setHistoryDestination)}
                 className="min-h-11 w-full rounded-xl border border-[--border-default] bg-[--bg-subtle] px-3 text-sm text-[--text-primary] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[--brand-500]"
               >
                 <option value="all">Todas as reservas</option>
@@ -441,10 +437,7 @@ export default function Savings() {
               <input
                 type="checkbox"
                 checked={historyWithAttachments}
-                onChange={(event) => {
-                  setHistoryWithAttachments(event.target.checked)
-                  setHistoryLimit(SAVINGS_HISTORY_PAGE_SIZE)
-                }}
+                onChange={setHistoryFilter(setHistoryWithAttachments, true)}
                 className="h-4 w-4 accent-[--brand-500]"
               />
               <Paperclip size={14} aria-hidden="true" />
