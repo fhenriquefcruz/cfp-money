@@ -1,7 +1,7 @@
 import React from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import TransactionAttachmentManager from './TransactionAttachmentManager'
+import TransactionAttachmentManager, { getAttachmentPreviewType } from './TransactionAttachmentManager'
 
 const mocks = vi.hoisted(() => ({
   upload: vi.fn(),
@@ -157,5 +157,82 @@ describe('Comprovantes opcionais por transação', () => {
     await waitFor(() => expect(screen.queryByText('boleto.pdf')).not.toBeInTheDocument())
     expect(screen.getByRole('status')).toHaveTextContent('0 de 6 comprovantes')
     confirm.mockRestore()
+  })
+})
+
+describe('visualização privada e acesso de leitura dos comprovantes', () => {
+  it('só permite prévia de PDF e imagens com extensão e MIME compatíveis', () => {
+    expect(getAttachmentPreviewType({ name: 'extrato.pdf', contentType: 'application/pdf' })).toBe(
+      'application/pdf',
+    )
+    expect(getAttachmentPreviewType({ name: 'foto.png', contentType: 'image/png' })).toBe(
+      'image/png',
+    )
+    expect(getAttachmentPreviewType({ name: 'extrato.html', contentType: 'text/html' })).toBeNull()
+    expect(getAttachmentPreviewType({ name: 'arquivo.pdf', contentType: 'text/html' })).toBeNull()
+    expect(getAttachmentPreviewType({ name: 'planilha.xlsx', contentType: 'application/pdf' })).toBeNull()
+  })
+
+  it('abre imagem privada sob demanda e revoga o URL ao fechar a prévia', async () => {
+    const receipt = {
+      id: 'savings-receipt',
+      name: 'deposito.png',
+      contentType: 'image/png',
+      size: 100,
+      kind: 'transaction',
+    }
+    const createObjectURL = vi.fn(() => 'blob:comprovante-sintetico')
+    const revokeObjectURL = vi.fn()
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectURL })
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: revokeObjectURL })
+    mocks.download.mockResolvedValue(new Blob(['imagem'], { type: 'application/octet-stream' }))
+
+    render(
+      <TransactionAttachmentManager
+        transaction={{ id: 'savings-1', isSavings: true, attachments: [receipt] }}
+        isOpen
+        readOnly
+        title="Comprovantes da reserva"
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Comprovantes da reserva')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Excluir deposito.png' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Adicionar PDF, imagem, planilha ou documento' })).not.toBeInTheDocument()
+    expect(mocks.download).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Visualizar deposito.png' }))
+    await waitFor(() =>
+      expect(mocks.download).toHaveBeenCalledWith('receipt-test-user', 'savings-1', receipt),
+    )
+    expect(await screen.findByAltText('Prévia de deposito.png')).toHaveAttribute(
+      'src',
+      'blob:comprovante-sintetico',
+    )
+    expect(createObjectURL).toHaveBeenCalledOnce()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fechar visualização' }))
+    await waitFor(() => expect(revokeObjectURL).toHaveBeenCalledWith('blob:comprovante-sintetico'))
+  })
+
+  it('mostra somente download para formatos sem pré-visualização segura', () => {
+    const receipt = {
+      id: 'sheet',
+      name: 'reserva.xlsx',
+      contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      size: 200,
+      kind: 'transaction',
+    }
+    render(
+      <TransactionAttachmentManager
+        transaction={{ id: 'savings-2', attachments: [receipt] }}
+        isOpen
+        readOnly
+        onClose={vi.fn()}
+      />,
+    )
+    expect(screen.queryByRole('button', { name: 'Visualizar reserva.xlsx' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Baixar reserva.xlsx' })).toBeInTheDocument()
   })
 })
