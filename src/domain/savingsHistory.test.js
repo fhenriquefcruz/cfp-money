@@ -50,7 +50,9 @@ describe('histórico de reservas', () => {
 
   test('separa aportes, retiradas e movimentações legadas positivas', () => {
     expect(buildSavingsHistory(movements, { type: 'deposit' }).total).toBe(2)
-    expect(buildSavingsHistory(movements, { type: 'withdrawal' }).groups[0].movements[0].id).toBe('b')
+    expect(buildSavingsHistory(movements, { type: 'withdrawal' }).groups[0].movements[0].id).toBe(
+      'b',
+    )
   })
 
   test('filtra por destino estruturado, busca e presença de anexos sem alterar valores', () => {
@@ -70,10 +72,12 @@ describe('histórico de reservas', () => {
     expect(result.total).toBe(3)
     expect(result.shown).toBe(1)
     expect(result.groups[0].movements.map((item) => item.id)).toEqual(['a'])
-    expect(savingsMovementDate({
-      purchaseDate: '2026-09-01',
-      date: '2026-10-01',
-    })).toBe('2026-09-01')
+    expect(
+      savingsMovementDate({
+        purchaseDate: '2026-09-01',
+        date: '2026-10-01',
+      }),
+    ).toBe('2026-09-01')
   })
 
   test('mantém movimentos sem data visíveis e classificados como históricos sem data', () => {
