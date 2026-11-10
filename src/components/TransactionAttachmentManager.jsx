@@ -28,7 +28,10 @@ const PREVIEW_TYPES = {
 }
 
 export function getAttachmentPreviewType(metadata = {}) {
-  const extension = String(metadata.name || '').split('.').pop().toLowerCase()
+  const extension = String(metadata.name || '')
+    .split('.')
+    .pop()
+    .toLowerCase()
   const safeType = PREVIEW_TYPES[extension]
   return safeType && metadata.contentType === safeType ? safeType : null
 }
@@ -177,8 +180,8 @@ export default function TransactionAttachmentManager({
       <div className="space-y-4">
         <p className="text-xs leading-relaxed text-[--text-tertiary]">
           Arquivos privados vinculados ao lançamento. Até {ATTACHMENTS_PER_TRANSACTION} arquivos de
-          2 MB cada. PDF e imagens podem ser visualizados aqui; os demais formatos podem ser baixados.
-          O arquivo é carregado somente após sua solicitação.
+          2 MB cada. PDF e imagens podem ser visualizados aqui; os demais formatos podem ser
+          baixados. O arquivo é carregado somente após sua solicitação.
         </p>
         <p role="status" aria-live="polite" className="text-xs text-[--text-secondary]">
           {attachments.length} de {ATTACHMENTS_PER_TRANSACTION} comprovantes vinculados.{' '}
@@ -188,48 +191,48 @@ export default function TransactionAttachmentManager({
         </p>
         {!readOnly && (
           <div role="group" aria-label="Tipo de comprovante" className="grid grid-cols-2 gap-2">
-          {[
-            ['transaction', 'Compra / lançamento'],
-            ['payment', 'Pagamento'],
-          ].map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={kind === value}
-              onClick={() => setKind(value)}
-              disabled={busy}
-              className={`min-h-10 rounded-xl border px-2 text-xs font-bold transition-colors ${
-                kind === value
-                  ? 'border-[--brand-500] bg-[--brand-50] text-[--text-brand]'
-                  : 'border-[--border-default] text-[--text-secondary] hover:bg-[--bg-hover]'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+            {[
+              ['transaction', 'Compra / lançamento'],
+              ['payment', 'Pagamento'],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={kind === value}
+                onClick={() => setKind(value)}
+                disabled={busy}
+                className={`min-h-10 rounded-xl border px-2 text-xs font-bold transition-colors ${
+                  kind === value
+                    ? 'border-[--brand-500] bg-[--brand-50] text-[--text-brand]'
+                    : 'border-[--border-default] text-[--text-secondary] hover:bg-[--bg-hover]'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         )}
         {!readOnly && (
           <>
             <input
-          ref={inputRef}
-          type="file"
-          className="sr-only"
-          aria-label="Selecionar comprovantes"
-          accept={ATTACHMENT_ACCEPT}
-          multiple
-          disabled={busy || attachments.length >= ATTACHMENTS_PER_TRANSACTION}
-          onChange={addFiles}
-        />
-        <button
-          type="button"
-          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[--border-strong] bg-[--bg-subtle] px-3 text-xs font-bold text-[--text-brand] hover:bg-[--bg-hover] disabled:opacity-50"
-          disabled={busy || attachments.length >= ATTACHMENTS_PER_TRANSACTION}
-          onClick={() => inputRef.current?.click()}
-        >
-          {busy ? <Upload size={16} /> : <FilePlus2 size={16} />}
-          {busy ? 'Salvando arquivos…' : 'Adicionar PDF, imagem, planilha ou documento'}
-        </button>
+              ref={inputRef}
+              type="file"
+              className="sr-only"
+              aria-label="Selecionar comprovantes"
+              accept={ATTACHMENT_ACCEPT}
+              multiple
+              disabled={busy || attachments.length >= ATTACHMENTS_PER_TRANSACTION}
+              onChange={addFiles}
+            />
+            <button
+              type="button"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[--border-strong] bg-[--bg-subtle] px-3 text-xs font-bold text-[--text-brand] hover:bg-[--bg-hover] disabled:opacity-50"
+              disabled={busy || attachments.length >= ATTACHMENTS_PER_TRANSACTION}
+              onClick={() => inputRef.current?.click()}
+            >
+              {busy ? <Upload size={16} /> : <FilePlus2 size={16} />}
+              {busy ? 'Salvando arquivos…' : 'Adicionar PDF, imagem, planilha ou documento'}
+            </button>
           </>
         )}
         {attachments.length ? (
@@ -271,14 +274,14 @@ export default function TransactionAttachmentManager({
                 </button>
                 {!readOnly && (
                   <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => remove(item)}
-                  aria-label={`Excluir ${item.name}`}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[--danger-text] hover:bg-[--danger-bg] disabled:opacity-50"
-                >
-                  <Trash2 size={16} />
-                </button>
+                    type="button"
+                    disabled={busy}
+                    onClick={() => remove(item)}
+                    aria-label={`Excluir ${item.name}`}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[--danger-text] hover:bg-[--danger-bg] disabled:opacity-50"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 )}
               </li>
             ))}
