@@ -10,11 +10,13 @@ export const savingsMovementDate = (transaction = {}) =>
   ''
 
 export function getSavingsHistoryDestinations(transactions = []) {
-  return [...new Set(
-    transactions
-      .filter((transaction) => getSavingsSignedAmount(transaction) !== 0)
-      .map(getSavingsDestinationLabel),
-  )].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  return [
+    ...new Set(
+      transactions
+        .filter((transaction) => getSavingsSignedAmount(transaction) !== 0)
+        .map(getSavingsDestinationLabel),
+    ),
+  ].sort((a, b) => a.localeCompare(b, 'pt-BR'))
 }
 
 export function buildSavingsHistory(
@@ -31,9 +33,10 @@ export function buildSavingsHistory(
       if (destination !== 'all' && getSavingsDestinationLabel(movement) !== destination) {
         return false
       }
-      if (attachmentsOnly && !(
-        Array.isArray(movement.attachments) && movement.attachments.length > 0
-      )) {
+      if (
+        attachmentsOnly &&
+        !(Array.isArray(movement.attachments) && movement.attachments.length > 0)
+      ) {
         return false
       }
       if (!query) return true
@@ -42,13 +45,16 @@ export function buildSavingsHistory(
         movement.savingsDestination,
         movement.savingsInstitution,
         getSavingsDestinationLabel(movement),
-      ].join(' ').toLocaleLowerCase('pt-BR')
+      ]
+        .join(' ')
+        .toLocaleLowerCase('pt-BR')
       return haystack.includes(query)
     })
-    .sort((a, b) =>
-      savingsMovementDate(b).localeCompare(savingsMovementDate(a)) ||
-      String(b.createdAt || '').localeCompare(String(a.createdAt || '')) ||
-      String(b.id || '').localeCompare(String(a.id || '')),
+    .sort(
+      (a, b) =>
+        savingsMovementDate(b).localeCompare(savingsMovementDate(a)) ||
+        String(b.createdAt || '').localeCompare(String(a.createdAt || '')) ||
+        String(b.id || '').localeCompare(String(a.id || '')),
     )
 
   const visible = matches.slice(0, Math.max(0, limit))
