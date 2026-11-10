@@ -42,9 +42,7 @@ export function buildSavingsHistory(
         movement.savingsDestination,
         movement.savingsInstitution,
         getSavingsDestinationLabel(movement),
-      ]
-        .map((part) => String(part || '').toLocaleLowerCase('pt-BR'))
-        .join(' ')
+      ].join(' ').toLocaleLowerCase('pt-BR')
       return haystack.includes(query)
     })
     .sort((a, b) =>
