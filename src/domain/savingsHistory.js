@@ -30,8 +30,7 @@ export function buildSavingsHistory(
       if (amount === 0) return false
       if (type === 'deposit' && amount < 0) return false
       if (type === 'withdrawal' && amount > 0) return false
-      const label = getSavingsDestinationLabel(movement)
-      if (destination !== 'all' && label !== destination) {
+      if (destination !== 'all' && getSavingsDestinationLabel(movement) !== destination) {
         return false
       }
       if (
@@ -41,14 +40,14 @@ export function buildSavingsHistory(
         return false
       }
       if (!query) return true
-      const haystack = `${movement.description ?? ''} ${label}`.toLowerCase()
+      const haystack = `${movement.description ?? ''} ${getSavingsDestinationLabel(movement)}`.toLowerCase()
       return haystack.includes(query)
     })
     .sort(
       (a, b) =>
         savingsMovementDate(b).localeCompare(savingsMovementDate(a)) ||
         String(b.createdAt || '').localeCompare(String(a.createdAt || '')) ||
-        (b.id || '').localeCompare(a.id || ''),
+        String(b.id || '').localeCompare(String(a.id || '')),
     )
 
   const visible = matches.slice(0, Math.max(0, limit))
@@ -57,7 +56,7 @@ export function buildSavingsHistory(
     const date = savingsMovementDate(movement)
     const month = /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.slice(0, 7) : ''
     const last = groups[groups.length - 1]
-    if (last?.month === month) last.movements.push(movement)
+    if (last && last.month === month) last.movements.push(movement)
     else groups.push({ month, movements: [movement] })
   }
 
