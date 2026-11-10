@@ -382,7 +382,9 @@ export default function Savings() {
 
           <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_170px_minmax(190px,0.85fr)]">
             <label className="block min-w-0">
-              <span className="mb-1 block text-xs font-semibold text-[--text-secondary]">Buscar</span>
+              <span className="mb-1 block text-xs font-semibold text-[--text-secondary]">
+                Buscar
+              </span>
               <span className="flex min-h-11 items-center gap-2 rounded-xl border border-[--border-default] bg-[--bg-subtle] px-3 focus-within:border-[--brand-500]">
                 <Search size={15} className="shrink-0 text-[--text-tertiary]" aria-hidden="true" />
                 <input
@@ -413,7 +415,9 @@ export default function Savings() {
               </select>
             </label>
             <label className="block min-w-0">
-              <span className="mb-1 block text-xs font-semibold text-[--text-secondary]">Reserva / instituição</span>
+              <span className="mb-1 block text-xs font-semibold text-[--text-secondary]">
+                Reserva / instituição
+              </span>
               <select
                 value={historyDestination}
                 onChange={(event) => {
@@ -485,13 +489,14 @@ export default function Savings() {
                       const files = Array.isArray(movement.attachments)
                         ? movement.attachments.length
                         : 0
-                      const name =
-                        movement.description ||
-                        getSavingsDestinationLabel(movement)
+                      const name = movement.description || getSavingsDestinationLabel(movement)
                       const date = savingsMovementDate(movement)
                       const unclassified = !String(movement.savingsDestination || '').trim()
                       return (
-                        <article key={movement.id} className="flex min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-4">
+                        <article
+                          key={movement.id}
+                          className="flex min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-4"
+                        >
                           <div className="flex min-w-0 flex-1 items-start gap-3">
                             <span
                               className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${deposit ? 'bg-[--success-bg] text-[--success-text]' : 'bg-[--danger-bg] text-[--danger-text]'}`}
@@ -500,9 +505,17 @@ export default function Savings() {
                               {deposit ? <ArrowUpRight size={17} /> : <ArrowDownRight size={17} />}
                             </span>
                             <div className="min-w-0">
-                              <p className="break-words text-sm font-bold text-[--text-primary]">{name}</p>
+                              <p className="break-words text-sm font-bold text-[--text-primary]">
+                                {name}
+                              </p>
                               <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[--text-tertiary]">
-                                <span className={deposit ? 'font-semibold text-[--success-text]' : 'font-semibold text-[--danger-text]'}>
+                                <span
+                                  className={
+                                    deposit
+                                      ? 'font-semibold text-[--success-text]'
+                                      : 'font-semibold text-[--danger-text]'
+                                  }
+                                >
                                   {deposit ? 'Aporte' : 'Retirada'}
                                 </span>
                                 <span className={unclassified ? 'text-[--warning-text]' : ''}>
@@ -514,8 +527,11 @@ export default function Savings() {
                             </div>
                           </div>
                           <div className="flex flex-wrap items-center justify-end gap-2 sm:shrink-0">
-                            <span className={`mr-auto text-sm font-black tabular-nums sm:mr-2 ${deposit ? 'text-[--success-text]' : 'text-[--danger-text]'}`}>
-                              {deposit ? '+' : '−'}{formatCurrency(Math.abs(amount))}
+                            <span
+                              className={`mr-auto text-sm font-black tabular-nums sm:mr-2 ${deposit ? 'text-[--success-text]' : 'text-[--danger-text]'}`}
+                            >
+                              {deposit ? '+' : '−'}
+                              {formatCurrency(Math.abs(amount))}
                             </span>
                             {files > 0 && (
                               <button
@@ -557,7 +573,9 @@ export default function Savings() {
                 <div className="text-center">
                   <Button
                     variant="secondary"
-                    onClick={() => setHistoryLimit((current) => current + SAVINGS_HISTORY_PAGE_SIZE)}
+                    onClick={() =>
+                      setHistoryLimit((current) => current + SAVINGS_HISTORY_PAGE_SIZE)
+                    }
                   >
                     Mostrar mais movimentos
                   </Button>
