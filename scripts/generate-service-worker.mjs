@@ -63,7 +63,10 @@ if (!source.includes(versionMarker) || !source.includes(manifestMarker)) {
 
 const generated = source
   .replace(versionMarker, `const SW_VERSION = '${version}'`)
-  .replace(manifestMarker, `const PRECACHE_URLS = ${JSON.stringify(precacheUrls, null, 2)}`)
+  .replace(manifestMarker, `const PRECACHE_URLS = ${JSON.stringify(precacheUrls)}`)
+  // A fonte mantém a formatação para revisão; só o SW gerado perde indentação e linhas vazias.
+  .replace(/^[ \t]+/gm, '')
+  .replace(/\n{2,}/g, '\n')
 
 if (generated.includes('__SW_VERSION__') || generated.includes('__PRECACHE_MANIFEST__')) {
   throw new Error('O service worker gerado ainda contém marcadores não resolvidos.')

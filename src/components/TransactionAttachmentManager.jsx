@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Download, FilePlus2, Paperclip, Trash2, Upload } from 'lucide-react'
+import { Download, Eye, FilePlus2, Paperclip, Trash2, Upload, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useTransactions, useNotifications } from '../contexts/AppContext'
 import {
@@ -18,11 +18,31 @@ function readableSize(bytes) {
     : `${Math.ceil(bytes / 1024)} KB`
 }
 
+const PREVIEW_TYPES = {
+  pdf: 'application/pdf',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+}
+
+export function getAttachmentPreviewType(metadata = {}) {
+  const extension = String(metadata.name || '')
+    .split('.')
+    .pop()
+    .toLowerCase()
+  const safeType = PREVIEW_TYPES[extension]
+  return safeType && metadata.contentType === safeType ? safeType : null
+}
+
 export default function TransactionAttachmentManager({
   transaction,
   isOpen,
   onClose,
   initialKind = 'transaction',
+  readOnly = false,
+  title = 'Comprovantes da transação',
 }) {
   const { user } = useAuth()
   const { transactions } = useTransactions()
@@ -31,6 +51,7 @@ export default function TransactionAttachmentManager({
   const [busy, setBusy] = useState(false)
   const [uploaded, setUploaded] = useState([])
   const [removedIds, setRemovedIds] = useState([])
+  const [preview, setPreview] = useState(null)
   const inputRef = useRef(null)
   const selected = transactions.find((item) => item.id === transaction?.id) || transaction
   const persisted = (Array.isArray(selected?.attachments) ? selected.attachments : []).filter(
@@ -42,11 +63,19 @@ export default function TransactionAttachmentManager({
   ]
 
   useEffect(() => {
+    setPreview(null)
     if (!isOpen) return
     setKind(initialKind)
     setUploaded([])
     setRemovedIds([])
   }, [isOpen, transaction?.id, initialKind])
+
+  useEffect(
+    () => () => {
+      if (preview?.url) URL.revokeObjectURL(preview.url)
+    },
+    [preview],
+  )
 
   const addFiles = async (event) => {
     const files = Array.from(event.target.files || [])
@@ -103,6 +132,21 @@ export default function TransactionAttachmentManager({
     }
   }
 
+  const openPreview = async (metadata) => {
+    const type = getAttachmentPreviewType(metadata)
+    if (!type || !user?.uid || !selected?.id) return
+    setBusy(true)
+    try {
+      const blob = await downloadTransactionAttachment(user.uid, selected.id, metadata)
+      const url = URL.createObjectURL(new Blob([blob], { type }))
+      setPreview({ url, name: metadata.name, type })
+    } catch (error) {
+      showNotification(error.message || 'Não foi possível visualizar o comprovante.', 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const remove = async (metadata) => {
     if (!user?.uid || !selected?.id) return
     if (!window.confirm(`Excluir o comprovante "${metadata.name}"?`)) return
@@ -125,7 +169,7 @@ export default function TransactionAttachmentManager({
       onClose={() => {
         if (!busy) onClose()
       }}
-      title="Comprovantes da transação"
+      title={title}
       size="md"
       footer={
         <Button variant="secondary" onClick={onClose} disabled={busy}>
@@ -136,7 +180,8 @@ export default function TransactionAttachmentManager({
       <div className="space-y-4">
         <p className="text-xs leading-relaxed text-[--text-tertiary]">
           Arquivos privados vinculados ao lançamento. Até {ATTACHMENTS_PER_TRANSACTION} arquivos de
-          2 MB cada. Os comprovantes são baixados apenas por quem acessa esta conta.
+          2 MB cada. PDF e imagens podem ser visualizados aqui; os demais formatos podem ser
+          baixados. O arquivo é carregado somente após sua solicitação.
         </p>
         <p role="status" aria-live="polite" className="text-xs text-[--text-secondary]">
           {attachments.length} de {ATTACHMENTS_PER_TRANSACTION} comprovantes vinculados.{' '}
@@ -144,46 +189,52 @@ export default function TransactionAttachmentManager({
             ? '1 vaga disponível.'
             : `${ATTACHMENTS_PER_TRANSACTION - attachments.length} vagas disponíveis.`}
         </p>
-        <div role="group" aria-label="Tipo de comprovante" className="grid grid-cols-2 gap-2">
-          {[
-            ['transaction', 'Compra / lançamento'],
-            ['payment', 'Pagamento'],
-          ].map(([value, label]) => (
+        {!readOnly && (
+          <div role="group" aria-label="Tipo de comprovante" className="grid grid-cols-2 gap-2">
+            {[
+              ['transaction', 'Compra / lançamento'],
+              ['payment', 'Pagamento'],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={kind === value}
+                onClick={() => setKind(value)}
+                disabled={busy}
+                className={`min-h-10 rounded-xl border px-2 text-xs font-bold transition-colors ${
+                  kind === value
+                    ? 'border-[--brand-500] bg-[--brand-50] text-[--text-brand]'
+                    : 'border-[--border-default] text-[--text-secondary] hover:bg-[--bg-hover]'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+        {!readOnly && (
+          <>
+            <input
+              ref={inputRef}
+              type="file"
+              className="sr-only"
+              aria-label="Selecionar comprovantes"
+              accept={ATTACHMENT_ACCEPT}
+              multiple
+              disabled={busy || attachments.length >= ATTACHMENTS_PER_TRANSACTION}
+              onChange={addFiles}
+            />
             <button
-              key={value}
               type="button"
-              aria-pressed={kind === value}
-              onClick={() => setKind(value)}
-              disabled={busy}
-              className={`min-h-10 rounded-xl border px-2 text-xs font-bold transition-colors ${
-                kind === value
-                  ? 'border-[--brand-500] bg-[--brand-50] text-[--text-brand]'
-                  : 'border-[--border-default] text-[--text-secondary] hover:bg-[--bg-hover]'
-              }`}
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[--border-strong] bg-[--bg-subtle] px-3 text-xs font-bold text-[--text-brand] hover:bg-[--bg-hover] disabled:opacity-50"
+              disabled={busy || attachments.length >= ATTACHMENTS_PER_TRANSACTION}
+              onClick={() => inputRef.current?.click()}
             >
-              {label}
+              {busy ? <Upload size={16} /> : <FilePlus2 size={16} />}
+              {busy ? 'Salvando arquivos…' : 'Adicionar PDF, imagem, planilha ou documento'}
             </button>
-          ))}
-        </div>
-        <input
-          ref={inputRef}
-          type="file"
-          className="sr-only"
-          aria-label="Selecionar comprovantes"
-          accept={ATTACHMENT_ACCEPT}
-          multiple
-          disabled={busy || attachments.length >= ATTACHMENTS_PER_TRANSACTION}
-          onChange={addFiles}
-        />
-        <button
-          type="button"
-          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[--border-strong] bg-[--bg-subtle] px-3 text-xs font-bold text-[--text-brand] hover:bg-[--bg-hover] disabled:opacity-50"
-          disabled={busy || attachments.length >= ATTACHMENTS_PER_TRANSACTION}
-          onClick={() => inputRef.current?.click()}
-        >
-          {busy ? <Upload size={16} /> : <FilePlus2 size={16} />}
-          {busy ? 'Salvando arquivos…' : 'Adicionar PDF, imagem, planilha ou documento'}
-        </button>
+          </>
+        )}
         {attachments.length ? (
           <ul className="space-y-2" aria-label="Comprovantes vinculados">
             {attachments.map((item) => (
@@ -201,6 +252,17 @@ export default function TransactionAttachmentManager({
                     {readableSize(item.size)}
                   </p>
                 </div>
+                {getAttachmentPreviewType(item) && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => openPreview(item)}
+                    aria-label={`Visualizar ${item.name}`}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[--text-brand] hover:bg-[--bg-hover] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[--brand-500] disabled:opacity-50"
+                  >
+                    <Eye size={16} aria-hidden="true" />
+                  </button>
+                )}
                 <button
                   type="button"
                   disabled={busy}
@@ -210,15 +272,17 @@ export default function TransactionAttachmentManager({
                 >
                   <Download size={16} />
                 </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => remove(item)}
-                  aria-label={`Excluir ${item.name}`}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[--danger-text] hover:bg-[--danger-bg] disabled:opacity-50"
-                >
-                  <Trash2 size={16} />
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => remove(item)}
+                    aria-label={`Excluir ${item.name}`}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[--danger-text] hover:bg-[--danger-bg] disabled:opacity-50"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -226,6 +290,44 @@ export default function TransactionAttachmentManager({
           <div className="rounded-xl border border-[--border-subtle] bg-[--bg-subtle] px-4 py-5 text-center text-xs text-[--text-tertiary]">
             Nenhum comprovante nesta transação.
           </div>
+        )}
+        {preview && (
+          <section
+            aria-label={`Visualização de ${preview.name}`}
+            className="space-y-2 rounded-xl border border-[--border-default] bg-[--bg-subtle] p-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="min-w-0 truncate text-xs font-bold text-[--text-primary]">
+                {preview.name}
+              </p>
+              <button
+                type="button"
+                onClick={() => setPreview(null)}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[--text-secondary] hover:bg-[--bg-hover]"
+                aria-label="Fechar visualização"
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            </div>
+            {preview.type === 'application/pdf' ? (
+              <iframe
+                src={preview.url}
+                title={`Prévia PDF de ${preview.name}`}
+                sandbox=""
+                referrerPolicy="no-referrer"
+                className="h-80 w-full rounded-lg bg-white sm:h-[26rem]"
+              />
+            ) : (
+              <img
+                src={preview.url}
+                alt={`Prévia de ${preview.name}`}
+                className="max-h-80 w-full rounded-lg bg-[--bg-surface] object-contain sm:max-h-[26rem]"
+              />
+            )}
+            <p className="text-[10px] text-[--text-tertiary]">
+              Se seu navegador não conseguir exibir a prévia, utilize o botão de download.
+            </p>
+          </section>
         )}
       </div>
     </Modal>
