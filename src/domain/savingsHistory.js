@@ -40,9 +40,7 @@ export function buildSavingsHistory(
         return false
       }
       if (!query) return true
-      const haystack = [movement.description, getSavingsDestinationLabel(movement)]
-        .join(' ')
-        .toLowerCase()
+      const haystack = `${movement.description ?? ''} ${getSavingsDestinationLabel(movement)}`.toLowerCase()
       return haystack.includes(query)
     })
     .sort(
