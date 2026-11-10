@@ -23,7 +23,7 @@ export function buildSavingsHistory(
   transactions = [],
   { type = 'all', destination = 'all', search = '', attachmentsOnly = false, limit = 12 } = {},
 ) {
-  const query = String(search).trim().toLocaleLowerCase('pt-BR')
+  const query = String(search).trim().toLowerCase()
   const matches = transactions
     .filter((movement) => {
       const amount = getSavingsSignedAmount(movement)
@@ -47,7 +47,7 @@ export function buildSavingsHistory(
         getSavingsDestinationLabel(movement),
       ]
         .join(' ')
-        .toLocaleLowerCase('pt-BR')
+        .toLowerCase()
       return haystack.includes(query)
     })
     .sort(
