@@ -47,7 +47,7 @@ export function buildSavingsHistory(
       (a, b) =>
         savingsMovementDate(b).localeCompare(savingsMovementDate(a)) ||
         String(b.createdAt || '').localeCompare(String(a.createdAt || '')) ||
-        String(b.id || '').localeCompare(String(a.id || '')),
+        (b.id || '').localeCompare(a.id || ''),
     )
 
   const visible = matches.slice(0, Math.max(0, limit))
