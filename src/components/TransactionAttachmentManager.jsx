@@ -263,7 +263,7 @@ export default function TransactionAttachmentManager({
                 <button
                   type="button"
                   disabled={busy}
-                  onClick={() => saveFile(item)
+                  onClick={() => saveFile(item)}
                   aria-label={`Baixar ${item.name}`}
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg hover:bg-[--bg-hover] disabled:opacity-50"
                 >
