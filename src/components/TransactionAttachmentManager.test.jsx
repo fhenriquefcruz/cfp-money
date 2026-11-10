@@ -1,7 +1,9 @@
 import React from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import TransactionAttachmentManager, { getAttachmentPreviewType } from './TransactionAttachmentManager'
+import TransactionAttachmentManager, {
+  getAttachmentPreviewType,
+} from './TransactionAttachmentManager'
 
 const mocks = vi.hoisted(() => ({
   upload: vi.fn(),
@@ -170,7 +172,9 @@ describe('visualização privada e acesso de leitura dos comprovantes', () => {
     )
     expect(getAttachmentPreviewType({ name: 'extrato.html', contentType: 'text/html' })).toBeNull()
     expect(getAttachmentPreviewType({ name: 'arquivo.pdf', contentType: 'text/html' })).toBeNull()
-    expect(getAttachmentPreviewType({ name: 'planilha.xlsx', contentType: 'application/pdf' })).toBeNull()
+    expect(
+      getAttachmentPreviewType({ name: 'planilha.xlsx', contentType: 'application/pdf' }),
+    ).toBeNull()
   })
 
   it('abre imagem privada sob demanda e revoga o URL ao fechar a prévia', async () => {
@@ -199,7 +203,9 @@ describe('visualização privada e acesso de leitura dos comprovantes', () => {
 
     expect(screen.getByText('Comprovantes da reserva')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Excluir deposito.png' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Adicionar PDF, imagem, planilha ou documento' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Adicionar PDF, imagem, planilha ou documento' }),
+    ).not.toBeInTheDocument()
     expect(mocks.download).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Visualizar deposito.png' }))
@@ -232,7 +238,9 @@ describe('visualização privada e acesso de leitura dos comprovantes', () => {
         onClose={vi.fn()}
       />,
     )
-    expect(screen.queryByRole('button', { name: 'Visualizar reserva.xlsx' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Visualizar reserva.xlsx' }),
+    ).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Baixar reserva.xlsx' })).toBeInTheDocument()
   })
 })
