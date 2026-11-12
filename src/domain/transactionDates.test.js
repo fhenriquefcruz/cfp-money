@@ -3,6 +3,7 @@ import {
   getTransactionAccountingDate,
   getTransactionActivityDate,
   getTransactionDateContext,
+  getTransactionLedgerDate,
   getTransactionPurchaseDate,
   isProtectedTransactionGroup,
   isStructuredCreditPurchase,
@@ -74,4 +75,32 @@ test('identifica série que não deve ser alterada isoladamente', () => {
       date: '2026-07-10',
     }),
   ).toBe(false)
+})
+
+test('parcelas estruturadas aparecem pela competência da fatura sem mudar a data da compra', () => {
+  const installment = {
+    ...creditPurchase,
+    purchaseDate: '2026-11-05',
+    originalPurchaseDate: '2026-11-05',
+    date: '2027-01-20',
+    dueDate: '2027-01-20',
+    invoiceMonth: '2027-01',
+    installmentNum: 3,
+    installmentOf: 3,
+  }
+  expect(getTransactionLedgerDate(installment)).toBe('2027-01-20')
+  expect(getTransactionLedgerDate(installment, 'activity')).toBe('2026-11-05')
+  expect(getTransactionActivityDate(installment)).toBe('2026-11-05')
+  expect(getTransactionLedgerDate({ type: 'expense', paymentMethod: 'pix', date: '2026-11-05' })).toBe(
+    '2026-11-05',
+  )
+})
+
+test('compra de cartão sem vencimento legado conserva a data disponível', () => {
+  expect(getTransactionLedgerDate({
+    type: 'expense',
+    paymentMethod: 'credit_card',
+    isCreditPurchase: true,
+    purchaseDate: '2026-11-25',
+  })).toBe('2026-11-25')
 })
