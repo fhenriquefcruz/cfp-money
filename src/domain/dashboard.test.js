@@ -332,7 +332,8 @@ test('Dashboard v2 limita a central a duas causas diferentes e prioriza atrasos'
     {
       cause: 'category',
       title: '2 classificações para revisar',
-      detail: 'Revise manualmente as categorias; nenhum lançamento será modificado automaticamente.',
+      detail:
+        'Revise manualmente as categorias; nenhum lançamento será modificado automaticamente.',
       to: '/transactions?review=categories&month=2026-11',
     },
   ])
@@ -342,17 +343,16 @@ test('Dashboard v2 limita a central a duas causas diferentes e prioriza atrasos'
 test('Dashboard v2 agrupa vencimentos e destaca o orçamento somente no limite ou excedido', () => {
   const actions = buildDashboardPriorityActions({
     paymentSummary: { dueNext7DaysCount: 1 },
-    budgetAlerts: [
-      { budget: { id: 'food', amount: 1000 }, spent: 1100, pct: 110 },
-    ],
+    budgetAlerts: [{ budget: { id: 'food', amount: 1000 }, spent: 1100, pct: 110 }],
     monthKey: '2026-11',
   })
   expect(actions.map((action) => action.cause)).toEqual(['payment', 'budget'])
   expect(actions[0].title).toBe('1 vencimento próximo')
   expect(actions[1].title).toBe('Orçamento ultrapassado')
-  expect(buildDashboardPriorityActions({
+  const noBudgetAlert = buildDashboardPriorityActions({
     budgetAlerts: [{ budget: { amount: 1000 }, spent: 690, pct: 69 }],
     monthKey: '2026-11',
-  })).toEqual([])
+  })
+  expect(noBudgetAlert).toEqual([])
   expect(buildDashboardPriorityActions({ categoryReviewCount: 1, limit: 0 })).toEqual([])
 })
