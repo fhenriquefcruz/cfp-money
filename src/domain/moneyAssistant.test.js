@@ -284,20 +284,18 @@ const canonicalMonthScenario = [
     date: '2026-10-03',
     categoryId: 'salary',
   },
-  ...['2026-12-10', '2027-01-10', '2027-02-10', '2027-03-10'].map(
-    (date, index) => ({
-      id: 'installment-' + (index + 1),
-      type: 'expense',
-      paymentMethod: 'credit_card',
-      isCreditPurchase: true,
-      purchaseDate: '2026-10-21',
-      date,
-      amount: index === 0 ? '300' : 300,
-      categoryId: 'food',
-      categoryName: 'Alimentação',
-      description: 'Compra parcelada',
-    }),
-  ),
+  ...['2026-12-10', '2027-01-10', '2027-02-10', '2027-03-10'].map((date, index) => ({
+    id: 'installment-' + (index + 1),
+    type: 'expense',
+    paymentMethod: 'credit_card',
+    isCreditPurchase: true,
+    purchaseDate: '2026-10-21',
+    date,
+    amount: index === 0 ? '300' : 300,
+    categoryId: 'food',
+    categoryName: 'Alimentação',
+    description: 'Compra parcelada',
+  })),
   {
     id: 'cancelled',
     type: 'expense',
@@ -335,7 +333,7 @@ const canonicalMonthScenario = [
   },
 ]
 
-test('MR-001: relatório mensal usa atividade da compra e a mesma regra de resumo financeiro', () => {
+test('MR-001: relatório mensal respeita mês de atividade e filtros canônicos', () => {
   const before = structuredClone(canonicalMonthScenario)
   const expected = summarizeTransactions(
     transactionsForMonth(canonicalMonthScenario, 2026, 9).filter(
@@ -370,7 +368,7 @@ test('MR-001: relatório mensal usa atividade da compra e a mesma regra de resum
   expect(canonicalMonthScenario).toEqual(before)
 })
 
-test('MR-001: consulta por categoria e maiores despesas ignoram estornos lógicos, transferências e reservas', () => {
+test('MR-001: categorias e ranking excluem reservas e transferências', () => {
   const byCategory = buildMoneyAssistantResponse({
     message: 'Quanto gastei com alimentação em outubro de 2026?',
     transactions: canonicalMonthScenario,
