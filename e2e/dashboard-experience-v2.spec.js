@@ -40,3 +40,29 @@ test('Dashboard v2 identifica o recorte até hoje e mês completo sem gravar dad
   await expect(toDate).toHaveAttribute('aria-pressed', 'true')
   await expectNoHorizontalOverflow(page)
 })
+
+test('Dashboard v2 organiza quatro áreas e recolhe análises sem perder atalhos', async ({
+  page,
+}) => {
+  await prepareE2EPage(page, '/dashboard')
+
+  await expect(page.getByRole('region', { name: 'Situação do mês' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Próximas ações' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Planejamento do mês' })).toBeVisible()
+  const expand = page.getByRole('button', { name: 'Explorar análises' })
+  await expect(expand).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.locator('#dashboard-explore-content')).toHaveCount(0)
+
+  await expand.click()
+  await expect(page.getByRole('button', { name: 'Ocultar análises' })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  )
+  await expect(page.getByRole('heading', { name: 'Evolução financeira' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Quem lidera os gastos' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Metas', exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Ocultar análises' }).click()
+  await expect(page.locator('#dashboard-explore-content')).toHaveCount(0)
+  await expectNoHorizontalOverflow(page)
+})
