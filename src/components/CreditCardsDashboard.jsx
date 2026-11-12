@@ -534,11 +534,14 @@ function CreditCardsCenterContent() {
           {incompleteInstallments.length > 0 && (
             <details className="rounded-xl border border-[--warning-border] bg-[--warning-bg] px-4 py-3 text-xs text-[--warning-text]">
               <summary className="min-h-8 cursor-pointer font-bold">
-                Revisar {incompleteInstallments.length} {incompleteInstallments.length === 1 ? 'compra parcelada incompleta' : 'compras parceladas incompletas'}
+                Revisar {incompleteInstallments.length}{' '}
+                {incompleteInstallments.length === 1
+                  ? 'compra parcelada incompleta'
+                  : 'compras parceladas incompletas'}
               </summary>
               <p className="mt-2">
-                Algumas parcelas esperadas não foram localizadas nos lançamentos carregados.
-                Não serão criadas automaticamente para evitar cobranças duplicadas.
+                Algumas parcelas esperadas não foram localizadas nos lançamentos carregados. Não
+                serão criadas automaticamente para evitar cobranças duplicadas.
               </p>
               <ul className="mt-2 space-y-1">
                 {incompleteInstallments.slice(0, 5).map((item) => (
@@ -561,11 +564,12 @@ function CreditCardsCenterContent() {
             <div className="space-y-4">
               <Card className="shadow-sm">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                   <h2 className="text-sm font-black text-[--text-primary]">Próximas faturas</h2>
-                   <p className="text-xs tabular-nums text-[--text-secondary]">
-                     {center.futureInstallmentCount} parcelas futuras · {formatCurrency(center.futureInstallmentTotal)}
-                   </p>
-                 </div>
+                  <h2 className="text-sm font-black text-[--text-primary]">Próximas faturas</h2>
+                  <p className="text-xs tabular-nums text-[--text-secondary]">
+                    {center.futureInstallmentCount} parcelas futuras ·{' '}
+                    {formatCurrency(center.futureInstallmentTotal)}
+                  </p>
+                </div>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 xl:grid-cols-3 2xl:grid-cols-6">
                   {center.forecast.map((item) => {
