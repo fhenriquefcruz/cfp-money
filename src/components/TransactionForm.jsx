@@ -55,32 +55,6 @@ function parseCurrency(masked) {
   return parseFloat(String(masked).replace(/\./g, '').replace(',', '.')) || 0
 }
 
-function formatInstallmentDistribution(maskedAmount, rawInstallments) {
-  try {
-    const amounts = splitInstallmentAmounts(
-      parseCurrency(maskedAmount),
-      parseInt(rawInstallments || 1),
-    )
-    const groups = []
-
-    amounts.forEach((amount) => {
-      const cents = Math.round(amount * 100)
-      const previous = groups[groups.length - 1]
-      if (previous?.cents === cents) {
-        previous.count += 1
-      } else {
-        groups.push({ cents, count: 1 })
-      }
-    })
-
-    return groups
-      .map((group) => `${group.count}× R$ ${maskCurrency(String(group.cents))}`)
-      .join(' + ')
-  } catch {
-    return ''
-  }
-}
-
 function CurrencyInput({ id, label, value, onChange, error, placeholder = '0,00', required }) {
   const generatedId = React.useId()
   const inputId = id || generatedId
@@ -986,12 +960,9 @@ export default function TransactionForm({
                           </p>
                         </div>
                       ) : (
-                        form.amount &&
-                        form.installments && (
-                          <p className="text-xs text-[--text-secondary]">
-                            {formatInstallmentDistribution(form.amount, form.installments)}
-                          </p>
-                        )
+                        <p className="text-xs text-[--text-secondary]">
+                          Selecione o cartão e informe o valor para visualizar as faturas.
+                        </p>
                       )}
                     </motion.div>
                   )}
