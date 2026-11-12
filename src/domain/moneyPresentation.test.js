@@ -38,6 +38,7 @@ test('rotula projeção parcial como estimativa e informa confiança e período'
     getMoneyProjectionPresentation(
       { isAvailable: true, isPartial: true, confidence: 'medium' },
       { start: '2026-11-01', end: '2026-11-30' },
+      new Date(2026, 10, 12),
     ),
   ).toEqual({
     label: 'Despesa estimada até o fim do ciclo',
@@ -50,6 +51,7 @@ test('diferencia ciclo fechado de projeção e dados ainda insuficientes', () =>
     getMoneyProjectionPresentation(
       { isAvailable: true, isPartial: false, confidence: 'high' },
       { start: '2026-10-01', end: '2026-10-31' },
+      new Date(2026, 10, 12),
     ),
   ).toEqual({
     label: 'Despesas do ciclo encerrado',
@@ -59,9 +61,23 @@ test('diferencia ciclo fechado de projeção e dados ainda insuficientes', () =>
     getMoneyProjectionPresentation(
       { isAvailable: false, isPartial: true, minimumElapsedDays: 5 },
       { start: '2026-11-01', end: '2026-11-30' },
+      new Date(2026, 10, 12),
     ),
   ).toEqual({
     label: 'Despesa estimada até o fim do ciclo',
     detail: 'Estimativa após 5 dias · 01/11/2026 a 30/11/2026',
+  })
+})
+
+test('não apresenta um ciclo futuro como encerrado', () => {
+  expect(
+    getMoneyProjectionPresentation(
+      { isAvailable: true, isPartial: false, confidence: 'high' },
+      { start: '2026-12-01', end: '2026-12-31' },
+      new Date(2026, 10, 12),
+    ),
+  ).toEqual({
+    label: 'Despesas cadastradas para ciclo futuro',
+    detail: 'Ciclo ainda não iniciado · 01/12/2026 a 31/12/2026',
   })
 })
