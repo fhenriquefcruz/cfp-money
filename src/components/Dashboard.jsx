@@ -433,6 +433,7 @@ export default function Dashboard() {
           type="button"
           onClick={() => setNewTransactionOpen(true)}
           className="dashboard-quick-add dashboard-quick-add__button mr-v2-primary-action inline-flex min-h-12 flex-shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold"
+          aria-label="Nova transação"
           aria-haspopup="dialog"
         >
           <Plus size={17} aria-hidden="true" />
