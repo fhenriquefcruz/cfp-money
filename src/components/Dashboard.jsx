@@ -571,23 +571,23 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <h2 className="text-sm font-black text-[--text-primary]">
-                          Poupança e Reservas
+                        <h2 className="text-sm font-bold text-[--text-primary]">
+                          Reserva acumulada
                         </h2>
                         <InfoTooltip text="Total reservado considera depósitos menos retiradas. O valor poupado no mês usa apenas o período visualizado." />
                       </div>
-                      <p className="text-[10px] text-[--text-tertiary]">
-                        Quanto você tem guardado e onde esse dinheiro está.
+                      <p className="text-xs text-[--text-tertiary]">
+                        Patrimônio reservado por instituição e destino.
                       </p>
                     </div>
                   </div>
 
-                  <p className="mt-4 text-3xl font-black tabular-nums text-[--text-primary]">
+                  <p className="mt-4 text-3xl font-bold tabular-nums text-[--text-primary]">
                     {formatCurrency(savingsOverview.totalBalance)}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[--text-tertiary]">
                     <span>
-                      Poupado no mês{' '}
+                      Aportes líquidos no mês{' '}
                       <strong
                         className={
                           savingsOverview.periodNet >= 0
@@ -605,7 +605,7 @@ export default function Dashboard() {
 
                 <div className="min-w-0 flex-1">
                   <div className="mb-2 flex items-center justify-between gap-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                    <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                       Onde está
                     </p>
                     <Link
@@ -631,11 +631,11 @@ export default function Dashboard() {
                             <p className="truncate text-xs font-bold text-[--text-primary]">
                               {destination.destination}
                             </p>
-                            <p className="truncate text-[10px] text-[--text-tertiary]">
+                            <p className="truncate text-xs text-[--text-tertiary]">
                               {destination.institution || 'Instituição não informada'}
                             </p>
                           </div>
-                          <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-primary]">
+                          <span className="flex-shrink-0 text-xs font-bold tabular-nums text-[--text-primary]">
                             {formatCurrency(destination.balance)}
                           </span>
                         </div>
