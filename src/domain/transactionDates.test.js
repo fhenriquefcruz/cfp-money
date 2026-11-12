@@ -96,6 +96,23 @@ test('parcelas estruturadas aparecem pela competência da fatura sem mudar a dat
   ).toBe('2026-11-05')
 })
 
+test('compra vinculada antiga sem flag de crédito respeita vencimento sem alterar atividade canônica', () => {
+  const legacy = {
+    type: 'expense',
+    paymentMethod: 'credit_card',
+    cardId: 'card-legado',
+    purchaseDate: '2026-11-05',
+    date: '2026-12-20',
+    dueDate: '2026-12-20',
+    isInstallment: true,
+    installmentNum: 2,
+    installmentOf: 3,
+  }
+  expect(getTransactionLedgerDate(legacy)).toBe('2026-12-20')
+  expect(getTransactionLedgerDate(legacy, 'activity')).toBe('2026-12-20')
+  expect(getTransactionActivityDate(legacy)).toBe('2026-12-20')
+})
+
 test('compra de cartão sem vencimento legado conserva a data disponível', () => {
   expect(
     getTransactionLedgerDate({
