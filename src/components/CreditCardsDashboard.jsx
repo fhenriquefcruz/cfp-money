@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { summarizeCardLinks } from '../domain/cardLinkageSummary'
+import { findIncompleteCardInstallmentGroups } from '../domain/creditCardIntegrity'
 import { auditLoadedCardInvoices } from '../domain/cardInvoiceReadOnlyAudit'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
@@ -228,6 +229,11 @@ function CreditCardsCenterContent() {
     [transactions, creditCards, invoiceEvents, selectedMonth],
   )
 
+  const incompleteInstallments = useMemo(
+    () => findIncompleteCardInstallmentGroups(transactions),
+    [transactions],
+  )
+
   const linkageAudit = useMemo(
     () => summarizeCardLinks({ transactions, creditCards }),
     [transactions, creditCards],
@@ -283,22 +289,19 @@ function CreditCardsCenterContent() {
 
   return (
     <div className="operational-page credit-cards-premium mx-auto min-w-0 w-full max-w-7xl space-y-5 pb-24 lg:pb-6">
-      <header className="operational-hero credit-cards-premium__hero overflow-hidden rounded-3xl border border-[--brand-200] bg-gradient-to-br from-[#050607] via-[#151819] to-[#3c3328] p-5 text-white shadow-xl sm:p-6">
+      <header className="operational-hero overflow-hidden rounded-2xl border border-[--border-default] bg-[--bg-surface] p-4 sm:p-5">
         <div className="operational-hero__layout flex flex-wrap items-start justify-between gap-5">
           <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/10 text-[#e8d4b8] ring-1 ring-white/20 backdrop-blur">
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-50] text-[--text-brand]">
               <WalletCards size={22} />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
+                <h1 className="text-2xl font-black tracking-tight text-[--text-primary] sm:text-3xl">
                   Cartões e faturas
                 </h1>
-                <span className="rounded-full bg-[#c49d6b]/20 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-[#e8d4b8] ring-1 ring-[#d9bb91]/20">
-                  Premium
-                </span>
               </div>
-              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/70">
+              <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[--text-secondary]">
                 Faturas, pagamentos e parcelas organizados pelo vencimento.
               </p>
             </div>
@@ -307,15 +310,15 @@ function CreditCardsCenterContent() {
           <div className="operational-hero__actions flex flex-wrap gap-2">
             <Link
               to="/transactions"
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-3 text-xs font-bold text-[#3d2b1d] shadow-sm transition-transform hover:-translate-y-0.5"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[--brand-600] px-3 text-xs font-bold text-white hover:opacity-90"
             >
               <Plus size={14} />
-              Nova compra
+              Ver transações
             </Link>
             <button
               type="button"
               onClick={() => setCardSettingsOpen((current) => !current)}
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-bold text-white backdrop-blur hover:bg-white/15"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[--border-default] bg-[--bg-subtle] px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
               aria-expanded={cardSettingsOpen}
             >
               <Settings2 size={14} />
@@ -396,18 +399,18 @@ function CreditCardsCenterContent() {
       </Card>
 
       {loadingData ? (
-        <div className="credit-cards-summary-grid operational-summary-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }, (_, index) => (
+        <div className="credit-cards-summary-grid operational-summary-grid grid grid-cols-2 gap-2 xl:grid-cols-3">
+          {Array.from({ length: 3 }, (_, index) => (
             <div key={index} className="h-28 animate-pulse rounded-2xl bg-[--bg-hover]" />
           ))}
         </div>
       ) : (
         <>
-          <div className="credit-cards-summary-grid operational-summary-grid grid grid-cols-2 gap-2 xl:grid-cols-4">
+          <div className="credit-cards-summary-grid operational-summary-grid grid grid-cols-2 gap-2 xl:grid-cols-3">
             {[
               [
                 CircleDollarSign,
-                'Total das faturas',
+                'Fatura do mês',
                 center.selectedTotal,
                 `${center.selectedItemCount} lançamento${center.selectedItemCount === 1 ? '' : 's'} no período`,
               ],
@@ -422,12 +425,6 @@ function CreditCardsCenterContent() {
                 'Saldo pendente',
                 center.selectedRemainingTotal,
                 'Restante a pagar nas faturas',
-              ],
-              [
-                CalendarDays,
-                'Parcelas futuras',
-                center.futureInstallmentTotal,
-                `${center.futureInstallmentCount} parcela${center.futureInstallmentCount === 1 ? '' : 's'} após este mês`,
               ],
             ].map(([icon, label, amount, helper]) => (
               <SummaryCard
@@ -522,10 +519,41 @@ function CreditCardsCenterContent() {
             </div>
           )}
 
+          {incompleteInstallments.length > 0 && (
+            <details className="rounded-xl border border-[--warning-border] bg-[--warning-bg] px-4 py-3 text-xs text-[--warning-text]">
+              <summary className="min-h-8 cursor-pointer font-bold">
+                Revisar {incompleteInstallments.length} {incompleteInstallments.length === 1 ? 'compra parcelada incompleta' : 'compras parceladas incompletas'}
+              </summary>
+              <p className="mt-2">
+                Algumas parcelas esperadas não foram localizadas nos lançamentos carregados.
+                Não serão criadas automaticamente para evitar cobranças duplicadas.
+              </p>
+              <ul className="mt-2 space-y-1">
+                {incompleteInstallments.slice(0, 5).map((item) => (
+                  <li key={`${item.cardId}-${item.id}`}>
+                    {item.description}: {item.found}/{item.expected} parcelas identificadas
+                    {item.inconsistent ? ' · numeração a revisar' : ''}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/transactions?scope=all"
+                className="mt-2 inline-flex min-h-10 items-center font-bold underline underline-offset-2"
+              >
+                Conferir no histórico
+              </Link>
+            </details>
+          )}
+
           <div className="credit-cards-premium__grid grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,0.88fr)_minmax(380px,1.12fr)]">
             <div className="space-y-4">
               <Card className="shadow-sm">
-                <h2 className="text-sm font-black text-[--text-primary]">Próximos compromissos</h2>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                   <h2 className="text-sm font-black text-[--text-primary]">Próximas faturas</h2>
+                   <p className="text-xs tabular-nums text-[--text-secondary]">
+                     {center.futureInstallmentCount} parcelas futuras · {formatCurrency(center.futureInstallmentTotal)}
+                   </p>
+                 </div>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6 xl:grid-cols-3 2xl:grid-cols-6">
                   {center.forecast.map((item) => {
