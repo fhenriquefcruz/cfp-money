@@ -1,3 +1,9 @@
+import {
+  getFinancialActivityDate,
+  isFinanciallyEffectiveTransaction,
+} from '../../../src/domain/financialActivityCore.js'
+import { getSavingsSignedAmount } from '../../../src/domain/savings.js'
+
 export const TRIAL_DAYS = 7
 const DAY_MS = 86_400_000
 
@@ -141,24 +147,44 @@ export function reportRange(frequency, now = new Date()) {
   return { start, end }
 }
 
+/**
+ * Resumo consultivo por atividade. Usa os mesmos seletores de data/efetividade
+ * e a mesma semântica de reserva da aplicação.
+ * Não transforma pagamento de fatura em nova despesa.
+ */
 export function summarizeTransactions(transactions, range) {
+  const start = toDate(range?.start)
+  const end = toDate(range?.end)
+  if (!start || !end || start > end) {
+    return { income: 0, expenses: 0, savings: 0, balance: 0, count: 0, topCategories: [] }
+  }
+
+  // reportRange estabelece dias fechados em UTC. Comparar YYYY-MM-DD evita
+  // deslocar a atividade cadastrada para o mês de vencimento ou para outro fuso.
+  const startKey = start.toISOString().slice(0, 10)
+  const endKey = end.toISOString().slice(0, 10)
   const included = transactions.filter((item) => {
-    const date = toDate(item.date ? `${item.date}T12:00:00.000Z` : item.createdAt)
-    return date && date >= range.start && date <= range.end
+    if (!isFinanciallyEffectiveTransaction(item)) return false
+    const activityDate = getFinancialActivityDate(item)
+    return (
+      /^\d{4}-\d{2}-\d{2}$/.test(activityDate || '') &&
+      activityDate >= startKey &&
+      activityDate <= endKey
+    )
   })
 
   let income = 0
   let expenses = 0
+  let savings = 0
   const categories = new Map()
 
   for (const item of included) {
-    const amount = Number(item.amount || 0)
-    if (item.type === 'income' && !item.isSavings) {
+    const amount = Number.isFinite(Number(item.amount)) ? Number(item.amount) : 0
+    if (item.isSavings) {
+      savings += getSavingsSignedAmount(item)
+    } else if (item.type === 'income') {
       income += amount
-      continue
-    }
-
-    if (item.type === 'expense') {
+    } else if (item.type === 'expense') {
       expenses += amount
       const name = item.categoryName || item.category || 'Outros'
       categories.set(name, (categories.get(name) || 0) + amount)
@@ -168,6 +194,7 @@ export function summarizeTransactions(transactions, range) {
   return {
     income,
     expenses,
+    savings,
     balance: income - expenses,
     count: included.length,
     topCategories: [...categories.entries()]
