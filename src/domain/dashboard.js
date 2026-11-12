@@ -202,6 +202,67 @@ export function buildPeriodResultInsight(current = {}, previous = {}) {
   }
 }
 
+/**
+ * Central executiva: máximo de duas causas distintas. Apenas apresenta
+ * alertas já calculados pelos domínios; não altera estados nem transações.
+ */
+export function buildDashboardPriorityActions({
+  paymentSummary = {},
+  categoryReviewCount = 0,
+  budgetAlerts = [],
+  monthKey = '',
+  limit = 2,
+} = {}) {
+  const candidates = []
+  const overdue = Number(paymentSummary.overdueCount) || 0
+  const dueSoon = Number(paymentSummary.dueNext7DaysCount) || 0
+
+  if (overdue > 0) {
+    candidates.push({
+      cause: 'payment',
+      title: overdue === 1 ? '1 pagamento atrasado' : `${overdue} pagamentos atrasados`,
+      detail: 'Confira os compromissos vencidos e a situação de cada pagamento.',
+      to: monthKey ? `/transactions?month=${monthKey}` : '/transactions',
+    })
+  } else if (dueSoon > 0) {
+    candidates.push({
+      cause: 'payment',
+      title: dueSoon === 1 ? '1 vencimento próximo' : `${dueSoon} vencimentos próximos`,
+      detail: 'Confira os compromissos previstos para os próximos sete dias.',
+      to: monthKey ? `/transactions?month=${monthKey}` : '/transactions',
+    })
+  }
+
+  if (Number(categoryReviewCount) > 0) {
+    candidates.push({
+      cause: 'category',
+      title:
+        categoryReviewCount === 1
+          ? '1 classificação para revisar'
+          : `${categoryReviewCount} classificações para revisar`,
+      detail: 'Revise manualmente as categorias; nenhum lançamento será modificado automaticamente.',
+      to: `/transactions?review=categories${monthKey ? `&month=${monthKey}` : ''}`,
+    })
+  }
+
+  const mostCriticalBudget = [...budgetAlerts]
+    .filter((entry) => Number(entry?.budget?.amount) > 0 && Number(entry.pct) >= 100)
+    .sort((a, b) => Number(b.pct) - Number(a.pct))[0]
+  if (mostCriticalBudget) {
+    candidates.push({
+      cause: 'budget',
+      title:
+        Number(mostCriticalBudget.spent) > Number(mostCriticalBudget.budget.amount)
+          ? 'Orçamento ultrapassado'
+          : 'Orçamento no limite',
+      detail: `Revise o limite de ${mostCriticalBudget.cat?.name || 'categoria'} neste mês.`,
+      to: monthKey ? `/budgets?month=${monthKey}` : '/budgets',
+    })
+  }
+
+  return candidates.slice(0, Math.max(0, Math.min(2, Number(limit) || 0)))
+}
+
 export function buildDashboardActionInsights({
   currentSummary = {},
   previousSummary = {},
