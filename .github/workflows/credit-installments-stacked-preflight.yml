@@ -1,0 +1,78 @@
+name: Credit installments financial integration preflight
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/credit-installments-stacked-preflight.yml
+      - src/**
+      - tests/**
+      - scripts/**
+      - e2e/**
+      - public/**
+      - firestore.rules
+      - package.json
+      - package-lock.json
+
+permissions:
+  contents: read
+
+jobs:
+  combined-credit-and-financial-gates:
+    name: Credit installments plus financial Gates 0-2 (isolated)
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      VITE_FIREBASE_API_KEY: test-api-key
+      VITE_FIREBASE_AUTH_DOMAIN: test-project.firebaseapp.com
+      VITE_FIREBASE_PROJECT_ID: test-project
+      VITE_FIREBASE_STORAGE_BUCKET: test-project.firebasestorage.app
+      VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+      VITE_FIREBASE_APP_ID: '1:123456789:web:test'
+    steps:
+      - name: Checkout PR head without deploying
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Merge financial gates only inside disposable runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin \
+            fix/gate-2-2-reversal-concurrency \
+            fix/financial-gates-0-1-parity
+          git -c user.name='Isolated Financial Preflight' -c user.email='ci-preflight@example.invalid' \
+            merge --no-edit origin/fix/gate-2-2-reversal-concurrency
+          git -c user.name='Isolated Financial Preflight' -c user.email='ci-preflight@example.invalid' \
+            merge --no-edit origin/fix/financial-gates-0-1-parity
+          git status --short
+          printf 'Temporary merged SHA: '
+          git rev-parse HEAD
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install frontend, Functions and Worker
+        run: |
+          npm ci
+          npm ci --prefix functions
+          npm ci --prefix worker/email-notifications
+      - name: Validate financial selectors, installments and unchanged performance budget
+        run: npm run validate:all
+      - name: Verify formatting in combined sources
+        if: ${{ !cancelled() }}
+        run: npm run format:check
+      - name: Verify UID isolation and invoice idempotency in Firestore Emulator
+        if: ${{ !cancelled() }}
+        run: npm run test:rules
+      - name: Verify synthetic backup and restoration
+        if: ${{ !cancelled() }}
+        run: npm run test:backup-recovery
