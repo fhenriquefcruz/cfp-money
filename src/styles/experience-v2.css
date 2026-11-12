@@ -102,7 +102,6 @@
   color: #f2f5f8;
   font-size: clamp(15px, 2.1vw, 20px);
   font-weight: 750;
-  font-variant-numeric: tabular-nums;
 }
 
 .mr-v2-primary-action {
