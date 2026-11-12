@@ -108,9 +108,7 @@ export default function PaymentControlCard({ summary, loading = false }) {
 
             {comparison && (
               <div className="rounded-xl bg-[--bg-hover] px-3 py-2">
-                <p className="text-xs font-semibold text-[--text-secondary]">
-                  Comparação mensal
-                </p>
+                <p className="text-xs font-semibold text-[--text-secondary]">Comparação mensal</p>
                 <p className="mt-0.5 text-xs font-bold text-[--text-primary]">{comparison}</p>
               </div>
             )}
