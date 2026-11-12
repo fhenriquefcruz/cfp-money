@@ -422,7 +422,7 @@ function CreditCardsCenterContent() {
             {[
               [
                 CircleDollarSign,
-                'Fatura do mês',
+                'Total das faturas',
                 center.selectedTotal,
                 `${center.selectedItemCount} lançamento${center.selectedItemCount === 1 ? '' : 's'} no período`,
               ],
