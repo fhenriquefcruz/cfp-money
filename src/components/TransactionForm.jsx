@@ -29,7 +29,7 @@ import {
   uploadTransactionAttachment,
   validateReceiptFile,
 } from '../services/transactionAttachments'
-import { PAYMENT_METHODS } from '../utils'
+import { PAYMENT_METHODS, formatCurrency } from '../utils'
 import { format, addMonths } from 'date-fns'
 import {
   buildCreditTransaction,
@@ -307,8 +307,14 @@ export default function TransactionForm({
     if (!form.date) errs.date = 'Data obrigatória'
     if (isExpense && form.paymentMethod === 'credit_card' && !form.cardId)
       errs.cardId = 'Selecione o cartão para incluir a compra na fatura'
-    if (form.isInstallment && parseInt(form.installments) < 2)
-      errs.installments = 'Mínimo 2 parcelas'
+    if (
+      form.isInstallment &&
+      (!Number.isInteger(Number(form.installments)) ||
+        Number(form.installments) < 2 ||
+        Number(form.installments) > 48)
+    ) {
+      errs.installments = 'Informe de 2 a 48 parcelas'
+    }
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -535,6 +541,24 @@ export default function TransactionForm({
     showCreditFields && selectedCreditCard && form.date
       ? calculateInvoiceSchedule(form.date, selectedCreditCard)
       : null
+  const installmentPreview =
+    showCreditFields &&
+    selectedCreditCard &&
+    form.date &&
+    form.isInstallment &&
+    parseCurrency(form.amount) > 0 &&
+    Number.isInteger(Number(form.installments)) &&
+    Number(form.installments) >= 2 &&
+    Number(form.installments) <= 48
+      ? buildInstallmentTransactions({
+          baseData: {},
+          totalAmount: parseCurrency(form.amount),
+          installments: Number(form.installments),
+          purchaseDate: form.date,
+          card: selectedCreditCard,
+          groupId: 'preview-only',
+        })
+      : []
   const showRecurringField = (isIncome || isExpense) && !isEditing
 
   const btnLabel = () => {
@@ -935,17 +959,39 @@ export default function TransactionForm({
                         onChange={update('installments')}
                         error={errors.installments}
                       />
-                      {form.amount && form.installments && (
-                        <div className="p-2 rounded-lg bg-white/60 text-xs text-[--brand-700]">
-                          Distribuição:{' '}
-                          <strong>
-                            {formatInstallmentDistribution(form.amount, form.installments)}
-                          </strong>
-                          <p className="mt-1 text-[10px] leading-relaxed text-[--brand-600]">
-                            Os centavos são ajustados entre as primeiras parcelas para preservar o
-                            valor total.
+                      {installmentPreview.length > 0 ? (
+                        <div className="rounded-xl border border-[--brand-200] bg-[--bg-surface] p-3">
+                          <p className="text-xs font-bold text-[--text-primary]">
+                            Parcelas nas próximas faturas
+                          </p>
+                          <ol className="mt-2 divide-y divide-[--border-subtle]">
+                            {installmentPreview.map((item) => (
+                              <li
+                                key={item.installmentNum}
+                                className="flex items-center justify-between gap-3 py-2 text-xs"
+                              >
+                                <span className="text-[--text-secondary]">
+                                  {item.installmentNum}/{item.installmentOf} · Fatura{' '}
+                                  {item.invoiceMonth.split('-').reverse().join('/')}
+                                </span>
+                                <strong className="tabular-nums text-[--text-primary]">
+                                  {formatCurrency(item.amount)}
+                                </strong>
+                              </li>
+                            ))}
+                          </ol>
+                          <p className="mt-2 text-[11px] text-[--text-tertiary]">
+                            A compra ocorre uma vez. Cada parcela entra na fatura indicada;
+                            pagar a fatura não cria outra despesa.
                           </p>
                         </div>
+                      ) : (
+                        form.amount &&
+                        form.installments && (
+                          <p className="text-xs text-[--text-secondary]">
+                            {formatInstallmentDistribution(form.amount, form.installments)}
+                          </p>
+                        )
                       )}
                     </motion.div>
                   )}
