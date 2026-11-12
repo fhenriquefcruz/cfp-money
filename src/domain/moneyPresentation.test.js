@@ -2,6 +2,7 @@ import {
   formatMoneyPeriodLabel,
   getMoneyInsightHeadline,
   getMoneyInsightTone,
+  getMoneyProjectionPresentation,
 } from './moneyPresentation'
 
 test('formata o período em pt-BR', () => {
@@ -30,4 +31,37 @@ test('prioriza aviso de qualidade quando há classificação a revisar', () => {
 
   expect(getMoneyInsightHeadline(analysis)).toBe('Revise algumas classificações')
   expect(getMoneyInsightTone(analysis)).toBe('warning')
+})
+
+test('rotula projeção parcial como estimativa e informa confiança e período', () => {
+  expect(
+    getMoneyProjectionPresentation(
+      { isAvailable: true, isPartial: true, confidence: 'medium' },
+      { start: '2026-11-01', end: '2026-11-30' },
+    ),
+  ).toEqual({
+    label: 'Despesa estimada até o fim do ciclo',
+    detail: 'Estimativa · confiança moderada · 01/11/2026 a 30/11/2026',
+  })
+})
+
+test('diferencia ciclo fechado de projeção e dados ainda insuficientes', () => {
+  expect(
+    getMoneyProjectionPresentation(
+      { isAvailable: true, isPartial: false, confidence: 'high' },
+      { start: '2026-10-01', end: '2026-10-31' },
+    ),
+  ).toEqual({
+    label: 'Despesas do ciclo encerrado',
+    detail: 'Ciclo 01/10/2026 a 31/10/2026',
+  })
+  expect(
+    getMoneyProjectionPresentation(
+      { isAvailable: false, isPartial: true, minimumElapsedDays: 5 },
+      { start: '2026-11-01', end: '2026-11-30' },
+    ),
+  ).toEqual({
+    label: 'Despesa estimada até o fim do ciclo',
+    detail: 'Estimativa após 5 dias · 01/11/2026 a 30/11/2026',
+  })
 })
