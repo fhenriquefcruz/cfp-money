@@ -109,10 +109,6 @@
   color: var(--mr-v2-primary-contrast);
 }
 
-.mr-v2-primary-action:hover {
-  border-color: var(--mr-v2-accent);
-}
-
 .mr-executive-v2 .dashboard-quick-add__button {
   min-width: 48px;
   min-height: 48px;
