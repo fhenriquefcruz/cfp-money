@@ -1,3 +1,5 @@
+import { buildInstallmentTransactions } from './creditCards'
+import { getTransactionLedgerDate } from './transactionDates'
 import {
   buildCreditCardCenter,
   firstRelevantForecastMonth,
@@ -649,4 +651,71 @@ test('mostra competência com evento de fatura mesmo sem compras no mês', () =>
     selectedMonth: '2026-10',
   })
   expect(center.availableInvoiceMonths).toEqual(['2026-01'])
+})
+
+test('compra de novembro em 3x aparece em novembro, dezembro e janeiro nas duas visões', () => {
+  const card = {
+    id: 'card-test',
+    name: 'Cartão teste',
+    closingDay: 10,
+    dueDay: 20,
+    active: true,
+  }
+  const installments = buildInstallmentTransactions({
+    baseData: { description: 'Compra parcelada', categoryId: 'test' },
+    totalAmount: 100,
+    installments: 3,
+    purchaseDate: '2026-11-05',
+    card,
+    groupId: 'purchase-test',
+  }).map((item, index) => ({ ...item, id: `installment-${index + 1}` }))
+
+  expect(installments.map((item) => item.invoiceMonth)).toEqual([
+    '2026-11',
+    '2026-12',
+    '2027-01',
+  ])
+  expect(installments.map((item) => item.installmentNum)).toEqual([1, 2, 3])
+  expect(installments.reduce((total, item) => total + Math.round(item.amount * 100), 0)).toBe(
+    10000,
+  )
+
+  for (const [index, month] of ['2026-11', '2026-12', '2027-01'].entries()) {
+    const center = buildCreditCardCenter({
+      transactions: installments,
+      creditCards: [card],
+      selectedMonth: month,
+      now: new Date(2026, 10, 5),
+    })
+    expect(center.selectedItemCount).toBe(1)
+    expect(center.selectedTransactions[0].id).toBe(`installment-${index + 1}`)
+    expect(center.selectedTotal).toBe(installments[index].amount)
+    expect(
+      installments.filter((item) => getTransactionLedgerDate(item).slice(0, 7) === month),
+    ).toHaveLength(1)
+  }
+
+  expect(installments.every((item) => getTransactionLedgerDate(item, 'activity') === '2026-11-05')).toBe(
+    true,
+  )
+})
+
+test('fechamento anterior ou posterior à compra preserva faturas futuras e atravessa o ano', () => {
+  const card = { id: 'card-late', closingDay: 3, dueDay: 15 }
+  const installments = buildInstallmentTransactions({
+    baseData: { description: 'Compra após o fechamento' },
+    totalAmount: 50,
+    installments: 3,
+    purchaseDate: '2026-11-08',
+    card,
+    groupId: 'late-purchase-test',
+  })
+  expect(installments.map((item) => item.invoiceMonth)).toEqual([
+    '2026-12',
+    '2027-01',
+    '2027-02',
+  ])
+  expect(installments.reduce((total, item) => total + Math.round(item.amount * 100), 0)).toBe(
+    5000,
+  )
 })
