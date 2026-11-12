@@ -36,7 +36,7 @@ export default function PaymentControlCard({ summary, loading = false }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <ReceiptText size={16} className="text-[--brand-600]" />
-            <h2 className="text-sm font-bold text-[--text-primary]">Controle de pagamentos</h2>
+            <h2 className="text-sm font-bold text-[--text-primary]">Compromissos do mês</h2>
           </div>
 
           <p className="mt-1 text-xs text-[--text-tertiary]">
@@ -46,7 +46,7 @@ export default function PaymentControlCard({ summary, loading = false }) {
           </p>
 
           {summary.card?.itemCount > 0 && (
-            <p className="mt-1 text-[10px] text-[--text-tertiary]">
+            <p className="mt-1 text-xs text-[--text-tertiary]">
               Cartões seguem automaticamente os pagamentos registrados nas faturas.
             </p>
           )}
@@ -66,33 +66,33 @@ export default function PaymentControlCard({ summary, loading = false }) {
         <>
           <div className="payment-control-columns mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div className="payment-control-column payment-control-column--committed min-w-0">
-              <p className="text-[10px] text-[--text-tertiary]">Comprometido</p>
-              <p className="break-words text-sm font-black tabular-nums text-[--text-primary] [overflow-wrap:anywhere]">
+              <p className="text-xs text-[--text-tertiary]">Comprometido</p>
+              <p className="break-words text-sm font-bold tabular-nums text-[--text-primary] [overflow-wrap:anywhere]">
                 {formatCurrency(committedAmount)}
               </p>
             </div>
 
             <div className="payment-control-column payment-control-column--paid min-w-0">
-              <p className="flex items-center gap-1 text-[10px] text-[--success-text]">
+              <p className="flex items-center gap-1 text-xs text-[--success-text]">
                 <CheckCircle2 size={11} /> Pago
               </p>
-              <p className="break-words text-sm font-black tabular-nums text-[--success-text] [overflow-wrap:anywhere]">
+              <p className="break-words text-sm font-bold tabular-nums text-[--success-text] [overflow-wrap:anywhere]">
                 {formatCurrency(paidAmount)}
               </p>
             </div>
 
             <div className="payment-control-column payment-control-column--pending min-w-0">
-              <p className="flex items-center gap-1 text-[10px] text-[--warning-text]">
+              <p className="flex items-center gap-1 text-xs text-[--warning-text]">
                 <Clock3 size={11} /> A pagar
               </p>
-              <p className="break-words text-sm font-black tabular-nums text-[--warning-text] [overflow-wrap:anywhere]">
+              <p className="break-words text-sm font-bold tabular-nums text-[--warning-text] [overflow-wrap:anywhere]">
                 {formatCurrency(toPayAmount)}
               </p>
             </div>
 
             <div className="payment-control-column payment-control-column--late min-w-0">
-              <p className="text-[10px] font-semibold text-[--danger-text]">Atrasado</p>
-              <p className="break-words text-sm font-black tabular-nums text-[--danger-text] [overflow-wrap:anywhere]">
+              <p className="text-xs font-semibold text-[--danger-text]">Atrasado</p>
+              <p className="break-words text-sm font-bold tabular-nums text-[--danger-text] [overflow-wrap:anywhere]">
                 {formatCurrency(overdueAmount)}
               </p>
             </div>
@@ -100,7 +100,7 @@ export default function PaymentControlCard({ summary, loading = false }) {
 
           <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div className="rounded-xl bg-[--bg-hover] px-3 py-2">
-              <p className="text-[10px] font-semibold text-[--text-secondary]">Próximos 7 dias</p>
+              <p className="text-xs font-semibold text-[--text-secondary]">Próximos 7 dias</p>
               <p className="mt-0.5 text-xs font-bold tabular-nums text-[--text-primary]">
                 {formatCurrency(dueNext7DaysAmount)}
               </p>
@@ -108,7 +108,7 @@ export default function PaymentControlCard({ summary, loading = false }) {
 
             {comparison && (
               <div className="rounded-xl bg-[--bg-hover] px-3 py-2">
-                <p className="text-[10px] font-semibold text-[--text-secondary]">
+                <p className="text-xs font-semibold text-[--text-secondary]">
                   Comparação mensal
                 </p>
                 <p className="mt-0.5 text-xs font-bold text-[--text-primary]">{comparison}</p>
@@ -121,7 +121,7 @@ export default function PaymentControlCard({ summary, loading = false }) {
               <p className="text-xs font-bold text-[--warning-text]">
                 {unknownCount} {unknownCount === 1 ? 'item' : 'itens'} a revisar
               </p>
-              <p className="mt-0.5 text-[10px] text-[--warning-text]">
+              <p className="mt-0.5 text-xs text-[--warning-text]">
                 {formatCurrency(unknownAmount)} sem status de pagamento confirmado.
               </p>
             </div>
@@ -137,7 +137,7 @@ export default function PaymentControlCard({ summary, loading = false }) {
           >
             <ProgressBar value={paidAmount} max={committedAmount} animated />
 
-            <div className="mt-1 flex flex-wrap justify-between gap-1 text-[10px] text-[--text-tertiary]">
+            <div className="mt-1 flex flex-wrap justify-between gap-1 text-xs text-[--text-tertiary]">
               <span>{(summary.progress ?? 0).toFixed(0)}% pago</span>
               <span>{toPayCount} a pagar</span>
             </div>
