@@ -16,6 +16,15 @@ export function getCalendarMonthBounds(referenceDate = new Date()) {
 }
 
 /**
+ * "Até hoje" só tem significado no mês atual. Meses históricos ou futuros
+ * usam o mês completo; nunca exibimos uma ausência artificial de lançamentos.
+ */
+export function resolveDashboardActivityScope(requestedScope, year, month, today = new Date()) {
+  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth()
+  return isCurrentMonth && requestedScope === 'to_date' ? 'to_date' : 'full_month'
+}
+
+/**
  * Resumo consultivo do Dashboard. Não altera competência, status ou liquidação.
  * "Até a data" significa data de atividade cadastrada, não pagamento bancário.
  */
