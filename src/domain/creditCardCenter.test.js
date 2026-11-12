@@ -670,15 +670,9 @@ test('compra de novembro em 3x aparece em novembro, dezembro e janeiro nas duas 
     groupId: 'purchase-test',
   }).map((item, index) => ({ ...item, id: `installment-${index + 1}` }))
 
-  expect(installments.map((item) => item.invoiceMonth)).toEqual([
-    '2026-11',
-    '2026-12',
-    '2027-01',
-  ])
+  expect(installments.map((item) => item.invoiceMonth)).toEqual(['2026-11', '2026-12', '2027-01'])
   expect(installments.map((item) => item.installmentNum)).toEqual([1, 2, 3])
-  expect(installments.reduce((total, item) => total + Math.round(item.amount * 100), 0)).toBe(
-    10000,
-  )
+  expect(installments.reduce((total, item) => total + Math.round(item.amount * 100), 0)).toBe(10000)
 
   for (const [index, month] of ['2026-11', '2026-12', '2027-01'].entries()) {
     const center = buildCreditCardCenter({
@@ -695,9 +689,9 @@ test('compra de novembro em 3x aparece em novembro, dezembro e janeiro nas duas 
     ).toHaveLength(1)
   }
 
-  expect(installments.every((item) => getTransactionLedgerDate(item, 'activity') === '2026-11-05')).toBe(
-    true,
-  )
+  expect(
+    installments.every((item) => getTransactionLedgerDate(item, 'activity') === '2026-11-05'),
+  ).toBe(true)
 })
 
 test('fechamento anterior ou posterior à compra preserva faturas futuras e atravessa o ano', () => {
@@ -710,12 +704,6 @@ test('fechamento anterior ou posterior à compra preserva faturas futuras e atra
     card,
     groupId: 'late-purchase-test',
   })
-  expect(installments.map((item) => item.invoiceMonth)).toEqual([
-    '2026-12',
-    '2027-01',
-    '2027-02',
-  ])
-  expect(installments.reduce((total, item) => total + Math.round(item.amount * 100), 0)).toBe(
-    5000,
-  )
+  expect(installments.map((item) => item.invoiceMonth)).toEqual(['2026-12', '2027-01', '2027-02'])
+  expect(installments.reduce((total, item) => total + Math.round(item.amount * 100), 0)).toBe(5000)
 })
