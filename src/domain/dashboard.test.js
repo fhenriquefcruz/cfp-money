@@ -6,6 +6,7 @@ import {
   getCalendarMonthBounds,
   getLargestMonthlyExpenseChange,
   getRecentDashboardTransactions,
+  summarizeDashboardActivity,
 } from './dashboard'
 
 test('gera limites mensais em data local sem converter para UTC', () => {
@@ -250,4 +251,50 @@ test('usa orçamento como próximo passo quando não há alerta de pagamentos ne
     title: 'Planejamento do mês',
     to: '/budgets?month=2026-10',
   })
+})
+
+test('Dashboard v2: corte por atividade não reinterpreta fatura, status ou transferências', () => {
+  const transactions = [
+    { type: 'income', date: '2026-11-02', amount: '1000' },
+    {
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      purchaseDate: '2026-11-05',
+      date: '2026-12-10',
+      amount: '300',
+    },
+    { type: 'expense', date: '2026-11-21', amount: 200 },
+    { type: 'expense', date: '2026-11-04', amount: 800, paymentStatus: 'cancelled' },
+    { type: 'expense', date: '2026-11-07', amount: 700, flowType: 'transfer' },
+    { type: 'expense', date: '2026-11-08', amount: 600, kind: 'transfer' },
+    {
+      type: 'income',
+      date: '2026-11-06',
+      amount: 50,
+      isSavings: true,
+      savingsMovement: 'deposit',
+    },
+  ]
+  const before = structuredClone(transactions)
+  const toDate = summarizeDashboardActivity(transactions, 2026, 10, '2026-11-12')
+  const entireMonth = summarizeDashboardActivity(transactions, 2026, 10)
+
+  expect(toDate).toMatchObject({
+    income: 1000,
+    expenses: 300,
+    balance: 700,
+    savings: 50,
+    count: 3,
+  })
+  expect(entireMonth).toMatchObject({
+    income: 1000,
+    expenses: 500,
+    balance: 500,
+    savings: 50,
+    count: 4,
+  })
+  expect(summarizeDashboardActivity(transactions, 2026, 9, '2026-11-12').count).toBe(0)
+  expect(summarizeDashboardActivity(transactions, 2026, 11, '2026-11-12').count).toBe(0)
+  expect(transactions).toEqual(before)
 })
