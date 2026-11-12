@@ -44,10 +44,11 @@ test('compra 3x de novembro permanece visível nas faturas e no extrato de dezem
   await page.getByRole('button', { name: 'Vencimentos' }).click()
   await expect(list.getByText('Compra 3x novembro E2E', { exact: true })).toHaveCount(1)
 
-  // Navegação por hash mantém o estado E2E em memória; nenhum Firebase é acessado.
-  await page.evaluate(() => { window.location.hash = '#/cards' })
+  // O link do lançamento abre a competência exata sem recarregar o estado E2E.
+  await list.getByRole('link', { name: /Abrir fatura de/ }).click()
   await expect(page.getByRole('heading', { name: 'Cartões e faturas' })).toBeVisible()
   const picker = page.getByLabel('Selecionar mês da fatura')
+  await expect(picker).toHaveValue('2027-01')
   const cardMovements = page.locator('.credit-cards-premium__grid')
   for (const month of ['2026-11', '2026-12', '2027-01']) {
     await picker.fill(month)
