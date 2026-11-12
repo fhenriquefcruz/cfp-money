@@ -31,7 +31,6 @@
 /* O Hero permanece mineral escuro em ambos os temas; a paleta de base é dual. */
 .mr-executive-v2 .dashboard-period-hero {
   border: 1px solid #2a3743;
-  border-radius: 16px;
   background: #17212b;
   box-shadow: none;
 }
