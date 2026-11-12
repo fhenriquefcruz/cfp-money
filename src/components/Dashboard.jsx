@@ -378,10 +378,10 @@ export default function Dashboard() {
     return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'
   }
   const isLoading = transactionsLoading
-  const periodInsight = useMemo(
-    () => buildPeriodResultInsight(heroSummary, activityView === 'full_month' ? previousSummary : {}),
-    [heroSummary, activityView, previousSummary],
-  )
+  const periodInsight = useMemo(() => {
+    const comparison = activityView === 'full_month' ? previousSummary : {}
+    return buildPeriodResultInsight(heroSummary, comparison)
+  }, [heroSummary, activityView, previousSummary])
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
@@ -528,7 +528,12 @@ export default function Dashboard() {
             </div>
 
             <div className="dashboard-period-hero__metrics">
-              <FinanceKpi label="Receitas" value={heroSummary.income} kind="income" loading={isLoading} />
+              <FinanceKpi
+                label="Receitas"
+                value={heroSummary.income}
+                kind="income"
+                loading={isLoading}
+              />
               <FinanceKpi
                 label="Despesas"
                 value={heroSummary.expenses}
