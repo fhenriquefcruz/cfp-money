@@ -1,7 +1,5 @@
 import { summarizeTransactions as summarizeApp, transactionsForMonth } from './finance'
-import {
-  summarizeTransactions as summarizeWorker,
-} from '../../worker/email-notifications/src/domain.js'
+import { summarizeTransactions as summarizeWorker } from '../../worker/email-notifications/src/domain.js'
 
 const range = (year, month) => ({
   start: new Date(Date.UTC(year, month - 1, 1)),
