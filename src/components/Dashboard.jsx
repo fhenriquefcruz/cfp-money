@@ -497,9 +497,15 @@ export default function Dashboard() {
                       </span>
                     )}
                   </div>
+                  <p className="mr-v2-secondary-context sm:hidden">
+                    Uso das receitas:{' '}
+                    {periodInsight.expenseIncomeRatio === null
+                      ? 'Sem base'
+                      : `${periodInsight.expenseIncomeRatio}%`}
+                  </p>
                 </div>
 
-                <div className="dashboard-period-hero__signal">
+                <div className="dashboard-period-hero__signal hidden sm:block">
                   <div className="dashboard-period-hero__signal-head">
                     <span>Uso das receitas</span>
                     <strong>
