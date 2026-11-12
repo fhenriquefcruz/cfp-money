@@ -101,3 +101,28 @@ test('Dashboard v2 exibe uso das receitas compacto no celular sem ocultar o valo
   await expect(page.getByRole('region', { name: 'Próximas ações' })).toBeVisible()
   await expectNoHorizontalOverflow(page)
 })
+
+test('Dashboard v2 mantém prioridades e exploração operáveis em larguras reduzidas', async ({
+  page,
+}) => {
+  await prepareE2EPage(page, '/dashboard')
+
+  for (const width of [320, 360, 390, 768]) {
+    await page.setViewportSize({ width, height: 800 })
+    await expect(page.getByRole('button', { name: 'Nova transação', exact: true })).toBeVisible()
+
+    const priority = page.getByRole('region', { name: 'Próximas ações' })
+    await expect(priority).toBeVisible()
+    expect(await priority.locator('.dashboard-attention-card__item').count()).toBeLessThanOrEqual(
+      2,
+    )
+
+    const expand = page.getByRole('button', { name: 'Explorar análises' })
+    await expand.click()
+    await expect(page.getByRole('heading', { name: 'Evolução financeira' })).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+
+    await page.getByRole('button', { name: 'Ocultar análises' }).click()
+    await expectNoHorizontalOverflow(page)
+  }
+})
