@@ -39,7 +39,13 @@ export function getTransactionActivityDate(transaction = {}) {
 // O extrato pode seguir a atividade da compra ou os compromissos de fatura.
 // Não modifica a competência usada em Dashboard e Orçamentos.
 export function getTransactionLedgerDate(transaction = {}, view = 'invoice') {
-  if (view === 'invoice' && isStructuredCreditPurchase(transaction)) {
+  if (
+    view === 'invoice' &&
+    (isStructuredCreditPurchase(transaction) ||
+      (transaction.type === 'expense' &&
+        transaction.cardId &&
+        transaction.paymentMethod === 'credit_card'))
+  ) {
     return getTransactionAccountingDate(transaction) || getTransactionActivityDate(transaction)
   }
   return getTransactionActivityDate(transaction)
