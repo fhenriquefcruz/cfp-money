@@ -1,5 +1,5 @@
 import { buildInstallmentTransactions } from './creditCards'
-import { getTransactionLedgerDate } from './transactionDates'
+import { getTransactionLedgerDate } from './transactionLedgerPeriods'
 import {
   buildCreditCardCenter,
   firstRelevantForecastMonth,
