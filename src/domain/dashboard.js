@@ -242,19 +242,8 @@ export function buildDashboardPriorityActions({
     })
   }
 
-  if (Number(categoryReviewCount) > 0) {
-    candidates.push({
-      cause: 'category',
-      title:
-        categoryReviewCount === 1
-          ? '1 classificação para revisar'
-          : `${categoryReviewCount} classificações para revisar`,
-      detail:
-        'Revise manualmente as categorias; nenhum lançamento será modificado automaticamente.',
-      to: `/transactions?review=categories${monthKey ? `&month=${monthKey}` : ''}`,
-    })
-  }
-
+  // Um limite estourado é uma obrigação de planejamento mais urgente que
+  // uma sugestão de classificação; ambos continuam consultivos.
   const mostCriticalBudget = [...budgetAlerts]
     .filter((entry) => Number(entry?.budget?.amount) > 0 && Number(entry.pct) >= 100)
     .sort((a, b) => Number(b.pct) - Number(a.pct))[0]
@@ -267,6 +256,19 @@ export function buildDashboardPriorityActions({
           : 'Orçamento no limite',
       detail: `Revise o limite de ${mostCriticalBudget.cat?.name || 'categoria'} neste mês.`,
       to: monthKey ? `/budgets?month=${monthKey}` : '/budgets',
+    })
+  }
+
+  if (Number(categoryReviewCount) > 0) {
+    candidates.push({
+      cause: 'category',
+      title:
+        categoryReviewCount === 1
+          ? '1 classificação para revisar'
+          : `${categoryReviewCount} classificações para revisar`,
+      detail:
+        'Revise manualmente as categorias; nenhum lançamento será modificado automaticamente.',
+      to: `/transactions?review=categories${monthKey ? `&month=${monthKey}` : ''}`,
     })
   }
 
