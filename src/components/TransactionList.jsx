@@ -57,7 +57,6 @@ import { ptBR } from 'date-fns/locale'
 import { defaultDateRangeEnd, summarizeTransactions } from '../domain/finance'
 import {
   formatTransactionIsoDate,
-  getTransactionActivityDate,
   getTransactionLedgerDate,
   getTransactionDateContext,
 } from '../domain/transactionDates'
