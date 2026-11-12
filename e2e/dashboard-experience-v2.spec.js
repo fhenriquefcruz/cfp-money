@@ -113,9 +113,7 @@ test('Dashboard v2 mantém prioridades e exploração operáveis em larguras red
 
     const priority = page.getByRole('region', { name: 'Próximas ações' })
     await expect(priority).toBeVisible()
-    expect(await priority.locator('.dashboard-attention-card__item').count()).toBeLessThanOrEqual(
-      2,
-    )
+    expect(await priority.locator('.dashboard-attention-card__item').count()).toBeLessThanOrEqual(2)
 
     const expand = page.getByRole('button', { name: 'Explorar análises' })
     await expand.click()
