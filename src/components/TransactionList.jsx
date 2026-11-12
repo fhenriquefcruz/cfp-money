@@ -55,10 +55,7 @@ import {
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { defaultDateRangeEnd, summarizeTransactions } from '../domain/finance'
-import {
-  formatTransactionIsoDate,
-  getTransactionDateContext,
-} from '../domain/transactionDates'
+import { formatTransactionIsoDate, getTransactionDateContext } from '../domain/transactionDates'
 import { getTransactionLedgerDate } from '../domain/transactionLedgerPeriods'
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
 import { getSavingsDestinationLabel } from '../domain/savings'
