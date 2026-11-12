@@ -552,6 +552,7 @@ export default function TransactionForm({
       onClose={onClose}
       title={isEditing ? 'Editar transação' : 'Nova transação'}
       size="sm"
+      initialFocusId={!isEditing ? 'transaction-amount' : undefined}
       closeOnBackdrop={false}
       closeOnEscape
       footer={
