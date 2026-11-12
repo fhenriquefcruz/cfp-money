@@ -80,7 +80,12 @@ export function findIncompleteCardInstallmentGroups(transactions = []) {
       positions: [],
       inconsistent: false,
     }
-    if (count !== group.expected || !Number.isInteger(position) || position < 1 || position > count) {
+    if (
+      count !== group.expected ||
+      !Number.isInteger(position) ||
+      position < 1 ||
+      position > count
+    ) {
       group.inconsistent = true
     } else {
       group.positions.push(position)
@@ -91,10 +96,9 @@ export function findIncompleteCardInstallmentGroups(transactions = []) {
   return [...groups.values()]
     .map((group) => {
       const unique = new Set(group.positions)
-      const missing = Array.from(
-        { length: group.expected },
-        (_, index) => index + 1,
-      ).filter((position) => !unique.has(position))
+      const missing = Array.from({ length: group.expected }, (_, index) => index + 1).filter(
+        (position) => !unique.has(position),
+      )
       return {
         id: group.id,
         cardId: group.cardId,
