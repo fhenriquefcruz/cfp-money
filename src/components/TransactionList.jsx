@@ -354,7 +354,9 @@ function TxRow({
 
           {payableExpense && structuredCredit && !toggleablePayment && (
             <Link
-              to="/cards"
+              to={/^\\d{4}-(0[1-9]|1[0-2])$/.test(tx.invoiceMonth || tx.dueDate?.slice(0, 7) || '')
+                ? `/cards?month=${tx.invoiceMonth || tx.dueDate.slice(0, 7)}`
+                : '/cards'}
               aria-label={`Abrir fatura de ${tx.cardName || 'cartão'}`}
               className={`transaction-payment-status ${invoicePresentation.className}`}
             >
