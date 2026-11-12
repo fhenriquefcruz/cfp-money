@@ -66,3 +66,26 @@ test('Dashboard v2 organiza quatro áreas e recolhe análises sem perder atalhos
   await expect(page.locator('#dashboard-explore-content')).toHaveCount(0)
   await expectNoHorizontalOverflow(page)
 })
+
+test('Dashboard v2 mostra mês completo ao navegar para passado e futuro', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-11-12T12:00:00-04:00') })
+  await prepareE2EPage(page, '/dashboard')
+  const scope = page.getByRole('group', { name: 'Recorte temporal do resultado' })
+  const toDate = scope.getByRole('button', { name: 'Até hoje' })
+  const fullMonth = scope.getByRole('button', { name: 'Mês completo' })
+
+  await expect(toDate).toBeEnabled()
+  await page.getByRole('button', { name: 'Visualizar próximo mês' }).click()
+  await expect(toDate).toBeDisabled()
+  await expect(fullMonth).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByText('Mostra os lançamentos cadastrados para todo o mês')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Visualizar mês anterior' }).click()
+  await expect(toDate).toBeEnabled()
+  await expect(toDate).toHaveAttribute('aria-pressed', 'true')
+
+  await page.getByRole('button', { name: 'Visualizar mês anterior' }).click()
+  await expect(toDate).toBeDisabled()
+  await expect(fullMonth).toHaveAttribute('aria-pressed', 'true')
+  await expectNoHorizontalOverflow(page)
+})
