@@ -276,6 +276,40 @@ describe('TransactionForm credit card integration', () => {
     active: true,
   }
 
+  it('pré-visualiza e grava as três competências da compra de novembro, incluindo janeiro', async () => {
+    appMocks.creditCards = [
+      { id: 'inter', name: 'Inter', closingDay: 10, dueDay: 20, active: true },
+    ]
+    render(<TransactionForm isOpen onClose={vi.fn()} transaction={null} />)
+
+    fireEvent.change(screen.getByLabelText('Data'), { target: { value: '2026-11-05' } })
+    fireEvent.change(screen.getByLabelText(/Valor/), { target: { value: '10000' } })
+    fireEvent.click(screen.getByRole('button', { name: /Alimentação/i }))
+    fireEvent.change(screen.getByLabelText('Pagamento'), {
+      target: { value: 'credit_card' },
+    })
+    fireEvent.change(screen.getByLabelText('Cartão cadastrado'), {
+      target: { value: 'inter' },
+    })
+    fireEvent.click(screen.getByRole('checkbox', { name: /Parcelado/i }))
+    fireEvent.change(screen.getByLabelText('Número de parcelas'), {
+      target: { value: '3' },
+    })
+
+    expect(screen.getByText('Parcelas nas próximas faturas')).toBeInTheDocument()
+    expect(screen.getByText(/1\/3 · Fatura 11\/2026/)).toBeInTheDocument()
+    expect(screen.getByText(/2\/3 · Fatura 12\/2026/)).toBeInTheDocument()
+    expect(screen.getByText(/3\/3 · Fatura 01\/2027/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Criar 3 parcelas' }))
+
+    await vi.waitFor(() => expect(appMocks.addTransactionBatch).toHaveBeenCalledTimes(1))
+    const items = appMocks.addTransactionBatch.mock.calls[0][0]
+    expect(items).toHaveLength(3)
+    expect(items.map((item) => item.invoiceMonth)).toEqual(['2026-11', '2026-12', '2027-01'])
+    expect(items.every((item) => item.cardId === 'inter')).toBe(true)
+    expect(items.reduce((cents, item) => cents + Math.round(item.amount * 100), 0)).toBe(10000)
+  })
+
   it('não solicita dia de fechamento ao criar transação no cartão cadastrado', () => {
     appMocks.creditCards = [
       { id: 'nubank', name: 'Nubank', closingDay: 24, dueDay: 1, active: true },

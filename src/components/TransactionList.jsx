@@ -40,11 +40,7 @@ import TransactionAttachmentManager from './TransactionAttachmentManager'
 import TransactionSeriesModal from './TransactionSeriesModal'
 import TransactionCsvImportModal from './TransactionCsvImportModal'
 import TransactionSavedViews from './TransactionSavedViews'
-import CategoryCompositionVisual from './CategoryCompositionVisual'
-import {
-  categoryAccentStyle,
-  categoryCompositionFromTransactions,
-} from '../domain/categoryComposition'
+import { categoryAccentStyle } from '../domain/categoryComposition'
 import {
   formatCurrency,
   getPaymentLabel,
@@ -55,11 +51,8 @@ import {
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { defaultDateRangeEnd, summarizeTransactions } from '../domain/finance'
-import {
-  formatTransactionIsoDate,
-  getTransactionActivityDate,
-  getTransactionDateContext,
-} from '../domain/transactionDates'
+import { formatTransactionIsoDate, getTransactionDateContext } from '../domain/transactionDates'
+import { getTransactionLedgerDate } from '../domain/transactionLedgerPeriods'
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
 import { getSavingsDestinationLabel } from '../domain/savings'
 import { isTransactionSeries } from '../domain/transactionSeries'
@@ -137,10 +130,10 @@ function getCurrentMonthRange() {
 }
 
 // Agrupa transações por data
-function groupByDate(txs) {
+function groupByDate(txs, view = 'invoice') {
   const groups = {}
   txs.forEach((tx) => {
-    const activityDate = getTransactionActivityDate(tx) || tx.date || ''
+    const activityDate = getTransactionLedgerDate(tx, view) || tx.date || ''
     if (!groups[activityDate]) groups[activityDate] = []
     groups[activityDate].push(tx)
   })
@@ -354,7 +347,11 @@ function TxRow({
 
           {payableExpense && structuredCredit && !toggleablePayment && (
             <Link
-              to="/cards"
+              to={
+                /^\d{4}-(0[1-9]|1[0-2])$/.test(tx.invoiceMonth || tx.dueDate?.slice(0, 7) || '')
+                  ? `/cards?month=${tx.invoiceMonth || tx.dueDate.slice(0, 7)}`
+                  : '/cards'
+              }
               aria-label={`Abrir fatura de ${tx.cardName || 'cartão'}`}
               className={`transaction-payment-status ${invoicePresentation.className}`}
             >
@@ -515,6 +512,9 @@ export default function TransactionList() {
       (searchParams.get('scope') === 'all' ? { from: '', to: '' } : getCurrentMonthRange()),
   )
   const [showFilters, setShowFilters] = useState(false)
+  const [periodView, setPeriodView] = useState(() =>
+    searchParams.get('view') === 'activity' ? 'activity' : 'invoice',
+  )
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTx, setEditingTx] = useState(null)
   const [deleteId, setDeleteId] = useState(null)
@@ -568,7 +568,7 @@ export default function TransactionList() {
         }
       }
 
-      const activityDate = getTransactionActivityDate(tx)
+      const activityDate = getTransactionLedgerDate(tx, periodView)
       if (dateRange.from && activityDate < dateRange.from) return false
       if (dateRange.to && activityDate > dateRange.to) return false
       if (search) {
@@ -583,8 +583,8 @@ export default function TransactionList() {
       return true
     })
     txs.sort((a, b) => {
-      const firstDate = getTransactionActivityDate(a)
-      const secondDate = getTransactionActivityDate(b)
+      const firstDate = getTransactionLedgerDate(a, periodView)
+      const secondDate = getTransactionLedgerDate(b, periodView)
       return sortAsc ? firstDate.localeCompare(secondDate) : secondDate.localeCompare(firstDate)
     })
     return txs
@@ -600,6 +600,7 @@ export default function TransactionList() {
     dateRange,
     search,
     sortAsc,
+    periodView,
   ])
 
   const bulkPaymentCandidates = useMemo(
@@ -630,6 +631,7 @@ export default function TransactionList() {
     dateRange.from,
     dateRange.to,
     search,
+    periodView,
   ])
 
   useEffect(() => {
@@ -656,12 +658,11 @@ export default function TransactionList() {
   }, [user?.uid])
 
   const summary = useMemo(() => summarizeTransactions(filtered), [filtered])
-  const expenseComposition = useMemo(
-    () => categoryCompositionFromTransactions(filtered, categories),
-    [filtered, categories],
-  )
 
-  const grouped = useMemo(() => groupByDate(filtered.slice(0, page * PER_PAGE)), [filtered, page])
+  const grouped = useMemo(
+    () => groupByDate(filtered.slice(0, page * PER_PAGE), periodView),
+    [filtered, page, periodView],
+  )
   const hasMore = filtered.length > page * PER_PAGE
   const currentMonthRange = getCurrentMonthRange()
   const currentMonthKey = currentMonthRange.from.slice(0, 7)
@@ -1079,6 +1080,36 @@ export default function TransactionList() {
         )}
       </div>
 
+      <div
+        role="group"
+        aria-label="Visão dos lançamentos"
+        className="flex flex-wrap items-center gap-2 px-1"
+      >
+        <span className="text-xs font-semibold text-[--text-secondary]">Organizar por</span>
+        {[
+          ['invoice', 'Vencimentos'],
+          ['activity', 'Compras'],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={periodView === value}
+            onClick={() => {
+              setPeriodView(value)
+              setPage(1)
+            }}
+            className={`min-h-10 rounded-xl border px-3 text-xs font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[--brand-500] ${periodView === value ? 'border-[--brand-500] bg-[--brand-50] text-[--text-brand]' : 'border-[--border-default] bg-[--bg-surface] text-[--text-secondary] hover:bg-[--bg-hover]'}`}
+          >
+            {label}
+          </button>
+        ))}
+        <span className="basis-full text-[11px] text-[--text-tertiary] sm:basis-auto sm:ml-auto">
+          {periodView === 'invoice'
+            ? 'Parcelas pelo vencimento da fatura; demais lançamentos pela atividade.'
+            : 'Compras pelo dia da aquisição, incluindo todas as parcelas da compra.'}
+        </span>
+      </div>
+
       {lastImportIds.length > 0 && (
         <div className="transaction-import-undo">
           <p>
@@ -1101,13 +1132,13 @@ export default function TransactionList() {
             icon: <TrendingUp size={13} />,
           },
           {
-            label: 'Despesas',
+            label: periodView === 'invoice' ? 'Saídas / parcelas' : 'Despesas',
             value: summary.expenses,
             color: 'var(--danger-icon)',
             icon: <TrendingDown size={13} />,
           },
           {
-            label: 'Saldo',
+            label: 'Resultado do recorte',
             value: summary.balance,
             color: summary.balance >= 0 ? 'var(--brand-600)' : 'var(--danger-icon)',
             icon: <ArrowLeftRight size={13} />,
@@ -1141,48 +1172,6 @@ export default function TransactionList() {
           </div>
         ))}
       </div>
-
-      {expenseComposition.length > 0 && (
-        <section
-          aria-label="Composição dos gastos filtrados"
-          className="category-composition-panel rounded-3xl border border-[--border-default] bg-[--bg-surface] p-4 sm:p-5"
-        >
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-[--text-brand]">
-                Leitura do período
-              </p>
-              <h2 className="mt-1 text-base font-black text-[--text-primary]">
-                Onde estão os gastos
-              </h2>
-              <p className="mt-1 text-xs text-[--text-tertiary]">
-                Atualizado pelos filtros selecionados. Selecione uma categoria para ver seus
-                lançamentos.
-              </p>
-            </div>
-            {catFilter !== 'all' && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCatFilter('all')
-                  setPage(1)
-                }}
-                className="min-h-9 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
-              >
-                Todas as categorias
-              </button>
-            )}
-          </div>
-          <CategoryCompositionVisual
-            items={expenseComposition}
-            selectedCategoryId={catFilter}
-            onSelect={(categoryId) => {
-              setCatFilter(categoryId)
-              setPage(1)
-            }}
-          />
-        </section>
-      )}
 
       {categoryReviewQueue.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--warning-border] bg-[--warning-bg] px-3 py-2.5">
@@ -1271,13 +1260,15 @@ export default function TransactionList() {
           </button>
         </div>
 
-        <TransactionSavedViews
-          views={savedViews}
-          canSave={savableFilterCount > 0}
-          onApply={applySavedView}
-          onSave={saveCurrentView}
-          onDelete={deleteSavedView}
-        />
+        {(savedViews.length > 0 || savableFilterCount > 0) && (
+          <TransactionSavedViews
+            views={savedViews}
+            canSave={savableFilterCount > 0}
+            onApply={applySavedView}
+            onSave={saveCurrentView}
+            onDelete={deleteSavedView}
+          />
+        )}
 
         {activeFilterChips.length > 0 && (
           <div className="transaction-active-filters">
@@ -1568,8 +1559,9 @@ export default function TransactionList() {
       )}
 
       <p className="px-1 text-[10px] text-[--text-tertiary]">
-        Lista agrupada pela data da movimentação. Vencimento e pagamento aparecem separadamente
-        quando informados.
+        {periodView === 'invoice'
+          ? 'Parcelas de cartão pela data da fatura; demais lançamentos pela atividade. Não é saldo bancário.'
+          : 'Compras pelo dia da atividade, sem duplicar parcelas no patrimônio. Não é saldo bancário.'}
       </p>
 
       {/* Lista agrupada por data */}

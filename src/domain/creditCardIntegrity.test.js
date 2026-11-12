@@ -1,5 +1,8 @@
 import { expect, test } from 'vitest'
-import { auditCreditCardIntegrity } from './creditCardIntegrity'
+import {
+  auditCreditCardIntegrity,
+  findIncompleteCardInstallmentGroups,
+} from './creditCardIntegrity'
 import { summarizeCardLinks } from './cardLinkageSummary'
 
 const card = { id: 'card-real', name: 'Cartão' }
@@ -194,4 +197,53 @@ test('resumo preserva compras realmente conciliáveis e soma valores em centavos
   expect(result.unlinkedPurchases.map((item) => item.id)).toEqual(['a', 'b'])
   expect(result.unlinkedTotal).toBe(0.3)
   expect(JSON.stringify(transactions)).toBe(original)
+})
+
+test('sinaliza parcela ausente no cartão sem inventar movimentos ou modificar o histórico', () => {
+  const original = [
+    {
+      ...purchase,
+      id: 'a',
+      installmentGroupId: 'g1',
+      isInstallment: true,
+      installmentNum: 1,
+      installmentOf: 3,
+      invoiceMonth: '2026-11',
+    },
+    {
+      ...purchase,
+      id: 'c',
+      installmentGroupId: 'g1',
+      isInstallment: true,
+      installmentNum: 3,
+      installmentOf: 3,
+      invoiceMonth: '2027-01',
+    },
+    { ...purchase, id: 'single', invoiceMonth: '2026-12' },
+  ]
+  const snapshot = JSON.stringify(original)
+  const incomplete = findIncompleteCardInstallmentGroups(original)
+  expect(incomplete).toMatchObject([
+    { id: 'g1', cardId: 'card-real', expected: 3, found: 2, missing: [2], inconsistent: false },
+  ])
+  expect(JSON.stringify(original)).toBe(snapshot)
+})
+
+test('não sinaliza série íntegra; expõe numeração duplicada para revisão', () => {
+  const installments = [1, 2, 3].map((position) => ({
+    ...purchase,
+    id: `part-${position}`,
+    isInstallment: true,
+    installmentGroupId: 'complete',
+    installmentNum: position,
+    installmentOf: 3,
+  }))
+  expect(findIncompleteCardInstallmentGroups(installments)).toEqual([])
+  const duplicated = [...installments, { ...installments[1], id: 'duplicate' }]
+  expect(findIncompleteCardInstallmentGroups(duplicated)[0]).toMatchObject({
+    expected: 3,
+    found: 3,
+    missing: [],
+    inconsistent: true,
+  })
 })
