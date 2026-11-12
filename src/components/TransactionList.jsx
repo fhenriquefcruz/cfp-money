@@ -57,9 +57,9 @@ import { ptBR } from 'date-fns/locale'
 import { defaultDateRangeEnd, summarizeTransactions } from '../domain/finance'
 import {
   formatTransactionIsoDate,
-  getTransactionLedgerDate,
   getTransactionDateContext,
 } from '../domain/transactionDates'
+import { getTransactionLedgerDate } from '../domain/transactionLedgerPeriods'
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
 import { getSavingsDestinationLabel } from '../domain/savings'
 import { isTransactionSeries } from '../domain/transactionSeries'
