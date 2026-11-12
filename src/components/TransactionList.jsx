@@ -1307,13 +1307,15 @@ export default function TransactionList() {
           </button>
         </div>
 
-        <TransactionSavedViews
-          views={savedViews}
-          canSave={savableFilterCount > 0}
-          onApply={applySavedView}
-          onSave={saveCurrentView}
-          onDelete={deleteSavedView}
-        />
+        {(savedViews.length > 0 || savableFilterCount > 0) && (
+          <TransactionSavedViews
+            views={savedViews}
+            canSave={savableFilterCount > 0}
+            onApply={applySavedView}
+            onSave={saveCurrentView}
+            onDelete={deleteSavedView}
+          />
+        )}
 
         {activeFilterChips.length > 0 && (
           <div className="transaction-active-filters">
