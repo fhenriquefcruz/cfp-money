@@ -89,3 +89,15 @@ test('Dashboard v2 mostra mês completo ao navegar para passado e futuro', async
   await expect(fullMonth).toHaveAttribute('aria-pressed', 'true')
   await expectNoHorizontalOverflow(page)
 })
+
+test('Dashboard v2 exibe uso das receitas compacto no celular sem ocultar o valor', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await prepareE2EPage(page, '/dashboard')
+
+  await expect(page.locator('.dashboard-period-hero__signal')).toBeHidden()
+  await expect(page.getByText(/Uso das receitas:/)).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Próximas ações' })).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+})
