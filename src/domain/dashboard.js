@@ -240,7 +240,8 @@ export function buildDashboardPriorityActions({
         categoryReviewCount === 1
           ? '1 classificação para revisar'
           : `${categoryReviewCount} classificações para revisar`,
-      detail: 'Revise manualmente as categorias; nenhum lançamento será modificado automaticamente.',
+      detail:
+        'Revise manualmente as categorias; nenhum lançamento será modificado automaticamente.',
       to: `/transactions?review=categories${monthKey ? `&month=${monthKey}` : ''}`,
     })
   }
