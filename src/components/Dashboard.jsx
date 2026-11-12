@@ -686,7 +686,9 @@ export default function Dashboard() {
                   <div className="min-w-0">
                     <div className="mb-1 flex items-center gap-1.5">
                       <Zap size={14} className="text-[--brand-600]" />
-                      <p className="text-xs font-semibold text-[--text-tertiary]">Ritmo de gastos</p>
+                      <p className="text-xs font-semibold text-[--text-tertiary]">
+                        Ritmo de gastos
+                      </p>
                       <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
                     </div>
                     {isLoading ? (
@@ -713,7 +715,9 @@ export default function Dashboard() {
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 size={14} className="text-[--brand-600]" />
-                    <p className="text-xs font-semibold text-[--text-tertiary]">Indicador financeiro</p>
+                    <p className="text-xs font-semibold text-[--text-tertiary]">
+                      Indicador financeiro
+                    </p>
                     <InfoTooltip text="Indicador de 0 a 100 baseado em equilíbrio do período, reserva, aderência a orçamentos, atrasos e relação despesas/receitas. Não representa diagnóstico financeiro completo." />
                   </div>
                 </div>
@@ -733,7 +737,9 @@ export default function Dashboard() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-bold text-[--text-primary]">Evolução financeira</h3>
+                          <h3 className="text-sm font-bold text-[--text-primary]">
+                            Evolução financeira
+                          </h3>
                           <InfoTooltip text="Valores agrupados pela data da movimentação. Use o seletor de meses para detalhar um período." />
                         </div>
                         <p className="mt-1 text-xs text-[--text-tertiary]">
@@ -799,26 +805,35 @@ export default function Dashboard() {
                     {trendView === 'flow' ? (
                       <>
                         <span className="inline-flex items-center gap-1.5">
-                          <i className="dashboard-series-dot dashboard-series-dot--income" /> Receitas
+                          <i className="dashboard-series-dot dashboard-series-dot--income" />{' '}
+                          Receitas
                         </span>
                         <span className="inline-flex items-center gap-1.5">
-                          <i className="dashboard-series-dot dashboard-series-dot--expense" /> Despesas
+                          <i className="dashboard-series-dot dashboard-series-dot--expense" />{' '}
+                          Despesas
                         </span>
                       </>
                     ) : (
                       <span className="inline-flex items-center gap-1.5">
-                        <i className="dashboard-series-dot dashboard-series-dot--result" /> Resultado
-                        líquido
+                        <i className="dashboard-series-dot dashboard-series-dot--result" />{' '}
+                        Resultado líquido
                       </span>
                     )}
                   </div>
                   <div className="dashboard-evolution-chart -mx-1 rounded-2xl">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={monthlyData} margin={{ top: 12, right: 10, left: 4, bottom: 4 }}>
+                      <AreaChart
+                        data={monthlyData}
+                        margin={{ top: 12, right: 10, left: 4, bottom: 4 }}
+                      >
                         <defs>
                           <linearGradient id="dashboardIncomeGradient" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor="var(--success-icon)" stopOpacity={0.22} />
-                            <stop offset="100%" stopColor="var(--success-icon)" stopOpacity={0.01} />
+                            <stop
+                              offset="100%"
+                              stopColor="var(--success-icon)"
+                              stopOpacity={0.01}
+                            />
                           </linearGradient>
                           <linearGradient id="dashboardExpenseGradient" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor="var(--danger-icon)" stopOpacity={0.18} />
@@ -948,7 +963,9 @@ export default function Dashboard() {
                 <Card className="dashboard-spending-composition dashboard-module--composition h-full overflow-hidden">
                   <div className="mb-3">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-[--text-primary]">Quem lidera os gastos</h3>
+                      <h3 className="text-sm font-bold text-[--text-primary]">
+                        Quem lidera os gastos
+                      </h3>
                       <InfoTooltip text="Despesas do mês pela data da movimentação, ordenadas do maior para o menor gasto." />
                     </div>
                     <p className="mt-1 text-xs text-[--text-tertiary]">
@@ -983,7 +1000,9 @@ export default function Dashboard() {
                   <Card>
                     <div className="flex items-center gap-2 mb-3">
                       <AlertTriangle size={14} className="text-[--warning-icon]" />
-                      <h3 className="text-sm font-bold text-[--text-primary]">Alertas de orçamento</h3>
+                      <h3 className="text-sm font-bold text-[--text-primary]">
+                        Alertas de orçamento
+                      </h3>
                       <InfoTooltip text="Categorias acima de 70% do limite mensal." />
                     </div>
                     <div className="space-y-3">
@@ -1060,7 +1079,11 @@ export default function Dashboard() {
                                 {pct.toFixed(0)}%
                               </span>
                             </div>
-                            <ProgressBar value={effectiveCurrent} max={goal.targetAmount} animated />
+                            <ProgressBar
+                              value={effectiveCurrent}
+                              max={goal.targetAmount}
+                              animated
+                            />
                             <div className="flex justify-between text-xs mt-1 text-[--text-tertiary]">
                               <span>{formatCurrency(effectiveCurrent)}</span>
                               <span>{formatCurrency(goal.targetAmount)}</span>
@@ -1093,8 +1116,8 @@ export default function Dashboard() {
                     </Link>
                   </div>
                   <p className="mb-3 text-[11px] text-[--text-tertiary]">
-                    {monthTx.length} {monthTx.length === 1 ? 'lançamento' : 'lançamentos'} neste período ·
-                    role para percorrer
+                    {monthTx.length} {monthTx.length === 1 ? 'lançamento' : 'lançamentos'} neste
+                    período · role para percorrer
                   </p>
                   {monthTx.length === 0 ? (
                     <EmptyState
