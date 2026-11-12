@@ -1,5 +1,8 @@
 import { expect, test } from 'vitest'
-import { auditCreditCardIntegrity, findIncompleteCardInstallmentGroups } from './creditCardIntegrity'
+import {
+  auditCreditCardIntegrity,
+  findIncompleteCardInstallmentGroups,
+} from './creditCardIntegrity'
 import { summarizeCardLinks } from './cardLinkageSummary'
 
 const card = { id: 'card-real', name: 'Cartão' }
@@ -198,8 +201,24 @@ test('resumo preserva compras realmente conciliáveis e soma valores em centavos
 
 test('sinaliza parcela ausente no cartão sem inventar movimentos ou modificar o histórico', () => {
   const original = [
-    { ...purchase, id: 'a', installmentGroupId: 'g1', isInstallment: true, installmentNum: 1, installmentOf: 3, invoiceMonth: '2026-11' },
-    { ...purchase, id: 'c', installmentGroupId: 'g1', isInstallment: true, installmentNum: 3, installmentOf: 3, invoiceMonth: '2027-01' },
+    {
+      ...purchase,
+      id: 'a',
+      installmentGroupId: 'g1',
+      isInstallment: true,
+      installmentNum: 1,
+      installmentOf: 3,
+      invoiceMonth: '2026-11',
+    },
+    {
+      ...purchase,
+      id: 'c',
+      installmentGroupId: 'g1',
+      isInstallment: true,
+      installmentNum: 3,
+      installmentOf: 3,
+      invoiceMonth: '2027-01',
+    },
     { ...purchase, id: 'single', invoiceMonth: '2026-12' },
   ]
   const snapshot = JSON.stringify(original)
@@ -222,6 +241,9 @@ test('não sinaliza série íntegra; expõe numeração duplicada para revisão'
   expect(findIncompleteCardInstallmentGroups(installments)).toEqual([])
   const duplicated = [...installments, { ...installments[1], id: 'duplicate' }]
   expect(findIncompleteCardInstallmentGroups(duplicated)[0]).toMatchObject({
-    expected: 3, found: 3, missing: [], inconsistent: true,
+    expected: 3,
+    found: 3,
+    missing: [],
+    inconsistent: true,
   })
 })
