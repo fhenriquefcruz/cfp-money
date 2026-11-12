@@ -8,6 +8,7 @@ import {
   getLargestMonthlyExpenseChange,
   getRecentDashboardTransactions,
   summarizeDashboardActivity,
+  resolveDashboardActivityScope,
 } from './dashboard'
 
 test('gera limites mensais em data local sem converter para UTC', () => {
@@ -355,4 +356,12 @@ test('Dashboard v2 agrupa vencimentos e destaca o orçamento somente no limite o
   })
   expect(noBudgetAlert).toEqual([])
   expect(buildDashboardPriorityActions({ categoryReviewCount: 1, limit: 0 })).toEqual([])
+})
+
+test('Dashboard v2 impede recorte até hoje fora do mês corrente sem mudar transações', () => {
+  const now = new Date(2026, 10, 12, 12)
+  expect(resolveDashboardActivityScope('to_date', 2026, 10, now)).toBe('to_date')
+  expect(resolveDashboardActivityScope('full_month', 2026, 10, now)).toBe('full_month')
+  expect(resolveDashboardActivityScope('to_date', 2026, 9, now)).toBe('full_month')
+  expect(resolveDashboardActivityScope('to_date', 2026, 11, now)).toBe('full_month')
 })
