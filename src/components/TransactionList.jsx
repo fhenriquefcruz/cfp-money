@@ -1182,45 +1182,42 @@ export default function TransactionList() {
       </div>
 
       {expenseComposition.length > 0 && (
-        <section
-          aria-label="Composição dos gastos filtrados"
-          className="category-composition-panel rounded-3xl border border-[--border-default] bg-[--bg-surface] p-4 sm:p-5"
-        >
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-[--text-brand]">
-                Leitura do período
+        <details className="category-composition-panel group rounded-2xl border border-[--border-default] bg-[--bg-surface] p-3 sm:p-4">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold text-[--text-primary] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[--brand-500]">
+            <span>Composição por categoria</span>
+            <span className="flex items-center gap-2 text-xs font-medium text-[--text-secondary]">
+              Explorar
+              <ChevronDown size={16} className="transition-transform group-open:rotate-180" />
+            </span>
+          </summary>
+          <div className="mt-3 border-t border-[--border-subtle] pt-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-[--text-tertiary]">
+                Distribuição dos gastos desta visão. Selecione uma categoria para filtrar.
               </p>
-              <h2 className="mt-1 text-base font-black text-[--text-primary]">
-                Onde estão os gastos
-              </h2>
-              <p className="mt-1 text-xs text-[--text-tertiary]">
-                Atualizado pelos filtros selecionados. Selecione uma categoria para ver seus
-                lançamentos.
-              </p>
+              {catFilter !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCatFilter('all')
+                    setPage(1)
+                  }}
+                  className="min-h-10 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
+                >
+                  Todas as categorias
+                </button>
+              )}
             </div>
-            {catFilter !== 'all' && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCatFilter('all')
-                  setPage(1)
-                }}
-                className="min-h-9 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
-              >
-                Todas as categorias
-              </button>
-            )}
+            <CategoryCompositionVisual
+              items={expenseComposition}
+              selectedCategoryId={catFilter}
+              onSelect={(categoryId) => {
+                setCatFilter(categoryId)
+                setPage(1)
+              }}
+            />
           </div>
-          <CategoryCompositionVisual
-            items={expenseComposition}
-            selectedCategoryId={catFilter}
-            onSelect={(categoryId) => {
-              setCatFilter(categoryId)
-              setPage(1)
-            }}
-          />
-        </section>
+        </details>
       )}
 
       {categoryReviewQueue.length > 0 && (
