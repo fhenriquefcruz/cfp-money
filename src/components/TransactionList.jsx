@@ -40,10 +40,8 @@ import TransactionAttachmentManager from './TransactionAttachmentManager'
 import TransactionSeriesModal from './TransactionSeriesModal'
 import TransactionCsvImportModal from './TransactionCsvImportModal'
 import TransactionSavedViews from './TransactionSavedViews'
-import CategoryCompositionVisual from './CategoryCompositionVisual'
 import {
   categoryAccentStyle,
-  categoryCompositionFromTransactions,
 } from '../domain/categoryComposition'
 import {
   formatCurrency,
@@ -662,10 +660,6 @@ export default function TransactionList() {
   }, [user?.uid])
 
   const summary = useMemo(() => summarizeTransactions(filtered), [filtered])
-  const expenseComposition = useMemo(
-    () => categoryCompositionFromTransactions(filtered, categories),
-    [filtered, categories],
-  )
 
   const grouped = useMemo(
     () => groupByDate(filtered.slice(0, page * PER_PAGE), periodView),
@@ -1180,45 +1174,6 @@ export default function TransactionList() {
           </div>
         ))}
       </div>
-
-      {expenseComposition.length > 0 && (
-        <details className="category-composition-panel group rounded-2xl border border-[--border-default] bg-[--bg-surface] p-3 sm:p-4">
-          <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 text-sm font-bold text-[--text-primary] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[--brand-500]">
-            <span>Composição por categoria</span>
-            <span className="flex items-center gap-2 text-xs font-medium text-[--text-secondary]">
-              Explorar
-              <ChevronDown size={16} className="transition-transform group-open:rotate-180" />
-            </span>
-          </summary>
-          <div className="mt-3 border-t border-[--border-subtle] pt-3">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs text-[--text-tertiary]">
-                Distribuição dos gastos desta visão. Selecione uma categoria para filtrar.
-              </p>
-              {catFilter !== 'all' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCatFilter('all')
-                    setPage(1)
-                  }}
-                  className="min-h-10 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
-                >
-                  Todas as categorias
-                </button>
-              )}
-            </div>
-            <CategoryCompositionVisual
-              items={expenseComposition}
-              selectedCategoryId={catFilter}
-              onSelect={(categoryId) => {
-                setCatFilter(categoryId)
-                setPage(1)
-              }}
-            />
-          </div>
-        </details>
-      )}
 
       {categoryReviewQueue.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--warning-border] bg-[--warning-bg] px-3 py-2.5">
