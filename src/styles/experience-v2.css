@@ -66,17 +66,11 @@
   color: #c8d2dd;
   font-size: 13px;
   font-weight: 600;
-  transition: background-color 150ms, color 150ms;
 }
 
 .mr-v2-period-switch__option[aria-pressed='true'] {
   background: #d3dce5;
   color: #0d141c;
-}
-
-.mr-v2-period-switch__option:not([aria-pressed='true']):hover {
-  background: #263440;
-  color: #ffffff;
 }
 
 .mr-v2-period-switch__option:focus-visible,
@@ -114,18 +108,10 @@
   border: 1px solid var(--mr-v2-primary);
   background: var(--mr-v2-primary);
   color: var(--mr-v2-primary-contrast);
-  transition: background-color 150ms, border-color 150ms;
 }
 
 .mr-v2-primary-action:hover {
   border-color: var(--mr-v2-accent);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mr-v2-period-switch__option,
-  .mr-v2-primary-action {
-    transition: none;
-  }
 }
 
 .mr-executive-v2 .dashboard-quick-add__button {
