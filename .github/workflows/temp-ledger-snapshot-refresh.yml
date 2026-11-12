@@ -1,0 +1,61 @@
+name: Temporary reviewed ledger visual baseline refresh
+
+on:
+  push:
+    branches:
+      - fix/credit-installments-ledger-periods
+
+permissions:
+  contents: write
+
+jobs:
+  reviewed-baselines:
+    if: github.repository == 'fhenriquefcruz/cfp-money' && github.ref == 'refs/heads/fix/credit-installments-ledger-periods'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VITE_E2E_MODE: 'true'
+      VITE_FIREBASE_API_KEY: test-api-key
+      VITE_FIREBASE_AUTH_DOMAIN: test-project.firebaseapp.com
+      VITE_FIREBASE_PROJECT_ID: test-project
+      VITE_FIREBASE_STORAGE_BUCKET: test-project.firebasestorage.app
+      VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+      VITE_FIREBASE_APP_ID: '1:123456789:web:test'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: fix/credit-installments-ledger-periods
+          fetch-depth: 1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Refresh only four manually reviewed cards and transactions baselines
+        run: npx playwright test --config=playwright.visual.config.js --grep '^(cards|transactions) mantém baseline visual$' --update-snapshots
+      - name: Verify exact four expected baseline files changed and commit only on draft branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t changed < <(git diff --name-only)
+          if [ "${#changed[@]}" -ne 4 ]; then
+            printf 'Expected exactly 4 visual baselines, found %s\n' "${#changed[@]}"
+            printf '%s\n' "${changed[@]}"
+            exit 1
+          fi
+          for file in "${changed[@]}"; do
+            case "$file" in
+              e2e/visual/visual.spec.js-snapshots/cards-visual-desktop-chromium-linux.png|\
+              e2e/visual/visual.spec.js-snapshots/cards-visual-mobile-chromium-linux.png|\
+              e2e/visual/visual.spec.js-snapshots/transactions-visual-desktop-chromium-linux.png|\
+              e2e/visual/visual.spec.js-snapshots/transactions-visual-mobile-chromium-linux.png) ;;
+              *) echo "Unexpected file changed: $file" >&2; exit 1 ;;
+            esac
+          done
+          git diff --check
+          git config user.name 'Visual Snapshot CI'
+          git config user.email 'visual-snapshot-ci@example.invalid'
+          git add "${changed[@]}"
+          git commit -m "test(visual): refresh reviewed cards and transactions baselines"
+          git push origin HEAD:refs/heads/fix/credit-installments-ledger-periods
