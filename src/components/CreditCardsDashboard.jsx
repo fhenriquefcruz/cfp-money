@@ -251,7 +251,6 @@ function CreditCardsCenterContent() {
     [transactions, creditCards],
   )
   const { unlinkedPurchases, unlinkedTotal } = linkageAudit
-  const diagnosticText = `${linkageAudit.saved} vínculos (${linkageAudit.historical} históricos) · ${linkageAudit.unlinked} sem cartão`
   const hasReversible = transactions.some((item) => item.cardReconciliation?.version === 1)
 
   const visibleInvoices =
@@ -448,20 +447,13 @@ function CreditCardsCenterContent() {
               />
             ))}
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            {(linkageAudit.unlinked || linkageAudit.historical) > 0 && (
-              <p aria-label="Diagnóstico dos cartões" className="text-xs text-[--text-tertiary]">
-                {diagnosticText}
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={() => setAuditOpen(true)}
-              className="min-h-11 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary]"
-            >
-              Auditar valores
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setAuditOpen(true)}
+            className="min-h-11 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary]"
+          >
+            Auditar valores
+          </button>
 
           {auditOpen && !loadingData && (
             <section
@@ -493,40 +485,22 @@ function CreditCardsCenterContent() {
             </section>
           )}
 
-          {center.reconciledPurchaseCount > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--info-border] bg-[--info-bg] p-3 text-xs text-[--info-text]">
-              <p>
-                {center.reconciledPurchaseCount} compra
-                {center.reconciledPurchaseCount === 1 ? '' : 's'} antiga
-                {center.reconciledPurchaseCount === 1 ? '' : 's'} com possível correspondência por
-                nome ou final do cartão. A associação ainda não está salva.
+          {(center.reconciledPurchaseCount > 0 ||
+            unlinkedPurchases.length > 0 ||
+            hasReversible) && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[--warning-border] bg-[--warning-bg] p-3">
+              <p className="text-xs text-[--warning-text]">
+                {unlinkedPurchases.length} sem vínculo · {formatCurrency(unlinkedTotal)}
+                {center.reconciledPurchaseCount > 0 &&
+                  ` · ${center.reconciledPurchaseCount} sugestões não salvas`}
+                {hasReversible && ' · Há vínculos reversíveis'}
               </p>
               <button
                 type="button"
                 onClick={() => setReconciliationOpen(true)}
-                className="font-bold underline-offset-2 hover:underline"
+                className="min-h-10 rounded-xl border border-[--warning-border] px-3 text-xs font-bold text-[--warning-text]"
               >
-                Conferir
-              </button>
-            </div>
-          )}
-
-          {(unlinkedPurchases.length > 0 || hasReversible) && (
-            <div className="flex flex-col gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs font-black text-[--text-primary]">Compras a conciliar</p>
-                <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
-                  {unlinkedPurchases.length} compra(s) sem vínculo salvo,{' '}
-                  {formatCurrency(unlinkedTotal)} no histórico. Escolha o cartão de cada compra e
-                  confira a fatura antes de confirmar.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setReconciliationOpen(true)}
-                className="min-h-11 rounded-xl bg-[--brand-600] px-4 text-xs font-bold text-white"
-              >
-                Conciliar compras
+                Revisar vínculos
               </button>
             </div>
           )}
