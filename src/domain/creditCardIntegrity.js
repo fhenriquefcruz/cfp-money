@@ -49,3 +49,61 @@ export function auditCreditCardIntegrity({ transactions = [], creditCards = [] }
     exceptions,
   }
 }
+
+/**
+ * Detecta lacunas em séries já gravadas sem reconstruir ou alterar movimentos.
+ * Não é possível inferir parcelas de uma série sem pelo menos um documento.
+ */
+export function findIncompleteCardInstallmentGroups(transactions = []) {
+  const groups = new Map()
+
+  transactions.forEach((transaction) => {
+    const count = Number(transaction.installmentOf)
+    const position = Number(transaction.installmentNum)
+    if (
+      !transaction.isInstallment ||
+      !transaction.installmentGroupId ||
+      !transaction.cardId ||
+      !Number.isInteger(count) ||
+      count < 2 ||
+      count > 48
+    ) {
+      return
+    }
+
+    const key = `${transaction.cardId}:${transaction.installmentGroupId}`
+    const group = groups.get(key) || {
+      id: transaction.installmentGroupId,
+      cardId: transaction.cardId,
+      description: transaction.description || 'Compra parcelada',
+      expected: count,
+      positions: [],
+      inconsistent: false,
+    }
+    if (count !== group.expected || !Number.isInteger(position) || position < 1 || position > count) {
+      group.inconsistent = true
+    } else {
+      group.positions.push(position)
+    }
+    groups.set(key, group)
+  })
+
+  return [...groups.values()]
+    .map((group) => {
+      const unique = new Set(group.positions)
+      const missing = Array.from(
+        { length: group.expected },
+        (_, index) => index + 1,
+      ).filter((position) => !unique.has(position))
+      return {
+        id: group.id,
+        cardId: group.cardId,
+        description: group.description,
+        expected: group.expected,
+        found: unique.size,
+        missing,
+        inconsistent: group.inconsistent || unique.size !== group.positions.length,
+      }
+    })
+    .filter((group) => group.missing.length || group.inconsistent)
+}
