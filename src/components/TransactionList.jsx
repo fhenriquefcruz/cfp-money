@@ -40,9 +40,7 @@ import TransactionAttachmentManager from './TransactionAttachmentManager'
 import TransactionSeriesModal from './TransactionSeriesModal'
 import TransactionCsvImportModal from './TransactionCsvImportModal'
 import TransactionSavedViews from './TransactionSavedViews'
-import {
-  categoryAccentStyle,
-} from '../domain/categoryComposition'
+import { categoryAccentStyle } from '../domain/categoryComposition'
 import {
   formatCurrency,
   getPaymentLabel,
