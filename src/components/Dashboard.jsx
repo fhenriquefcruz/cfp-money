@@ -45,6 +45,7 @@ import { getMonthlyFinancialData } from '../domain/monthlyFinance'
 import {
   buildCategoryBreakdown,
   buildDashboardPriorityActions,
+  resolveDashboardActivityScope,
   buildPeriodResultInsight,
   getCalendarMonthBounds,
   getRecentDashboardTransactions,
@@ -262,7 +263,8 @@ export default function Dashboard() {
     () => summarizeDashboardActivity(transactions, year, month, activityCutoff),
     [transactions, year, month, activityCutoff],
   )
-  const heroSummary = activityView === 'to_date' ? activitySummary : currentSummary
+  const activeScope = resolveDashboardActivityScope(activityView, year, month)
+  const heroSummary = activeScope === 'to_date' ? activitySummary : currentSummary
   const activityCutoffLabel = activityCutoff.split('-').reverse().join('/')
   const paymentSummary = useMemo(
     () =>
@@ -368,9 +370,9 @@ export default function Dashboard() {
   }
   const isLoading = transactionsLoading
   const periodInsight = useMemo(() => {
-    const comparison = activityView === 'full_month' ? previousSummary : {}
+    const comparison = activeScope === 'full_month' ? previousSummary : {}
     return buildPeriodResultInsight(heroSummary, comparison)
-  }, [heroSummary, activityView, previousSummary])
+  }, [heroSummary, activeScope, previousSummary])
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
@@ -438,7 +440,7 @@ export default function Dashboard() {
                 <div className="dashboard-period-hero__amount">
                   <div className="dashboard-period-hero__eyebrow">
                     <span>
-                      {activityView === 'to_date'
+                      {activeScope === 'to_date'
                         ? `Resultado registrado até ${activityCutoffLabel}`
                         : 'Resultado do mês completo'}
                     </span>
@@ -451,7 +453,9 @@ export default function Dashboard() {
                   >
                     <button
                       type="button"
-                      aria-pressed={activityView === 'to_date'}
+                      aria-pressed={activeScope === 'to_date'}
+                      disabled={!isCurrentMonth}
+                      title={!isCurrentMonth ? 'Disponível somente no mês atual' : undefined}
                       onClick={() => setActivityView('to_date')}
                       className="mr-v2-period-switch__option"
                     >
@@ -459,7 +463,7 @@ export default function Dashboard() {
                     </button>
                     <button
                       type="button"
-                      aria-pressed={activityView === 'full_month'}
+                      aria-pressed={activeScope === 'full_month'}
                       onClick={() => setActivityView('full_month')}
                       className="mr-v2-period-switch__option"
                     >
@@ -467,9 +471,11 @@ export default function Dashboard() {
                     </button>
                   </div>
                   <p className="mr-v2-period-description">
-                    {activityView === 'to_date'
+                    {activeScope === 'to_date'
                       ? 'Somente datas de atividade até o corte; não indica pagamentos liquidados.'
-                      : 'Inclui lançamentos futuros já cadastrados. Não indica saldo em conta.'}
+                      : isCurrentMonth
+                        ? 'Inclui lançamentos futuros já cadastrados. Não indica saldo em conta.'
+                        : 'Mostra os lançamentos cadastrados para todo o mês selecionado; não é saldo bancário.'}
                   </p>
                   <p className="dashboard-period-hero__value">
                     {isLoading ? '—' : formatCurrency(heroSummary.balance)}
