@@ -1,0 +1,115 @@
+/* Meu Real v2 — tokens semânticos reutilizáveis e adoção gradual por feature.
+   Não substitui os tokens legados até a homologação visual. */
+:root[data-theme='light'] {
+  --mr-v2-canvas: #f6f7f8;
+  --mr-v2-surface: #ffffff;
+  --mr-v2-text: #18232d;
+  --mr-v2-text-muted: #53606d;
+  --mr-v2-border: #e4e8ed;
+  --mr-v2-primary: #263e52;
+  --mr-v2-primary-contrast: #ffffff;
+  --mr-v2-accent: #ad804e;
+  --mr-v2-positive: #19836b;
+  --mr-v2-warning: #b87922;
+  --mr-v2-negative: #c65053;
+}
+
+:root[data-theme='dark'] {
+  --mr-v2-canvas: #0d141c;
+  --mr-v2-surface: #17212b;
+  --mr-v2-text: #f2f5f8;
+  --mr-v2-text-muted: #a7b3be;
+  --mr-v2-border: #2a3743;
+  --mr-v2-primary: #d3dce5;
+  --mr-v2-primary-contrast: #0d141c;
+  --mr-v2-accent: #d7ae78;
+  --mr-v2-positive: #57c5a7;
+  --mr-v2-warning: #e7b662;
+  --mr-v2-negative: #f18589;
+}
+
+/* O Hero permanece mineral escuro em ambos os temas; a paleta de base é dual. */
+.mr-executive-v2 .dashboard-period-hero {
+  border: 1px solid #2a3743;
+  background: #17212b;
+  box-shadow: none;
+}
+
+.mr-executive-v2 .dashboard-period-hero__eyebrow {
+  color: #d3dce5;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.mr-executive-v2 .dashboard-period-hero__value {
+  font-weight: 800;
+}
+
+.mr-v2-period-switch {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 4px;
+  border: 1px solid #364552;
+  border-radius: 14px;
+  background: #111a23;
+}
+
+.mr-v2-period-switch__option {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  color: #c8d2dd;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mr-v2-period-switch__option[aria-pressed='true'] {
+  background: #d3dce5;
+  color: #0d141c;
+}
+
+.mr-v2-period-switch__option:focus-visible,
+.mr-v2-primary-action:focus-visible,
+.mr-v2-explore-toggle:focus-visible {
+  outline: 2px solid var(--mr-v2-accent);
+  outline-offset: 3px;
+}
+
+.mr-v2-period-description,
+.mr-v2-secondary-context {
+  margin-top: 10px;
+  color: #bac8d3;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.mr-executive-v2 .dashboard-period-hero__metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mr-executive-v2 .mr-v2-kpi .dashboard-period-metric__label {
+  color: #c3cdd7;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mr-executive-v2 .mr-v2-kpi .dashboard-period-metric__value {
+  color: #f2f5f8;
+  font-size: clamp(15px, 2.1vw, 20px);
+  font-weight: 750;
+}
+
+.mr-v2-primary-action {
+  border: 1px solid var(--mr-v2-primary);
+  background: var(--mr-v2-primary);
+  color: var(--mr-v2-primary-contrast);
+}
+
+.mr-executive-v2 .dashboard-quick-add__button {
+  min-width: 48px;
+  min-height: 48px;
+}

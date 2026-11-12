@@ -1,4 +1,5 @@
 import { endOfMonth, format, startOfMonth } from 'date-fns'
+import { getFinancialActivityDate, summarizeTransactions, transactionsForMonth } from './finance'
 import { getTransactionActivityDate } from './transactionDates'
 
 export function getCalendarMonthBounds(referenceDate = new Date()) {
@@ -12,6 +13,28 @@ export function getCalendarMonthBounds(referenceDate = new Date()) {
     start: format(startOfMonth(date), 'yyyy-MM-dd'),
     end: format(endOfMonth(date), 'yyyy-MM-dd'),
   }
+}
+
+/**
+ * "Até hoje" só tem significado no mês atual. Meses históricos ou futuros
+ * usam o mês completo; nunca exibimos uma ausência artificial de lançamentos.
+ */
+export function resolveDashboardActivityScope(requestedScope, year, month, today = new Date()) {
+  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth()
+  return isCurrentMonth && requestedScope === 'to_date' ? 'to_date' : 'full_month'
+}
+
+/**
+ * Resumo consultivo do Dashboard. Não altera competência, status ou liquidação.
+ * "Até a data" significa data de atividade cadastrada, não pagamento bancário.
+ */
+export function summarizeDashboardActivity(transactions = [], year, month, cutoffIso = '') {
+  const monthTransactions = transactionsForMonth(transactions, year, month)
+  const selected = cutoffIso
+    ? monthTransactions.filter((transaction) => getFinancialActivityDate(transaction) <= cutoffIso)
+    : monthTransactions
+
+  return summarizeTransactions(selected)
 }
 
 export function getRecentDashboardTransactions(transactions = [], bounds, limit = 6) {
@@ -186,6 +209,70 @@ export function buildPeriodResultInsight(current = {}, previous = {}) {
     comparisonTone,
     story,
   }
+}
+
+/**
+ * Central executiva: máximo de duas causas distintas. Apenas apresenta
+ * alertas já calculados pelos domínios; não altera estados nem transações.
+ */
+export function buildDashboardPriorityActions({
+  paymentSummary = {},
+  categoryReviewCount = 0,
+  budgetAlerts = [],
+  monthKey = '',
+  limit = 2,
+} = {}) {
+  const candidates = []
+  const overdue = Number(paymentSummary.overdueCount) || 0
+  const dueSoon = Number(paymentSummary.dueNext7DaysCount) || 0
+
+  if (overdue > 0) {
+    candidates.push({
+      cause: 'payment',
+      title: overdue === 1 ? '1 pagamento atrasado' : `${overdue} pagamentos atrasados`,
+      detail: 'Confira os compromissos vencidos e a situação de cada pagamento.',
+      to: monthKey ? `/transactions?month=${monthKey}` : '/transactions',
+    })
+  } else if (dueSoon > 0) {
+    candidates.push({
+      cause: 'payment',
+      title: dueSoon === 1 ? '1 vencimento próximo' : `${dueSoon} vencimentos próximos`,
+      detail: 'Confira os compromissos previstos para os próximos sete dias.',
+      to: monthKey ? `/transactions?month=${monthKey}` : '/transactions',
+    })
+  }
+
+  // Um limite estourado é uma obrigação de planejamento mais urgente que
+  // uma sugestão de classificação; ambos continuam consultivos.
+  const mostCriticalBudget = [...budgetAlerts]
+    .filter((entry) => Number(entry?.budget?.amount) > 0 && Number(entry.pct) >= 100)
+    .sort((a, b) => Number(b.pct) - Number(a.pct))[0]
+  if (mostCriticalBudget) {
+    candidates.push({
+      cause: 'budget',
+      title:
+        Number(mostCriticalBudget.spent) > Number(mostCriticalBudget.budget.amount)
+          ? 'Orçamento ultrapassado'
+          : 'Orçamento no limite',
+      detail: `Revise o limite de ${mostCriticalBudget.cat?.name || 'categoria'} neste mês.`,
+      to: monthKey ? `/budgets?month=${monthKey}` : '/budgets',
+    })
+  }
+
+  if (Number(categoryReviewCount) > 0) {
+    candidates.push({
+      cause: 'category',
+      title:
+        categoryReviewCount === 1
+          ? '1 classificação para revisar'
+          : `${categoryReviewCount} classificações para revisar`,
+      detail:
+        'Revise manualmente as categorias; nenhum lançamento será modificado automaticamente.',
+      to: `/transactions?review=categories${monthKey ? `&month=${monthKey}` : ''}`,
+    })
+  }
+
+  return candidates.slice(0, Math.max(0, Math.min(2, Number(limit) || 0)))
 }
 
 export function buildDashboardActionInsights({

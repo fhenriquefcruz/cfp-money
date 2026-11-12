@@ -17,6 +17,7 @@ import {
   formatMoneyPeriodLabel,
   getMoneyInsightHeadline,
   getMoneyInsightTone,
+  getMoneyProjectionPresentation,
 } from '../domain/moneyPresentation'
 import { formatCurrency } from '../utils'
 import { Card } from './ui'
@@ -41,12 +42,6 @@ const TONE_STYLES = {
   },
 }
 
-const PROJECTION_CONFIDENCE_LABELS = {
-  low: 'inicial',
-  medium: 'moderada',
-  high: 'alta',
-}
-
 function resolveAnalysisDate(referenceDate) {
   const reference = new Date(referenceDate)
   const now = new Date()
@@ -60,11 +55,9 @@ function resolveAnalysisDate(referenceDate) {
 function MoneyMetric({ label, value, detail }) {
   return (
     <div className="money-insight-metric min-w-0 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3.5">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-        {label}
-      </p>
+      <p className="text-xs font-semibold text-[--text-tertiary]">{label}</p>
       <p className="mt-1 text-base font-black tabular-nums text-[--text-primary]">{value}</p>
-      {detail && <p className="mt-0.5 text-[10px] text-[--text-tertiary]">{detail}</p>}
+      {detail && <p className="mt-0.5 text-xs text-[--text-tertiary]">{detail}</p>}
     </div>
   )
 }
@@ -83,6 +76,10 @@ function MoneyInsightContent({ referenceDate, compact = false }) {
     [transactions, settings, analysisDate],
   )
 
+  const projectionCopy = getMoneyProjectionPresentation(
+    analysis.projection,
+    analysis.periods.current,
+  )
   const tone = getMoneyInsightTone(analysis)
   const toneStyle = TONE_STYLES[tone]
   const ToneIcon = toneStyle.icon
@@ -204,21 +201,13 @@ function MoneyInsightContent({ referenceDate, compact = false }) {
                 />
               )}
               <MoneyMetric
-                label="Projeção"
+                label={projectionCopy.label}
                 value={
                   analysis.projection.isAvailable
                     ? formatCurrency(analysis.projection.expenses)
                     : 'Aguardando dados'
                 }
-                detail={
-                  !analysis.projection.isAvailable
-                    ? `Disponível após ${analysis.projection.minimumElapsedDays} dias`
-                    : analysis.projection.isPartial
-                      ? `Estimativa · confiança ${
-                          PROJECTION_CONFIDENCE_LABELS[analysis.projection.confidence] || 'inicial'
-                        }`
-                      : 'Ciclo fechado'
-                }
+                detail={projectionCopy.detail}
               />
               {!compact && (
                 <MoneyMetric

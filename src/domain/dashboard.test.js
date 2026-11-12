@@ -1,11 +1,14 @@
 import {
   buildCategoryBreakdown,
   buildDashboardActionInsights,
+  buildDashboardPriorityActions,
   buildMonthAttentionSignals,
   buildPeriodResultInsight,
   getCalendarMonthBounds,
   getLargestMonthlyExpenseChange,
   getRecentDashboardTransactions,
+  summarizeDashboardActivity,
+  resolveDashboardActivityScope,
 } from './dashboard'
 
 test('gera limites mensais em data local sem converter para UTC', () => {
@@ -250,4 +253,140 @@ test('usa orçamento como próximo passo quando não há alerta de pagamentos ne
     title: 'Planejamento do mês',
     to: '/budgets?month=2026-10',
   })
+})
+
+test('Dashboard v2: corte por atividade não reinterpreta fatura, status ou transferências', () => {
+  const transactions = [
+    { type: 'income', date: '2026-11-02', amount: '1000' },
+    {
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      purchaseDate: '2026-11-05',
+      date: '2026-12-10',
+      amount: '300',
+    },
+    { type: 'expense', date: '2026-11-21', amount: 200 },
+    { type: 'expense', date: '2026-11-04', amount: 800, paymentStatus: 'cancelled' },
+    { type: 'expense', date: '2026-11-07', amount: 700, flowType: 'transfer' },
+    { type: 'expense', date: '2026-11-08', amount: 600, kind: 'transfer' },
+    {
+      type: 'income',
+      date: '2026-11-06',
+      amount: 50,
+      isSavings: true,
+      savingsMovement: 'deposit',
+    },
+  ]
+  const before = structuredClone(transactions)
+  const toDate = summarizeDashboardActivity(transactions, 2026, 10, '2026-11-12')
+  const entireMonth = summarizeDashboardActivity(transactions, 2026, 10)
+
+  expect(toDate).toMatchObject({
+    income: 1000,
+    expenses: 300,
+    balance: 700,
+    savings: 50,
+    count: 3,
+  })
+  expect(entireMonth).toMatchObject({
+    income: 1000,
+    expenses: 500,
+    balance: 500,
+    savings: 50,
+    count: 4,
+  })
+  expect(summarizeDashboardActivity(transactions, 2026, 9, '2026-11-12').count).toBe(0)
+  expect(summarizeDashboardActivity(transactions, 2026, 11, '2026-11-12').count).toBe(0)
+  expect(transactions).toEqual(before)
+})
+
+test('Dashboard v2 limita a central a duas causas diferentes e prioriza atrasos', () => {
+  const summary = {
+    overdueCount: 2,
+    overdueAmount: 900,
+    dueNext7DaysCount: 3,
+  }
+  const input = {
+    paymentSummary: summary,
+    categoryReviewCount: 2,
+    budgetAlerts: [
+      {
+        budget: { id: 'food', categoryId: 'food', amount: 1000 },
+        cat: { name: 'Alimentação' },
+        spent: 1120,
+        pct: 112,
+      },
+    ],
+    monthKey: '2026-11',
+  }
+  const before = structuredClone(input)
+  const result = buildDashboardPriorityActions(input)
+
+  expect(result).toEqual([
+    {
+      cause: 'payment',
+      title: '2 pagamentos atrasados',
+      detail: 'Confira os compromissos vencidos e a situação de cada pagamento.',
+      to: '/transactions?month=2026-11',
+    },
+    {
+      cause: 'budget',
+      title: 'Orçamento ultrapassado',
+      detail: 'Revise o limite de Alimentação neste mês.',
+      to: '/budgets?month=2026-11',
+    },
+  ])
+  expect(input).toEqual(before)
+})
+
+test('Dashboard v2 agrupa vencimentos e destaca o orçamento somente no limite ou excedido', () => {
+  const actions = buildDashboardPriorityActions({
+    paymentSummary: { dueNext7DaysCount: 1 },
+    budgetAlerts: [{ budget: { id: 'food', amount: 1000 }, spent: 1100, pct: 110 }],
+    monthKey: '2026-11',
+  })
+  expect(actions.map((action) => action.cause)).toEqual(['payment', 'budget'])
+  expect(actions[0].title).toBe('1 vencimento próximo')
+  expect(actions[1].title).toBe('Orçamento ultrapassado')
+  const noBudgetAlert = buildDashboardPriorityActions({
+    budgetAlerts: [{ budget: { amount: 1000 }, spent: 690, pct: 69 }],
+    monthKey: '2026-11',
+  })
+  expect(noBudgetAlert).toEqual([])
+  expect(buildDashboardPriorityActions({ categoryReviewCount: 1, limit: 0 })).toEqual([])
+})
+
+test('Dashboard v2 preserva a revisão de categoria quando não há alerta financeiro crítico', () => {
+  const items = buildDashboardPriorityActions({
+    paymentSummary: { overdueCount: 0, dueNext7DaysCount: 0 },
+    categoryReviewCount: 2,
+    budgetAlerts: [{ budget: { amount: 1000 }, spent: 840, pct: 84 }],
+    monthKey: '2026-11',
+  })
+  expect(items).toEqual([
+    {
+      cause: 'category',
+      title: '2 classificações para revisar',
+      detail:
+        'Revise manualmente as categorias; nenhum lançamento será modificado automaticamente.',
+      to: '/transactions?review=categories&month=2026-11',
+    },
+  ])
+
+  const withBudget = buildDashboardPriorityActions({
+    categoryReviewCount: 2,
+    budgetAlerts: [{ budget: { amount: 1000 }, spent: 1000, pct: 100 }],
+    monthKey: '2026-11',
+  })
+  expect(withBudget.map((item) => item.cause)).toEqual(['budget', 'category'])
+  expect(withBudget[0].title).toBe('Orçamento no limite')
+})
+
+test('Dashboard v2 impede recorte até hoje fora do mês corrente sem mudar transações', () => {
+  const now = new Date(2026, 10, 12, 12)
+  expect(resolveDashboardActivityScope('to_date', 2026, 10, now)).toBe('to_date')
+  expect(resolveDashboardActivityScope('full_month', 2026, 10, now)).toBe('full_month')
+  expect(resolveDashboardActivityScope('to_date', 2026, 9, now)).toBe('full_month')
+  expect(resolveDashboardActivityScope('to_date', 2026, 11, now)).toBe('full_month')
 })

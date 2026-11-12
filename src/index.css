@@ -1,6 +1,7 @@
 @import './styles/global.css';
 @import './styles/login-future.css';
 @import './styles/aurora.css';
+@import './styles/experience-v2.css';
 
 @tailwind base;
 @tailwind components;

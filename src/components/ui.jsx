@@ -179,6 +179,7 @@ export const Modal = ({
   size = 'md',
   closeOnBackdrop = true,
   closeOnEscape = true,
+  initialFocusId,
 }) => {
   const titleId = React.useId()
   const dialogRef = React.useRef(null)
@@ -256,8 +257,12 @@ export const Modal = ({
     window.visualViewport?.addEventListener('resize', keepFocusedControlVisible)
 
     const focusTimer = window.setTimeout(() => {
-      const firstFocusable = getFocusableElements()[0]
-      ;(firstFocusable || dialogRef.current)?.focus()
+      const requested = initialFocusId ? document.getElementById(initialFocusId) : null
+      const focusTarget =
+        requested && dialogRef.current?.contains(requested)
+          ? requested
+          : getFocusableElements()[0] || dialogRef.current
+      focusTarget?.focus()
     }, 0)
 
     return () => {
@@ -269,7 +274,7 @@ export const Modal = ({
       window.visualViewport?.removeEventListener('resize', keepFocusedControlVisible)
       previouslyFocused?.focus?.()
     }
-  }, [closeOnEscape, isOpen])
+  }, [closeOnEscape, initialFocusId, isOpen])
 
   if (!isOpen || typeof document === 'undefined') return null
   const sizes = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl' }
