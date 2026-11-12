@@ -1,9 +1,9 @@
+import { getTransactionLedgerDate } from './transactionLedgerPeriods'
 import {
   formatTransactionIsoDate,
   getTransactionAccountingDate,
   getTransactionActivityDate,
   getTransactionDateContext,
-  getTransactionLedgerDate,
   getTransactionPurchaseDate,
   isProtectedTransactionGroup,
   isStructuredCreditPurchase,
