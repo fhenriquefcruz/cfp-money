@@ -33,7 +33,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Refresh only four manually reviewed cards and transactions baselines
-        run: npx playwright test --config=playwright.visual.config.js --grep '^(cards|transactions) mantém baseline visual$' --update-snapshots
+        run: npx playwright test --config=playwright.visual.config.js --grep 'cards mantém baseline visual|transactions mantém baseline visual' --update-snapshots
       - name: Verify exact four expected baseline files changed and commit only on draft branch
         shell: bash
         run: |
