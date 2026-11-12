@@ -1,0 +1,42 @@
+import { expect, test } from '@playwright/test'
+import { expectNoHorizontalOverflow, prepareE2EPage } from './support'
+
+test('Dashboard v2 abre criação em um clique e restaura foco ao fechar', async ({ page }) => {
+  await prepareE2EPage(page, '/dashboard')
+
+  const trigger = page.getByRole('button', { name: 'Nova transação', exact: true })
+  await expect(trigger).toBeVisible()
+  await trigger.focus()
+  await trigger.click()
+
+  const dialog = page.getByRole('dialog', { name: 'Nova transação' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.locator('#transaction-amount')).toBeFocused()
+
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await expect(trigger).toBeFocused()
+  await expectNoHorizontalOverflow(page)
+})
+
+test('Dashboard v2 identifica o recorte até hoje e mês completo sem gravar dados', async ({
+  page,
+}) => {
+  await prepareE2EPage(page, '/dashboard')
+
+  const scope = page.getByRole('group', { name: 'Recorte temporal do resultado' })
+  const toDate = scope.getByRole('button', { name: 'Até hoje' })
+  const fullMonth = scope.getByRole('button', { name: 'Mês completo' })
+
+  await expect(toDate).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByText('Somente datas de atividade até o corte')).toBeVisible()
+
+  await fullMonth.click()
+  await expect(fullMonth).toHaveAttribute('aria-pressed', 'true')
+  await expect(toDate).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.getByText('Inclui lançamentos futuros já cadastrados')).toBeVisible()
+
+  await toDate.click()
+  await expect(toDate).toHaveAttribute('aria-pressed', 'true')
+  await expectNoHorizontalOverflow(page)
+})
