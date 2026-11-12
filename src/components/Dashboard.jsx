@@ -431,7 +431,7 @@ export default function Dashboard() {
       </motion.div>
 
       <section aria-label="Situação do mês">
-        <div className="dashboard-executive-grid">
+        <div className="min-w-0">
           <motion.div className="min-w-0" {...fade} transition={{ delay: 0.05 }}>
           <Card variant="hero" className="dashboard-period-summary dashboard-period-hero h-full">
             <div className="dashboard-period-hero__main">
@@ -711,7 +711,7 @@ export default function Dashboard() {
           <div className="mb-2 flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5">
               <CheckCircle2 size={14} className="text-[--brand-600]" />
-              <p className="text-xs font-semibold text-[--text-tertiary]">Saúde financeira</p>
+              <p className="text-xs font-semibold text-[--text-tertiary]">Indicador financeiro</p>
               <InfoTooltip text="Indicador de 0 a 100 baseado em equilíbrio do período, reserva, aderência a orçamentos, atrasos e relação despesas/receitas. Não representa diagnóstico financeiro completo." />
             </div>
           </div>
@@ -953,21 +953,6 @@ export default function Dashboard() {
                 Mesmas categorias e cores em todos os lançamentos e gráficos.
               </p>
             </div>
-
-            {categoryReviewCount > 0 && (
-              <Link
-                to="/transactions?review=categories&scope=all"
-                className="mb-3 flex min-h-10 items-center justify-between gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-[10px] font-bold text-[--warning-text]"
-              >
-                <span>
-                  {categoryReviewCount}{' '}
-                  {categoryReviewCount === 1
-                    ? 'classificação para revisar'
-                    : 'classificações para revisar'}
-                </span>
-                <ArrowRight size={12} />
-              </Link>
-            )}
 
             {categoryBreakdown.length === 0 ? (
               <p className="py-8 text-center text-xs text-[--text-tertiary]">
