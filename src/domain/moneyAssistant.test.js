@@ -1,3 +1,4 @@
+import { summarizeTransactions, transactionsForMonth } from './finance'
 import { analyzeMoney } from './money'
 import { buildMoneyAssistantResponse, parseMoneyAssistantIntent } from './moneyAssistant'
 
@@ -273,4 +274,136 @@ test('não afirma padrão quando a amostra ainda é insuficiente', () => {
     title: 'Ainda estou formando seu perfil',
   })
   expect(response.metrics).toEqual([{ label: 'Amostra', rawValue: '3 despesas' }])
+})
+
+const canonicalMonthScenario = [
+  {
+    id: 'salary-october',
+    type: 'income',
+    amount: 3000,
+    date: '2026-10-03',
+    categoryId: 'salary',
+  },
+  ...['2026-12-10', '2027-01-10', '2027-02-10', '2027-03-10'].map((date, index) => ({
+    id: 'installment-' + (index + 1),
+    type: 'expense',
+    paymentMethod: 'credit_card',
+    isCreditPurchase: true,
+    purchaseDate: '2026-10-21',
+    date,
+    amount: index === 0 ? '300' : 300,
+    categoryId: 'food',
+    categoryName: 'Alimentação',
+    description: 'Compra parcelada',
+  })),
+  {
+    id: 'cancelled',
+    type: 'expense',
+    amount: 900,
+    date: '2026-10-06',
+    paymentStatus: 'cancelled',
+    categoryId: 'food',
+    categoryName: 'Alimentação',
+  },
+  {
+    id: 'transfer-flow',
+    type: 'expense',
+    amount: 700,
+    date: '2026-10-07',
+    flowType: 'transfer',
+    categoryId: 'food',
+    categoryName: 'Alimentação',
+  },
+  {
+    id: 'transfer-kind',
+    type: 'income',
+    amount: 400,
+    date: '2026-10-08',
+    kind: 'transfer',
+  },
+  {
+    id: 'savings-deposit',
+    type: 'expense',
+    amount: 200,
+    date: '2026-10-09',
+    isSavings: true,
+    savingsMovement: 'deposit',
+    categoryId: 'food',
+    categoryName: 'Alimentação',
+  },
+]
+
+test('MR-001: relatório mensal respeita mês de atividade e filtros canônicos', () => {
+  const before = structuredClone(canonicalMonthScenario)
+  const expected = summarizeTransactions(
+    transactionsForMonth(canonicalMonthScenario, 2026, 9).filter(
+      (transaction) => !transaction.isSavings,
+    ),
+  )
+  const report = buildMoneyAssistantResponse({
+    message: 'Quero o relatório de outubro de 2026',
+    transactions: canonicalMonthScenario,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+
+  expect(expected).toMatchObject({ income: 3000, expenses: 1200, balance: 1800, count: 5 })
+  expect(report.reportMonth).toBe('2026-10')
+  expect(report.metrics).toEqual([
+    { label: 'Receitas', value: expected.income },
+    { label: 'Despesas', value: expected.expenses },
+    { label: 'Resultado', value: expected.balance },
+  ])
+  expect(report.text).toContain('5 lançamentos')
+
+  const invoiceMonth = buildMoneyAssistantResponse({
+    message: 'Quero o relatório de dezembro de 2026',
+    transactions: canonicalMonthScenario,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+  expect(invoiceMonth.metrics).toEqual([])
+  expect(canonicalMonthScenario).toEqual(before)
+})
+
+test('MR-001: categorias e ranking excluem reservas e transferências', () => {
+  const byCategory = buildMoneyAssistantResponse({
+    message: 'Quanto gastei com alimentação em outubro de 2026?',
+    transactions: canonicalMonthScenario,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+  expect(byCategory.metrics).toEqual([
+    { label: 'Total', value: 1200 },
+    { label: 'Lançamentos', rawValue: '4' },
+  ])
+
+  const top = buildMoneyAssistantResponse({
+    message: 'Maiores despesas de outubro de 2026',
+    transactions: canonicalMonthScenario,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+  expect(top.type).toBe('top')
+  expect(top.text).toContain('300,00')
+  expect(top.text).not.toContain('900,00')
+  expect(top.text).not.toContain('700,00')
+
+  const withSavingsIncluded = buildMoneyAssistantResponse({
+    message: 'Quero o relatório de outubro de 2026',
+    transactions: canonicalMonthScenario,
+    categories,
+    settings: { excludeSavings: false },
+    now,
+    analyze: analyzeMoney,
+  })
+  expect(withSavingsIncluded.metrics).toEqual([
+    { label: 'Receitas', value: 3000 },
+    { label: 'Despesas', value: 1200 },
+    { label: 'Resultado', value: 1800 },
+  ])
 })
