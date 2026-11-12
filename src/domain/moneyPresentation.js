@@ -13,9 +13,21 @@ const PROJECTION_CONFIDENCE_LABELS = {
   high: 'alta',
 }
 
-export function getMoneyProjectionPresentation(projection = {}, period) {
+export function getMoneyProjectionPresentation(projection = {}, period, today = new Date()) {
   const periodLabel = formatMoneyPeriodLabel(period)
   const suffix = periodLabel ? ` · ${periodLabel}` : ''
+  const todayIso = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-')
+
+  if (period?.start > todayIso) {
+    return {
+      label: 'Despesas cadastradas para ciclo futuro',
+      detail: `Ciclo ainda não iniciado${suffix}`,
+    }
+  }
 
   if (!projection.isAvailable) {
     return {
