@@ -1,4 +1,5 @@
 import { endOfMonth, format, startOfMonth } from 'date-fns'
+import { getFinancialActivityDate, summarizeTransactions, transactionsForMonth } from './finance'
 import { getTransactionActivityDate } from './transactionDates'
 
 export function getCalendarMonthBounds(referenceDate = new Date()) {
@@ -12,6 +13,19 @@ export function getCalendarMonthBounds(referenceDate = new Date()) {
     start: format(startOfMonth(date), 'yyyy-MM-dd'),
     end: format(endOfMonth(date), 'yyyy-MM-dd'),
   }
+}
+
+/**
+ * Resumo consultivo do Dashboard. Não altera competência, status ou liquidação.
+ * "Até a data" significa data de atividade cadastrada, não pagamento bancário.
+ */
+export function summarizeDashboardActivity(transactions = [], year, month, cutoffIso = '') {
+  const monthTransactions = transactionsForMonth(transactions, year, month)
+  const selected = cutoffIso
+    ? monthTransactions.filter((transaction) => getFinancialActivityDate(transaction) <= cutoffIso)
+    : monthTransactions
+
+  return summarizeTransactions(selected)
 }
 
 export function getRecentDashboardTransactions(transactions = [], bounds, limit = 6) {
