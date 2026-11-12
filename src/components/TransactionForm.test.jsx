@@ -305,15 +305,9 @@ describe('TransactionForm credit card integration', () => {
     await vi.waitFor(() => expect(appMocks.addTransactionBatch).toHaveBeenCalledTimes(1))
     const items = appMocks.addTransactionBatch.mock.calls[0][0]
     expect(items).toHaveLength(3)
-    expect(items.map((item) => item.invoiceMonth)).toEqual([
-      '2026-11',
-      '2026-12',
-      '2027-01',
-    ])
+    expect(items.map((item) => item.invoiceMonth)).toEqual(['2026-11', '2026-12', '2027-01'])
     expect(items.every((item) => item.cardId === 'inter')).toBe(true)
-    expect(items.reduce((cents, item) => cents + Math.round(item.amount * 100), 0)).toBe(
-      10000,
-    )
+    expect(items.reduce((cents, item) => cents + Math.round(item.amount * 100), 0)).toBe(10000)
   })
 
   it('não solicita dia de fechamento ao criar transação no cartão cadastrado', () => {
