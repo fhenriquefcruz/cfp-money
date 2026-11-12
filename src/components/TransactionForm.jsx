@@ -981,8 +981,8 @@ export default function TransactionForm({
                             ))}
                           </ol>
                           <p className="mt-2 text-[11px] text-[--text-tertiary]">
-                            A compra ocorre uma vez. Cada parcela entra na fatura indicada;
-                            pagar a fatura não cria outra despesa.
+                            A compra ocorre uma vez. Cada parcela entra na fatura indicada; pagar a
+                            fatura não cria outra despesa.
                           </p>
                         </div>
                       ) : (
