@@ -331,11 +331,10 @@ test('Dashboard v2 limita a central a duas causas diferentes e prioriza atrasos'
       to: '/transactions?month=2026-11',
     },
     {
-      cause: 'category',
-      title: '2 classificações para revisar',
-      detail:
-        'Revise manualmente as categorias; nenhum lançamento será modificado automaticamente.',
-      to: '/transactions?review=categories&month=2026-11',
+      cause: 'budget',
+      title: 'Orçamento ultrapassado',
+      detail: 'Revise o limite de Alimentação neste mês.',
+      to: '/budgets?month=2026-11',
     },
   ])
   expect(input).toEqual(before)
@@ -356,6 +355,32 @@ test('Dashboard v2 agrupa vencimentos e destaca o orçamento somente no limite o
   })
   expect(noBudgetAlert).toEqual([])
   expect(buildDashboardPriorityActions({ categoryReviewCount: 1, limit: 0 })).toEqual([])
+})
+
+test('Dashboard v2 preserva a revisão de categoria quando não há alerta financeiro crítico', () => {
+  const items = buildDashboardPriorityActions({
+    paymentSummary: { overdueCount: 0, dueNext7DaysCount: 0 },
+    categoryReviewCount: 2,
+    budgetAlerts: [{ budget: { amount: 1000 }, spent: 840, pct: 84 }],
+    monthKey: '2026-11',
+  })
+  expect(items).toEqual([
+    {
+      cause: 'category',
+      title: '2 classificações para revisar',
+      detail:
+        'Revise manualmente as categorias; nenhum lançamento será modificado automaticamente.',
+      to: '/transactions?review=categories&month=2026-11',
+    },
+  ])
+
+  const withBudget = buildDashboardPriorityActions({
+    categoryReviewCount: 2,
+    budgetAlerts: [{ budget: { amount: 1000 }, spent: 1000, pct: 100 }],
+    monthKey: '2026-11',
+  })
+  expect(withBudget.map((item) => item.cause)).toEqual(['budget', 'category'])
+  expect(withBudget[0].title).toBe('Orçamento no limite')
 })
 
 test('Dashboard v2 impede recorte até hoje fora do mês corrente sem mudar transações', () => {
