@@ -55,9 +55,7 @@ function resolveAnalysisDate(referenceDate) {
 function MoneyMetric({ label, value, detail }) {
   return (
     <div className="money-insight-metric min-w-0 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3.5">
-      <p className="text-xs font-semibold text-[--text-tertiary]">
-        {label}
-      </p>
+      <p className="text-xs font-semibold text-[--text-tertiary]">{label}</p>
       <p className="mt-1 text-base font-black tabular-nums text-[--text-primary]">{value}</p>
       {detail && <p className="mt-0.5 text-xs text-[--text-tertiary]">{detail}</p>}
     </div>
