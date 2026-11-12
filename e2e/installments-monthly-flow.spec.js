@@ -14,7 +14,9 @@ test('compra 3x de novembro permanece visível nas faturas e no extrato de dezem
 
   await dialog.locator('#transaction-amount').fill('10000')
   await dialog.getByLabel('Data', { exact: true }).fill('2026-11-04')
-  await dialog.getByRole('textbox', { name: 'Descrição', exact: true }).fill('Compra 3x novembro E2E')
+  await dialog
+    .getByRole('textbox', { name: 'Descrição', exact: true })
+    .fill('Compra 3x novembro E2E')
   await dialog.getByRole('button', { name: /Alimentação/ }).click()
   await dialog.getByLabel('Pagamento', { exact: true }).selectOption('credit_card')
   await dialog.getByLabel('Cartão cadastrado', { exact: true }).selectOption('card-nubank')
