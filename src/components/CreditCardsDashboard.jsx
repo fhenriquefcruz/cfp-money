@@ -10,7 +10,7 @@ import {
   Settings2,
   WalletCards,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/AppContext'
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { summarizeCardLinks } from '../domain/cardLinkageSummary'
@@ -209,13 +209,25 @@ function CreditCardsCenterContent() {
   const { transactions, loading: transactionsLoading } = useTransactions()
   const { creditCards, loading: creditCardsLoading } = useCreditCards()
   const { invoiceEvents, loading: invoiceEventsLoading, createInvoiceEvent } = useInvoiceEvents()
-  const [selectedMonth, setSelectedMonth] = useState(monthKeyFromDate())
-  const userSelectedMonthRef = useRef(false)
+  const [searchParams] = useSearchParams()
+  const requestedMonth = searchParams.get('month')
+  const hasRequestedMonth = /^\d{4}-(0[1-9]|1[0-2])$/.test(requestedMonth || '')
+  const [selectedMonth, setSelectedMonth] = useState(() =>
+    hasRequestedMonth ? requestedMonth : monthKeyFromDate(),
+  )
+  const userSelectedMonthRef = useRef(hasRequestedMonth)
   const [selectedCardId, setSelectedCardId] = useState('all')
   const [managingCardId, setManagingCardId] = useState(null)
   const [cardSettingsOpen, setCardSettingsOpen] = useState(false)
   const [reconciliationOpen, setReconciliationOpen] = useState(false)
   const [auditOpen, setAuditOpen] = useState(false)
+
+  useEffect(() => {
+    if (!hasRequestedMonth) return
+    userSelectedMonthRef.current = true
+    setSelectedMonth(requestedMonth)
+    setSelectedCardId('all')
+  }, [hasRequestedMonth, requestedMonth])
 
   const center = useMemo(
     () =>
@@ -620,9 +632,15 @@ function CreditCardsCenterContent() {
                     <h2 className="text-sm font-black text-[--text-primary]">
                       Lançamentos da fatura
                     </h2>
-                    <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                    <p className="mt-1 text-xs text-[--text-tertiary]">
                       {selectedCardId === 'all' ? 'Todos os cartões' : selectedInvoice?.card.name}
                     </p>
+                    <Link
+                      to={`/transactions?month=${selectedMonth}&view=invoice`}
+                      className="mt-2 inline-flex min-h-9 items-center text-xs font-bold text-[--text-brand] hover:underline"
+                    >
+                      Ver este mês em Transações
+                    </Link>
                   </div>
 
                   {selectedInvoice && (
