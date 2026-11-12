@@ -91,16 +91,18 @@ test('parcelas estruturadas aparecem pela competência da fatura sem mudar a dat
   expect(getTransactionLedgerDate(installment)).toBe('2027-01-20')
   expect(getTransactionLedgerDate(installment, 'activity')).toBe('2026-11-05')
   expect(getTransactionActivityDate(installment)).toBe('2026-11-05')
-  expect(getTransactionLedgerDate({ type: 'expense', paymentMethod: 'pix', date: '2026-11-05' })).toBe(
-    '2026-11-05',
-  )
+  expect(
+    getTransactionLedgerDate({ type: 'expense', paymentMethod: 'pix', date: '2026-11-05' }),
+  ).toBe('2026-11-05')
 })
 
 test('compra de cartão sem vencimento legado conserva a data disponível', () => {
-  expect(getTransactionLedgerDate({
-    type: 'expense',
-    paymentMethod: 'credit_card',
-    isCreditPurchase: true,
-    purchaseDate: '2026-11-25',
-  })).toBe('2026-11-25')
+  expect(
+    getTransactionLedgerDate({
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      purchaseDate: '2026-11-25',
+    }),
+  ).toBe('2026-11-25')
 })
