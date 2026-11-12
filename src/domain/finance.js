@@ -4,7 +4,10 @@ import {
   isFinanciallyEffectiveTransaction,
 } from './financialActivityCore'
 
-export { getFinancialActivityDate, isFinanciallyEffectiveTransaction } from './financialActivityCore'
+export {
+  getFinancialActivityDate,
+  isFinanciallyEffectiveTransaction,
+} from './financialActivityCore'
 
 const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
 
