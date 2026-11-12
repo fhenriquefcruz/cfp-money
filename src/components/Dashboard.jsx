@@ -44,7 +44,7 @@ import { formatCurrency, formatRelativeDate } from '../utils'
 import { getMonthlyFinancialData } from '../domain/monthlyFinance'
 import {
   buildCategoryBreakdown,
-  buildDashboardActionInsights,
+  buildDashboardPriorityActions,
   buildPeriodResultInsight,
   getCalendarMonthBounds,
   getRecentDashboardTransactions,
@@ -148,9 +148,9 @@ function MonthAttentionCard({ items }) {
         <div>
           <div className="dashboard-attention-card__title">
             <Zap size={15} />
-            <h2>Leituras do mês</h2>
+            <h2>Próximas ações</h2>
           </div>
-          <p>O que mudou e onde vale agir.</p>
+          <p>Até duas pendências para resolver, sem repetir o mesmo motivo.</p>
         </div>
       </div>
 
@@ -160,8 +160,8 @@ function MonthAttentionCard({ items }) {
             <CheckCircle2 size={17} />
           </div>
           <div>
-            <p>Sem pressão relevante</p>
-            <span>O período não apresenta desvios que exijam ação imediata.</span>
+            <p>Nenhuma pendência prioritária</p>
+            <span>Confira as informações complementares quando quiser.</span>
           </div>
         </div>
       ) : (
@@ -205,6 +205,7 @@ export default function Dashboard() {
   const [viewDate, setViewDate] = useState(new Date())
   const [activityView, setActivityView] = useState('to_date')
   const [newTransactionOpen, setNewTransactionOpen] = useState(false)
+  const [exploreOpen, setExploreOpen] = useState(false)
   const [trendMonths, setTrendMonths] = useState(6)
   const [trendView, setTrendView] = useState('flow')
   const [selectedMonthKey, setSelectedMonthKey] = useState('')
@@ -350,27 +351,15 @@ export default function Dashboard() {
     }
   }, [currentSummary, budgetOverview, paymentSummary.overdueCount, categoryReviewCount])
 
-  const actionInsights = useMemo(
+  const priorityActions = useMemo(
     () =>
-      buildDashboardActionInsights({
-        currentSummary,
-        previousSummary,
-        categoryBreakdown,
+      buildDashboardPriorityActions({
         paymentSummary,
-        savingsOverview,
-        budgetMonthKey: budgetOverview.monthKey,
-      }).map((item) => ({
-        ...item,
-        detail: item.amount ? `${formatCurrency(item.amount)} · ${item.detail}` : item.detail,
-      })),
-    [
-      currentSummary,
-      previousSummary,
-      categoryBreakdown,
-      paymentSummary,
-      savingsOverview,
-      budgetOverview.monthKey,
-    ],
+        categoryReviewCount,
+        budgetAlerts,
+        monthKey: budgetOverview.monthKey,
+      }),
+    [paymentSummary, categoryReviewCount, budgetAlerts, budgetOverview.monthKey],
   )
 
   const greeting = () => {
@@ -441,8 +430,9 @@ export default function Dashboard() {
         </button>
       </motion.div>
 
-      <div className="dashboard-executive-grid">
-        <motion.div className="min-w-0" {...fade} transition={{ delay: 0.05 }}>
+      <section aria-label="Situação do mês">
+        <div className="dashboard-executive-grid">
+          <motion.div className="min-w-0" {...fade} transition={{ delay: 0.05 }}>
           <Card variant="hero" className="dashboard-period-summary dashboard-period-hero h-full">
             <div className="dashboard-period-hero__main">
               <div className="dashboard-period-hero__amount">
@@ -545,15 +535,19 @@ export default function Dashboard() {
               Compromissos, reservas e gráficos abaixo mostram o mês selecionado completo.
             </p>
           </Card>
-        </motion.div>
+          </motion.div>
+        </div>
+      </section>
 
+      <section aria-label="Próximas ações">
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.075 }}>
-          <MonthAttentionCard items={actionInsights} />
+          <MonthAttentionCard items={priorityActions} />
         </motion.div>
-      </div>
+      </section>
 
       {/* Faixa operacional: compromissos do mês + patrimônio reservado */}
-      <div className="dashboard-executive-grid">
+      <section aria-label="Planejamento do mês">
+        <div className="dashboard-executive-grid">
         <motion.div className="min-w-0" {...fade} transition={{ delay: 0.08 }}>
           <PaymentControlCard summary={paymentSummary} loading={isLoading} />
         </motion.div>
@@ -646,8 +640,35 @@ export default function Dashboard() {
             </div>
           </Card>
         </motion.div>
-      </div>
+        </div>
+      </section>
 
+      <section
+        aria-labelledby="dashboard-explore-heading"
+        className="min-w-0 rounded-2xl border border-[--border-default] bg-[--bg-surface] p-4"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h2 id="dashboard-explore-heading" className="text-base font-bold text-[--text-primary]">
+              Explorar os números
+            </h2>
+            <p className="mt-1 text-sm text-[--text-secondary]">
+              Evolução, categorias, metas e Money ficam acessíveis sob demanda.
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-expanded={exploreOpen}
+            aria-controls="dashboard-explore-content"
+            onClick={() => setExploreOpen((value) => !value)}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[--border-default] px-4 text-sm font-semibold text-[--text-primary] hover:bg-[--bg-hover] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--brand-500]"
+          >
+            {exploreOpen ? 'Ocultar análises' : 'Explorar análises'}
+            <ChevronRight size={16} aria-hidden="true" />
+          </button>
+        </div>
+        {exploreOpen && (
+          <div id="dashboard-explore-content" className="mt-4 space-y-4">
       {/* Inteligência executiva: ritmo, saúde e Money em uma faixa coerente */}
       <motion.div
         className="dashboard-bento-grid grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12"
@@ -1116,6 +1137,9 @@ export default function Dashboard() {
           </Card>
         </motion.div>
       </div>
+          </div>
+        )}
+      </section>
       {newTransactionOpen && (
         <React.Suspense fallback={<p role="status">Carregando formulário de transação…</p>}>
           <TransactionForm isOpen onClose={() => setNewTransactionOpen(false)} />
