@@ -74,7 +74,8 @@
 }
 
 .mr-v2-period-switch__option:focus-visible,
-.mr-v2-primary-action:focus-visible {
+.mr-v2-primary-action:focus-visible,
+.mr-v2-explore-toggle:focus-visible {
   outline: 2px solid var(--mr-v2-accent);
   outline-offset: 3px;
 }
