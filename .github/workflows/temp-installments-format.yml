@@ -1,0 +1,28 @@
+name: Temporary installment formatting diagnostic
+
+on:
+  push:
+    branches:
+      - fix/credit-installments-ledger-periods
+
+permissions:
+  contents: read
+
+jobs:
+  formatting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Show precise Prettier diff (read-only)
+        shell: bash
+        run: |
+          for f in src/domain/transactionDates.js src/domain/transactionDates.test.js src/domain/creditCardCenter.test.js src/domain/creditCardIntegrity.js src/domain/creditCardIntegrity.test.js src/components/TransactionList.jsx src/components/CreditCardsDashboard.jsx src/components/TransactionForm.jsx src/components/TransactionForm.test.jsx e2e/installments-monthly-flow.spec.js; do
+            npx --no-install prettier "$f" > /tmp/meu-real-prettier.js
+            diff -u "$f" /tmp/meu-real-prettier.js || true
+          done
