@@ -52,6 +52,8 @@ import {
 import { getTransactionActivityDate, getTransactionDateContext } from '../domain/transactionDates'
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
 import { buildPaymentControlOverview } from '../domain/paymentControl'
+import { summarizeDashboardActivity } from '../domain/dashboard'
+import FinanceKpi from './finance/FinanceKpi'
 import { buildFinancialHealth } from '../domain/financialHealth'
 import { budgetMonthKey, buildMonthlyBudgetOverview } from '../domain/budgetPeriods'
 import {
@@ -61,6 +63,8 @@ import {
 } from '../domain/savings'
 import { format, subMonths, addMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+
+const TransactionForm = React.lazy(() => import('./TransactionForm'))
 
 const formatAxisCurrency = (value) =>
   `R$ ${new Intl.NumberFormat('pt-BR', {
@@ -199,6 +203,8 @@ export default function Dashboard() {
   const { invoiceEvents } = useInvoiceEvents()
 
   const [viewDate, setViewDate] = useState(new Date())
+  const [activityView, setActivityView] = useState('to_date')
+  const [newTransactionOpen, setNewTransactionOpen] = useState(false)
   const [trendMonths, setTrendMonths] = useState(6)
   const [trendView, setTrendView] = useState('flow')
   const [selectedMonthKey, setSelectedMonthKey] = useState('')
@@ -249,6 +255,14 @@ export default function Dashboard() {
   const forecast = useMemo(() => getSpendingForecast(), [transactions])
 
   const monthBounds = useMemo(() => getCalendarMonthBounds(viewDate), [year, month])
+  const todayIso = format(new Date(), 'yyyy-MM-dd')
+  const activityCutoff = monthBounds.end < todayIso ? monthBounds.end : todayIso
+  const activitySummary = useMemo(
+    () => summarizeDashboardActivity(transactions, year, month, activityCutoff),
+    [transactions, year, month, activityCutoff],
+  )
+  const heroSummary = activityView === 'to_date' ? activitySummary : currentSummary
+  const activityCutoffLabel = activityCutoff.split('-').reverse().join('/')
   const paymentSummary = useMemo(
     () =>
       buildPaymentControlOverview({
@@ -365,15 +379,15 @@ export default function Dashboard() {
   }
   const isLoading = transactionsLoading
   const periodInsight = useMemo(
-    () => buildPeriodResultInsight(currentSummary, previousSummary),
-    [currentSummary, previousSummary],
+    () => buildPeriodResultInsight(heroSummary, activityView === 'full_month' ? previousSummary : {}),
+    [heroSummary, activityView, previousSummary],
   )
   const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
     <div
       data-tour="dashboard"
-      className="dashboard-premium dashboard-v58 mx-auto min-w-0 max-w-[1680px] space-y-5 pb-24 sm:space-y-6 lg:pb-6"
+      className="dashboard-premium dashboard-v58 mr-executive-v2 mx-auto min-w-0 max-w-[1680px] space-y-5 pb-24 sm:space-y-6 lg:pb-6"
     >
       {/* Header — mês com destaque, saudação secundária */}
       <motion.div
@@ -415,17 +429,15 @@ export default function Dashboard() {
             {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'}
           </p>
         </div>
-        <Link to="/transactions" className="dashboard-quick-add w-auto flex-shrink-0">
-          <Button
-            variant="primary"
-            icon={<Plus />}
-            size="sm"
-            aria-label="Nova transação"
-            className="dashboard-quick-add__button"
-          >
-            <span className="dashboard-quick-add__label">Nova transação</span>
-          </Button>
-        </Link>
+        <button
+          type="button"
+          onClick={() => setNewTransactionOpen(true)}
+          className="dashboard-quick-add dashboard-quick-add__button mr-v2-primary-action inline-flex min-h-12 flex-shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold"
+          aria-haspopup="dialog"
+        >
+          <Plus size={17} aria-hidden="true" />
+          <span className="dashboard-quick-add__label">Nova transação</span>
+        </button>
       </motion.div>
 
       <div className="dashboard-executive-grid">
@@ -434,11 +446,42 @@ export default function Dashboard() {
             <div className="dashboard-period-hero__main">
               <div className="dashboard-period-hero__amount">
                 <div className="dashboard-period-hero__eyebrow">
-                  <span>Resultado do período</span>
-                  <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
+                  <span>
+                    {activityView === 'to_date'
+                      ? `Resultado registrado até ${activityCutoffLabel}`
+                      : 'Resultado do mês completo'}
+                  </span>
+                  <InfoTooltip text="Receitas menos despesas pela data de atividade cadastrada. Não representa saldo bancário ou confirmação de pagamento." />
                 </div>
+                <div
+                  role="group"
+                  aria-label="Recorte temporal do resultado"
+                  className="mr-v2-period-switch"
+                >
+                  <button
+                    type="button"
+                    aria-pressed={activityView === 'to_date'}
+                    onClick={() => setActivityView('to_date')}
+                    className="mr-v2-period-switch__option"
+                  >
+                    Até hoje
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={activityView === 'full_month'}
+                    onClick={() => setActivityView('full_month')}
+                    className="mr-v2-period-switch__option"
+                  >
+                    Mês completo
+                  </button>
+                </div>
+                <p className="mr-v2-period-description">
+                  {activityView === 'to_date'
+                    ? 'Somente datas de atividade até o corte; não indica pagamentos liquidados.'
+                    : 'Inclui lançamentos futuros já cadastrados. Não indica saldo em conta.'}
+                </p>
                 <p className="dashboard-period-hero__value">
-                  {isLoading ? '—' : formatCurrency(currentSummary.balance)}
+                  {isLoading ? '—' : formatCurrency(heroSummary.balance)}
                 </p>
                 <div className="dashboard-period-hero__context">
                   <span className="dashboard-period-hero__status" data-tone={periodInsight.tone}>
@@ -484,21 +527,17 @@ export default function Dashboard() {
             </div>
 
             <div className="dashboard-period-hero__metrics">
-              {[
-                ['Receitas', currentSummary.income, 'income'],
-                ['Despesas', currentSummary.expenses, 'expense'],
-                ['Comprometido', paymentSummary.committedAmount || 0, 'commitment'],
-                ['Reservado total', savingsOverview.totalBalance, 'reserve'],
-              ].map(([label, value, kind]) => (
-                <div key={label} className="dashboard-period-metric" data-kind={kind}>
-                  <p className="dashboard-period-metric__label">
-                    <span aria-hidden="true" />
-                    {label}
-                  </p>
-                  <p className="dashboard-period-metric__value">{formatCurrency(value)}</p>
-                </div>
-              ))}
+              <FinanceKpi label="Receitas" value={heroSummary.income} kind="income" loading={isLoading} />
+              <FinanceKpi
+                label="Despesas"
+                value={heroSummary.expenses}
+                kind="expense"
+                loading={isLoading}
+              />
             </div>
+            <p className="mr-v2-secondary-context">
+              Compromissos, reservas e gráficos abaixo mostram o mês selecionado completo.
+            </p>
           </Card>
         </motion.div>
 
@@ -1071,6 +1110,11 @@ export default function Dashboard() {
           </Card>
         </motion.div>
       </div>
+      {newTransactionOpen && (
+        <React.Suspense fallback={<p role="status">Carregando formulário de transação…</p>}>
+          <TransactionForm isOpen onClose={() => setNewTransactionOpen(false)} />
+        </React.Suspense>
+      )}
     </div>
   )
 }
