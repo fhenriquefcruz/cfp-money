@@ -662,7 +662,6 @@ export default function Dashboard() {
           <button
             type="button"
             aria-expanded={exploreOpen}
-            aria-controls="dashboard-explore-content"
             onClick={() => setExploreOpen((value) => !value)}
             className="mr-v2-explore-toggle inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[--border-default] px-4 text-sm font-semibold text-[--text-primary] hover:bg-[--bg-hover]"
           >
