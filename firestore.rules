@@ -239,125 +239,14 @@ service cloud.firestore {
         && request.resource.data.updatedAt is timestamp;
     }
 
-    // Eventos novos: ID estável, vínculo por cardId e schema imutável.
+    // Novo evento: ID estável, schema fechado e histórico imutável.
     function validInvoiceEventMoney(amount) {
       return amount is number && amount > 0 && amount <= 1000000000;
     }
 
     function validInvoiceEventDate(value) {
       return value is string
-        && value.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])
-      allow read: if owner(uid) || admin();
-
-      allow create: if owner(uid) && validInitialUser();
-
-      allow update: if (owner(uid) && validOwnerUserUpdate()) || (admin() && validAdminAccessUpdate());
-
-      allow delete: if false;
-
-      // Comprovantes fragmentados: isolados por usuário, imutáveis após gravação,
-      // com tamanho e vínculo a uma transação existente validados no servidor.
-      match /transactionAttachmentChunks/{chunkId} {
-        allow get, list: if owner(uid);
-        allow create: if owner(uid)
-          && request.resource.data.keys().hasAll(['txId', 'attachmentId', 'chunkIndex', 'data'])
-          && request.resource.data.keys().hasOnly(['txId', 'attachmentId', 'chunkIndex', 'data'])
-          && request.resource.data.txId is string
-          && request.resource.data.txId.size() > 0
-          && request.resource.data.txId.size() <= 128
-          && request.resource.data.attachmentId is string
-          && request.resource.data.attachmentId.size() > 0
-          && request.resource.data.attachmentId.size() <= 128
-          && request.resource.data.chunkIndex is int
-          && request.resource.data.chunkIndex >= 0
-          && request.resource.data.chunkIndex <= 12
-          && request.resource.data.data is string
-          && request.resource.data.data.size() > 0
-          && request.resource.data.data.size() <= 270000
-          && exists(/databases/$(database)/documents/users/$(uid)/transactions/$(request.resource.data.txId));
-        allow update: if false;
-        allow delete: if owner(uid);
-      }
-
-      match /{collection}/{document=**} {
-        allow read, write: if owner(uid) && collection != 'transactionAttachmentChunks';
-      }
-    }
-
-    match /categories/{categoryId} {
-      allow read: if admin()
-        || (
-          signedIn()
-          && (
-            resource.data.isDefault == true
-            || resource.data.ownerUid == request.auth.uid
-          )
-        );
-
-      allow create: if admin()
-        || (
-          signedIn()
-          && validCustomCategoryOwner()
-          && validCustomCategoryFields()
-        );
-
-      allow update: if admin()
-        || (
-          ownsCustomCategory()
-          && validCustomCategoryOwner()
-          && validCustomCategoryFields()
-        );
-
-      allow delete: if admin() || ownsCustomCategory();
-    }
-
-    match /adminAudit/{auditId} {
-      allow read: if admin();
-      allow write: if false;
-    }
-
-    match /supportRequests/{requestId} {
-      allow create: if signedIn() && validSupportCreate(requestId);
-      allow read: if signedIn()
-        && (resource.data.uid == request.auth.uid || admin());
-      allow update: if admin() && validSupportAdminUpdate();
-      allow delete: if false;
-    }
-
-    match /notificationSubscribers/{uid} {
-      allow read: if owner(uid);
-
-      allow create, update: if owner(uid)
-        && validNotificationSubscriber(uid);
-
-      allow delete: if owner(uid);
-    }
-
-    match /notificationDeliveries/{deliveryId} {
-      allow read, write: if false;
-    }
-
-    match /privacyConsents/{consentId} {
-      allow read: if admin();
-      allow write: if false;
-    }
-
-    match /accountDeletionRequests/{uid} {
-      allow read: if admin();
-      allow write: if false;
-    }
-
-    match /privacyAudit/{auditId} {
-      allow read: if admin();
-      allow write: if false;
-    }
-
-    match /{document=**} {
-      allow read, write: if false;
-    }
-  }
-}
-);
+        && value.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$');
     }
 
     function validInvoiceEventDetails(uid, data) {
@@ -422,118 +311,7 @@ service cloud.firestore {
         ])
         && data.operationId is string
         && data.operationId.matches(
-          '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}
-      allow read: if owner(uid) || admin();
-
-      allow create: if owner(uid) && validInitialUser();
-
-      allow update: if (owner(uid) && validOwnerUserUpdate()) || (admin() && validAdminAccessUpdate());
-
-      allow delete: if false;
-
-      // Comprovantes fragmentados: isolados por usuário, imutáveis após gravação,
-      // com tamanho e vínculo a uma transação existente validados no servidor.
-      match /transactionAttachmentChunks/{chunkId} {
-        allow get, list: if owner(uid);
-        allow create: if owner(uid)
-          && request.resource.data.keys().hasAll(['txId', 'attachmentId', 'chunkIndex', 'data'])
-          && request.resource.data.keys().hasOnly(['txId', 'attachmentId', 'chunkIndex', 'data'])
-          && request.resource.data.txId is string
-          && request.resource.data.txId.size() > 0
-          && request.resource.data.txId.size() <= 128
-          && request.resource.data.attachmentId is string
-          && request.resource.data.attachmentId.size() > 0
-          && request.resource.data.attachmentId.size() <= 128
-          && request.resource.data.chunkIndex is int
-          && request.resource.data.chunkIndex >= 0
-          && request.resource.data.chunkIndex <= 12
-          && request.resource.data.data is string
-          && request.resource.data.data.size() > 0
-          && request.resource.data.data.size() <= 270000
-          && exists(/databases/$(database)/documents/users/$(uid)/transactions/$(request.resource.data.txId));
-        allow update: if false;
-        allow delete: if owner(uid);
-      }
-
-      match /{collection}/{document=**} {
-        allow read, write: if owner(uid) && collection != 'transactionAttachmentChunks';
-      }
-    }
-
-    match /categories/{categoryId} {
-      allow read: if admin()
-        || (
-          signedIn()
-          && (
-            resource.data.isDefault == true
-            || resource.data.ownerUid == request.auth.uid
-          )
-        );
-
-      allow create: if admin()
-        || (
-          signedIn()
-          && validCustomCategoryOwner()
-          && validCustomCategoryFields()
-        );
-
-      allow update: if admin()
-        || (
-          ownsCustomCategory()
-          && validCustomCategoryOwner()
-          && validCustomCategoryFields()
-        );
-
-      allow delete: if admin() || ownsCustomCategory();
-    }
-
-    match /adminAudit/{auditId} {
-      allow read: if admin();
-      allow write: if false;
-    }
-
-    match /supportRequests/{requestId} {
-      allow create: if signedIn() && validSupportCreate(requestId);
-      allow read: if signedIn()
-        && (resource.data.uid == request.auth.uid || admin());
-      allow update: if admin() && validSupportAdminUpdate();
-      allow delete: if false;
-    }
-
-    match /notificationSubscribers/{uid} {
-      allow read: if owner(uid);
-
-      allow create, update: if owner(uid)
-        && validNotificationSubscriber(uid);
-
-      allow delete: if owner(uid);
-    }
-
-    match /notificationDeliveries/{deliveryId} {
-      allow read, write: if false;
-    }
-
-    match /privacyConsents/{consentId} {
-      allow read: if admin();
-      allow write: if false;
-    }
-
-    match /accountDeletionRequests/{uid} {
-      allow read: if admin();
-      allow write: if false;
-    }
-
-    match /privacyAudit/{auditId} {
-      allow read: if admin();
-      allow write: if false;
-    }
-
-    match /{document=**} {
-      allow read, write: if false;
-    }
-  }
-}
-
+          '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
         )
         && eventId == 'op_' + data.operationId
         && data.cardId is string
@@ -545,118 +323,7 @@ service cloud.firestore {
         && data.cardLast4 is string
         && data.cardLast4.size() <= 4
         && data.invoiceMonth is string
-        && data.invoiceMonth.matches('^[0-9]{4}-(0[1-9]|1[0-2])
-      allow read: if owner(uid) || admin();
-
-      allow create: if owner(uid) && validInitialUser();
-
-      allow update: if (owner(uid) && validOwnerUserUpdate()) || (admin() && validAdminAccessUpdate());
-
-      allow delete: if false;
-
-      // Comprovantes fragmentados: isolados por usuário, imutáveis após gravação,
-      // com tamanho e vínculo a uma transação existente validados no servidor.
-      match /transactionAttachmentChunks/{chunkId} {
-        allow get, list: if owner(uid);
-        allow create: if owner(uid)
-          && request.resource.data.keys().hasAll(['txId', 'attachmentId', 'chunkIndex', 'data'])
-          && request.resource.data.keys().hasOnly(['txId', 'attachmentId', 'chunkIndex', 'data'])
-          && request.resource.data.txId is string
-          && request.resource.data.txId.size() > 0
-          && request.resource.data.txId.size() <= 128
-          && request.resource.data.attachmentId is string
-          && request.resource.data.attachmentId.size() > 0
-          && request.resource.data.attachmentId.size() <= 128
-          && request.resource.data.chunkIndex is int
-          && request.resource.data.chunkIndex >= 0
-          && request.resource.data.chunkIndex <= 12
-          && request.resource.data.data is string
-          && request.resource.data.data.size() > 0
-          && request.resource.data.data.size() <= 270000
-          && exists(/databases/$(database)/documents/users/$(uid)/transactions/$(request.resource.data.txId));
-        allow update: if false;
-        allow delete: if owner(uid);
-      }
-
-      match /{collection}/{document=**} {
-        allow read, write: if owner(uid) && collection != 'transactionAttachmentChunks';
-      }
-    }
-
-    match /categories/{categoryId} {
-      allow read: if admin()
-        || (
-          signedIn()
-          && (
-            resource.data.isDefault == true
-            || resource.data.ownerUid == request.auth.uid
-          )
-        );
-
-      allow create: if admin()
-        || (
-          signedIn()
-          && validCustomCategoryOwner()
-          && validCustomCategoryFields()
-        );
-
-      allow update: if admin()
-        || (
-          ownsCustomCategory()
-          && validCustomCategoryOwner()
-          && validCustomCategoryFields()
-        );
-
-      allow delete: if admin() || ownsCustomCategory();
-    }
-
-    match /adminAudit/{auditId} {
-      allow read: if admin();
-      allow write: if false;
-    }
-
-    match /supportRequests/{requestId} {
-      allow create: if signedIn() && validSupportCreate(requestId);
-      allow read: if signedIn()
-        && (resource.data.uid == request.auth.uid || admin());
-      allow update: if admin() && validSupportAdminUpdate();
-      allow delete: if false;
-    }
-
-    match /notificationSubscribers/{uid} {
-      allow read: if owner(uid);
-
-      allow create, update: if owner(uid)
-        && validNotificationSubscriber(uid);
-
-      allow delete: if owner(uid);
-    }
-
-    match /notificationDeliveries/{deliveryId} {
-      allow read, write: if false;
-    }
-
-    match /privacyConsents/{consentId} {
-      allow read: if admin();
-      allow write: if false;
-    }
-
-    match /accountDeletionRequests/{uid} {
-      allow read: if admin();
-      allow write: if false;
-    }
-
-    match /privacyAudit/{auditId} {
-      allow read: if admin();
-      allow write: if false;
-    }
-
-    match /{document=**} {
-      allow read, write: if false;
-    }
-  }
-}
-)
+        && data.invoiceMonth.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
         && data.invoiceKey == data.cardId + ':' + data.invoiceMonth
         && data.notes is string
         && data.notes.size() <= 2000
@@ -698,8 +365,17 @@ service cloud.firestore {
         allow delete: if owner(uid);
       }
 
+      // Leituras históricas permanecem; só novas criações validadas são aceitas.
+      match /invoiceEvents/{eventId} {
+        allow get, list: if owner(uid);
+        allow create: if owner(uid) && validInvoiceEventCreate(uid, eventId);
+        allow update, delete: if false;
+      }
+
       match /{collection}/{document=**} {
-        allow read, write: if owner(uid) && collection != 'transactionAttachmentChunks';
+        allow read, write: if owner(uid)
+          && collection != 'transactionAttachmentChunks'
+          && collection != 'invoiceEvents';
       }
     }
 
