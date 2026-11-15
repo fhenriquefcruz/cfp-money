@@ -236,4 +236,3 @@ test('MR-004: saldo não pode ficar negativo e não deve duplicar patrimônio', 
   assert.equal(goal.currentAmount, 100)
   assert.deepEqual(goalAlertCandidates(effective), [])
 })
-
