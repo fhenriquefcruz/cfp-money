@@ -55,6 +55,12 @@ jobs:
       - name: Install Worker dependencies
         run: npm ci --prefix worker/email-notifications
 
+      # Bundle the actual Cloudflare Worker, including shared financial selectors.
+      # --dry-run never publishes a Worker or modifies a remote account.
+      - name: Verify notification Worker bundles (dry-run only)
+        working-directory: worker/email-notifications
+        run: npx wrangler deploy --dry-run --outdir "$RUNNER_TEMP/meu-real-worker-check"
+
       - name: Complete validation
         run: npm run validate:all
 
