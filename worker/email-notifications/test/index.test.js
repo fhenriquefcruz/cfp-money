@@ -177,6 +177,6 @@ test('mensagem do alerta utiliza o mesmo saldo efetivo para calcular valor resta
   const notice = goalAlertMessage(effectiveGoal, 'progress-80')
 
   assert.equal(notice.level, 'warning')
-  assert.match(notice.message, /R\\$\\s*499,90/)
-  assert.doesNotMatch(notice.message, /R\\$\\s*1\\.000,00/)
+  assert.match(notice.message, /R\$\s*499,90/)
+  assert.doesNotMatch(notice.message, /R\$\s*1\.000,00/)
 })
