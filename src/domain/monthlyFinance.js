@@ -1,7 +1,8 @@
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { getTransactionActivityDate } from './transactionDates'
-import { getSavingsSignedAmount } from './savings'
+import { getSavingsSignedCents } from './savings'
+import { addMoneyCents, fromMoneyCents, toMoneyCents } from './moneyCents'
 
 const capitalizeMonth = (value) => (value ? value.charAt(0).toUpperCase() + value.slice(1) : '')
 const isEffective = (transaction) =>
@@ -38,24 +39,28 @@ export function getMonthlyFinancialData(transactions = [], months = 6, baseDate 
       return parsed.getFullYear() === year && parsed.getMonth() === month
     })
 
-    const income = periodTransactions
-      .filter((transaction) => transaction.type === 'income' && !transaction.isSavings)
-      .reduce((total, transaction) => total + transaction.amount, 0)
-    const expenses = periodTransactions
-      .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
-      .reduce((total, transaction) => total + transaction.amount, 0)
-    const savings = periodTransactions
-      .filter((transaction) => transaction.isSavings)
-      .reduce((total, transaction) => total + getSavingsSignedAmount(transaction), 0)
+    let incomeCents = 0
+    let expenseCents = 0
+    let savingsCents = 0
+
+    for (const transaction of periodTransactions) {
+      if (transaction.isSavings) {
+        savingsCents = addMoneyCents(savingsCents, getSavingsSignedCents(transaction))
+      } else if (transaction.type === 'income') {
+        incomeCents = addMoneyCents(incomeCents, toMoneyCents(transaction.amount))
+      } else if (transaction.type === 'expense') {
+        expenseCents = addMoneyCents(expenseCents, toMoneyCents(transaction.amount))
+      }
+    }
 
     result.push({
       monthKey: format(date, 'yyyy-MM'),
       month: capitalizeMonth(format(date, 'MMM', { locale: ptBR })),
       fullMonth: format(date, "MMMM 'de' yyyy", { locale: ptBR }),
-      income,
-      expenses,
-      savings,
-      balance: income - expenses,
+      income: fromMoneyCents(incomeCents),
+      expenses: fromMoneyCents(expenseCents),
+      savings: fromMoneyCents(savingsCents),
+      balance: fromMoneyCents(addMoneyCents(incomeCents, -expenseCents)),
     })
   }
 

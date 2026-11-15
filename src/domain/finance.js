@@ -1,6 +1,5 @@
-import { getSavingsSignedAmount } from './savings'
-
-const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
+import { getSavingsSignedCents } from './savings'
+import { addMoneyCents, fromMoneyCents, toMoneyCents } from './moneyCents'
 
 export const getFinancialActivityDate = (transaction = {}) =>
   transaction.type === 'expense' &&
@@ -15,31 +14,31 @@ export const isFinanciallyEffectiveTransaction = (transaction = {}) =>
   transaction.kind !== 'transfer'
 
 export function summarizeTransactions(transactions = []) {
-  return transactions.reduce(
-    (summary, transaction) => {
-      if (!isFinanciallyEffectiveTransaction(transaction)) return summary
-      const amount = asAmount(transaction.amount)
+  let incomeCents = 0
+  let expenseCents = 0
+  let savingsCents = 0
+  let count = 0
 
-      if (transaction.isSavings) {
-        summary.savings += getSavingsSignedAmount(transaction)
-      } else if (transaction.type === 'income') {
-        summary.income += amount
-      } else if (transaction.type === 'expense') {
-        summary.expenses += amount
-      }
+  for (const transaction of transactions) {
+    if (!isFinanciallyEffectiveTransaction(transaction)) continue
 
-      summary.balance = summary.income - summary.expenses
-      summary.count += 1
-      return summary
-    },
-    {
-      income: 0,
-      expenses: 0,
-      savings: 0,
-      balance: 0,
-      count: 0,
-    },
-  )
+    if (transaction.isSavings) {
+      savingsCents = addMoneyCents(savingsCents, getSavingsSignedCents(transaction))
+    } else if (transaction.type === 'income') {
+      incomeCents = addMoneyCents(incomeCents, toMoneyCents(transaction.amount))
+    } else if (transaction.type === 'expense') {
+      expenseCents = addMoneyCents(expenseCents, toMoneyCents(transaction.amount))
+    }
+    count += 1
+  }
+
+  return {
+    income: fromMoneyCents(incomeCents),
+    expenses: fromMoneyCents(expenseCents),
+    savings: fromMoneyCents(savingsCents),
+    balance: fromMoneyCents(addMoneyCents(incomeCents, -expenseCents)),
+    count,
+  }
 }
 
 export function calculateCurrentBalance(transactions = []) {
@@ -72,11 +71,11 @@ export function defaultDateRangeEnd(startDate, days = 30) {
 }
 
 export function calculateBudgetUsage(transactions = [], budget, referenceDate = new Date()) {
-  if (!budget || asAmount(budget.amount) <= 0) {
-    return { spent: 0, percent: 0 }
-  }
+  if (!budget) return { spent: 0, percent: 0 }
+  const budgetCents = toMoneyCents(budget.amount)
+  if (budgetCents <= 0) return { spent: 0, percent: 0 }
 
-  const spent = transactions
+  const spentCents = transactions
     .filter((transaction) => {
       const activityDate = getFinancialActivityDate(transaction)
       if (!/^\d{4}-\d{2}-\d{2}$/.test(activityDate || '')) return false
@@ -91,10 +90,10 @@ export function calculateBudgetUsage(transactions = [], budget, referenceDate = 
         date.getMonth() === referenceDate.getMonth()
       )
     })
-    .reduce((total, transaction) => total + asAmount(transaction.amount), 0)
+    .reduce((total, transaction) => addMoneyCents(total, toMoneyCents(transaction.amount)), 0)
 
   return {
-    spent,
-    percent: (spent / asAmount(budget.amount)) * 100,
+    spent: fromMoneyCents(spentCents),
+    percent: (spentCents / budgetCents) * 100,
   }
 }
