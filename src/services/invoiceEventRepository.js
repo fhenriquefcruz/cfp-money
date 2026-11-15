@@ -2,7 +2,6 @@ import { doc, runTransaction, serverTimestamp } from 'firebase/firestore'
 import {
   prepareInvoiceEventOperation,
   sameInvoiceOperation,
-  validateInvoiceReversalBalance,
 } from '../domain/invoiceEventIdempotency.js'
 
 /**
@@ -25,12 +24,15 @@ export async function writeInvoiceEventOnce(database, uid, event) {
   // serializa todas as novas tentativas concorrentes para o mesmo pagamento.
   // Antes do deploy das Rules, clientes antigos ainda podem gravar eventos
   // legados simultaneamente: homologação coordenada é obrigatória.
-  const historicalReversals =
-    event.type === 'reversal'
-      ? await import('./invoiceLegacyReversals.js').then(({ readHistoricalInvoiceReversals }) =>
-          readHistoricalInvoiceReversals(database, uid, event.reversesEventId, operation.id),
-        )
-      : []
+  const historicalAudit = event.type === 'reversal' ? await import('./invoiceLegacyReversals.js') : null
+  const historicalReversals = historicalAudit
+    ? await historicalAudit.readHistoricalInvoiceReversals(
+        database,
+        uid,
+        event.reversesEventId,
+        operation.id,
+      )
+    : []
 
   return runTransaction(database, async (transaction) => {
     const existing = await transaction.get(reference)
@@ -56,7 +58,7 @@ export async function writeInvoiceEventOnce(database, uid, event) {
       )
       const paymentSnapshot = await transaction.get(paymentReference)
 
-      validateInvoiceReversalBalance({
+      historicalAudit.validateInvoiceReversalBalance({
         payment: paymentSnapshot.exists()
           ? { id: paymentSnapshot.id, ...paymentSnapshot.data() }
           : null,
