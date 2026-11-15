@@ -46,6 +46,24 @@ const customCategory = (ownerUid, name = 'Categoria própria') => ({
   ownerUid,
 })
 
+const invoiceEventFixture = (
+  operationId = 'a4d5072f-9bd7-4ca9-9129-9d2a621ed918',
+) => ({
+  type: 'payment',
+  operationId,
+  invoiceKey: 'card-1:2026-11',
+  cardId: 'card-1',
+  cardName: 'Cartão de teste',
+  cardLast4: '1234',
+  invoiceMonth: '2026-11',
+  eventDate: '2026-11-14',
+  paymentDate: '2026-11-14',
+  notes: '',
+  amount: 80.25,
+  sourceAccount: 'Conta de teste',
+  createdAt: serverTimestamp(),
+})
+
 before(async () => {
   environment = await initializeTestEnvironment({
     projectId: PROJECT_ID,
@@ -70,6 +88,17 @@ beforeEach(async () => {
     await Promise.all([
       setDoc(doc(database, 'users', 'alice'), initialUser('alice@example.com')),
       setDoc(doc(database, 'users', 'bob'), initialUser('bob@example.com')),
+      setDoc(doc(database, 'users', 'alice', 'creditCards', 'card-1'), {
+        name: 'Cartão de teste',
+        last4: '1234',
+      }),
+      // Legado: permitido consultar, sem autorização para reescrever.
+      setDoc(doc(database, 'users', 'alice', 'invoiceEvents', 'historical-payment'), {
+        type: 'payment',
+        invoiceKey: 'card-1:2026-10',
+        amount: 40,
+        eventDate: '2026-10-15',
+      }),
       setDoc(doc(database, 'users', 'alice', 'transactions', 'transaction-1'), {
         description: 'Registro privado',
         amount: 100,
@@ -153,6 +182,106 @@ test('permite somente criação inicial segura do usuário', async () => {
 
   await assertFails(
     setDoc(doc(anotherUserDatabase, 'users', 'victim'), initialUser('victim@example.com')),
+  )
+})
+
+test('MR-003: cria somente evento novo válido com ID atrelado à operação e cartão', async () => {
+  const database = environment.authenticatedContext('alice').firestore()
+  const event = invoiceEventFixture()
+  const reference = doc(database, 'users', 'alice', 'invoiceEvents', `op_${event.operationId}`)
+
+  await assertSucceeds(setDoc(reference, event))
+  const persisted = (await getDoc(reference)).data()
+  assert.equal(persisted.amount, 80.25)
+  assert.equal(persisted.invoiceKey, 'card-1:2026-11')
+  assert.equal(persisted.operationId, event.operationId)
+
+  // Mesmo uma edição feita pelo próprio titular não pode reescrever o passado.
+  await assertFails(updateDoc(reference, { amount: 80.26 }))
+  await assertFails(setDoc(reference, event))
+  await assertFails(deleteDoc(reference))
+  assert.equal((await getDoc(reference)).data().amount, 80.25)
+})
+
+test('MR-003: bloqueia IDs falsos, dados divergentes, operações legadas novas e UID alheio', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const event = invoiceEventFixture()
+  const reference = doc(alice, 'users', 'alice', 'invoiceEvents', `op_${event.operationId}`)
+
+  await assertFails(setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'random-id'), event))
+  await assertFails(setDoc(reference, { ...event, invoiceKey: 'wrong:2026-11' }))
+  await assertFails(setDoc(reference, { ...event, cardId: 'missing-card', invoiceKey: 'missing-card:2026-11' }))
+  await assertFails(setDoc(reference, { ...event, amount: -2 }))
+  await assertFails(setDoc(reference, { ...event, paymentDate: '2026-11-15' }))
+  await assertFails(setDoc(reference, { ...event, unexpectedField: 'inject' }))
+  await assertFails(setDoc(reference, { ...event, createdAt: Timestamp.now() }))
+  await assertFails(setDoc(reference, { ...event, operationId: 'not-uuid' }))
+  await assertFails(
+    setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'legacy-new'), {
+      type: 'payment',
+      amount: 50,
+      invoiceMonth: '2026-11',
+    }),
+  )
+  await assertFails(
+    setDoc(doc(bob, 'users', 'alice', 'invoiceEvents', `op_${event.operationId}`), event),
+  )
+
+  await assertSucceeds(getDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'historical-payment')))
+  await assertFails(updateDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'historical-payment'), { amount: 100 }))
+  await assertFails(deleteDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'historical-payment')))
+  await assertFails(getDoc(doc(bob, 'users', 'alice', 'invoiceEvents', 'historical-payment')))
+})
+
+test('MR-003: estorno referenciado, ajuste e fechamento têm schemas distintos', async () => {
+  const database = environment.authenticatedContext('alice').firestore()
+  const payment = invoiceEventFixture()
+  const paymentId = `op_${payment.operationId}`
+  await assertSucceeds(setDoc(doc(database, 'users', 'alice', 'invoiceEvents', paymentId), payment))
+
+  const reversal = {
+    ...payment,
+    type: 'reversal',
+    operationId: '189dd740-6703-4c79-b889-3daecf2f3b7b',
+    reversesEventId: paymentId,
+  }
+  delete reversal.paymentDate
+  await assertSucceeds(
+    setDoc(doc(database, 'users', 'alice', 'invoiceEvents', `op_${reversal.operationId}`), reversal),
+  )
+  await assertFails(
+    setDoc(
+      doc(database, 'users', 'alice', 'invoiceEvents', 'op_91988c27-2acf-4402-8c07-10d21af8ae1b'),
+      { ...reversal, operationId: '91988c27-2acf-4402-8c07-10d21af8ae1b', reversesEventId: 'non-existent' },
+    ),
+  )
+
+  const adjustment = {
+    ...payment,
+    type: 'adjustment',
+    operationId: '91988c27-2acf-4402-8c07-10d21af8ae1b',
+    direction: 'credit',
+    signedAmount: -12.25,
+    notes: 'Crédito confirmado',
+  }
+  delete adjustment.paymentDate
+  delete adjustment.amount
+  delete adjustment.sourceAccount
+  await assertSucceeds(
+    setDoc(doc(database, 'users', 'alice', 'invoiceEvents', `op_${adjustment.operationId}`), adjustment),
+  )
+
+  const closed = {
+    ...payment,
+    type: 'manual_close',
+    operationId: 'a7b80312-1d70-42c6-952e-9ea1f1366a87',
+  }
+  delete closed.paymentDate
+  delete closed.amount
+  delete closed.sourceAccount
+  await assertSucceeds(
+    setDoc(doc(database, 'users', 'alice', 'invoiceEvents', `op_${closed.operationId}`), closed),
   )
 })
 
