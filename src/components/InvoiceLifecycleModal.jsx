@@ -217,8 +217,8 @@ export default function InvoiceLifecycleModal({
           notes,
         }),
       )
-    } catch {
-      // O erro já foi exibido.
+    } catch (submitError) {
+      setError((current) => current || submitError?.message || 'Não foi possível registrar o evento.')
     }
   }
 
@@ -234,8 +234,8 @@ export default function InvoiceLifecycleModal({
           notes,
         }),
       )
-    } catch {
-      // O erro já foi exibido.
+    } catch (submitError) {
+      setError((current) => current || submitError?.message || 'Não foi possível registrar o evento.')
     }
   }
 
@@ -251,8 +251,8 @@ export default function InvoiceLifecycleModal({
           notes: `Estorno do pagamento de ${formatCurrency(payment.amount)}.`,
         }),
       )
-    } catch {
-      // O erro já foi exibido.
+    } catch (submitError) {
+      setError((current) => current || submitError?.message || 'Não foi possível registrar o evento.')
     }
   }
 
