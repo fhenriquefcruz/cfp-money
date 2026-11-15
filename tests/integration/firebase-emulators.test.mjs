@@ -337,11 +337,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
       ...legacyReversal,
       amount: 50.15,
     }
-    const registeredRemaining = await writeInvoiceEventOnce(
-      database,
-      uid,
-      permittedLegacyReversal,
-    )
+    const registeredRemaining = await writeInvoiceEventOnce(database, uid, permittedLegacyReversal)
     assert.equal(registeredRemaining.id, `rev_${legacySource}`)
     assert.equal(
       (await getDoc(doc(database, 'users', uid, 'invoiceEvents', registeredRemaining.id))).data()
