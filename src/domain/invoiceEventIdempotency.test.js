@@ -3,6 +3,7 @@ import {
   newInvoiceOperationId,
   prepareInvoiceEventOperation,
   sameInvoiceOperation,
+  validateInvoiceReversalBalance,
 } from './invoiceEventIdempotency'
 
 const operationId = 'a4d5072f-9bd7-4ca9-9129-9d2a621ed918'
@@ -111,4 +112,75 @@ test('MR-003: diferentes UUIDs não geram diferentes documentos para estornar o 
     operationId: '189dd740-6703-4c79-b889-3daecf2f3b7b',
   })
   expect(independentPayment.id).not.toBe(prepareInvoiceEventOperation(payment).id)
+})
+
+test('MR-003: estorno novo respeita o saldo após estornos parciais legados em centavos', () => {
+  const original = { ...payment, id: 'payment-legacy' }
+  const reversal = {
+    ...payment,
+    type: 'reversal',
+    amount: 120.19,
+    reversesEventId: original.id,
+  }
+  delete reversal.paymentDate
+  const history = [
+    {
+      type: 'reversal',
+      invoiceKey: original.invoiceKey,
+      reversesEventId: original.id,
+      amount: '30.10',
+    },
+  ]
+
+  expect(
+    validateInvoiceReversalBalance({
+      payment: original,
+      reversal,
+      historicalReversals: history,
+    }),
+  ).toBe(12019)
+  expect(history[0].amount).toBe('30.10')
+  expect(() =>
+    validateInvoiceReversalBalance({
+      payment: original,
+      reversal: { ...reversal, amount: 120.2 },
+      historicalReversals: history,
+    }),
+  ).toThrow('excede o saldo reversível')
+})
+
+test('MR-003: histórico inválido ou acima do pagamento exige revisão e não grava', () => {
+  const original = { ...payment, id: 'payment-legacy' }
+  const reversal = {
+    ...payment,
+    type: 'reversal',
+    amount: 1,
+    reversesEventId: original.id,
+  }
+  const legacy = {
+    type: 'reversal',
+    invoiceKey: original.invoiceKey,
+    reversesEventId: original.id,
+    amount: 20,
+  }
+  const verify = (history, origin = original) =>
+    validateInvoiceReversalBalance({
+      payment: origin,
+      reversal,
+      historicalReversals: history,
+    })
+
+  expect(() => verify([{ ...legacy, amount: 150.29 }])).toThrow('integralmente')
+  expect(() => verify([{ ...legacy, amount: 'valor quebrado' }])).toThrow(
+    'Valor monetário inválido',
+  )
+  expect(() => verify([{ ...legacy, amount: -0.01 }])).toThrow('inválido')
+  expect(() => verify([{ ...legacy, invoiceKey: 'other:2026-11' }])).toThrow(
+    'fatura incorreta',
+  )
+  expect(() => verify([{ ...legacy, type: 'adjustment' }])).toThrow('inconsistente')
+  expect(() => verify([legacy], { ...original, cardId: 'other-card' })).toThrow(
+    'incompatível',
+  )
+  expect(() => verify([legacy, { ...legacy, amount: 150 }])).toThrow('ultrapassa')
 })
