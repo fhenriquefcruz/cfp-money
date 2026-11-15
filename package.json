@@ -9,7 +9,7 @@
     "build": "vite build && node scripts/generate-service-worker.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check . || (prettier --write src/domain/creditCardCenter.js src/domain/creditCardCenter.test.js src/components/CreditCardsDashboard.jsx && git diff -- src/domain/creditCardCenter.js src/domain/creditCardCenter.test.js src/components/CreditCardsDashboard.jsx && exit 1)",
+    "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
     "validate": "npm run lint && npm run test && npm run build",
