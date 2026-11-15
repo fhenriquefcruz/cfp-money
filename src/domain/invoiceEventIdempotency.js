@@ -20,7 +20,7 @@ const FIELDS = [
 
 const EVENT_TYPES = new Set(['payment', 'reversal', 'adjustment', 'manual_close'])
 
-const asCents = (value) => {
+export const invoiceEventToCents = (value) => {
   const number = Number(value)
   const scaled = number * 100
   const rounded = Math.round(scaled)
@@ -73,9 +73,9 @@ export function prepareInvoiceEventOperation(event = {}) {
   }
 
   if (event.type === 'payment' || event.type === 'reversal') {
-    if (asCents(event.amount) <= 0) throw new Error('O valor precisa ser positivo.')
+    if (invoiceEventToCents(event.amount) <= 0) throw new Error('O valor precisa ser positivo.')
   }
-  if (event.type === 'adjustment' && asCents(event.signedAmount) === 0) {
+  if (event.type === 'adjustment' && invoiceEventToCents(event.signedAmount) === 0) {
     throw new Error('O ajuste precisa ter valor diferente de zero.')
   }
   if (
