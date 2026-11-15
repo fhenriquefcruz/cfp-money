@@ -42,7 +42,7 @@ test('dois cliques enquanto grava envia uma única operação', async () => {
 
   expect(onCreateEvent).toHaveBeenCalledTimes(1)
   const attempted = onCreateEvent.mock.calls[0][0]
-  expect(attempted.operationId).toMatch(/^[a-f0-9-]{36}$/)
+  expect(attempted.operationId).toMatch(/^[a-f0-9]{32}$/)
   expect(attempted.amount).toBe(300)
 
   finish('op_confirmed')
