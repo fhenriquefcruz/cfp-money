@@ -100,9 +100,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             </span>
           </div>
 
-          <p className="mt-1 text-[10px] text-[--text-tertiary]">
-            {datesLabel}
-          </p>
+          <p className="mt-1 text-[10px] text-[--text-tertiary]">{datesLabel}</p>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div>
