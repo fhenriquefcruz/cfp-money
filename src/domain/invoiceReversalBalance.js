@@ -1,61 +1,40 @@
 import { asCents } from './invoiceEventIdempotency.js'
 
 /**
- * Valida o saldo de um pagamento a partir de estornos legados imutáveis.
- * Não corrige nem ignora registros históricos inconsistentes.
- *
- * O documento canônico do estorno novo é excluído pelo repositório:
- * sua existência é resolvida primeiro pela transação como replay/conflito.
+ * Estornos legados não são ignorados nem corrigidos automaticamente.
+ * Esta validação trabalha apenas com centavos exatos e falha em histórico inconsistente.
  */
-export function validateInvoiceReversalBalance({
-  payment,
-  reversal,
-  historicalReversals = [],
-}) {
+export function validateInvoiceReversalBalance({ payment, reversal, historicalReversals = [] }) {
   if (
     payment?.type !== 'payment' ||
     !payment.id ||
-    payment.invoiceKey !== reversal?.invoiceKey ||
-    payment.cardId !== reversal?.cardId ||
-    payment.id !== reversal?.reversesEventId
+    payment.id !== reversal?.reversesEventId ||
+    payment.invoiceKey !== reversal.invoiceKey ||
+    payment.cardId !== reversal.cardId
   ) {
-    throw new Error('Pagamento de origem incompatível com a fatura. Revise o histórico.')
+    throw new Error('Pagamento de origem incompatível com a fatura.')
   }
 
-  const paymentCents = asCents(payment.amount)
-  const reversalCents = asCents(reversal.amount)
-  if (paymentCents <= 0 || reversalCents <= 0) {
-    throw new Error('Pagamento ou estorno com valor inválido.')
-  }
+  const total = asCents(payment.amount)
+  const requested = asCents(reversal.amount)
+  if (total <= 0 || requested <= 0) throw new Error('Pagamento ou estorno inválido.')
 
-  let historicalCents = 0
-  for (const item of historicalReversals) {
-    if (item.type !== 'reversal') {
-      throw new Error('Histórico de estornos inconsistente. Revise antes de continuar.')
+  let reversed = 0
+  for (const event of historicalReversals) {
+    if (event.type !== 'reversal') throw new Error('Histórico de estornos inconsistente.')
+    if (event.reversesEventId !== payment.id || event.invoiceKey !== payment.invoiceKey) {
+      throw new Error('Histórico vinculado à fatura incorreta.')
     }
-    if (item.reversesEventId !== payment.id || item.invoiceKey !== payment.invoiceKey) {
-      throw new Error('Histórico de estornos vinculado à fatura incorreta.')
-    }
-
-    const cents = asCents(item.amount)
-    if (cents <= 0) {
-      throw new Error('Valor de estorno histórico inválido. Revise antes de continuar.')
-    }
-
-    historicalCents += cents
-    if (!Number.isSafeInteger(historicalCents) || historicalCents > paymentCents) {
-      throw new Error('Histórico estornado ultrapassa o pagamento original.')
-    }
+    const cents = asCents(event.amount)
+    if (cents <= 0) throw new Error('Valor de estorno histórico inválido.')
+    reversed += cents
   }
 
-  const remainingCents = paymentCents - historicalCents
-  if (remainingCents <= 0) {
-    throw new Error('Este pagamento já foi integralmente estornado.')
+  if (!Number.isSafeInteger(reversed) || reversed > total) {
+    throw new Error('Histórico estornado ultrapassa o pagamento original.')
   }
-  if (reversalCents > remainingCents) {
-    throw new Error('O estorno excede o saldo reversível após os eventos históricos.')
-  }
-
-  return remainingCents
+  const remaining = total - reversed
+  if (!remaining) throw new Error('Pagamento já estornado integralmente.')
+  if (requested > remaining) throw new Error('O estorno excede o saldo reversível.')
+  return remaining
 }
-
