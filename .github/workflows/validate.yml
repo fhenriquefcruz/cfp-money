@@ -61,6 +61,10 @@ jobs:
       - name: Firebase Emulator integration
         run: npm run test:integration:firebase
 
+      # Protege PRs empilhadas: o workflow exclusivo de segurança só roda para main.
+      - name: Firestore Rules regression
+        run: npm run test:rules
+
       - name: Formatting
         run: npm run format:check
 
