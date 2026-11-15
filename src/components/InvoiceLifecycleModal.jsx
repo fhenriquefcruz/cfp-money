@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, History, LockKeyhole, Receipt, RotateCcw, Scale, Wallet } from 'lucide-react'
 import {
   createAdjustmentEvent,
@@ -7,6 +7,11 @@ import {
   createReversalEvent,
   getPaymentReversibleAmount,
 } from '../domain/invoiceLifecycle'
+import {
+  invoiceEventSignature,
+  newInvoiceOperationId,
+  prepareInvoiceEventOperation,
+} from '../domain/invoiceEventIdempotency'
 import { formatCurrency, formatDate } from '../utils'
 import { Button, Modal } from './ui'
 
@@ -121,6 +126,8 @@ export default function InvoiceLifecycleModal({
   const [direction, setDirection] = useState('credit')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const submittingRef = useRef(false)
+  const pendingOperationRef = useRef(null)
 
   const lifecycle = invoice?.lifecycle
   const events = lifecycle?.events || []
@@ -148,11 +155,29 @@ export default function InvoiceLifecycleModal({
   )
 
   const submitEvent = async (event) => {
-    setLoading(true)
-    setError('')
+    // useRef fecha a janela entre duplo clique e o próximo render React.
+    if (submittingRef.current) return
 
     try {
-      await onCreateEvent(event)
+      const signature = invoiceEventSignature(event)
+      const previous = pendingOperationRef.current
+
+      if (previous && previous.signature !== signature) {
+        throw new Error(
+          'Uma tentativa anterior pode ter sido registrada. Consulte o histórico antes de alterar e reenviar.',
+        )
+      }
+
+      const operationId = previous?.operationId || newInvoiceOperationId()
+      // Validar antes de guardar uma tentativa potencialmente incerta.
+      prepareInvoiceEventOperation({ ...event, operationId })
+      pendingOperationRef.current = { signature, operationId }
+      submittingRef.current = true
+      setLoading(true)
+      setError('')
+
+      await onCreateEvent({ ...event, operationId })
+      pendingOperationRef.current = null
       setNotes('')
       if (event.type === 'payment') {
         setAmount('')
@@ -162,6 +187,7 @@ export default function InvoiceLifecycleModal({
       setError(submitError?.message || 'Não foi possível registrar o evento.')
       throw submitError
     } finally {
+      submittingRef.current = false
       setLoading(false)
     }
   }
@@ -194,8 +220,10 @@ export default function InvoiceLifecycleModal({
           notes,
         }),
       )
-    } catch {
-      // O erro já foi exibido.
+    } catch (submitError) {
+      setError(
+        (current) => current || submitError?.message || 'Não foi possível registrar o evento.',
+      )
     }
   }
 
@@ -211,8 +239,10 @@ export default function InvoiceLifecycleModal({
           notes,
         }),
       )
-    } catch {
-      // O erro já foi exibido.
+    } catch (submitError) {
+      setError(
+        (current) => current || submitError?.message || 'Não foi possível registrar o evento.',
+      )
     }
   }
 
@@ -228,8 +258,10 @@ export default function InvoiceLifecycleModal({
           notes: `Estorno do pagamento de ${formatCurrency(payment.amount)}.`,
         }),
       )
-    } catch {
-      // O erro já foi exibido.
+    } catch (submitError) {
+      setError(
+        (current) => current || submitError?.message || 'Não foi possível registrar o evento.',
+      )
     }
   }
 

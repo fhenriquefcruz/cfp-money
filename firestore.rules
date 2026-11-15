@@ -239,6 +239,115 @@ service cloud.firestore {
         && request.resource.data.updatedAt is timestamp;
     }
 
+    // Novo evento: ID estável, schema fechado e histórico imutável.
+    function validInvoiceEventMoney(amount) {
+      return amount is number
+        && amount > 0
+        && amount <= 100000000
+        && math.abs(amount * 100 - math.round(amount * 100)) < 0.00001;
+    }
+
+    function validInvoiceEventDate(value) {
+      return value is string
+        && value.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$');
+    }
+
+    function validInvoiceEventDetails(uid, data) {
+      return (
+          data.type == 'payment'
+          && data.keys().hasAll(['amount', 'paymentDate', 'sourceAccount'])
+          && !data.keys().hasAny(['direction', 'signedAmount', 'reversesEventId'])
+          && validInvoiceEventMoney(data.amount)
+          && data.paymentDate == data.eventDate
+          && data.sourceAccount is string
+          && data.sourceAccount.size() <= 120
+        )
+        || (
+          data.type == 'adjustment'
+          && data.keys().hasAll(['signedAmount', 'direction'])
+          && !data.keys().hasAny(['amount', 'paymentDate', 'sourceAccount', 'reversesEventId'])
+          && data.signedAmount is number
+          && data.signedAmount != 0
+          && data.signedAmount >= -100000000
+          && data.signedAmount <= 100000000
+          && math.abs(data.signedAmount * 100 - math.round(data.signedAmount * 100)) < 0.00001
+          && (data.direction == 'credit' || data.direction == 'charge')
+          && (
+            (data.direction == 'credit' && data.signedAmount < 0)
+            || (data.direction == 'charge' && data.signedAmount > 0)
+          )
+          && data.notes.size() > 0
+        )
+        || (
+          data.type == 'reversal'
+          && data.keys().hasAll(['amount', 'reversesEventId', 'sourceAccount'])
+          && !data.keys().hasAny(['direction', 'signedAmount', 'paymentDate'])
+          && validInvoiceEventMoney(data.amount)
+          && data.reversesEventId is string
+          && data.reversesEventId.size() > 0
+          && data.reversesEventId.size() <= 128
+          && data.sourceAccount is string
+          && data.sourceAccount.size() <= 120
+          && exists(/databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversesEventId))
+          && get(/databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversesEventId)).data.type == 'payment'
+          && get(/databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversesEventId)).data.invoiceKey == data.invoiceKey
+          && data.amount <= get(/databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversesEventId)).data.amount
+        )
+        || (
+          data.type == 'manual_close'
+          && !data.keys().hasAny([
+            'amount', 'paymentDate', 'sourceAccount', 'signedAmount', 'direction', 'reversesEventId'
+          ])
+        );
+    }
+
+    function validInvoiceEventCreate(uid, eventId) {
+      let data = request.resource.data;
+
+      return data.keys().hasAll([
+          'type', 'operationId', 'invoiceKey', 'cardId', 'cardName',
+          'cardLast4', 'invoiceMonth', 'eventDate', 'notes', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'type', 'operationId', 'invoiceKey', 'cardId', 'cardName',
+          'cardLast4', 'invoiceMonth', 'eventDate', 'notes', 'createdAt',
+          'paymentDate', 'amount', 'sourceAccount', 'signedAmount',
+          'direction', 'reversesEventId'
+        ])
+        && data.operationId is string
+        && data.operationId.matches(
+          '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+        )
+        && (
+          (
+            data.type == 'reversal'
+            && data.keys().hasAll(['reversesEventId'])
+            && data.reversesEventId is string
+            && eventId == 'rev_' + data.reversesEventId
+          )
+          || (
+            data.type != 'reversal'
+            && eventId == 'op_' + data.operationId
+          )
+        )
+        && data.cardId is string
+        && data.cardId.size() > 0
+        && data.cardId.size() <= 128
+        && exists(/databases/$(database)/documents/users/$(uid)/creditCards/$(data.cardId))
+        && data.cardName is string
+        && data.cardName.size() <= 120
+        && data.cardLast4 is string
+        && data.cardLast4.size() <= 4
+        && data.invoiceMonth is string
+        && data.invoiceMonth.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+        && data.invoiceKey == data.cardId + ':' + data.invoiceMonth
+        && data.notes is string
+        && data.notes.size() <= 2000
+        && validInvoiceEventDate(data.eventDate)
+        && data.createdAt == request.time
+        && validInvoiceEventDetails(uid, data);
+    }
+
     match /users/{uid} {
       allow read: if owner(uid) || admin();
 
@@ -272,8 +381,17 @@ service cloud.firestore {
         allow delete: if owner(uid);
       }
 
+      // Leituras históricas permanecem; só novas criações validadas são aceitas.
+      match /invoiceEvents/{eventId} {
+        allow get, list: if owner(uid);
+        allow create: if owner(uid) && validInvoiceEventCreate(uid, eventId);
+        allow update, delete: if false;
+      }
+
       match /{collection}/{document=**} {
-        allow read, write: if owner(uid) && collection != 'transactionAttachmentChunks';
+        allow read, write: if owner(uid)
+          && collection != 'transactionAttachmentChunks'
+          && collection != 'invoiceEvents';
       }
     }
 

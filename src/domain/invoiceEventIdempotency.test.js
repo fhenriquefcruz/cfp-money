@@ -1,0 +1,182 @@
+import {
+  invoiceEventSignature,
+  newInvoiceOperationId,
+  prepareInvoiceEventOperation,
+  sameInvoiceOperation,
+} from './invoiceEventIdempotency'
+import { validateInvoiceReversalBalance } from './invoiceReversalBalance'
+
+const operationId = 'a4d5072f-9bd7-4ca9-9129-9d2a621ed918'
+const payment = {
+  type: 'payment',
+  invoiceKey: 'card-1:2026-11',
+  cardId: 'card-1',
+  cardName: 'Cartão pessoal',
+  cardLast4: '1234',
+  invoiceMonth: '2026-11',
+  eventDate: '2026-11-14',
+  paymentDate: '2026-11-14',
+  amount: 150.29,
+  sourceAccount: 'Banco',
+  notes: '',
+  operationId,
+}
+
+test('MR-003: ID aleatório seguro pode ser injetado para testar sem IO', () => {
+  expect(newInvoiceOperationId({ randomUUID: () => operationId })).toBe(operationId)
+  expect(() => newInvoiceOperationId({})).toThrow('identificadores seguros')
+})
+
+test('MR-003: identifica pagamento único com referência estável, sem mutação', () => {
+  const before = structuredClone(payment)
+  const operation = prepareInvoiceEventOperation(payment)
+
+  expect(operation.id).toBe(`op_${operationId}`)
+  expect(operation.data).toMatchObject(payment)
+  expect(operation.data).not.toHaveProperty('createdAt')
+  expect(invoiceEventSignature(operation.data)).toBe(invoiceEventSignature(payment))
+  expect(sameInvoiceOperation(operation.data, payment)).toBe(true)
+  expect(payment).toEqual(before)
+})
+
+test('MR-003: replay não permite alterar valor, competência ou tipo', () => {
+  const stored = prepareInvoiceEventOperation(payment).data
+
+  expect(sameInvoiceOperation(stored, { ...stored, amount: 150.3 })).toBe(false)
+  expect(sameInvoiceOperation(stored, { ...stored, invoiceMonth: '2026-12' })).toBe(false)
+  expect(sameInvoiceOperation(stored, { ...stored, type: 'reversal' })).toBe(false)
+})
+
+test('MR-003: rejeita dados não autorizados antes da persistência', () => {
+  expect(() => prepareInvoiceEventOperation({ ...payment, operationId: '' })).toThrow(
+    'Identificador seguro',
+  )
+  expect(() => prepareInvoiceEventOperation({ ...payment, invoiceKey: 'wrong' })).toThrow(
+    'Vínculo de fatura',
+  )
+  expect(() => prepareInvoiceEventOperation({ ...payment, amount: 0 })).toThrow('O valor precisa')
+  expect(() => prepareInvoiceEventOperation({ ...payment, amount: 10.001 })).toThrow(
+    'Valor monetário inválido',
+  )
+  expect(() => prepareInvoiceEventOperation({ ...payment, type: 'unknown' })).toThrow(
+    'Tipo de evento',
+  )
+})
+
+test('MR-003: estorno e ajuste preservam ligações e os sinais monetários', () => {
+  const reversal = prepareInvoiceEventOperation({
+    ...payment,
+    type: 'reversal',
+    reversesEventId: 'pay-1',
+  })
+  const adjustment = prepareInvoiceEventOperation({
+    ...payment,
+    type: 'adjustment',
+    signedAmount: -20.05,
+    direction: 'credit',
+    amount: undefined,
+  })
+
+  expect(reversal.id).toBe('rev_pay-1')
+  expect(reversal.data.reversesEventId).toBe('pay-1')
+  expect(adjustment.data.signedAmount).toBe(-20.05)
+  expect(() =>
+    prepareInvoiceEventOperation({
+      ...payment,
+      type: 'reversal',
+      reversesEventId: '',
+    }),
+  ).toThrow('referenciar um pagamento')
+})
+
+test('MR-003: diferentes UUIDs não geram diferentes documentos para estornar o mesmo pagamento', () => {
+  const first = prepareInvoiceEventOperation({
+    ...payment,
+    type: 'reversal',
+    reversesEventId: 'op_a4d5072f-9bd7-4ca9-9129-9d2a621ed918',
+  })
+  const second = prepareInvoiceEventOperation({
+    ...payment,
+    type: 'reversal',
+    operationId: '189dd740-6703-4c79-b889-3daecf2f3b7b',
+    reversesEventId: 'op_a4d5072f-9bd7-4ca9-9129-9d2a621ed918',
+  })
+
+  expect(first.id).toBe('rev_op_a4d5072f-9bd7-4ca9-9129-9d2a621ed918')
+  expect(second.id).toBe(first.id)
+  expect(sameInvoiceOperation(first.data, second.data)).toBe(false)
+
+  // Pagamentos parciais legítimos preservam IDs independentes.
+  const independentPayment = prepareInvoiceEventOperation({
+    ...payment,
+    operationId: '189dd740-6703-4c79-b889-3daecf2f3b7b',
+  })
+  expect(independentPayment.id).not.toBe(prepareInvoiceEventOperation(payment).id)
+})
+
+test('MR-003: estorno novo respeita o saldo após estornos parciais legados em centavos', () => {
+  const original = { ...payment, id: 'payment-legacy' }
+  const reversal = {
+    ...payment,
+    type: 'reversal',
+    amount: 120.19,
+    reversesEventId: original.id,
+  }
+  delete reversal.paymentDate
+  const history = [
+    {
+      type: 'reversal',
+      invoiceKey: original.invoiceKey,
+      reversesEventId: original.id,
+      amount: '30.10',
+    },
+  ]
+
+  expect(
+    validateInvoiceReversalBalance({
+      payment: original,
+      reversal,
+      historicalReversals: history,
+    }),
+  ).toBe(12019)
+  expect(history[0].amount).toBe('30.10')
+  expect(() =>
+    validateInvoiceReversalBalance({
+      payment: original,
+      reversal: { ...reversal, amount: 120.2 },
+      historicalReversals: history,
+    }),
+  ).toThrow('excede o saldo reversível')
+})
+
+test('MR-003: histórico inválido ou acima do pagamento exige revisão e não grava', () => {
+  const original = { ...payment, id: 'payment-legacy' }
+  const reversal = {
+    ...payment,
+    type: 'reversal',
+    amount: 1,
+    reversesEventId: original.id,
+  }
+  const legacy = {
+    type: 'reversal',
+    invoiceKey: original.invoiceKey,
+    reversesEventId: original.id,
+    amount: 20,
+  }
+  const verify = (history, origin = original) =>
+    validateInvoiceReversalBalance({
+      payment: origin,
+      reversal,
+      historicalReversals: history,
+    })
+
+  expect(() => verify([{ ...legacy, amount: 150.29 }])).toThrow('integralmente')
+  expect(() => verify([{ ...legacy, amount: 'valor quebrado' }])).toThrow(
+    'Valor monetário inválido',
+  )
+  expect(() => verify([{ ...legacy, amount: -0.01 }])).toThrow('inválido')
+  expect(() => verify([{ ...legacy, invoiceKey: 'other:2026-11' }])).toThrow('fatura incorreta')
+  expect(() => verify([{ ...legacy, type: 'adjustment' }])).toThrow('inconsistente')
+  expect(() => verify([legacy], { ...original, cardId: 'other-card' })).toThrow('incompatível')
+  expect(() => verify([legacy, { ...legacy, amount: 150 }])).toThrow('ultrapassa')
+})

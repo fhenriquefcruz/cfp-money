@@ -22,11 +22,13 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions'
+import { writeInvoiceEventOnce } from '../../src/services/invoiceEventRepository.js'
 
 const requireFromFunctions = createRequire(new URL('../../functions/package.json', import.meta.url))
 const { deleteApp: deleteAdminApp, initializeApp: initializeAdminApp } =
   requireFromFunctions('firebase-admin/app')
 const { getAuth: getAdminAuth } = requireFromFunctions('firebase-admin/auth')
+const { getFirestore: getAdminFirestore } = requireFromFunctions('firebase-admin/firestore')
 
 const PROJECT_ID = 'demo-cfp-money-integration'
 const REGION = 'southamerica-east1'
@@ -64,6 +66,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
   const database = getFirestore(app)
   const functions = getFunctions(app, REGION)
   const adminAuth = getAdminAuth(adminApp)
+  const adminDatabase = getAdminFirestore(adminApp)
 
   connectAuthEmulator(auth, `http://${authAddress.host}:${authAddress.port}`, {
     disableWarnings: true,
@@ -210,6 +213,142 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     await recover.commit()
     assert.equal((await getDoc(orphanChunk)).exists(), false)
     assert.equal((await getDoc(cleanupJob)).exists(), false)
+
+    // A gravação deve apontar para um cartão persistido do mesmo UID.
+    await setDoc(doc(database, 'users', uid, 'creditCards', 'card-integration'), {
+      name: 'Cartão de teste',
+      last4: '4321',
+    })
+
+    // MR-003: a repetição da mesma operação não cria um segundo pagamento,
+    // inclusive quando duas tentativas competem no mesmo documento Firestore.
+    const event = {
+      type: 'payment',
+      cardId: 'card-integration',
+      cardName: 'Cartão de teste',
+      cardLast4: '4321',
+      invoiceMonth: '2026-11',
+      invoiceKey: 'card-integration:2026-11',
+      eventDate: '2026-11-14',
+      paymentDate: '2026-11-14',
+      amount: 80.25,
+      sourceAccount: 'Conta de teste',
+      notes: '',
+      operationId: '8f902547-8019-4f77-a202-86aba6d378ed',
+    }
+    const eventReference = doc(database, 'users', uid, 'invoiceEvents', `op_${event.operationId}`)
+    const firstWrite = await writeInvoiceEventOnce(database, uid, event)
+    const repeatedWrite = await writeInvoiceEventOnce(database, uid, event)
+    assert.equal(firstWrite.replayed, false)
+    assert.equal(repeatedWrite.replayed, true)
+    assert.equal(firstWrite.id, repeatedWrite.id)
+    assert.equal((await getDoc(eventReference)).data().amount, 80.25)
+
+    const parallelEvent = {
+      ...event,
+      amount: 35.1,
+      operationId: '189dd740-6703-4c79-b889-3daecf2f3b7b',
+    }
+    const [concurrentFirst, concurrentSecond] = await Promise.all([
+      writeInvoiceEventOnce(database, uid, parallelEvent),
+      writeInvoiceEventOnce(database, uid, parallelEvent),
+    ])
+    assert.equal(concurrentFirst.id, concurrentSecond.id)
+    assert.equal([concurrentFirst.replayed, concurrentSecond.replayed].filter(Boolean).length, 1)
+    assert.equal(
+      (await getDoc(doc(database, 'users', uid, 'invoiceEvents', concurrentFirst.id))).data()
+        .amount,
+      35.1,
+    )
+
+    await assert.rejects(
+      () => writeInvoiceEventOnce(database, uid, { ...event, amount: 80.26 }),
+      /identificador já foi utilizado/,
+    )
+    assert.equal((await getDoc(eventReference)).data().amount, 80.25)
+
+    // Outro pagamento parcial legítimo usa outro ID e pode coexistir.
+    const independentPayment = await writeInvoiceEventOnce(database, uid, {
+      ...event,
+      operationId: '91988c27-2acf-4402-8c07-10d21af8ae1b',
+    })
+    assert.equal(independentPayment.replayed, false)
+    assert.notEqual(independentPayment.id, firstWrite.id)
+
+    // Dois UUIDs distintos tentam estornar o MESMO pagamento simultaneamente.
+    // Só um documento canônico rev_<paymentId> pode nascer.
+    const firstReversal = {
+      ...event,
+      type: 'reversal',
+      operationId: '88a4e3bb-99c7-4faf-9395-bd63d73f4ab4',
+      reversesEventId: firstWrite.id,
+    }
+    delete firstReversal.paymentDate
+    const secondReversal = {
+      ...firstReversal,
+      operationId: '77a4e3bb-99c7-4faf-9395-bd63d73f4ab4',
+    }
+
+    const racingReversals = await Promise.allSettled([
+      writeInvoiceEventOnce(database, uid, firstReversal),
+      writeInvoiceEventOnce(database, uid, secondReversal),
+    ])
+    assert.equal(racingReversals.filter((item) => item.status === 'fulfilled').length, 1)
+    assert.equal(racingReversals.filter((item) => item.status === 'rejected').length, 1)
+
+    const reversalReference = doc(database, 'users', uid, 'invoiceEvents', `rev_${firstWrite.id}`)
+    const savedReversal = (await getDoc(reversalReference)).data()
+    assert.equal(savedReversal.type, 'reversal')
+    assert.equal(savedReversal.amount, 80.25)
+    assert.equal(savedReversal.reversesEventId, firstWrite.id)
+
+    const accepted = racingReversals.find((item) => item.status === 'fulfilled')
+    const acceptedEvent =
+      savedReversal.operationId === firstReversal.operationId ? firstReversal : secondReversal
+    assert.equal(accepted.value.id, reversalReference.id)
+    assert.equal((await writeInvoiceEventOnce(database, uid, acceptedEvent)).replayed, true)
+
+    // Simula estorno parcial LEGADO criado antes das regras restritivas.
+    // O repositório deve somá-lo sem alterar registros históricos.
+    const legacySource = independentPayment.id
+    await adminDatabase.doc(`users/${uid}/invoiceEvents/legacy-reversal-partial`).set({
+      type: 'reversal',
+      cardId: 'card-integration',
+      invoiceKey: 'card-integration:2026-11',
+      amount: 30.1,
+      reversesEventId: legacySource,
+      eventDate: '2026-11-14',
+    })
+
+    const legacyReversal = {
+      ...event,
+      type: 'reversal',
+      operationId: 'a7b80312-1d70-42c6-952e-9ea1f1366a87',
+      reversesEventId: legacySource,
+      amount: 80.25,
+    }
+    delete legacyReversal.paymentDate
+
+    await assert.rejects(
+      () => writeInvoiceEventOnce(database, uid, legacyReversal),
+      /excede o saldo reversível/,
+    )
+    const permittedLegacyReversal = {
+      ...legacyReversal,
+      amount: 50.15,
+    }
+    const registeredRemaining = await writeInvoiceEventOnce(database, uid, permittedLegacyReversal)
+    assert.equal(registeredRemaining.id, `rev_${legacySource}`)
+    assert.equal(
+      (await getDoc(doc(database, 'users', uid, 'invoiceEvents', registeredRemaining.id))).data()
+        .amount,
+      50.15,
+    )
+    assert.equal(
+      (await getDoc(doc(database, 'users', uid, 'invoiceEvents', 'legacy-reversal-partial'))).data()
+        .amount,
+      30.1,
+    )
 
     const getBackendStatus = httpsCallable(functions, 'getBackendStatus')
     const backendStatus = await getBackendStatus()
