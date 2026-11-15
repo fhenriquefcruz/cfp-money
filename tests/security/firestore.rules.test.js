@@ -213,6 +213,7 @@ test('MR-003: bloqueia IDs falsos, dados divergentes, operações legadas novas 
   await assertFails(setDoc(reference, { ...event, invoiceKey: 'wrong:2026-11' }))
   await assertFails(setDoc(reference, { ...event, cardId: 'missing-card', invoiceKey: 'missing-card:2026-11' }))
   await assertFails(setDoc(reference, { ...event, amount: -2 }))
+  await assertFails(setDoc(reference, { ...event, amount: 80.251 }))
   await assertFails(setDoc(reference, { ...event, paymentDate: '2026-11-15' }))
   await assertFails(setDoc(reference, { ...event, unexpectedField: 'inject' }))
   await assertFails(setDoc(reference, { ...event, createdAt: Timestamp.now() }))
@@ -257,6 +258,17 @@ test('MR-003: estorno referenciado, ajuste e fechamento têm schemas distintos',
     ),
   )
 
+  await assertFails(
+    setDoc(
+      doc(database, 'users', 'alice', 'invoiceEvents', 'op_88a4e3bb-99c7-4faf-9395-bd63d73f4ab4'),
+      {
+        ...reversal,
+        operationId: '88a4e3bb-99c7-4faf-9395-bd63d73f4ab4',
+        amount: 80.26,
+      },
+    ),
+  )
+
   const adjustment = {
     ...payment,
     type: 'adjustment',
@@ -270,6 +282,12 @@ test('MR-003: estorno referenciado, ajuste e fechamento têm schemas distintos',
   delete adjustment.sourceAccount
   await assertSucceeds(
     setDoc(doc(database, 'users', 'alice', 'invoiceEvents', `op_${adjustment.operationId}`), adjustment),
+  )
+  await assertFails(
+    setDoc(
+      doc(database, 'users', 'alice', 'invoiceEvents', 'op_70914c44-ab7c-4d8b-91c1-2a54f0da6cff'),
+      { ...adjustment, operationId: '70914c44-ab7c-4d8b-91c1-2a54f0da6cff', signedAmount: -0.001 },
+    ),
   )
 
   const closed = {
