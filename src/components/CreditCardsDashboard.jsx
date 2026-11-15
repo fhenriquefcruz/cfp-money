@@ -35,6 +35,7 @@ const STATUS = {
   past_due: ['Vencimento passado', 'bg-[--bg-hover] text-[--text-secondary]'],
   future: ['Futura', 'bg-[--bg-hover] text-[--text-tertiary]'],
   empty: ['Sem lançamentos', 'bg-[--bg-hover] text-[--text-tertiary]'],
+  unknown: ['Datas a revisar', 'bg-[--warning-bg] text-[--warning-text]'],
 }
 
 function SummaryCard({ icon: Icon, label, value, helper }) {
@@ -59,6 +60,12 @@ function SummaryCard({ icon: Icon, label, value, helper }) {
 function InvoiceCard({ invoice, selected, onSelect }) {
   const [statusLabel, statusClass] = STATUS[invoice.status] || STATUS.empty
   const { card, dates, lifecycle } = invoice
+  const datesLabel =
+    dates.source === 'conflict'
+      ? 'Datas divergentes no histórico — revisão necessária'
+      : dates.source === 'unknown'
+        ? 'Datas históricas não registradas'
+        : `${dates.closingDate ? `Fecha em ${formatDate(dates.closingDate)}` : 'Fechamento sem registro'} · ${dates.dueDate ? `vence em ${formatDate(dates.dueDate)}` : 'vencimento sem registro'}${dates.source === 'partial' ? ' · histórico parcial' : ''}${dates.source === 'estimated' ? ' · previsão pelo cadastro atual' : ''}`
   const cardLimit = Math.max(0, Number(card.limit) || 0)
   const committed = lifecycle.remainingAmount + invoice.futureCommitmentTotal
   const limitUsage = cardLimit ? Math.round((committed / cardLimit) * 100) : 0
@@ -94,7 +101,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
           </div>
 
           <p className="mt-1 text-[10px] text-[--text-tertiary]">
-            Fecha em {formatDate(dates.closingDate)} · vence em {formatDate(dates.dueDate)}
+            {datesLabel}
           </p>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
