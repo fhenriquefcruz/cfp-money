@@ -1,5 +1,8 @@
 import { getGoalEffectiveCurrent } from './savings'
-import { goalAlertCandidates, goalAlertSnapshot } from '../../worker/email-notifications/src/domain.js'
+import {
+  goalAlertCandidates,
+  goalAlertSnapshot,
+} from '../../worker/email-notifications/src/domain.js'
 
 test('MR-004: alertas e reserva exibem o mesmo saldo efetivo para a meta', () => {
   const goal = {
@@ -26,9 +29,7 @@ test('MR-004: alertas e reserva exibem o mesmo saldo efetivo para a meta', () =>
 
   expect(expected).toBe(750)
   expect(workerGoal.currentAmount).toBe(expected)
-  expect(goalAlertCandidates(workerGoal, new Date('2026-11-15T12:00:00.000Z'))).toEqual(
-    [],
-  )
+  expect(goalAlertCandidates(workerGoal, new Date('2026-11-15T12:00:00.000Z'))).toEqual([])
   expect(goal).toEqual(original)
 
   const afterDeposit = [
