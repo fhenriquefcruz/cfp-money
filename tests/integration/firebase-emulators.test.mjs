@@ -304,10 +304,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     const acceptedEvent =
       savedReversal.operationId === firstReversal.operationId ? firstReversal : secondReversal
     assert.equal(accepted.value.id, reversalReference.id)
-    assert.equal(
-      (await writeInvoiceEventOnce(database, uid, acceptedEvent)).replayed,
-      true,
-    )
+    assert.equal((await writeInvoiceEventOnce(database, uid, acceptedEvent)).replayed, true)
 
     const getBackendStatus = httpsCallable(functions, 'getBackendStatus')
     const backendStatus = await getBackendStatus()
