@@ -1,5 +1,6 @@
 import {
   goalAlertCandidates,
+  goalAlertSnapshot,
   isPremiumUser,
   isReportDue,
   localParts,
@@ -243,7 +244,7 @@ async function collectQueueAlerts({ env, user, settings, local }) {
   return pending
 }
 
-async function collectGoalAlerts({ env, user, settings, now, local }) {
+async function collectGoalAlerts({ env, user, settings, now, local, transactions }) {
   if (
     !settings.goalAlerts ||
     local.hour !== Number(settings.reportHour || 8) ||
@@ -253,9 +254,21 @@ async function collectGoalAlerts({ env, user, settings, now, local }) {
   }
 
   const goals = await listCollection(env, `users/${user.id}/goals`, { limit: 500 })
+  if (!goals.length) return []
+
+  // Respeita o saldo inicial legado e todas as movimentações vinculadas.
+  // Uma consulta no limite de documentos pode estar truncada: nesse caso,
+  // não gerar alertas de progresso potencialmente incorretos.
+  const activityTransactions = transactions ?? (await readTransactions(env, user.id))
+  if (activityTransactions.length >= 3000) {
+    console.warn('[Meu Real] Alertas de metas suspensos: histórico possivelmente incompleto.')
+    return []
+  }
+
   const pending = []
 
-  for (const goal of goals) {
+  for (const rawGoal of goals) {
+    const goal = goalAlertSnapshot(rawGoal, activityTransactions)
     const candidates = goalAlertCandidates(goal, now).filter((candidate) => {
       if (candidate.startsWith('progress-')) {
         const threshold = Number(candidate.split('-').pop())
@@ -439,6 +452,7 @@ async function processUser({ env, user, now }) {
       settings,
       now,
       local,
+      transactions,
     })),
   ]
   const alertCount = await sendAlerts({
