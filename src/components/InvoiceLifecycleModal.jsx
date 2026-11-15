@@ -162,9 +162,7 @@ export default function InvoiceLifecycleModal({
     const signature = invoiceEventIntentSignature(event)
     const pending = pendingIntentRef.current
     if (pending && pending.signature !== signature) {
-      setError(
-        'Operação anterior sem confirmação. Confira o histórico e repita os mesmos dados.',
-      )
+      setError('Operação anterior sem confirmação. Confira o histórico e repita os mesmos dados.')
       return
     }
 
