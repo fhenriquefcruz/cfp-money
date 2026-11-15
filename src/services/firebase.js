@@ -37,6 +37,7 @@ import { securityRuntime } from '../config/securityRuntime'
 import { createPaymentPersistenceChange } from '../domain/paymentControl'
 import { writeInvoiceEventOnce } from './invoiceEventRepository'
 
+
 const firebaseConfig = resolveFirebaseConfig(import.meta.env)
 
 export const app = initializeApp(firebaseConfig)

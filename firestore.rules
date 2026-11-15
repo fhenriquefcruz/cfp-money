@@ -301,6 +301,51 @@ service cloud.firestore {
         );
     }
 
+    // Uma única nova operação de estorno poderá ocupar a trava do pagamento.
+    // O documento de evento e a trava precisam nascer na mesma transação.
+    function validInvoiceReversalEventLock(uid, eventId, data) {
+      let lockPath = /databases/$(database)/documents/users/$(uid)/invoiceReversalLocks/$(data.reversesEventId);
+
+      return !exists(lockPath)
+        && getAfter(lockPath).data.paymentId == data.reversesEventId
+        && getAfter(lockPath).data.reversalEventId == eventId
+        && getAfter(lockPath).data.invoiceKey == data.invoiceKey
+        && getAfter(lockPath).data.amountCents == math.round(data.amount * 100);
+    }
+
+    function validInvoiceReversalLockCreate(uid, paymentId) {
+      let data = request.resource.data;
+      let paymentPath = /databases/$(database)/documents/users/$(uid)/invoiceEvents/$(paymentId);
+      let reversalPath = /databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversalEventId);
+
+      return data.keys().hasAll([
+          'paymentId', 'reversalEventId', 'invoiceKey', 'amountCents', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'paymentId', 'reversalEventId', 'invoiceKey', 'amountCents', 'createdAt'
+        ])
+        && data.paymentId == paymentId
+        && data.reversalEventId is string
+        && data.reversalEventId.size() <= 64
+        && data.reversalEventId.matches(
+          '^op_[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+        )
+        && data.invoiceKey is string
+        && data.amountCents is int
+        && data.amountCents > 0
+        && data.amountCents <= 10000000000
+        && data.createdAt == request.time
+        && exists(paymentPath)
+        && get(paymentPath).data.type == 'payment'
+        && get(paymentPath).data.invoiceKey == data.invoiceKey
+        && data.amountCents <= math.round(get(paymentPath).data.amount * 100)
+        && !exists(reversalPath)
+        && getAfter(reversalPath).data.type == 'reversal'
+        && getAfter(reversalPath).data.reversesEventId == paymentId
+        && getAfter(reversalPath).data.invoiceKey == data.invoiceKey
+        && data.amountCents == math.round(getAfter(reversalPath).data.amount * 100);
+    }
+
     function validInvoiceEventCreate(uid, eventId) {
       let data = request.resource.data;
 
@@ -334,7 +379,11 @@ service cloud.firestore {
         && data.notes.size() <= 2000
         && validInvoiceEventDate(data.eventDate)
         && data.createdAt == request.time
-        && validInvoiceEventDetails(uid, data);
+        && validInvoiceEventDetails(uid, data)
+        && (
+          data.type != 'reversal'
+          || validInvoiceReversalEventLock(uid, eventId, data)
+        );
     }
 
     match /users/{uid} {
@@ -377,10 +426,20 @@ service cloud.firestore {
         allow update, delete: if false;
       }
 
+      // A trava impede várias novas operações sobre um único pagamento,
+      // mesmo quando cada evento usa um UUID diferente.
+      match /invoiceReversalLocks/{paymentId} {
+        allow get: if owner(uid);
+        allow list: if false;
+        allow create: if owner(uid) && validInvoiceReversalLockCreate(uid, paymentId);
+        allow update, delete: if false;
+      }
+
       match /{collection}/{document=**} {
         allow read, write: if owner(uid)
           && collection != 'transactionAttachmentChunks'
-          && collection != 'invoiceEvents';
+          && collection != 'invoiceEvents'
+          && collection != 'invoiceReversalLocks';
       }
     }
 

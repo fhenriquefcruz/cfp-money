@@ -16,6 +16,7 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore'
 
 const PROJECT_ID = 'demo-cfp-money-security'
@@ -250,12 +251,53 @@ test('MR-003: estorno referenciado, ajuste e fechamento têm schemas distintos',
     reversesEventId: paymentId,
   }
   delete reversal.paymentDate
-  await assertSucceeds(
-    setDoc(
-      doc(database, 'users', 'alice', 'invoiceEvents', `op_${reversal.operationId}`),
-      reversal,
-    ),
+  const reversalId = `op_${reversal.operationId}`
+  const lockRef = doc(database, 'users', 'alice', 'invoiceReversalLocks', paymentId)
+  const reversalRef = doc(database, 'users', 'alice', 'invoiceEvents', reversalId)
+
+  // Evento sozinho e trava sozinha devem ser rejeitados.
+  await assertFails(setDoc(reversalRef, reversal))
+  await assertFails(
+    setDoc(lockRef, {
+      paymentId,
+      reversalEventId: reversalId,
+      invoiceKey: reversal.invoiceKey,
+      amountCents: 8025,
+      createdAt: serverTimestamp(),
+    }),
   )
+
+  const both = writeBatch(database)
+  both.set(reversalRef, reversal)
+  both.set(lockRef, {
+    paymentId,
+    reversalEventId: reversalId,
+    invoiceKey: reversal.invoiceKey,
+    amountCents: 8025,
+    createdAt: serverTimestamp(),
+  })
+  await assertSucceeds(both.commit())
+  assert.equal((await getDoc(lockRef)).data().amountCents, 8025)
+  await assertFails(updateDoc(lockRef, { amountCents: 1 }))
+  await assertFails(deleteDoc(lockRef))
+
+  // Um outro UUID não pode registrar um segundo estorno no mesmo pagamento.
+  const secondEvent = {
+    ...reversal,
+    operationId: '9c8d5f40-86b9-4fd6-b633-3c4e9ef1699e',
+    amount: 0.01,
+  }
+  const secondId = `op_${secondEvent.operationId}`
+  const secondBatch = writeBatch(database)
+  secondBatch.set(doc(database, 'users', 'alice', 'invoiceEvents', secondId), secondEvent)
+  secondBatch.set(lockRef, {
+    paymentId,
+    reversalEventId: secondId,
+    invoiceKey: reversal.invoiceKey,
+    amountCents: 1,
+    createdAt: serverTimestamp(),
+  })
+  await assertFails(secondBatch.commit())
   await assertFails(
     setDoc(
       doc(database, 'users', 'alice', 'invoiceEvents', 'op_91988c27-2acf-4402-8c07-10d21af8ae1b'),

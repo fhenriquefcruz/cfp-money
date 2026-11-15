@@ -273,6 +273,66 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     assert.equal(independentPayment.replayed, false)
     assert.notEqual(independentPayment.id, firstWrite.id)
 
+    // Dois IDs de estorno diferentes disputam a mesma trava atômica.
+    const reversalBase = {
+      type: 'reversal',
+      cardId: event.cardId,
+      cardName: event.cardName,
+      cardLast4: event.cardLast4,
+      invoiceMonth: event.invoiceMonth,
+      invoiceKey: event.invoiceKey,
+      eventDate: '2026-11-15',
+      amount: 80.25,
+      reversesEventId: eventReference.id,
+      sourceAccount: event.sourceAccount,
+      notes: 'Estorno integral de teste',
+    }
+    const firstReversal = {
+      ...reversalBase,
+      operationId: '6a252817-ad9c-42cf-b214-100473e127ea',
+    }
+    const secondReversal = {
+      ...reversalBase,
+      operationId: '1d2c19b2-8756-4ef3-b39b-6e0c58a35826',
+    }
+    const attempts = await Promise.allSettled([
+      writeInvoiceEventOnce(database, uid, firstReversal),
+      writeInvoiceEventOnce(database, uid, secondReversal),
+    ])
+    const accepted = attempts.filter((result) => result.status === 'fulfilled')
+    const rejected = attempts.filter((result) => result.status === 'rejected')
+    assert.equal(accepted.length, 1)
+    assert.equal(rejected.length, 1)
+
+    const committedReversal = accepted[0].value
+    assert.equal(
+      (await getDoc(doc(database, 'users', uid, 'invoiceEvents', committedReversal.id))).data()
+        .reversesEventId,
+      eventReference.id,
+    )
+    const guard = await getDoc(
+      doc(database, 'users', uid, 'invoiceReversalLocks', eventReference.id),
+    )
+    assert.equal(guard.exists(), true)
+    assert.equal(guard.data().amountCents, 8025)
+    assert.equal(guard.data().reversalEventId, committedReversal.id)
+
+    const winningRequest =
+      committedReversal.id === `op_${firstReversal.operationId}`
+        ? firstReversal
+        : secondReversal
+    const replay = await writeInvoiceEventOnce(database, uid, winningRequest)
+    assert.deepEqual(replay, { id: committedReversal.id, replayed: true })
+
+    await assert.rejects(
+      () => writeInvoiceEventOnce(database, uid, {
+        ...reversalBase,
+        operationId: 'a8f315f4-6939-4dc7-84b3-aa82550ec34e',
+        amount: 0.01,
+      }),
+      /já teve um estorno/,
+    )
+
     const getBackendStatus = httpsCallable(functions, 'getBackendStatus')
     const backendStatus = await getBackendStatus()
     assert.equal(backendStatus.data.ok, true)
