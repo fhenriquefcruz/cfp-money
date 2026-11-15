@@ -27,7 +27,7 @@ export async function writeInvoiceEventOnce(database, uid, event) {
   // legados simultaneamente: homologação coordenada é obrigatória.
   const historicalReversals =
     event.type === 'reversal'
-      ? await import('./invoiceLegacyReversals').then(({ readHistoricalInvoiceReversals }) =>
+      ? await import('./invoiceLegacyReversals.js').then(({ readHistoricalInvoiceReversals }) =>
           readHistoricalInvoiceReversals(database, uid, event.reversesEventId, operation.id),
         )
       : []
