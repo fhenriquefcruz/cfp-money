@@ -1,3 +1,10 @@
+import {
+  getFinancialActivityDate,
+  isFinanciallyEffectiveTransaction,
+  summarizeTransactions as summarizeCanonicalTransactions,
+  toTransactionCents,
+} from '../../../src/domain/finance.js'
+
 export const TRIAL_DAYS = 7
 const DAY_MS = 86_400_000
 
@@ -141,40 +148,41 @@ export function reportRange(frequency, now = new Date()) {
   return { start, end }
 }
 
-export function summarizeTransactions(transactions, range) {
-  const included = transactions.filter((item) => {
-    const date = toDate(item.date ? `${item.date}T12:00:00.000Z` : item.createdAt)
-    return date && date >= range.start && date <= range.end
-  })
+const ISO_FINANCIAL_DATE = /^\d{4}-\d{2}-\d{2}$/
 
-  let income = 0
-  let expenses = 0
+function inReportRange(transaction, range) {
+  if (!isFinanciallyEffectiveTransaction(transaction)) return false
+  const activityDate = getFinancialActivityDate(transaction)
+  if (typeof activityDate !== 'string' || !ISO_FINANCIAL_DATE.test(activityDate)) {
+    return false
+  }
+  // Day-only financial activity is compared at UTC noon to avoid timezone shifts.
+  const instant = toDate(`${activityDate}T12:00:00.000Z`)
+  if (!instant || instant.toISOString().slice(0, 10) !== activityDate) return false
+  return instant >= range.start && instant <= range.end
+}
+
+export function summarizeTransactions(transactions = [], range) {
+  const included = transactions.filter((item) => inReportRange(item, range))
+  const canonical = summarizeCanonicalTransactions(included)
   const categories = new Map()
 
   for (const item of included) {
-    const amount = Number(item.amount || 0)
-    if (item.type === 'income' && !item.isSavings) {
-      income += amount
-      continue
-    }
-
-    if (item.type === 'expense') {
-      expenses += amount
-      const name = item.categoryName || item.category || 'Outros'
-      categories.set(name, (categories.get(name) || 0) + amount)
-    }
+    if (item.type !== 'expense' || item.isSavings) continue
+    const name = item.categoryName || item.category || 'Outros'
+    // Share the same centavo conversion used by the app summary.
+    const cents = toTransactionCents(item.amount)
+    categories.set(name, (categories.get(name) || 0) + cents)
   }
 
   return {
-    income,
-    expenses,
-    balance: income - expenses,
-    count: included.length,
+    income: canonical.income,
+    expenses: canonical.expenses,
+    savings: canonical.savings,
+    balance: canonical.balance,
+    count: canonical.count,
     topCategories: [...categories.entries()]
-      .map(([name, amount]) => ({
-        name,
-        amount,
-      }))
+      .map(([name, cents]) => ({ name, amount: cents / 100 }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 5),
   }
