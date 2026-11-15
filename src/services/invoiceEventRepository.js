@@ -15,7 +15,7 @@ import {
 
 /** A mesma operação só pode ser escrita uma vez, inclusive sob retry. */
 export async function writeInvoiceEventOnce(database, uid, event) {
-  if (!uid || typeof uid !== 'string') throw new Error('Usuário autenticado obrigatório.')
+  if (typeof uid !== 'string' || !uid.trim()) throw new Error('Usuário autenticado obrigatório.')
 
   const { id, data } = prepareInvoiceEventOperation(event)
   const reference = doc(database, 'users', uid, 'invoiceEvents', id)
