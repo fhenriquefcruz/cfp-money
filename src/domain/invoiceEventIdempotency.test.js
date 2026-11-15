@@ -3,8 +3,8 @@ import {
   newInvoiceOperationId,
   prepareInvoiceEventOperation,
   sameInvoiceOperation,
-  validateInvoiceReversalBalance,
 } from './invoiceEventIdempotency'
+import { validateInvoiceReversalBalance } from './invoiceReversalBalance'
 
 const operationId = 'a4d5072f-9bd7-4ca9-9129-9d2a621ed918'
 const payment = {
