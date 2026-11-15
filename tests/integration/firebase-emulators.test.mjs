@@ -28,6 +28,7 @@ const requireFromFunctions = createRequire(new URL('../../functions/package.json
 const { deleteApp: deleteAdminApp, initializeApp: initializeAdminApp } =
   requireFromFunctions('firebase-admin/app')
 const { getAuth: getAdminAuth } = requireFromFunctions('firebase-admin/auth')
+const { getFirestore: getAdminFirestore } = requireFromFunctions('firebase-admin/firestore')
 
 const PROJECT_ID = 'demo-cfp-money-integration'
 const REGION = 'southamerica-east1'
@@ -65,6 +66,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
   const database = getFirestore(app)
   const functions = getFunctions(app, REGION)
   const adminAuth = getAdminAuth(adminApp)
+  const adminDatabase = getAdminFirestore(adminApp)
 
   connectAuthEmulator(auth, `http://${authAddress.host}:${authAddress.port}`, {
     disableWarnings: true,
@@ -305,6 +307,52 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
       savedReversal.operationId === firstReversal.operationId ? firstReversal : secondReversal
     assert.equal(accepted.value.id, reversalReference.id)
     assert.equal((await writeInvoiceEventOnce(database, uid, acceptedEvent)).replayed, true)
+
+    // Simula estorno parcial LEGADO criado antes das regras restritivas.
+    // O repositório deve somá-lo sem alterar registros históricos.
+    const legacySource = independentPayment.id
+    await adminDatabase.doc(`users/${uid}/invoiceEvents/legacy-reversal-partial`).set({
+      type: 'reversal',
+      cardId: 'card-integration',
+      invoiceKey: 'card-integration:2026-11',
+      amount: 30.1,
+      reversesEventId: legacySource,
+      eventDate: '2026-11-14',
+    })
+
+    const legacyReversal = {
+      ...event,
+      type: 'reversal',
+      operationId: 'a7b80312-1d70-42c6-952e-9ea1f1366a87',
+      reversesEventId: legacySource,
+      amount: 80.25,
+    }
+    delete legacyReversal.paymentDate
+
+    await assert.rejects(
+      () => writeInvoiceEventOnce(database, uid, legacyReversal),
+      /excede o saldo reversível/,
+    )
+    const permittedLegacyReversal = {
+      ...legacyReversal,
+      amount: 50.15,
+    }
+    const registeredRemaining = await writeInvoiceEventOnce(
+      database,
+      uid,
+      permittedLegacyReversal,
+    )
+    assert.equal(registeredRemaining.id, `rev_${legacySource}`)
+    assert.equal(
+      (await getDoc(doc(database, 'users', uid, 'invoiceEvents', registeredRemaining.id))).data()
+        .amount,
+      50.15,
+    )
+    assert.equal(
+      (await getDoc(doc(database, 'users', uid, 'invoiceEvents', 'legacy-reversal-partial'))).data()
+        .amount,
+      30.1,
+    )
 
     const getBackendStatus = httpsCallable(functions, 'getBackendStatus')
     const backendStatus = await getBackendStatus()
