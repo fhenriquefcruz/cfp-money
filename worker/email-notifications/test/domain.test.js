@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   goalAlertCandidates,
+  goalAlertSnapshot,
   highestBudgetAlert,
   isPremiumUser,
   isReportDue,
@@ -112,4 +113,126 @@ test('resume lançamentos do período', () => {
   assert.equal(summary.expenses, 250)
   assert.equal(summary.balance, 750)
   assert.equal(summary.topCategories[0].name, 'Alimentação')
+})
+
+test('MR-002: resumo respeita atividade da compra, estornos e reservas sem misturar consumo', () => {
+  const range = {
+    start: new Date('2026-10-01T00:00:00.000Z'),
+    end: new Date('2026-10-31T23:59:59.999Z'),
+  }
+  const transactions = [
+    { type: 'income', date: '2026-10-02', amount: '3000' },
+    {
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      purchaseDate: '2026-10-21',
+      date: '2026-12-10',
+      amount: '1200',
+      categoryName: 'Moradia',
+    },
+    { type: 'expense', date: '2026-10-04', amount: 950, paymentStatus: 'cancelled' },
+    { type: 'expense', date: '2026-10-05', amount: 500, flowType: 'transfer' },
+    { type: 'income', date: '2026-10-06', amount: 900, kind: 'transfer' },
+    {
+      type: 'expense',
+      date: '2026-10-09',
+      amount: 200,
+      isSavings: true,
+      savingsMovement: 'deposit',
+      categoryName: 'Reserva',
+    },
+    {
+      type: 'expense',
+      date: '2026-10-11',
+      amount: '50',
+      isSavings: true,
+      savingsMovement: 'withdrawal',
+    },
+    { type: 'expense', date: '2026-10-12', amount: '120.25', categoryName: 'Alimentação' },
+    { type: 'expense', createdAt: '2026-10-13T09:00:00Z', amount: 180 },
+  ]
+  const original = structuredClone(transactions)
+  const result = summarizeTransactions(transactions, range)
+
+  assert.deepEqual(
+    { income: result.income, expenses: result.expenses, savings: result.savings },
+    { income: 3000, expenses: 1320.25, savings: 150 },
+  )
+  assert.equal(result.balance, 1679.75)
+  assert.equal(result.count, 5)
+  assert.deepEqual(result.topCategories, [
+    { name: 'Moradia', amount: 1200 },
+    { name: 'Alimentação', amount: 120.25 },
+  ])
+  assert.deepEqual(transactions, original)
+})
+
+test('MR-002: vencimento posterior não desloca compra para o resumo de dezembro', () => {
+  const transactions = [
+    {
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      purchaseDate: '2026-10-21',
+      date: '2026-12-10',
+      amount: '300',
+    },
+  ]
+  const december = {
+    start: new Date('2026-12-01T00:00:00.000Z'),
+    end: new Date('2026-12-31T23:59:59.999Z'),
+  }
+  assert.equal(summarizeTransactions(transactions, december).expenses, 0)
+  assert.equal(summarizeTransactions(transactions, december).count, 0)
+})
+
+test('MR-004: alertas consideram saldo legado, aportes, retiradas e status efetivo', () => {
+  const goal = {
+    id: 'goal-a',
+    name: 'Reserva de viagem',
+    targetAmount: 1000,
+    currentAmount: 400,
+  }
+  const transactions = [
+    { goalId: 'goal-a', isSavings: true, amount: '500.00', savingsMovement: 'deposit' },
+    { goalId: 'goal-a', isSavings: true, amount: '50.00', savingsMovement: 'withdrawal' },
+    {
+      goalId: 'goal-a',
+      isSavings: true,
+      amount: '200.00',
+      savingsMovement: 'deposit',
+      paymentStatus: 'cancelled',
+    },
+    {
+      goalId: 'goal-a',
+      isSavings: true,
+      amount: '100.00',
+      savingsMovement: 'deposit',
+      flowType: 'transfer',
+    },
+    { goalId: 'other-goal', isSavings: true, amount: '800.00', savingsMovement: 'deposit' },
+    { goalId: 'goal-a', amount: 1000, type: 'income' },
+  ]
+  const effective = goalAlertSnapshot(goal, transactions)
+  assert.equal(effective.currentAmount, 850)
+  assert.equal(goal.currentAmount, 400)
+  assert.deepEqual(goalAlertCandidates(effective), ['progress-80'])
+
+  const withdrawing = goalAlertSnapshot(goal, [
+    ...transactions,
+    { goalId: 'goal-a', isSavings: true, amount: 90, savingsMovement: 'withdrawal' },
+  ])
+  assert.equal(withdrawing.currentAmount, 760)
+  assert.deepEqual(goalAlertCandidates(withdrawing), [])
+})
+
+test('MR-004: saldo não pode ficar negativo e não deve duplicar patrimônio', () => {
+  const goal = { id: 'goal-b', targetAmount: 500, currentAmount: 100 }
+  const effective = goalAlertSnapshot(goal, [
+    { goalId: 'goal-b', isSavings: true, amount: 180, savingsMovement: 'withdrawal' },
+  ])
+  assert.equal(effective.currentAmount, 0)
+  assert.equal(goal.currentAmount, 100)
+  assert.deepEqual(goalAlertCandidates(effective), [])
 })

@@ -1,18 +1,15 @@
 import { getSavingsSignedAmount } from './savings'
+import {
+  getFinancialActivityDate,
+  isFinanciallyEffectiveTransaction,
+} from './financialActivityCore'
+
+export {
+  getFinancialActivityDate,
+  isFinanciallyEffectiveTransaction,
+} from './financialActivityCore'
 
 const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
-
-export const getFinancialActivityDate = (transaction = {}) =>
-  transaction.type === 'expense' &&
-  transaction.paymentMethod === 'credit_card' &&
-  transaction.isCreditPurchase
-    ? transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date || ''
-    : transaction.date || transaction.dueDate || ''
-
-export const isFinanciallyEffectiveTransaction = (transaction = {}) =>
-  transaction.paymentStatus !== 'cancelled' &&
-  transaction.flowType !== 'transfer' &&
-  transaction.kind !== 'transfer'
 
 export function summarizeTransactions(transactions = []) {
   return transactions.reduce(
