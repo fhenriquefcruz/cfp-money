@@ -212,6 +212,12 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     assert.equal((await getDoc(orphanChunk)).exists(), false)
     assert.equal((await getDoc(cleanupJob)).exists(), false)
 
+    // A gravação deve apontar para um cartão persistido do mesmo UID.
+    await setDoc(doc(database, 'users', uid, 'creditCards', 'card-integration'), {
+      name: 'Cartão de teste',
+      last4: '4321',
+    })
+
     // MR-003: a repetição da mesma operação não cria um segundo pagamento,
     // inclusive quando duas tentativas competem no mesmo documento Firestore.
     const event = {
