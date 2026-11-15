@@ -107,7 +107,7 @@ export async function getDocument(env, path) {
   return decodeDocument(await response.json())
 }
 
-export async function listCollection(env, path, { limit = 2000 } = {}) {
+export async function listCollection(env, path, { limit = 2000, requireComplete = false } = {}) {
   const items = []
   let pageToken = ''
 
@@ -133,6 +133,9 @@ export async function listCollection(env, path, { limit = 2000 } = {}) {
     items.push(...(data.documents || []).map(decodeDocument))
 
     if (!data.nextPageToken) break
+    if (items.length >= limit && requireComplete) {
+      throw new Error('Limite de leitura do histórico atingido; dados incompletos.')
+    }
     pageToken = data.nextPageToken
   }
 
