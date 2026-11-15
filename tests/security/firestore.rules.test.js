@@ -604,6 +604,13 @@ test('evento de fatura com identidade de operação é imutável e isolado por U
   await assertFails(setDoc(doc(bob, ...path), data))
   await assertFails(updateDoc(reference, { amount: 300 }))
   await assertFails(deleteDoc(reference))
+  await assertFails(
+    setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'op_unknown-field-000001'), {
+      ...data,
+      operationId: 'unknown-field-000001',
+      extraValue: 'não permitido',
+    }),
+  )
 
   await assertFails(
     setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'op_wrong-operation-0001'), data),
