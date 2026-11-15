@@ -86,3 +86,58 @@ test('poupança mensal usa aportes menos retiradas', () => {
   expect(data[0].income).toBe(0)
   expect(data[0].expenses).toBe(0)
 })
+
+test('MR-006: agrega valores legados string e precisão centesimal por atividade', () => {
+  const source = [
+    { type: 'income', amount: '1000.10', date: '2026-07-01' },
+    { type: 'income', amount: '0,20', date: '2026-07-02' },
+    { type: 'expense', amount: 'R$ 1.234,56', date: '2026-07-03' },
+    { type: 'expense', amount: '0.10', date: '2026-07-04' },
+    { type: 'expense', amount: 0.2, date: '2026-07-05' },
+    {
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      purchaseDate: '2026-07-06',
+      date: '2026-08-10',
+      amount: '0.05',
+    },
+    { type: 'expense', amount: 1000, date: '2026-07-07', paymentStatus: 'cancelled' },
+  ]
+  const original = structuredClone(source)
+  const [month] = getMonthlyFinancialData(source, 1, new Date(2026, 6, 15))
+
+  expect(month.income).toBe(1000.3)
+  expect(month.expenses).toBe(1234.91)
+  expect(month.balance).toBe(-234.61)
+  expect(source).toEqual(original)
+})
+
+test('MR-006: reserva mensal não vira consumo nem perde centavos', () => {
+  const [month] = getMonthlyFinancialData(
+    [
+      { type: 'expense', isSavings: true, amount: '0.10', date: '2026-07-01' },
+      { type: 'expense', isSavings: true, amount: 0.2, date: '2026-07-02' },
+      {
+        type: 'income',
+        isSavings: true,
+        savingsMovement: 'withdrawal',
+        amount: '0,05',
+        date: '2026-07-03',
+      },
+    ],
+    1,
+    new Date(2026, 6, 15),
+  )
+  expect(month).toMatchObject({ income: 0, expenses: 0, savings: 0.25, balance: 0 })
+})
+
+test('MR-006: registros com precisão ou agrupamento ambíguos não geram total falso', () => {
+  expect(() =>
+    getMonthlyFinancialData(
+      [{ type: 'expense', amount: '1.234', date: '2026-07-15' }],
+      1,
+      new Date(2026, 6, 15),
+    ),
+  ).toThrow('Valor monetário inválido')
+})
