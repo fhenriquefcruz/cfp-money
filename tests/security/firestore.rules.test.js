@@ -252,13 +252,29 @@ test('MR-003: estorno referenciado, ajuste e fechamento têm schemas distintos',
   delete reversal.paymentDate
   await assertSucceeds(
     setDoc(
-      doc(database, 'users', 'alice', 'invoiceEvents', `op_${reversal.operationId}`),
+      doc(database, 'users', 'alice', 'invoiceEvents', `rev_${paymentId}`),
       reversal,
     ),
   )
+  // Outro UUID de tentativa para o mesmo pagamento compete pelo mesmo documento.
+  const reversalReference = doc(database, 'users', 'alice', 'invoiceEvents', `rev_${paymentId}`)
+  await assertFails(
+    setDoc(reversalReference, {
+      ...reversal,
+      operationId: '88a4e3bb-99c7-4faf-9395-bd63d73f4ab4',
+    }),
+  )
+  // Também não é permitido contornar o ID canônico gravando em op_UUID.
   await assertFails(
     setDoc(
-      doc(database, 'users', 'alice', 'invoiceEvents', 'op_91988c27-2acf-4402-8c07-10d21af8ae1b'),
+      doc(database, 'users', 'alice', 'invoiceEvents', 'op_88a4e3bb-99c7-4faf-9395-bd63d73f4ab4'),
+      { ...reversal, operationId: '88a4e3bb-99c7-4faf-9395-bd63d73f4ab4' },
+    ),
+  )
+
+  await assertFails(
+    setDoc(
+      doc(database, 'users', 'alice', 'invoiceEvents', 'rev_non-existent'),
       {
         ...reversal,
         operationId: '91988c27-2acf-4402-8c07-10d21af8ae1b',
