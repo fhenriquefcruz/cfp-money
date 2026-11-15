@@ -241,7 +241,10 @@ service cloud.firestore {
 
     // Novo evento: ID estável, schema fechado e histórico imutável.
     function validInvoiceEventMoney(amount) {
-      return amount is number && amount > 0 && amount <= 1000000000;
+      return amount is number
+        && amount > 0
+        && amount <= 100000000
+        && math.abs(amount * 100 - math.round(amount * 100)) < 0.00001;
     }
 
     function validInvoiceEventDate(value) {
@@ -265,8 +268,9 @@ service cloud.firestore {
           && !data.keys().hasAny(['amount', 'paymentDate', 'sourceAccount', 'reversesEventId'])
           && data.signedAmount is number
           && data.signedAmount != 0
-          && data.signedAmount >= -1000000000
-          && data.signedAmount <= 1000000000
+          && data.signedAmount >= -100000000
+          && data.signedAmount <= 100000000
+          && math.abs(data.signedAmount * 100 - math.round(data.signedAmount * 100)) < 0.00001
           && (data.direction == 'credit' || data.direction == 'charge')
           && (
             (data.direction == 'credit' && data.signedAmount < 0)
@@ -287,6 +291,7 @@ service cloud.firestore {
           && exists(/databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversesEventId))
           && get(/databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversesEventId)).data.type == 'payment'
           && get(/databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversesEventId)).data.invoiceKey == data.invoiceKey
+          && data.amount <= get(/databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversesEventId)).data.amount
         )
         || (
           data.type == 'manual_close'
