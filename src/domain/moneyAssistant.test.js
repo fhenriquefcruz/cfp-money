@@ -277,12 +277,8 @@ test('não afirma padrão quando a amostra ainda é insuficiente', () => {
 })
 
 test('Money usa atividade da compra e os filtros financeiros canônicos no relatório mensal', () => {
-  const creditInstallments = [
-    '2026-12-10',
-    '2027-01-10',
-    '2027-02-10',
-    '2027-03-10',
-  ].map((date) => ({
+  const creditInstallmentDates = ['2026-12-10', '2027-01-10', '2027-02-10', '2027-03-10']
+  const creditInstallments = creditInstallmentDates.map((date) => ({
     type: 'expense',
     amount: '300.00',
     date,
