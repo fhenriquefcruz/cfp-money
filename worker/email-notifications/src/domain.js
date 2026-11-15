@@ -5,6 +5,8 @@ import {
   toTransactionCents,
 } from '../../../src/domain/finance.js'
 
+import { getGoalEffectiveCurrent } from '../../../src/domain/savings.js'
+
 export const TRIAL_DAYS = 7
 const DAY_MS = 86_400_000
 
@@ -105,6 +107,11 @@ export function highestBudgetAlert({ percentage, thresholds = [70, 90, 100], ove
     .sort((a, b) => b - a)
 
   return reached[0] || null
+}
+
+// Use the exact opening balance + linked deposits - withdrawals selector from Goals.
+export function effectiveGoalForNotifications(goal = {}, transactions = []) {
+  return { ...goal, currentAmount: getGoalEffectiveCurrent(goal, transactions) }
 }
 
 export function goalAlertCandidates(goal, now = new Date()) {
