@@ -2,6 +2,7 @@ import {
   getFinancialActivityDate,
   isFinanciallyEffectiveTransaction,
   summarizeTransactions as summarizeCanonicalTransactions,
+  toTransactionCents,
 } from '../../../src/domain/finance.js'
 
 export const TRIAL_DAYS = 7
@@ -168,11 +169,9 @@ export function summarizeTransactions(transactions = [], range) {
 
   for (const item of included) {
     if (item.type !== 'expense' || item.isSavings) continue
-    const amount = Number(item.amount)
-    if (!Number.isFinite(amount)) continue
     const name = item.categoryName || item.category || 'Outros'
-    // Group category amounts in integer cents to avoid accumulation drift.
-    const cents = Math.round(amount * 100)
+    // Share the same centavo conversion used by the app summary.
+    const cents = toTransactionCents(item.amount)
     categories.set(name, (categories.get(name) || 0) + cents)
   }
 
