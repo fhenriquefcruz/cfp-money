@@ -112,4 +112,3 @@ test('MR-003: diferentes UUIDs não geram diferentes documentos para estornar o 
   })
   expect(independentPayment.id).not.toBe(prepareInvoiceEventOperation(payment).id)
 })
-
