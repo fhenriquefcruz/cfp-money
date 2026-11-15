@@ -273,6 +273,42 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     assert.equal(independentPayment.replayed, false)
     assert.notEqual(independentPayment.id, firstWrite.id)
 
+    // Dois UUIDs distintos tentam estornar o MESMO pagamento simultaneamente.
+    // Só um documento canônico rev_<paymentId> pode nascer.
+    const firstReversal = {
+      ...event,
+      type: 'reversal',
+      operationId: '88a4e3bb-99c7-4faf-9395-bd63d73f4ab4',
+      reversesEventId: firstWrite.id,
+    }
+    delete firstReversal.paymentDate
+    const secondReversal = {
+      ...firstReversal,
+      operationId: '77a4e3bb-99c7-4faf-9395-bd63d73f4ab4',
+    }
+
+    const racingReversals = await Promise.allSettled([
+      writeInvoiceEventOnce(database, uid, firstReversal),
+      writeInvoiceEventOnce(database, uid, secondReversal),
+    ])
+    assert.equal(racingReversals.filter((item) => item.status === 'fulfilled').length, 1)
+    assert.equal(racingReversals.filter((item) => item.status === 'rejected').length, 1)
+
+    const reversalReference = doc(database, 'users', uid, 'invoiceEvents', `rev_${firstWrite.id}`)
+    const savedReversal = (await getDoc(reversalReference)).data()
+    assert.equal(savedReversal.type, 'reversal')
+    assert.equal(savedReversal.amount, 80.25)
+    assert.equal(savedReversal.reversesEventId, firstWrite.id)
+
+    const accepted = racingReversals.find((item) => item.status === 'fulfilled')
+    const acceptedEvent =
+      savedReversal.operationId === firstReversal.operationId ? firstReversal : secondReversal
+    assert.equal(accepted.value.id, reversalReference.id)
+    assert.equal(
+      (await writeInvoiceEventOnce(database, uid, acceptedEvent)).replayed,
+      true,
+    )
+
     const getBackendStatus = httpsCallable(functions, 'getBackendStatus')
     const backendStatus = await getBackendStatus()
     assert.equal(backendStatus.data.ok, true)
