@@ -3,6 +3,7 @@ import {
   firstRelevantForecastMonth,
   invoiceDatesForMonth,
   invoiceStatus,
+  resolveInvoiceDatesForMonth,
   labelForMonth,
   shiftMonthKey,
 } from './creditCardCenter'
@@ -649,4 +650,194 @@ test('mostra competência com evento de fatura mesmo sem compras no mês', () =>
     selectedMonth: '2026-10',
   })
   expect(center.availableInvoiceMonths).toEqual(['2026-01'])
+})
+
+test('MR-005: edição atual do cartão não muda datas nem estado de uma fatura antiga', () => {
+  const saved = {
+    id: 'snapshot-historical',
+    type: 'expense',
+    paymentMethod: 'credit_card',
+    isCreditPurchase: true,
+    cardId: 'inter',
+    invoiceMonth: '2026-08',
+    purchaseDate: '2026-07-20',
+    date: '2026-08-15',
+    dueDate: '2026-08-15',
+    invoiceClosingDate: '2026-08-08',
+    cardClosingDay: 8,
+    cardDueDay: 15,
+    amount: 188.37,
+  }
+  const original = structuredClone(saved)
+  const cardEdited = { ...cards[1], closingDay: 28, dueDay: 3 }
+  const center = buildCreditCardCenter({
+    transactions: [saved],
+    creditCards: [cardEdited],
+    selectedMonth: '2026-08',
+    now: new Date(2026, 7, 12),
+  })
+  const invoice = center.invoices[0]
+
+  expect(invoice.dates).toEqual({
+    closingDate: '2026-08-08',
+    dueDate: '2026-08-15',
+    source: 'snapshot',
+  })
+  expect(invoice.status).toBe('closed')
+  expect(invoice.lifecycle.overdue).toBe(false)
+  expect(invoice.purchaseTotal).toBe(188.37)
+  expect(saved).toEqual(original)
+})
+
+test('MR-005: reconstrói competência com dias capturados, inclusive virada do ano', () => {
+  const old = {
+    id: 'snapshot-days',
+    type: 'expense',
+    paymentMethod: 'credit_card',
+    cardId: 'inter',
+    amount: 120,
+    purchaseDate: '2026-12-21',
+    date: '2026-12-21',
+    cardClosingDay: 20,
+    cardDueDay: 10,
+  }
+  const center = buildCreditCardCenter({
+    creditCards: [{ ...cards[1], closingDay: 25, dueDay: 30 }],
+    transactions: [old],
+    selectedMonth: '2027-02',
+    now: new Date(2026, 11, 21),
+  })
+  expect(center.selectedItemCount).toBe(1)
+  expect(center.selectedTotal).toBe(120)
+  expect(center.invoices[0].dates).toEqual({
+    closingDate: '2027-01-20',
+    dueDate: '2027-02-10',
+    source: 'snapshot',
+  })
+})
+
+test('MR-005: fechamento e vencimento capturados respeitam fevereiro curto e bissexto', () => {
+  expect(
+    resolveInvoiceDatesForMonth('2027-02', { closingDay: 5, dueDay: 6 }, [
+      { cardClosingDay: 31, cardDueDay: 10 },
+    ]),
+  ).toMatchObject({ closingDate: '2027-01-31', dueDate: '2027-02-10', source: 'snapshot' })
+
+  expect(
+    resolveInvoiceDatesForMonth('2028-02', { closingDay: 3, dueDay: 7 }, [
+      { cardClosingDay: 31, cardDueDay: 31 },
+    ]),
+  ).toMatchObject({ closingDate: '2028-01-31', dueDate: '2028-02-29', source: 'snapshot' })
+})
+
+test('MR-005: snapshot com datas de fatura conflitantes não inventa vencimento', () => {
+  const sources = [
+    {
+      id: 'one',
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      cardId: 'inter',
+      amount: 100,
+      invoiceMonth: '2026-08',
+      invoiceClosingDate: '2026-08-08',
+      dueDate: '2026-08-15',
+    },
+    {
+      id: 'two',
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      cardId: 'inter',
+      amount: 200,
+      invoiceMonth: '2026-08',
+      invoiceClosingDate: '2026-08-08',
+      dueDate: '2026-08-17',
+    },
+  ]
+  const center = buildCreditCardCenter({
+    transactions: sources,
+    creditCards: cards,
+    selectedMonth: '2026-08',
+    now: new Date(2026, 7, 25),
+  })
+  const invoice = center.invoices.find((item) => item.card.id === 'inter')
+  expect(invoice.dates).toEqual({ closingDate: '', dueDate: '', source: 'conflict' })
+  expect(invoice.status).toBe('unknown')
+  expect(invoice.lifecycle.overdue).toBe(false)
+  expect(invoice.purchaseTotal).toBe(300)
+  expect(center.selectedRemainingTotal).toBe(300)
+})
+
+test('MR-005: campo de vencimento histórico é usado mesmo sem fechamento salvo', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      {
+        id: 'partial',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'inter',
+        amount: 70,
+        invoiceMonth: '2026-08',
+        dueDate: '2026-08-17',
+      },
+    ],
+    creditCards: [{ ...cards[1], closingDay: 1, dueDay: 2 }],
+    selectedMonth: '2026-08',
+    now: new Date(2026, 7, 20),
+  })
+  expect(center.invoices.find((invoice) => invoice.card.id === 'inter').dates).toEqual({
+    closingDate: '',
+    dueDate: '2026-08-17',
+    source: 'partial',
+  })
+  expect(center.invoices.find((invoice) => invoice.card.id === 'inter').status).toBe('overdue')
+})
+
+test('MR-005: sem snapshots evita reinterpretação silenciosa de calendário histórico', () => {
+  const purchase = {
+    id: 'undocumented',
+    type: 'expense',
+    paymentMethod: 'credit_card',
+    cardId: 'inter',
+    amount: 100,
+    invoiceMonth: '2026-08',
+    date: '2026-07-22',
+  }
+  const center = buildCreditCardCenter({
+    transactions: [purchase],
+    creditCards: [{ ...cards[1], closingDay: 1, dueDay: 3 }],
+    selectedMonth: '2026-08',
+    now: new Date(2026, 9, 10),
+  })
+  const invoice = center.invoices.find((item) => item.card.id === 'inter')
+  expect(invoice.dates).toEqual({ closingDate: '', dueDate: '', source: 'unknown' })
+  expect(invoice.status).toBe('unknown')
+  expect(invoice.purchaseTotal).toBe(100)
+  expect(purchase).not.toHaveProperty('invoiceClosingDate')
+})
+
+test('MR-005: datas inválidas e competência divergente exigem revisão, não projeção', () => {
+  const month = '2026-02'
+  const editedCard = { closingDay: 2, dueDay: 8 }
+  expect(
+    resolveInvoiceDatesForMonth(month, editedCard, [
+      { invoiceClosingDate: '2026-01-25', dueDate: '2026-02-30' },
+    ]),
+  ).toMatchObject({ source: 'conflict', dueDate: '' })
+  expect(resolveInvoiceDatesForMonth(month, editedCard, [{ dueDate: '2026-03-10' }])).toMatchObject(
+    { source: 'conflict', dueDate: '' },
+  )
+})
+
+test('MR-005: fatura futura sem compras usa apenas projeção declarada do cartão', () => {
+  const cardEdited = { closingDay: 19, dueDay: 8 }
+  expect(resolveInvoiceDatesForMonth('2027-01', cardEdited, [], new Date(2026, 10, 15))).toEqual({
+    closingDate: '2026-12-19',
+    dueDate: '2027-01-08',
+    source: 'estimated',
+  })
+  expect(resolveInvoiceDatesForMonth('2026-08', cardEdited, [], new Date(2026, 10, 15))).toEqual({
+    closingDate: '',
+    dueDate: '',
+    source: 'unknown',
+  })
 })

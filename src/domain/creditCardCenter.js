@@ -61,16 +61,105 @@ export function invoiceDatesForMonth(monthKey, rawCard = {}) {
   }
 }
 
-export function invoiceStatus(monthKey, card, now = new Date()) {
+// Datas históricas são fatos salvos nas compras, nunca inferências das condições
+// atuais do cartão. Sem evidência suficiente, a UI não deve afirmar vencimento.
+function recordedDay(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return ''
+  const date = new Date(`${value}T12:00:00.000Z`)
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value ? value : ''
+}
+
+function recordedCardDay(value) {
+  const day = Number(value)
+  return Number.isInteger(day) && day >= 1 && day <= 31 ? day : null
+}
+
+const UNKNOWN_INVOICE_DATES = { closingDate: '', dueDate: '', source: 'unknown' }
+const CONFLICTING_INVOICE_DATES = { closingDate: '', dueDate: '', source: 'conflict' }
+
+export function resolveInvoiceDatesForMonth(
+  monthKey,
+  rawCard = {},
+  purchases = [],
+  now = new Date(),
+) {
+  if (!purchases.length) {
+    return monthKey < monthKeyFromDate(now)
+      ? { ...UNKNOWN_INVOICE_DATES }
+      : { ...invoiceDatesForMonth(monthKey, rawCard), source: 'estimated' }
+  }
+
+  let closingDate = ''
+  let dueDate = ''
+  let incomplete = false
+
+  for (const purchase of purchases) {
+    const rawClosing = purchase.invoiceClosingDate
+    const rawDue = purchase.dueDate
+    const recordedClosing = recordedDay(rawClosing)
+    const recordedDue = recordedDay(rawDue)
+
+    if (
+      (rawClosing && !recordedClosing) ||
+      (rawDue && !recordedDue) ||
+      (recordedDue && recordedDue.slice(0, 7) !== monthKey) ||
+      (recordedClosing && recordedDue && recordedClosing >= recordedDue)
+    ) {
+      return { ...CONFLICTING_INVOICE_DATES }
+    }
+
+    let itemClosing = recordedClosing
+    let itemDue = recordedDue
+    const closingDay = recordedCardDay(purchase.cardClosingDay)
+    const dueDay = recordedCardDay(purchase.cardDueDay)
+
+    if ((!itemClosing || !itemDue) && closingDay && dueDay) {
+      const captured = invoiceDatesForMonth(monthKey, { closingDay, dueDay })
+      if (
+        (itemClosing && itemClosing !== captured.closingDate) ||
+        (itemDue && itemDue !== captured.dueDate)
+      ) {
+        return { ...CONFLICTING_INVOICE_DATES }
+      }
+      itemClosing = captured.closingDate
+      itemDue = captured.dueDate
+    }
+
+    if (!itemClosing || !itemDue) incomplete = true
+    if (
+      (itemClosing && closingDate && itemClosing !== closingDate) ||
+      (itemDue && dueDate && itemDue !== dueDate)
+    ) {
+      return { ...CONFLICTING_INVOICE_DATES }
+    }
+
+    if (itemClosing) closingDate = itemClosing
+    if (itemDue) dueDate = itemDue
+  }
+
+  if (!closingDate && !dueDate) return { ...UNKNOWN_INVOICE_DATES }
+
+  return {
+    closingDate,
+    dueDate,
+    source: incomplete ? 'partial' : 'snapshot',
+  }
+}
+
+function invoiceStatusFromDates(monthKey, dates, now = new Date()) {
   const currentMonth = monthKeyFromDate(now)
   const today = [now.getFullYear(), pad(now.getMonth() + 1), pad(now.getDate())].join('-')
-  const dates = invoiceDatesForMonth(monthKey, card)
 
+  if (!dates.dueDate && !dates.closingDate) return 'unknown'
   if (monthKey > currentMonth) return 'future'
-  if (dates.dueDate < today) return 'past_due'
+  if (dates.dueDate && dates.dueDate < today) return 'past_due'
   if (dates.dueDate === today) return 'due_today'
-  if (dates.closingDate < today) return 'closed'
-  return 'forming'
+  if (dates.closingDate && dates.closingDate < today) return 'closed'
+  return dates.closingDate ? 'forming' : 'unknown'
+}
+
+export function invoiceStatus(monthKey, card, now = new Date()) {
+  return invoiceStatusFromDates(monthKey, invoiceDatesForMonth(monthKey, card), now)
 }
 
 export function isStructuredCreditTransaction(transaction = {}) {
@@ -99,7 +188,11 @@ export function resolveCreditTransactionInvoiceMonth(transaction, card) {
   const purchaseDate =
     transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date
 
-  return inferInvoiceMonth(purchaseDate, card) || transaction.date?.slice(0, 7) || ''
+  const closingDay = recordedCardDay(transaction.cardClosingDay)
+  const dueDay = recordedCardDay(transaction.cardDueDay)
+  const historicalCard = closingDay && dueDay ? { closingDay, dueDay } : card
+
+  return inferInvoiceMonth(purchaseDate, historicalCard) || transaction.date?.slice(0, 7) || ''
 }
 
 function cardSnapshotFromTransaction(transaction) {
@@ -282,7 +375,7 @@ export function buildCreditCardCenter({
   const invoices = cards.map((card) => {
     const cardPurchases = structured.filter((transaction) => transaction.cardId === card.id)
     const items = selectedTransactions.filter((transaction) => transaction.cardId === card.id)
-    const dates = invoiceDatesForMonth(selectedMonth, card)
+    const dates = resolveInvoiceDatesForMonth(selectedMonth, card, items, now)
     const events = getInvoiceEvents(invoiceEvents, card.id, selectedMonth)
     const purchaseTotal = sum(items)
     const hasManualPaymentEvents = events.some(
@@ -295,7 +388,9 @@ export function buildCreditCardCenter({
             (transaction) => transaction.paymentStatus === 'paid' || transaction.isPaid === true,
           ),
         )
-    const temporalStatus = items.length ? invoiceStatus(selectedMonth, card, now) : 'empty'
+    const temporalStatus = items.length
+      ? invoiceStatusFromDates(selectedMonth, dates, now)
+      : 'empty'
     const lifecycle = buildInvoiceLifecycle({
       purchaseTotal,
       baselinePaidAmount: transactionPaidTotal,
