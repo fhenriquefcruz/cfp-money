@@ -5,9 +5,8 @@ export async function persistInvoiceEventOperation(database, uid, event) {
     throw new Error('Usuário não autenticado.')
   }
 
-  const { sameInvoiceEventIntent, validateInvoiceEventOperation } = await import(
-    '../domain/invoiceEventIdempotency.js',
-  )
+  const { sameInvoiceEventIntent, validateInvoiceEventOperation } =
+    await import('../domain/invoiceEventIdempotency.js')
   const { documentId, payload } = validateInvoiceEventOperation(event)
   const reference = doc(database, 'users', uid, 'invoiceEvents', documentId)
 
