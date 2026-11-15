@@ -251,10 +251,7 @@ test('MR-003: estorno referenciado, ajuste e fechamento têm schemas distintos',
   }
   delete reversal.paymentDate
   await assertSucceeds(
-    setDoc(
-      doc(database, 'users', 'alice', 'invoiceEvents', `rev_${paymentId}`),
-      reversal,
-    ),
+    setDoc(doc(database, 'users', 'alice', 'invoiceEvents', `rev_${paymentId}`), reversal),
   )
   // Outro UUID de tentativa para o mesmo pagamento compete pelo mesmo documento.
   const reversalReference = doc(database, 'users', 'alice', 'invoiceEvents', `rev_${paymentId}`)
@@ -273,14 +270,11 @@ test('MR-003: estorno referenciado, ajuste e fechamento têm schemas distintos',
   )
 
   await assertFails(
-    setDoc(
-      doc(database, 'users', 'alice', 'invoiceEvents', 'rev_non-existent'),
-      {
-        ...reversal,
-        operationId: '91988c27-2acf-4402-8c07-10d21af8ae1b',
-        reversesEventId: 'non-existent',
-      },
-    ),
+    setDoc(doc(database, 'users', 'alice', 'invoiceEvents', 'rev_non-existent'), {
+      ...reversal,
+      operationId: '91988c27-2acf-4402-8c07-10d21af8ae1b',
+      reversesEventId: 'non-existent',
+    }),
   )
 
   await assertFails(
