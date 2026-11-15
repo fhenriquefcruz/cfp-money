@@ -1,4 +1,4 @@
-import { getSavingsSignedAmount } from './savings'
+import { getSavingsSignedAmount } from './savings.js'
 
 const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
 
