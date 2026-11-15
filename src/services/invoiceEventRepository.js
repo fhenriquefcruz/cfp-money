@@ -1,7 +1,16 @@
-import { doc, runTransaction, serverTimestamp } from 'firebase/firestore'
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  runTransaction,
+  serverTimestamp,
+  where,
+} from 'firebase/firestore'
 import {
   prepareInvoiceEventOperation,
   sameInvoiceOperation,
+  validateInvoiceReversalBalance,
 } from '../domain/invoiceEventIdempotency.js'
 
 /**
@@ -19,6 +28,21 @@ export async function writeInvoiceEventOnce(database, uid, event) {
   const operation = prepareInvoiceEventOperation(event)
   const reference = doc(database, 'users', uid, 'invoiceEvents', operation.id)
 
+  // Os eventos antigos são somente leitura no novo schema. A consulta
+  // anterior à transação preserva a soma histórica; a chave rev_<paymentId>
+  // serializa todas as novas tentativas concorrentes para o mesmo pagamento.
+  // Antes do deploy das Rules, clientes antigos ainda podem gravar eventos
+  // legados simultaneamente: homologação coordenada é obrigatória.
+  const historicalSnapshot =
+    event.type === 'reversal'
+      ? await getDocs(
+          query(
+            collection(database, 'users', uid, 'invoiceEvents'),
+            where('reversesEventId', '==', event.reversesEventId),
+          ),
+        )
+      : null
+
   return runTransaction(database, async (transaction) => {
     const existing = await transaction.get(reference)
 
@@ -31,6 +55,27 @@ export async function writeInvoiceEventOnce(database, uid, event) {
         )
       }
       return { id: reference.id, replayed: true }
+    }
+
+    if (event.type === 'reversal') {
+      const paymentReference = doc(
+        database,
+        'users',
+        uid,
+        'invoiceEvents',
+        event.reversesEventId,
+      )
+      const paymentSnapshot = await transaction.get(paymentReference)
+
+      validateInvoiceReversalBalance({
+        payment: paymentSnapshot.exists()
+          ? { id: paymentSnapshot.id, ...paymentSnapshot.data() }
+          : null,
+        reversal: operation.data,
+        historicalReversals: historicalSnapshot.docs
+          .filter((snapshot) => snapshot.id !== operation.id)
+          .map((snapshot) => ({ id: snapshot.id, ...snapshot.data() })),
+      })
     }
 
     transaction.set(reference, {
