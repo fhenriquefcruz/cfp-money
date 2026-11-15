@@ -35,6 +35,7 @@ import {
 import { resolveFirebaseConfig } from '../config/firebaseConfig'
 import { securityRuntime } from '../config/securityRuntime'
 import { createPaymentPersistenceChange } from '../domain/paymentControl'
+import { persistInvoiceEventOperation } from './invoiceEventPersistence'
 
 const firebaseConfig = resolveFirebaseConfig(import.meta.env)
 
@@ -230,10 +231,7 @@ export const onInvoiceEventsChange = (uid, callback) => {
   return onSnapshot(q, (snapshot) => callback(snapshot.docs.map(documentData)))
 }
 
-export const addInvoiceEvent = async (uid, data) => {
-  const { persistInvoiceEventOperation } = await import('./invoiceEventPersistence')
-  return persistInvoiceEventOperation(db, uid, data)
-}
+export const addInvoiceEvent = async (uid, data) => persistInvoiceEventOperation(db, uid, data)
 
 // ── CREDIT CARDS ──
 export const getCreditCards = async (uid) =>
