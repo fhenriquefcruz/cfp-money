@@ -10,6 +10,7 @@ import {
 import {
   invoiceEventSignature,
   newInvoiceOperationId,
+  prepareInvoiceEventOperation,
 } from '../domain/invoiceEventIdempotency'
 import { formatCurrency, formatDate } from '../utils'
 import { Button, Modal } from './ui'
@@ -168,6 +169,8 @@ export default function InvoiceLifecycleModal({
       }
 
       const operationId = previous?.operationId || newInvoiceOperationId()
+      // Validar antes de guardar uma tentativa potencialmente incerta.
+      prepareInvoiceEventOperation({ ...event, operationId })
       pendingOperationRef.current = { signature, operationId }
       submittingRef.current = true
       setLoading(true)
