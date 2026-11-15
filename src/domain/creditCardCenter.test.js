@@ -718,19 +718,15 @@ test('MR-005: reconstrói competência com dias capturados, inclusive virada do 
 
 test('MR-005: fechamento e vencimento capturados respeitam fevereiro curto e bissexto', () => {
   expect(
-    resolveInvoiceDatesForMonth(
-      '2027-02',
-      { closingDay: 5, dueDay: 6 },
-      [{ cardClosingDay: 31, cardDueDay: 10 }],
-    ),
+    resolveInvoiceDatesForMonth('2027-02', { closingDay: 5, dueDay: 6 }, [
+      { cardClosingDay: 31, cardDueDay: 10 },
+    ]),
   ).toMatchObject({ closingDate: '2027-01-31', dueDate: '2027-02-10', source: 'snapshot' })
 
   expect(
-    resolveInvoiceDatesForMonth(
-      '2028-02',
-      { closingDay: 3, dueDay: 7 },
-      [{ cardClosingDay: 31, cardDueDay: 31 }],
-    ),
+    resolveInvoiceDatesForMonth('2028-02', { closingDay: 3, dueDay: 7 }, [
+      { cardClosingDay: 31, cardDueDay: 31 },
+    ]),
   ).toMatchObject({ closingDate: '2028-01-31', dueDate: '2028-02-29', source: 'snapshot' })
 })
 
@@ -827,17 +823,21 @@ test('MR-005: datas inválidas e competência divergente exigem revisão, não p
       { invoiceClosingDate: '2026-01-25', dueDate: '2026-02-30' },
     ]),
   ).toMatchObject({ source: 'conflict', dueDate: '' })
-  expect(
-    resolveInvoiceDatesForMonth(month, editedCard, [{ dueDate: '2026-03-10' }]),
-  ).toMatchObject({ source: 'conflict', dueDate: '' })
+  expect(resolveInvoiceDatesForMonth(month, editedCard, [{ dueDate: '2026-03-10' }])).toMatchObject(
+    { source: 'conflict', dueDate: '' },
+  )
 })
 
 test('MR-005: fatura futura sem compras usa apenas projeção declarada do cartão', () => {
   const cardEdited = { closingDay: 19, dueDay: 8 }
-  expect(
-    resolveInvoiceDatesForMonth('2027-01', cardEdited, [], new Date(2026, 10, 15)),
-  ).toEqual({ closingDate: '2026-12-19', dueDate: '2027-01-08', source: 'estimated' })
-  expect(
-    resolveInvoiceDatesForMonth('2026-08', cardEdited, [], new Date(2026, 10, 15)),
-  ).toEqual({ closingDate: '', dueDate: '', source: 'unknown' })
+  expect(resolveInvoiceDatesForMonth('2027-01', cardEdited, [], new Date(2026, 10, 15))).toEqual({
+    closingDate: '2026-12-19',
+    dueDate: '2027-01-08',
+    source: 'estimated',
+  })
+  expect(resolveInvoiceDatesForMonth('2026-08', cardEdited, [], new Date(2026, 10, 15))).toEqual({
+    closingDate: '',
+    dueDate: '',
+    source: 'unknown',
+  })
 })
