@@ -318,7 +318,18 @@ service cloud.firestore {
         && data.operationId.matches(
           '^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
         )
-        && eventId == 'op_' + data.operationId
+        && (
+          (
+            data.type == 'reversal'
+            && data.keys().hasAll(['reversesEventId'])
+            && data.reversesEventId is string
+            && eventId == 'rev_' + data.reversesEventId
+          )
+          || (
+            data.type != 'reversal'
+            && eventId == 'op_' + data.operationId
+          )
+        )
         && data.cardId is string
         && data.cardId.size() > 0
         && data.cardId.size() <= 128
