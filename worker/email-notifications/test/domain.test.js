@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   goalAlertCandidates,
+  goalAlertSnapshot,
   highestBudgetAlert,
   isPremiumUser,
   isReportDue,
@@ -185,3 +186,54 @@ test('MR-002: vencimento posterior não desloca compra para o resumo de dezembro
   assert.equal(summarizeTransactions(transactions, december).expenses, 0)
   assert.equal(summarizeTransactions(transactions, december).count, 0)
 })
+
+test('MR-004: alertas consideram saldo legado, aportes, retiradas e status efetivo', () => {
+  const goal = {
+    id: 'goal-a',
+    name: 'Reserva de viagem',
+    targetAmount: 1000,
+    currentAmount: 400,
+  }
+  const transactions = [
+    { goalId: 'goal-a', isSavings: true, amount: '500.00', savingsMovement: 'deposit' },
+    { goalId: 'goal-a', isSavings: true, amount: '50.00', savingsMovement: 'withdrawal' },
+    {
+      goalId: 'goal-a',
+      isSavings: true,
+      amount: '200.00',
+      savingsMovement: 'deposit',
+      paymentStatus: 'cancelled',
+    },
+    {
+      goalId: 'goal-a',
+      isSavings: true,
+      amount: '100.00',
+      savingsMovement: 'deposit',
+      flowType: 'transfer',
+    },
+    { goalId: 'other-goal', isSavings: true, amount: '800.00', savingsMovement: 'deposit' },
+    { goalId: 'goal-a', amount: 1000, type: 'income' },
+  ]
+  const effective = goalAlertSnapshot(goal, transactions)
+  assert.equal(effective.currentAmount, 850)
+  assert.equal(goal.currentAmount, 400)
+  assert.deepEqual(goalAlertCandidates(effective), ['progress-80'])
+
+  const withdrawing = goalAlertSnapshot(goal, [
+    ...transactions,
+    { goalId: 'goal-a', isSavings: true, amount: 90, savingsMovement: 'withdrawal' },
+  ])
+  assert.equal(withdrawing.currentAmount, 760)
+  assert.deepEqual(goalAlertCandidates(withdrawing), [])
+})
+
+test('MR-004: saldo não pode ficar negativo e não deve duplicar patrimônio', () => {
+  const goal = { id: 'goal-b', targetAmount: 500, currentAmount: 100 }
+  const effective = goalAlertSnapshot(goal, [
+    { goalId: 'goal-b', isSavings: true, amount: 180, savingsMovement: 'withdrawal' },
+  ])
+  assert.equal(effective.currentAmount, 0)
+  assert.equal(goal.currentAmount, 100)
+  assert.deepEqual(goalAlertCandidates(effective), [])
+})
+
