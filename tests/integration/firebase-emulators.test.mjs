@@ -22,6 +22,7 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions'
+import { writeInvoiceEventOnce } from '../../src/services/invoiceEventRepository.js'
 
 const requireFromFunctions = createRequire(new URL('../../functions/package.json', import.meta.url))
 const { deleteApp: deleteAdminApp, initializeApp: initializeAdminApp } =
@@ -210,6 +211,70 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     await recover.commit()
     assert.equal((await getDoc(orphanChunk)).exists(), false)
     assert.equal((await getDoc(cleanupJob)).exists(), false)
+
+    // MR-003: a repetição da mesma operação não cria um segundo pagamento,
+    // inclusive quando duas tentativas competem no mesmo documento Firestore.
+    const event = {
+      type: 'payment',
+      cardId: 'card-integration',
+      cardName: 'Cartão de teste',
+      cardLast4: '4321',
+      invoiceMonth: '2026-11',
+      invoiceKey: 'card-integration:2026-11',
+      eventDate: '2026-11-14',
+      paymentDate: '2026-11-14',
+      amount: 80.25,
+      sourceAccount: 'Conta de teste',
+      notes: '',
+      operationId: '8f902547-8019-4f77-a202-86aba6d378ed',
+    }
+    const eventReference = doc(
+      database,
+      'users',
+      uid,
+      'invoiceEvents',
+      `op_${event.operationId}`,
+    )
+    const firstWrite = await writeInvoiceEventOnce(database, uid, event)
+    const repeatedWrite = await writeInvoiceEventOnce(database, uid, event)
+    assert.equal(firstWrite.replayed, false)
+    assert.equal(repeatedWrite.replayed, true)
+    assert.equal(firstWrite.id, repeatedWrite.id)
+    assert.equal((await getDoc(eventReference)).data().amount, 80.25)
+
+    const parallelEvent = {
+      ...event,
+      amount: 35.1,
+      operationId: '189dd740-6703-4c79-b889-3daecf2f3b7b',
+    }
+    const [concurrentFirst, concurrentSecond] = await Promise.all([
+      writeInvoiceEventOnce(database, uid, parallelEvent),
+      writeInvoiceEventOnce(database, uid, parallelEvent),
+    ])
+    assert.equal(concurrentFirst.id, concurrentSecond.id)
+    assert.equal(
+      [concurrentFirst.replayed, concurrentSecond.replayed].filter(Boolean).length,
+      1,
+    )
+    assert.equal(
+      (await getDoc(doc(database, 'users', uid, 'invoiceEvents', concurrentFirst.id))).data()
+        .amount,
+      35.1,
+    )
+
+    await assert.rejects(
+      () => writeInvoiceEventOnce(database, uid, { ...event, amount: 80.26 }),
+      /identificador já foi utilizado/,
+    )
+    assert.equal((await getDoc(eventReference)).data().amount, 80.25)
+
+    // Outro pagamento parcial legítimo usa outro ID e pode coexistir.
+    const independentPayment = await writeInvoiceEventOnce(database, uid, {
+      ...event,
+      operationId: '91988c27-2acf-4402-8c07-10d21af8ae1b',
+    })
+    assert.equal(independentPayment.replayed, false)
+    assert.notEqual(independentPayment.id, firstWrite.id)
 
     const getBackendStatus = httpsCallable(functions, 'getBackendStatus')
     const backendStatus = await getBackendStatus()
