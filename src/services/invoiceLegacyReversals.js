@@ -1,4 +1,5 @@
 import { collection, getDocs, query, where } from 'firebase/firestore'
+export { validateInvoiceReversalBalance } from '../domain/invoiceReversalBalance.js'
 
 /**
  * Consulta sob demanda: não carrega o código de auditoria no bundle inicial.
