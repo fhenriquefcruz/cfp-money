@@ -102,10 +102,7 @@ export function resolveInvoiceDatesForMonth(monthKey, card = {}, items = [], now
       const dueDay = recordedCardDay(item.cardDueDay)
       if (closingDay && dueDay) {
         const stored = invoiceDatesForMonth(monthKey, { closingDay, dueDay })
-        if (
-          (closing && closing !== stored.closingDate) ||
-          (due && due !== stored.dueDate)
-        ) {
+        if ((closing && closing !== stored.closingDate) || (due && due !== stored.dueDate)) {
           return blank('conflict')
         }
         closing = stored.closingDate
