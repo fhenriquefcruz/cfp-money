@@ -53,9 +53,7 @@ test('MR-003: rejeita dados não autorizados antes da persistência', () => {
   expect(() => prepareInvoiceEventOperation({ ...payment, invoiceKey: 'wrong' })).toThrow(
     'Vínculo de fatura',
   )
-  expect(() => prepareInvoiceEventOperation({ ...payment, amount: 0 })).toThrow(
-    'O valor precisa',
-  )
+  expect(() => prepareInvoiceEventOperation({ ...payment, amount: 0 })).toThrow('O valor precisa')
   expect(() => prepareInvoiceEventOperation({ ...payment, amount: 10.001 })).toThrow(
     'Valor monetário inválido',
   )
