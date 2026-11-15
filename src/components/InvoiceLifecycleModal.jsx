@@ -153,6 +153,9 @@ export default function InvoiceLifecycleModal({
     [lifecycle],
   )
 
+  const showSubmitError = (submitError) =>
+    setError(submitError?.message || 'Não foi possível confirmar o evento.')
+
   const submitEvent = async (event) => {
     if (submittingRef.current) return
 
@@ -180,7 +183,7 @@ export default function InvoiceLifecycleModal({
         setSourceAccount('')
       }
     } catch (submitError) {
-      setError(submitError?.message || 'Não foi possível confirmar o evento. Repita a operação.')
+      showSubmitError(submitError)
     } finally {
       submittingRef.current = false
       setLoading(false)
@@ -216,7 +219,7 @@ export default function InvoiceLifecycleModal({
         }),
       )
     } catch (submitError) {
-      setError(submitError?.message || 'Não foi possível confirmar o evento.')
+      showSubmitError(submitError)
     }
   }
 
@@ -233,7 +236,7 @@ export default function InvoiceLifecycleModal({
         }),
       )
     } catch (submitError) {
-      setError(submitError?.message || 'Não foi possível confirmar o fechamento.')
+      showSubmitError(submitError)
     }
   }
 
@@ -250,7 +253,7 @@ export default function InvoiceLifecycleModal({
         }),
       )
     } catch (submitError) {
-      setError(submitError?.message || 'Não foi possível confirmar o estorno.')
+      showSubmitError(submitError)
     }
   }
 
