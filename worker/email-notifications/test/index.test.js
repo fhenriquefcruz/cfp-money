@@ -1,7 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { effectiveGoalForNotifications } from '../src/domain.js'
-import worker, { getEnvironmentReadiness, goalAlertMessage, runActivationTest } from '../src/index.js'
+import worker, {
+  getEnvironmentReadiness,
+  goalAlertMessage,
+  runActivationTest,
+} from '../src/index.js'
 
 function readyEnvironment(overrides = {}) {
   return {
