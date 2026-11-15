@@ -139,9 +139,9 @@ test('MR-006: reserva e meta usam centavos em saldos legados mistos', () => {
 })
 
 test('MR-006: saldos inválidos geram erro consultivo, sem regravar dados', () => {
-  expect(() =>
-    getGoalEffectiveCurrent({ id: 'goal', currentAmount: '1.234' }, []),
-  ).toThrow('Valor monetário inválido')
+  expect(() => getGoalEffectiveCurrent({ id: 'goal', currentAmount: '1.234' }, [])).toThrow(
+    'Valor monetário inválido',
+  )
   expect(() =>
     buildSavingsOverview([{ isSavings: true, amount: '1,234', date: '2026-07-01' }]),
   ).toThrow('Valor monetário inválido')
