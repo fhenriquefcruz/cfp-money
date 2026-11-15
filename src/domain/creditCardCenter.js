@@ -66,9 +66,7 @@ export function invoiceDatesForMonth(monthKey, rawCard = {}) {
 function recordedDay(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return ''
   const date = new Date(`${value}T12:00:00.000Z`)
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
-    ? value
-    : ''
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value ? value : ''
 }
 
 function recordedCardDay(value) {
@@ -192,8 +190,7 @@ export function resolveCreditTransactionInvoiceMonth(transaction, card) {
 
   const closingDay = recordedCardDay(transaction.cardClosingDay)
   const dueDay = recordedCardDay(transaction.cardDueDay)
-  const historicalCard =
-    closingDay && dueDay ? { closingDay, dueDay } : card
+  const historicalCard = closingDay && dueDay ? { closingDay, dueDay } : card
 
   return inferInvoiceMonth(purchaseDate, historicalCard) || transaction.date?.slice(0, 7) || ''
 }
