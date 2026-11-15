@@ -23,8 +23,9 @@ import LegalGate from './components/LegalGate'
 // Notificações globais
 import NotificationStack from './components/NotificationStack'
 import ErrorBoundary from './components/ErrorBoundary'
-import NotFound from './components/NotFound'
 
+
+const NotFound = lazy(() => import('./components/NotFound'))
 const Dashboard = lazy(() => import('./components/Dashboard'))
 const Money = lazy(() => import('./components/Money'))
 const CreditCardsDashboard = lazy(() => import('./components/CreditCardsDashboard'))
