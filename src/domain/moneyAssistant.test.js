@@ -1,3 +1,4 @@
+import { summarizeTransactions, transactionsForMonth } from './finance'
 import { analyzeMoney } from './money'
 import { buildMoneyAssistantResponse, parseMoneyAssistantIntent } from './moneyAssistant'
 
@@ -273,4 +274,141 @@ test('não afirma padrão quando a amostra ainda é insuficiente', () => {
     title: 'Ainda estou formando seu perfil',
   })
   expect(response.metrics).toEqual([{ label: 'Amostra', rawValue: '3 despesas' }])
+})
+
+test('Money usa atividade da compra e os filtros financeiros canônicos no relatório mensal', () => {
+  const creditInstallments = [
+    '2026-12-10',
+    '2027-01-10',
+    '2027-02-10',
+    '2027-03-10',
+  ].map((date) => ({
+    type: 'expense',
+    amount: '300.00',
+    date,
+    purchaseDate: '2026-10-21',
+    paymentMethod: 'credit_card',
+    isCreditPurchase: true,
+    categoryId: 'food',
+    categoryName: 'Alimentação',
+  }))
+  const entries = [
+    ...creditInstallments,
+    { type: 'income', amount: '500.00', date: '2026-10-05' },
+    { type: 'expense', amount: 900, date: '2026-10-07', paymentStatus: 'cancelled' },
+    { type: 'expense', amount: 800, date: '2026-10-08', flowType: 'transfer' },
+    { type: 'income', amount: 700, date: '2026-10-09', kind: 'transfer' },
+    { type: 'expense', amount: 999, date: '2026-10-10', isSavings: true },
+  ]
+  const original = structuredClone(entries)
+  const expected = summarizeTransactions(
+    transactionsForMonth(entries, 2026, 9).filter((entry) => !entry.isSavings),
+  )
+  const october = buildMoneyAssistantResponse({
+    message: 'Relatório de outubro de 2026',
+    transactions: entries,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+  const december = buildMoneyAssistantResponse({
+    message: 'Relatório de dezembro de 2026',
+    transactions: entries,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+
+  expect(expected).toMatchObject({ income: 500, expenses: 1200, balance: -700 })
+  expect(october.metrics).toEqual([
+    { label: 'Receitas', value: expected.income },
+    { label: 'Despesas', value: expected.expenses },
+    { label: 'Resultado', value: expected.balance },
+  ])
+  expect(december.metrics).toEqual([])
+  expect(entries).toEqual(original)
+})
+
+test('categorias e maiores despesas ignoram poupança, cancelamento e transferência', () => {
+  const entries = [
+    {
+      type: 'expense',
+      amount: '100.50',
+      date: '2026-10-05',
+      categoryId: 'food',
+      categoryName: 'Alimentação',
+    },
+    {
+      type: 'expense',
+      amount: 900,
+      date: '2026-10-06',
+      categoryId: 'food',
+      categoryName: 'Alimentação',
+      paymentStatus: 'cancelled',
+    },
+    {
+      type: 'expense',
+      amount: 800,
+      date: '2026-10-07',
+      categoryId: 'food',
+      categoryName: 'Alimentação',
+      kind: 'transfer',
+    },
+    {
+      type: 'expense',
+      amount: 700,
+      date: '2026-10-08',
+      categoryId: 'food',
+      categoryName: 'Alimentação',
+      isSavings: true,
+    },
+  ]
+  const category = buildMoneyAssistantResponse({
+    message: 'Quanto gastei com alimentação em outubro de 2026?',
+    transactions: entries,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+  const top = buildMoneyAssistantResponse({
+    message: 'Quais são minhas maiores despesas em outubro de 2026?',
+    transactions: entries,
+    categories,
+    now,
+    analyze: analyzeMoney,
+  })
+
+  expect(category.metrics).toEqual([
+    { label: 'Total', value: 100.5 },
+    { label: 'Lançamentos', rawValue: '1' },
+  ])
+  expect(top.text).toContain('100,50')
+  expect(top.text).not.toContain('900,00')
+  expect(top.text).not.toContain('800,00')
+  expect(top.text).not.toContain('700,00')
+})
+
+test('reservas incluídas no período nunca viram despesas de consumo do Money', () => {
+  const response = buildMoneyAssistantResponse({
+    message: 'Relatório de outubro de 2026',
+    transactions: [
+      { type: 'expense', amount: 300, date: '2026-10-05', isSavings: true },
+      {
+        type: 'income',
+        amount: 100,
+        date: '2026-10-06',
+        isSavings: true,
+        savingsMovement: 'withdrawal',
+      },
+    ],
+    settings: { excludeSavings: false },
+    now,
+    analyze: analyzeMoney,
+  })
+
+  expect(response.metrics).toEqual([
+    { label: 'Receitas', value: 0 },
+    { label: 'Despesas', value: 0 },
+    { label: 'Resultado', value: 0 },
+  ])
 })
