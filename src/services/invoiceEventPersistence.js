@@ -6,7 +6,7 @@ export async function persistInvoiceEventOperation(database, uid, event) {
   }
 
   const { sameInvoiceEventIntent, validateInvoiceEventOperation } = await import(
-    '../domain/invoiceEventIdempotency.js'
+    '../domain/invoiceEventIdempotency.js',
   )
   const { documentId, payload } = validateInvoiceEventOperation(event)
   const reference = doc(database, 'users', uid, 'invoiceEvents', documentId)
