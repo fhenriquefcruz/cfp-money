@@ -51,7 +51,9 @@ export function newInvoiceOperationId(cryptoSource = globalThis.crypto) {
  * Uma nova liquidação legítima precisa receber um novo operationId.
  */
 export function prepareInvoiceEventOperation(event = {}) {
-  const operationId = String(event.operationId || '').trim().toLowerCase()
+  const operationId = String(event.operationId || '')
+    .trim()
+    .toLowerCase()
   if (!OPERATION_ID_PATTERN.test(operationId)) {
     throw new Error('Identificador seguro de operação de fatura obrigatório.')
   }
