@@ -146,7 +146,7 @@ test('agrega números legados em centavos sem deriva de ponto flutuante', () => 
     { type: 'expense', amount: 1.02, date: '2026-11-03' },
     { type: 'expense', amount: 'inválido', date: '2026-11-04' },
     { type: 'income', isSavings: true, amount: '0.10', date: '2026-11-05' },
-    { type: 'income', isSavings: true, amount: 0.20, date: '2026-11-06' },
+    { type: 'income', isSavings: true, amount: 0.2, date: '2026-11-06' },
   ])
 
   expect(summary).toEqual({
