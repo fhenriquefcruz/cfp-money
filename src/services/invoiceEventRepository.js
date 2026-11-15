@@ -1,4 +1,12 @@
-import { collection, doc, getDocs, query, runTransaction, serverTimestamp, where } from 'firebase/firestore'
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  runTransaction,
+  serverTimestamp,
+  where,
+} from 'firebase/firestore'
 import { validateInvoiceReversalBalance } from '../domain/invoiceReversalBalance.js'
 import {
   prepareInvoiceEventOperation,
@@ -50,13 +58,7 @@ export async function writeInvoiceEventOnce(database, uid, event) {
     }
 
     if (event.type === 'reversal') {
-      const paymentReference = doc(
-        database,
-        'users',
-        uid,
-        'invoiceEvents',
-        event.reversesEventId,
-      )
+      const paymentReference = doc(database, 'users', uid, 'invoiceEvents', event.reversesEventId)
       const paymentSnapshot = await transaction.get(paymentReference)
 
       validateInvoiceReversalBalance({
