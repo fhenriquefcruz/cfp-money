@@ -136,7 +136,7 @@ async function readTransactions(env, uid) {
   return listCollection(env, `users/${uid}/transactions`, { limit: 3000 })
 }
 
-function goalAlertMessage(goal, candidate) {
+export function goalAlertMessage(goal, candidate) {
   const target = Number(goal.targetAmount || 0)
   const current = Number(goal.currentAmount || 0)
   const remaining = Math.max(0, target - current)
