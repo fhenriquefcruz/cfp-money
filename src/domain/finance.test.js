@@ -138,3 +138,56 @@ test('retirada da poupança reduz o reservado sem virar despesa', () => {
   expect(result.expenses).toBe(250)
   expect(result.balance).toBe(750)
 })
+
+test('MR-006: cálculo principal mantém centavos e separa reservas de consumo', () => {
+  const source = [
+    { type: 'income', amount: '100.10' },
+    { type: 'income', amount: '0.20' },
+    { type: 'expense', amount: '25,15' },
+    { type: 'expense', amount: 0.05 },
+    { type: 'income', isSavings: true, savingsMovement: 'deposit', amount: '0.10' },
+    { type: 'income', isSavings: true, savingsMovement: 'deposit', amount: 0.2 },
+    { type: 'income', isSavings: true, savingsMovement: 'withdrawal', amount: '0.05' },
+    { type: 'income', amount: '500', flowType: 'transfer' },
+  ]
+  const original = structuredClone(source)
+  expect(summarizeTransactions(source)).toEqual({
+    income: 100.3,
+    expenses: 25.2,
+    savings: 0.25,
+    balance: 75.1,
+    count: 7,
+  })
+  expect(source).toEqual(original)
+})
+
+test('MR-006: orçamento converte legado antes da soma e preserva atividade de compra', () => {
+  const actual = calculateBudgetUsage(
+    [
+      { type: 'expense', categoryId: 'food', amount: '0.10', date: '2026-07-02' },
+      { type: 'expense', categoryId: 'food', amount: '0.20', date: '2026-07-03' },
+      {
+        type: 'expense',
+        categoryId: 'food',
+        amount: '0,05',
+        paymentMethod: 'credit_card',
+        isCreditPurchase: true,
+        purchaseDate: '2026-07-04',
+        date: '2026-08-12',
+      },
+      { type: 'expense', categoryId: 'food', amount: 100, date: '2026-07-04', isSavings: true },
+    ],
+    { categoryId: 'food', amount: '1.00' },
+    new Date(2026, 6, 15),
+  )
+  expect(actual).toEqual({ spent: 0.35, percent: 35 })
+})
+
+test('MR-006: montantes corrompidos não são convertidos silenciosamente em zero', () => {
+  expect(() => summarizeTransactions([{ type: 'expense', amount: '1,234' }])).toThrow(
+    'Valor monetário inválido',
+  )
+  expect(() =>
+    calculateBudgetUsage([], { categoryId: 'food', amount: 'R$ 1.234' }),
+  ).toThrow('Valor monetário inválido')
+})
