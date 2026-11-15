@@ -107,6 +107,12 @@ export async function getDocument(env, path) {
   return decodeDocument(await response.json())
 }
 
+export function assertCompleteCollectionPage(count, limit, nextPageToken) {
+  if (nextPageToken && count >= limit) {
+    throw new Error('Limite de leitura do histórico atingido; dados incompletos.')
+  }
+}
+
 export async function listCollection(env, path, { limit = 2000, requireComplete = false } = {}) {
   const items = []
   let pageToken = ''
@@ -133,9 +139,7 @@ export async function listCollection(env, path, { limit = 2000, requireComplete 
     items.push(...(data.documents || []).map(decodeDocument))
 
     if (!data.nextPageToken) break
-    if (items.length >= limit && requireComplete) {
-      throw new Error('Limite de leitura do histórico atingido; dados incompletos.')
-    }
+    if (requireComplete) assertCompleteCollectionPage(items.length, limit, data.nextPageToken)
     pageToken = data.nextPageToken
   }
 
