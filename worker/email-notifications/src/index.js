@@ -1,5 +1,6 @@
 import {
   goalAlertCandidates,
+  effectiveGoalForNotifications,
   isPremiumUser,
   isReportDue,
   localParts,
@@ -253,10 +254,25 @@ async function collectGoalAlerts({ env, user, settings, now, local }) {
   }
 
   const goals = await listCollection(env, `users/${user.id}/goals`, { limit: 500 })
+  if (!goals.length) return []
+
+  let transactions
+  try {
+    // A partial history can report a fictitious goal balance. Never send such alerts.
+    transactions = await listCollection(env, `users/${user.id}/transactions`, {
+      limit: 10000,
+      requireComplete: true,
+    })
+  } catch {
+    console.warn('Alertas de metas suspensos: histórico financeiro indisponível ou incompleto.')
+    return []
+  }
+
   const pending = []
 
   for (const goal of goals) {
-    const candidates = goalAlertCandidates(goal, now).filter((candidate) => {
+    const effectiveGoal = effectiveGoalForNotifications(goal, transactions)
+    const candidates = goalAlertCandidates(effectiveGoal, now).filter((candidate) => {
       if (candidate.startsWith('progress-')) {
         const threshold = Number(candidate.split('-').pop())
         return (settings.goalProgressThresholds || []).includes(threshold)
@@ -279,7 +295,7 @@ async function collectGoalAlerts({ env, user, settings, now, local }) {
       pending.push({
         key: `goal:${goal.id}:${candidate}`,
         deliveryKey,
-        ...goalAlertMessage(goal, candidate),
+        ...goalAlertMessage(effectiveGoal, candidate),
       })
     }
   }
