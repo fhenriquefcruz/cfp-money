@@ -221,7 +221,9 @@ export default function InvoiceLifecycleModal({
         }),
       )
     } catch (submitError) {
-      setError((current) => current || submitError?.message || 'Não foi possível registrar o evento.')
+      setError(
+        (current) => current || submitError?.message || 'Não foi possível registrar o evento.',
+      )
     }
   }
 
@@ -238,7 +240,9 @@ export default function InvoiceLifecycleModal({
         }),
       )
     } catch (submitError) {
-      setError((current) => current || submitError?.message || 'Não foi possível registrar o evento.')
+      setError(
+        (current) => current || submitError?.message || 'Não foi possível registrar o evento.',
+      )
     }
   }
 
@@ -255,7 +259,9 @@ export default function InvoiceLifecycleModal({
         }),
       )
     } catch (submitError) {
-      setError((current) => current || submitError?.message || 'Não foi possível registrar o evento.')
+      setError(
+        (current) => current || submitError?.message || 'Não foi possível registrar o evento.',
+      )
     }
   }
 
