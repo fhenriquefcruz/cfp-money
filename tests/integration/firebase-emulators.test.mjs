@@ -228,13 +228,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
       notes: '',
       operationId: '8f902547-8019-4f77-a202-86aba6d378ed',
     }
-    const eventReference = doc(
-      database,
-      'users',
-      uid,
-      'invoiceEvents',
-      `op_${event.operationId}`,
-    )
+    const eventReference = doc(database, 'users', uid, 'invoiceEvents', `op_${event.operationId}`)
     const firstWrite = await writeInvoiceEventOnce(database, uid, event)
     const repeatedWrite = await writeInvoiceEventOnce(database, uid, event)
     assert.equal(firstWrite.replayed, false)
@@ -252,10 +246,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
       writeInvoiceEventOnce(database, uid, parallelEvent),
     ])
     assert.equal(concurrentFirst.id, concurrentSecond.id)
-    assert.equal(
-      [concurrentFirst.replayed, concurrentSecond.replayed].filter(Boolean).length,
-      1,
-    )
+    assert.equal([concurrentFirst.replayed, concurrentSecond.replayed].filter(Boolean).length, 1)
     assert.equal(
       (await getDoc(doc(database, 'users', uid, 'invoiceEvents', concurrentFirst.id))).data()
         .amount,
