@@ -84,7 +84,7 @@ export function validateInvoiceEventOperation(event) {
     if (
       !validCents(event.signedAmount, true) ||
       !['charge', 'credit'].includes(event.direction) ||
-      (event.direction === 'credit') !== (event.signedAmount < 0) ||
+      (event.direction === 'credit') !== event.signedAmount < 0 ||
       !String(event.notes || '').trim()
     ) {
       invalidOperation()
