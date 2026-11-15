@@ -148,7 +148,7 @@ export function reportRange(frequency, now = new Date()) {
   return { start, end }
 }
 
-const ISO_FINANCIAL_DATE = /^\\d{4}-\\d{2}-\\d{2}$/
+const ISO_FINANCIAL_DATE = /^\d{4}-\d{2}-\d{2}$/
 
 function inReportRange(transaction, range) {
   if (!isFinanciallyEffectiveTransaction(transaction)) return false
