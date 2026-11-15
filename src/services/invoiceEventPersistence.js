@@ -1,14 +1,13 @@
 import { doc, runTransaction, serverTimestamp } from 'firebase/firestore'
-import {
-  sameInvoiceEventIntent,
-  validateInvoiceEventOperation,
-} from '../domain/invoiceEventIdempotency.js'
 
 export async function persistInvoiceEventOperation(database, uid, event) {
   if (typeof uid !== 'string' || !uid.trim() || uid.includes('/')) {
     throw new Error('Usuário não autenticado.')
   }
 
+  const { sameInvoiceEventIntent, validateInvoiceEventOperation } = await import(
+    '../domain/invoiceEventIdempotency.js'
+  )
   const { documentId, payload } = validateInvoiceEventOperation(event)
   const reference = doc(database, 'users', uid, 'invoiceEvents', documentId)
 
