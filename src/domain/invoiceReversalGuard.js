@@ -1,4 +1,4 @@
-import { invoiceEventToCents } from './invoiceEventIdempotency'
+import { invoiceEventToCents } from './invoiceEventIdempotency.js'
 
 /**
  * A reversão atual da interface é integral sobre o saldo reversível.
