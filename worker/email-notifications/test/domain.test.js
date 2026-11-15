@@ -225,8 +225,20 @@ test('alertas de metas utilizam saldo inicial e aportes menos retiradas vinculad
     deadline: '2026-11-30',
   }
   const transactions = [
-    { id: 'deposit', goalId: goal.id, isSavings: true, amount: '650.20', savingsMovement: 'deposit' },
-    { id: 'withdrawal', goalId: goal.id, isSavings: true, amount: '150.10', savingsMovement: 'withdrawal' },
+    {
+      id: 'deposit',
+      goalId: goal.id,
+      isSavings: true,
+      amount: '650.20',
+      savingsMovement: 'deposit',
+    },
+    {
+      id: 'withdrawal',
+      goalId: goal.id,
+      isSavings: true,
+      amount: '150.10',
+      savingsMovement: 'withdrawal',
+    },
     { id: 'cancelled', goalId: goal.id, isSavings: true, amount: 800, paymentStatus: 'cancelled' },
     { id: 'transfer', goalId: goal.id, isSavings: true, amount: 500, flowType: 'transfer' },
     { id: 'other-goal', goalId: 'another-goal', isSavings: true, amount: 700 },
@@ -237,10 +249,10 @@ test('alertas de metas utilizam saldo inicial e aportes menos retiradas vinculad
   assert.equal(effective.currentAmount, getGoalEffectiveCurrent(goal, transactions))
   assert.equal(Math.round(effective.currentAmount * 100), 250010)
   assert.equal(Math.round((goal.targetAmount - effective.currentAmount) * 100), 49990)
-  assert.deepEqual(
-    goalAlertCandidates(effective, new Date('2026-11-15T12:00:00Z')),
-    ['progress-80', 'deadline-30'],
-  )
+  assert.deepEqual(goalAlertCandidates(effective, new Date('2026-11-15T12:00:00Z')), [
+    'progress-80',
+    'deadline-30',
+  ])
   assert.deepEqual(goal, original)
 })
 
@@ -252,11 +264,14 @@ test('retiradas válidas impedem falso alerta de meta concluída', () => {
   ]
   const effective = effectiveGoalForNotifications(goal, transactions)
   assert.equal(effective.currentAmount, 850)
-  assert.deepEqual(
-    goalAlertCandidates(effective, new Date('2026-11-15T12:00:00Z')),
-    ['progress-80', 'deadline-7'],
+  assert.deepEqual(goalAlertCandidates(effective, new Date('2026-11-15T12:00:00Z')), [
+    'progress-80',
+    'deadline-7',
+  ])
+  assert.equal(
+    goalAlertCandidates(effective, new Date('2026-11-18T12:00:00Z')).includes('progress-100'),
+    false,
   )
-  assert.equal(goalAlertCandidates(effective, new Date('2026-11-18T12:00:00Z')).includes('progress-100'), false)
 })
 
 test('saldo legado não é somado duas vezes sem movimentação vinculada', () => {
