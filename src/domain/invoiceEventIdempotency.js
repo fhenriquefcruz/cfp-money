@@ -90,8 +90,13 @@ export function prepareInvoiceEventOperation(event = {}) {
     if (event[field] !== undefined) data[field] = event[field]
   }
 
+  // Um pagamento pode ser liquidado em parcelas independentes. Já o
+  // estorno integral do saldo disponível deve ser único por pagamento,
+  // inclusive se duas abas gerarem UUIDs de tentativa diferentes.
+  const id = event.type === 'reversal' ? `rev_${event.reversesEventId}` : `op_${operationId}`
+
   return {
-    id: `op_${operationId}`,
+    id,
     data,
   }
 }
