@@ -187,7 +187,7 @@ test('MR-006: montantes corrompidos não são convertidos silenciosamente em zer
   expect(() => summarizeTransactions([{ type: 'expense', amount: '1,234' }])).toThrow(
     'Valor monetário inválido',
   )
-  expect(() =>
-    calculateBudgetUsage([], { categoryId: 'food', amount: 'R$ 1.234' }),
-  ).toThrow('Valor monetário inválido')
+  expect(() => calculateBudgetUsage([], { categoryId: 'food', amount: 'R$ 1.234' })).toThrow(
+    'Valor monetário inválido',
+  )
 })
