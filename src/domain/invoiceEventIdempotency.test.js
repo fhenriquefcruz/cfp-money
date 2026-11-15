@@ -175,12 +175,8 @@ test('MR-003: histórico inválido ou acima do pagamento exige revisão e não g
     'Valor monetário inválido',
   )
   expect(() => verify([{ ...legacy, amount: -0.01 }])).toThrow('inválido')
-  expect(() => verify([{ ...legacy, invoiceKey: 'other:2026-11' }])).toThrow(
-    'fatura incorreta',
-  )
+  expect(() => verify([{ ...legacy, invoiceKey: 'other:2026-11' }])).toThrow('fatura incorreta')
   expect(() => verify([{ ...legacy, type: 'adjustment' }])).toThrow('inconsistente')
-  expect(() => verify([legacy], { ...original, cardId: 'other-card' })).toThrow(
-    'incompatível',
-  )
+  expect(() => verify([legacy], { ...original, cardId: 'other-card' })).toThrow('incompatível')
   expect(() => verify([legacy, { ...legacy, amount: 150 }])).toThrow('ultrapassa')
 })
