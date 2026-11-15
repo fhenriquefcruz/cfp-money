@@ -1,7 +1,7 @@
 import {
   collection,
   doc,
-  getDocsFromServer,
+  getDocs,
   query,
   runTransaction,
   serverTimestamp,
@@ -14,9 +14,11 @@ import {
 } from '../domain/invoiceEventIdempotency.js'
 
 /**
- * Novos pagamentos, ajustes e fechamentos usam a mesma identidade estável.
- * O módulo de estorno, que precisa de consultas e trava adicional, só carrega
- * quando há estorno, preservando o orçamento de JavaScript inicial.
+ * Grava uma única vez a mesma operação, inclusive sob retries simultâneos.
+ * A transação compara payload imutável antes de aceitar um replay.
+ *
+ * Não interpreta pagamentos de tentativas com IDs diferentes como duplicatas:
+ * pagamentos parciais legítimos devem continuar possíveis.
  */
 export async function writeInvoiceEventOnce(database, uid, event) {
   if (typeof uid !== 'string' || !uid.trim()) {
@@ -24,14 +26,36 @@ export async function writeInvoiceEventOnce(database, uid, event) {
   }
 
   const operation = prepareInvoiceEventOperation(event)
-  if (operation.data.type === 'reversal') {
-    return writeReversalOnce(database, uid, operation)
-  }
-
   const reference = doc(database, 'users', uid, 'invoiceEvents', operation.id)
+  const isReversal = operation.data.type === 'reversal'
+  const originalPaymentId = operation.data.reversesEventId
+
+  // A leitura obrigatoriamente vai ao servidor para reconhecer estornos legados.
+  // Após a ativação das novas Rules, não podem surgir eventos novos sem trava.
+  const priorReversals = isReversal
+    ? await getDocs(
+        query(
+          collection(database, 'users', uid, 'invoiceEvents'),
+          where('reversesEventId', '==', originalPaymentId),
+        ),
+      )
+    : null
+  if (priorReversals?.metadata?.fromCache) {
+    throw new Error('Histórico de estornos indisponível no servidor. Tente novamente online.')
+  }
+  const historicalEvents = priorReversals
+    ? priorReversals.docs.map((snapshot) => ({ id: snapshot.id, ...snapshot.data() }))
+    : []
+
+  const paymentRef = isReversal
+    ? doc(database, 'users', uid, 'invoiceEvents', originalPaymentId)
+    : null
+  const guardRef = isReversal
+    ? doc(database, 'users', uid, 'invoiceReversalLocks', originalPaymentId)
+    : null
+
   return runTransaction(database, async (transaction) => {
     const existing = await transaction.get(reference)
-
     if (existing.exists()) {
       if (!sameInvoiceOperation(existing.data(), operation.data)) {
         throw new Error('Este identificador já foi utilizado para um evento diferente.')
@@ -39,60 +63,38 @@ export async function writeInvoiceEventOnce(database, uid, event) {
       return { id: reference.id, replayed: true }
     }
 
+    let reversalValidation = null
+    if (isReversal) {
+      // Todas as leituras precedem as escritas; concorrentes disputam a mesma
+      // trava por pagamento, inclusive usando IDs de operação diferentes.
+      const paymentSnapshot = await transaction.get(paymentRef)
+      const lockSnapshot = await transaction.get(guardRef)
+      if (lockSnapshot.exists()) {
+        throw new Error('Este pagamento já teve um estorno registrado. Revise o histórico.')
+      }
+      reversalValidation = validateInvoiceReversalBalance(
+        paymentSnapshot.exists()
+          ? { ...paymentSnapshot.data(), id: paymentSnapshot.id }
+          : null,
+        operation.data,
+        historicalEvents,
+      )
+    }
+
     transaction.set(reference, {
       ...operation.data,
       createdAt: serverTimestamp(),
     })
 
-    return { id: reference.id, replayed: false }
-  })
-}
-
-async function writeReversalOnce(database, uid, operation) {
-  const event = operation.data
-  const originalPaymentId = event.reversesEventId
-  const reference = doc(database, 'users', uid, 'invoiceEvents', operation.id)
-  const paymentRef = doc(database, 'users', uid, 'invoiceEvents', originalPaymentId)
-  const guardRef = doc(database, 'users', uid, 'invoiceReversalLocks', originalPaymentId)
-
-  // O histórico anterior às travas precisa vir do servidor, não do cache offline.
-  const prior = await getDocsFromServer(
-    query(
-      collection(database, 'users', uid, 'invoiceEvents'),
-      where('reversesEventId', '==', originalPaymentId),
-    ),
-  )
-  const history = prior.docs.map((snapshot) => ({ id: snapshot.id, ...snapshot.data() }))
-
-  return runTransaction(database, async (transaction) => {
-    const existing = await transaction.get(reference)
-    if (existing.exists()) {
-      if (!sameInvoiceOperation(existing.data(), event)) {
-        throw new Error('Este identificador já foi utilizado para um evento diferente.')
-      }
-      return { id: reference.id, replayed: true }
+    if (isReversal) {
+      transaction.set(guardRef, {
+        paymentId: originalPaymentId,
+        reversalEventId: reference.id,
+        invoiceKey: operation.data.invoiceKey,
+        amountCents: reversalValidation.requestedCents,
+        createdAt: serverTimestamp(),
+      })
     }
-
-    const paymentSnapshot = await transaction.get(paymentRef)
-    const lockSnapshot = await transaction.get(guardRef)
-    if (lockSnapshot.exists()) {
-      throw new Error('Este pagamento já teve um estorno registrado. Revise o histórico.')
-    }
-
-    const amount = validateInvoiceReversalBalance(
-      paymentSnapshot.exists() ? { ...paymentSnapshot.data(), id: paymentSnapshot.id } : null,
-      event,
-      history,
-    )
-
-    transaction.set(reference, { ...event, createdAt: serverTimestamp() })
-    transaction.set(guardRef, {
-      paymentId: originalPaymentId,
-      reversalEventId: reference.id,
-      invoiceKey: event.invoiceKey,
-      amountCents: amount.requestedCents,
-      createdAt: serverTimestamp(),
-    })
 
     return { id: reference.id, replayed: false }
   })
