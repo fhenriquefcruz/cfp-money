@@ -1,7 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { summarizeTransactions as summarizeCanonicalTransactions } from '../../../src/domain/finance.js'
+import { getGoalEffectiveCurrent } from '../../../src/domain/savings.js'
 import {
+  effectiveGoalForNotifications,
   goalAlertCandidates,
   highestBudgetAlert,
   isPremiumUser,
@@ -212,4 +214,56 @@ test('Worker respeita data de atividade, vencimento legado e limite dos período
   assert.equal(report.balance, 0)
   assert.equal(report.count, 3)
   assert.deepEqual(report.topCategories, [{ name: 'Alimentação', amount: 2.03 }])
+})
+
+test('alertas de metas utilizam saldo inicial e aportes menos retiradas vinculadas', () => {
+  const goal = {
+    id: 'goal-emergency',
+    name: 'Reserva de emergência',
+    targetAmount: 3000,
+    currentAmount: 2000,
+    deadline: '2026-11-30',
+  }
+  const transactions = [
+    { id: 'deposit', goalId: goal.id, isSavings: true, amount: '650.20', savingsMovement: 'deposit' },
+    { id: 'withdrawal', goalId: goal.id, isSavings: true, amount: '150.10', savingsMovement: 'withdrawal' },
+    { id: 'cancelled', goalId: goal.id, isSavings: true, amount: 800, paymentStatus: 'cancelled' },
+    { id: 'transfer', goalId: goal.id, isSavings: true, amount: 500, flowType: 'transfer' },
+    { id: 'other-goal', goalId: 'another-goal', isSavings: true, amount: 700 },
+    { id: 'wrong-kind', goalId: goal.id, type: 'expense', amount: 100, isSavings: false },
+  ]
+  const original = structuredClone(goal)
+  const effective = effectiveGoalForNotifications(goal, transactions)
+  assert.equal(effective.currentAmount, getGoalEffectiveCurrent(goal, transactions))
+  assert.equal(Math.round(effective.currentAmount * 100), 250010)
+  assert.equal(Math.round((goal.targetAmount - effective.currentAmount) * 100), 49990)
+  assert.deepEqual(
+    goalAlertCandidates(effective, new Date('2026-11-15T12:00:00Z')),
+    ['progress-80', 'deadline-30'],
+  )
+  assert.deepEqual(goal, original)
+})
+
+test('retiradas válidas impedem falso alerta de meta concluída', () => {
+  const goal = { id: 'goal-travel', currentAmount: 900, targetAmount: 1000, deadline: '2026-11-17' }
+  const transactions = [
+    { goalId: goal.id, isSavings: true, amount: 200, savingsMovement: 'deposit' },
+    { goalId: goal.id, isSavings: true, amount: 250, savingsMovement: 'withdrawal' },
+  ]
+  const effective = effectiveGoalForNotifications(goal, transactions)
+  assert.equal(effective.currentAmount, 850)
+  assert.deepEqual(
+    goalAlertCandidates(effective, new Date('2026-11-15T12:00:00Z')),
+    ['progress-80', 'deadline-7'],
+  )
+  assert.equal(goalAlertCandidates(effective, new Date('2026-11-18T12:00:00Z')).includes('progress-100'), false)
+})
+
+test('saldo legado não é somado duas vezes sem movimentação vinculada', () => {
+  const goal = { id: 'goal-legacy', targetAmount: 5000, currentAmount: 3000 }
+  assert.equal(effectiveGoalForNotifications(goal, []).currentAmount, 3000)
+  assert.deepEqual(
+    goalAlertCandidates(effectiveGoalForNotifications(goal, []), new Date('2026-11-15T12:00:00Z')),
+    [],
+  )
 })
