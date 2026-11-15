@@ -24,7 +24,11 @@ export async function writeInvoiceEventOnce(database, uid, event) {
 
     if (existing.exists()) {
       if (!sameInvoiceOperation(existing.data(), operation.data)) {
-        throw new Error('Este identificador já foi utilizado para um evento diferente.')
+        throw new Error(
+          event.type === 'reversal'
+            ? 'Este pagamento já possui um estorno registrado. Confira o histórico antes de tentar novamente.'
+            : 'Este identificador já foi utilizado para um evento diferente.',
+        )
       }
       return { id: reference.id, replayed: true }
     }
