@@ -61,105 +61,89 @@ export function invoiceDatesForMonth(monthKey, rawCard = {}) {
   }
 }
 
-// Datas históricas são fatos salvos nas compras, nunca inferências das condições
-// atuais do cartão. Sem evidência suficiente, a UI não deve afirmar vencimento.
+// Compras capturam as datas e os dias do cartão na época. A configuração
+// atual não substitui evidência ausente ou divergente do histórico.
 function recordedDay(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return ''
-  const date = new Date(`${value}T12:00:00.000Z`)
+  const date = new Date(`${value}T12:00:00Z`)
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value ? value : ''
 }
 
 function recordedCardDay(value) {
   const day = Number(value)
-  return Number.isInteger(day) && day >= 1 && day <= 31 ? day : null
+  return Number.isInteger(day) && day >= 1 && day <= 31 ? day : 0
 }
 
-const UNKNOWN_INVOICE_DATES = { closingDate: '', dueDate: '', source: 'unknown' }
-const CONFLICTING_INVOICE_DATES = { closingDate: '', dueDate: '', source: 'conflict' }
-
-export function resolveInvoiceDatesForMonth(
-  monthKey,
-  rawCard = {},
-  purchases = [],
-  now = new Date(),
-) {
-  if (!purchases.length) {
+export function resolveInvoiceDatesForMonth(monthKey, card = {}, items = [], now = new Date()) {
+  const blank = (source) => ({ closingDate: '', dueDate: '', source })
+  if (!items.length) {
     return monthKey < monthKeyFromDate(now)
-      ? { ...UNKNOWN_INVOICE_DATES }
-      : { ...invoiceDatesForMonth(monthKey, rawCard), source: 'estimated' }
+      ? blank('unknown')
+      : { ...invoiceDatesForMonth(monthKey, card), source: 'estimated' }
   }
 
-  let closingDate = ''
-  let dueDate = ''
-  let incomplete = false
+  const dates = { closingDate: '', dueDate: '' }
+  let partial = false
 
-  for (const purchase of purchases) {
-    const rawClosing = purchase.invoiceClosingDate
-    const rawDue = purchase.dueDate
-    const recordedClosing = recordedDay(rawClosing)
-    const recordedDue = recordedDay(rawDue)
-
+  for (const item of items) {
+    let closing = recordedDay(item.invoiceClosingDate)
+    let due = recordedDay(item.dueDate)
     if (
-      (rawClosing && !recordedClosing) ||
-      (rawDue && !recordedDue) ||
-      (recordedDue && recordedDue.slice(0, 7) !== monthKey) ||
-      (recordedClosing && recordedDue && recordedClosing >= recordedDue)
+      (item.invoiceClosingDate && !closing) ||
+      (item.dueDate && !due) ||
+      (due && due.slice(0, 7) !== monthKey) ||
+      (closing && due && closing >= due)
     ) {
-      return { ...CONFLICTING_INVOICE_DATES }
+      return blank('conflict')
     }
 
-    let itemClosing = recordedClosing
-    let itemDue = recordedDue
-    const closingDay = recordedCardDay(purchase.cardClosingDay)
-    const dueDay = recordedCardDay(purchase.cardDueDay)
-
-    if ((!itemClosing || !itemDue) && closingDay && dueDay) {
-      const captured = invoiceDatesForMonth(monthKey, { closingDay, dueDay })
-      if (
-        (itemClosing && itemClosing !== captured.closingDate) ||
-        (itemDue && itemDue !== captured.dueDate)
-      ) {
-        return { ...CONFLICTING_INVOICE_DATES }
+    if (!closing || !due) {
+      const closingDay = recordedCardDay(item.cardClosingDay)
+      const dueDay = recordedCardDay(item.cardDueDay)
+      if (closingDay && dueDay) {
+        const stored = invoiceDatesForMonth(monthKey, { closingDay, dueDay })
+        if (
+          (closing && closing !== stored.closingDate) ||
+          (due && due !== stored.dueDate)
+        ) {
+          return blank('conflict')
+        }
+        closing = stored.closingDate
+        due = stored.dueDate
       }
-      itemClosing = captured.closingDate
-      itemDue = captured.dueDate
     }
 
-    if (!itemClosing || !itemDue) incomplete = true
+    if (!closing || !due) partial = true
     if (
-      (itemClosing && closingDate && itemClosing !== closingDate) ||
-      (itemDue && dueDate && itemDue !== dueDate)
+      (closing && dates.closingDate && dates.closingDate !== closing) ||
+      (due && dates.dueDate && dates.dueDate !== due)
     ) {
-      return { ...CONFLICTING_INVOICE_DATES }
+      return blank('conflict')
     }
-
-    if (itemClosing) closingDate = itemClosing
-    if (itemDue) dueDate = itemDue
+    dates.closingDate ||= closing
+    dates.dueDate ||= due
   }
-
-  if (!closingDate && !dueDate) return { ...UNKNOWN_INVOICE_DATES }
 
   return {
-    closingDate,
-    dueDate,
-    source: incomplete ? 'partial' : 'snapshot',
+    ...dates,
+    source: !dates.closingDate && !dates.dueDate ? 'unknown' : partial ? 'partial' : 'snapshot',
   }
 }
 
-function invoiceStatusFromDates(monthKey, dates, now = new Date()) {
-  const currentMonth = monthKeyFromDate(now)
+export function invoiceStatus(
+  monthKey,
+  card,
+  now = new Date(),
+  dates = invoiceDatesForMonth(monthKey, card),
+) {
   const today = [now.getFullYear(), pad(now.getMonth() + 1), pad(now.getDate())].join('-')
 
   if (!dates.dueDate && !dates.closingDate) return 'unknown'
-  if (monthKey > currentMonth) return 'future'
+  if (monthKey > monthKeyFromDate(now)) return 'future'
   if (dates.dueDate && dates.dueDate < today) return 'past_due'
   if (dates.dueDate === today) return 'due_today'
   if (dates.closingDate && dates.closingDate < today) return 'closed'
   return dates.closingDate ? 'forming' : 'unknown'
-}
-
-export function invoiceStatus(monthKey, card, now = new Date()) {
-  return invoiceStatusFromDates(monthKey, invoiceDatesForMonth(monthKey, card), now)
 }
 
 export function isStructuredCreditTransaction(transaction = {}) {
@@ -388,9 +372,7 @@ export function buildCreditCardCenter({
             (transaction) => transaction.paymentStatus === 'paid' || transaction.isPaid === true,
           ),
         )
-    const temporalStatus = items.length
-      ? invoiceStatusFromDates(selectedMonth, dates, now)
-      : 'empty'
+    const temporalStatus = items.length ? invoiceStatus(selectedMonth, card, now, dates) : 'empty'
     const lifecycle = buildInvoiceLifecycle({
       purchaseTotal,
       baselinePaidAmount: transactionPaidTotal,
