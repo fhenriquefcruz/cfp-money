@@ -76,6 +76,7 @@ test('MR-003: estorno e ajuste preservam ligações e os sinais monetários', ()
     amount: undefined,
   })
 
+  expect(reversal.id).toBe('rev_pay-1')
   expect(reversal.data.reversesEventId).toBe('pay-1')
   expect(adjustment.data.signedAmount).toBe(-20.05)
   expect(() =>
@@ -86,3 +87,29 @@ test('MR-003: estorno e ajuste preservam ligações e os sinais monetários', ()
     }),
   ).toThrow('referenciar um pagamento')
 })
+
+test('MR-003: diferentes UUIDs não geram diferentes documentos para estornar o mesmo pagamento', () => {
+  const first = prepareInvoiceEventOperation({
+    ...payment,
+    type: 'reversal',
+    reversesEventId: 'op_a4d5072f-9bd7-4ca9-9129-9d2a621ed918',
+  })
+  const second = prepareInvoiceEventOperation({
+    ...payment,
+    type: 'reversal',
+    operationId: '189dd740-6703-4c79-b889-3daecf2f3b7b',
+    reversesEventId: 'op_a4d5072f-9bd7-4ca9-9129-9d2a621ed918',
+  })
+
+  expect(first.id).toBe('rev_op_a4d5072f-9bd7-4ca9-9129-9d2a621ed918')
+  expect(second.id).toBe(first.id)
+  expect(sameInvoiceOperation(first.data, second.data)).toBe(false)
+
+  // Pagamentos parciais legítimos preservam IDs independentes.
+  const independentPayment = prepareInvoiceEventOperation({
+    ...payment,
+    operationId: '189dd740-6703-4c79-b889-3daecf2f3b7b',
+  })
+  expect(independentPayment.id).not.toBe(prepareInvoiceEventOperation(payment).id)
+})
+
