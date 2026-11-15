@@ -3,6 +3,10 @@ const OPERATION_ID = /^[A-Za-z0-9_-]{16,80}$/
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 const TYPES = new Set(['payment', 'reversal', 'adjustment', 'manual_close'])
+function invalidOperation() {
+  throw new Error('Evento de fatura inválido. Confira os dados.')
+}
+
 function validDay(value) {
   if (typeof value !== 'string' || !DAY.test(value)) return false
   const date = new Date(`${value}T00:00:00.000Z`)
@@ -38,11 +42,11 @@ export function invoiceEventIntentSignature(event = {}) {
 
 export function validateInvoiceEventOperation(event) {
   if (!event || typeof event !== 'object' || Array.isArray(event)) {
-    throw new Error('Evento financeiro inválido.')
+    invalidOperation()
   }
   const { operationId, cardId, invoiceMonth, invoiceKey, type, eventDate } = event
   if (typeof operationId !== 'string' || !OPERATION_ID.test(operationId)) {
-    throw new Error('Identidade de operação inválida.')
+    invalidOperation()
   }
   if (
     'createdAt' in event ||
@@ -56,7 +60,7 @@ export function validateInvoiceEventOperation(event) {
     !TYPES.has(type) ||
     !validDay(eventDate)
   ) {
-    throw new Error('Dados da fatura inválidos para registro.')
+    invalidOperation()
   }
 
   if (type === 'payment') {
@@ -65,7 +69,7 @@ export function validateInvoiceEventOperation(event) {
       event.paymentDate !== eventDate ||
       typeof event.sourceAccount !== 'string'
     ) {
-      throw new Error('Valor, conta ou data do pagamento inválidos.')
+      invalidOperation()
     }
   } else if (type === 'reversal') {
     if (
@@ -73,7 +77,7 @@ export function validateInvoiceEventOperation(event) {
       typeof event.reversesEventId !== 'string' ||
       !event.reversesEventId.trim()
     ) {
-      throw new Error('Estorno sem pagamento válido de origem.')
+      invalidOperation()
     }
   } else if (type === 'adjustment') {
     if (
@@ -82,17 +86,8 @@ export function validateInvoiceEventOperation(event) {
       (event.direction === 'credit') !== (event.signedAmount < 0) ||
       !String(event.notes || '').trim()
     ) {
-      throw new Error('Ajuste sem valor ou justificativa válida.')
+      invalidOperation()
     }
-  }
-
-  if (
-    (event.notes !== undefined && typeof event.notes !== 'string') ||
-    (event.cardName !== undefined && typeof event.cardName !== 'string') ||
-    (event.sourceAccount !== undefined && typeof event.sourceAccount !== 'string') ||
-    (typeof event.notes === 'string' && event.notes.length > 2000)
-  ) {
-    throw new Error('Campos descritivos inválidos.')
   }
 
   return { documentId: `op_${operationId}`, payload: { ...event } }
