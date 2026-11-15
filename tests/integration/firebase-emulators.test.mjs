@@ -247,11 +247,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
         disableWarnings: true,
       })
       connectFirestoreEmulator(secondDatabase, firestoreAddress.host, firestoreAddress.port)
-      await signInWithEmailAndPassword(
-        secondAuth,
-        'integration-user@example.com',
-        TEST_PASSWORD,
-      )
+      await signInWithEmailAndPassword(secondAuth, 'integration-user@example.com', TEST_PASSWORD)
 
       const ids = await Promise.all([
         persistInvoiceEventOperation(database, uid, invoicePayment),
@@ -261,16 +257,11 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
 
       const existingReference = doc(database, 'users', uid, 'invoiceEvents', ids[0])
       const originalCreatedAt = (await getDoc(existingReference)).data().createdAt.toMillis()
-      assert.equal(
-        await persistInvoiceEventOperation(database, uid, invoicePayment),
-        ids[0],
-      )
-      assert.equal(
-        (await getDoc(existingReference)).data().createdAt.toMillis(),
-        originalCreatedAt,
-      )
+      assert.equal(await persistInvoiceEventOperation(database, uid, invoicePayment), ids[0])
+      assert.equal((await getDoc(existingReference)).data().createdAt.toMillis(), originalCreatedAt)
       await assert.rejects(
-        () => persistInvoiceEventOperation(secondDatabase, uid, { ...invoicePayment, amount: 150.26 }),
+        () =>
+          persistInvoiceEventOperation(secondDatabase, uid, { ...invoicePayment, amount: 150.26 }),
         /outros dados/,
       )
 
