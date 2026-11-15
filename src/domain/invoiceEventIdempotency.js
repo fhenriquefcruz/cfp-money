@@ -3,6 +3,7 @@ const OPERATION_ID = /^[A-Za-z0-9_-]{16,80}$/
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 const TYPES = new Set(['payment', 'reversal', 'adjustment', 'manual_close'])
+
 function invalidOperation() {
   throw new Error('Evento de fatura inválido. Confira os dados.')
 }
