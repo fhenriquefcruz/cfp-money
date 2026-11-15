@@ -64,7 +64,7 @@ export function invoiceDatesForMonth(monthKey, rawCard = {}) {
 // Datas históricas são fatos salvos nas compras, nunca inferências das condições
 // atuais do cartão. Sem evidência suficiente, a UI não deve afirmar vencimento.
 function recordedDay(value) {
-  if (typeof value !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return ''
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return ''
   const date = new Date(`${value}T12:00:00.000Z`)
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
     ? value
@@ -162,6 +162,7 @@ function invoiceStatusFromDates(monthKey, dates, now = new Date()) {
 
 export function invoiceStatus(monthKey, card, now = new Date()) {
   return invoiceStatusFromDates(monthKey, invoiceDatesForMonth(monthKey, card), now)
+}
 
 export function isStructuredCreditTransaction(transaction = {}) {
   return Boolean(
