@@ -275,7 +275,10 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
       )
       const events = await getDocs(collection(database, 'users', uid, 'invoiceEvents'))
       assert.equal(events.size, 2)
-      assert.equal(events.docs.reduce((sum, event) => sum + event.data().amount, 0), 300.5)
+      assert.equal(
+        events.docs.reduce((sum, event) => sum + event.data().amount, 0),
+        300.5,
+      )
       await assert.rejects(
         () => getDoc(doc(secondDatabase, 'users', 'another-user', 'invoiceEvents', ids[0])),
         (error) => error?.code === 'permission-denied',
