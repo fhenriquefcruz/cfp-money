@@ -3,24 +3,6 @@ const OPERATION_ID = /^[A-Za-z0-9_-]{16,80}$/
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 const TYPES = new Set(['payment', 'reversal', 'adjustment', 'manual_close'])
-const FIELDS = new Set([
-  'operationId',
-  'type',
-  'invoiceKey',
-  'cardId',
-  'cardName',
-  'cardLast4',
-  'invoiceMonth',
-  'eventDate',
-  'notes',
-  'amount',
-  'paymentDate',
-  'sourceAccount',
-  'direction',
-  'signedAmount',
-  'reversesEventId',
-])
-
 function validDay(value) {
   if (typeof value !== 'string' || !DAY.test(value)) return false
   const date = new Date(`${value}T00:00:00.000Z`)
@@ -63,7 +45,8 @@ export function validateInvoiceEventOperation(event) {
     throw new Error('Identidade de operação inválida.')
   }
   if (
-    Object.keys(event).some((key) => !FIELDS.has(key)) ||
+    'createdAt' in event ||
+    'id' in event ||
     typeof cardId !== 'string' ||
     !cardId.trim() ||
     cardId.includes('/') ||
