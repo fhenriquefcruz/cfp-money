@@ -575,3 +575,51 @@ test('conciliação de cartão respeita titularidade e restaura dados sem duplic
   assert.equal(restored.cardId, undefined)
   assert.equal(restored.cardReconciliation, undefined)
 })
+
+test('evento de fatura com identidade de operação é imutável e isolado por UID', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const operationId = 'payment-operation-2026-11-0001'
+  const path = ['users', 'alice', 'invoiceEvents', `op_${operationId}`]
+  const reference = doc(alice, ...path)
+  const data = {
+    operationId,
+    type: 'payment',
+    cardId: 'card-1',
+    cardName: 'Cartão',
+    cardLast4: '1234',
+    invoiceMonth: '2026-11',
+    invoiceKey: 'card-1:2026-11',
+    eventDate: '2026-11-15',
+    paymentDate: '2026-11-15',
+    amount: 150.25,
+    sourceAccount: 'Banco',
+    notes: '',
+    createdAt: serverTimestamp(),
+  }
+
+  await assertSucceeds(setDoc(reference, data))
+  await assertSucceeds(getDoc(reference))
+  await assertFails(getDoc(doc(bob, ...path)))
+  await assertFails(setDoc(doc(bob, ...path), data))
+  await assertFails(updateDoc(reference, { amount: 300 }))
+  await assertFails(deleteDoc(reference))
+
+  await assertFails(
+    setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'op_wrong-operation-0001'), data),
+  )
+  await assertFails(
+    setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'op_bad-payment-000001'), {
+      ...data,
+      operationId: 'bad-payment-000001',
+      amount: -1,
+    }),
+  )
+
+  // IDs antigos continuam acessíveis sem migração ou reescrita de histórico.
+  const legacy = doc(alice, 'users', 'alice', 'invoiceEvents', 'legacy-event-1')
+  await assertSucceeds(
+    setDoc(legacy, { type: 'payment', amount: 25, eventDate: '2025-02-10' }),
+  )
+  await assertSucceeds(updateDoc(legacy, { notes: 'Legado preservado' }))
+})
