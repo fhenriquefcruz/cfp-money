@@ -45,19 +45,22 @@ export function getUnclassifiedSavingsTransactions(transactions = []) {
     .sort((first, second) => activityDate(second).localeCompare(activityDate(first)))
 }
 
-export function getGoalSavingsAmount(transactions = [], goalId = '') {
+function getGoalSavingsCents(transactions = [], goalId = '') {
   if (!goalId) return 0
 
-  const cents = transactions.reduce((total, transaction) => {
+  return transactions.reduce((total, transaction) => {
     if (transaction.goalId !== goalId) return total
     return addMoneyCents(total, getSavingsSignedCents(transaction))
   }, 0)
-  return fromMoneyCents(cents)
+}
+
+export function getGoalSavingsAmount(transactions = [], goalId = '') {
+  return fromMoneyCents(getGoalSavingsCents(transactions, goalId))
 }
 
 export function getGoalEffectiveCurrent(goal = {}, transactions = []) {
   const openingCents = toMoneyCents(goal.currentAmount)
-  const movementCents = toMoneyCents(getGoalSavingsAmount(transactions, goal.id))
+  const movementCents = getGoalSavingsCents(transactions, goal.id)
   return fromMoneyCents(Math.max(0, addMoneyCents(openingCents, movementCents)))
 }
 
