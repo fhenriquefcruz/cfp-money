@@ -2,7 +2,7 @@ import { doc, runTransaction, serverTimestamp } from 'firebase/firestore'
 import {
   prepareInvoiceEventOperation,
   sameInvoiceOperation,
-} from '../domain/invoiceEventIdempotency'
+} from '../domain/invoiceEventIdempotency.js'
 
 /**
  * Grava uma única vez a mesma operação, inclusive sob retries simultâneos.
