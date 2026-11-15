@@ -42,9 +42,16 @@ const indexPath = join(distRoot, 'index.html')
 // Fase 66.4: +2 KiB apenas no teto agregado (741 KiB) para a auditoria
 // consultiva de cartões; os demais limites, tolerâncias e barreiras de segurança
 // permanecem idênticos. Revisar métricas da CI no SHA final antes do merge.
+// MR-003 (PR #171): margem EXCLUSIVAMENTE agregada de 1 KiB após três
+// tentativas de otimização e separação do repositório de eventos em chunk
+// sob demanda. Última medição: 741,55 KiB gzip total, 244,27 KiB inicial.
+// Este incremento explícito NÃO altera o teto inicial (245 KiB), Money,
+// maior chunk, CSS nem tolerâncias. Justificativa: validar em centavos o
+// saldo de estornos contra históricos legados antes de gravar no Firestore.
+// Reverter a margem se a auditoria for removida; revalidar na CI final.
 const limits = {
   initialJavaScriptGzipBytes: 245 * 1024,
-  totalJavaScriptGzipBytes: 741 * 1024,
+  totalJavaScriptGzipBytes: 742 * 1024,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 22 * 1024 + 512,
