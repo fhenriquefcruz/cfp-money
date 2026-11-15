@@ -625,8 +625,6 @@ test('evento de fatura com identidade de operação é imutável e isolado por U
 
   // IDs antigos continuam acessíveis sem migração ou reescrita de histórico.
   const legacy = doc(alice, 'users', 'alice', 'invoiceEvents', 'legacy-event-1')
-  await assertSucceeds(
-    setDoc(legacy, { type: 'payment', amount: 25, eventDate: '2025-02-10' }),
-  )
+  await assertSucceeds(setDoc(legacy, { type: 'payment', amount: 25, eventDate: '2025-02-10' }))
   await assertSucceeds(updateDoc(legacy, { notes: 'Legado preservado' }))
 })
