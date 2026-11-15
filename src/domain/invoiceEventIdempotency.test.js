@@ -27,7 +27,7 @@ function payment(override = {}) {
 describe('idempotência de evento de fatura', () => {
   test('cria identidade segura e diferente por intenção', () => {
     const id = createInvoiceOperationId()
-    expect(id).toMatch(/^[a-f0-9-]{36}$/)
+    expect(id).toMatch(/^[a-f0-9]{32}$/)
     expect(createInvoiceOperationId()).not.toBe(id)
   })
 
