@@ -9,12 +9,6 @@ test('leitura completa não confunde última página exata com truncamento', () 
 })
 
 test('histórico maior que o limite interrompe alertas em vez de usar saldo parcial', () => {
-  assert.throws(
-    () => assertCompleteCollectionPage(10000, 10000, 'next-page'),
-    /dados incompletos/,
-  )
-  assert.throws(
-    () => assertCompleteCollectionPage(10001, 10000, 'next-page'),
-    /dados incompletos/,
-  )
+  assert.throws(() => assertCompleteCollectionPage(10000, 10000, 'next-page'), /dados incompletos/)
+  assert.throws(() => assertCompleteCollectionPage(10001, 10000, 'next-page'), /dados incompletos/)
 })
