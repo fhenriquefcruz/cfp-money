@@ -1,7 +1,5 @@
 import { getSavingsSignedAmount } from './savings.js'
 
-const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
-
 export const getFinancialActivityDate = (transaction = {}) =>
   transaction.type === 'expense' &&
   transaction.paymentMethod === 'credit_card' &&
@@ -78,11 +76,10 @@ export function defaultDateRangeEnd(startDate, days = 30) {
 }
 
 export function calculateBudgetUsage(transactions = [], budget, referenceDate = new Date()) {
-  if (!budget || asAmount(budget.amount) <= 0) {
-    return { spent: 0, percent: 0 }
-  }
+  const budgetCents = toTransactionCents(budget?.amount)
+  if (budgetCents <= 0) return { spent: 0, percent: 0 }
 
-  const spent = transactions
+  const spentCents = transactions
     .filter((transaction) => {
       const activityDate = getFinancialActivityDate(transaction)
       if (!/^\d{4}-\d{2}-\d{2}$/.test(activityDate || '')) return false
@@ -97,10 +94,10 @@ export function calculateBudgetUsage(transactions = [], budget, referenceDate = 
         date.getMonth() === referenceDate.getMonth()
       )
     })
-    .reduce((total, transaction) => total + asAmount(transaction.amount), 0)
+    .reduce((cents, transaction) => cents + toTransactionCents(transaction.amount), 0)
 
   return {
-    spent,
-    percent: (spent / asAmount(budget.amount)) * 100,
+    spent: spentCents / 100,
+    percent: (spentCents / budgetCents) * 100,
   }
 }
