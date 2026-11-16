@@ -155,21 +155,20 @@ function ReportsContent() {
   )
 
   const periodTotals = useMemo(() => {
-    const cents = monthlyData.reduce(
-      (result, month) => ({
-        income: result.income + toTransactionCents(month.income),
-        expenses: result.expenses + toTransactionCents(month.expenses),
-      }),
-      { income: 0, expenses: 0 },
-    )
-    const income = cents.income / 100
-    const expenses = cents.expenses / 100
+    let incomeCents = 0
+    let expensesCents = 0
+    monthlyData.forEach((month) => {
+      incomeCents += toTransactionCents(month.income)
+      expensesCents += toTransactionCents(month.expenses)
+    })
+    const income = incomeCents / 100
+    const expenses = expensesCents / 100
     const savings = savingsOverview.periodNet
 
     return {
       income,
       expenses,
-      balance: (cents.income - cents.expenses) / 100,
+      balance: (incomeCents - expensesCents) / 100,
       avg: expenses / (period || 1),
       savingRate: income > 0 ? (savings / income) * 100 : 0,
       savings,
