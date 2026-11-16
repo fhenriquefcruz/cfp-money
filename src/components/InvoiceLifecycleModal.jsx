@@ -188,72 +188,55 @@ export default function InvoiceLifecycleModal({
     }
   }
 
-  const handleSubmit = async () => {
-    if (!invoice) return
-
+  const submitCreatedEvent = (buildEvent) => {
     try {
-      if (tab === 'payment') {
-        await submitEvent(
-          createPaymentEvent({
+      return submitEvent(buildEvent())
+    } catch (submitError) {
+      showSubmitError(submitError)
+    }
+  }
+
+  const handleSubmit = () => {
+    if (!invoice) return
+    return submitCreatedEvent(() =>
+      tab === 'payment'
+        ? createPaymentEvent({
             card: invoice.card,
             invoiceMonth,
             amount: parseCurrency(amount),
             paymentDate: eventDate,
             sourceAccount,
             notes,
+          })
+        : createAdjustmentEvent({
+            card: invoice.card,
+            invoiceMonth,
+            amount: parseCurrency(amount),
+            direction,
+            eventDate,
+            notes,
           }),
-        )
-        return
-      }
-
-      await submitEvent(
-        createAdjustmentEvent({
-          card: invoice.card,
-          invoiceMonth,
-          amount: parseCurrency(amount),
-          direction,
-          eventDate,
-          notes,
-        }),
-      )
-    } catch (submitError) {
-      showSubmitError(submitError)
-    }
+    )
   }
 
-  const handleManualClose = async () => {
+  const handleManualClose = () => {
     if (!invoice) return
-
-    try {
-      await submitEvent(
-        createManualCloseEvent({
-          card: invoice.card,
-          invoiceMonth,
-          eventDate,
-          notes,
-        }),
-      )
-    } catch (submitError) {
-      showSubmitError(submitError)
-    }
+    return submitCreatedEvent(() =>
+      createManualCloseEvent({ card: invoice.card, invoiceMonth, eventDate, notes }),
+    )
   }
 
-  const handleReverse = async (payment) => {
-    try {
-      await submitEvent(
-        createReversalEvent({
-          card: invoice.card,
-          invoiceMonth,
-          payment,
-          invoiceEvents: events,
-          eventDate: todayIso(),
-          notes: `Estorno do pagamento de ${formatCurrency(payment.amount)}.`,
-        }),
-      )
-    } catch (submitError) {
-      showSubmitError(submitError)
-    }
-  }
+  const handleReverse = (payment) =>
+    submitCreatedEvent(() =>
+      createReversalEvent({
+        card: invoice.card,
+        invoiceMonth,
+        payment,
+        invoiceEvents: events,
+        eventDate: todayIso(),
+        notes: `Estorno do pagamento de ${formatCurrency(payment.amount)}.`,
+      }),
+    )
 
   if (!invoice) return null
 
