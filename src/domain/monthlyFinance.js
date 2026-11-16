@@ -11,15 +11,14 @@ const capitalizeMonth = (value) => (value ? value.charAt(0).toUpperCase() + valu
 
 export function groupTransactionsByActivityMonth(transactions = []) {
   const groups = {}
-
-  transactions.filter(isFinanciallyEffectiveTransaction).forEach((transaction) => {
+  for (const transaction of transactions) {
+    if (!isFinanciallyEffectiveTransaction(transaction)) continue
     const activityDate = getTransactionActivityDate(transaction)
-    if (!activityDate) return
+    if (!activityDate) continue
     const key = activityDate.slice(0, 7)
     if (!groups[key]) groups[key] = []
     groups[key].push(transaction)
-  })
-
+  }
   return groups
 }
 
@@ -28,10 +27,8 @@ export function getMonthlyFinancialData(transactions = [], months = 6, baseDate 
 
   for (let index = months - 1; index >= 0; index -= 1) {
     const date = subMonths(baseDate, index)
-    const year = date.getFullYear()
-    const month = date.getMonth()
     const { income, expenses, savings, balance } = summarizeTransactions(
-      transactionsForMonth(transactions, year, month),
+      transactionsForMonth(transactions, date.getFullYear(), date.getMonth()),
     )
 
     result.push({
