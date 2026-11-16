@@ -44,6 +44,7 @@ import {
   getFinancialActivityDate,
 } from '../domain/finance'
 import { enqueueBudgetNotification } from '../services/notificationService'
+import { summarizeExpenseCategories } from '../domain/expenseCategories'
 import { E2E_MODE } from '../e2e/runtime'
 import { createE2EAppState } from '../e2e/fixtures'
 import {
@@ -935,25 +936,7 @@ export const TransactionsProvider = ({ children }) => {
   )
 
   const getCategoryTotals = useCallback(
-    (year, month) => {
-      const totals = {}
-      getMonthTransactions(year, month)
-        .filter((t) => t.type === 'expense')
-        .forEach((t) => {
-          if (!totals[t.categoryId])
-            totals[t.categoryId] = {
-              categoryId: t.categoryId,
-              categoryName: t.categoryName,
-              categoryColor: t.categoryColor,
-              categoryIcon: t.categoryIcon,
-              total: 0,
-              count: 0,
-            }
-          totals[t.categoryId].total += t.amount
-          totals[t.categoryId].count++
-        })
-      return Object.values(totals).sort((a, b) => b.total - a.total)
-    },
+    (year, month) => summarizeExpenseCategories(getMonthTransactions(year, month)),
     [getMonthTransactions],
   )
 
