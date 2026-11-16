@@ -33,7 +33,6 @@ import { summarizeExpenseCategories } from '../domain/expenseCategories'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
 import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
 import { getTransactionActivityDate } from '../domain/transactionDates'
 import { buildSavingsOverview } from '../domain/savings'
 
