@@ -575,3 +575,155 @@ test('conciliação de cartão respeita titularidade e restaura dados sem duplic
   assert.equal(restored.cardId, undefined)
   assert.equal(restored.cardReconciliation, undefined)
 })
+
+test('evento de fatura com identidade de operação é imutável e isolado por UID', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const operationId = 'payment-operation-2026-11-0001'
+  const path = ['users', 'alice', 'invoiceEvents', `op_${operationId}`]
+  const reference = doc(alice, ...path)
+  const data = {
+    operationId,
+    type: 'payment',
+    cardId: 'card-1',
+    cardName: 'Cartão',
+    cardLast4: '1234',
+    invoiceMonth: '2026-11',
+    invoiceKey: 'card-1:2026-11',
+    eventDate: '2026-11-15',
+    paymentDate: '2026-11-15',
+    amount: 150.25,
+    sourceAccount: 'Banco',
+    notes: '',
+    createdAt: serverTimestamp(),
+  }
+
+  await assertSucceeds(setDoc(reference, data))
+  await assertSucceeds(getDoc(reference))
+  await assertFails(getDoc(doc(bob, ...path)))
+  await assertFails(setDoc(doc(bob, ...path), data))
+  await assertFails(updateDoc(reference, { amount: 300 }))
+  await assertFails(deleteDoc(reference))
+  await assertFails(
+    setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'op_unknown-field-000001'), {
+      ...data,
+      operationId: 'unknown-field-000001',
+      extraValue: 'não permitido',
+    }),
+  )
+
+  await assertFails(
+    setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'op_wrong-operation-0001'), data),
+  )
+  await assertFails(
+    setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'op_bad-payment-000001'), {
+      ...data,
+      operationId: 'bad-payment-000001',
+      amount: -1,
+    }),
+  )
+
+  // IDs antigos continuam acessíveis sem migração ou reescrita de histórico.
+  const legacy = doc(alice, 'users', 'alice', 'invoiceEvents', 'legacy-event-1')
+  await assertSucceeds(setDoc(legacy, { type: 'payment', amount: 25, eventDate: '2025-02-10' }))
+  await assertSucceeds(updateDoc(legacy, { notes: 'Legado preservado' }))
+})
+
+test('MR-007: novas transações exigem montante numérico positivo e campos financeiros válidos', async () => {
+  const db = environment.authenticatedContext('alice').firestore()
+  const ref = (suffix) => doc(db, 'users', 'alice', 'transactions', suffix)
+  const valid = {
+    type: 'expense',
+    description: 'Mercado',
+    amount: 12.34,
+    date: '2026-11-16',
+    paymentStatus: 'pending',
+    isSavings: false,
+  }
+
+  await assertSucceeds(setDoc(ref('valid'), valid))
+  await assertSucceeds(
+    setDoc(ref('card'), {
+      ...valid,
+      cardId: '',
+      invoiceMonth: '2026-11',
+      dueDate: '2026-11-25',
+    }),
+  )
+
+  for (const [id, changes] of [
+    ['text', { amount: '12.34' }],
+    ['zero', { amount: 0 }],
+    ['negative', { amount: -10 }],
+    ['huge', { amount: 100000001 }],
+    ['missing', { amount: undefined }],
+    ['type', { type: 'invalid' }],
+    ['date', { date: 1710000000 }],
+    ['due', { dueDate: 'invalid' }],
+    ['purchase', { purchaseDate: 123 }],
+    ['month', { invoiceMonth: '2026-13' }],
+    ['card', { cardId: { id: 'fake' } }],
+    ['savings', { isSavings: 'yes' }],
+    ['status', { paymentStatus: 'settled' }],
+    ['uid', { uid: 'bob' }],
+  ]) {
+    const payload = { ...valid, ...changes }
+    if (id === 'missing') delete payload.amount
+    await assertFails(setDoc(ref(id), payload))
+  }
+})
+
+test('MR-007: campos históricos inválidos não bloqueiam edição de descrição, mas não podem ser recriados', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const legacyRef = doc(alice, 'users', 'alice', 'transactions', 'legacy-string')
+
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'users', 'alice', 'transactions', 'legacy-string'), {
+      type: 'expense',
+      date: 'data-legada',
+      amount: '15.20',
+      description: 'Registro legado',
+    })
+  })
+
+  await assertSucceeds(updateDoc(legacyRef, { description: 'Descrição atualizada' }))
+  await assertSucceeds(updateDoc(legacyRef, { amount: 15.2, updatedAt: serverTimestamp() }))
+  await assertFails(updateDoc(legacyRef, { amount: '15.20' }))
+  await assertFails(updateDoc(legacyRef, { type: 'refund_invalid' }))
+  await assertFails(updateDoc(legacyRef, { date: null }))
+  await assertSucceeds(updateDoc(legacyRef, { date: '2026-11-16' }))
+
+  await assertFails(
+    updateDoc(doc(bob, 'users', 'alice', 'transactions', 'legacy-string'), {
+      amount: 20,
+    }),
+  )
+  await assertSucceeds(getDoc(legacyRef))
+})
+
+test('MR-007: alterações de pagamento são permitidas e escrita financeira entre UIDs é negada', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const ref = doc(alice, 'users', 'alice', 'transactions', 'transaction-1')
+  await assertSucceeds(
+    updateDoc(ref, {
+      paymentStatus: 'paid',
+      paidAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }),
+  )
+  await assertSucceeds(updateDoc(ref, { paymentStatus: 'pending', paidAt: null }))
+  await assertFails(
+    setDoc(doc(bob, 'users', 'alice', 'transactions', 'attempt'), {
+      type: 'expense',
+      amount: 20,
+      date: '2026-11-16',
+    }),
+  )
+  await assertFails(
+    setDoc(doc(alice, 'users', 'alice', 'transactions', 'transaction-1', 'nested', 'bad'), {
+      amount: 20,
+    }),
+  )
+})
