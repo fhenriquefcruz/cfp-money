@@ -35,7 +35,7 @@ import InfoTooltip from './InfoTooltip'
 import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { getTransactionActivityDate } from '../domain/transactionDates'
-import { buildSavingsOverview, getSavingsSignedAmount } from '../domain/savings'
+import { buildSavingsOverview } from '../domain/savings'
 
 const COLORS = [
   '#c49d6b',
@@ -182,23 +182,10 @@ function ReportsContent() {
     [transactions, period, referenceDate],
   )
 
-  // Dados de poupança mês a mês
-  const savingsMonthly = useMemo(() => {
-    return Array.from({ length: period }, (_, i) => {
-      const d = subMonths(referenceDate, period - 1 - i)
-      const label = format(d, 'MMM', { locale: ptBR })
-      const from = format(d, 'yyyy-MM-01')
-      const to = format(new Date(d.getFullYear(), d.getMonth() + 1, 0), 'yyyy-MM-dd')
-      const value = transactions
-        .filter((t) => {
-          if (!t.isSavings || !isEffective(t)) return false
-          const activityDate = getTransactionActivityDate(t)
-          return activityDate >= from && activityDate <= to
-        })
-        .reduce((s, t) => s + getSavingsSignedAmount(t), 0)
-      return { month: label, value }
-    })
-  }, [transactions, period, referenceDate])
+  const savingsMonthly = useMemo(
+    () => monthlyData.map(({ month, savings }) => ({ month: month.toLowerCase(), value: savings })),
+    [monthlyData],
+  )
 
   const categoryData = useMemo(
     () =>
