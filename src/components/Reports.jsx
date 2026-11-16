@@ -28,6 +28,7 @@ import { useTransactions } from '../contexts/AppContext'
 import { Card, Button } from './ui'
 import { formatCurrency, exportToCSV, exportToPDF } from '../utils'
 import { getMonthlyFinancialData } from '../domain/monthlyFinance'
+import { isFinanciallyEffectiveTransaction as isEffective } from '../domain/finance'
 import { summarizeExpenseCategories } from '../domain/expenseCategories'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
@@ -35,11 +36,6 @@ import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { getTransactionActivityDate } from '../domain/transactionDates'
 import { buildSavingsOverview, getSavingsSignedAmount } from '../domain/savings'
-
-const isEffective = (transaction) =>
-  transaction.paymentStatus !== 'cancelled' &&
-  transaction.flowType !== 'transfer' &&
-  transaction.kind !== 'transfer'
 
 const COLORS = [
   '#c49d6b',
