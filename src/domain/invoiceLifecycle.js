@@ -67,29 +67,25 @@ export function buildInvoiceLifecycle({
   temporalStatus = 'forming',
   now = new Date(),
 }) {
-  let adjustmentCents = 0
-  let paymentCents = 0
-  let reversalCents = 0
-  let paymentCount = 0
-  let reversalCount = 0
-  let manuallyClosed = false
-
-  for (const event of events) {
-    if (event.type === 'adjustment') adjustmentCents += toCents(event.signedAmount)
-    else if (event.type === 'payment') {
-      paymentCents += toCents(event.amount)
-      paymentCount += 1
-    } else if (event.type === 'reversal') {
-      reversalCents += toCents(event.amount)
-      reversalCount += 1
-    } else if (event.type === 'manual_close') manuallyClosed = true
-  }
+  const adjustmentCents = sumCents(
+    events.filter((event) => event.type === 'adjustment'),
+    (event) => event.signedAmount,
+  )
+  const paymentCents = sumCents(
+    events.filter((event) => event.type === 'payment'),
+    (event) => event.amount,
+  )
+  const reversalCents = sumCents(
+    events.filter((event) => event.type === 'reversal'),
+    (event) => event.amount,
+  )
 
   const invoiceTotalCents = Math.max(0, toCents(purchaseTotal) + adjustmentCents)
   const baselinePaidCents = Math.max(0, toCents(baselinePaidAmount))
   const paidCents = Math.max(0, baselinePaidCents + paymentCents - reversalCents)
   const remainingCents = Math.max(0, invoiceTotalCents - paidCents)
   const creditCents = Math.max(0, paidCents - invoiceTotalCents)
+  const manuallyClosed = events.some((event) => event.type === 'manual_close')
   const today = todayIso(now)
   const isClosed =
     manuallyClosed ||
@@ -126,8 +122,8 @@ export function buildInvoiceLifecycle({
     paidAmount: fromCents(paidCents),
     remainingAmount: fromCents(remainingCents),
     creditAmount: fromCents(creditCents),
-    paymentCount,
-    reversalCount,
+    paymentCount: events.filter((event) => event.type === 'payment').length,
+    reversalCount: events.filter((event) => event.type === 'reversal').length,
     manuallyClosed,
     isClosed,
     overdue,
