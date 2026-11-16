@@ -79,21 +79,17 @@ export function calculateBudgetUsage(transactions = [], budget, referenceDate = 
   const budgetCents = toTransactionCents(budget?.amount)
   if (budgetCents <= 0) return { spent: 0, percent: 0 }
 
-  const spentCents = transactions
-    .filter((transaction) => {
-      const activityDate = getFinancialActivityDate(transaction)
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(activityDate || '')) return false
-      const date = new Date(activityDate + 'T00:00:00')
-
-      return (
-        isFinanciallyEffectiveTransaction(transaction) &&
+  const spentCents = transactionsForMonth(
+    transactions,
+    referenceDate.getFullYear(),
+    referenceDate.getMonth(),
+  )
+    .filter(
+      (transaction) =>
         transaction.type === 'expense' &&
         !transaction.isSavings &&
-        transaction.categoryId === budget.categoryId &&
-        date.getFullYear() === referenceDate.getFullYear() &&
-        date.getMonth() === referenceDate.getMonth()
-      )
-    })
+        transaction.categoryId === budget.categoryId,
+    )
     .reduce((cents, transaction) => cents + toTransactionCents(transaction.amount), 0)
 
   return {
