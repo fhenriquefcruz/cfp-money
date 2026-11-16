@@ -28,7 +28,7 @@ import { useTransactions } from '../contexts/AppContext'
 import { Card, Button } from './ui'
 import { formatCurrency, exportToCSV, exportToPDF } from '../utils'
 import { getMonthlyFinancialData } from '../domain/monthlyFinance'
-import { isFinanciallyEffectiveTransaction as isEffective } from '../domain/finance'
+import { isFinanciallyEffectiveTransaction as isEffective, toTransactionCents } from '../domain/finance'
 import { summarizeExpenseCategories } from '../domain/expenseCategories'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
@@ -113,7 +113,7 @@ function SavingRateBadge({ rate }) {
 }
 
 function ReportsContent() {
-  const { transactions, getSummary } = useTransactions()
+  const { transactions } = useTransactions()
   const [searchParams] = useSearchParams()
   const requestedMonth = searchParams.get('month')
   const initialMonth = /^\d{4}-\d{2}$/.test(requestedMonth || '')
@@ -149,38 +149,34 @@ function ReportsContent() {
     [transactions, periodStart, periodEnd],
   )
 
-  const periodTotals = useMemo(() => {
-    let income = 0
-    let expenses = 0
-
-    for (let index = 0; index < period; index += 1) {
-      const date = subMonths(referenceDate, index)
-      const summary = getSummary(date.getFullYear(), date.getMonth())
-      income += summary.income
-      expenses += summary.expenses
-    }
-
-    const savings = savingsOverview.periodNet
-    const balance = income - expenses
-    const avg = expenses / (period || 1)
-    const savingRate = income > 0 ? (savings / income) * 100 : 0
-
-    return {
-      income,
-      expenses,
-      balance,
-      avg,
-      savingRate,
-      savings,
-      savingsDeposits: savingsOverview.periodDeposits,
-      savingsWithdrawals: savingsOverview.periodWithdrawals,
-    }
-  }, [period, getSummary, referenceDate, savingsOverview])
-
   const monthlyData = useMemo(
     () => getMonthlyFinancialData(transactions, period, referenceDate),
     [transactions, period, referenceDate],
   )
+
+  const periodTotals = useMemo(() => {
+    const cents = monthlyData.reduce(
+      (result, month) => ({
+        income: result.income + toTransactionCents(month.income),
+        expenses: result.expenses + toTransactionCents(month.expenses),
+      }),
+      { income: 0, expenses: 0 },
+    )
+    const income = cents.income / 100
+    const expenses = cents.expenses / 100
+    const savings = savingsOverview.periodNet
+
+    return {
+      income,
+      expenses,
+      balance: (cents.income - cents.expenses) / 100,
+      avg: expenses / (period || 1),
+      savingRate: income > 0 ? (savings / income) * 100 : 0,
+      savings,
+      savingsDeposits: savingsOverview.periodDeposits,
+      savingsWithdrawals: savingsOverview.periodWithdrawals,
+    }
+  }, [monthlyData, period, savingsOverview])
 
   const savingsMonthly = useMemo(
     () => monthlyData.map(({ month, savings }) => ({ month: month.toLowerCase(), value: savings })),
