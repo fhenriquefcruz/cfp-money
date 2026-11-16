@@ -1,18 +1,18 @@
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { getTransactionActivityDate } from './transactionDates'
-import { getSavingsSignedAmount } from './savings'
+import {
+  isFinanciallyEffectiveTransaction,
+  summarizeTransactions,
+  transactionsForMonth,
+} from './finance'
 
 const capitalizeMonth = (value) => (value ? value.charAt(0).toUpperCase() + value.slice(1) : '')
-const isEffective = (transaction) =>
-  transaction.paymentStatus !== 'cancelled' &&
-  transaction.flowType !== 'transfer' &&
-  transaction.kind !== 'transfer'
 
 export function groupTransactionsByActivityMonth(transactions = []) {
   const groups = {}
 
-  transactions.filter(isEffective).forEach((transaction) => {
+  transactions.filter(isFinanciallyEffectiveTransaction).forEach((transaction) => {
     const activityDate = getTransactionActivityDate(transaction)
     if (!activityDate) return
     const key = activityDate.slice(0, 7)
@@ -30,23 +30,9 @@ export function getMonthlyFinancialData(transactions = [], months = 6, baseDate 
     const date = subMonths(baseDate, index)
     const year = date.getFullYear()
     const month = date.getMonth()
-    const periodTransactions = transactions.filter((transaction) => {
-      if (!isEffective(transaction)) return false
-      const activityDate = getTransactionActivityDate(transaction)
-      if (!activityDate) return false
-      const parsed = new Date(activityDate + 'T00:00:00')
-      return parsed.getFullYear() === year && parsed.getMonth() === month
-    })
-
-    const income = periodTransactions
-      .filter((transaction) => transaction.type === 'income' && !transaction.isSavings)
-      .reduce((total, transaction) => total + transaction.amount, 0)
-    const expenses = periodTransactions
-      .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
-      .reduce((total, transaction) => total + transaction.amount, 0)
-    const savings = periodTransactions
-      .filter((transaction) => transaction.isSavings)
-      .reduce((total, transaction) => total + getSavingsSignedAmount(transaction), 0)
+    const { income, expenses, savings, balance } = summarizeTransactions(
+      transactionsForMonth(transactions, year, month),
+    )
 
     result.push({
       monthKey: format(date, 'yyyy-MM'),
@@ -55,7 +41,7 @@ export function getMonthlyFinancialData(transactions = [], months = 6, baseDate 
       income,
       expenses,
       savings,
-      balance: income - expenses,
+      balance,
     })
   }
 
