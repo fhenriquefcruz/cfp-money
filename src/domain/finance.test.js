@@ -138,3 +138,22 @@ test('retirada da poupança reduz o reservado sem virar despesa', () => {
   expect(result.expenses).toBe(250)
   expect(result.balance).toBe(750)
 })
+
+test('agrega números legados em centavos sem deriva de ponto flutuante', () => {
+  const summary = summarizeTransactions([
+    { type: 'income', amount: '3.50', date: '2026-11-01' },
+    { type: 'expense', amount: '1.01', date: '2026-11-02' },
+    { type: 'expense', amount: 1.02, date: '2026-11-03' },
+    { type: 'expense', amount: 'inválido', date: '2026-11-04' },
+    { type: 'income', isSavings: true, amount: '0.10', date: '2026-11-05' },
+    { type: 'income', isSavings: true, amount: 0.2, date: '2026-11-06' },
+  ])
+
+  expect(summary).toEqual({
+    income: 3.5,
+    expenses: 2.03,
+    savings: 0.3,
+    balance: 1.47,
+    count: 6,
+  })
+})

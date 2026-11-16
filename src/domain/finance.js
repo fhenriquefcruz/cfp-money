@@ -1,4 +1,4 @@
-import { getSavingsSignedAmount } from './savings'
+import { getSavingsSignedAmount } from './savings.js'
 
 const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
 
@@ -14,32 +14,38 @@ export const isFinanciallyEffectiveTransaction = (transaction = {}) =>
   transaction.flowType !== 'transfer' &&
   transaction.kind !== 'transfer'
 
+export function toTransactionCents(value) {
+  const number = Number(value)
+  return Number.isFinite(number) ? Math.round(number * 100) : 0
+}
+
 export function summarizeTransactions(transactions = []) {
-  return transactions.reduce(
+  const totals = transactions.reduce(
     (summary, transaction) => {
       if (!isFinanciallyEffectiveTransaction(transaction)) return summary
-      const amount = asAmount(transaction.amount)
+      const amountCents = toTransactionCents(transaction.amount)
 
       if (transaction.isSavings) {
-        summary.savings += getSavingsSignedAmount(transaction)
+        summary.savingsCents += Math.round(getSavingsSignedAmount(transaction) * 100)
       } else if (transaction.type === 'income') {
-        summary.income += amount
+        summary.incomeCents += amountCents
       } else if (transaction.type === 'expense') {
-        summary.expenses += amount
+        summary.expenseCents += amountCents
       }
 
-      summary.balance = summary.income - summary.expenses
       summary.count += 1
       return summary
     },
-    {
-      income: 0,
-      expenses: 0,
-      savings: 0,
-      balance: 0,
-      count: 0,
-    },
+    { incomeCents: 0, expenseCents: 0, savingsCents: 0, count: 0 },
   )
+
+  return {
+    income: totals.incomeCents / 100,
+    expenses: totals.expenseCents / 100,
+    savings: totals.savingsCents / 100,
+    balance: (totals.incomeCents - totals.expenseCents) / 100,
+    count: totals.count,
+  }
 }
 
 export function calculateCurrentBalance(transactions = []) {
