@@ -28,6 +28,7 @@ import { useTransactions } from '../contexts/AppContext'
 import { Card, Button } from './ui'
 import { formatCurrency, exportToCSV, exportToPDF } from '../utils'
 import { getMonthlyFinancialData } from '../domain/monthlyFinance'
+import { summarizeExpenseCategories } from '../domain/expenseCategories'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
 import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
@@ -203,26 +204,16 @@ function ReportsContent() {
     })
   }, [transactions, period, referenceDate])
 
-  const categoryData = useMemo(() => {
-    const totals = {}
-
-    reportTransactions
-      .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
-      .forEach((transaction) => {
-        const categoryKey = transaction.categoryId || 'without-category'
-        if (!totals[categoryKey])
-          totals[categoryKey] = {
-            name: transaction.categoryName || 'Sem categoria',
-            value: 0,
-            count: 0,
-            color: transaction.categoryColor || '#c49d6b',
-          }
-        totals[categoryKey].value += transaction.amount
-        totals[categoryKey].count += 1
-      })
-
-    return Object.values(totals).sort((first, second) => second.value - first.value)
-  }, [reportTransactions])
+  const categoryData = useMemo(
+    () =>
+      summarizeExpenseCategories(reportTransactions).map((category) => ({
+        name: category.categoryName,
+        value: category.total,
+        count: category.count,
+        color: category.categoryColor || '#c49d6b',
+      })),
+    [reportTransactions],
+  )
 
   const hasTx = reportTransactions.length > 0
 
