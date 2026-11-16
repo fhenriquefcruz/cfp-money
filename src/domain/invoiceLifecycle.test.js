@@ -203,3 +203,33 @@ test('aceita valor pago derivado das transações quando não há evento manual'
     status: 'partially_paid',
   })
 })
+
+test('MR-006: agregação de eventos mantém centavos, contagens e fechamento em uma passagem', () => {
+  const events = [
+    { type: 'adjustment', signedAmount: '0.10' },
+    { type: 'adjustment', signedAmount: '0.20' },
+    { type: 'payment', amount: '1.01' },
+    { type: 'payment', amount: 0.02 },
+    { type: 'reversal', amount: '0.03' },
+    { type: 'manual_close' },
+    { type: 'unknown', amount: 9999 },
+  ]
+  const untouched = structuredClone(events)
+  const result = buildInvoiceLifecycle({
+    purchaseTotal: '10.00',
+    events,
+    now: new Date(2026, 10, 16),
+  })
+  expect(result).toMatchObject({
+    purchaseTotal: 10,
+    adjustmentTotal: 0.3,
+    invoiceTotal: 10.3,
+    paidAmount: 1,
+    remainingAmount: 9.3,
+    paymentCount: 2,
+    reversalCount: 1,
+    manuallyClosed: true,
+    status: 'closed',
+  })
+  expect(events).toEqual(untouched)
+})
