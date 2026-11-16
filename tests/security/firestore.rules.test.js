@@ -654,7 +654,7 @@ test('MR-007: novas transações exigem montante numérico positivo e campos fin
     ['zero', { amount: 0 }],
     ['negative', { amount: -10 }],
     ['huge', { amount: 100000001 }],
-    ['missing', { amount: deleteField() }],
+    ['missing', { amount: undefined }],
     ['type', { type: 'invalid' }],
     ['date', { date: 1710000000 }],
     ['due', { dueDate: 'invalid' }],
@@ -666,7 +666,7 @@ test('MR-007: novas transações exigem montante numérico positivo e campos fin
     ['uid', { uid: 'bob' }],
   ]) {
     const payload = { ...valid, ...changes }
-    if (changes.amount?.constructor?.name === 'FieldValue') delete payload.amount
+    if (id === 'missing') delete payload.amount
     await assertFails(setDoc(ref(id), payload))
   }
 })
