@@ -642,12 +642,14 @@ test('MR-007: novas transações exigem montante numérico positivo e campos fin
   }
 
   await assertSucceeds(setDoc(ref('valid'), valid))
-  await assertSucceeds(setDoc(ref('card'), {
-    ...valid,
-    cardId: '',
-    invoiceMonth: '2026-11',
-    dueDate: '2026-11-25',
-  }))
+  await assertSucceeds(
+    setDoc(ref('card'), {
+      ...valid,
+      cardId: '',
+      invoiceMonth: '2026-11',
+      dueDate: '2026-11-25',
+    }),
+  )
 
   for (const [id, changes] of [
     ['text', { amount: '12.34' }],
@@ -692,9 +694,11 @@ test('MR-007: campos históricos inválidos não bloqueiam edição de descriç�
   await assertFails(updateDoc(legacyRef, { date: null }))
   await assertSucceeds(updateDoc(legacyRef, { date: '2026-11-16' }))
 
-  await assertFails(updateDoc(doc(bob, 'users', 'alice', 'transactions', 'legacy-string'), {
-    amount: 20,
-  }))
+  await assertFails(
+    updateDoc(doc(bob, 'users', 'alice', 'transactions', 'legacy-string'), {
+      amount: 20,
+    }),
+  )
   await assertSucceeds(getDoc(legacyRef))
 })
 
@@ -702,16 +706,24 @@ test('MR-007: alterações de pagamento são permitidas e escrita financeira ent
   const alice = environment.authenticatedContext('alice').firestore()
   const bob = environment.authenticatedContext('bob').firestore()
   const ref = doc(alice, 'users', 'alice', 'transactions', 'transaction-1')
-  await assertSucceeds(updateDoc(ref, {
-    paymentStatus: 'paid',
-    paidAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  }))
+  await assertSucceeds(
+    updateDoc(ref, {
+      paymentStatus: 'paid',
+      paidAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }),
+  )
   await assertSucceeds(updateDoc(ref, { paymentStatus: 'pending', paidAt: null }))
-  await assertFails(setDoc(doc(bob, 'users', 'alice', 'transactions', 'attempt'), {
-    type: 'expense', amount: 20, date: '2026-11-16',
-  }))
-  await assertFails(setDoc(doc(alice, 'users', 'alice', 'transactions', 'transaction-1', 'nested', 'bad'), {
-    amount: 20,
-  }))
+  await assertFails(
+    setDoc(doc(bob, 'users', 'alice', 'transactions', 'attempt'), {
+      type: 'expense',
+      amount: 20,
+      date: '2026-11-16',
+    }),
+  )
+  await assertFails(
+    setDoc(doc(alice, 'users', 'alice', 'transactions', 'transaction-1', 'nested', 'bad'), {
+      amount: 20,
+    }),
+  )
 })
