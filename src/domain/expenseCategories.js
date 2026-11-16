@@ -3,7 +3,12 @@ import { isFinanciallyEffectiveTransaction, toTransactionCents } from './finance
 export function summarizeExpenseCategories(transactions = []) {
   const categories = new Map()
   for (const transaction of transactions) {
-    if (transaction.type !== 'expense' || transaction.isSavings || !isFinanciallyEffectiveTransaction(transaction)) continue
+    if (
+      transaction.type !== 'expense' ||
+      transaction.isSavings ||
+      !isFinanciallyEffectiveTransaction(transaction)
+    )
+      continue
     const categoryId = String(transaction.categoryId || 'without-category')
     const current = categories.get(categoryId) || {
       categoryId,
