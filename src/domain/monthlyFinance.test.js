@@ -95,8 +95,20 @@ test('MR-006: série mensal, resumo financeiro e categorias usam os mesmos centa
     { type: 'expense', date: '2026-07-04', amount: '0.20', categoryId: 'food' },
     { type: 'expense', date: '2026-07-05', amount: 1.01, categoryId: 'home' },
     { type: 'expense', date: '2026-07-06', amount: 'invalid', categoryId: 'home' },
-    { type: 'income', date: '2026-07-07', isSavings: true, amount: '0.20', savingsMovement: 'deposit' },
-    { type: 'income', date: '2026-07-08', isSavings: true, amount: '0.10', savingsMovement: 'withdrawal' },
+    {
+      type: 'income',
+      date: '2026-07-07',
+      isSavings: true,
+      amount: '0.20',
+      savingsMovement: 'deposit',
+    },
+    {
+      type: 'income',
+      date: '2026-07-08',
+      isSavings: true,
+      amount: '0.10',
+      savingsMovement: 'withdrawal',
+    },
     { type: 'expense', date: '2026-07-09', amount: '100.00', paymentStatus: 'cancelled' },
     { type: 'expense', date: '2026-07-10', amount: '100.00', flowType: 'transfer' },
     {
