@@ -157,3 +157,20 @@ test('agrega números legados em centavos sem deriva de ponto flutuante', () => 
     count: 6,
   })
 })
+
+test('MR-006: execução orçamentária normaliza strings em centavos e ignora transferências', () => {
+  const expenses = [
+    { type: 'expense', categoryId: 'food', amount: '0.10', date: '2026-11-03' },
+    { type: 'expense', categoryId: 'food', amount: '0.20', date: '2026-11-04' },
+    { type: 'expense', categoryId: 'food', amount: 'invalid', date: '2026-11-05' },
+    { type: 'expense', categoryId: 'food', amount: '55.00', date: '2026-11-06', flowType: 'transfer' },
+    { type: 'expense', categoryId: 'food', amount: 100, date: '2026-11-07', isSavings: true },
+  ]
+  expect(
+    calculateBudgetUsage(
+      expenses,
+      { categoryId: 'food', amount: '1.00' },
+      new Date(2026, 10, 15),
+    ),
+  ).toEqual({ spent: 0.3, percent: 30 })
+})
