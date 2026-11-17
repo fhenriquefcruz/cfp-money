@@ -643,6 +643,73 @@ test('evento de fatura com identidade de operação é imutável e isolado por U
   await assertSucceeds(updateDoc(legacy, { notes: 'Legado preservado' }))
 })
 
+test('MR-003: regras de eventos rejeitam frações de centavo e campos cruzados', async () => {
+  const db = environment.authenticatedContext('alice').firestore()
+  const send = (operationId, payload) =>
+    setDoc(doc(db, 'users', 'alice', 'invoiceEvents', `op_${operationId}`), {
+      ...payload,
+      operationId,
+    })
+
+  const payment = {
+    type: 'payment',
+    cardId: 'card-1',
+    cardName: 'Cartão',
+    cardLast4: '1234',
+    invoiceMonth: '2026-11',
+    invoiceKey: 'card-1:2026-11',
+    eventDate: '2026-11-15',
+    paymentDate: '2026-11-15',
+    amount: 0.01,
+    sourceAccount: 'Banco',
+    notes: '',
+    createdAt: serverTimestamp(),
+  }
+  await assertSucceeds(send('schema-valid-payment-0001', payment))
+  for (const [id, changes] of [
+    ['fraction', { amount: 1.001 }],
+    ['subcent', { amount: 0.00000001 }],
+    ['negative', { amount: -1 }],
+    ['text', { amount: '1.00' }],
+    ['mixed-adjustment', { signedAmount: -1.5, direction: 'credit' }],
+    ['mixed-reversal', { reversesEventId: 'op_not-a-payment' }],
+    ['source-too-long', { sourceAccount: 'x'.repeat(121) }],
+  ]) {
+    await assertFails(send(`schema-invalid-payment-${id}-0001`, { ...payment, ...changes }))
+  }
+
+  const { amount, paymentDate, sourceAccount, ...common } = payment
+  const adjustment = {
+    ...common,
+    type: 'adjustment',
+    signedAmount: -0.01,
+    direction: 'credit',
+    notes: 'Ajuste de um centavo',
+  }
+  await assertSucceeds(send('schema-valid-adjustment-0001', adjustment))
+  for (const [id, changes] of [
+    ['fraction', { signedAmount: -1.005 }],
+    ['subcent', { signedAmount: -0.00000001 }],
+    ['mixed-payment', { amount: 10 }],
+    ['wrong-direction', { direction: 'charge' }],
+    ['empty-notes', { notes: '' }],
+  ]) {
+    await assertFails(
+      send(`schema-invalid-adjustment-${id}-0001`, { ...adjustment, ...changes }),
+    )
+  }
+
+  await assertSucceeds(send('schema-valid-manual-close-0001', {
+    ...common,
+    type: 'manual_close',
+  }))
+  await assertFails(send('schema-invalid-manual-close-0001', {
+    ...common,
+    type: 'manual_close',
+    amount: 0.01,
+  }))
+})
+
 test('MR-003: duas intenções de estorno não conseguem reverter o mesmo pagamento', async () => {
   const alice = environment.authenticatedContext('alice').firestore()
   const bob = environment.authenticatedContext('bob').firestore()
