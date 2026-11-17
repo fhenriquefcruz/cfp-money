@@ -8,10 +8,20 @@ const workerFile = resolve('dist/sw.js')
 const getControlled = async (page) =>
   page.evaluate(() => Boolean(navigator.serviceWorker.controller))
 
+async function waitForControlledPage(page) {
+  await expect.poll(() => getControlled(page).catch(() => false), { timeout: 30_000 }).toBe(true)
+}
+
+const hasWaitingUpdate = (page) =>
+  page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.getRegistration()
+    return Boolean(registration?.waiting)
+  })
+
 async function readyForControlledPwa(page, route) {
   await page.addInitScript(() => localStorage.setItem('cfp_onboarding_done_e2e-user', '1'))
   await page.goto(`./#${route}`, { waitUntil: 'domcontentloaded' })
-  await expect.poll(() => getControlled(page).catch(() => false), { timeout: 30_000 }).toBe(true)
+  await waitForControlledPage(page)
   await expect(page.locator('main')).toBeVisible()
 }
 
@@ -58,14 +68,7 @@ test('PWA: duas abas preservam rascunho na atualização', async ({ page, contex
       await registration.update()
     })
 
-    await expect.poll(
-      () =>
-        page.evaluate(async () => {
-          const registration = await navigator.serviceWorker.getRegistration()
-          return Boolean(registration?.waiting)
-        }),
-      { timeout: 30_000 },
-    ).toBe(true)
+    await expect.poll(() => hasWaitingUpdate(page), { timeout: 30_000 }).toBe(true)
 
     await expect(page.getByText('Nova versão disponível')).toBeVisible()
     await expect(draft.locator('#transaction-amount')).toHaveValue('123,45')
@@ -87,9 +90,7 @@ test('PWA: duas abas preservam rascunho na atualização', async ({ page, contex
     await expect(draft).toBeHidden()
     await second.getByRole('button', { name: 'Recarregar quando estiver pronto' }).click()
     await expect(second.locator('main')).toBeVisible()
-    await expect.poll(() => getControlled(second).catch(() => false), {
-      timeout: 30_000,
-    }).toBe(true)
+    await waitForControlledPage(second)
   } finally {
     await context.setOffline(false)
     await writeFile(workerFile, originalWorker)
