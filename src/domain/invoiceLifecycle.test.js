@@ -266,7 +266,13 @@ test('MR-005: ordena históricos sem eventDate sem alterar valores, datas ou a e
 
 test('MR-005: nenhum evento de outra fatura é incluído por fallback de data', () => {
   const events = [
-    { id: 'legacy-matching', cardId: 'nubank', invoiceMonth: '2026-08', amount: 15, type: 'payment' },
+    {
+      id: 'legacy-matching',
+      cardId: 'nubank',
+      invoiceMonth: '2026-08',
+      amount: 15,
+      type: 'payment',
+    },
     { id: 'other-card', cardId: 'other', invoiceMonth: '2026-08', amount: 70, type: 'payment' },
     { id: 'other-month', cardId: 'nubank', invoiceMonth: '2026-09', amount: 50, type: 'payment' },
   ]
