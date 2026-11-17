@@ -36,7 +36,6 @@ import { resolveFirebaseConfig } from '../config/firebaseConfig'
 import { securityRuntime } from '../config/securityRuntime'
 import { createPaymentPersistenceChange } from '../domain/paymentControl'
 
-
 const firebaseConfig = resolveFirebaseConfig(import.meta.env)
 
 export const app = initializeApp(firebaseConfig)
