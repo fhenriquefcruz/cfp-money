@@ -5,7 +5,8 @@ import { expect, test } from '@playwright/test'
 // A troca do script no dist em execução simula duas versões do MESMO PWA.
 // Não modifica dados de produção nem usa o backend financeiro real (VITE_E2E_MODE).
 const workerFile = resolve('dist/sw.js')
-const getControlled = async (page) => page.evaluate(() => Boolean(navigator.serviceWorker.controller))
+const getControlled = async (page) =>
+  page.evaluate(() => Boolean(navigator.serviceWorker.controller))
 
 async function readyForControlledPwa(page, route) {
   await page.addInitScript(() => localStorage.setItem('cfp_onboarding_done_e2e-user', '1'))
