@@ -3,7 +3,7 @@ import { RefreshCw, X } from 'lucide-react'
 import {
   activatePwaUpdate,
   isPwaReloadRequired,
-} from '../pwa/registerServiceWorker'
+} from '../pwa/pwaControllerChange'
 
 export default function PwaUpdateNotice() {
   const [registration, setRegistration] = useState(null)
