@@ -105,7 +105,7 @@ export const BudgetsProvider = ({ children }) => {
     setBudgets(null)
     return onBudgetsChange(user.uid, setBudgets, (error) => {
       console.error('[Meu Real] orçamentos:', error)
-      setBudgets([])
+      setBudgets((current) => current ?? [])
     })
   }, [user?.uid])
 
@@ -171,7 +171,7 @@ export const GoalsProvider = ({ children, userId }) => {
     setGoals(null)
     return onGoalsChange(userId, setGoals, (error) => {
       console.error('[Meu Real] metas:', error)
-      setGoals([])
+      setGoals((current) => current ?? [])
     })
   }, [userId])
 
@@ -255,7 +255,7 @@ export const CategoriesProvider = ({ children, userId }) => {
     setCategories(null)
     return onCategoriesChange(userId, setCategories, (error) => {
       console.error('[Meu Real] categorias:', error)
-      setCategories([])
+      setCategories((current) => current ?? [])
     })
   }, [userId])
 
@@ -307,7 +307,7 @@ export const CreditCardsProvider = ({ children, userId }) => {
     setCreditCards(null)
     return onCreditCardsChange(userId, setCreditCards, (error) => {
       console.error('[Meu Real] cartões:', error)
-      setCreditCards([])
+      setCreditCards((current) => current ?? [])
     })
   }, [userId])
 
