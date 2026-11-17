@@ -12,6 +12,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  onSnapshot,
   runTransaction,
   serverTimestamp,
   setDoc,
@@ -574,4 +575,47 @@ test('conciliação de cartão respeita titularidade e restaura dados sem duplic
   for (const key of Object.keys(original)) assert.deepEqual(restored[key], original[key])
   assert.equal(restored.cardId, undefined)
   assert.equal(restored.cardReconciliation, undefined)
+})
+
+test('MR-008: duas sessões do mesmo UID recebem mudanças de cartões, metas e orçamentos', async () => {
+  const sessionA = environment.authenticatedContext('alice').firestore()
+  const sessionB = environment.authenticatedContext('alice').firestore()
+  const otherUser = environment.authenticatedContext('bob').firestore()
+
+  const waitForUpdate = (reference, expectedName) =>
+    new Promise((resolve, reject) => {
+      let unsubscribe = () => {}
+      const timeout = setTimeout(() => {
+        unsubscribe()
+        reject(new Error('Snapshot atualizado não recebido: ' + expectedName))
+      }, 8000)
+      unsubscribe = onSnapshot(
+        reference,
+        (snapshot) => {
+          if (snapshot.data()?.name !== expectedName) return
+          clearTimeout(timeout)
+          unsubscribe()
+          resolve(snapshot.data())
+        },
+        (error) => {
+          clearTimeout(timeout)
+          unsubscribe()
+          reject(error)
+        },
+      )
+    })
+
+  for (const collectionName of ['creditCards', 'goals', 'budgets']) {
+    const path = ['users', 'alice', collectionName, 'sync-test']
+    const referenceA = doc(sessionA, ...path)
+    const referenceB = doc(sessionB, ...path)
+    const otherReference = doc(otherUser, ...path)
+
+    await assertSucceeds(setDoc(referenceA, { name: 'Antes', amount: 25 }))
+    const synced = waitForUpdate(referenceA, 'Depois')
+    await assertSucceeds(updateDoc(referenceB, { name: 'Depois' }))
+    assert.equal((await synced).name, 'Depois')
+    await assertFails(updateDoc(otherReference, { name: 'Intruso' }))
+    assert.equal((await getDoc(referenceA)).data().name, 'Depois')
+  }
 })
