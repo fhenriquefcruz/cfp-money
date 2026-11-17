@@ -3,8 +3,8 @@ import workflow from '../../.github/workflows/deploy-firestore-rules.yml?raw'
 
 describe('publicação segura das regras Firestore', () => {
   test('nunca publica regras automaticamente no push de main', () => {
-    expect(workflow).toMatch(/^  workflow_dispatch:/m)
-    expect(workflow).not.toMatch(/^  push:/m)
+    expect(workflow).toMatch(/^ {2}workflow_dispatch:/m)
+    expect(workflow).not.toMatch(/^ {2}push:/m)
   })
 
   test('exige autorização explícita, ref main e commit SHA completo', () => {
