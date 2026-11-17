@@ -32,7 +32,7 @@ import { isFinanciallyEffectiveTransaction as isEffective, toTransactionCents } 
 import { summarizeExpenseCategories } from '../domain/expenseCategories'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
-import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
+import { endOfMonth, format, subMonths } from 'date-fns'
 import { getTransactionActivityDate } from '../domain/transactionDates'
 import { buildSavingsOverview } from '../domain/savings'
 
@@ -127,7 +127,7 @@ function ReportsContent() {
   ) // 'overview' | 'categories' | 'savings'
 
   const referenceDate = useMemo(() => new Date(referenceMonth + '-01T00:00:00'), [referenceMonth])
-  const periodStart = format(startOfMonth(subMonths(referenceDate, period - 1)), 'yyyy-MM-dd')
+  const periodStart = format(subMonths(referenceDate, period - 1), 'yyyy-MM-dd')
   const periodEnd = format(endOfMonth(referenceDate), 'yyyy-MM-dd')
   const reportTransactions = useMemo(
     () =>
