@@ -685,10 +685,7 @@ test('MR-003: eventos legados permanecem legíveis e imutáveis', async () => {
 
   const invoiceCollection = collection(alice, 'users', 'alice', 'invoiceEvents')
   const visible = await assertSucceeds(getDocs(invoiceCollection))
-  assert.deepEqual(
-    visible.docs.map((item) => item.id).sort(),
-    historical.map(([id]) => id).sort(),
-  )
+  assert.deepEqual(visible.docs.map((item) => item.id).sort(), historical.map(([id]) => id).sort())
   await assertFails(getDocs(collection(bob, 'users', 'alice', 'invoiceEvents')))
 
   for (const [id, expected] of historical) {
