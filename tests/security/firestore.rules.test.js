@@ -8,6 +8,7 @@ import {
 } from '@firebase/rules-unit-testing'
 import {
   Timestamp,
+  addDoc,
   collection,
   deleteField,
   deleteDoc,
@@ -696,6 +697,47 @@ test('MR-003: eventos legados permanecem legíveis e imutáveis', async () => {
     await assertFails(getDoc(doc(bob, 'users', 'alice', 'invoiceEvents', id)))
     assert.deepEqual((await assertSucceeds(getDoc(reference))).data(), expected)
   }
+})
+
+
+test('MR-003/PWA: cliente antigo falha fechado sob Rules novas e preserva o histórico', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const ownEvents = collection(alice, 'users', 'alice', 'invoiceEvents')
+  const operationId = 'pwa-compatible-payment-2026-11'
+  const validPayload = {
+    operationId,
+    type: 'payment',
+    cardId: 'card-pwa',
+    invoiceMonth: '2026-11',
+    invoiceKey: 'card-pwa:2026-11',
+    eventDate: '2026-11-17',
+    paymentDate: '2026-11-17',
+    amount: 10.01,
+    sourceAccount: 'Banco teste',
+    notes: '',
+    createdAt: serverTimestamp(),
+  }
+
+  // Simula o addDoc/ID aleatório presente no código antigo, sem dados reais.
+  await assertFails(addDoc(ownEvents, { ...validPayload, operationId: undefined }))
+
+  const legacy = doc(ownEvents, 'old-payment-pwa-2025')
+  const legacyValue = { type: 'payment', amount: 5.02, paymentDate: '2025-11-02' }
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(
+      doc(context.firestore(), 'users', 'alice', 'invoiceEvents', 'old-payment-pwa-2025'),
+      legacyValue,
+    )
+  })
+  await assertFails(updateDoc(legacy, { amount: 0 }))
+  await assertFails(deleteDoc(legacy))
+  assert.deepEqual((await assertSucceeds(getDoc(legacy))).data(), legacyValue)
+
+  // A nova versão grava com identidade de operação determinística.
+  const updated = doc(ownEvents, `op_${operationId}`)
+  await assertSucceeds(setDoc(updated, validPayload))
+  assert.equal((await assertSucceeds(getDoc(updated))).data().amount, 10.01)
+  assert.equal((await getDocs(ownEvents)).size, 2)
 })
 
 test('MR-003: regras de eventos rejeitam frações de centavo e campos cruzados', async () => {
