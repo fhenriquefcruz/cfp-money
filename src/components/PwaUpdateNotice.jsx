@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { RefreshCw, X } from 'lucide-react'
-import {
-  activatePwaUpdate,
-  isPwaReloadRequired,
-} from '../pwa/pwaControllerChange'
+import { activatePwaUpdate, isPwaReloadRequired } from '../pwa/pwaControllerChange'
 
 export default function PwaUpdateNotice() {
   const [registration, setRegistration] = useState(null)
@@ -57,7 +54,8 @@ export default function PwaUpdateNotice() {
             {reloadRequired ? 'Atualização ativada em outra aba' : 'Nova versão disponível'}
           </p>
           <p className="text-xs text-[--text-secondary]">
-            Conclua e salve lançamentos antes de recarregar. Seus rascunhos não são salvos automaticamente.
+            Conclua e salve lançamentos antes de recarregar. Seus rascunhos não são salvos
+            automaticamente.
           </p>
         </div>
         <button
