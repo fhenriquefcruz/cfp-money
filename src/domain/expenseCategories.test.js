@@ -83,3 +83,20 @@ test('agrupa sem categoria e protege nomes de chave reservados', () => {
     },
   ])
 })
+
+test('cores das categorias não dependem da posição no ranking', () => {
+  const purchases = [
+    { type: 'expense', amount: 8, categoryId: 'food', categoryColor: '#008800' },
+    { type: 'expense', amount: 15, categoryId: 'home', categoryColor: '#334455' },
+  ]
+  const colors = (items) =>
+    Object.fromEntries(
+      summarizeExpenseCategories(items).map(({ categoryId, categoryColor }) => [
+        categoryId,
+        categoryColor,
+      ]),
+    )
+
+  expect(colors(purchases)).toEqual({ food: '#008800', home: '#334455' })
+  expect(colors([{ ...purchases[0], amount: 90 }, purchases[1]])).toEqual(colors(purchases))
+})
