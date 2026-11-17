@@ -28,7 +28,10 @@ import { useTransactions } from '../contexts/AppContext'
 import { Card, Button } from './ui'
 import { formatCurrency, exportToCSV, exportToPDF } from '../utils'
 import { getMonthlyFinancialData } from '../domain/monthlyFinance'
-import { isFinanciallyEffectiveTransaction as isEffective, toTransactionCents } from '../domain/finance'
+import {
+  isFinanciallyEffectiveTransaction as isEffective,
+  toTransactionCents,
+} from '../domain/finance'
 import { summarizeExpenseCategories } from '../domain/expenseCategories'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
@@ -657,7 +660,12 @@ function ReportsContent() {
                           tickFormatter={(v) => formatCurrency(v, { compact: true })}
                         />
                         <Tooltip content={<ChartTooltip />} />
-                        <Bar dataKey="savings" name="Poupança" fill="#c49d6b" radius={[4, 4, 0, 0]} />
+                        <Bar
+                          dataKey="savings"
+                          name="Poupança"
+                          fill="#c49d6b"
+                          radius={[4, 4, 0, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
 
