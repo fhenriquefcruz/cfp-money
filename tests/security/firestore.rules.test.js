@@ -699,15 +699,19 @@ test('MR-003: regras de eventos rejeitam frações de centavo e campos cruzados'
     )
   }
 
-  await assertSucceeds(send('schema-valid-manual-close-0001', {
-    ...common,
-    type: 'manual_close',
-  }))
-  await assertFails(send('schema-invalid-manual-close-0001', {
-    ...common,
-    type: 'manual_close',
-    amount: 0.01,
-  }))
+  await assertSucceeds(
+    send('schema-valid-manual-close-0001', {
+      ...common,
+      type: 'manual_close',
+    }),
+  )
+  await assertFails(
+    send('schema-invalid-manual-close-0001', {
+      ...common,
+      type: 'manual_close',
+      amount: 0.01,
+    }),
+  )
 })
 
 test('MR-003: duas intenções de estorno não conseguem reverter o mesmo pagamento', async () => {
