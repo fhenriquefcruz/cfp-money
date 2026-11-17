@@ -371,7 +371,105 @@ service cloud.firestore {
               && d.amount > 0
               && d.amount <= 100000000
               && d.reversesEventId is string
-              && d.reversesEventId.size() > 0)
+              && d.reversesEventId.matches('^[A-Za-z0-9_-]{1,128}
+            ||
+            (d.type == 'adjustment'
+              && d.keys().hasAll(['signedAmount', 'direction'])
+              && d.signedAmount is number
+              && d.signedAmount != 0
+              && d.signedAmount > -100000000
+              && d.signedAmount < 100000000
+              && d.direction in ['charge', 'credit']
+              && ((d.direction == 'credit' && d.signedAmount < 0)
+                || (d.direction == 'charge' && d.signedAmount > 0)))
+            ||
+            d.type == 'manual_close'
+          );
+      }
+
+      match /{collection}/{document=**} {
+        allow read, write: if owner(uid)
+          && collection != 'transactionAttachmentChunks'
+          && collection != 'invoiceEvents'
+          && collection != 'transactions';
+      }
+    }
+
+    match /categories/{categoryId} {
+      allow read: if admin()
+        || (
+          signedIn()
+          && (
+            resource.data.isDefault == true
+            || resource.data.ownerUid == request.auth.uid
+          )
+        );
+
+      allow create: if admin()
+        || (
+          signedIn()
+          && validCustomCategoryOwner()
+          && validCustomCategoryFields()
+        );
+
+      allow update: if admin()
+        || (
+          ownsCustomCategory()
+          && validCustomCategoryOwner()
+          && validCustomCategoryFields()
+        );
+
+      allow delete: if admin() || ownsCustomCategory();
+    }
+
+    match /adminAudit/{auditId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /supportRequests/{requestId} {
+      allow create: if signedIn() && validSupportCreate(requestId);
+      allow read: if signedIn()
+        && (resource.data.uid == request.auth.uid || admin());
+      allow update: if admin() && validSupportAdminUpdate();
+      allow delete: if false;
+    }
+
+    match /notificationSubscribers/{uid} {
+      allow read: if owner(uid);
+
+      allow create, update: if owner(uid)
+        && validNotificationSubscriber(uid);
+
+      allow delete: if owner(uid);
+    }
+
+    match /notificationDeliveries/{deliveryId} {
+      allow read, write: if false;
+    }
+
+    match /privacyConsents/{consentId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /accountDeletionRequests/{uid} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /privacyAudit/{auditId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+)
+              && validReversalEventLock(uid, eventId, d))
             ||
             (d.type == 'adjustment'
               && d.keys().hasAll(['signedAmount', 'direction'])
