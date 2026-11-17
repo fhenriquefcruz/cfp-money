@@ -6,9 +6,7 @@ beforeEach(() => {
 })
 
 test('PWA: controller ativado por outra aba não recarrega o rascunho desta aba', async () => {
-  const { handlePwaControllerChange, isPwaReloadRequired } = await import(
-    './pwaControllerChange',
-  )
+  const { handlePwaControllerChange, isPwaReloadRequired } = await import('./pwaControllerChange')
   const reload = vi.fn()
   const notify = vi.fn()
 
@@ -20,9 +18,7 @@ test('PWA: controller ativado por outra aba não recarrega o rascunho desta aba'
 })
 
 test('PWA: só a aba que confirmou a atualização recarrega automaticamente', async () => {
-  const { activatePwaUpdate, handlePwaControllerChange } = await import(
-    './pwaControllerChange',
-  )
+  const { activatePwaUpdate, handlePwaControllerChange } = await import('./pwaControllerChange')
   const postMessage = vi.fn()
   const reload = vi.fn()
   const notify = vi.fn()
@@ -38,9 +34,7 @@ test('PWA: só a aba que confirmou a atualização recarrega automaticamente', a
 })
 
 test('PWA: não considera atualização confirmada se não há worker aguardando', async () => {
-  const { activatePwaUpdate, handlePwaControllerChange } = await import(
-    './pwaControllerChange',
-  )
+  const { activatePwaUpdate, handlePwaControllerChange } = await import('./pwaControllerChange')
   const reload = vi.fn()
   const notify = vi.fn()
   activatePwaUpdate({ waiting: null })
@@ -50,9 +44,7 @@ test('PWA: não considera atualização confirmada se não há worker aguardando
 })
 
 test('PWA: erro ao solicitar ativação não autoriza recarga posterior', async () => {
-  const { activatePwaUpdate, handlePwaControllerChange } = await import(
-    './pwaControllerChange',
-  )
+  const { activatePwaUpdate, handlePwaControllerChange } = await import('./pwaControllerChange')
   const reload = vi.fn()
   const notify = vi.fn()
   const worker = {
