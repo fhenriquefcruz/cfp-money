@@ -694,9 +694,7 @@ test('MR-003: regras de eventos rejeitam frações de centavo e campos cruzados'
     ['wrong-direction', { direction: 'charge' }],
     ['empty-notes', { notes: '' }],
   ]) {
-    await assertFails(
-      send(`schema-invalid-adjustment-${id}-0001`, { ...adjustment, ...changes }),
-    )
+    await assertFails(send(`schema-invalid-adjustment-${id}-0001`, { ...adjustment, ...changes }))
   }
 
   await assertSucceeds(
