@@ -5,8 +5,7 @@ import { expect, test } from '@playwright/test'
 // A troca do script no dist em execução simula duas versões do MESMO PWA.
 // Não modifica dados de produção nem usa o backend financeiro real (VITE_E2E_MODE).
 const workerFile = resolve('dist/sw.js')
-const getControlled = async (page) =>
-  page.evaluate(() => Boolean(navigator.serviceWorker.controller))
+const getControlled = async (page) => page.evaluate(() => Boolean(navigator.serviceWorker.controller))
 
 async function readyForControlledPwa(page, route) {
   await page.addInitScript(() => localStorage.setItem('cfp_onboarding_done_e2e-user', '1'))
@@ -15,7 +14,7 @@ async function readyForControlledPwa(page, route) {
   await expect(page.locator('main')).toBeVisible()
 }
 
-test('PWA previamente controlado: offline, segunda aba com rascunho e atualização consentida', async ({
+test('PWA: duas abas preservam rascunho na atualização', async ({
   page,
   context,
 }) => {
@@ -40,7 +39,9 @@ test('PWA previamente controlado: offline, segunda aba com rascunho e atualizaç
     const draft = second.getByRole('dialog', { name: 'Nova transação' })
     await expect(draft).toBeVisible()
     await draft.locator('#transaction-amount').fill('12345')
-    await draft.getByRole('textbox', { name: 'Descrição', exact: true }).fill('Rascunho PWA sem salvar')
+    await draft
+      .getByRole('textbox', { name: 'Descrição', exact: true })
+      .fill('Rascunho PWA sem salvar')
     await second.evaluate(() => {
       window.__pwaDraftMarker = 'mantido-entre-abas'
     })
