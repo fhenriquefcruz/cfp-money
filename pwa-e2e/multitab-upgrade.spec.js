@@ -18,9 +18,7 @@ function hasWaitingUpdate(page) {
 }
 
 async function waitForControlledPage(page) {
-  const assertion = expect.poll(() => getControlled(page).catch(() => false), {
-    timeout: 30_000,
-  })
+  const assertion = expect.poll(() => getControlled(page).catch(() => false), { timeout: 30_000 })
   await assertion.toBe(true)
 }
 
