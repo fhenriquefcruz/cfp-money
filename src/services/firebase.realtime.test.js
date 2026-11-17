@@ -28,12 +28,7 @@ vi.mock('firebase/firestore', () => ({
   },
 }))
 
-import {
-  onBudgetsChange,
-  onCategoriesChange,
-  onCreditCardsChange,
-  onGoalsChange,
-} from './firebase'
+import { onBudgetsChange, onCategoriesChange, onCreditCardsChange, onGoalsChange } from './firebase'
 
 const snapshot = (...docs) => ({
   docs: docs.map(([id, fields]) => ({ id, data: () => fields })),
