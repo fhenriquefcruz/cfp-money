@@ -632,15 +632,25 @@ test('evento de fatura com identidade de operação é imutável e isolado por U
     setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'legacy-forged-payment'), data),
   )
 
-  // Simula registros históricos que já existiam antes da regra, sem regravá-los.
+  // Registros históricos permanecem legíveis sem regravação ou migração.
+  // O payload antigo não precisa obedecer ao schema moderno de criação.
   await environment.withSecurityRulesDisabled(async (context) => {
     await setDoc(
       doc(context.firestore(), 'users', 'alice', 'invoiceEvents', 'legacy-event-1'),
       legacyPayload,
     )
   })
-  await assertSucceeds(getDoc(legacy))
-  await assertSucceeds(updateDoc(legacy, { notes: 'Legado preservado' }))
+
+  const beforeAttempt = await assertSucceeds(getDoc(legacy))
+  assert.deepEqual(beforeAttempt.data(), legacyPayload)
+  await assertFails(updateDoc(legacy, { notes: 'Tentativa de editar histórico' }))
+  await assertFails(updateDoc(legacy, { amount: 300 }))
+  await assertFails(setDoc(legacy, { ...legacyPayload, amount: 1 }))
+  await assertFails(deleteDoc(legacy))
+  await assertFails(getDoc(doc(bob, 'users', 'alice', 'invoiceEvents', 'legacy-event-1')))
+
+  const afterAttempt = await assertSucceeds(getDoc(legacy))
+  assert.deepEqual(afterAttempt.data(), legacyPayload)
 })
 
 test('MR-003: regras de eventos rejeitam frações de centavo e campos cruzados', async () => {
