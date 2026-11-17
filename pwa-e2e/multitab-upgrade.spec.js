@@ -14,10 +14,7 @@ async function readyForControlledPwa(page, route) {
   await expect(page.locator('main')).toBeVisible()
 }
 
-test('PWA: duas abas preservam rascunho na atualização', async ({
-  page,
-  context,
-}) => {
+test('PWA: duas abas preservam rascunho na atualização', async ({ page, context }) => {
   test.setTimeout(120_000)
   const originalWorker = await readFile(workerFile, 'utf8')
   const version = originalWorker.match(/const SW_VERSION = 'phase20-([a-f0-9]{12})'/)?.[1]
