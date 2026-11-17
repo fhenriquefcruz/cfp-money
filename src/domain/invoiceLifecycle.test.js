@@ -7,6 +7,7 @@ import {
   createReversalEvent,
   getInvoiceEvents,
   getPaymentReversibleAmount,
+  sortInvoiceEvents,
 } from './invoiceLifecycle'
 
 const card = {
@@ -202,4 +203,73 @@ test('aceita valor pago derivado das transações quando não há evento manual'
     remainingAmount: 300,
     status: 'partially_paid',
   })
+})
+
+test('MR-005: ordena históricos sem eventDate sem alterar valores, datas ou a entrada', () => {
+  const events = [
+    {
+      id: 'legacy-created',
+      type: 'payment',
+      amount: 40.01,
+      invoiceKey: 'nubank:2026-08',
+      createdAt: { toDate: () => new Date('2026-08-04T09:00:00.000Z') },
+    },
+    {
+      id: 'current',
+      type: 'payment',
+      amount: 60.02,
+      invoiceKey: 'nubank:2026-08',
+      eventDate: '2026-08-07',
+    },
+    {
+      id: 'legacy-payment-date',
+      type: 'payment',
+      amount: 20.03,
+      invoiceKey: 'nubank:2026-08',
+      paymentDate: '2026-08-06',
+    },
+    {
+      id: 'unknown',
+      type: 'manual_close',
+      invoiceKey: 'nubank:2026-08',
+    },
+    {
+      id: 'a-tie',
+      type: 'adjustment',
+      signedAmount: -0.01,
+      invoiceKey: 'nubank:2026-08',
+      eventDate: '2026-08-07',
+    },
+  ]
+
+  const ordered = sortInvoiceEvents(events)
+  expect(ordered.map((event) => event.id)).toEqual([
+    'a-tie',
+    'current',
+    'legacy-payment-date',
+    'legacy-created',
+    'unknown',
+  ])
+  expect(events[0].id).toBe('legacy-created')
+  expect(ordered[2].eventDate).toBeUndefined()
+  expect(ordered[3].eventDate).toBeUndefined()
+  expect(ordered[4].eventDate).toBeUndefined()
+
+  const invoice = getInvoiceEvents(events, 'nubank', '2026-08')
+  expect(invoice.map((event) => event.id)).toEqual(ordered.map((event) => event.id))
+  expect(buildInvoiceLifecycle({ purchaseTotal: 120.06, events: invoice })).toMatchObject({
+    paidAmount: 120.06,
+    invoiceTotal: 120.05,
+    creditAmount: 0.01,
+  })
+})
+
+test('MR-005: nenhum evento de outra fatura é incluído por fallback de data', () => {
+  const events = [
+    { id: 'legacy-matching', cardId: 'nubank', invoiceMonth: '2026-08', amount: 15, type: 'payment' },
+    { id: 'other-card', cardId: 'other', invoiceMonth: '2026-08', amount: 70, type: 'payment' },
+    { id: 'other-month', cardId: 'nubank', invoiceMonth: '2026-09', amount: 50, type: 'payment' },
+  ]
+  const invoice = getInvoiceEvents(events, 'nubank', '2026-08')
+  expect(invoice.map((event) => event.id)).toEqual(['legacy-matching'])
 })
