@@ -35,6 +35,7 @@ import {
 import { resolveFirebaseConfig } from '../config/firebaseConfig'
 import { securityRuntime } from '../config/securityRuntime'
 import { createPaymentPersistenceChange } from '../domain/paymentControl'
+import { subscribeInvoiceEvents } from './invoiceEventReader'
 
 const firebaseConfig = resolveFirebaseConfig(import.meta.env)
 
@@ -224,11 +225,8 @@ export const updateTransactionPaymentStatuses = async (uid, operation = {}) => {
 export const deleteTransaction = (uid, id) => deleteTransactionBatch(uid, [id])
 
 // ── INVOICE EVENTS ──
-export const onInvoiceEventsChange = (uid, callback) => {
-  const q = query(userCol(uid, 'invoiceEvents'), orderBy('eventDate', 'desc'))
-
-  return onSnapshot(q, (snapshot) => callback(snapshot.docs.map(documentData)))
-}
+export const onInvoiceEventsChange = (uid, callback, onError) =>
+  subscribeInvoiceEvents(db, uid, callback, onError)
 
 export const addInvoiceEvent = async (uid, data) => {
   const { persistInvoiceEventOperation } = await import('./invoiceEventPersistence.js')
