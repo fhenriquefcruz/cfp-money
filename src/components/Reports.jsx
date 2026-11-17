@@ -32,20 +32,9 @@ import { isFinanciallyEffectiveTransaction as isEffective, toTransactionCents } 
 import { summarizeExpenseCategories } from '../domain/expenseCategories'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
-import { endOfMonth, format, subMonths } from 'date-fns'
+import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { getTransactionActivityDate } from '../domain/transactionDates'
 import { buildSavingsOverview } from '../domain/savings'
-
-const COLORS = [
-  '#c49d6b',
-  '#4e8066',
-  '#a7804e',
-  '#b64c43',
-  '#786c8d',
-  '#9a6671',
-  '#5f8587',
-  '#b87645',
-]
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -127,7 +116,7 @@ function ReportsContent() {
   ) // 'overview' | 'categories' | 'savings'
 
   const referenceDate = useMemo(() => new Date(referenceMonth + '-01T00:00:00'), [referenceMonth])
-  const periodStart = format(subMonths(referenceDate, period - 1), 'yyyy-MM-dd')
+  const periodStart = format(startOfMonth(subMonths(referenceDate, period - 1)), 'yyyy-MM-dd')
   const periodEnd = format(endOfMonth(referenceDate), 'yyyy-MM-dd')
   const reportTransactions = useMemo(
     () =>
@@ -476,8 +465,8 @@ function ReportsContent() {
                             nameKey="name"
                             paddingAngle={2}
                           >
-                            {categoryData.map((_, i) => (
-                              <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                            {categoryData.map((cat, i) => (
+                              <Cell key={i} fill={cat.color} />
                             ))}
                           </Pie>
                           <Tooltip
@@ -505,7 +494,7 @@ function ReportsContent() {
                                   <div
                                     className="w-2 h-2 rounded-full"
                                     style={{
-                                      background: COLORS[i % COLORS.length],
+                                      background: cat.color,
                                     }}
                                   />
                                   <span className="font-medium text-[--text-primary] truncate max-w-[130px]">
@@ -522,7 +511,7 @@ function ReportsContent() {
                                   className="h-full rounded-full transition-all duration-700"
                                   style={{
                                     width: `${pct}%`,
-                                    background: COLORS[i % COLORS.length],
+                                    background: cat.color,
                                   }}
                                 />
                               </div>
