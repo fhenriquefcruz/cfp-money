@@ -38,6 +38,7 @@ esse requisito de visibilidade da interface.
 A implantação desta regra é uma **mudança de comportamento**: versões antigas do PWA que editam eventos legados falharão, e versões que criam novos IDs aleatórios já são incompatíveis com as regras do laboratório.
 
 **Bloquear release até:**
+
 - Inventário read-only dos documentos legados e caminhos reais de escrita, sem expor dados pessoais.
 - Testar formatos e fluxos de pagamentos históricos, estornos anteriores, datas, competência, pagamentos parciais e retornos após offline.
 - Garantir frontend compatível e estratégia de atualização das instalações PWA antigas antes de ativar regras restritivas.
