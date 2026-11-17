@@ -83,16 +83,15 @@ export function calculateBudgetUsage(transactions = [], budget, referenceDate = 
     transactions,
     referenceDate.getFullYear(),
     referenceDate.getMonth(),
+  ).reduce(
+    (cents, transaction) =>
+      transaction.type === 'expense' &&
+      !transaction.isSavings &&
+      transaction.categoryId === budget.categoryId
+        ? cents + toTransactionCents(transaction.amount)
+        : cents,
+    0,
   )
-    .reduce(
-      (cents, transaction) =>
-        transaction.type === 'expense' &&
-        !transaction.isSavings &&
-        transaction.categoryId === budget.categoryId
-          ? cents + toTransactionCents(transaction.amount)
-          : cents,
-      0,
-    )
 
   return {
     spent: spentCents / 100,
