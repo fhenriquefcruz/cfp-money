@@ -8,10 +8,12 @@ import {
 } from '@firebase/rules-unit-testing'
 import {
   Timestamp,
+  collection,
   deleteField,
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   runTransaction,
   serverTimestamp,
@@ -679,6 +681,14 @@ test('MR-003: formatos legados de pagamento, estorno, ajuste e fechamento são s
       await setDoc(doc(context.firestore(), 'users', 'alice', 'invoiceEvents', id), data)
     }
   })
+
+  const invoiceCollection = collection(alice, 'users', 'alice', 'invoiceEvents')
+  const visible = await assertSucceeds(getDocs(invoiceCollection))
+  assert.deepEqual(
+    visible.docs.map((item) => item.id).sort(),
+    historical.map(([id]) => id).sort(),
+  )
+  await assertFails(getDocs(collection(bob, 'users', 'alice', 'invoiceEvents')))
 
   for (const [id, expected] of historical) {
     const reference = doc(alice, 'users', 'alice', 'invoiceEvents', id)
