@@ -1,9 +1,17 @@
-name: Deploy verified Firestore receipt rules
+name: Publish verified Firestore rules (manual)
+# NUNCA publicar regras automaticamente ao mesclar um PR financeiro.
+# A publicação manual exige autorização, SHA exato, backup e plano de rollback.
 on:
-  push:
-    branches: [main]
-    paths: [firestore.rules, .github/workflows/deploy-firestore-rules.yml]
   workflow_dispatch:
+    inputs:
+      approved_sha:
+        description: 'SHA completo (40 caracteres) autorizado para publicação'
+        required: true
+        type: string
+      confirmation:
+        description: 'Digite PUBLICAR_REGRAS_FIRESTORE para confirmar'
+        required: true
+        type: string
 permissions:
   contents: read
 jobs:
@@ -17,6 +25,29 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+      - name: Verify manually approved release source
+        shell: bash
+        env:
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+          RELEASE_CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo 'Regra de publicação: execute somente na branch main.'
+            exit 1
+          fi
+          if [[ "$RELEASE_CONFIRMATION" != "PUBLICAR_REGRAS_FIRESTORE" ]]; then
+            echo 'Confirmação de publicação ausente ou incorreta.'
+            exit 1
+          fi
+          if [[ ! "$APPROVED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo 'Informe o SHA completo de 40 caracteres autorizado.'
+            exit 1
+          fi
+          if [[ "$(git rev-parse HEAD)" != "$APPROVED_SHA" ]]; then
+            echo 'O SHA executado difere da revisão aprovada; publicação bloqueada.'
+            exit 1
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: 24

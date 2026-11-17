@@ -272,8 +272,205 @@ service cloud.firestore {
         allow delete: if owner(uid);
       }
 
+      // Valida apenas campos novos ou alterados em históricos legados.
+      function validTransactionAmount() {
+        return request.resource.data.get('amount', null) is number
+          && request.resource.data.amount > 0
+          && request.resource.data.amount <= 100000000;
+      }
+
+      function validChangedTransactionFields(changed, uid) {
+        let d = request.resource.data;
+        return (!changed.hasAny(['amount']) || validTransactionAmount())
+          && (!changed.hasAny(['type']) || !d.keys().hasAny(['type'])
+            || d.get('type', '') in ['income', 'expense'])
+          && (!changed.hasAny(['date']) || !d.keys().hasAny(['date'])
+            || (d.get('date', '') is string
+              && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
+          && (!changed.hasAny(['dueDate']) || !d.keys().hasAny(['dueDate'])
+            || (d.get('dueDate', '') is string
+              && d.dueDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
+          && (!changed.hasAny(['purchaseDate']) || !d.keys().hasAny(['purchaseDate'])
+            || (d.get('purchaseDate', '') is string
+              && d.purchaseDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
+          && (!changed.hasAny(['invoiceMonth']) || !d.keys().hasAny(['invoiceMonth'])
+            || (d.get('invoiceMonth', '') is string
+              && d.invoiceMonth.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')))
+          && (!changed.hasAny(['cardId']) || !d.keys().hasAny(['cardId'])
+            || (d.get('cardId', '') is string && d.cardId.size() <= 128))
+          && (!changed.hasAny(['isSavings']) || !d.keys().hasAny(['isSavings'])
+            || d.get('isSavings', false) is bool)
+          && (!changed.hasAny(['paymentStatus']) || !d.keys().hasAny(['paymentStatus'])
+            || d.get('paymentStatus', '') in [
+              'unknown', 'pending', 'partial', 'overdue', 'paid', 'cancelled'
+            ])
+          && (!changed.hasAny(['uid']) || !d.keys().hasAny(['uid']) || d.get('uid', '') == uid);
+      }
+
+      match /transactions/{transactionId} {
+        allow get, list: if owner(uid);
+        allow create: if owner(uid) && validTransactionAmount()
+          && validChangedTransactionFields(request.resource.data.keys(), uid);
+        allow update: if owner(uid)
+          && validChangedTransactionFields(
+            request.resource.data.diff(resource.data).affectedKeys(), uid
+          );
+        allow delete: if owner(uid);
+      }
+
+      // Ledger de faturas append-only: legados continuam consultáveis
+      // sem migração, mas não podem ser alterados ou excluídos pelo cliente.
+      // Correções financeiras devem gerar um novo evento auditável.
+      match /invoiceEvents/{eventId} {
+        allow get, list: if owner(uid);
+        allow create: if owner(uid)
+          && eventId.matches('^op_.*')
+          && validIdempotentInvoiceEvent(eventId);
+        allow update, delete: if false;
+      }
+
+      // Novos estornos exigem uma trava criada na mesma transação.
+      function validReversalEventLock(uid, eventId, data) {
+        let paymentPath = /databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversesEventId);
+        let lockPath = /databases/$(database)/documents/users/$(uid)/invoiceReversalLocks/$(data.reversesEventId);
+
+        return exists(paymentPath)
+          && get(paymentPath).data.type == 'payment'
+          && get(paymentPath).data.cardId == data.cardId
+          && get(paymentPath).data.invoiceMonth == data.invoiceMonth
+          && get(paymentPath).data.invoiceKey == data.invoiceKey
+          && get(paymentPath).data.amount is number
+          && data.amount <= get(paymentPath).data.amount
+          && math.abs(data.amount * 100 - math.round(data.amount * 100)) < 0.00001
+          && !exists(lockPath)
+          && getAfter(lockPath).data.paymentId == data.reversesEventId
+          && getAfter(lockPath).data.reversalEventId == eventId
+          && getAfter(lockPath).data.invoiceKey == data.invoiceKey
+          && getAfter(lockPath).data.amountCents == math.round(data.amount * 100);
+      }
+
+      function validReversalLockCreate(uid, paymentId) {
+        let data = request.resource.data;
+        let paymentPath = /databases/$(database)/documents/users/$(uid)/invoiceEvents/$(paymentId);
+        let eventPath = /databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversalEventId);
+
+        return data.keys().hasAll([
+            'paymentId', 'reversalEventId', 'invoiceKey', 'amountCents', 'createdAt'
+          ])
+          && data.keys().hasOnly([
+            'paymentId', 'reversalEventId', 'invoiceKey', 'amountCents', 'createdAt'
+          ])
+          && data.paymentId == paymentId
+          && data.reversalEventId is string
+          && data.reversalEventId.matches('^op_[A-Za-z0-9_-]{16,80}$')
+          && data.invoiceKey is string
+          && data.amountCents is int
+          && data.amountCents > 0
+          && data.amountCents <= 10000000000
+          && data.createdAt == request.time
+          && exists(paymentPath)
+          && get(paymentPath).data.type == 'payment'
+          && get(paymentPath).data.invoiceKey == data.invoiceKey
+          && data.amountCents <= math.round(get(paymentPath).data.amount * 100)
+          && !exists(eventPath)
+          && getAfter(eventPath).data.type == 'reversal'
+          && getAfter(eventPath).data.reversesEventId == paymentId
+          && getAfter(eventPath).data.invoiceKey == data.invoiceKey
+          && data.amountCents == math.round(getAfter(eventPath).data.amount * 100);
+      }
+
+      // Firestore valida CENTAVOS e contratos por tipo, não apenas o frontend.
+      function validInvoiceUnsignedCents(amount) {
+        return amount is number
+          && amount >= 0.01
+          && amount <= 100000000
+          && math.abs(amount * 100 - math.round(amount * 100)) < 0.00001;
+      }
+
+      function validInvoiceSignedCents(amount) {
+        return amount is number
+          && (amount <= -0.01 || amount >= 0.01)
+          && amount > -100000000
+          && amount < 100000000
+          && math.abs(amount * 100 - math.round(amount * 100)) < 0.00001;
+      }
+
+      function validIdempotentInvoiceEvent(eventId) {
+        let d = request.resource.data;
+        return d.keys().hasAll([
+            'operationId', 'type', 'invoiceKey', 'cardId',
+            'invoiceMonth', 'eventDate', 'notes', 'createdAt'
+          ])
+          && d.keys().hasOnly([
+            'operationId', 'type', 'invoiceKey', 'cardId', 'cardName',
+            'cardLast4', 'invoiceMonth', 'eventDate', 'notes', 'createdAt',
+            'amount', 'paymentDate', 'sourceAccount', 'direction',
+            'signedAmount', 'reversesEventId'
+          ])
+          && d.operationId is string
+          && d.operationId.matches('^[A-Za-z0-9_-]{16,80}$')
+          && eventId == 'op_' + d.operationId
+          && d.type in ['payment', 'reversal', 'adjustment', 'manual_close']
+          && d.cardId is string
+          && d.cardId.size() > 0
+          && d.cardId.size() <= 128
+          && d.invoiceMonth is string
+          && d.invoiceMonth.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
+          && d.invoiceKey == d.cardId + ':' + d.invoiceMonth
+          && d.eventDate is string
+          && d.eventDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          && d.notes is string
+          && d.notes.size() <= 2000
+          && d.createdAt is timestamp
+          && (
+            (d.type == 'payment'
+              && d.keys().hasAll(['amount', 'paymentDate', 'sourceAccount'])
+              && !d.keys().hasAny(['signedAmount', 'direction', 'reversesEventId'])
+              && validInvoiceUnsignedCents(d.amount)
+              && d.paymentDate == d.eventDate
+              && d.sourceAccount is string
+              && d.sourceAccount.size() <= 120)
+            ||
+            (d.type == 'reversal'
+              && d.keys().hasAll(['amount', 'reversesEventId', 'sourceAccount'])
+              && !d.keys().hasAny(['paymentDate', 'signedAmount', 'direction'])
+              && validInvoiceUnsignedCents(d.amount)
+              && d.reversesEventId is string
+              && d.reversesEventId.matches('^[A-Za-z0-9_-]{1,128}$')
+              && d.sourceAccount is string
+              && d.sourceAccount.size() <= 120
+              && validReversalEventLock(uid, eventId, d))
+            ||
+            (d.type == 'adjustment'
+              && d.keys().hasAll(['signedAmount', 'direction'])
+              && !d.keys().hasAny(['amount', 'paymentDate', 'sourceAccount', 'reversesEventId'])
+              && validInvoiceSignedCents(d.signedAmount)
+              && d.direction in ['charge', 'credit']
+              && d.notes.size() > 0
+              && ((d.direction == 'credit' && d.signedAmount < 0)
+                || (d.direction == 'charge' && d.signedAmount > 0)))
+            ||
+            (d.type == 'manual_close'
+              && !d.keys().hasAny([
+                'amount', 'paymentDate', 'sourceAccount', 'signedAmount',
+                'direction', 'reversesEventId'
+              ]))
+          );
+      }
+
+      match /invoiceReversalLocks/{paymentId} {
+        allow get: if owner(uid);
+        allow list: if false;
+        allow create: if owner(uid) && validReversalLockCreate(uid, paymentId);
+        allow update, delete: if false;
+      }
+
       match /{collection}/{document=**} {
-        allow read, write: if owner(uid) && collection != 'transactionAttachmentChunks';
+        allow read, write: if owner(uid)
+          && collection != 'transactionAttachmentChunks'
+          && collection != 'invoiceEvents'
+          && collection != 'invoiceReversalLocks'
+          && collection != 'transactions';
       }
     }
 
