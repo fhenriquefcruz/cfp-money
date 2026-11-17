@@ -272,6 +272,52 @@ service cloud.firestore {
         allow delete: if owner(uid);
       }
 
+      // Valida apenas campos novos ou alterados em históricos legados.
+      function validTransactionAmount() {
+        return request.resource.data.get('amount', null) is number
+          && request.resource.data.amount > 0
+          && request.resource.data.amount <= 100000000;
+      }
+
+      function validChangedTransactionFields(changed, uid) {
+        let d = request.resource.data;
+        return (!changed.hasAny(['amount']) || validTransactionAmount())
+          && (!changed.hasAny(['type']) || !d.keys().hasAny(['type'])
+            || d.get('type', '') in ['income', 'expense'])
+          && (!changed.hasAny(['date']) || !d.keys().hasAny(['date'])
+            || (d.get('date', '') is string
+              && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
+          && (!changed.hasAny(['dueDate']) || !d.keys().hasAny(['dueDate'])
+            || (d.get('dueDate', '') is string
+              && d.dueDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
+          && (!changed.hasAny(['purchaseDate']) || !d.keys().hasAny(['purchaseDate'])
+            || (d.get('purchaseDate', '') is string
+              && d.purchaseDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
+          && (!changed.hasAny(['invoiceMonth']) || !d.keys().hasAny(['invoiceMonth'])
+            || (d.get('invoiceMonth', '') is string
+              && d.invoiceMonth.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')))
+          && (!changed.hasAny(['cardId']) || !d.keys().hasAny(['cardId'])
+            || (d.get('cardId', '') is string && d.cardId.size() <= 128))
+          && (!changed.hasAny(['isSavings']) || !d.keys().hasAny(['isSavings'])
+            || d.get('isSavings', false) is bool)
+          && (!changed.hasAny(['paymentStatus']) || !d.keys().hasAny(['paymentStatus'])
+            || d.get('paymentStatus', '') in [
+              'unknown', 'pending', 'partial', 'overdue', 'paid', 'cancelled'
+            ])
+          && (!changed.hasAny(['uid']) || !d.keys().hasAny(['uid']) || d.get('uid', '') == uid);
+      }
+
+      match /transactions/{transactionId} {
+        allow get, list: if owner(uid);
+        allow create: if owner(uid) && validTransactionAmount()
+          && validChangedTransactionFields(request.resource.data.keys(), uid);
+        allow update: if owner(uid)
+          && validChangedTransactionFields(
+            request.resource.data.diff(resource.data).affectedKeys(), uid
+          );
+        allow delete: if owner(uid);
+      }
+
       // IDs de operação são imutáveis. IDs legados continuam compatíveis.
       match /invoiceEvents/{eventId} {
         allow get, list: if owner(uid);
@@ -342,7 +388,8 @@ service cloud.firestore {
       match /{collection}/{document=**} {
         allow read, write: if owner(uid)
           && collection != 'transactionAttachmentChunks'
-          && collection != 'invoiceEvents';
+          && collection != 'invoiceEvents'
+          && collection != 'transactions';
       }
     }
 
