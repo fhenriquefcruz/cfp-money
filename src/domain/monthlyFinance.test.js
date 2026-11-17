@@ -129,3 +129,16 @@ test('MR-006: série mensal, resumo financeiro e categorias usam os mesmos centa
   expect(month.savings).toBe(0.1)
   expect(items).toEqual(before)
 })
+
+test('mantém rótulos pt-BR e competência ao atravessar ano, mês curto e ano bissexto', () => {
+  const periods = getMonthlyFinancialData([], 4, new Date(2028, 2, 31))
+  expect(periods.map(({ monthKey, month, fullMonth }) => ({ monthKey, month, fullMonth }))).toEqual([
+    { monthKey: '2027-12', month: 'Dez', fullMonth: 'dezembro de 2027' },
+    { monthKey: '2028-01', month: 'Jan', fullMonth: 'janeiro de 2028' },
+    { monthKey: '2028-02', month: 'Fev', fullMonth: 'fevereiro de 2028' },
+    { monthKey: '2028-03', month: 'Mar', fullMonth: 'março de 2028' },
+  ])
+  expect(periods.every(({ income, expenses, balance, savings }) => (
+    income === 0 && expenses === 0 && balance === 0 && savings === 0
+  ))).toBe(true)
+})
