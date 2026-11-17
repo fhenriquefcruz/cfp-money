@@ -318,12 +318,14 @@ service cloud.firestore {
         allow delete: if owner(uid);
       }
 
-      // IDs de operação são imutáveis. IDs legados continuam compatíveis.
+      // Novos eventos exigem identidade de operação imutável.
+      // Documentos legados existentes permanecem acessíveis, mas novos IDs
+      // antigos não podem contornar as validações de invoiceEvents.
       match /invoiceEvents/{eventId} {
         allow get, list: if owner(uid);
-        allow create: if owner(uid) && (
-          !eventId.matches('^op_.*') || validIdempotentInvoiceEvent(eventId)
-        );
+        allow create: if owner(uid)
+          && eventId.matches('^op_.*')
+          && validIdempotentInvoiceEvent(eventId);
         allow update, delete: if owner(uid) && !eventId.matches('^op_.*');
       }
 
