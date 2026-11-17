@@ -677,8 +677,9 @@ test('MR-003: eventos legados permanecem legíveis e imutáveis', async () => {
   ]
 
   await environment.withSecurityRulesDisabled(async (context) => {
+    const database = context.firestore()
     for (const [id, data] of historical) {
-      await setDoc(doc(context.firestore(), 'users', 'alice', 'invoiceEvents', id), data)
+      await setDoc(doc(database, 'users', 'alice', 'invoiceEvents', id), data)
     }
   })
 
