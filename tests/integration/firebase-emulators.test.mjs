@@ -323,11 +323,7 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
         await persistInvoiceEventOperation(database, uid, successfulReversal),
         successfulId,
       )
-      assert.equal(
-        (await getDocs(collection(database, 'users', uid, 'invoiceEvents'))).size,
-        3,
-      )
-
+      assert.equal((await getDocs(collection(database, 'users', uid, 'invoiceEvents'))).size, 3)
     } finally {
       await deleteApp(secondClient)
     }
