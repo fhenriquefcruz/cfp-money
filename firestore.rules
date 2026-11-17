@@ -329,6 +329,56 @@ service cloud.firestore {
         allow update, delete: if owner(uid) && !eventId.matches('^op_.*');
       }
 
+      // Novos estornos exigem uma trava criada na mesma transação.
+      function validReversalEventLock(uid, eventId, data) {
+        let paymentPath = /databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversesEventId);
+        let lockPath = /databases/$(database)/documents/users/$(uid)/invoiceReversalLocks/$(data.reversesEventId);
+
+        return exists(paymentPath)
+          && get(paymentPath).data.type == 'payment'
+          && get(paymentPath).data.cardId == data.cardId
+          && get(paymentPath).data.invoiceMonth == data.invoiceMonth
+          && get(paymentPath).data.invoiceKey == data.invoiceKey
+          && get(paymentPath).data.amount is number
+          && data.amount <= get(paymentPath).data.amount
+          && math.abs(data.amount * 100 - math.round(data.amount * 100)) < 0.00001
+          && !exists(lockPath)
+          && getAfter(lockPath).data.paymentId == data.reversesEventId
+          && getAfter(lockPath).data.reversalEventId == eventId
+          && getAfter(lockPath).data.invoiceKey == data.invoiceKey
+          && getAfter(lockPath).data.amountCents == math.round(data.amount * 100);
+      }
+
+      function validReversalLockCreate(uid, paymentId) {
+        let data = request.resource.data;
+        let paymentPath = /databases/$(database)/documents/users/$(uid)/invoiceEvents/$(paymentId);
+        let eventPath = /databases/$(database)/documents/users/$(uid)/invoiceEvents/$(data.reversalEventId);
+
+        return data.keys().hasAll([
+            'paymentId', 'reversalEventId', 'invoiceKey', 'amountCents', 'createdAt'
+          ])
+          && data.keys().hasOnly([
+            'paymentId', 'reversalEventId', 'invoiceKey', 'amountCents', 'createdAt'
+          ])
+          && data.paymentId == paymentId
+          && data.reversalEventId is string
+          && data.reversalEventId.matches('^op_[A-Za-z0-9_-]{16,80}$')
+          && data.invoiceKey is string
+          && data.amountCents is int
+          && data.amountCents > 0
+          && data.amountCents <= 10000000000
+          && data.createdAt == request.time
+          && exists(paymentPath)
+          && get(paymentPath).data.type == 'payment'
+          && get(paymentPath).data.invoiceKey == data.invoiceKey
+          && data.amountCents <= math.round(get(paymentPath).data.amount * 100)
+          && !exists(eventPath)
+          && getAfter(eventPath).data.type == 'reversal'
+          && getAfter(eventPath).data.reversesEventId == paymentId
+          && getAfter(eventPath).data.invoiceKey == data.invoiceKey
+          && data.amountCents == math.round(getAfter(eventPath).data.amount * 100);
+      }
+
       function validIdempotentInvoiceEvent(eventId) {
         let d = request.resource.data;
         return d.keys().hasAll([
@@ -371,7 +421,8 @@ service cloud.firestore {
               && d.amount > 0
               && d.amount <= 100000000
               && d.reversesEventId is string
-              && d.reversesEventId.size() > 0)
+              && d.reversesEventId.matches('^[A-Za-z0-9_-]{1,128}$')
+              && validReversalEventLock(uid, eventId, d))
             ||
             (d.type == 'adjustment'
               && d.keys().hasAll(['signedAmount', 'direction'])
@@ -387,10 +438,18 @@ service cloud.firestore {
           );
       }
 
+      match /invoiceReversalLocks/{paymentId} {
+        allow get: if owner(uid);
+        allow list: if false;
+        allow create: if owner(uid) && validReversalLockCreate(uid, paymentId);
+        allow update, delete: if false;
+      }
+
       match /{collection}/{document=**} {
         allow read, write: if owner(uid)
           && collection != 'transactionAttachmentChunks'
           && collection != 'invoiceEvents'
+          && collection != 'invoiceReversalLocks'
           && collection != 'transactions';
       }
     }
