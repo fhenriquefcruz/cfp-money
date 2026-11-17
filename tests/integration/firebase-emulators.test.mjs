@@ -16,12 +16,14 @@ import {
   connectFirestoreEmulator,
   doc,
   getDoc,
+  getDocs,
   getFirestore,
   runTransaction,
   setDoc,
   writeBatch,
 } from 'firebase/firestore'
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions'
+import { persistInvoiceEventOperation } from '../../src/services/invoiceEventPersistence.js'
 
 const requireFromFunctions = createRequire(new URL('../../functions/package.json', import.meta.url))
 const { deleteApp: deleteAdminApp, initializeApp: initializeAdminApp } =
@@ -210,6 +212,121 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     await recover.commit()
     assert.equal((await getDoc(orphanChunk)).exists(), false)
     assert.equal((await getDoc(cleanupJob)).exists(), false)
+
+    // Eventos de fatura: a mesma intenção concorrente em sessões diferentes gera
+    // um único documento, inclusive quando o cliente repete após timeout.
+    const paymentOperation = 'integration-payment-operation-0001'
+    const invoicePayment = {
+      operationId: paymentOperation,
+      type: 'payment',
+      cardId: 'card-integration',
+      cardName: 'Cartão de teste',
+      cardLast4: '1234',
+      invoiceMonth: '2026-11',
+      invoiceKey: 'card-integration:2026-11',
+      eventDate: '2026-11-15',
+      paymentDate: '2026-11-15',
+      amount: 150.25,
+      sourceAccount: 'Conta de teste',
+      notes: '',
+    }
+
+    const secondClient = initializeApp(
+      {
+        apiKey: 'demo-api-key',
+        authDomain: `${PROJECT_ID}.firebaseapp.com`,
+        projectId: PROJECT_ID,
+        appId: '1:123456789:web:invoice-idempotency',
+      },
+      'firebase-emulator-integration-second-session',
+    )
+    try {
+      const secondAuth = getAuth(secondClient)
+      const secondDatabase = getFirestore(secondClient)
+      connectAuthEmulator(secondAuth, `http://${authAddress.host}:${authAddress.port}`, {
+        disableWarnings: true,
+      })
+      connectFirestoreEmulator(secondDatabase, firestoreAddress.host, firestoreAddress.port)
+      await signInWithEmailAndPassword(secondAuth, 'integration-user@example.com', TEST_PASSWORD)
+
+      const ids = await Promise.all([
+        persistInvoiceEventOperation(database, uid, invoicePayment),
+        persistInvoiceEventOperation(secondDatabase, uid, invoicePayment),
+      ])
+      assert.deepEqual(ids, [`op_${paymentOperation}`, `op_${paymentOperation}`])
+
+      const existingReference = doc(database, 'users', uid, 'invoiceEvents', ids[0])
+      const originalCreatedAt = (await getDoc(existingReference)).data().createdAt.toMillis()
+      assert.equal(await persistInvoiceEventOperation(database, uid, invoicePayment), ids[0])
+      assert.equal((await getDoc(existingReference)).data().createdAt.toMillis(), originalCreatedAt)
+      await assert.rejects(
+        () =>
+          persistInvoiceEventOperation(secondDatabase, uid, { ...invoicePayment, amount: 150.26 }),
+        /outros dados/,
+      )
+
+      const anotherOperation = {
+        ...invoicePayment,
+        operationId: 'integration-payment-operation-0002',
+      }
+      assert.equal(
+        await persistInvoiceEventOperation(database, uid, anotherOperation),
+        'op_integration-payment-operation-0002',
+      )
+      const events = await getDocs(collection(database, 'users', uid, 'invoiceEvents'))
+      assert.equal(events.size, 2)
+      assert.equal(
+        events.docs.reduce((sum, event) => sum + event.data().amount, 0),
+        300.5,
+      )
+      await assert.rejects(
+        () => getDoc(doc(secondDatabase, 'users', 'another-user', 'invoiceEvents', ids[0])),
+        (error) => error?.code === 'permission-denied',
+      )
+
+      // Corrida real entre duas sessões com IDENTIDADES DIFERENTES para estornar
+      // o mesmo pagamento. A trava impede que ambas registrem liquidação inversa.
+      const makeReversal = (operationId) => ({
+        operationId,
+        type: 'reversal',
+        cardId: invoicePayment.cardId,
+        cardName: invoicePayment.cardName,
+        cardLast4: invoicePayment.cardLast4,
+        invoiceMonth: invoicePayment.invoiceMonth,
+        invoiceKey: invoicePayment.invoiceKey,
+        eventDate: '2026-11-16',
+        amount: 150.25,
+        reversesEventId: ids[0],
+        sourceAccount: 'Conta de teste',
+        notes: 'Estorno integral em teste',
+      })
+      const firstReversal = makeReversal('integration-reversal-operation-0001')
+      const competingReversal = makeReversal('integration-reversal-operation-0002')
+      const reversalResults = await Promise.allSettled([
+        persistInvoiceEventOperation(database, uid, firstReversal),
+        persistInvoiceEventOperation(secondDatabase, uid, competingReversal),
+      ])
+      const successes = reversalResults.filter((item) => item.status === 'fulfilled')
+      const failures = reversalResults.filter((item) => item.status === 'rejected')
+      assert.equal(successes.length, 1)
+      assert.equal(failures.length, 1)
+
+      const successfulReversal =
+        reversalResults[0].status === 'fulfilled' ? firstReversal : competingReversal
+      const successfulId = successes[0].value
+      const lockRef = doc(database, 'users', uid, 'invoiceReversalLocks', ids[0])
+      const persistedLock = (await getDoc(lockRef)).data()
+      assert.equal(persistedLock.paymentId, ids[0])
+      assert.equal(persistedLock.reversalEventId, successfulId)
+      assert.equal(persistedLock.amountCents, 15025)
+      assert.equal(
+        await persistInvoiceEventOperation(database, uid, successfulReversal),
+        successfulId,
+      )
+      assert.equal((await getDocs(collection(database, 'users', uid, 'invoiceEvents'))).size, 3)
+    } finally {
+      await deleteApp(secondClient)
+    }
 
     const getBackendStatus = httpsCallable(functions, 'getBackendStatus')
     const backendStatus = await getBackendStatus()
