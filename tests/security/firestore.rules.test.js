@@ -655,7 +655,7 @@ test('evento de fatura com identidade de operação é imutável e isolado por U
   assert.deepEqual(afterAttempt.data(), legacyPayload)
 })
 
-test('MR-003: formatos legados de pagamento, estorno, ajuste e fechamento são somente leitura', async () => {
+test('MR-003: eventos legados permanecem legíveis e imutáveis', async () => {
   const alice = environment.authenticatedContext('alice').firestore()
   const bob = environment.authenticatedContext('bob').firestore()
   const historical = [
