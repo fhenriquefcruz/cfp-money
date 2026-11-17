@@ -379,6 +379,22 @@ service cloud.firestore {
           && data.amountCents == math.round(getAfter(eventPath).data.amount * 100);
       }
 
+      // Firestore valida CENTAVOS e contratos por tipo, não apenas o frontend.
+      function validInvoiceUnsignedCents(amount) {
+        return amount is number
+          && amount >= 0.01
+          && amount <= 100000000
+          && math.abs(amount * 100 - math.round(amount * 100)) < 0.00001;
+      }
+
+      function validInvoiceSignedCents(amount) {
+        return amount is number
+          && (amount <= -0.01 || amount >= 0.01)
+          && amount > -100000000
+          && amount < 100000000
+          && math.abs(amount * 100 - math.round(amount * 100)) < 0.00001;
+      }
+
       function validIdempotentInvoiceEvent(eventId) {
         let d = request.resource.data;
         return d.keys().hasAll([
@@ -409,32 +425,36 @@ service cloud.firestore {
           && (
             (d.type == 'payment'
               && d.keys().hasAll(['amount', 'paymentDate', 'sourceAccount'])
-              && d.amount is number
-              && d.amount > 0
-              && d.amount <= 100000000
+              && !d.keys().hasAny(['signedAmount', 'direction', 'reversesEventId'])
+              && validInvoiceUnsignedCents(d.amount)
               && d.paymentDate == d.eventDate
-              && d.sourceAccount is string)
+              && d.sourceAccount is string
+              && d.sourceAccount.size() <= 120)
             ||
             (d.type == 'reversal'
-              && d.keys().hasAll(['amount', 'reversesEventId'])
-              && d.amount is number
-              && d.amount > 0
-              && d.amount <= 100000000
+              && d.keys().hasAll(['amount', 'reversesEventId', 'sourceAccount'])
+              && !d.keys().hasAny(['paymentDate', 'signedAmount', 'direction'])
+              && validInvoiceUnsignedCents(d.amount)
               && d.reversesEventId is string
               && d.reversesEventId.matches('^[A-Za-z0-9_-]{1,128}$')
+              && d.sourceAccount is string
+              && d.sourceAccount.size() <= 120
               && validReversalEventLock(uid, eventId, d))
             ||
             (d.type == 'adjustment'
               && d.keys().hasAll(['signedAmount', 'direction'])
-              && d.signedAmount is number
-              && d.signedAmount != 0
-              && d.signedAmount > -100000000
-              && d.signedAmount < 100000000
+              && !d.keys().hasAny(['amount', 'paymentDate', 'sourceAccount', 'reversesEventId'])
+              && validInvoiceSignedCents(d.signedAmount)
               && d.direction in ['charge', 'credit']
+              && d.notes.size() > 0
               && ((d.direction == 'credit' && d.signedAmount < 0)
                 || (d.direction == 'charge' && d.signedAmount > 0)))
             ||
-            d.type == 'manual_close'
+            (d.type == 'manual_close'
+              && !d.keys().hasAny([
+                'amount', 'paymentDate', 'sourceAccount', 'signedAmount',
+                'direction', 'reversesEventId'
+              ]))
           );
       }
 
