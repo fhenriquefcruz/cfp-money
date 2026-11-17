@@ -79,3 +79,24 @@ test('não cria segunda operação ao alterar dados após timeout não confirmad
   expect(onCreateEvent).toHaveBeenCalledTimes(1)
   expect(screen.getByRole('alert')).toHaveTextContent('Confira o histórico')
 })
+
+test('MR-005: histórico de fatura sinaliza evento legado sem data, sem inventar vencimento', () => {
+  render(
+    <InvoiceLifecycleModal
+      isOpen
+      invoice={{
+        ...invoice,
+        lifecycle: {
+          ...invoice.lifecycle,
+          events: [{ id: 'legacy-undated', type: 'manual_close', notes: 'Histórico preservado' }],
+        },
+      }}
+      invoiceMonth="2026-11"
+      onCreateEvent={vi.fn()}
+      onClose={vi.fn()}
+    />,
+  )
+  fireEvent.click(screen.getByRole('button', { name: 'Histórico' }))
+  expect(screen.getByText('Data do evento não registrada')).toBeInTheDocument()
+  expect(screen.getByText('Histórico preservado')).toBeInTheDocument()
+})
