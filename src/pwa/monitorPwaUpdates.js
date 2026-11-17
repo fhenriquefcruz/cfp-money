@@ -45,4 +45,3 @@ export function monitorPwaUpdates(
     windowTarget.removeEventListener('online', handleResume)
   }
 }
-
