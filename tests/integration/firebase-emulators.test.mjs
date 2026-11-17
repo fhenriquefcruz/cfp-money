@@ -24,11 +24,14 @@ import {
 } from 'firebase/firestore'
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions'
 import { persistInvoiceEventOperation } from '../../src/services/invoiceEventPersistence.js'
+import { subscribeInvoiceEvents } from '../../src/services/invoiceEventReader.js'
+import { buildInvoiceLifecycle, getInvoiceEvents } from '../../src/domain/invoiceLifecycle.js'
 
 const requireFromFunctions = createRequire(new URL('../../functions/package.json', import.meta.url))
 const { deleteApp: deleteAdminApp, initializeApp: initializeAdminApp } =
   requireFromFunctions('firebase-admin/app')
 const { getAuth: getAdminAuth } = requireFromFunctions('firebase-admin/auth')
+const { getFirestore: getAdminFirestore } = requireFromFunctions('firebase-admin/firestore')
 
 const PROJECT_ID = 'demo-cfp-money-integration'
 const REGION = 'southamerica-east1'
@@ -327,6 +330,70 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
     } finally {
       await deleteApp(secondClient)
     }
+
+    // MR-005: o backend legado pode ter eventos sem eventDate. Somente o Admin
+    // SDK cria fixtures sintéticas; as Rules permanecem ativas no leitor do UID.
+    const transactionsBeforeHistory = (
+      await getDocs(collection(database, 'users', uid, 'transactions'))
+    ).size
+    const adminDatabase = getAdminFirestore(adminApp)
+    const legacyCollection = adminDatabase.collection('users').doc(uid).collection('invoiceEvents')
+    await legacyCollection.doc('legacy-older-payment').set({
+      type: 'payment',
+      cardId: 'card-integration',
+      invoiceMonth: '2026-11',
+      invoiceKey: 'card-integration:2026-11',
+      paymentDate: '2026-11-12',
+      amount: 19.02,
+      createdAt: Timestamp.fromDate(new Date('2026-11-12T10:00:00.000Z')),
+    })
+    await legacyCollection.doc('legacy-undated-close').set({
+      type: 'manual_close',
+      cardId: 'card-integration',
+      invoiceMonth: '2026-11',
+      invoiceKey: 'card-integration:2026-11',
+      createdAt: Timestamp.fromDate(new Date('2026-11-11T10:00:00.000Z')),
+    })
+
+    const history = await new Promise((resolve, reject) => {
+      let stop = () => {}
+      const deadline = setTimeout(() => {
+        stop()
+        reject(new Error('Listener do UID não recebeu todos os eventos históricos.'))
+      }, 15000)
+      stop = subscribeInvoiceEvents(
+        database,
+        uid,
+        (items) => {
+          if (!items.some((item) => item.id === 'legacy-older-payment')) return
+          if (!items.some((item) => item.id === 'legacy-undated-close')) return
+          clearTimeout(deadline)
+          stop()
+          resolve(items)
+        },
+        (error) => {
+          clearTimeout(deadline)
+          stop()
+          reject(error)
+        },
+      )
+    })
+
+    assert.equal(history.length, 5)
+    assert.equal(history.at(-1).id, 'legacy-undated-close')
+    assert.equal(history.at(-2).id, 'legacy-older-payment')
+    assert.equal(history.find((item) => item.id === 'legacy-older-payment').eventDate, undefined)
+    const historyForInvoice = getInvoiceEvents(history, 'card-integration', '2026-11')
+    const lifecycle = buildInvoiceLifecycle({
+      purchaseTotal: 310,
+      events: historyForInvoice,
+    })
+    assert.equal(lifecycle.paidAmount, 169.27)
+    assert.equal(lifecycle.remainingAmount, 140.73)
+    assert.equal(
+      (await getDocs(collection(database, 'users', uid, 'transactions'))).size,
+      transactionsBeforeHistory,
+    )
 
     const getBackendStatus = httpsCallable(functions, 'getBackendStatus')
     const backendStatus = await getBackendStatus()
