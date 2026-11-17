@@ -43,9 +43,7 @@ describe('MR-003: limite aritmético de estornos', () => {
     expect(
       validateReversalAgainstPayment(payment, { ...reversal, amount: 100.01 }, history),
     ).toMatchObject({ requestedCents: 10001, historicalCents: 2001 })
-    expect(() => validateReversalAgainstPayment(payment, reversal, history)).toThrow(
-      /ultrapassa/,
-    )
+    expect(() => validateReversalAgainstPayment(payment, reversal, history)).toThrow(/ultrapassa/)
   })
 
   test('rejeita outro cartão, outra competência e origem inexistente', () => {
