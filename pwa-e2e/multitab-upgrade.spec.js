@@ -2,21 +2,27 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { expect, test } from '@playwright/test'
 
-// A troca do script no dist em execução simula duas versões do MESMO PWA.
-// Não modifica dados de produção nem usa o backend financeiro real (VITE_E2E_MODE).
+// Simula duas versões do Service Worker no servidor local do Playwright.
+// Firebase real não é acessado: a suíte usa VITE_E2E_MODE.
 const workerFile = resolve('dist/sw.js')
-const getControlled = async (page) =>
-  page.evaluate(() => Boolean(navigator.serviceWorker.controller))
 
-async function waitForControlledPage(page) {
-  await expect.poll(() => getControlled(page).catch(() => false), { timeout: 30_000 }).toBe(true)
+function getControlled(page) {
+  return page.evaluate(() => Boolean(navigator.serviceWorker.controller))
 }
 
-const hasWaitingUpdate = (page) =>
-  page.evaluate(async () => {
+function hasWaitingUpdate(page) {
+  return page.evaluate(async () => {
     const registration = await navigator.serviceWorker.getRegistration()
     return Boolean(registration?.waiting)
   })
+}
+
+async function waitForControlledPage(page) {
+  const assertion = expect.poll(() => getControlled(page).catch(() => false), {
+    timeout: 30_000,
+  })
+  await assertion.toBe(true)
+}
 
 async function readyForControlledPwa(page, route) {
   await page.addInitScript(() => localStorage.setItem('cfp_onboarding_done_e2e-user', '1'))
@@ -42,50 +48,43 @@ test('PWA: duas abas preservam rascunho na atualização', async ({ page, contex
     await readyForControlledPwa(page, '/dashboard')
     await readyForControlledPwa(second, '/transactions')
 
-    // Segunda aba representa lançamento REAL na interface, mas só em memória E2E.
+    // Rascunho não salvo na interface; sem mutações no banco de produção.
     await second.getByRole('button', { name: 'Nova', exact: true }).click()
     const draft = second.getByRole('dialog', { name: 'Nova transação' })
+    const description = draft.getByRole('textbox', { name: 'Descrição', exact: true })
+    const amount = draft.locator('#transaction-amount')
     await expect(draft).toBeVisible()
-    await draft.locator('#transaction-amount').fill('12345')
-    await draft
-      .getByRole('textbox', { name: 'Descrição', exact: true })
-      .fill('Rascunho PWA sem salvar')
+    await amount.fill('12345')
+    await description.fill('Rascunho PWA sem salvar')
     await second.evaluate(() => {
       window.__pwaDraftMarker = 'mantido-entre-abas'
     })
 
     await context.setOffline(true)
-    await expect(draft.locator('#transaction-amount')).toHaveValue('123,45')
-    await expect(
-      draft.getByRole('textbox', { name: 'Descrição', exact: true }),
-    ).toHaveValue('Rascunho PWA sem salvar')
+    await expect(amount).toHaveValue('123,45')
+    await expect(description).toHaveValue('Rascunho PWA sem salvar')
     await context.setOffline(false)
 
-    // A versão antiga continua controlando ambas as abas até decisão explícita.
+    // Uma versão nova é servida no mesmo escopo, sem ativação forçada.
     await writeFile(workerFile, updatedWorker)
     await page.evaluate(async () => {
       const registration = await navigator.serviceWorker.ready
       await registration.update()
     })
-
     await expect.poll(() => hasWaitingUpdate(page), { timeout: 30_000 }).toBe(true)
 
     await expect(page.getByText('Nova versão disponível')).toBeVisible()
-    await expect(draft.locator('#transaction-amount')).toHaveValue('123,45')
-    await expect(
-      draft.getByRole('textbox', { name: 'Descrição', exact: true }),
-    ).toHaveValue('Rascunho PWA sem salvar')
+    await expect(amount).toHaveValue('123,45')
+    await expect(description).toHaveValue('Rascunho PWA sem salvar')
 
-    // Aceitação ocorre na primeira aba; a segunda não pode descartar a edição.
+    // Confirmar na primeira aba não pode recarregar a segunda com rascunho.
     await page.getByRole('button', { name: 'Atualizar agora' }).click()
     await expect(second.getByText('Atualização ativada em outra aba')).toBeVisible()
     expect(await second.evaluate(() => window.__pwaDraftMarker)).toBe('mantido-entre-abas')
-    await expect(draft.locator('#transaction-amount')).toHaveValue('123,45')
-    await expect(
-      draft.getByRole('textbox', { name: 'Descrição', exact: true }),
-    ).toHaveValue('Rascunho PWA sem salvar')
+    await expect(amount).toHaveValue('123,45')
+    await expect(description).toHaveValue('Rascunho PWA sem salvar')
 
-    // Somente depois de descartar conscientemente o rascunho, a segunda aba recarrega.
+    // O usuário descarta o rascunho antes de recarregar a segunda aba.
     await draft.getByRole('button', { name: 'Cancelar', exact: true }).click()
     await expect(draft).toBeHidden()
     await second.getByRole('button', { name: 'Recarregar quando estiver pronto' }).click()
