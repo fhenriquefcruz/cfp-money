@@ -9,7 +9,7 @@
     "build": "vite build && node scripts/generate-service-worker.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --check . || (prettier --write src/services/firebase.realtime.test.js tests/security/firestore.rules.test.js && git diff -- src/services/firebase.realtime.test.js tests/security/firestore.rules.test.js && exit 1)",
     "test": "vitest run",
     "test:watch": "vitest",
     "validate": "npm run lint && npm run test && npm run build",
