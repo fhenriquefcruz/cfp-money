@@ -11,9 +11,9 @@ import React, {
 import { useAuth } from './AuthContext'
 import {
   onTransactionsChange,
-  getCategories,
-  getGoals,
-  getBudgets,
+  onCategoriesChange,
+  onGoalsChange,
+  onBudgetsChange,
   addTransaction,
   updateTransaction,
   updateTransactionPaymentStatus,
@@ -24,7 +24,7 @@ import {
   addTransactionBatch as fbAddBatch,
   deleteTransactionBatch as fbDeleteBatch,
   commitTransactionSeriesOperation as fbCommitSeries,
-  getCreditCards,
+  onCreditCardsChange,
   addCreditCard,
   updateCreditCard,
   deleteCreditCard,
@@ -104,23 +104,10 @@ export const BudgetsProvider = ({ children }) => {
     }
 
     setBudgets(null)
-    getBudgets(user.uid)
-      .then(setBudgets)
-      .catch((error) => {
-        console.error('[Meu Real] orçamentos:', error)
-        setBudgets([])
-      })
-
-    return undefined
-  }, [user?.uid])
-
-  const refreshBudgets = useCallback(async () => {
-    if (!user?.uid) return
-    try {
-      setBudgets(await getBudgets(user.uid))
-    } catch (error) {
-      console.error('[Meu Real] refreshBudgets:', error.code)
-    }
+    return onBudgetsChange(user.uid, setBudgets, (error) => {
+      console.error('[Meu Real] orçamentos:', error)
+      setBudgets((current) => current ?? [])
+    })
   }, [user?.uid])
 
   const saveBudget = useCallback(
@@ -131,14 +118,13 @@ export const BudgetsProvider = ({ children }) => {
         await Promise.all(
           items.map((item) => setBudget(user.uid, item.categoryId, item.amount, monthKey)),
         )
-        await refreshBudgets()
         showNotification('Orçamento salvo e vigente a partir deste mês!')
       } catch (error) {
         showNotification('Erro ao salvar.', 'error')
         throw error
       }
     },
-    [user?.uid, showNotification, refreshBudgets],
+    [user?.uid, showNotification],
   )
 
   const removeBudget = useCallback(
@@ -146,14 +132,13 @@ export const BudgetsProvider = ({ children }) => {
       if (!user?.uid) return
       try {
         await deleteBudget(user.uid, categoryId, monthKey, budgetId)
-        await refreshBudgets()
         showNotification('Orçamento encerrado a partir deste mês.', 'info')
       } catch (error) {
         showNotification('Erro ao remover orçamento.', 'error')
         throw error
       }
     },
-    [user?.uid, showNotification, refreshBudgets],
+    [user?.uid, showNotification],
   )
 
   return (
@@ -185,14 +170,10 @@ export const GoalsProvider = ({ children, userId }) => {
     }
 
     setGoals(null)
-    getGoals(userId)
-      .then(setGoals)
-      .catch((error) => {
-        console.error('[Meu Real] metas:', error)
-        setGoals([])
-      })
-
-    return undefined
+    return onGoalsChange(userId, setGoals, (error) => {
+      console.error('[Meu Real] metas:', error)
+      setGoals((current) => current ?? [])
+    })
   }, [userId])
 
   const mutateGoal = async (action, message, type, e2eMutation) => {
@@ -202,7 +183,6 @@ export const GoalsProvider = ({ children, userId }) => {
         setGoals((current) => e2eMutation(current ?? []))
       } else {
         await action()
-        setGoals(await getGoals(userId))
       }
       showNotification(message, type)
     } catch (error) {
@@ -274,21 +254,16 @@ export const CategoriesProvider = ({ children, userId }) => {
     }
 
     setCategories(null)
-    getCategories(userId)
-      .then(setCategories)
-      .catch((error) => {
-        console.error('[Meu Real] categorias:', error)
-        setCategories([])
-      })
-
-    return undefined
+    return onCategoriesChange(userId, setCategories, (error) => {
+      console.error('[Meu Real] categorias:', error)
+      setCategories((current) => current ?? [])
+    })
   }, [userId])
 
   const mutateCategory = async (action, message, type) => {
     if (!userId) return
     try {
       await action()
-      setCategories(await getCategories(userId))
       showNotification(message, type)
     } catch (error) {
       showNotification('Erro na categoria.', 'error')
@@ -331,21 +306,16 @@ export const CreditCardsProvider = ({ children, userId }) => {
     }
 
     setCreditCards(null)
-    getCreditCards(userId)
-      .then(setCreditCards)
-      .catch((error) => {
-        console.error('[Meu Real] cartões:', error)
-        setCreditCards([])
-      })
-
-    return undefined
+    return onCreditCardsChange(userId, setCreditCards, (error) => {
+      console.error('[Meu Real] cartões:', error)
+      setCreditCards((current) => current ?? [])
+    })
   }, [userId])
 
   const mutateCreditCard = async (action, message, type) => {
     if (!userId) return undefined
     try {
       const result = await action()
-      setCreditCards(await getCreditCards(userId))
       showNotification(message, type)
       return result
     } catch (error) {
