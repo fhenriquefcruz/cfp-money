@@ -11,7 +11,22 @@ export default function PwaUpdateNotice() {
     }
 
     window.addEventListener('meu-real:pwa-update', handleUpdate)
-    return () => window.removeEventListener('meu-real:pwa-update', handleUpdate)
+
+    let mounted = true
+    // O aviso pode ter sido emitido antes do componente lazy ser montado.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .getRegistration()
+        .then((current) => {
+          if (mounted && current?.waiting) setRegistration(current)
+        })
+        .catch(() => {})
+    }
+
+    return () => {
+      mounted = false
+      window.removeEventListener('meu-real:pwa-update', handleUpdate)
+    }
   }, [])
 
   if (!registration) return null
@@ -28,7 +43,9 @@ export default function PwaUpdateNotice() {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-[--text-primary]">Nova versão disponível</p>
-          <p className="text-xs text-[--text-secondary]">Atualize para receber as melhorias.</p>
+          <p className="text-xs text-[--text-secondary]">
+            Conclua e salve lançamentos antes de atualizar. O aplicativo será recarregado.
+          </p>
         </div>
         <button
           type="button"

@@ -34,6 +34,12 @@ export function registerServiceWorker() {
       registration.addEventListener('updatefound', () => {
         observeInstallingWorker(registration)
       })
+      // Carregamento tardio preserva o orçamento de JS inicial da fintech.
+      void import('./monitorPwaUpdates')
+        .then(({ monitorPwaUpdates }) =>
+          monitorPwaUpdates(registration, { onWaiting: notifyUpdate }),
+        )
+        .catch(() => {})
 
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (isRefreshing) return
