@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from 'react'
 import { RefreshCw, X } from 'lucide-react'
-import { activatePwaUpdate } from '../pwa/registerServiceWorker'
+import { activatePwaUpdate, isPwaReloadRequired } from '../pwa/pwaControllerChange'
 
 export default function PwaUpdateNotice() {
   const [registration, setRegistration] = useState(null)
+  const [reloadRequired, setReloadRequired] = useState(isPwaReloadRequired)
+  const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
     const handleUpdate = (event) => {
       setRegistration(event.detail?.registration || null)
     }
 
+    const handleReloadRequired = () => {
+      setReloadRequired(true)
+      setDismissed(false)
+    }
     window.addEventListener('meu-real:pwa-update', handleUpdate)
+    window.addEventListener('meu-real:pwa-reload-required', handleReloadRequired)
 
     let mounted = true
     // O aviso pode ter sido emitido antes do componente lazy ser montado.
@@ -26,10 +33,11 @@ export default function PwaUpdateNotice() {
     return () => {
       mounted = false
       window.removeEventListener('meu-real:pwa-update', handleUpdate)
+      window.removeEventListener('meu-real:pwa-reload-required', handleReloadRequired)
     }
   }, [])
 
-  if (!registration) return null
+  if (dismissed || (!registration && !reloadRequired)) return null
 
   return (
     <div
@@ -42,14 +50,20 @@ export default function PwaUpdateNotice() {
           <RefreshCw size={17} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-[--text-primary]">Nova versão disponível</p>
+          <p className="text-sm font-bold text-[--text-primary]">
+            {reloadRequired ? 'Atualização ativada em outra aba' : 'Nova versão disponível'}
+          </p>
           <p className="text-xs text-[--text-secondary]">
-            Conclua e salve lançamentos antes de atualizar. O aplicativo será recarregado.
+            Conclua e salve lançamentos antes de recarregar. Seus rascunhos não são salvos
+            automaticamente.
           </p>
         </div>
         <button
           type="button"
-          onClick={() => setRegistration(null)}
+          onClick={() => {
+            setRegistration(null)
+            setDismissed(true)
+          }}
           className="flex h-10 w-10 items-center justify-center rounded-xl text-[--text-tertiary] hover:bg-[--bg-hover]"
           aria-label="Atualizar depois"
         >
@@ -58,10 +72,12 @@ export default function PwaUpdateNotice() {
       </div>
       <button
         type="button"
-        onClick={() => activatePwaUpdate(registration)}
+        onClick={() =>
+          reloadRequired ? window.location.reload() : activatePwaUpdate(registration)
+        }
         className="mt-3 flex min-h-11 w-full items-center justify-center rounded-xl bg-[--brand-600] px-4 text-sm font-bold text-white transition-colors hover:bg-[--brand-700]"
       >
-        Atualizar agora
+        {reloadRequired ? 'Recarregar quando estiver pronto' : 'Atualizar agora'}
       </button>
     </div>
   )
