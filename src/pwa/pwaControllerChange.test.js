@@ -7,7 +7,7 @@ beforeEach(() => {
 
 test('PWA: controller ativado por outra aba não recarrega o rascunho desta aba', async () => {
   const { handlePwaControllerChange, isPwaReloadRequired } = await import(
-    './registerServiceWorker'
+    './pwaControllerChange'
   )
   const reload = vi.fn()
   const notify = vi.fn()
@@ -21,7 +21,7 @@ test('PWA: controller ativado por outra aba não recarrega o rascunho desta aba'
 
 test('PWA: só a aba que confirmou a atualização recarrega automaticamente', async () => {
   const { activatePwaUpdate, handlePwaControllerChange } = await import(
-    './registerServiceWorker'
+    './pwaControllerChange'
   )
   const postMessage = vi.fn()
   const reload = vi.fn()
@@ -39,7 +39,7 @@ test('PWA: só a aba que confirmou a atualização recarrega automaticamente', a
 
 test('PWA: não considera atualização confirmada se não há worker aguardando', async () => {
   const { activatePwaUpdate, handlePwaControllerChange } = await import(
-    './registerServiceWorker'
+    './pwaControllerChange'
   )
   const reload = vi.fn()
   const notify = vi.fn()
@@ -51,7 +51,7 @@ test('PWA: não considera atualização confirmada se não há worker aguardando
 
 test('PWA: erro ao solicitar ativação não autoriza recarga posterior', async () => {
   const { activatePwaUpdate, handlePwaControllerChange } = await import(
-    './registerServiceWorker'
+    './pwaControllerChange'
   )
   const reload = vi.fn()
   const notify = vi.fn()
@@ -60,4 +60,24 @@ test('PWA: erro ao solicitar ativação não autoriza recarga posterior', async 
   handlePwaControllerChange({ reload, notify })
   expect(reload).not.toHaveBeenCalled()
   expect(notify).toHaveBeenCalledOnce()
+})
+
+test('PWA: primeira instalação não confunde claim inicial com atualização', async () => {
+  const { observePwaControllerChanges } = await import('./pwaControllerChange')
+  const serviceWorker = new EventTarget()
+  serviceWorker.controller = null
+  const notice = vi.fn()
+  window.addEventListener('meu-real:pwa-reload-required', notice)
+  try {
+    observePwaControllerChanges(serviceWorker)
+    serviceWorker.controller = { state: 'activated' }
+    serviceWorker.dispatchEvent(new Event('controllerchange'))
+    expect(notice).not.toHaveBeenCalled()
+
+    // Em versão posterior sem aceite nesta aba, o aviso é obrigatório.
+    serviceWorker.dispatchEvent(new Event('controllerchange'))
+    expect(notice).toHaveBeenCalledOnce()
+  } finally {
+    window.removeEventListener('meu-real:pwa-reload-required', notice)
+  }
 })
