@@ -283,6 +283,51 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
         () => getDoc(doc(secondDatabase, 'users', 'another-user', 'invoiceEvents', ids[0])),
         (error) => error?.code === 'permission-denied',
       )
+
+      // Corrida real entre duas sessões com IDENTIDADES DIFERENTES para estornar
+      // o mesmo pagamento. A trava impede que ambas registrem liquidação inversa.
+      const makeReversal = (operationId) => ({
+        operationId,
+        type: 'reversal',
+        cardId: invoicePayment.cardId,
+        cardName: invoicePayment.cardName,
+        cardLast4: invoicePayment.cardLast4,
+        invoiceMonth: invoicePayment.invoiceMonth,
+        invoiceKey: invoicePayment.invoiceKey,
+        eventDate: '2026-11-16',
+        amount: 150.25,
+        reversesEventId: ids[0],
+        sourceAccount: 'Conta de teste',
+        notes: 'Estorno integral em teste',
+      })
+      const firstReversal = makeReversal('integration-reversal-operation-0001')
+      const competingReversal = makeReversal('integration-reversal-operation-0002')
+      const reversalResults = await Promise.allSettled([
+        persistInvoiceEventOperation(database, uid, firstReversal),
+        persistInvoiceEventOperation(secondDatabase, uid, competingReversal),
+      ])
+      const successes = reversalResults.filter((item) => item.status === 'fulfilled')
+      const failures = reversalResults.filter((item) => item.status === 'rejected')
+      assert.equal(successes.length, 1)
+      assert.equal(failures.length, 1)
+
+      const successfulReversal =
+        reversalResults[0].status === 'fulfilled' ? firstReversal : competingReversal
+      const successfulId = successes[0].value
+      const lockRef = doc(database, 'users', uid, 'invoiceReversalLocks', ids[0])
+      const persistedLock = (await getDoc(lockRef)).data()
+      assert.equal(persistedLock.paymentId, ids[0])
+      assert.equal(persistedLock.reversalEventId, successfulId)
+      assert.equal(persistedLock.amountCents, 15025)
+      assert.equal(
+        await persistInvoiceEventOperation(database, uid, successfulReversal),
+        successfulId,
+      )
+      assert.equal(
+        (await getDocs(collection(database, 'users', uid, 'invoiceEvents'))).size,
+        3,
+      )
+
     } finally {
       await deleteApp(secondClient)
     }
