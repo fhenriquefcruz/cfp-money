@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { activatePwaUpdate } from './registerServiceWorker'
+import { activatePwaUpdate } from './pwaControllerChange'
 import { monitorPwaUpdates } from './monitorPwaUpdates'
 
 describe('activatePwaUpdate', () => {
