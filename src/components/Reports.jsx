@@ -176,11 +176,6 @@ function ReportsContent() {
     }
   }, [monthlyData, period, savingsOverview])
 
-  const savingsMonthly = useMemo(
-    () => monthlyData.map(({ month, savings }) => ({ month: month.toLowerCase(), value: savings })),
-    [monthlyData],
-  )
-
   const categoryData = useMemo(
     () =>
       summarizeExpenseCategories(reportTransactions).map((category) => ({
@@ -652,7 +647,7 @@ function ReportsContent() {
                   <>
                     <ResponsiveContainer width="100%" height={200}>
                       <BarChart
-                        data={savingsMonthly}
+                        data={monthlyData}
                         margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
                       >
                         <CartesianGrid
@@ -673,7 +668,7 @@ function ReportsContent() {
                           tickFormatter={(v) => formatCurrency(v, { compact: true })}
                         />
                         <Tooltip content={<ChartTooltip />} />
-                        <Bar dataKey="value" name="Poupança" fill="#c49d6b" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="savings" name="Poupança" fill="#c49d6b" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
 
