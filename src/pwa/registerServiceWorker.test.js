@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { activatePwaUpdate, monitorPwaUpdates } from './registerServiceWorker'
+import { activatePwaUpdate } from './registerServiceWorker'
+import { monitorPwaUpdates } from './monitorPwaUpdates'
 
 describe('activatePwaUpdate', () => {
   it('solicita ativação apenas ao worker em espera', () => {
@@ -44,6 +45,11 @@ describe('monitorPwaUpdates', () => {
       documentTarget,
       navigatorTarget,
       now: () => time,
+      onWaiting: (current) => {
+        window.dispatchEvent(
+          new CustomEvent('meu-real:pwa-update', { detail: { registration: current } }),
+        )
+      },
     })
 
     return {
