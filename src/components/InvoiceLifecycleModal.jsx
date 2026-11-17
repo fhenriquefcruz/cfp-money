@@ -75,7 +75,9 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
           {EVENT_LABELS[event.type] || 'Evento'}
         </p>
         <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-          {formatDate(event.eventDate || event.paymentDate)}
+          {event.eventDate || event.paymentDate
+            ? formatDate(event.eventDate || event.paymentDate)
+            : 'Data do evento não registrada'}
           {event.sourceAccount ? ` · ${event.sourceAccount}` : ''}
         </p>
         {event.notes && (

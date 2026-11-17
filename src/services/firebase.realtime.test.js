@@ -28,7 +28,13 @@ vi.mock('firebase/firestore', () => ({
   },
 }))
 
-import { onBudgetsChange, onCategoriesChange, onCreditCardsChange, onGoalsChange } from './firebase'
+import {
+  onBudgetsChange,
+  onCategoriesChange,
+  onCreditCardsChange,
+  onGoalsChange,
+  onInvoiceEventsChange,
+} from './firebase'
 
 const snapshot = (...docs) => ({
   docs: docs.map(([id, fields]) => ({ id, data: () => fields })),
@@ -80,4 +86,41 @@ test('categorias publicam apenas conjunto completo e mantêm padrão após remo�
   expect(updates).toHaveBeenLastCalledWith([{ id: 'default', name: 'Padrão' }])
   stop()
   expect(state.unsubscribed).toHaveLength(2)
+})
+
+test('MR-005: listener de faturas consulta o UID completo sem orderBy que omite legados', () => {
+  const updates = vi.fn()
+  const onError = vi.fn()
+  const stop = onInvoiceEventsChange('uid-A', updates, onError)
+  expect(state.listeners).toHaveLength(1)
+  expect(state.listeners[0].path).toBe('users/uid-A/invoiceEvents')
+
+  const historical = [
+    [
+      'legacy-created',
+      {
+        type: 'payment',
+        amount: 20,
+        createdAt: { toDate: () => new Date('2026-08-03T00:00:00.000Z') },
+      },
+    ],
+    ['modern', { type: 'payment', amount: 30, eventDate: '2026-08-10' }],
+    ['legacy-payment-date', { type: 'payment', amount: 10, paymentDate: '2026-08-05' }],
+    ['legacy-undated', { type: 'manual_close' }],
+  ]
+  state.listeners[0].next(snapshot(...historical))
+  expect(updates).toHaveBeenCalledOnce()
+  const published = updates.mock.lastCall[0]
+  expect(published.map((event) => event.id)).toEqual([
+    'modern',
+    'legacy-payment-date',
+    'legacy-created',
+    'legacy-undated',
+  ])
+  expect(published.find((event) => event.id === 'legacy-undated').eventDate).toBeUndefined()
+  expect(published.reduce((sum, event) => sum + (event.amount || 0), 0)).toBe(60)
+  state.listeners[0].error(new Error('offline'))
+  expect(onError).toHaveBeenCalledOnce()
+  stop()
+  expect(state.unsubscribed).toHaveLength(1)
 })
