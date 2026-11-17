@@ -318,15 +318,15 @@ service cloud.firestore {
         allow delete: if owner(uid);
       }
 
-      // Novos eventos exigem identidade de operação imutável.
-      // Documentos legados existentes permanecem acessíveis, mas novos IDs
-      // antigos não podem contornar as validações de invoiceEvents.
+      // Ledger de faturas append-only: legados continuam consultáveis
+      // sem migração, mas não podem ser alterados ou excluídos pelo cliente.
+      // Correções financeiras devem gerar um novo evento auditável.
       match /invoiceEvents/{eventId} {
         allow get, list: if owner(uid);
         allow create: if owner(uid)
           && eventId.matches('^op_.*')
           && validIdempotentInvoiceEvent(eventId);
-        allow update, delete: if owner(uid) && !eventId.matches('^op_.*');
+        allow update, delete: if false;
       }
 
       // Novos estornos exigem uma trava criada na mesma transação.
