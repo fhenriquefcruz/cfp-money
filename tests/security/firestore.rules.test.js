@@ -699,8 +699,7 @@ test('MR-003: eventos legados permanecem legíveis e imutáveis', async () => {
   }
 })
 
-
-test('MR-003/PWA: cliente antigo falha fechado sob Rules novas e preserva o histórico', async () => {
+test('MR-003/PWA: cliente antigo é bloqueado pelas Rules novas', async () => {
   const alice = environment.authenticatedContext('alice').firestore()
   const ownEvents = collection(alice, 'users', 'alice', 'invoiceEvents')
   const operationId = 'pwa-compatible-payment-2026-11'
