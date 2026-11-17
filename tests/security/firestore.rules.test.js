@@ -719,7 +719,9 @@ test('MR-003/PWA: cliente antigo falha fechado sob Rules novas e preserva o hist
   }
 
   // Simula o addDoc/ID aleatório presente no código antigo, sem dados reais.
-  await assertFails(addDoc(ownEvents, { ...validPayload, operationId: undefined }))
+  const oldPayload = { ...validPayload }
+  delete oldPayload.operationId
+  await assertFails(addDoc(ownEvents, oldPayload))
 
   const legacy = doc(ownEvents, 'old-payment-pwa-2025')
   const legacyValue = { type: 'payment', amount: 5.02, paymentDate: '2025-11-02' }
