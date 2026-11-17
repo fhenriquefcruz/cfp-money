@@ -345,14 +345,14 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
       invoiceKey: 'card-integration:2026-11',
       paymentDate: '2026-11-12',
       amount: 19.02,
-      createdAt: Timestamp.fromDate(new Date('2026-11-12T10:00:00.000Z')),
+      createdAt: new Date('2026-11-12T10:00:00.000Z'),
     })
     await legacyCollection.doc('legacy-undated-close').set({
       type: 'manual_close',
       cardId: 'card-integration',
       invoiceMonth: '2026-11',
       invoiceKey: 'card-integration:2026-11',
-      createdAt: Timestamp.fromDate(new Date('2026-11-11T10:00:00.000Z')),
+      createdAt: new Date('2026-11-11T10:00:00.000Z'),
     })
 
     const history = await new Promise((resolve, reject) => {
