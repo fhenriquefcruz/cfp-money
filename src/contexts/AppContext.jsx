@@ -137,7 +137,7 @@ export const BudgetsProvider = ({ children }) => {
         throw error
       }
     },
-    [user?.uid, showNotification, refreshBudgets],
+    [user?.uid, showNotification],
   )
 
   return (
