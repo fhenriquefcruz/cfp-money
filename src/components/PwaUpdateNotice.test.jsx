@@ -24,7 +24,7 @@ test('PWA: aviso detecta worker aguardando antes da montagem e exige ação expl
 
   render(<PwaUpdateNotice />)
   await screen.findByText('Nova versão disponível')
-  expect(screen.getByText(/Conclua e salve lançamentos antes de atualizar/)).toBeInTheDocument()
+  expect(screen.getByText(/Conclua e salve lançamentos antes de recarregar/)).toBeInTheDocument()
   expect(postMessage).not.toHaveBeenCalled()
 
   fireEvent.click(screen.getByRole('button', { name: 'Atualizar agora' }))
