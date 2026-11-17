@@ -653,6 +653,43 @@ test('evento de fatura com identidade de operação é imutável e isolado por U
   assert.deepEqual(afterAttempt.data(), legacyPayload)
 })
 
+test('MR-003: formatos legados de pagamento, estorno, ajuste e fechamento são somente leitura', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const historical = [
+    ['legacy-payment-old', { type: 'payment', amount: '150.25', eventDate: '2025-01-10' }],
+    [
+      'legacy-reversal-old',
+      {
+        type: 'reversal',
+        amount: 40.01,
+        reversesEventId: 'legacy-payment-old',
+        eventDate: '2025-01-11',
+      },
+    ],
+    [
+      'legacy-adjustment-old',
+      { type: 'adjustment', signedAmount: -2.01, direction: 'credit', eventDate: '2025-01-12' },
+    ],
+    ['legacy-manual-close-old', { type: 'manual_close', eventDate: '2025-01-13' }],
+  ]
+
+  await environment.withSecurityRulesDisabled(async (context) => {
+    for (const [id, data] of historical) {
+      await setDoc(doc(context.firestore(), 'users', 'alice', 'invoiceEvents', id), data)
+    }
+  })
+
+  for (const [id, expected] of historical) {
+    const reference = doc(alice, 'users', 'alice', 'invoiceEvents', id)
+    assert.deepEqual((await assertSucceeds(getDoc(reference))).data(), expected)
+    await assertFails(updateDoc(reference, { notes: 'Alteração não autorizada' }))
+    await assertFails(deleteDoc(reference))
+    await assertFails(getDoc(doc(bob, 'users', 'alice', 'invoiceEvents', id)))
+    assert.deepEqual((await assertSucceeds(getDoc(reference))).data(), expected)
+  }
+})
+
 test('MR-003: regras de eventos rejeitam frações de centavo e campos cruzados', async () => {
   const db = environment.authenticatedContext('alice').firestore()
   const send = (operationId, payload) =>
