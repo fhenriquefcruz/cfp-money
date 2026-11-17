@@ -26,7 +26,7 @@ export function buildInvoiceKey(cardId, invoiceMonth) {
 // Chave de apresentação apenas: não preenche datas ou corrige eventos financeiros.
 function invoiceEventSortDate(event) {
   for (const value of [event?.eventDate, event?.paymentDate]) {
-    if (typeof value === 'string' && /^\\d{4}-\\d{2}-\\d{2}/.test(value)) return value
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value
   }
   const timestamp = event?.createdAt
   const date = timestamp instanceof Date ? timestamp : timestamp?.toDate?.()
