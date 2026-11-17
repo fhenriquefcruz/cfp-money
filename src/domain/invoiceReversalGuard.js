@@ -5,11 +5,7 @@ export function invoiceReversalCents(value) {
     throw new Error('Valor de pagamento ou estorno inválido.')
   }
   const cents = Math.round(value * 100)
-  if (
-    !Number.isSafeInteger(cents) ||
-    cents <= 0 ||
-    Math.abs(value - cents / 100) >= 1e-9
-  ) {
+  if (!Number.isSafeInteger(cents) || cents <= 0 || Math.abs(value - cents / 100) >= 1e-9) {
     throw new Error('Pagamento ou estorno precisa ter centavos exatos.')
   }
   return cents
