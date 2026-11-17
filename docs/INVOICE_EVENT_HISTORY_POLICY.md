@@ -17,6 +17,22 @@
 3. Para documentos legados incompatíveis com o contrato moderno (por exemplo, sem `cardId`, `invoiceKey` ou relação de origem), **não improvisar estorno ou edição direta**. Bloquear conciliação automática, inventariar sem alterar os dados e solicitar plano específico de correção auditável, autorizado e reversível.
 4. Correções administrativas/migrações futuras exigirão backend privilegiado separado, autorização por UID e ação, idempotência, log de auditoria e testes; **nenhuma dessas funcionalidades foi implementada nesta proposta**. As Rules do cliente não impedem operações com privilégios do Admin SDK.
 
+## Visibilidade dos documentos legados
+
+As Rules permitem `get` e `list` do UID mesmo com payload incompleto.
+**Isso não prova visibilidade em todas as telas.** Na versão analisada,
+`src/services/firebase.js` usa `orderBy('eventDate', 'desc')` em
+`onInvoiceEventsChange`; consultas ordenadas do Firestore não incluem
+documentos sem o campo ordenado. Assim, eventos legados sem `eventDate`
+podem ser omitidos do listener, embora continuem armazenados e legíveis
+por uma consulta direta à coleção.
+
+Antes de homologar, corrigir/testar a leitura histórica no mesmo fluxo
+utilizado pelo aplicativo, incluindo fallback de `paymentDate` ou
+`createdAt`, ordenação estável, custos de leitura e paridade financeira.
+Os testes de Rules usam leitura direta não ordenada e **não fecham**
+esse requisito de visibilidade da interface.
+
 ## Riscos e gates de publicação
 
 A implantação desta regra é uma **mudança de comportamento**: versões antigas do PWA que editam eventos legados falharão, e versões que criam novos IDs aleatórios já são incompatíveis com as regras do laboratório.
