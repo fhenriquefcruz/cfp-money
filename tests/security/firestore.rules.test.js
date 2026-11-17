@@ -8,10 +8,12 @@ import {
 } from '@firebase/rules-unit-testing'
 import {
   Timestamp,
+  collection,
   deleteField,
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   runTransaction,
   serverTimestamp,
@@ -632,15 +634,68 @@ test('evento de fatura com identidade de operação é imutável e isolado por U
     setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'legacy-forged-payment'), data),
   )
 
-  // Simula registros históricos que já existiam antes da regra, sem regravá-los.
+  // Registros históricos permanecem legíveis sem regravação ou migração.
+  // O payload antigo não precisa obedecer ao schema moderno de criação.
   await environment.withSecurityRulesDisabled(async (context) => {
     await setDoc(
       doc(context.firestore(), 'users', 'alice', 'invoiceEvents', 'legacy-event-1'),
       legacyPayload,
     )
   })
-  await assertSucceeds(getDoc(legacy))
-  await assertSucceeds(updateDoc(legacy, { notes: 'Legado preservado' }))
+
+  const beforeAttempt = await assertSucceeds(getDoc(legacy))
+  assert.deepEqual(beforeAttempt.data(), legacyPayload)
+  await assertFails(updateDoc(legacy, { notes: 'Tentativa de editar histórico' }))
+  await assertFails(updateDoc(legacy, { amount: 300 }))
+  await assertFails(setDoc(legacy, { ...legacyPayload, amount: 1 }))
+  await assertFails(deleteDoc(legacy))
+  await assertFails(getDoc(doc(bob, 'users', 'alice', 'invoiceEvents', 'legacy-event-1')))
+
+  const afterAttempt = await assertSucceeds(getDoc(legacy))
+  assert.deepEqual(afterAttempt.data(), legacyPayload)
+})
+
+test('MR-003: eventos legados permanecem legíveis e imutáveis', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const historical = [
+    ['legacy-payment-old', { type: 'payment', amount: '150.25', eventDate: '2025-01-10' }],
+    [
+      'legacy-reversal-old',
+      {
+        type: 'reversal',
+        amount: 40.01,
+        reversesEventId: 'legacy-payment-old',
+        eventDate: '2025-01-11',
+      },
+    ],
+    [
+      'legacy-adjustment-old',
+      { type: 'adjustment', signedAmount: -2.01, direction: 'credit', eventDate: '2025-01-12' },
+    ],
+    ['legacy-manual-close-old', { type: 'manual_close', eventDate: '2025-01-13' }],
+  ]
+
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const database = context.firestore()
+    for (const [id, data] of historical) {
+      await setDoc(doc(database, 'users', 'alice', 'invoiceEvents', id), data)
+    }
+  })
+
+  const invoiceCollection = collection(alice, 'users', 'alice', 'invoiceEvents')
+  const visible = await assertSucceeds(getDocs(invoiceCollection))
+  assert.deepEqual(visible.docs.map((item) => item.id).sort(), historical.map(([id]) => id).sort())
+  await assertFails(getDocs(collection(bob, 'users', 'alice', 'invoiceEvents')))
+
+  for (const [id, expected] of historical) {
+    const reference = doc(alice, 'users', 'alice', 'invoiceEvents', id)
+    assert.deepEqual((await assertSucceeds(getDoc(reference))).data(), expected)
+    await assertFails(updateDoc(reference, { notes: 'Alteração não autorizada' }))
+    await assertFails(deleteDoc(reference))
+    await assertFails(getDoc(doc(bob, 'users', 'alice', 'invoiceEvents', id)))
+    assert.deepEqual((await assertSucceeds(getDoc(reference))).data(), expected)
+  }
 })
 
 test('MR-003: regras de eventos rejeitam frações de centavo e campos cruzados', async () => {
