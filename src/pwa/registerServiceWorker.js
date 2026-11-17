@@ -1,4 +1,27 @@
 let isRefreshing = false
+let updateRequestedHere = false
+let reloadRequired = false
+
+export const isPwaReloadRequired = () => reloadRequired
+
+// Outra aba pode ativar a nova versão enquanto há formulários abertos aqui.
+// Só recarregar automaticamente na aba que aceitou a atualização.
+export function handlePwaControllerChange({
+  reload = () => window.location.reload(),
+  notify = () => window.dispatchEvent(new Event('meu-real:pwa-reload-required')),
+} = {}) {
+  if (isRefreshing) return
+  if (updateRequestedHere) {
+    updateRequestedHere = false
+    isRefreshing = true
+    reload()
+    return
+  }
+
+  reloadRequired = true
+  notify()
+}
+
 
 const notifyUpdate = (registration) => {
   window.dispatchEvent(
@@ -41,10 +64,16 @@ export function registerServiceWorker() {
         )
         .catch(() => {})
 
+      // Um primeiro controller pode assumir o controle após instalação limpa.
+      // Não é atualização de uma sessão antiga e não deve disparar aviso.
+      let previouslyControlled = Boolean(navigator.serviceWorker.controller)
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (isRefreshing) return
-        isRefreshing = true
-        window.location.reload()
+        if (!previouslyControlled && !updateRequestedHere) {
+          previouslyControlled = true
+          return
+        }
+        previouslyControlled = true
+        handlePwaControllerChange()
       })
     } catch (error) {
       console.warn('Não foi possível ativar os recursos offline.', error)
@@ -53,5 +82,12 @@ export function registerServiceWorker() {
 }
 
 export function activatePwaUpdate(registration) {
-  registration?.waiting?.postMessage({ type: 'SKIP_WAITING' })
+  if (!registration?.waiting) return
+  updateRequestedHere = true
+  try {
+    registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+  } catch (error) {
+    updateRequestedHere = false
+    throw error
+  }
 }
