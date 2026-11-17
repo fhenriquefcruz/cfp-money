@@ -624,9 +624,22 @@ test('evento de fatura com identidade de operação é imutável e isolado por U
     }),
   )
 
-  // IDs antigos continuam acessíveis sem migração ou reescrita de histórico.
+  // IDs sem prefixo não podem criar novos pagamentos e burlar a idempotência.
   const legacy = doc(alice, 'users', 'alice', 'invoiceEvents', 'legacy-event-1')
-  await assertSucceeds(setDoc(legacy, { type: 'payment', amount: 25, eventDate: '2025-02-10' }))
+  const legacyPayload = { type: 'payment', amount: 25, eventDate: '2025-02-10' }
+  await assertFails(setDoc(legacy, legacyPayload))
+  await assertFails(
+    setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'legacy-forged-payment'), data),
+  )
+
+  // Simula registros históricos que já existiam antes da regra, sem regravá-los.
+  await environment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(
+      doc(context.firestore(), 'users', 'alice', 'invoiceEvents', 'legacy-event-1'),
+      legacyPayload,
+    )
+  })
+  await assertSucceeds(getDoc(legacy))
   await assertSucceeds(updateDoc(legacy, { notes: 'Legado preservado' }))
 })
 
