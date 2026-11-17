@@ -643,6 +643,92 @@ test('evento de fatura com identidade de operação é imutável e isolado por U
   await assertSucceeds(updateDoc(legacy, { notes: 'Legado preservado' }))
 })
 
+test('MR-003: duas intenções de estorno não conseguem reverter o mesmo pagamento', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const paymentId = 'op_original-payment-operation-0001'
+  const paymentRef = doc(alice, 'users', 'alice', 'invoiceEvents', paymentId)
+  const payment = {
+    operationId: 'original-payment-operation-0001',
+    type: 'payment',
+    cardId: 'card-1',
+    cardName: 'Cartão',
+    cardLast4: '1234',
+    invoiceMonth: '2026-11',
+    invoiceKey: 'card-1:2026-11',
+    eventDate: '2026-11-15',
+    paymentDate: '2026-11-15',
+    amount: 150.25,
+    sourceAccount: 'Banco',
+    notes: '',
+    createdAt: serverTimestamp(),
+  }
+  await assertSucceeds(setDoc(paymentRef, payment))
+
+  const lockRef = doc(alice, 'users', 'alice', 'invoiceReversalLocks', paymentId)
+  const reverse = (operationId) => {
+    const eventId = `op_${operationId}`
+    return {
+      id: eventId,
+      ref: doc(alice, 'users', 'alice', 'invoiceEvents', eventId),
+      data: {
+        operationId,
+        type: 'reversal',
+        cardId: 'card-1',
+        cardName: 'Cartão',
+        cardLast4: '1234',
+        invoiceMonth: '2026-11',
+        invoiceKey: 'card-1:2026-11',
+        eventDate: '2026-11-16',
+        amount: 150.25,
+        reversesEventId: paymentId,
+        sourceAccount: 'Banco',
+        notes: 'Estorno',
+        createdAt: serverTimestamp(),
+      },
+    }
+  }
+  const first = reverse('reversal-operation-000001')
+  const second = reverse('reversal-operation-000002')
+  const lock = (item) => ({
+    paymentId,
+    reversalEventId: item.id,
+    invoiceKey: item.data.invoiceKey,
+    amountCents: 15025,
+    createdAt: serverTimestamp(),
+  })
+
+  // Uma criação solta não é aceita, nem a gravação isolada de uma trava.
+  await assertFails(setDoc(first.ref, first.data))
+  await assertFails(setDoc(lockRef, lock(first)))
+
+  await assertSucceeds(
+    runTransaction(alice, async (write) => {
+      const original = await write.get(paymentRef)
+      const alreadyLocked = await write.get(lockRef)
+      assert.equal(original.exists(), true)
+      assert.equal(alreadyLocked.exists(), false)
+      write.set(first.ref, first.data)
+      write.set(lockRef, lock(first))
+    }),
+  )
+  assert.equal((await getDoc(first.ref)).exists(), true)
+  assert.equal((await getDoc(lockRef)).data().reversalEventId, first.id)
+
+  await assertFails(
+    runTransaction(alice, async (write) => {
+      await write.get(paymentRef)
+      await write.get(lockRef)
+      write.set(second.ref, second.data)
+      write.set(lockRef, lock(second))
+    }),
+  )
+  assert.equal((await getDoc(second.ref)).exists(), false)
+  await assertFails(updateDoc(lockRef, { amountCents: 1 }))
+  await assertFails(deleteDoc(lockRef))
+  await assertFails(getDoc(doc(bob, 'users', 'alice', 'invoiceReversalLocks', paymentId)))
+})
+
 test('MR-007: novas transações exigem montante numérico positivo e campos financeiros válidos', async () => {
   const db = environment.authenticatedContext('alice').firestore()
   const ref = (suffix) => doc(db, 'users', 'alice', 'transactions', suffix)
