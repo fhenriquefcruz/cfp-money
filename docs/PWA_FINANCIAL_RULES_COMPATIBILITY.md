@@ -20,15 +20,15 @@ e perda de informações ainda não salvas.
 
 ## Matriz de operações contra regras restritivas propostas
 
-| Cliente | Operação | Resultado esperado no Emulator | Implicação |
-| --- | --- | --- | --- |
-| Antigo (`addDoc`, ID aleatório) | Novo pagamento/ajuste | **Negado** | Instalações em cache podem ficar sem capacidade de registrar pagamentos |
-| Antigo (edição direta) | Alterar ou excluir evento legado | **Negado** | Histórico preservado; UX antiga pode mostrar erro de permissão |
-| Atualizado (`op_{operationId}`) | Criar evento válido | **Permitido** ao UID | Nova intenção é imutável e rastreável |
-| Atualizado (replay mesmo ID) | Repetir intenção idêntica | **Idempotente** pela persistência | Não pode duplicar pagamento na repetição |
-| Atualizado (estorno) | Duas intenções diferentes para mesma origem | **Uma aceita, outra negada** | Evita novo estorno concorrente sem controle |
-| Qualquer cliente | Ler histórico do próprio UID | **Permitido**, inclusive legados | Novas versões também incluem documentos sem `eventDate` |
-| Qualquer cliente | Acessar outro UID | **Negado** | Isolamento independente da versão |
+| Cliente                         | Operação                                    | Resultado esperado no Emulator    | Implicação                                                              |
+| ------------------------------- | ------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------- |
+| Antigo (`addDoc`, ID aleatório) | Novo pagamento/ajuste                       | **Negado**                        | Instalações em cache podem ficar sem capacidade de registrar pagamentos |
+| Antigo (edição direta)          | Alterar ou excluir evento legado            | **Negado**                        | Histórico preservado; UX antiga pode mostrar erro de permissão          |
+| Atualizado (`op_{operationId}`) | Criar evento válido                         | **Permitido** ao UID              | Nova intenção é imutável e rastreável                                   |
+| Atualizado (replay mesmo ID)    | Repetir intenção idêntica                   | **Idempotente** pela persistência | Não pode duplicar pagamento na repetição                                |
+| Atualizado (estorno)            | Duas intenções diferentes para mesma origem | **Uma aceita, outra negada**      | Evita novo estorno concorrente sem controle                             |
+| Qualquer cliente                | Ler histórico do próprio UID                | **Permitido**, inclusive legados  | Novas versões também incluem documentos sem `eventDate`                 |
+| Qualquer cliente                | Acessar outro UID                           | **Negado**                        | Isolamento independente da versão                                       |
 
 Os resultados de emulação **não demonstram** compatibilidade dos clientes antigos
 com as regras efetivamente publicadas, que não foram consultadas ou alteradas
