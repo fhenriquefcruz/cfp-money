@@ -96,7 +96,14 @@ test('MR-005: listener de faturas consulta o UID completo sem orderBy que omite 
   expect(state.listeners[0].path).toBe('users/uid-A/invoiceEvents')
 
   const historical = [
-    ['legacy-created', { type: 'payment', amount: 20, createdAt: { toDate: () => new Date('2026-08-03T00:00:00.000Z') } }],
+    [
+      'legacy-created',
+      {
+        type: 'payment',
+        amount: 20,
+        createdAt: { toDate: () => new Date('2026-08-03T00:00:00.000Z') },
+      },
+    ],
     ['modern', { type: 'payment', amount: 30, eventDate: '2026-08-10' }],
     ['legacy-payment-date', { type: 'payment', amount: 10, paymentDate: '2026-08-05' }],
     ['legacy-undated', { type: 'manual_close' }],
