@@ -1,5 +1,5 @@
 import { collection, onSnapshot } from 'firebase/firestore'
-import { sortInvoiceEvents } from '../domain/invoiceLifecycle'
+import { sortInvoiceEvents } from '../domain/invoiceLifecycle.js'
 
 // Consulta toda a coleção: orderBy('eventDate') omite legados sem esse campo.
 // Preserva o ID/valor de origem e somente ordena a apresentação em memória.
