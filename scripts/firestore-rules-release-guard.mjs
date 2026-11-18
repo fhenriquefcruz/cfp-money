@@ -19,15 +19,12 @@ export function validRulesetName(name) {
 
 export function getRulesetSource(ruleset) {
   const files = ruleset?.source?.files
-  if (!Array.isArray(files) || files.length === 0) {
-    throw new Error('Ruleset sem arquivos de origem verificáveis.')
+  // A origem publicada pelo Meu Real possui somente firestore.rules.
+  // Não ignorar outros arquivos: eles podem alterar a política efetiva.
+  if (!Array.isArray(files) || files.length !== 1) {
+    throw new Error('Ruleset com origem ausente ou ambígua; publicação bloqueada.')
   }
-
-  const firestoreFiles = files.filter((file) => /(^|\/)firestore\.rules$/.test(file.name || ''))
-  if (firestoreFiles.length > 1 || (firestoreFiles.length === 0 && files.length !== 1)) {
-    throw new Error('Ruleset com origem ambígua; publicação bloqueada.')
-  }
-  const source = (firestoreFiles[0] || files[0]).content
+  const source = files[0]?.content
   if (typeof source !== 'string' || !source.trim()) {
     throw new Error('Ruleset sem conteúdo de regras verificável.')
   }
