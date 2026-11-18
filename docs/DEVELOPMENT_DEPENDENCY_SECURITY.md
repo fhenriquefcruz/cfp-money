@@ -6,6 +6,7 @@ para merge ou publicação.
 ## Situação em 18/11/2026
 
 A auditoria reproduzível da issue #203, workflow `44265566465`, registrou:
+
 - `npm audit --omit=dev --json`: **0 vulnerabilidades no grafo de produção**.
 - `npm audit --json`: **16 alertas de severidade high**, propagados por
   `picomatch` (GHSA-fc5q-39xc-vjpf; CVE-2026-112366), além de
