@@ -8,10 +8,22 @@ on:
         description: 'SHA completo (40 caracteres) autorizado para publicação'
         required: true
         type: string
+      approved_ruleset:
+        description: 'Ruleset ativo aprovado (projects/cfp-money/rulesets/...)'
+        required: true
+        type: string
+      approved_rules_sha256:
+        description: 'SHA-256 do conteúdo atual das regras, obtido na inspeção autorizada'
+        required: true
+        type: string
       confirmation:
         description: 'Digite PUBLICAR_REGRAS_FIRESTORE para confirmar'
         required: true
         type: string
+concurrency:
+  group: firestore-rules-manual-release
+  cancel-in-progress: false
+
 permissions:
   contents: read
 jobs:
@@ -19,6 +31,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
+      APPROVED_RELEASE_SHA: ${{ inputs.approved_sha }}
+      APPROVED_ACTIVE_RULESET: ${{ inputs.approved_ruleset }}
+      APPROVED_ACTIVE_RULES_SHA256: ${{ inputs.approved_rules_sha256 }}
+      RELEASE_CONFIRMATION: ${{ inputs.confirmation }}
       GOOGLE_CLIENT_EMAIL: ${{ secrets.GOOGLE_CLIENT_EMAIL }}
       GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
     steps:
@@ -27,9 +43,6 @@ jobs:
           fetch-depth: 2
       - name: Verify manually approved release source
         shell: bash
-        env:
-          APPROVED_SHA: ${{ inputs.approved_sha }}
-          RELEASE_CONFIRMATION: ${{ inputs.confirmation }}
         run: |
           set -euo pipefail
           if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
@@ -40,12 +53,20 @@ jobs:
             echo 'Confirmação de publicação ausente ou incorreta.'
             exit 1
           fi
-          if [[ ! "$APPROVED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+          if [[ ! "$APPROVED_RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
             echo 'Informe o SHA completo de 40 caracteres autorizado.'
             exit 1
           fi
-          if [[ "$(git rev-parse HEAD)" != "$APPROVED_SHA" ]]; then
+          if [[ "$(git rev-parse HEAD)" != "$APPROVED_RELEASE_SHA" ]]; then
             echo 'O SHA executado difere da revisão aprovada; publicação bloqueada.'
+            exit 1
+          fi
+          if [[ ! "$APPROVED_ACTIVE_RULESET" =~ ^projects/cfp-money/rulesets/[A-Za-z0-9_-]+$ ]]; then
+            echo 'Identificador do ruleset ativo aprovado está ausente ou é inválido.'
+            exit 1
+          fi
+          if [[ ! "$APPROVED_ACTIVE_RULES_SHA256" =~ ^[0-9a-f]{64}$ ]]; then
+            echo 'SHA-256 das regras ativas aprovadas está ausente ou é inválido.'
             exit 1
           fi
       - uses: actions/setup-node@v4
