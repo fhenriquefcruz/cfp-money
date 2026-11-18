@@ -5,6 +5,11 @@ export default defineConfig({
   plugins: [react()],
   base: process.env.VITE_PUBLIC_BASE_PATH || '/cfp-money/',
 
+  // Não expor ferramentas de desenvolvimento e prévia à rede por padrão.
+  // Em Codespaces, o encaminhamento privado de portas continua disponível.
+  server: { host: '127.0.0.1' },
+  preview: { host: '127.0.0.1' },
+
   build: {
     outDir: 'dist',
     sourcemap: false,
