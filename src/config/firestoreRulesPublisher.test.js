@@ -1,8 +1,5 @@
 import { describe, expect, test, vi } from 'vitest'
-import {
-  FIRESTORE_RELEASE,
-  rulesSha256,
-} from '../../scripts/firestore-rules-release-guard.mjs'
+import { FIRESTORE_RELEASE, rulesSha256 } from '../../scripts/firestore-rules-release-guard.mjs'
 import { publishVerifiedRules } from '../../scripts/firestore-rules-publisher-core.mjs'
 
 const originalName = 'projects/cfp-money/rulesets/original-approved'
@@ -24,7 +21,8 @@ function fakeRulesApi({
       return { name: FIRESTORE_RELEASE, rulesetName: live.name }
     }
     if (method === 'GET' && path === live.name) {
-      return { name: live.name, source: { files: [{ name: 'firestore.rules', content: live.source }] } }
+      const file = { name: 'firestore.rules', content: live.source }
+      return { name: live.name, source: { files: [file] } }
     }
     if (method === 'POST' && path === 'projects/cfp-money/rulesets') {
       if (driftAfterCreate) {
@@ -47,6 +45,9 @@ function fakeRulesApi({
 function methods(request) {
   return request.mock.calls.map(([, method = 'GET']) => method)
 }
+
+const execute = (request) =>
+  publishVerifiedRules({ request, approved: approval, expected: desiredSource })
 
 describe('publicador exato de Firestore Rules — execução isolada sem API real', () => {
   test('troca somente após confirmar a origem e valida destino depois do PATCH', async () => {
@@ -78,7 +79,7 @@ describe('publicador exato de Firestore Rules — execução isolada sem API rea
   test('rejeita ID ativo diferente do aprovado antes de qualquer escrita', async () => {
     const api = fakeRulesApi({ name: 'projects/cfp-money/rulesets/not-approved' })
     await expect(
-      publishVerifiedRules({ request: api.request, approved: approval, expected: desiredSource }),
+      execute(api.request),
     ).rejects.toThrow(/mudou/)
     expect(methods(api.request)).toEqual(['GET', 'GET'])
   })
@@ -86,7 +87,7 @@ describe('publicador exato de Firestore Rules — execução isolada sem API rea
   test('rejeita hash diferente mesmo se o ruleset ID permanecer igual', async () => {
     const api = fakeRulesApi({ source: originalSource + '\n// alteração externa' })
     await expect(
-      publishVerifiedRules({ request: api.request, approved: approval, expected: desiredSource }),
+      execute(api.request),
     ).rejects.toThrow(/diverge/)
     expect(methods(api.request)).toEqual(['GET', 'GET'])
   })
@@ -94,7 +95,7 @@ describe('publicador exato de Firestore Rules — execução isolada sem API rea
   test('revalida contra drift externo após criar ruleset e antes do PATCH', async () => {
     const api = fakeRulesApi({ driftAfterCreate: true })
     await expect(
-      publishVerifiedRules({ request: api.request, approved: approval, expected: desiredSource }),
+      execute(api.request),
     ).rejects.toThrow(/mudou/)
     expect(methods(api.request)).toContain('POST')
     expect(methods(api.request)).not.toContain('PATCH')
@@ -103,7 +104,7 @@ describe('publicador exato de Firestore Rules — execução isolada sem API rea
   test('não publica regras criadas com ruleset fora do projeto aprovado', async () => {
     const api = fakeRulesApi({ createdName: 'projects/outro/rulesets/novo' })
     await expect(
-      publishVerifiedRules({ request: api.request, approved: approval, expected: desiredSource }),
+      execute(api.request),
     ).rejects.toThrow(/fora do projeto/)
     expect(methods(api.request)).not.toContain('PATCH')
   })
@@ -111,7 +112,7 @@ describe('publicador exato de Firestore Rules — execução isolada sem API rea
   test('detecta publicação concorrente ou destino diferente após o PATCH', async () => {
     const api = fakeRulesApi({ driftAfterPatch: true })
     await expect(
-      publishVerifiedRules({ request: api.request, approved: approval, expected: desiredSource }),
+      execute(api.request),
     ).rejects.toThrow(/não corresponde/)
     expect(methods(api.request)).toContain('PATCH')
   })
