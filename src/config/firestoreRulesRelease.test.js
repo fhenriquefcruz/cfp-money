@@ -13,7 +13,12 @@ import {
 } from '../../scripts/firestore-rules-release-guard.mjs'
 
 const name = 'projects/cfp-money/rulesets/approved-uuid-123'
-const source = "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{db}/documents {}\n}"
+const source = [
+  "rules_version = '2';",
+  'service cloud.firestore {',
+  '  match /databases/{db}/documents {}',
+  '}',
+].join('\n')
 const approval = { name, digest: rulesSha256(source) }
 
 describe('publicação segura das regras Firestore', () => {
@@ -51,8 +56,10 @@ describe('publicação segura das regras Firestore', () => {
     expect(verifier).toContain('verifyApprovedOrigin(active, approved)')
     expect(publisher).toContain('publishVerifiedRules({ request, approved, expected })')
     expect(publisherCore).toContain('verifyApprovedOrigin(previous, approved)')
-    expect(publisherCore).toContain('verifyApprovedOrigin(await readActiveRules(request), approved)')
-    expect(publisherCore).toContain('verifyPublishedTarget(await readActiveRules(request), expected, createdName)')
+    const repeatedCheck = 'verifyApprovedOrigin(await readActiveRules(request), approved)'
+    const finalCheck = 'verifyPublishedTarget(await readActiveRules(request), expected, createdName)'
+    expect(publisherCore).toContain(repeatedCheck)
+    expect(publisherCore).toContain(finalCheck)
     for (const script of [verifier, publisher, publisherCore]) {
       expect(script).not.toContain('HEAD^:firestore.rules')
       expect(script).not.toContain('firestore-rules-pre-attachments.rules')
@@ -86,9 +93,8 @@ describe('publicação segura das regras Firestore', () => {
     expect(() =>
       verifyApprovedOrigin({ name: 'projects/cfp-money/rulesets/other', source }, approval),
     ).toThrow(/mudou/)
-    expect(() => verifyApprovedOrigin({ name, source: source + '\n// modificada' }, approval)).toThrow(
-      /diverge/,
-    )
+    const modified = { name, source: source + '\n// modificada' }
+    expect(() => verifyApprovedOrigin(modified, approval)).toThrow(/diverge/)
   })
 
   test('pós-publicação exige ruleset publicado e conteúdo exatos', () => {
@@ -102,9 +108,8 @@ describe('publicação segura das regras Firestore', () => {
   test('normaliza CRLF apenas e recusa origem de arquivo ambígua', () => {
     expect(normalizeRules(source.replaceAll('\n', '\r\n'))).toBe(normalizeRules(source))
     expect(rulesSha256(source.replaceAll('\n', '\r\n'))).toBe(rulesSha256(source))
-    expect(getRulesetSource({ source: { files: [{ name: 'firestore.rules', content: source }] } })).toBe(
-      source,
-    )
+    const singleFile = { source: { files: [{ name: 'firestore.rules', content: source }] } }
+    expect(getRulesetSource(singleFile)).toBe(source)
     expect(() => getRulesetSource({ source: { files: [] } })).toThrow()
     expect(() =>
       getRulesetSource({
