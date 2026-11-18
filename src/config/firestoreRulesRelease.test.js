@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import workflow from '../../.github/workflows/deploy-firestore-rules.yml?raw'
 import verifier from '../../scripts/verify-firestore-rules-release.mjs?raw'
 import publisher from '../../scripts/publish-firestore-rules-api.mjs?raw'
+import publisherCore from '../../scripts/firestore-rules-publisher-core.mjs?raw'
 import {
   getApprovedOrigin,
   getRulesetSource,
@@ -48,10 +49,11 @@ describe('publicação segura das regras Firestore', () => {
 
   test('verificador e publicador compartilham baseline explícito, não histórico implícito', () => {
     expect(verifier).toContain('verifyApprovedOrigin(active, approved)')
-    expect(publisher).toContain('verifyApprovedOrigin(previous, approved)')
-    expect(publisher).toContain('verifyApprovedOrigin(await publishedRules(), approved)')
-    expect(publisher).toContain('verifyPublishedTarget(await publishedRules(), expected, createdName)')
-    for (const script of [verifier, publisher]) {
+    expect(publisher).toContain('publishVerifiedRules({ request, approved, expected })')
+    expect(publisherCore).toContain('verifyApprovedOrigin(previous, approved)')
+    expect(publisherCore).toContain('verifyApprovedOrigin(await readActiveRules(request), approved)')
+    expect(publisherCore).toContain('verifyPublishedTarget(await readActiveRules(request), expected, createdName)')
+    for (const script of [verifier, publisher, publisherCore]) {
       expect(script).not.toContain('HEAD^:firestore.rules')
       expect(script).not.toContain('firestore-rules-pre-attachments.rules')
     }
