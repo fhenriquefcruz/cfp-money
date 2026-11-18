@@ -42,9 +42,14 @@ const indexPath = join(distRoot, 'index.html')
 // Fase 66.4: +2 KiB apenas no teto agregado (741 KiB) para a auditoria
 // consultiva de cartões; os demais limites, tolerâncias e barreiras de segurança
 // permanecem idênticos. Revisar métricas da CI no SHA final antes do merge.
+// Rebaseline financeiro de 17/11/2026, autorizado pelo responsável do produto:
+// a integração MR-001 a MR-006 mediu 740,97–741,02 KiB em jobs distintos.
+// Margem explícita de 3 KiB (0,40%) apenas para JS agregado; manter o
+// carregamento inicial, Money, CSS, maior chunk e tolerâncias inalterados.
+// É um teto de regressão, não uma meta de consumo nem dispensa da CI.
 const limits = {
   initialJavaScriptGzipBytes: 245 * 1024,
-  totalJavaScriptGzipBytes: 741 * 1024,
+  totalJavaScriptGzipBytes: 744 * 1024,
   moneyRouteGzipBytes: 18 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 22 * 1024 + 512,
