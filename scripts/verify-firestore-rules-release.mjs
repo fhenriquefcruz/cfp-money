@@ -1,28 +1,28 @@
-// Safety gate for publishing the checked-in Firestore rules without overwriting
-// unexpected Console changes. Read-only check before and after Firebase Rules API deployment.
+// Auditoria de Rules somente por leitura. Antes da publicação exige origem
+// exata aprovada, não HEAD^ ou snapshots legados desconectados do ambiente.
 import { readFileSync } from 'node:fs'
-import { execFileSync } from 'node:child_process'
 import { createRequire } from 'node:module'
+import {
+  FIRESTORE_RELEASE,
+  assertProjectRuleset,
+  getApprovedOrigin,
+  getRulesetSource,
+  rulesSha256,
+  verifyApprovedOrigin,
+  verifyPublishedTarget,
+} from './firestore-rules-release-guard.mjs'
 
 const require = createRequire(import.meta.url)
 const { GoogleAuth } = require('google-auth-library')
-
 const mode = process.argv[2]
-if (!['before', 'after'].includes(mode)) throw new Error('Expected before or after')
-const normalize = (input) =>
-  String(input || '')
-    .replace(/\r\n/g, '\n')
-    .trim()
-const intended = normalize(readFileSync('firestore.rules', 'utf8'))
-// Conjunto exato confirmado em produção antes da Fase 57; permite refazer
-// uma publicação bloqueada pela CLI sem ignorar mudanças externas.
-const priorVerified = normalize(
-  readFileSync('scripts/firestore-rules-pre-attachments.rules', 'utf8'),
-)
-const baseline =
-  mode === 'before'
-    ? normalize(execFileSync('git', ['show', 'HEAD^:firestore.rules'], { encoding: 'utf8' }))
-    : intended
+if (!['inspect', 'before', 'after'].includes(mode)) {
+  throw new Error('Modo inválido: use inspect, before ou after.')
+}
+
+// Falha antes de autenticar ou chamar a API se a aprovação não existe.
+const approved = mode === 'inspect' ? null : getApprovedOrigin()
+const targetRuleset = mode === 'after' ? assertProjectRuleset(process.env.PUBLISHED_RULESET) : null
+const intended = mode === 'inspect' ? '' : readFileSync('firestore.rules', 'utf8')
 
 const auth = new GoogleAuth({
   keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
@@ -30,31 +30,33 @@ const auth = new GoogleAuth({
 })
 const token = await auth.getAccessToken()
 
-async function getRules(url) {
-  const response = await fetch(url, { headers: { Authorization: 'Bearer ' + token } })
-  if (!response.ok) throw new Error('Firebase Rules API returned HTTP ' + response.status)
+async function getRules(path) {
+  const response = await fetch(`https://firebaserules.googleapis.com/v1/${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) throw new Error(`Rules API GET falhou: HTTP ${response.status}`)
   return response.json()
 }
 
-const release = await getRules(
-  'https://firebaserules.googleapis.com/v1/projects/cfp-money/releases/cloud.firestore',
-)
-if (!/^projects\/cfp-money\/rulesets\//.test(release.rulesetName || '')) {
-  throw new Error('Unexpected Firebase project or ruleset')
+const release = await getRules(FIRESTORE_RELEASE)
+if (release.name !== FIRESTORE_RELEASE) {
+  throw new Error('Release Firebase inesperada; operação interrompida.')
 }
-const result = await getRules('https://firebaserules.googleapis.com/v1/' + release.rulesetName)
-const live = normalize(
-  result.source?.files?.find((file) => /firestore\.rules$/.test(file.name || ''))?.content ||
-    result.source?.files?.[0]?.content,
-)
-if (!live) throw new Error('Could not read published Firestore rules')
+const activeRuleset = assertProjectRuleset(release.rulesetName)
+const result = await getRules(activeRuleset)
+if (result.name !== activeRuleset) {
+  throw new Error('A API retornou um ruleset diferente do solicitado.')
+}
+const active = { name: activeRuleset, source: getRulesetSource(result) }
 
-if (mode === 'before') {
-  if (live !== baseline && live !== priorVerified && live !== intended) {
-    throw new Error('Live Firebase rules diverged from main baseline; deployment blocked')
-  }
-  console.log('Guard: live rules match an exact audited baseline or the intended release.')
+if (mode === 'inspect') {
+  // Apenas identidade e fingerprint: não publicar texto de regras ou dados privados.
+  console.log(`Ruleset ativo: ${active.name}`)
+  console.log(`SHA-256 da origem: ${rulesSha256(active.source)}`)
+} else if (mode === 'before') {
+  verifyApprovedOrigin(active, approved)
+  console.log('Preflight aprovado: ID e conteúdo do ruleset ativo conferem com a aprovação.')
 } else {
-  if (live !== intended) throw new Error('Post-deployment rules do not match repository content')
-  console.log('Verified: Firestore rules were published and match the reviewed source.')
+  verifyPublishedTarget(active, intended, targetRuleset)
+  console.log('Pós-publicação conferida: ID e conteúdo coincidem com o destino versionado.')
 }
