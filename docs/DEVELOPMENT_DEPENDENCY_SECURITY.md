@@ -40,6 +40,20 @@ regenerado pelo npm, incluindo versões e integridades de Rolldown;
   severidade nem incluir exceção genérica em
   `scripts/validate-production-audit.mjs`.
 
+## Gates independentes no CI
+
+O workflow `Phase 21 security` executa duas tarefas independentes:
+
+- `dependency-audit` mantém a auditoria de segurança de produção e
+  desenvolvimento **bloqueante**, inclusive high/critical, sem `continue-on-error`.
+- `firestore-policy` executa os testes App Check e Firestore Rules Emulator
+  em paralelo, sem depender de uma auditoria de ferramentas dev que ainda
+  falha pelo advisory não corrigido.
+
+A aprovação da segunda tarefa **não torna o workflow geral verde**.
+Os resultados separados permitem preservar evidência de isolamento UID,
+permissões e integridade enquanto a issue #203 permanece bloqueante.
+
 ## Pendências para DoD
 
 1. Acompanhar publicação **oficial** de uma versão de `picomatch` que
