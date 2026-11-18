@@ -21,8 +21,7 @@ if (!['inspect', 'before', 'after'].includes(mode)) {
 
 // Falha antes de autenticar ou chamar a API se a aprovação não existe.
 const approved = mode === 'inspect' ? null : getApprovedOrigin()
-const targetRuleset =
-  mode === 'after' ? assertProjectRuleset(process.env.PUBLISHED_RULESET) : null
+const targetRuleset = mode === 'after' ? assertProjectRuleset(process.env.PUBLISHED_RULESET) : null
 const intended = mode === 'inspect' ? '' : readFileSync('firestore.rules', 'utf8')
 
 const auth = new GoogleAuth({
