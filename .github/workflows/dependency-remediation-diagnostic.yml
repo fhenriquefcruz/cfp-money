@@ -1,0 +1,89 @@
+name: Dependency remediation diagnostic (read-only lab)
+# Temporário: executa somente na PR interna específica; sem push ou escrita remota.
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  assess:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'security/npm-audit-remediation-20261118' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install current immutable lockfile
+        run: npm ci
+      - name: Record advisory inventory before remediation
+        shell: bash
+        run: |
+          set -u
+          npm audit --json > /tmp/audit-before.json || true
+          npm audit --omit=dev --json > /tmp/audit-production.json || true
+          node <<'NODE'
+          const fs = require('node:fs')
+          for (const [name, path] of [
+            ['BEFORE', '/tmp/audit-before.json'],
+            ['PRODUCTION', '/tmp/audit-production.json'],
+          ]) {
+            const result = JSON.parse(fs.readFileSync(path, 'utf8'))
+            const found = result.vulnerabilities || {}
+            const summary = result.metadata?.vulnerabilities || {}
+            console.log('AUDIT_' + name + '_SUMMARY ' + JSON.stringify(summary))
+            const high = Object.entries(found)
+              .filter(([, entry]) => ['high', 'critical'].includes(entry.severity))
+              .sort(([a], [b]) => a.localeCompare(b))
+            for (const [pkg, entry] of high) {
+              const leaves = (entry.via || []).map((via) =>
+                typeof via === 'string'
+                  ? { linked: via }
+                  : { name: via.name, url: via.url, range: via.range, severity: via.severity },
+              )
+              console.log('AUDIT_' + name + '_HIGH ' + JSON.stringify({
+                package: pkg,
+                severity: entry.severity,
+                range: entry.range,
+                isDirect: entry.isDirect,
+                fixAvailable: entry.fixAvailable,
+                via: leaves,
+              }))
+            }
+          }
+          NODE
+      - name: Generate minimal Vite patch and compatible lockfile-only fixes
+        shell: bash
+        run: |
+          set -eu
+          npm install --package-lock-only --save-dev --save-exact vite@8.1.7 --no-audit --no-fund
+          npm audit fix --package-lock-only --no-fund > /tmp/npm-fix-output.txt 2>&1 || true
+          echo '=== npm audit fix summary (may include unresolved advisories) ==='
+          tail -45 /tmp/npm-fix-output.txt
+          npm audit --json > /tmp/audit-after.json || true
+          node <<'NODE'
+          const fs = require('node:fs')
+          const result = JSON.parse(fs.readFileSync('/tmp/audit-after.json', 'utf8'))
+          const v = result.vulnerabilities || {}
+          console.log('AUDIT_AFTER_SUMMARY ' + JSON.stringify(result.metadata?.vulnerabilities || {}))
+          for (const [pkg, entry] of Object.entries(v).sort(([a], [b]) => a.localeCompare(b))) {
+            if (entry.severity !== 'high' && entry.severity !== 'critical') continue
+            console.log('AUDIT_AFTER_HIGH ' + JSON.stringify({
+              package: pkg,
+              severity: entry.severity,
+              range: entry.range,
+              fixAvailable: entry.fixAvailable,
+              via: (entry.via || []).map((x) => typeof x === 'string' ? x : x.url),
+            }))
+          }
+          NODE
+          npm ci --no-audit --no-fund
+          echo '__GIT_PATCH_BEGIN__'
+          git --no-pager diff --no-ext-diff --unified=3 -- package.json package-lock.json
+          echo '__GIT_PATCH_END__'
+          echo 'This job is diagnostic; Phase 21 security remains the authoritative policy gate.'
