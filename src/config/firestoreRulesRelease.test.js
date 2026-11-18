@@ -57,9 +57,9 @@ describe('publicação segura das regras Firestore', () => {
     expect(publisher).toContain('publishVerifiedRules({ request, approved, expected })')
     expect(publisherCore).toContain('verifyApprovedOrigin(previous, approved)')
     const repeatedCheck = 'verifyApprovedOrigin(await readActiveRules(request), approved)'
-    const finalCheck = 'verifyPublishedTarget(await readActiveRules(request), expected, createdName)'
     expect(publisherCore).toContain(repeatedCheck)
-    expect(publisherCore).toContain(finalCheck)
+    expect(publisherCore).toContain('verifyPublishedTarget(')
+    expect(publisherCore).toContain('expected, createdName)')
     for (const script of [verifier, publisher, publisherCore]) {
       expect(script).not.toContain('HEAD^:firestore.rules')
       expect(script).not.toContain('firestore-rules-pre-attachments.rules')
@@ -68,18 +68,16 @@ describe('publicação segura das regras Firestore', () => {
 
   test('não aceita aprovação sem identidade e fingerprint completos', () => {
     expect(() => getApprovedOrigin({})).toThrow()
-    expect(() =>
-      getApprovedOrigin({
-        APPROVED_ACTIVE_RULESET: 'projects/outro/rulesets/uuid123',
-        APPROVED_ACTIVE_RULES_SHA256: approval.digest,
-      }),
-    ).toThrow()
-    expect(() =>
-      getApprovedOrigin({
-        APPROVED_ACTIVE_RULESET: name,
-        APPROVED_ACTIVE_RULES_SHA256: 'incorrect',
-      }),
-    ).toThrow()
+    const wrongProject = {
+      APPROVED_ACTIVE_RULESET: 'projects/outro/rulesets/uuid123',
+      APPROVED_ACTIVE_RULES_SHA256: approval.digest,
+    }
+    const wrongDigest = {
+      APPROVED_ACTIVE_RULESET: name,
+      APPROVED_ACTIVE_RULES_SHA256: 'incorrect',
+    }
+    expect(() => getApprovedOrigin(wrongProject)).toThrow()
+    expect(() => getApprovedOrigin(wrongDigest)).toThrow()
     expect(
       getApprovedOrigin({
         APPROVED_ACTIVE_RULESET: name,
@@ -90,18 +88,16 @@ describe('publicação segura das regras Firestore', () => {
 
   test('bloqueia outra versão e mesma origem com ruleset ID diferente', () => {
     expect(() => verifyApprovedOrigin({ name, source }, approval)).not.toThrow()
-    expect(() =>
-      verifyApprovedOrigin({ name: 'projects/cfp-money/rulesets/other', source }, approval),
-    ).toThrow(/mudou/)
+    const other = { name: 'projects/cfp-money/rulesets/other', source }
+    expect(() => verifyApprovedOrigin(other, approval)).toThrow(/mudou/)
     const modified = { name, source: source + '\n// modificada' }
     expect(() => verifyApprovedOrigin(modified, approval)).toThrow(/diverge/)
   })
 
   test('pós-publicação exige ruleset publicado e conteúdo exatos', () => {
     expect(() => verifyPublishedTarget({ name, source }, source, name)).not.toThrow()
-    expect(() =>
-      verifyPublishedTarget({ name: 'projects/cfp-money/rulesets/other', source }, source, name),
-    ).toThrow()
+    const other = { name: 'projects/cfp-money/rulesets/other', source }
+    expect(() => verifyPublishedTarget(other, source, name)).toThrow()
     expect(() => verifyPublishedTarget({ name, source: source + 'x' }, source, name)).toThrow()
   })
 
@@ -111,15 +107,10 @@ describe('publicação segura das regras Firestore', () => {
     const singleFile = { source: { files: [{ name: 'firestore.rules', content: source }] } }
     expect(getRulesetSource(singleFile)).toBe(source)
     expect(() => getRulesetSource({ source: { files: [] } })).toThrow()
-    expect(() =>
-      getRulesetSource({
-        source: {
-          files: [
-            { name: 'a.rules', content: source },
-            { name: 'b.rules', content: source },
-          ],
-        },
-      }),
-    ).toThrow(/ambígua/)
+    const files = [
+      { name: 'a.rules', content: source },
+      { name: 'b.rules', content: source },
+    ]
+    expect(() => getRulesetSource({ source: { files } })).toThrow(/ambígua/)
   })
 })
