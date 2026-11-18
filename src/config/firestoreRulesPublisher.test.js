@@ -78,42 +78,32 @@ describe('publicador exato de Firestore Rules — execução isolada sem API rea
 
   test('rejeita ID ativo diferente do aprovado antes de qualquer escrita', async () => {
     const api = fakeRulesApi({ name: 'projects/cfp-money/rulesets/not-approved' })
-    await expect(
-      execute(api.request),
-    ).rejects.toThrow(/mudou/)
+    await expect(execute(api.request)).rejects.toThrow(/mudou/)
     expect(methods(api.request)).toEqual(['GET', 'GET'])
   })
 
   test('rejeita hash diferente mesmo se o ruleset ID permanecer igual', async () => {
     const api = fakeRulesApi({ source: originalSource + '\n// alteração externa' })
-    await expect(
-      execute(api.request),
-    ).rejects.toThrow(/diverge/)
+    await expect(execute(api.request)).rejects.toThrow(/diverge/)
     expect(methods(api.request)).toEqual(['GET', 'GET'])
   })
 
   test('revalida contra drift externo após criar ruleset e antes do PATCH', async () => {
     const api = fakeRulesApi({ driftAfterCreate: true })
-    await expect(
-      execute(api.request),
-    ).rejects.toThrow(/mudou/)
+    await expect(execute(api.request)).rejects.toThrow(/mudou/)
     expect(methods(api.request)).toContain('POST')
     expect(methods(api.request)).not.toContain('PATCH')
   })
 
   test('não publica regras criadas com ruleset fora do projeto aprovado', async () => {
     const api = fakeRulesApi({ createdName: 'projects/outro/rulesets/novo' })
-    await expect(
-      execute(api.request),
-    ).rejects.toThrow(/fora do projeto/)
+    await expect(execute(api.request)).rejects.toThrow(/fora do projeto/)
     expect(methods(api.request)).not.toContain('PATCH')
   })
 
   test('detecta publicação concorrente ou destino diferente após o PATCH', async () => {
     const api = fakeRulesApi({ driftAfterPatch: true })
-    await expect(
-      execute(api.request),
-    ).rejects.toThrow(/não corresponde/)
+    await expect(execute(api.request)).rejects.toThrow(/não corresponde/)
     expect(methods(api.request)).toContain('PATCH')
   })
 })
