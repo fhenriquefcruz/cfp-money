@@ -1,21 +1,34 @@
-// Publica APENAS as regras do Firestore via Firebase Rules Management API.
-// O Firebase CLI consulta Service Usage; nossa conta de serviço tem acesso
-// de Rules, porém não à API Service Usage. Falha fechada em divergência.
-import { readFileSync } from 'node:fs'
+// Publicação somente no workflow manual: origem exata, SHA revisado e
+// verificação da Release antes e depois da troca de ruleset.
+import { appendFileSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import {
+  FIRESTORE_RELEASE,
+  assertProjectRuleset,
+  getApprovedOrigin,
+  getRulesetSource,
+  normalizeRules,
+  verifyApprovedOrigin,
+  verifyPublishedTarget,
+} from './firestore-rules-release-guard.mjs'
 
 const require = createRequire(import.meta.url)
 const { GoogleAuth } = require('google-auth-library')
-
 const expected = readFileSync('firestore.rules', 'utf8')
-const normalize = (value) =>
-  String(value || '')
-    .replace(/\r\n/g, '\n')
-    .trim()
-const project = 'cfp-money'
-const prefix = `https://firebaserules.googleapis.com/v1/projects/${project}`
-const releaseName = `projects/${project}/releases/cloud.firestore`
+const approved = getApprovedOrigin()
 
+if (
+  process.env.GITHUB_ACTIONS !== 'true' ||
+  process.env.GITHUB_REF !== 'refs/heads/main' ||
+  process.env.GITHUB_SHA !== process.env.APPROVED_RELEASE_SHA ||
+  !/^[a-f0-9]{40}$/.test(process.env.APPROVED_RELEASE_SHA || '') ||
+  process.env.RELEASE_CONFIRMATION !== 'PUBLICAR_REGRAS_FIRESTORE' ||
+  !process.env.GITHUB_ENV
+) {
+  throw new Error('Publicação requer workflow manual na main e SHA expressamente aprovado.')
+}
+
+const prefix = 'https://firebaserules.googleapis.com/v1'
 const auth = new GoogleAuth({
   keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
   scopes: ['https://www.googleapis.com/auth/cloud-platform'],
@@ -23,7 +36,7 @@ const auth = new GoogleAuth({
 const token = await auth.getAccessToken()
 
 async function request(path, method = 'GET', body) {
-  const response = await fetch(path, {
+  const response = await fetch(`${prefix}/${path}`, {
     method,
     headers: {
       Authorization: `Bearer ${token}`,
@@ -32,60 +45,54 @@ async function request(path, method = 'GET', body) {
     ...(body ? { body: JSON.stringify(body) } : {}),
   })
   if (!response.ok) {
-    // Evitar imprimir resposta potencialmente sensível.
-    throw new Error(`Firebase Rules API ${method} falhou: HTTP ${response.status}`)
+    // Não imprimir payload de erro remoto: pode conter informações sensíveis.
+    throw new Error(`Rules API ${method} falhou: HTTP ${response.status}`)
   }
   return response.json()
 }
 
 async function publishedRules() {
-  const release = await request(`${prefix}/releases/cloud.firestore`)
-  if (!/^projects\/cfp-money\/rulesets\//.test(release.rulesetName || '')) {
-    throw new Error('Regras de produção não reconhecidas; operação abortada.')
+  const release = await request(FIRESTORE_RELEASE)
+  if (release.name !== FIRESTORE_RELEASE) {
+    throw new Error('A API retornou Release diferente da aprovada.')
   }
-  const ruleset = await request(`https://firebaserules.googleapis.com/v1/${release.rulesetName}`)
-  const source =
-    ruleset.source?.files?.find((file) => /firestore\.rules$/.test(file.name || ''))?.content ||
-    ruleset.source?.files?.[0]?.content
-  if (!source) throw new Error('Regras de produção não disponíveis.')
-  return { name: release.rulesetName, source: normalize(source) }
+  const name = assertProjectRuleset(release.rulesetName)
+  const ruleset = await request(name)
+  if (ruleset.name !== name) {
+    throw new Error('A API retornou Ruleset diferente do solicitado.')
+  }
+  return { name, source: getRulesetSource(ruleset) }
 }
 
-// O preflight do workflow também compara as regras, mas o publicador valida
-// novamente o estado aprovado para impedir substituição de mudanças externas
-// ocorridas entre as duas etapas.
-const approvedBaseline = normalize(
-  readFileSync('scripts/firestore-rules-pre-attachments.rules', 'utf8'),
-)
-const previous = await publishedRules()
-if (previous.source !== approvedBaseline && previous.source !== normalize(expected)) {
-  throw new Error('Regras de produção divergiram do baseline aprovado; publicação bloqueada.')
+function exportPublishedRuleset(name) {
+  appendFileSync(process.env.GITHUB_ENV, `PUBLISHED_RULESET=${assertProjectRuleset(name)}\n`)
 }
-if (previous.source === normalize(expected)) {
-  console.log('Regras já estão publicadas; nenhuma alteração necessária.')
+
+const previous = await publishedRules()
+verifyApprovedOrigin(previous, approved)
+
+if (normalizeRules(previous.source) === normalizeRules(expected)) {
+  exportPublishedRuleset(previous.name)
+  console.log('Rules já publicadas com origem aprovada; nenhum PATCH foi realizado.')
   process.exit(0)
 }
 
-// Regras atuais foram checadas pelo gate "before", mas não alterá-las se
-// mudou algo enquanto o ruleset estava sendo criado.
-const created = await request(`${prefix}/rulesets`, 'POST', {
+const created = await request('projects/cfp-money/rulesets', 'POST', {
   source: { files: [{ name: 'firestore.rules', content: expected }] },
 })
-if (!/^projects\/cfp-money\/rulesets\//.test(created.name || '')) {
-  throw new Error('Ruleset criado fora do projeto esperado; operação abortada.')
-}
+const createdName = assertProjectRuleset(created.name)
 
-const current = await publishedRules()
-if (current.name !== previous.name || current.source !== previous.source) {
-  throw new Error('Regras de produção mudaram durante a publicação; lançamento bloqueado.')
-}
+// Revalidação da origem, sem aceitar snapshots históricos por aproximação.
+verifyApprovedOrigin(await publishedRules(), approved)
 
-await request(`${prefix}/releases/cloud.firestore`, 'PATCH', {
-  release: { name: releaseName, rulesetName: created.name },
+// ATENÇÃO: a API PATCH não oferece compare-and-swap do ruleset de origem.
+// Há risco residual de mudanças externas simultâneas entre GET e PATCH.
+// Exigir janela controlada e titular responsável na aprovação operacional.
+await request(FIRESTORE_RELEASE, 'PATCH', {
+  release: { name: FIRESTORE_RELEASE, rulesetName: createdName },
   updateMask: 'rulesetName',
 })
-const published = await publishedRules()
-if (published.source !== normalize(expected)) {
-  throw new Error('Regras publicadas não correspondem ao arquivo revisado.')
-}
-console.log('Regras do Firestore publicadas e verificadas via API específica.')
+
+verifyPublishedTarget(await publishedRules(), expected, createdName)
+exportPublishedRuleset(createdName)
+console.log('Rules publicadas: ruleset ativo e conteúdo exato foram verificados.')
