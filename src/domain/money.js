@@ -235,7 +235,7 @@ export function calculateCategoryChanges(currentTransactions = [], previousTrans
         categoryName: currentItem?.categoryName || previousItem?.categoryName || 'Sem categoria',
         currentTotal,
         previousTotal,
-        difference: currentTotal - previousTotal,
+        difference: subtractMoney(currentTotal, previousTotal),
         percentChange: safePercentChange(currentTotal, previousTotal),
       }
     })
