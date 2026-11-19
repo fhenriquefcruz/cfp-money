@@ -49,7 +49,8 @@ describe('exportToCSV', () => {
           {
             date: '2026-11-19',
             type: 'expense',
-            description: 'Compra legada',
+            description: '=HYPERLINK("https://example.invalid")',
+            categoryName: '+SUM(1,2)',
             amount: '125.50',
             paymentMethod: 'pix',
           },
@@ -64,7 +65,8 @@ describe('exportToCSV', () => {
         reader.onerror = () => reject(reader.error)
         reader.readAsText(blob)
       })
-      expect(csv).toContain('"Compra legada"')
+      expect(csv).toContain('"\'=HYPERLINK(""https://example.invalid"")"')
+      expect(csv).toContain('"\'+SUM(1,2)"')
       expect(csv).toContain('"125,50"')
       expect(click).toHaveBeenCalledOnce()
     } finally {
