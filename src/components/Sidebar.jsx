@@ -452,8 +452,6 @@ export default function Sidebar() {
             aria-label="Mais opções de navegação"
             tabIndex={-1}
             className="aurora-mobile-drawer fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-0 top-0 z-[60] flex w-[min(18rem,86vw)] flex-col overflow-hidden bg-[--bg-sidebar] shadow-2xl lg:hidden"
-            animate={{ x: 0 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           >
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-2">
