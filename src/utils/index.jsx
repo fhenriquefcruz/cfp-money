@@ -80,7 +80,7 @@ export const formatCsvAmount = (amount) =>
 
 export const escapeCsvText = (value) => {
   const text = String(value ?? '')
-  return /^[\\s]*[=+@-]/.test(text) ? `'${text}` : text
+  return /^\s*[=+@-]/.test(text) ? `'${text}` : text
 }
 
 export const exportToCSV = (transactions) => {
