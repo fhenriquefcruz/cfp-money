@@ -34,7 +34,7 @@ export default function NotificationStack() {
           <button
             onClick={() => dismissNotification(n.id)}
             className="flex-shrink-0 text-[--text-tertiary] hover:text-[--text-secondary] transition-colors"
-            >
+          >
             <X size={14} />
           </button>
         </div>
