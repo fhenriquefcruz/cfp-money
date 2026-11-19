@@ -1,6 +1,5 @@
 // src/components/Dashboard.jsx
 import React, { useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
   AreaChart,
@@ -368,7 +367,6 @@ export default function Dashboard() {
     () => buildPeriodResultInsight(currentSummary, previousSummary),
     [currentSummary, previousSummary],
   )
-  const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } }
 
   return (
     <div
@@ -376,9 +374,8 @@ export default function Dashboard() {
       className="dashboard-premium dashboard-v58 mx-auto min-w-0 max-w-[1680px] space-y-5 pb-24 sm:space-y-6 lg:pb-6"
     >
       {/* Header — mês com destaque, saudação secundária */}
-      <motion.div
+      <div
         className="dashboard-premium__toolbar flex flex-wrap items-start justify-between gap-3"
-        {...fade}
       >
         <div className="min-w-0 flex-1">
           {/* Mês é o destaque principal */}
@@ -426,10 +423,10 @@ export default function Dashboard() {
             <span className="dashboard-quick-add__label">Nova transação</span>
           </Button>
         </Link>
-      </motion.div>
+      </div
 
       <div className="dashboard-executive-grid">
-        <motion.div className="min-w-0" {...fade} transition={{ delay: 0.05 }}>
+        <div className="min-w-0">
           <Card variant="hero" className="dashboard-period-summary dashboard-period-hero h-full">
             <div className="dashboard-period-hero__main">
               <div className="dashboard-period-hero__amount">
@@ -500,20 +497,20 @@ export default function Dashboard() {
               ))}
             </div>
           </Card>
-        </motion.div>
+        </div
 
-        <motion.div className="min-w-0" {...fade} transition={{ delay: 0.075 }}>
+        <div className="min-w-0">
           <MonthAttentionCard items={actionInsights} />
-        </motion.div>
+        </div
       </div>
 
       {/* Faixa operacional: compromissos do mês + patrimônio reservado */}
       <div className="dashboard-executive-grid">
-        <motion.div className="min-w-0" {...fade} transition={{ delay: 0.08 }}>
+        <div className="min-w-0">
           <PaymentControlCard summary={paymentSummary} loading={isLoading} />
-        </motion.div>
+        </div
 
-        <motion.div className="min-w-0" {...fade} transition={{ delay: 0.09 }}>
+        <div className="min-w-0">
           <Card
             variant="elevated"
             className="dashboard-savings-card dashboard-module--savings h-full"
@@ -600,15 +597,12 @@ export default function Dashboard() {
               </div>
             </div>
           </Card>
-        </motion.div>
+        </div
       </div>
 
       {/* Inteligência executiva: ritmo, saúde e Money em uma faixa coerente */}
-      <motion.div
+      <div
         className="dashboard-bento-grid grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
       >
         <Card
           variant="elevated"
@@ -655,11 +649,11 @@ export default function Dashboard() {
         <div className="dashboard-money-insight dashboard-module--money col-span-1 min-w-0 md:col-span-2 xl:col-span-6">
           <MoneyInsightCard referenceDate={viewDate} compact />
         </div>
-      </motion.div>
+      </div
 
       {/* Análise principal: evolução e composição */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-3">
-        <motion.div className="xl:col-span-2" {...fade} transition={{ delay: 0.15 }}>
+        <div className="xl:col-span-2">
           <Card className="dashboard-finance-chart dashboard-module--evolution h-full overflow-hidden">
             <div className="dashboard-finance-chart__header mb-4 flex flex-col gap-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -874,9 +868,9 @@ export default function Dashboard() {
               </div>
             )}
           </Card>
-        </motion.div>
+        </div
 
-        <motion.div {...fade} transition={{ delay: 0.2 }}>
+        <div>
           <Card className="dashboard-spending-composition dashboard-module--composition h-full overflow-hidden">
             <div className="mb-3">
               <div className="flex items-center gap-2">
@@ -920,13 +914,13 @@ export default function Dashboard() {
               </>
             )}
           </Card>
-        </motion.div>
+        </div
       </div>
 
       {/* Planejamento sem competir com o gráfico: orçamentos e metas lado a lado */}
       <div className="dashboard-support-grid grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
         {budgetAlerts.length > 0 && (
-          <motion.div {...fade} transition={{ delay: 0.3 }}>
+          <div>
             <Card>
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle size={14} className="text-[--warning-icon]" />
@@ -970,9 +964,9 @@ export default function Dashboard() {
                 Gerenciar orçamentos
               </Link>
             </Card>
-          </motion.div>
+          </div
         )}
-        <motion.div {...fade} transition={{ delay: 0.35 }}>
+        <div>
           <Card>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -1018,12 +1012,12 @@ export default function Dashboard() {
               </div>
             )}
           </Card>
-        </motion.div>
+        </div
       </div>
 
       {/* Histórico no rodapé: o painel rola sem esticar os demais cards. */}
       <div className="dashboard-history-area min-w-0">
-        <motion.div className="min-w-0" {...fade} transition={{ delay: 0.25 }}>
+        <div className="min-w-0">
           <Card className="dashboard-transactions-card dashboard-module--transactions">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-2">
@@ -1069,7 +1063,7 @@ export default function Dashboard() {
               </div>
             )}
           </Card>
-        </motion.div>
+        </div
       </div>
     </div>
   )
