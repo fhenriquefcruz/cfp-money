@@ -4,9 +4,21 @@ const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 const TYPES = new Set(['payment', 'reversal', 'adjustment', 'manual_close'])
 const ALLOWED_FIELDS = new Set([
-  'operationId', 'type', 'invoiceKey', 'cardId', 'cardName', 'cardLast4',
-  'invoiceMonth', 'eventDate', 'notes', 'amount', 'paymentDate',
-  'sourceAccount', 'direction', 'signedAmount', 'reversesEventId',
+  'operationId',
+  'type',
+  'invoiceKey',
+  'cardId',
+  'cardName',
+  'cardLast4',
+  'invoiceMonth',
+  'eventDate',
+  'notes',
+  'amount',
+  'paymentDate',
+  'sourceAccount',
+  'direction',
+  'signedAmount',
+  'reversesEventId',
 ])
 
 function invalidOperation() {
@@ -24,7 +36,9 @@ function validCents(value, signed = false) {
   const cents = Math.round(value * 100)
   return (
     Number.isSafeInteger(cents) &&
-    (signed ? cents !== 0 && Math.abs(value) < 100000000 : cents > 0 && value <= 100000000) &&
+    (signed
+      ? cents !== 0 && Math.abs(value) < 100000000
+      : cents > 0 && value <= 100000000) &&
     Math.abs(value - cents / 100) < 1e-9
   )
 }
@@ -81,7 +95,9 @@ export function validateInvoiceEventOperation(event) {
       event.paymentDate !== eventDate ||
       typeof event.sourceAccount !== 'string' ||
       event.sourceAccount.length > 120 ||
-      'direction' in event || 'signedAmount' in event || 'reversesEventId' in event
+      'direction' in event ||
+      'signedAmount' in event ||
+      'reversesEventId' in event
     ) {
       invalidOperation()
     }
@@ -93,7 +109,9 @@ export function validateInvoiceEventOperation(event) {
       !/^[A-Za-z0-9_-]{1,128}$/.test(event.reversesEventId) ||
       typeof event.sourceAccount !== 'string' ||
       event.sourceAccount.length > 120 ||
-      'paymentDate' in event || 'signedAmount' in event || 'direction' in event
+      'paymentDate' in event ||
+      'signedAmount' in event ||
+      'direction' in event
     ) {
       invalidOperation()
     }
@@ -103,14 +121,20 @@ export function validateInvoiceEventOperation(event) {
       !['charge', 'credit'].includes(event.direction) ||
       (event.direction === 'credit') !== event.signedAmount < 0 ||
       !String(event.notes || '').trim() ||
-      'amount' in event || 'paymentDate' in event ||
-      'sourceAccount' in event || 'reversesEventId' in event
+      'amount' in event ||
+      'paymentDate' in event ||
+      'sourceAccount' in event ||
+      'reversesEventId' in event
     ) {
       invalidOperation()
     }
   } else if (
-    'amount' in event || 'paymentDate' in event || 'sourceAccount' in event ||
-    'signedAmount' in event || 'direction' in event || 'reversesEventId' in event
+    'amount' in event ||
+    'paymentDate' in event ||
+    'sourceAccount' in event ||
+    'signedAmount' in event ||
+    'direction' in event ||
+    'reversesEventId' in event
   ) {
     invalidOperation()
   }
