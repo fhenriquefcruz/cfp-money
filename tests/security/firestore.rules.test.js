@@ -1037,3 +1037,75 @@ test('MR-008: duas sessões do mesmo UID recebem mudanças de cartões, metas e 
     assert.equal((await getDoc(referenceA)).data().name, 'Depois')
   }
 })
+
+test('MR-003: Rules rejeitam payloads que o validador cliente agora bloqueia', async () => {
+  const alice = environment.authenticatedContext('alice').firestore()
+  const bob = environment.authenticatedContext('bob').firestore()
+  const base = {
+    operationId: 'invoice-parity-payment-0001',
+    type: 'payment',
+    cardId: 'card-1',
+    invoiceMonth: '2026-11',
+    invoiceKey: 'card-1:2026-11',
+    eventDate: '2026-11-15',
+    paymentDate: '2026-11-15',
+    amount: 15.25,
+    sourceAccount: 'Banco',
+    notes: '',
+    createdAt: serverTimestamp(),
+  }
+  const write = (suffix, changes = {}) => {
+    const operationId = 'invoice-parity-' + suffix + '-0001'
+    const payload = { ...base, operationId, ...changes }
+    for (const [key, value] of Object.entries(payload)) {
+      if (value === null) delete payload[key]
+    }
+    return setDoc(doc(alice, 'users', 'alice', 'invoiceEvents', 'op_' + operationId), payload)
+  }
+
+  await assertSucceeds(write('valid-payment'))
+  for (const [suffix, changes] of [
+    ['over-limit', { amount: 100000000.01 }],
+    ['extra-field', { unexpected: true }],
+    ['long-card', { cardId: 'x'.repeat(129), invoiceKey: 'x'.repeat(129) + ':2026-11' }],
+    ['long-notes', { notes: 'x'.repeat(2001) }],
+    ['long-account', { sourceAccount: 'x'.repeat(121) }],
+    ['wrong-type-field', { signedAmount: 1 }],
+  ]) {
+    await assertFails(write(suffix, changes))
+  }
+
+  await assertSucceeds(write('valid-adjustment', {
+    type: 'adjustment',
+    direction: 'credit',
+    signedAmount: -0.01,
+    notes: 'Desconto',
+    amount: null,
+    paymentDate: null,
+    sourceAccount: null,
+  }))
+  await assertFails(write('adjustment-limit', {
+    type: 'adjustment',
+    direction: 'charge',
+    signedAmount: 100000000,
+    notes: 'Limite',
+    amount: null,
+    paymentDate: null,
+    sourceAccount: null,
+  }))
+  await assertSucceeds(write('valid-close', {
+    type: 'manual_close',
+    amount: null,
+    paymentDate: null,
+    sourceAccount: null,
+  }))
+  await assertFails(write('close-amount', {
+    type: 'manual_close',
+  }))
+  await assertFails(
+    setDoc(doc(bob, 'users', 'alice', 'invoiceEvents', 'op_invoice-parity-bob-0001'), {
+      ...base,
+      operationId: 'invoice-parity-bob-0001',
+    }),
+  )
+})
