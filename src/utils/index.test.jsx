@@ -37,7 +37,7 @@ describe('formatCsvAmount', () => {
 })
 
 describe('exportToCSV', () => {
-  test('exporta transação legada com valor string sem lançar erro', () => {
+  test('exporta transação legada com valor string e conteúdo correto', async () => {
     const originalCreateObjectURL = URL.createObjectURL
     const createObjectURL = vi.fn(() => 'blob:meu-real-test')
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
@@ -56,7 +56,16 @@ describe('exportToCSV', () => {
         ]),
       ).not.toThrow()
       expect(createObjectURL).toHaveBeenCalledOnce()
-      expect(createObjectURL.mock.calls[0][0]).toBeInstanceOf(Blob)
+      const blob = createObjectURL.mock.calls[0][0]
+      expect(blob).toBeInstanceOf(Blob)
+      const csv = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = () => reject(reader.error)
+        reader.readAsText(blob)
+      })
+      expect(csv).toContain('"Compra legada"')
+      expect(csv).toContain('"125,50"')
       expect(click).toHaveBeenCalledOnce()
     } finally {
       URL.createObjectURL = originalCreateObjectURL
