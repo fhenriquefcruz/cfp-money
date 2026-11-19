@@ -281,6 +281,7 @@ export const Modal = ({
     >
       <div
         ref={dialogRef}
+        className="meu-real-modal-enter"
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
