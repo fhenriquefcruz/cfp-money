@@ -66,9 +66,9 @@ describe('MR-003: limite aritmético de estornos', () => {
   })
 
   test('não permite origem ou histórico com frações ocultas de centavo', () => {
-    expect(() =>
-      validateReversalAgainstPayment({ ...payment, amount: 120.021 }, reversal),
-    ).toThrow(/centavos exatos/)
+    expect(() => validateReversalAgainstPayment({ ...payment, amount: 120.021 }, reversal)).toThrow(
+      /centavos exatos/,
+    )
     expect(() =>
       validateReversalAgainstPayment(payment, reversal, [
         { type: 'reversal', reversesEventId: payment.id, amount: 0.001 },
