@@ -59,6 +59,12 @@ describe('idempotência de evento de fatura', () => {
     expect(() => validateInvoiceEventOperation(payment({ eventDate: '2026-11-31' }))).toThrow()
     expect(() => validateInvoiceEventOperation(payment({ invoiceKey: 'other' }))).toThrow()
     expect(() => validateInvoiceEventOperation(payment({ createdAt: 'forged' }))).toThrow()
+    expect(() => validateInvoiceEventOperation(payment({ unexpected: true }))).toThrow()
+    expect(() => validateInvoiceEventOperation(payment({ amount: 100000000.01 }))).toThrow()
+    expect(() => validateInvoiceEventOperation(payment({ cardId: 'x'.repeat(129) }))).toThrow()
+    expect(() => validateInvoiceEventOperation(payment({ notes: 'x'.repeat(2001) }))).toThrow()
+    expect(() => validateInvoiceEventOperation(payment({ sourceAccount: 'x'.repeat(121) }))).toThrow()
+    expect(() => validateInvoiceEventOperation(payment({ signedAmount: 1 }))).toThrow()
   })
 
   test('permite ajustes e estornos estruturados sem tratar como despesas', () => {
@@ -83,6 +89,17 @@ describe('idempotência de evento de fatura', () => {
     expect(() =>
       validateInvoiceEventOperation({ ...base, amount: 50.25, reversesEventId: '' }),
     ).toThrow()
+    expect(() =>
+      validateInvoiceEventOperation({
+        ...base, amount: 50.25, reversesEventId: 'payment-document-1',
+      }),
+    ).toThrow()
+    expect(() =>
+      validateInvoiceEventOperation({
+        ...base, amount: 50.25, reversesEventId: 'payment-document-1',
+        sourceAccount: 'Conta 1', paymentDate: '2026-11-15',
+      }),
+    ).toThrow()
 
     expect(
       validateInvoiceEventOperation({
@@ -100,6 +117,17 @@ describe('idempotência de evento de fatura', () => {
         signedAmount: 10.25,
         direction: 'credit',
         notes: 'Desconto revisado',
+      }),
+    ).toThrow()
+    expect(() =>
+      validateInvoiceEventOperation({
+        ...base, type: 'adjustment', signedAmount: 100000000,
+        direction: 'charge', notes: 'Limite',
+      }),
+    ).toThrow()
+    expect(() =>
+      validateInvoiceEventOperation({
+        ...base, type: 'manual_close', amount: 1,
       }),
     ).toThrow()
   })
