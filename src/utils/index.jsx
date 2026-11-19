@@ -1,6 +1,7 @@
 // src/utils/index.jsx
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { toTransactionCents } from '../domain/finance'
 
 // ── CAPITALIZE ──
 export const capitalize = (str) => {
@@ -111,7 +112,7 @@ export const exportToCSV = (transactions) => {
       t.isSavings ? 'Poupança' : t.type === 'income' ? 'Receita' : 'Despesa',
       t.description || '',
       t.categoryName || '',
-      t.amount.toFixed(2).replace('.', ','),
+      (toTransactionCents(t.amount) / 100).toFixed(2).replace('.', ','),
       getPaymentLabel(t.paymentMethod),
       t.type === 'expense' && !t.isSavings ? paymentStatus : '',
       paidAtIso(t.paidAt),
