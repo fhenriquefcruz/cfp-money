@@ -67,8 +67,8 @@ jobs:
           if npm run format:check; then
             exit 0
           fi
-          npx prettier --write src/domain/invoiceEventIdempotency.js src/domain/invoiceEventIdempotency.test.js tests/security/firestore.rules.test.js
-          git diff -- src/domain/invoiceEventIdempotency.js src/domain/invoiceEventIdempotency.test.js tests/security/firestore.rules.test.js
+          npx prettier --write src/domain/invoiceEventIdempotency.js src/domain/invoiceEventIdempotency.test.js src/domain/invoiceReversalGuard.test.js tests/security/firestore.rules.test.js
+          git diff -- src/domain/invoiceEventIdempotency.js src/domain/invoiceEventIdempotency.test.js src/domain/invoiceReversalGuard.test.js tests/security/firestore.rules.test.js
           exit 1
 
       - name: PowerShell bootstrap syntax
