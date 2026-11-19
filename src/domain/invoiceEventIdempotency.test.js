@@ -63,7 +63,9 @@ describe('idempotência de evento de fatura', () => {
     expect(() => validateInvoiceEventOperation(payment({ amount: 100000000.01 }))).toThrow()
     expect(() => validateInvoiceEventOperation(payment({ cardId: 'x'.repeat(129) }))).toThrow()
     expect(() => validateInvoiceEventOperation(payment({ notes: 'x'.repeat(2001) }))).toThrow()
-    expect(() => validateInvoiceEventOperation(payment({ sourceAccount: 'x'.repeat(121) }))).toThrow()
+    expect(() =>
+      validateInvoiceEventOperation(payment({ sourceAccount: 'x'.repeat(121) })),
+    ).toThrow()
     expect(() => validateInvoiceEventOperation(payment({ signedAmount: 1 }))).toThrow()
   })
 
@@ -135,7 +137,9 @@ describe('idempotência de evento de fatura', () => {
     ).toThrow()
     expect(() =>
       validateInvoiceEventOperation({
-        ...base, amount: 50.25, reversesEventId: 'payment-document-1',
+        ...base,
+        amount: 50.25,
+        reversesEventId: 'payment-document-1',
         sourceAccount: 'Conta 1',
         paymentDate: '2026-11-15',
       }),
