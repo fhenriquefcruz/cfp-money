@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { formatRelativeDate } from './index'
+import { formatCsvAmount, formatRelativeDate } from './index'
 
 describe('formatRelativeDate', () => {
   beforeEach(() => {
@@ -21,5 +21,17 @@ describe('formatRelativeDate', () => {
     expect(formatRelativeDate('2026-07-24')).toBe('Amanhã')
     expect(formatRelativeDate('2026-07-25')).toBe('Daqui a 2 dias')
     expect(formatRelativeDate('2026-08-01')).toBe('01/08/2026')
+  })
+})
+
+describe('formatCsvAmount', () => {
+  test('aceita valores legados em string e preserva centavos', () => {
+    expect(formatCsvAmount('125.50')).toBe('125,50')
+    expect(formatCsvAmount('0.29')).toBe('0,29')
+    expect(formatCsvAmount(10.01)).toBe('10,01')
+  })
+
+  test('normaliza valores inválidos conforme o seletor financeiro existente', () => {
+    expect(formatCsvAmount('invalid')).toBe('0,00')
   })
 })
