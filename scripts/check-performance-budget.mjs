@@ -164,6 +164,7 @@ const report = {
   metrics,
   largestJavaScript,
   initialAssets: assets.filter((asset) => asset.initial),
+  javascriptChunks: [...javascript].sort((a, b) => b.gzipBytes - a.gzipBytes),
   failures,
 }
 
@@ -209,6 +210,14 @@ console.table(
 )
 
 if (failures.length > 0) {
+  console.log('Maiores chunks JavaScript (diagnóstico, sem alterar os limites):')
+  console.table(
+    report.javascriptChunks.slice(0, 25).map((asset) => ({
+      arquivo: asset.file,
+      gzip: kib(asset.gzipBytes),
+      inicial: asset.initial,
+    })),
+  )
   console.error('Orçamento de performance excedido:')
   failures.forEach((failure) => console.error(`- ${failure}`))
   process.exitCode = 1
