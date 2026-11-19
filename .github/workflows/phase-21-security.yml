@@ -12,8 +12,41 @@ permissions:
   contents: read
 
 jobs:
-  security:
-    name: Security runtime and Firestore rules
+  dependency-audit:
+    name: Dependency and production configuration audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate security configuration
+        run: npm run validate:security-config
+
+      - name: Audit Functions production dependencies
+        run: npm audit --prefix functions --omit=dev --audit-level=high
+
+      - name: Audit notification worker dependencies
+        run: npm audit --prefix worker/email-notifications --audit-level=high
+
+      - name: Block critical vulnerabilities
+        run: npm audit --audit-level=critical
+
+      - name: Validate production audit policy
+        run: npm run validate:production-audit
+
+  firestore-policy:
+    name: App Check runtime and Firestore UID rules
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -36,23 +69,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate security configuration
-        run: npm run validate:security-config
-
-      - name: Validate production audit policy
-        run: npm run validate:production-audit
-
-      - name: Audit Functions production dependencies
-        run: npm audit --prefix functions --omit=dev --audit-level=high
-
-      - name: Audit notification worker dependencies
-        run: npm audit --prefix worker/email-notifications --audit-level=high
-
       - name: Test App Check runtime
         run: npm run test:security-runtime
 
       - name: Test Firestore rules
         run: npm run test:rules
-
-      - name: Block critical vulnerabilities
-        run: npm audit --audit-level=critical

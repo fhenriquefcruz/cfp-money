@@ -1,6 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import worker, { getEnvironmentReadiness, runActivationTest } from '../src/index.js'
+import { effectiveGoalForNotifications } from '../src/domain.js'
+import worker, {
+  getEnvironmentReadiness,
+  goalAlertMessage,
+  runActivationTest,
+} from '../src/index.js'
 
 function readyEnvironment(overrides = {}) {
   return {
@@ -159,4 +164,23 @@ test('teste operacional envia somente para o e-mail da conta fixa', async () => 
   assert.deepEqual(calls[0].tags, ['activation-test'])
   assert.match(calls[0].subject, /Teste operacional/)
   assert.doesNotMatch(calls[0].html, /R\$|Receitas|Despesas|Saldo do período/)
+})
+
+test('mensagem do alerta utiliza o mesmo saldo efetivo para calcular valor restante', () => {
+  const goal = {
+    id: 'goal-1',
+    name: 'Reserva',
+    targetAmount: 3000,
+    currentAmount: 2000,
+  }
+  const transactions = [
+    { goalId: 'goal-1', isSavings: true, savingsMovement: 'deposit', amount: 650.2 },
+    { goalId: 'goal-1', isSavings: true, savingsMovement: 'withdrawal', amount: 150.1 },
+  ]
+  const effectiveGoal = effectiveGoalForNotifications(goal, transactions)
+  const notice = goalAlertMessage(effectiveGoal, 'progress-80')
+
+  assert.equal(notice.level, 'warning')
+  assert.match(notice.message, /R\$\s*499,90/)
+  assert.doesNotMatch(notice.message, /R\$\s*1\.000,00/)
 })
