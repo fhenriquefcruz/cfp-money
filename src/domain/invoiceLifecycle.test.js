@@ -383,8 +383,10 @@ test('MR-003: estorno de outra origem não reduz saldo reversível do pagamento'
     { id: 'adj-1', type: 'adjustment', reversesEventId: 'pay-1', signedAmount: -0.02 },
   ]
   expect(getPaymentReversibleAmount(payment, events)).toBe(10.02)
-  expect(getPaymentReversibleAmount(payment, [
-    ...events,
-    { id: 'rev-3', type: 'reversal', reversesEventId: 'pay-1', amount: 10.02 },
-  ])).toBe(0)
+  expect(
+    getPaymentReversibleAmount(payment, [
+      ...events,
+      { id: 'rev-3', type: 'reversal', reversesEventId: 'pay-1', amount: 10.02 },
+    ]),
+  ).toBe(0)
 })
