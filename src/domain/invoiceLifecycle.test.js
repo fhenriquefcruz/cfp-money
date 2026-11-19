@@ -310,3 +310,53 @@ test('MR-018: liquidação parcial, estorno e ajuste não duplicam despesa da co
   expect(events).toEqual(original)
 })
 
+test('MR-005: não mistura eventos com vínculos de fatura contraditórios', () => {
+  const events = [
+    {
+      id: 'consistent',
+      type: 'payment',
+      amount: 10.01,
+      invoiceKey: 'nubank:2026-08',
+      cardId: 'nubank',
+      invoiceMonth: '2026-08',
+    },
+    {
+      id: 'legacy',
+      type: 'payment',
+      amount: 2.02,
+      cardId: 'nubank',
+      invoiceMonth: '2026-08',
+    },
+    {
+      id: 'wrong-key',
+      type: 'payment',
+      amount: 99,
+      invoiceKey: 'nubank:2026-09',
+      cardId: 'nubank',
+      invoiceMonth: '2026-08',
+    },
+    {
+      id: 'wrong-card',
+      type: 'payment',
+      amount: 99,
+      invoiceKey: 'nubank:2026-08',
+      cardId: 'other',
+      invoiceMonth: '2026-08',
+    },
+    {
+      id: 'wrong-month',
+      type: 'payment',
+      amount: 99,
+      invoiceKey: 'nubank:2026-08',
+      cardId: 'nubank',
+      invoiceMonth: '2026-09',
+    },
+  ]
+  const invoiceEvents = getInvoiceEvents(events, 'nubank', '2026-08')
+  expect(invoiceEvents.map((event) => event.id)).toEqual(['consistent', 'legacy'])
+  expect(buildInvoiceLifecycle({ events: invoiceEvents, purchaseTotal: 20 })).toMatchObject({
+    paidAmount: 12.03,
+    remainingAmount: 7.97,
+  })
+  expect(events).toHaveLength(5)
+})
