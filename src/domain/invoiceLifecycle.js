@@ -47,7 +47,7 @@ export function getInvoiceEvents(events = [], cardId, invoiceMonth) {
     events.filter(
       (event) =>
         event.invoiceKey === invoiceKey ||
-        (event.cardId === cardId && event.invoiceMonth === invoiceMonth),
+        (!event.invoiceKey && event.cardId === cardId && event.invoiceMonth === invoiceMonth),
     ),
   )
 }
