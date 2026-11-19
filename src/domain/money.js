@@ -79,6 +79,10 @@ function toAmount(value) {
   return Number.isFinite(amount) ? amount : 0
 }
 
+function subtractMoney(first, second) {
+  return (toTransactionCents(first) - toTransactionCents(second)) / 100
+}
+
 function safePercentChange(current, previous) {
   if (previous === 0) return current === 0 ? 0 : null
   return ((current - previous) / previous) * 100
@@ -346,19 +350,19 @@ export function analyzeMoney(transactions = [], settings = {}, referenceDate = n
     current: {
       income: currentIncome,
       expenses: currentExpenses,
-      balance: currentIncome - currentExpenses,
+      balance: subtractMoney(currentIncome, currentExpenses),
       transactionCount: currentTransactions.length,
     },
     previous: {
       income: previousIncome,
       expenses: previousExpenses,
-      balance: previousIncome - previousExpenses,
+      balance: subtractMoney(previousIncome, previousExpenses),
       transactionCount: previousTransactions.length,
     },
     comparison: {
-      expenseDifference: currentExpenses - previousExpenses,
+      expenseDifference: subtractMoney(currentExpenses, previousExpenses),
       expenseChangePercent,
-      incomeDifference: currentIncome - previousIncome,
+      incomeDifference: subtractMoney(currentIncome, previousIncome),
       incomeChangePercent,
     },
     projection: {
