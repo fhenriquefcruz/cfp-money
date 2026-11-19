@@ -86,6 +86,16 @@ describe('idempotência de evento de fatura', () => {
     expect(() => validateInvoiceEventOperation(payment({ signedAmount: 1 }))).toThrow()
   })
 
+  test('valida calendário real e data de liquidação consistente', () => {
+    const valid = payment({ eventDate: '2028-02-29', paymentDate: '2028-02-29' })
+    expect(validateInvoiceEventOperation(valid).documentId).toBe(`op_${operationId}`)
+    for (const day of ['2027-02-29', '2026-04-31', '2026-13-01']) {
+      expect(() => validateInvoiceEventOperation(payment({ eventDate: day, paymentDate: day }))).toThrow()
+    }
+    const mismatch = payment({ eventDate: '2026-12-31', paymentDate: '2027-01-01' })
+    expect(() => validateInvoiceEventOperation(mismatch)).toThrow()
+  })
+
   test('preserva limites exatos em centavos e contratos de fechamento manual', () => {
     expect(validateInvoiceEventOperation(payment({ amount: 0.01 })).payload.amount).toBe(0.01)
     expect(validateInvoiceEventOperation(payment({ amount: 100000000 })).payload.amount).toBe(
