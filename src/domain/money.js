@@ -1,4 +1,5 @@
 import { getTransactionActivityDate } from './transactionDates'
+import { toTransactionCents } from './finance'
 import { buildCategoryReviewQueue } from './categoryReview'
 
 const DEFAULT_SETTINGS = Object.freeze({
@@ -86,13 +87,13 @@ function safePercentChange(current, previous) {
 function sumExpenses(transactions) {
   return transactions
     .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
-    .reduce((total, transaction) => total + toAmount(transaction.amount), 0)
+    .reduce((total, transaction) => total + toTransactionCents(transaction.amount), 0) / 100
 }
 
 function sumIncome(transactions) {
   return transactions
     .filter((transaction) => transaction.type === 'income' && !transaction.isSavings)
-    .reduce((total, transaction) => total + toAmount(transaction.amount), 0)
+    .reduce((total, transaction) => total + toTransactionCents(transaction.amount), 0) / 100
 }
 
 export function normalizeMoneySettings(settings = {}) {
@@ -207,7 +208,7 @@ export function calculateCategoryChanges(currentTransactions = [], previousTrans
           categoryName: transaction.categoryName || 'Sem categoria',
           total: 0,
         }
-        existing.total += toAmount(transaction.amount)
+        existing.total += toTransactionCents(transaction.amount)
         totals.set(key, existing)
       })
 
@@ -222,8 +223,8 @@ export function calculateCategoryChanges(currentTransactions = [], previousTrans
     .map((key) => {
       const currentItem = current.get(key)
       const previousItem = previous.get(key)
-      const currentTotal = currentItem?.total || 0
-      const previousTotal = previousItem?.total || 0
+      const currentTotal = (currentItem?.total || 0) / 100
+      const previousTotal = (previousItem?.total || 0) / 100
 
       return {
         categoryId: currentItem?.categoryId || previousItem?.categoryId || null,
