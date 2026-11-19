@@ -291,3 +291,23 @@ test('MR-001/MR-006: Money agrega valores legados em centavos exatos', () => {
   })
 })
 
+
+test('MR-001: saldo e diferenças de períodos preservam centavos exatos', () => {
+  const result = analyzeMoney(
+    [
+      { type: 'income', amount: '0.30', date: '2026-07-01' },
+      { type: 'expense', amount: '0.10', date: '2026-07-02' },
+      { type: 'income', amount: '0.10', date: '2026-06-01' },
+      { type: 'expense', amount: '0.20', date: '2026-06-02' },
+    ],
+    { comparisonMode: 'full_cycle' },
+    '2026-07-15',
+  )
+
+  expect(result.current).toMatchObject({ income: 0.3, expenses: 0.1, balance: 0.2 })
+  expect(result.previous).toMatchObject({ income: 0.1, expenses: 0.2, balance: -0.1 })
+  expect(result.comparison).toMatchObject({
+    incomeDifference: 0.2,
+    expenseDifference: -0.1,
+  })
+})
