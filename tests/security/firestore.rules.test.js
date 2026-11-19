@@ -1067,10 +1067,7 @@ test('MR-003: Rules rejeitam payloads que o validador cliente agora bloqueia', a
   for (const [suffix, changes] of [
     ['over-limit', { amount: 100000000.01 }],
     ['extra-field', { unexpected: true }],
-    [
-      'long-card',
-      { cardId: 'x'.repeat(129), invoiceKey: 'x'.repeat(129) + ':2026-11' },
-    ],
+    ['long-card', { cardId: 'x'.repeat(129), invoiceKey: 'x'.repeat(129) + ':2026-11' }],
     ['long-notes', { notes: 'x'.repeat(2001) }],
     ['long-account', { sourceAccount: 'x'.repeat(121) }],
     ['wrong-type-field', { signedAmount: 1 }],
