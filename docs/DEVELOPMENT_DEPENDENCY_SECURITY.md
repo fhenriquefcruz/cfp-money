@@ -1,9 +1,9 @@
 # Meu Real — dependências de desenvolvimento e exposição de servidores
 
-**Estado:** mitigação em laboratório. Não é aceite do advisory nem autorização
-para merge ou publicação.
+**Estado:** registro de diagnóstico e revalidação em laboratório. A aprovação de CI
+não representa autorização para merge, publicação de Rules ou deploy de produção.
 
-## Situação em 18/11/2026
+## Diagnóstico histórico de 18/11/2026 (antes da retirada do advisory)
 
 A auditoria reproduzível da issue #203, workflow `44265566465`, registrou:
 
@@ -20,6 +20,30 @@ A atualização independente de `vite` para **8.1.7** corrige
 GHSA-p4f5-76q4-ffq7 na linha 8.1.x. O `package-lock.json` foi
 regenerado pelo npm, incluindo versões e integridades de Rolldown;
 **não** houve alterações manuais nos hashes do lockfile.
+
+## Revalidação após retirada do advisory (18–19/11/2026 UTC)
+
+O GitHub Advisory [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf)
+passou a indicar **Withdrawn em 18/11/2026**. Os 16 alertas high
+descritos acima são um **registro histórico**, não uma afirmação de que o
+advisory permanece ativo. A retirada não prova ausência de outras
+vulnerabilidades ou segurança irrestrita do ambiente.
+
+O job de auditoria que falhava no workflow
+[Phase 21 security, run 44267994641](https://github.com/fhenriquefcruz/cfp-money/actions/runs/44267994641)
+foi reexecutado na PR #204, SHA
+`3eeb870ed8c22f8b7af5a8cc673c0c4173ccb716`, **sem alteração dos
+validadores**. Tanto `Dependency and production configuration audit`
+quanto `App Check runtime and Firestore UID rules` terminaram em
+`success`; os **sete workflows** associados àquele SHA terminaram em
+`success` após o rerun. Isso não significa que os sete workflows já
+foram aprovados no SHA final de uma futura integração.
+
+A correção Vite 8.1.7, a proteção do servidor de desenvolvimento e o
+lockfile regenerado permanecem sujeitos a revisão. **Não introduzir
+exceção ao audit** com base apenas na retirada do advisory. Se a
+auditoria voltar a falhar, examinar os advisories atuais antes de
+classificar ou mitigar riscos.
 
 ## Medidas compensatórias de menor risco
 
@@ -47,27 +71,27 @@ O workflow `Phase 21 security` executa duas tarefas independentes:
 - `dependency-audit` mantém a auditoria de segurança de produção e
   desenvolvimento **bloqueante**, inclusive high/critical, sem `continue-on-error`.
 - `firestore-policy` executa os testes App Check e Firestore Rules Emulator
-  em paralelo, sem depender de uma auditoria de ferramentas dev que ainda
-  falha pelo advisory não corrigido.
+  em paralelo, sem depender do resultado da auditoria de ferramentas dev.
 
-A aprovação da segunda tarefa **não torna o workflow geral verde**.
-Os resultados separados permitem preservar evidência de isolamento UID,
-permissões e integridade enquanto a issue #203 permanece bloqueante.
+A aprovação da segunda tarefa **não torna o workflow geral verde** quando
+a primeira falha. A reexecução da PR #204 passou nas duas tarefas, mas
+um novo SHA exige nova validação. A issue #203 conserva o histórico de
+triagem e os requisitos de revisão antes de release.
 
 ## Pendências para DoD
 
-1. Acompanhar publicação **oficial** de uma versão de `picomatch` que
-   remova GHSA-fc5q-39xc-vjpf e confirmar faixas transitivas com
-   `npm audit --json`.
-2. Gerar novo lockfile com npm, sem `--force`, e revisar o diff;
-   rodar `npm ci` e auditorias completa e produção.
+1. Confirmar o estado atual de todos os advisories com `npm audit --json`
+   e `npm audit --omit=dev --json`; não tratar alertas históricos retirados
+   como vulnerabilidades ainda ativas nem ignorar alertas novos.
+2. Preservar o lockfile gerado pelo npm, sem `--force`, revisar o diff
+   e executar `npm ci` e auditorias completa e de produção.
 3. Reexecutar Vitest, regras/integração Firebase Emulator, PWA Chromium,
-   mobile, acessibilidade, build e budgets no **mesmo SHA**.
-4. Separar homologação de dependências da decisão sobre clientes PWA
-   antigos, Gate manual Firestore Rules, backup, rollback e proteção
-   da branch `main`.
+   mobile, acessibilidade, build e budgets no **mesmo SHA candidato**.
+4. Homologar separadamente clientes PWA antigos, gate manual de Rules,
+   baseline ativo, backup, rollback e proteção da branch `main`.
 
-**Bloqueio:** um advisory high não remediado continua sendo falha do
-workflow `Phase 21 security`. Exceção requer avaliação técnica
-documentada, prazo, responsável e autorização humana explícita;
-não há exceção aprovada nesta fase.
+**Política:** qualquer advisory high ativo e não remediado continua
+bloqueando o workflow `Phase 21 security`. Exceção requer avaliação
+formal, prazo, responsável e autorização humana explícita; não foi
+criada exceção nesta fase. Mesmo com CI verde, o release permanece
+bloqueado até homologação operacional e autorização específica.
