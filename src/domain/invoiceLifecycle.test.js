@@ -279,3 +279,34 @@ test('MR-005: nenhum evento de outra fatura é incluído por fallback de data', 
   const invoice = getInvoiceEvents(events, 'nubank', '2026-08')
   expect(invoice.map((event) => event.id)).toEqual(['legacy-matching'])
 })
+
+test('MR-018: liquidação parcial, estorno e ajuste não duplicam despesa da compra', () => {
+  const events = [
+    { id: 'payment-1', type: 'payment', amount: 30.02 },
+    { id: 'payment-2', type: 'payment', amount: 20.01 },
+    { id: 'reversal-1', type: 'reversal', reversesEventId: 'payment-1', amount: 0.01 },
+    { id: 'adjustment-1', type: 'adjustment', signedAmount: -0.02 },
+  ]
+  const original = structuredClone(events)
+  const invoice = buildInvoiceLifecycle({
+    purchaseTotal: 100.03,
+    baselinePaidAmount: 10.01,
+    events,
+    now: new Date(2026, 10, 18),
+  })
+
+  expect(invoice).toMatchObject({
+    purchaseTotal: 100.03,
+    adjustmentTotal: -0.02,
+    invoiceTotal: 100.01,
+    baselinePaidAmount: 10.01,
+    paidAmount: 60.03,
+    remainingAmount: 39.98,
+    creditAmount: 0,
+    paymentCount: 2,
+    reversalCount: 1,
+    status: 'partially_paid',
+  })
+  expect(events).toEqual(original)
+})
+
