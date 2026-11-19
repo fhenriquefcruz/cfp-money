@@ -52,7 +52,8 @@ describe('exportToCSV', () => {
             description: '=HYPERLINK("https://example.invalid")',
             categoryName: '+SUM(1,2)',
             amount: '125.50',
-            paymentMethod: 'pix',
+            paymentMethod: '=1+1',
+            paymentStatus: '@SUM(1,2)',
           },
         ]),
       ).not.toThrow()
@@ -68,6 +69,8 @@ describe('exportToCSV', () => {
       expect(csv).toContain('"\'=HYPERLINK(""https://example.invalid"")"')
       expect(csv).toContain('"\'+SUM(1,2)"')
       expect(csv).toContain('"125,50"')
+      expect(csv).toContain('"\'=1+1"')
+      expect(csv).toContain('"\'@SUM(1,2)"')
       expect(click).toHaveBeenCalledOnce()
     } finally {
       URL.createObjectURL = originalCreateObjectURL
