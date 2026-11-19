@@ -75,6 +75,9 @@ export const PAYMENT_METHODS = [
 export const getPaymentLabel = (id) => PAYMENT_METHODS.find((m) => m.id === id)?.label || id
 
 // ── CSV EXPORT ──
+export const formatCsvAmount = (amount) =>
+  (toTransactionCents(amount) / 100).toFixed(2).replace('.', ',')
+
 export const exportToCSV = (transactions) => {
   const headers = [
     'Data',
@@ -112,7 +115,7 @@ export const exportToCSV = (transactions) => {
       t.isSavings ? 'Poupança' : t.type === 'income' ? 'Receita' : 'Despesa',
       t.description || '',
       t.categoryName || '',
-      (toTransactionCents(t.amount) / 100).toFixed(2).replace('.', ','),
+      formatCsvAmount(t.amount),
       getPaymentLabel(t.paymentMethod),
       t.type === 'expense' && !t.isSavings ? paymentStatus : '',
       paidAtIso(t.paidAt),
