@@ -67,6 +67,39 @@ describe('idempotência de evento de fatura', () => {
     expect(() => validateInvoiceEventOperation(payment({ signedAmount: 1 }))).toThrow()
   })
 
+  test('preserva limites exatos em centavos e contratos de fechamento manual', () => {
+    expect(validateInvoiceEventOperation(payment({ amount: 0.01 })).payload.amount).toBe(0.01)
+    expect(validateInvoiceEventOperation(payment({ amount: 100000000 })).payload.amount).toBe(100000000)
+    expect(() => validateInvoiceEventOperation(payment({ amount: 100000000.01 }))).toThrow()
+
+    const base = payment()
+    const manualClose = {
+      operationId,
+      type: 'manual_close',
+      cardId: base.cardId,
+      cardName: base.cardName,
+      cardLast4: base.cardLast4,
+      invoiceMonth: base.invoiceMonth,
+      invoiceKey: base.invoiceKey,
+      eventDate: base.eventDate,
+      notes: '',
+    }
+    expect(validateInvoiceEventOperation(manualClose).documentId).toBe(`op_${operationId}`)
+    expect(() => validateInvoiceEventOperation({ ...manualClose, amount: 0.01 })).toThrow()
+    expect(() => validateInvoiceEventOperation({ ...manualClose, sourceAccount: '' })).toThrow()
+
+    const adjustment = {
+      ...manualClose,
+      type: 'adjustment',
+      direction: 'charge',
+      signedAmount: 99999999.99,
+      notes: 'Acréscimo autorizado',
+    }
+    expect(validateInvoiceEventOperation(adjustment).payload.signedAmount).toBe(99999999.99)
+    expect(() => validateInvoiceEventOperation({ ...adjustment, signedAmount: 100000000 })).toThrow()
+    expect(() => validateInvoiceEventOperation({ ...adjustment, signedAmount: 0.001 })).toThrow()
+  })
+
   test('permite ajustes e estornos estruturados sem tratar como despesas', () => {
     const base = {
       type: 'reversal',
