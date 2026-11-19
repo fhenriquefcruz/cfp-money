@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { exportToCSV, formatCsvAmount, formatRelativeDate } from './index'
+import { escapeCsvText, exportToCSV, formatCsvAmount, formatRelativeDate } from './index'
 
 describe('formatRelativeDate', () => {
   beforeEach(() => {
@@ -71,5 +71,19 @@ describe('exportToCSV', () => {
       URL.createObjectURL = originalCreateObjectURL
       click.mockRestore()
     }
+  })
+})
+
+describe('escapeCsvText', () => {
+  test('neutraliza fórmulas de planilha em descrições e categorias', () => {
+    expect(escapeCsvText('=1+1')).toBe("'=1+1")
+    expect(escapeCsvText('  @SUM(1)')).toBe("'  @SUM(1)")
+    expect(escapeCsvText('+cmd')).toBe("'+cmd")
+    expect(escapeCsvText('-cmd')).toBe("'-cmd")
+  })
+
+  test('preserva texto comum e valores ausentes', () => {
+    expect(escapeCsvText('Compra legada')).toBe('Compra legada')
+    expect(escapeCsvText(null)).toBe('')
   })
 })
