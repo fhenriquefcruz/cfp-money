@@ -127,7 +127,6 @@ describe('MR-018: atividade, obrigação e liquidação são grandezas distintas
     expect(summarizeTransactions(transactionsForMonth(transactions, 2026, 11)).expenses).toBe(0)
   })
 
-
   test('pagamento parcial altera pago/pendente da fatura, sem reconhecer nova despesa', () => {
     const transactions = [
       purchase({
