@@ -291,7 +291,6 @@ test('MR-001/MR-006: Money agrega valores legados em centavos exatos', () => {
   })
 })
 
-
 test('MR-001: saldo e diferenças de períodos preservam centavos exatos', () => {
   const result = analyzeMoney(
     [
