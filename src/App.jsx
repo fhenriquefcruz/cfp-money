@@ -15,9 +15,7 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { PlanProvider } from './contexts/PlanContext'
 import { MoneyProvider } from './contexts/MoneyContext'
 import Sidebar from './components/Sidebar'
-import Login from './components/Login'
 import PlanAlert from './components/PlanAlert'
-import Onboarding from './components/Onboarding'
 import LegalGate from './components/LegalGate'
 
 // Notificações globais
@@ -25,6 +23,8 @@ import NotificationStack from './components/NotificationStack'
 import ErrorBoundary from './components/ErrorBoundary'
 import NotFound from './components/NotFound'
 
+const Login = lazy(() => import('./components/Login'))
+const Onboarding = lazy(() => import('./components/Onboarding'))
 const Dashboard = lazy(() => import('./components/Dashboard'))
 const Money = lazy(() => import('./components/Money'))
 const CreditCardsDashboard = lazy(() => import('./components/CreditCardsDashboard'))
@@ -50,7 +50,7 @@ const LoadingScreen = () => (
 const AppRoutes = () => {
   const { user, loading, isAdmin } = useAuth()
   if (loading) return <LoadingScreen />
-  if (!user) return <Login />
+  if (!user) return <Suspense fallback={<LoadingScreen />}><Login /></Suspense>
 
   return (
     <CategoriesProvider userId={user.uid}>
@@ -83,7 +83,9 @@ const AppRoutes = () => {
                 </Suspense>
               </main>
               <PlanAlert />
-              <Onboarding />
+              <Suspense fallback={null}>
+                <Onboarding />
+              </Suspense>
               <LegalGate />
               <NotificationStack />
               <Suspense fallback={null}>
