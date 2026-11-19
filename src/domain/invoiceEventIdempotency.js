@@ -36,9 +36,7 @@ function validCents(value, signed = false) {
   const cents = Math.round(value * 100)
   return (
     Number.isSafeInteger(cents) &&
-    (signed
-      ? cents !== 0 && Math.abs(value) < 100000000
-      : cents > 0 && value <= 100000000) &&
+    (signed ? cents !== 0 && Math.abs(value) < 100000000 : cents > 0 && value <= 100000000) &&
     Math.abs(value - cents / 100) < 1e-9
   )
 }
