@@ -121,8 +121,8 @@ export const exportToCSV = (transactions) => {
       escapeCsvText(t.description),
       escapeCsvText(t.categoryName),
       formatCsvAmount(t.amount),
-      getPaymentLabel(t.paymentMethod),
-      t.type === 'expense' && !t.isSavings ? paymentStatus : '',
+      escapeCsvText(getPaymentLabel(t.paymentMethod)),
+      t.type === 'expense' && !t.isSavings ? escapeCsvText(paymentStatus) : '',
       paidAtIso(t.paidAt),
       t.isSavings ? 'Sim' : 'Não',
     ]
