@@ -90,7 +90,8 @@ describe('idempotência de evento de fatura', () => {
     const valid = payment({ eventDate: '2028-02-29', paymentDate: '2028-02-29' })
     expect(validateInvoiceEventOperation(valid).documentId).toBe(`op_${operationId}`)
     for (const day of ['2027-02-29', '2026-04-31', '2026-13-01']) {
-      expect(() => validateInvoiceEventOperation(payment({ eventDate: day, paymentDate: day }))).toThrow()
+      const invalid = payment({ eventDate: day, paymentDate: day })
+      expect(() => validateInvoiceEventOperation(invalid)).toThrow()
     }
     const mismatch = payment({ eventDate: '2026-12-31', paymentDate: '2027-01-01' })
     expect(() => validateInvoiceEventOperation(mismatch)).toThrow()
