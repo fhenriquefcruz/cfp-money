@@ -360,3 +360,17 @@ test('MR-005: não mistura eventos com vínculos de fatura contraditórios', () 
   })
   expect(events).toHaveLength(5)
 })
+
+test('MR-003: estorno de outra origem não reduz saldo reversível do pagamento', () => {
+  const payment = { id: 'pay-1', type: 'payment', amount: 10.03 }
+  const events = [
+    { id: 'rev-1', type: 'reversal', reversesEventId: 'pay-1', amount: 0.01 },
+    { id: 'rev-2', type: 'reversal', reversesEventId: 'pay-2', amount: 9.99 },
+    { id: 'adj-1', type: 'adjustment', reversesEventId: 'pay-1', signedAmount: -0.02 },
+  ]
+  expect(getPaymentReversibleAmount(payment, events)).toBe(10.02)
+  expect(getPaymentReversibleAmount(payment, [
+    ...events,
+    { id: 'rev-3', type: 'reversal', reversesEventId: 'pay-1', amount: 10.02 },
+  ])).toBe(0)
+})
