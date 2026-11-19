@@ -46,7 +46,6 @@ describe('MR-003: limite aritmético de estornos', () => {
     expect(() => validateReversalAgainstPayment(payment, reversal, history)).toThrow(/ultrapassa/)
   })
 
-
   test('recompõe estornos legados em centavos sem arredondar valores monetários', () => {
     const history = [
       { type: 'reversal', reversesEventId: payment.id, amount: 0.01 },
