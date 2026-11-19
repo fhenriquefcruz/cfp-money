@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { formatCsvAmount, formatRelativeDate } from './index'
+import { exportToCSV, formatCsvAmount, formatRelativeDate } from './index'
 
 describe('formatRelativeDate', () => {
   beforeEach(() => {
@@ -33,5 +33,34 @@ describe('formatCsvAmount', () => {
 
   test('normaliza valores inválidos conforme o seletor financeiro existente', () => {
     expect(formatCsvAmount('invalid')).toBe('0,00')
+  })
+})
+
+describe('exportToCSV', () => {
+  test('exporta transação legada com valor string sem lançar erro', () => {
+    const originalCreateObjectURL = URL.createObjectURL
+    const createObjectURL = vi.fn(() => 'blob:meu-real-test')
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    URL.createObjectURL = createObjectURL
+
+    try {
+      expect(() =>
+        exportToCSV([
+          {
+            date: '2026-11-19',
+            type: 'expense',
+            description: 'Compra legada',
+            amount: '125.50',
+            paymentMethod: 'pix',
+          },
+        ]),
+      ).not.toThrow()
+      expect(createObjectURL).toHaveBeenCalledOnce()
+      expect(createObjectURL.mock.calls[0][0]).toBeInstanceOf(Blob)
+      expect(click).toHaveBeenCalledOnce()
+    } finally {
+      URL.createObjectURL = originalCreateObjectURL
+      click.mockRestore()
+    }
   })
 })
