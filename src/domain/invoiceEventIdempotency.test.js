@@ -31,6 +31,23 @@ describe('idempotência de evento de fatura', () => {
     expect(createInvoiceOperationId()).not.toBe(id)
   })
 
+  test('falha fechado sem gerador criptográfico seguro', () => {
+    expect(() => createInvoiceOperationId(null)).toThrow(/identidade segura/)
+    expect(() => createInvoiceOperationId({ getRandomValues: null })).toThrow(/identidade segura/)
+  })
+
+  test('replay idêntico ignora somente metadados persistidos', () => {
+    const event = payment({ amount: 0.01 })
+    expect(
+      sameInvoiceEventIntent(
+        { ...event, id: `op_${operationId}`, createdAt: { seconds: 1 } },
+        event,
+      ),
+    ).toBe(true)
+    expect(sameInvoiceEventIntent({ ...event, amount: 0.02 }, event)).toBe(false)
+    expect(sameInvoiceEventIntent({ ...event, invoiceMonth: '2026-12' }, event)).toBe(false)
+  })
+
   test('identidade é estável por operação, não por valor e data', () => {
     const event = payment()
     const original = structuredClone(event)
