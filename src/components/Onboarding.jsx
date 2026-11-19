@@ -1,6 +1,5 @@
 // src/components/Onboarding.jsx — Tour guiado, só no primeiro acesso
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -135,13 +134,7 @@ export default function Onboarding() {
   if (!visible) return null
 
   return (
-    <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
         {/* Backdrop: no passo contextual, o próprio spotlight cria o escurecimento. */}
         <div
           className={`absolute inset-0 ${
@@ -151,35 +144,22 @@ export default function Onboarding() {
         />
 
         {highlightRect && (
-          <motion.div
-            className="pointer-events-none fixed z-[1] rounded-[22px] border-2 border-white/90 shadow-[0_0_0_9999px_rgba(2,6,23,0.72),0_0_40px_rgba(99,102,241,0.45)]"
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: 1,
-              top: highlightRect.top,
-              left: highlightRect.left,
-              width: highlightRect.width,
-              height: highlightRect.height,
-            }}
-            transition={{ duration: 0.22 }}
+          <div
+            className="pointer-events-none fixed z-[1] rounded-[22px] border-2 border-white/90 shadow-[0_0_0_9999px_rgba(2,6,23,0.72),0_0_40px_rgba(99,102,241,0.45)] transition-[top,left,width,height] duration-200 motion-reduce:transition-none"
+            style={highlightRect}
           />
         )}
 
         {/* Card do tour - fundo sólido e legível */}
-        <motion.div
+        <div
           key={step}
-          initial={{ opacity: 0, y: 20, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.96 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
           className="relative z-10 w-full max-w-sm mx-4 mb-6 sm:mb-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-2xl overflow-hidden"
         >
           {/* Barra de progresso */}
           <div className="h-1 bg-gray-200 dark:bg-gray-700">
-            <motion.div
-              className="h-full bg-[--brand-600] rounded-full"
-              animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
-              transition={{ duration: 0.3 }}
+            <div
+              className="h-full bg-[--brand-600] rounded-full transition-[width] duration-300 motion-reduce:transition-none"
+              style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
             />
           </div>
 
@@ -254,8 +234,7 @@ export default function Onboarding() {
               </button>
             )}
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </div>
+      </div>
   )
 }
