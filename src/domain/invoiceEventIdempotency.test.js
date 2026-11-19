@@ -69,7 +69,9 @@ describe('idempotência de evento de fatura', () => {
 
   test('preserva limites exatos em centavos e contratos de fechamento manual', () => {
     expect(validateInvoiceEventOperation(payment({ amount: 0.01 })).payload.amount).toBe(0.01)
-    expect(validateInvoiceEventOperation(payment({ amount: 100000000 })).payload.amount).toBe(100000000)
+    expect(validateInvoiceEventOperation(payment({ amount: 100000000 })).payload.amount).toBe(
+      100000000,
+    )
     expect(() => validateInvoiceEventOperation(payment({ amount: 100000000.01 }))).toThrow()
 
     const base = payment()
@@ -96,7 +98,9 @@ describe('idempotência de evento de fatura', () => {
       notes: 'Acréscimo autorizado',
     }
     expect(validateInvoiceEventOperation(adjustment).payload.signedAmount).toBe(99999999.99)
-    expect(() => validateInvoiceEventOperation({ ...adjustment, signedAmount: 100000000 })).toThrow()
+    expect(() =>
+      validateInvoiceEventOperation({ ...adjustment, signedAmount: 100000000 }),
+    ).toThrow()
     expect(() => validateInvoiceEventOperation({ ...adjustment, signedAmount: 0.001 })).toThrow()
   })
 
@@ -124,13 +128,16 @@ describe('idempotência de evento de fatura', () => {
     ).toThrow()
     expect(() =>
       validateInvoiceEventOperation({
-        ...base, amount: 50.25, reversesEventId: 'payment-document-1',
+        ...base,
+        amount: 50.25,
+        reversesEventId: 'payment-document-1',
       }),
     ).toThrow()
     expect(() =>
       validateInvoiceEventOperation({
         ...base, amount: 50.25, reversesEventId: 'payment-document-1',
-        sourceAccount: 'Conta 1', paymentDate: '2026-11-15',
+        sourceAccount: 'Conta 1',
+        paymentDate: '2026-11-15',
       }),
     ).toThrow()
 
@@ -154,13 +161,18 @@ describe('idempotência de evento de fatura', () => {
     ).toThrow()
     expect(() =>
       validateInvoiceEventOperation({
-        ...base, type: 'adjustment', signedAmount: 100000000,
-        direction: 'charge', notes: 'Limite',
+        ...base,
+        type: 'adjustment',
+        signedAmount: 100000000,
+        direction: 'charge',
+        notes: 'Limite',
       }),
     ).toThrow()
     expect(() =>
       validateInvoiceEventOperation({
-        ...base, type: 'manual_close', amount: 1,
+        ...base,
+        type: 'manual_close',
+        amount: 1,
       }),
     ).toThrow()
   })
