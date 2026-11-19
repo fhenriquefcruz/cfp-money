@@ -281,7 +281,6 @@ export const Modal = ({
     >
       <div
         ref={dialogRef}
-        className="meu-real-modal-enter"
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
@@ -295,7 +294,7 @@ export const Modal = ({
           onClose()
         }}
         className={clsx(
-          'flex w-full max-h-[calc(100dvh-env(safe-area-inset-top,0px)-0.5rem)] flex-col overflow-hidden rounded-t-[28px] bg-[--bg-surface] shadow-2xl sm:max-h-[90vh] sm:rounded-2xl',
+          'meu-real-modal-enter flex w-full max-h-[calc(100dvh-env(safe-area-inset-top,0px)-0.5rem)] flex-col overflow-hidden rounded-t-[28px] bg-[--bg-surface] shadow-2xl sm:max-h-[90vh] sm:rounded-2xl',
           sizes[size],
         )}
       >
