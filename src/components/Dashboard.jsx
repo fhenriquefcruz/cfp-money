@@ -423,7 +423,7 @@ export default function Dashboard() {
             <span className="dashboard-quick-add__label">Nova transação</span>
           </Button>
         </Link>
-      </div
+      </div>
 
       <div className="dashboard-executive-grid">
         <div className="min-w-0">
@@ -497,18 +497,18 @@ export default function Dashboard() {
               ))}
             </div>
           </Card>
-        </div
+        </div>
 
         <div className="min-w-0">
           <MonthAttentionCard items={actionInsights} />
-        </div
+        </div>
       </div>
 
       {/* Faixa operacional: compromissos do mês + patrimônio reservado */}
       <div className="dashboard-executive-grid">
         <div className="min-w-0">
           <PaymentControlCard summary={paymentSummary} loading={isLoading} />
-        </div
+        </div>
 
         <div className="min-w-0">
           <Card
@@ -597,7 +597,7 @@ export default function Dashboard() {
               </div>
             </div>
           </Card>
-        </div
+        </div>
       </div>
 
       {/* Inteligência executiva: ritmo, saúde e Money em uma faixa coerente */}
@@ -649,7 +649,7 @@ export default function Dashboard() {
         <div className="dashboard-money-insight dashboard-module--money col-span-1 min-w-0 md:col-span-2 xl:col-span-6">
           <MoneyInsightCard referenceDate={viewDate} compact />
         </div>
-      </div
+      </div>
 
       {/* Análise principal: evolução e composição */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-3">
@@ -868,7 +868,7 @@ export default function Dashboard() {
               </div>
             )}
           </Card>
-        </div
+        </div>
 
         <div>
           <Card className="dashboard-spending-composition dashboard-module--composition h-full overflow-hidden">
@@ -914,7 +914,7 @@ export default function Dashboard() {
               </>
             )}
           </Card>
-        </div
+        </div>
       </div>
 
       {/* Planejamento sem competir com o gráfico: orçamentos e metas lado a lado */}
@@ -964,7 +964,7 @@ export default function Dashboard() {
                 Gerenciar orçamentos
               </Link>
             </Card>
-          </div
+          </div>
         )}
         <div>
           <Card>
@@ -1012,7 +1012,7 @@ export default function Dashboard() {
               </div>
             )}
           </Card>
-        </div
+        </div>
       </div>
 
       {/* Histórico no rodapé: o painel rola sem esticar os demais cards. */}
@@ -1063,7 +1063,7 @@ export default function Dashboard() {
               </div>
             )}
           </Card>
-        </div
+        </div>
       </div>
     </div>
   )
