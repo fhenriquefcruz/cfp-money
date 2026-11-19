@@ -361,6 +361,20 @@ test('MR-005: não mistura eventos com vínculos de fatura contraditórios', () 
   expect(events).toHaveLength(5)
 })
 
+test('MR-005: eventos legados somente com invoiceKey continuam legíveis', () => {
+  const events = [
+    { id: 'key-only', invoiceKey: 'nubank:2026-08', type: 'payment', amount: 1.01 },
+    { id: 'different', invoiceKey: 'nubank:2026-09', type: 'payment', amount: 99 },
+    { id: 'missing', type: 'payment', amount: 99 },
+  ]
+  const filtered = getInvoiceEvents(events, 'nubank', '2026-08')
+  expect(filtered.map((event) => event.id)).toEqual(['key-only'])
+  expect(buildInvoiceLifecycle({ purchaseTotal: 2.02, events: filtered })).toMatchObject({
+    paidAmount: 1.01,
+    remainingAmount: 1.01,
+  })
+})
+
 test('MR-003: estorno de outra origem não reduz saldo reversível do pagamento', () => {
   const payment = { id: 'pay-1', type: 'payment', amount: 10.03 }
   const events = [
