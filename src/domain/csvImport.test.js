@@ -113,7 +113,7 @@ describe('buildCsvImportPreview', () => {
         '2026-02-31;Despesa;Data inválida;Alimentação;20,00;',
         '2026-02-28;Despesa;Vencimento inválido;Alimentação;20,00;2026-02-31',
         '2028-02-29;Despesa;Bissexto válido;Alimentação;20,00;2028-03-01',
-      ].join('\\n'),
+      ].join('\n'),
       { categories, paymentMethods },
     )
 
@@ -137,7 +137,7 @@ describe('buildCsvImportPreview', () => {
         '03/09/2026;Despesa;Notação científica;Alimentação;1e3',
         '04/09/2026;Despesa;Centavos exatos;Alimentação;0,29',
         '05/09/2026;Despesa;Milhar brasileiro;Alimentação;1.234,56',
-      ].join('\\n'),
+      ].join('\n'),
       { categories, paymentMethods },
     )
 
