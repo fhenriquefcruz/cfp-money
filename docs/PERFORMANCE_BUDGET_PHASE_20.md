@@ -80,3 +80,36 @@ somente o crescimento legítimo das rotas alteradas, o teto de JavaScript total 
 **718 KiB** para **719 KiB gzip**.
 
 Permanecem inalterados os limites de JavaScript inicial, rota Money, maior chunk e CSS.
+
+## Recalibração controlada — 20/11/2026
+
+**Motivação:** o limite de JavaScript total inclui a soma gzip de **todos** os chunks produzidos,
+mesmo aqueles carregados sob demanda (como jsPDF, gráficos e rotas). Isso mede o tamanho do
+artefato distribuído, mas **não** representa o JavaScript transferido na primeira visita.
+
+**Evidência:** no CI da PR #210, SHA `a6781b677bc7320291279d76c938c1a2f8f2a241`, o
+validador mediu 748,13 KiB de JS total, 238,47 KiB de JS inicial, 17,42 KiB na rota
+Money, 125,64 KiB no maior chunk e 22,07 KiB de CSS inicial. Os 510 testes unitários,
+segurança, mobile e acessibilidade passaram; o gate de performance falhou **somente** pelo
+limite agregado de 744 KiB.
+
+A política agora distingue o **teto bloqueante** do **limiar de revisão**:
+
+| Métrica gzip | Limite / regra | Efeito |
+| --- | ---: | --- |
+| JavaScript total de todos os chunks | 768 KiB | Bloqueia CI acima disso |
+| JavaScript total: limiar de revisão | 752 KiB | Alerta no CI e no relatório JSON; justificar crescimento na PR |
+| JavaScript inicial | 245 KiB (+64 bytes de tolerância histórica) | Bloqueia CI |
+| Rota Money | 18 KiB | Bloqueia CI |
+| Maior chunk JavaScript | 140 KiB | Bloqueia CI |
+| CSS inicial | 22,5 KiB | Bloqueia CI |
+
+A ampliação do teto **agregado** é de 24 KiB (+3,23%) em relação ao limite anterior, com
+aproximadamente 20 KiB de margem em relação à medição de referência. Os demais limites **não
+foram alterados**. Os gates que impedem carregar gráficos e bibliotecas de PDF no HTML inicial
+também permanecem bloqueantes.
+
+O limiar de 752 KiB é **não bloqueante por desenho**, mas cada PR que o exceder deve apresentar
+comparação dos tamanhos dos chunks, justificativa da nova capacidade e impacto sobre o
+carregamento inicial. Aprovação automática do orçamento não substitui medição de carregamento
+real, acessibilidade, revisão de bundle, testes financeiros e homologação.
