@@ -200,6 +200,15 @@ export function buildCsvImportPreview(
 
   const fatalIssues = []
 
+  // Uma linha com colunas desalinhadas pode associar valores ao campo errado.
+  // Falhar fechado é preferível a importar um lançamento monetário corrompido.
+  if (parsed.errors?.length) {
+    fatalIssues.push({
+      code: 'malformed_csv',
+      message: 'O CSV possui linhas malformadas ou colunas desalinhadas. Corrija o arquivo antes de importar.',
+    })
+  }
+
   if (missingHeaders.length) {
     fatalIssues.push({
       code: 'missing_headers',
