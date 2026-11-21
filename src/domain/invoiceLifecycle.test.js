@@ -279,3 +279,114 @@ test('MR-005: nenhum evento de outra fatura é incluído por fallback de data', 
   const invoice = getInvoiceEvents(events, 'nubank', '2026-08')
   expect(invoice.map((event) => event.id)).toEqual(['legacy-matching'])
 })
+
+test('MR-018: liquidação parcial, estorno e ajuste não duplicam despesa da compra', () => {
+  const events = [
+    { id: 'payment-1', type: 'payment', amount: 30.02 },
+    { id: 'payment-2', type: 'payment', amount: 20.01 },
+    { id: 'reversal-1', type: 'reversal', reversesEventId: 'payment-1', amount: 0.01 },
+    { id: 'adjustment-1', type: 'adjustment', signedAmount: -0.02 },
+  ]
+  const original = structuredClone(events)
+  const invoice = buildInvoiceLifecycle({
+    purchaseTotal: 100.03,
+    baselinePaidAmount: 10.01,
+    events,
+    now: new Date(2026, 10, 18),
+  })
+
+  expect(invoice).toMatchObject({
+    purchaseTotal: 100.03,
+    adjustmentTotal: -0.02,
+    invoiceTotal: 100.01,
+    baselinePaidAmount: 10.01,
+    paidAmount: 60.03,
+    remainingAmount: 39.98,
+    creditAmount: 0,
+    paymentCount: 2,
+    reversalCount: 1,
+    status: 'partially_paid',
+  })
+  expect(events).toEqual(original)
+})
+
+test('MR-005: não mistura eventos com vínculos de fatura contraditórios', () => {
+  const events = [
+    {
+      id: 'consistent',
+      type: 'payment',
+      amount: 10.01,
+      invoiceKey: 'nubank:2026-08',
+      cardId: 'nubank',
+      invoiceMonth: '2026-08',
+    },
+    {
+      id: 'legacy',
+      type: 'payment',
+      amount: 2.02,
+      cardId: 'nubank',
+      invoiceMonth: '2026-08',
+    },
+    {
+      id: 'wrong-key',
+      type: 'payment',
+      amount: 99,
+      invoiceKey: 'nubank:2026-09',
+      cardId: 'nubank',
+      invoiceMonth: '2026-08',
+    },
+    {
+      id: 'wrong-card',
+      type: 'payment',
+      amount: 99,
+      invoiceKey: 'nubank:2026-08',
+      cardId: 'other',
+      invoiceMonth: '2026-08',
+    },
+    {
+      id: 'wrong-month',
+      type: 'payment',
+      amount: 99,
+      invoiceKey: 'nubank:2026-08',
+      cardId: 'nubank',
+      invoiceMonth: '2026-09',
+    },
+  ]
+  const invoiceEvents = getInvoiceEvents(events, 'nubank', '2026-08')
+  expect(invoiceEvents.map((event) => event.id)).toEqual(['consistent', 'legacy'])
+  expect(buildInvoiceLifecycle({ events: invoiceEvents, purchaseTotal: 20 })).toMatchObject({
+    paidAmount: 12.03,
+    remainingAmount: 7.97,
+  })
+  expect(events).toHaveLength(5)
+})
+
+test('MR-005: eventos legados somente com invoiceKey continuam legíveis', () => {
+  const events = [
+    { id: 'key-only', invoiceKey: 'nubank:2026-08', type: 'payment', amount: 1.01 },
+    { id: 'different', invoiceKey: 'nubank:2026-09', type: 'payment', amount: 99 },
+    { id: 'missing', type: 'payment', amount: 99 },
+  ]
+  const filtered = getInvoiceEvents(events, 'nubank', '2026-08')
+  expect(filtered.map((event) => event.id)).toEqual(['key-only'])
+  expect(buildInvoiceLifecycle({ purchaseTotal: 2.02, events: filtered })).toMatchObject({
+    paidAmount: 1.01,
+    remainingAmount: 1.01,
+  })
+})
+
+test('MR-003: estorno de outra origem não reduz saldo reversível do pagamento', () => {
+  const payment = { id: 'pay-1', type: 'payment', amount: 10.03 }
+  const events = [
+    { id: 'rev-1', type: 'reversal', reversesEventId: 'pay-1', amount: 0.01 },
+    { id: 'rev-2', type: 'reversal', reversesEventId: 'pay-2', amount: 9.99 },
+    { id: 'adj-1', type: 'adjustment', reversesEventId: 'pay-1', signedAmount: -0.02 },
+  ]
+  expect(getPaymentReversibleAmount(payment, events)).toBe(10.02)
+  expect(
+    getPaymentReversibleAmount(payment, [
+      ...events,
+      { id: 'rev-3', type: 'reversal', reversesEventId: 'pay-1', amount: 10.02 },
+    ]),
+  ).toBe(0)
+})

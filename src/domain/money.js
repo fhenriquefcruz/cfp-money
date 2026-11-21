@@ -1,4 +1,5 @@
 import { getTransactionActivityDate } from './transactionDates'
+import { toTransactionCents } from './finance'
 import { buildCategoryReviewQueue } from './categoryReview'
 
 const DEFAULT_SETTINGS = Object.freeze({
@@ -78,21 +79,29 @@ function toAmount(value) {
   return Number.isFinite(amount) ? amount : 0
 }
 
+function subtractMoney(first, second) {
+  return (toTransactionCents(first) - toTransactionCents(second)) / 100
+}
+
 function safePercentChange(current, previous) {
   if (previous === 0) return current === 0 ? 0 : null
   return ((current - previous) / previous) * 100
 }
 
 function sumExpenses(transactions) {
-  return transactions
-    .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
-    .reduce((total, transaction) => total + toAmount(transaction.amount), 0)
+  return (
+    transactions
+      .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
+      .reduce((total, transaction) => total + toTransactionCents(transaction.amount), 0) / 100
+  )
 }
 
 function sumIncome(transactions) {
-  return transactions
-    .filter((transaction) => transaction.type === 'income' && !transaction.isSavings)
-    .reduce((total, transaction) => total + toAmount(transaction.amount), 0)
+  return (
+    transactions
+      .filter((transaction) => transaction.type === 'income' && !transaction.isSavings)
+      .reduce((total, transaction) => total + toTransactionCents(transaction.amount), 0) / 100
+  )
 }
 
 export function normalizeMoneySettings(settings = {}) {
@@ -207,7 +216,7 @@ export function calculateCategoryChanges(currentTransactions = [], previousTrans
           categoryName: transaction.categoryName || 'Sem categoria',
           total: 0,
         }
-        existing.total += toAmount(transaction.amount)
+        existing.total += toTransactionCents(transaction.amount)
         totals.set(key, existing)
       })
 
@@ -222,15 +231,15 @@ export function calculateCategoryChanges(currentTransactions = [], previousTrans
     .map((key) => {
       const currentItem = current.get(key)
       const previousItem = previous.get(key)
-      const currentTotal = currentItem?.total || 0
-      const previousTotal = previousItem?.total || 0
+      const currentTotal = (currentItem?.total || 0) / 100
+      const previousTotal = (previousItem?.total || 0) / 100
 
       return {
         categoryId: currentItem?.categoryId || previousItem?.categoryId || null,
         categoryName: currentItem?.categoryName || previousItem?.categoryName || 'Sem categoria',
         currentTotal,
         previousTotal,
-        difference: currentTotal - previousTotal,
+        difference: subtractMoney(currentTotal, previousTotal),
         percentChange: safePercentChange(currentTotal, previousTotal),
       }
     })
@@ -345,19 +354,19 @@ export function analyzeMoney(transactions = [], settings = {}, referenceDate = n
     current: {
       income: currentIncome,
       expenses: currentExpenses,
-      balance: currentIncome - currentExpenses,
+      balance: subtractMoney(currentIncome, currentExpenses),
       transactionCount: currentTransactions.length,
     },
     previous: {
       income: previousIncome,
       expenses: previousExpenses,
-      balance: previousIncome - previousExpenses,
+      balance: subtractMoney(previousIncome, previousExpenses),
       transactionCount: previousTransactions.length,
     },
     comparison: {
-      expenseDifference: currentExpenses - previousExpenses,
+      expenseDifference: subtractMoney(currentExpenses, previousExpenses),
       expenseChangePercent,
-      incomeDifference: currentIncome - previousIncome,
+      incomeDifference: subtractMoney(currentIncome, previousIncome),
       incomeChangePercent,
     },
     projection: {

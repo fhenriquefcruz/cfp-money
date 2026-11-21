@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { buildCreditCardCenter } from './creditCardCenter'
 import { summarizeTransactions, transactionsForMonth } from './finance'
 import { buildPaymentControlOverview } from './paymentControl'
 
@@ -46,6 +47,84 @@ const decemberOverview = (transactions, invoiceEvents = []) =>
   })
 
 describe('MR-018: atividade, obrigação e liquidação são grandezas distintas', () => {
+  test('paridade Cartões e Controle de Pagamentos com centavos, ajuste e estorno', () => {
+    const transactions = [
+      purchase({
+        id: 'parity-one',
+        amount: 100.03,
+        invoiceMonth: '2026-12',
+        dueDate: '2026-12-10',
+      }),
+      purchase({
+        id: 'parity-two',
+        amount: 19.99,
+        invoiceMonth: '2026-12',
+        dueDate: '2026-12-10',
+      }),
+    ]
+    const events = [
+      {
+        ...invoicePayment('parity-payment', 40.02),
+        invoiceKey: 'card-mr018:2026-12',
+      },
+      {
+        id: 'parity-reversal',
+        type: 'reversal',
+        invoiceKey: 'card-mr018:2026-12',
+        cardId: card.id,
+        invoiceMonth: '2026-12',
+        reversesEventId: 'parity-payment',
+        amount: 0.01,
+        eventDate: '2026-12-06',
+      },
+      {
+        id: 'parity-credit',
+        type: 'adjustment',
+        invoiceKey: 'card-mr018:2026-12',
+        cardId: card.id,
+        invoiceMonth: '2026-12',
+        signedAmount: -0.02,
+        eventDate: '2026-12-07',
+      },
+      {
+        ...invoicePayment('other-month', 99, '2027-01'),
+        invoiceKey: 'card-mr018:2027-01',
+      },
+    ]
+    const now = new Date(2026, 11, 8)
+    const center = buildCreditCardCenter({
+      transactions,
+      creditCards: [card],
+      invoiceEvents: events,
+      selectedMonth: '2026-12',
+      now,
+    })
+    const control = buildPaymentControlOverview({
+      transactions,
+      creditCards: [card],
+      invoiceEvents: events,
+      bounds: { start: '2026-12-01', end: '2026-12-31' },
+      now,
+    })
+
+    expect(center).toMatchObject({
+      selectedPurchaseTotal: 120.02,
+      selectedTotal: 120,
+      selectedPaidTotal: 40.01,
+      selectedRemainingTotal: 79.99,
+    })
+    expect(control.card).toMatchObject({
+      totalAmount: center.selectedTotal,
+      paidAmount: center.selectedPaidTotal,
+      pendingAmount: center.selectedRemainingTotal,
+      itemCount: 2,
+      obligationCount: 1,
+    })
+    expect(control.committedAmount).toBe(center.selectedTotal)
+    expect(summarizeTransactions(transactionsForMonth(transactions, 2026, 9)).expenses).toBe(120.02)
+    expect(summarizeTransactions(transactionsForMonth(transactions, 2026, 11)).expenses).toBe(0)
+  })
+
   test('pagamento parcial altera pago/pendente da fatura, sem reconhecer nova despesa', () => {
     const transactions = [
       purchase({

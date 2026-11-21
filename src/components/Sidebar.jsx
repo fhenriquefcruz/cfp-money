@@ -1,7 +1,6 @@
 // src/components/Sidebar.jsx
 import React, { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -73,19 +72,11 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
         )}
       </span>
 
-      <AnimatePresence>
-        {!collapsed && (
-          <motion.span
-            initial={{ opacity: 0, width: 0 }}
-            animate={{ opacity: 1, width: 'auto' }}
-            exit={{ opacity: 0, width: 0 }}
-            transition={{ duration: 0.2 }}
-            className="min-w-0 flex-1 overflow-hidden whitespace-nowrap text-sm font-medium"
-          >
-            {label}
-          </motion.span>
-        )}
-      </AnimatePresence>
+      {!collapsed && (
+        <span className="min-w-0 flex-1 overflow-hidden whitespace-nowrap text-sm font-medium">
+          {label}
+        </span>
+      )}
 
       {premium && !collapsed && (
         <span
@@ -100,9 +91,9 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
       )}
 
       {isActive && !collapsed && !premium && (
-        <motion.div layoutId="nav-indicator">
+        <div>
           <ChevronRight size={14} className="text-white/60" />
-        </motion.div>
+        </div>
       )}
 
       {collapsed && (
@@ -252,22 +243,14 @@ export default function Sidebar() {
           <div className="aurora-brand-mark flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-600]">
             <TrendingUp size={16} className="text-white" />
           </div>
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden whitespace-nowrap"
-              >
-                <p className="text-base font-black text-[--text-primary]">Meu Real</p>
-                <p className="text-[9px] text-[--text-tertiary]">
-                  {status.isPremium ? 'Experiência Premium' : 'Plano básico'}
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {!collapsed && (
+            <div className="overflow-hidden whitespace-nowrap">
+              <p className="text-base font-black text-[--text-primary]">Meu Real</p>
+              <p className="text-[9px] text-[--text-tertiary]">
+                {status.isPremium ? 'Experiência Premium' : 'Plano básico'}
+              </p>
+            </div>
+          )}
         </div>
         {!collapsed && (
           <button
@@ -384,13 +367,12 @@ export default function Sidebar() {
 
   return (
     <>
-      <motion.aside
-        animate={{ width: collapsed ? 68 : 232 }}
-        transition={{ duration: 0.2 }}
-        className="aurora-sidebar sticky top-0 hidden h-screen flex-shrink-0 flex-col overflow-hidden border-r border-[--border-subtle] bg-[--bg-sidebar] lg:flex"
+      <aside
+        style={{ width: collapsed ? 68 : 232 }}
+        className="aurora-sidebar sticky top-0 hidden h-screen flex-shrink-0 flex-col overflow-hidden border-r border-[--border-subtle] bg-[--bg-sidebar] lg:flex transition-[width] duration-200 motion-reduce:transition-none"
       >
         {sidebarContent}
-      </motion.aside>
+      </aside>
 
       <nav
         className="aurora-bottom-nav fixed bottom-0 left-0 right-0 z-[70] grid grid-cols-5 items-stretch overflow-x-clip border-t border-[--border-subtle] bg-[--bg-surface]/95 px-1 backdrop-blur-md sm:px-2 lg:hidden"
@@ -458,13 +440,11 @@ export default function Sidebar() {
 
       {mobileOpen && (
         <>
-          <motion.div
+          <div
             className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-0 right-0 top-0 z-[60] bg-black/50 backdrop-blur-sm lg:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
             onClick={() => setMobileOpen(false)}
           />
-          <motion.div
+          <div
             ref={mobileDrawerRef}
             id="mobile-more-menu"
             role="dialog"
@@ -472,9 +452,6 @@ export default function Sidebar() {
             aria-label="Mais opções de navegação"
             tabIndex={-1}
             className="aurora-mobile-drawer fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] left-0 top-0 z-[60] flex w-[min(18rem,86vw)] flex-col overflow-hidden bg-[--bg-sidebar] shadow-2xl lg:hidden"
-            initial={{ x: -288 }}
-            animate={{ x: 0 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           >
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-2">
@@ -535,7 +512,7 @@ export default function Sidebar() {
                 Sair da conta
               </Button>
             </div>
-          </motion.div>
+          </div>
         </>
       )}
     </>
