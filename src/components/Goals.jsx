@@ -1,5 +1,6 @@
 // src/components/Goals.jsx
 import React, { useMemo, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Pencil, Trash2 } from 'lucide-react'
 import { useGoals, useTransactions } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
@@ -33,7 +34,12 @@ function GoalCard({ goal, transactions, onEdit, onDelete, onContribute }) {
     plan.daysLeft !== null && plan.daysLeft >= 0 && plan.daysLeft <= 30 && !plan.completed
 
   return (
-    <div>
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+    >
       <Card>
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 items-center gap-3">
@@ -156,7 +162,7 @@ function GoalCard({ goal, transactions, onEdit, onDelete, onContribute }) {
           </Button>
         )}
       </Card>
-    </div>
+    </motion.div>
   )
 }
 
@@ -395,6 +401,7 @@ function GoalsContent() {
         />
       ) : (
         <div className="operational-card-grid goals-card-grid grid grid-cols-1 gap-4 md:grid-cols-2">
+          <AnimatePresence>
             {sortedGoals.map((goal) => (
               <GoalCard
                 key={goal.id}
@@ -405,6 +412,7 @@ function GoalsContent() {
                 onContribute={handleContribute}
               />
             ))}
+          </AnimatePresence>
         </div>
       )}
 
