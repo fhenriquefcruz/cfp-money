@@ -50,7 +50,12 @@ const LoadingScreen = () => (
 const AppRoutes = () => {
   const { user, loading, isAdmin } = useAuth()
   if (loading) return <LoadingScreen />
-  if (!user) return <Suspense fallback={<LoadingScreen />}><Login /></Suspense>
+  if (!user)
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <Login />
+      </Suspense>
+    )
 
   return (
     <CategoriesProvider userId={user.uid}>

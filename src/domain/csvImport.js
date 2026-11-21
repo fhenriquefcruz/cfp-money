@@ -111,9 +111,7 @@ const parseAmount = (value) => {
   if (!/^\+?\d+(?:\.\d{1,2})?$/.test(normalized)) return NaN
 
   const parsed = Number(normalized)
-  return Number.isFinite(parsed) && Number.isSafeInteger(Math.round(parsed * 100))
-    ? parsed
-    : NaN
+  return Number.isFinite(parsed) && Number.isSafeInteger(Math.round(parsed * 100)) ? parsed : NaN
 }
 
 const categoryKey = (value) => normalizeText(value)

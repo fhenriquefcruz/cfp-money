@@ -374,9 +374,7 @@ export default function Dashboard() {
       className="dashboard-premium dashboard-v58 mx-auto min-w-0 max-w-[1680px] space-y-5 pb-24 sm:space-y-6 lg:pb-6"
     >
       {/* Header — mês com destaque, saudação secundária */}
-      <div
-        className="dashboard-premium__toolbar flex flex-wrap items-start justify-between gap-3"
-      >
+      <div className="dashboard-premium__toolbar flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {/* Mês é o destaque principal */}
           <div className="dashboard-month-nav mb-0.5 flex min-w-0 flex-nowrap items-center gap-1">
@@ -601,9 +599,7 @@ export default function Dashboard() {
       </div>
 
       {/* Inteligência executiva: ritmo, saúde e Money em uma faixa coerente */}
-      <div
-        className="dashboard-bento-grid grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12"
-      >
+      <div className="dashboard-bento-grid grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12">
         <Card
           variant="elevated"
           className="dashboard-forecast-card dashboard-module--rhythm col-span-1 h-full shadow-sm xl:col-span-3"

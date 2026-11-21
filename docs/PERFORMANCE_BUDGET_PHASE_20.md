@@ -95,14 +95,14 @@ limite agregado de 744 KiB.
 
 A política agora distingue o **teto bloqueante** do **limiar de revisão**:
 
-| Métrica gzip | Limite / regra | Efeito |
-| --- | ---: | --- |
-| JavaScript total de todos os chunks | 768 KiB | Bloqueia CI acima disso |
-| JavaScript total: limiar de revisão | 752 KiB | Alerta no CI e no relatório JSON; justificar crescimento na PR |
-| JavaScript inicial | 245 KiB (+64 bytes de tolerância histórica) | Bloqueia CI |
-| Rota Money | 18 KiB | Bloqueia CI |
-| Maior chunk JavaScript | 140 KiB | Bloqueia CI |
-| CSS inicial | 22,5 KiB | Bloqueia CI |
+| Métrica gzip                        |                              Limite / regra | Efeito                                                         |
+| ----------------------------------- | ------------------------------------------: | -------------------------------------------------------------- |
+| JavaScript total de todos os chunks |                                     768 KiB | Bloqueia CI acima disso                                        |
+| JavaScript total: limiar de revisão |                                     752 KiB | Alerta no CI e no relatório JSON; justificar crescimento na PR |
+| JavaScript inicial                  | 245 KiB (+64 bytes de tolerância histórica) | Bloqueia CI                                                    |
+| Rota Money                          |                                      18 KiB | Bloqueia CI                                                    |
+| Maior chunk JavaScript              |                                     140 KiB | Bloqueia CI                                                    |
+| CSS inicial                         |                                    22,5 KiB | Bloqueia CI                                                    |
 
 A ampliação do teto **agregado** é de 24 KiB (+3,23%) em relação ao limite anterior, com
 aproximadamente 20 KiB de margem em relação à medição de referência. Os demais limites **não

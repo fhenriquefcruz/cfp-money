@@ -89,15 +89,19 @@ function safePercentChange(current, previous) {
 }
 
 function sumExpenses(transactions) {
-  return transactions
-    .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
-    .reduce((total, transaction) => total + toTransactionCents(transaction.amount), 0) / 100
+  return (
+    transactions
+      .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
+      .reduce((total, transaction) => total + toTransactionCents(transaction.amount), 0) / 100
+  )
 }
 
 function sumIncome(transactions) {
-  return transactions
-    .filter((transaction) => transaction.type === 'income' && !transaction.isSavings)
-    .reduce((total, transaction) => total + toTransactionCents(transaction.amount), 0) / 100
+  return (
+    transactions
+      .filter((transaction) => transaction.type === 'income' && !transaction.isSavings)
+      .reduce((total, transaction) => total + toTransactionCents(transaction.amount), 0) / 100
+  )
 }
 
 export function normalizeMoneySettings(settings = {}) {

@@ -121,9 +121,7 @@ describe('MR-018: atividade, obrigação e liquidação são grandezas distintas
       obligationCount: 1,
     })
     expect(control.committedAmount).toBe(center.selectedTotal)
-    expect(summarizeTransactions(transactionsForMonth(transactions, 2026, 9)).expenses).toBe(
-      120.02,
-    )
+    expect(summarizeTransactions(transactionsForMonth(transactions, 2026, 9)).expenses).toBe(120.02)
     expect(summarizeTransactions(transactionsForMonth(transactions, 2026, 11)).expenses).toBe(0)
   })
 
