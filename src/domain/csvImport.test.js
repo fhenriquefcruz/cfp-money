@@ -150,4 +150,35 @@ describe('buildCsvImportPreview', () => {
     expect(preview.rows[4].transaction.amount).toBe(1234.56)
     expect(preview.rows.slice(3).every((row) => row.status === 'ready')).toBe(true)
   })
+
+  test('bloqueia todo o arquivo quando uma linha desloca colunas financeiras', () => {
+    const preview = buildCsvImportPreview(
+      [
+        'Data;Tipo;Descrição;Categoria;Valor',
+        '01/09/2026;Despesa;Compra legítima;Alimentação;25,90',
+        '02/09/2026;Despesa;Pagamento;indevido;Alimentação;99,00',
+      ].join('\n'),
+      { categories, paymentMethods },
+    )
+
+    expect(preview.rows).toEqual([])
+    expect(preview.fatalIssues.map((issue) => issue.code)).toContain('malformed_csv')
+    expect(preview.summary.total).toBe(2)
+    expect(preview.summary.errors).toBe(2)
+  })
+
+  test('mantém importáveis descrições com ponto e vírgula quando corretamente entre aspas', () => {
+    const preview = buildCsvImportPreview(
+      [
+        'Data;Tipo;Descrição;Categoria;Valor',
+        '01/09/2026;Despesa;"Mercado; compras";Alimentação;25,90',
+      ].join('\n'),
+      { categories, paymentMethods },
+    )
+
+    expect(preview.fatalIssues).toEqual([])
+    expect(preview.summary.ready).toBe(1)
+    expect(preview.rows[0].transaction.description).toBe('Mercado; compras')
+    expect(preview.rows[0].transaction.amount).toBe(25.9)
+  })
 })
