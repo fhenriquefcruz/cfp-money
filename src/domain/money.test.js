@@ -273,3 +273,40 @@ test('Money sinaliza revisão de categoria antes de interpretar destaques', () =
     count: 1,
   })
 })
+
+test('MR-001/MR-006: Money agrega valores legados em centavos exatos', () => {
+  const items = [
+    { type: 'income', amount: '10.01', date: '2026-07-01' },
+    { type: 'income', amount: 0.02, date: '2026-07-02' },
+    { type: 'expense', amount: '0.10', date: '2026-07-03', categoryId: 'food' },
+    { type: 'expense', amount: 0.2, date: '2026-07-04', categoryId: 'food' },
+    { type: 'expense', amount: '99', date: '2026-07-05', paymentStatus: 'cancelled' },
+  ]
+  const result = analyzeMoney(items, {}, '2026-07-15')
+  expect(result.current.income).toBe(10.03)
+  expect(result.current.expenses).toBe(0.3)
+  expect(result.categories.changes.find((item) => item.categoryId === 'food')).toMatchObject({
+    currentTotal: 0.3,
+    difference: 0.3,
+  })
+})
+
+test('MR-001: saldo e diferenças de períodos preservam centavos exatos', () => {
+  const result = analyzeMoney(
+    [
+      { type: 'income', amount: '0.30', date: '2026-07-01' },
+      { type: 'expense', amount: '0.10', date: '2026-07-02' },
+      { type: 'income', amount: '0.10', date: '2026-06-01' },
+      { type: 'expense', amount: '0.20', date: '2026-06-02' },
+    ],
+    { comparisonMode: 'full_cycle' },
+    '2026-07-15',
+  )
+
+  expect(result.current).toMatchObject({ income: 0.3, expenses: 0.1, balance: 0.2 })
+  expect(result.previous).toMatchObject({ income: 0.1, expenses: 0.2, balance: -0.1 })
+  expect(result.comparison).toMatchObject({
+    incomeDifference: 0.2,
+    expenseDifference: -0.1,
+  })
+})

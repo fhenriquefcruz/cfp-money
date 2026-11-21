@@ -35,6 +35,7 @@ import {
 import { resolveFirebaseConfig } from '../config/firebaseConfig'
 import { securityRuntime } from '../config/securityRuntime'
 import { createPaymentPersistenceChange } from '../domain/paymentControl'
+import { subscribeInvoiceEvents } from './invoiceEventReader'
 
 const firebaseConfig = resolveFirebaseConfig(import.meta.env)
 
@@ -224,24 +225,20 @@ export const updateTransactionPaymentStatuses = async (uid, operation = {}) => {
 export const deleteTransaction = (uid, id) => deleteTransactionBatch(uid, [id])
 
 // ── INVOICE EVENTS ──
-export const onInvoiceEventsChange = (uid, callback) => {
-  const q = query(userCol(uid, 'invoiceEvents'), orderBy('eventDate', 'desc'))
-
-  return onSnapshot(q, (snapshot) => callback(snapshot.docs.map(documentData)))
-}
+export const onInvoiceEventsChange = (uid, callback, onError) =>
+  subscribeInvoiceEvents(db, uid, callback, onError)
 
 export const addInvoiceEvent = async (uid, data) => {
-  const ref = await addDoc(userCol(uid, 'invoiceEvents'), {
-    ...data,
-    createdAt: serverTimestamp(),
-  })
-
-  return ref.id
+  const { persistInvoiceEventOperation } = await import('./invoiceEventPersistence.js')
+  return persistInvoiceEventOperation(db, uid, data)
 }
 
 // ── CREDIT CARDS ──
 export const getCreditCards = async (uid) =>
   (await getDocs(userCol(uid, 'creditCards'))).docs.map(documentData)
+
+export const onCreditCardsChange = (uid, callback, onError) =>
+  onSnapshot(userCol(uid, 'creditCards'), (snap) => callback(snap.docs.map(documentData)), onError)
 
 export const addCreditCard = async (uid, data) => {
   const fields = { ...data, createdAt: serverTimestamp() }
@@ -329,6 +326,36 @@ export const getCategories = async (uid) => {
   return [...defSnap.docs.map(documentData), ...cusSnap.docs.map(documentData)]
 }
 
+// Categorias padrão e do usuário são duas consultas: publicar apenas um
+// conjunto completo, nunca um snapshot parcial que esconda categorias.
+export const onCategoriesChange = (uid, callback, onError) => {
+  let defaults = null
+  let custom = null
+  const publish = () => {
+    if (defaults !== null && custom !== null) callback([...defaults, ...custom])
+  }
+  const unsubscribeDefaults = onSnapshot(
+    query(collection(db, 'categories'), where('isDefault', '==', true)),
+    (snap) => {
+      defaults = snap.docs.map(documentData)
+      publish()
+    },
+    onError,
+  )
+  const unsubscribeCustom = onSnapshot(
+    query(collection(db, 'categories'), where('ownerUid', '==', uid)),
+    (snap) => {
+      custom = snap.docs.map(documentData)
+      publish()
+    },
+    onError,
+  )
+  return () => {
+    unsubscribeDefaults()
+    unsubscribeCustom()
+  }
+}
+
 export const addCategory = async (uid, data) =>
   addDoc(collection(db, 'categories'), {
     ...data,
@@ -346,6 +373,9 @@ export const getGoals = async (uid) => {
   return snap.docs.map(documentData)
 }
 
+export const onGoalsChange = (uid, callback, onError) =>
+  onSnapshot(userCol(uid, 'goals'), (snap) => callback(snap.docs.map(documentData)), onError)
+
 export const addGoal = async (uid, data) =>
   addDoc(userCol(uid, 'goals'), {
     ...data,
@@ -362,6 +392,9 @@ export const getBudgets = async (uid) => {
   const snap = await getDocs(userCol(uid, 'budgets'))
   return snap.docs.map(documentData)
 }
+
+export const onBudgetsChange = (uid, callback, onError) =>
+  onSnapshot(userCol(uid, 'budgets'), (snap) => callback(snap.docs.map(documentData)), onError)
 
 export const setBudget = async (uid, categoryId, amount, monthKey) => {
   if (!/^\d{4}-\d{2}$/.test(monthKey || '')) {

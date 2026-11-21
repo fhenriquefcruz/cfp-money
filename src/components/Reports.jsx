@@ -28,28 +28,16 @@ import { useTransactions } from '../contexts/AppContext'
 import { Card, Button } from './ui'
 import { formatCurrency, exportToCSV, exportToPDF } from '../utils'
 import { getMonthlyFinancialData } from '../domain/monthlyFinance'
+import {
+  isFinanciallyEffectiveTransaction as isEffective,
+  toTransactionCents,
+} from '../domain/finance'
+import { summarizeExpenseCategories } from '../domain/expenseCategories'
 import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
 import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
 import { getTransactionActivityDate } from '../domain/transactionDates'
-import { buildSavingsOverview, getSavingsSignedAmount } from '../domain/savings'
-
-const isEffective = (transaction) =>
-  transaction.paymentStatus !== 'cancelled' &&
-  transaction.flowType !== 'transfer' &&
-  transaction.kind !== 'transfer'
-
-const COLORS = [
-  '#c49d6b',
-  '#4e8066',
-  '#a7804e',
-  '#b64c43',
-  '#786c8d',
-  '#9a6671',
-  '#5f8587',
-  '#b87645',
-]
+import { buildSavingsOverview } from '../domain/savings'
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -116,7 +104,7 @@ function SavingRateBadge({ rate }) {
 }
 
 function ReportsContent() {
-  const { transactions, getSummary } = useTransactions()
+  const { transactions } = useTransactions()
   const [searchParams] = useSearchParams()
   const requestedMonth = searchParams.get('month')
   const initialMonth = /^\d{4}-\d{2}$/.test(requestedMonth || '')
@@ -152,77 +140,44 @@ function ReportsContent() {
     [transactions, periodStart, periodEnd],
   )
 
-  const periodTotals = useMemo(() => {
-    let income = 0
-    let expenses = 0
-
-    for (let index = 0; index < period; index += 1) {
-      const date = subMonths(referenceDate, index)
-      const summary = getSummary(date.getFullYear(), date.getMonth())
-      income += summary.income
-      expenses += summary.expenses
-    }
-
-    const savings = savingsOverview.periodNet
-    const balance = income - expenses
-    const avg = expenses / (period || 1)
-    const savingRate = income > 0 ? (savings / income) * 100 : 0
-
-    return {
-      income,
-      expenses,
-      balance,
-      avg,
-      savingRate,
-      savings,
-      savingsDeposits: savingsOverview.periodDeposits,
-      savingsWithdrawals: savingsOverview.periodWithdrawals,
-    }
-  }, [period, getSummary, referenceDate, savingsOverview])
-
   const monthlyData = useMemo(
     () => getMonthlyFinancialData(transactions, period, referenceDate),
     [transactions, period, referenceDate],
   )
 
-  // Dados de poupança mês a mês
-  const savingsMonthly = useMemo(() => {
-    return Array.from({ length: period }, (_, i) => {
-      const d = subMonths(referenceDate, period - 1 - i)
-      const label = format(d, 'MMM', { locale: ptBR })
-      const from = format(d, 'yyyy-MM-01')
-      const to = format(new Date(d.getFullYear(), d.getMonth() + 1, 0), 'yyyy-MM-dd')
-      const value = transactions
-        .filter((t) => {
-          if (!t.isSavings || !isEffective(t)) return false
-          const activityDate = getTransactionActivityDate(t)
-          return activityDate >= from && activityDate <= to
-        })
-        .reduce((s, t) => s + getSavingsSignedAmount(t), 0)
-      return { month: label, value }
+  const periodTotals = useMemo(() => {
+    let incomeCents = 0
+    let expensesCents = 0
+    monthlyData.forEach((month) => {
+      incomeCents += toTransactionCents(month.income)
+      expensesCents += toTransactionCents(month.expenses)
     })
-  }, [transactions, period, referenceDate])
+    const income = incomeCents / 100
+    const expenses = expensesCents / 100
+    const savings = savingsOverview.periodNet
 
-  const categoryData = useMemo(() => {
-    const totals = {}
+    return {
+      income,
+      expenses,
+      balance: (incomeCents - expensesCents) / 100,
+      avg: expenses / (period || 1),
+      savingRate: income > 0 ? (savings / income) * 100 : 0,
+      savings,
+      savingsDeposits: savingsOverview.periodDeposits,
+      savingsWithdrawals: savingsOverview.periodWithdrawals,
+    }
+  }, [monthlyData, period, savingsOverview])
 
-    reportTransactions
-      .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
-      .forEach((transaction) => {
-        const categoryKey = transaction.categoryId || 'without-category'
-        if (!totals[categoryKey])
-          totals[categoryKey] = {
-            name: transaction.categoryName || 'Sem categoria',
-            value: 0,
-            count: 0,
-            color: transaction.categoryColor || '#c49d6b',
-          }
-        totals[categoryKey].value += transaction.amount
-        totals[categoryKey].count += 1
-      })
-
-    return Object.values(totals).sort((first, second) => second.value - first.value)
-  }, [reportTransactions])
+  const categoryData = useMemo(
+    () =>
+      summarizeExpenseCategories(reportTransactions).map((category) => ({
+        name: category.categoryName,
+        value: category.total,
+        count: category.count,
+        color: category.categoryColor || '#c49d6b',
+      })),
+    [reportTransactions],
+  )
 
   const hasTx = reportTransactions.length > 0
 
@@ -513,8 +468,8 @@ function ReportsContent() {
                             nameKey="name"
                             paddingAngle={2}
                           >
-                            {categoryData.map((_, i) => (
-                              <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                            {categoryData.map((cat, i) => (
+                              <Cell key={i} fill={cat.color} />
                             ))}
                           </Pie>
                           <Tooltip
@@ -542,7 +497,7 @@ function ReportsContent() {
                                   <div
                                     className="w-2 h-2 rounded-full"
                                     style={{
-                                      background: COLORS[i % COLORS.length],
+                                      background: cat.color,
                                     }}
                                   />
                                   <span className="font-medium text-[--text-primary] truncate max-w-[130px]">
@@ -559,7 +514,7 @@ function ReportsContent() {
                                   className="h-full rounded-full transition-all duration-700"
                                   style={{
                                     width: `${pct}%`,
-                                    background: COLORS[i % COLORS.length],
+                                    background: cat.color,
                                   }}
                                 />
                               </div>
@@ -684,7 +639,7 @@ function ReportsContent() {
                   <>
                     <ResponsiveContainer width="100%" height={200}>
                       <BarChart
-                        data={savingsMonthly}
+                        data={monthlyData}
                         margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
                       >
                         <CartesianGrid
@@ -705,7 +660,12 @@ function ReportsContent() {
                           tickFormatter={(v) => formatCurrency(v, { compact: true })}
                         />
                         <Tooltip content={<ChartTooltip />} />
-                        <Bar dataKey="value" name="Poupança" fill="#c49d6b" radius={[4, 4, 0, 0]} />
+                        <Bar
+                          dataKey="savings"
+                          name="Poupança"
+                          fill="#c49d6b"
+                          radius={[4, 4, 0, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
 

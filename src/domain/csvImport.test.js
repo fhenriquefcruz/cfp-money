@@ -105,4 +105,80 @@ describe('buildCsvImportPreview', () => {
     expect(preview.rows).toEqual([])
     expect(preview.fatalIssues[0].code).toBe('too_many_rows')
   })
+
+  test('rejeita datas ISO impossíveis e mantém datas bissextas válidas', () => {
+    const preview = buildCsvImportPreview(
+      [
+        'Data;Tipo;Descrição;Categoria;Valor;Vencimento',
+        '2026-02-31;Despesa;Data inválida;Alimentação;20,00;',
+        '2026-02-28;Despesa;Vencimento inválido;Alimentação;20,00;2026-02-31',
+        '2028-02-29;Despesa;Bissexto válido;Alimentação;20,00;2028-03-01',
+      ].join('\n'),
+      { categories, paymentMethods },
+    )
+
+    expect(preview.rows[0].importable).toBe(false)
+    expect(preview.rows[0].issues.some((issue) => issue.code === 'invalid_date')).toBe(true)
+    expect(preview.rows[1].transaction.dueDate).toBeUndefined()
+    expect(preview.rows[1].issues.some((issue) => issue.code === 'invalid_due_date')).toBe(true)
+    expect(preview.rows[2].status).toBe('ready')
+    expect(preview.rows[2].transaction).toMatchObject({
+      date: '2028-02-29',
+      dueDate: '2028-03-01',
+    })
+  })
+
+  test('rejeita frações de centavo sem arredondamento silencioso', () => {
+    const preview = buildCsvImportPreview(
+      [
+        'Data;Tipo;Descrição;Categoria;Valor',
+        '01/09/2026;Despesa;Milésimo;Alimentação;0,001',
+        '02/09/2026;Despesa;Decimal ambíguo;Alimentação;1.234',
+        '03/09/2026;Despesa;Notação científica;Alimentação;1e3',
+        '04/09/2026;Despesa;Centavos exatos;Alimentação;0,29',
+        '05/09/2026;Despesa;Milhar brasileiro;Alimentação;1.234,56',
+      ].join('\n'),
+      { categories, paymentMethods },
+    )
+
+    expect(preview.summary.errors).toBe(3)
+    for (const row of preview.rows.slice(0, 3)) {
+      expect(row.importable).toBe(false)
+      expect(row.issues.some((issue) => issue.code === 'invalid_amount')).toBe(true)
+    }
+    expect(preview.rows[3].transaction.amount).toBe(0.29)
+    expect(preview.rows[4].transaction.amount).toBe(1234.56)
+    expect(preview.rows.slice(3).every((row) => row.status === 'ready')).toBe(true)
+  })
+
+  test('bloqueia todo o arquivo quando uma linha desloca colunas financeiras', () => {
+    const preview = buildCsvImportPreview(
+      [
+        'Data;Tipo;Descrição;Categoria;Valor',
+        '01/09/2026;Despesa;Compra legítima;Alimentação;25,90',
+        '02/09/2026;Despesa;Pagamento;indevido;Alimentação;99,00',
+      ].join('\n'),
+      { categories, paymentMethods },
+    )
+
+    expect(preview.rows).toEqual([])
+    expect(preview.fatalIssues.map((issue) => issue.code)).toContain('malformed_csv')
+    expect(preview.summary.total).toBe(2)
+    expect(preview.summary.errors).toBe(2)
+  })
+
+  test('mantém importáveis descrições com ponto e vírgula quando corretamente entre aspas', () => {
+    const preview = buildCsvImportPreview(
+      [
+        'Data;Tipo;Descrição;Categoria;Valor',
+        '01/09/2026;Despesa;"Mercado; compras";Alimentação;25,90',
+      ].join('\n'),
+      { categories, paymentMethods },
+    )
+
+    expect(preview.fatalIssues).toEqual([])
+    expect(preview.summary.ready).toBe(1)
+    expect(preview.rows[0].transaction.description).toBe('Mercado; compras')
+    expect(preview.rows[0].transaction.amount).toBe(25.9)
+  })
 })
