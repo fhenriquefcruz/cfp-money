@@ -205,7 +205,8 @@ export function buildCsvImportPreview(
   if (parsed.errors?.length) {
     fatalIssues.push({
       code: 'malformed_csv',
-      message: 'O CSV possui linhas malformadas ou colunas desalinhadas. Corrija o arquivo antes de importar.',
+      message:
+        'O CSV possui linhas malformadas ou colunas desalinhadas. Corrija o arquivo antes de importar.',
     })
   }
 
