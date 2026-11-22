@@ -143,9 +143,9 @@ export function auditCreditCardFinancialParity({
         const origin = origins[0]
         const differentInvoice = Boolean(
           origin &&
-            ((origin.cardId && origin.cardId !== invoice.card.id) ||
-              (origin.invoiceMonth && origin.invoiceMonth !== month) ||
-              (origin.invoiceKey && origin.invoiceKey !== `${invoice.card.id}:${month}`)),
+          ((origin.cardId && origin.cardId !== invoice.card.id) ||
+            (origin.invoiceMonth && origin.invoiceMonth !== month) ||
+            (origin.invoiceKey && origin.invoiceKey !== `${invoice.card.id}:${month}`)),
         )
         add(
           differentInvoice ? 'cross_invoice_payment_reversal' : 'unmatched_payment_reversal',
