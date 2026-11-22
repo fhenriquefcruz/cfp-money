@@ -416,17 +416,23 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
       )
     })
 
-    assert.equal(history.length, 5)
+    assert.equal(history.length, 6)
     assert.equal(history.at(-1).id, 'legacy-undated-close')
     assert.equal(history.at(-2).id, 'legacy-older-payment')
     assert.equal(history.find((item) => item.id === 'legacy-older-payment').eventDate, undefined)
+    const conflictingPayment = history.find(
+      (item) => item.id === 'op_integration-conflicting-operation-0003',
+    )
+    assert.ok(conflictingPayment)
+    assert.ok([0.01, 0.02].includes(conflictingPayment.amount))
     const historyForInvoice = getInvoiceEvents(history, 'card-integration', '2026-11')
     const lifecycle = buildInvoiceLifecycle({
       purchaseTotal: 310,
       events: historyForInvoice,
     })
-    assert.equal(lifecycle.paidAmount, 169.27)
-    assert.equal(lifecycle.remainingAmount, 140.73)
+    const expectedPaidCents = 16927 + Math.round(conflictingPayment.amount * 100)
+    assert.equal(lifecycle.paidAmount, expectedPaidCents / 100)
+    assert.equal(lifecycle.remainingAmount, (31000 - expectedPaidCents) / 100)
     assert.equal(
       (await getDocs(collection(database, 'users', uid, 'transactions'))).size,
       transactionsBeforeHistory,
