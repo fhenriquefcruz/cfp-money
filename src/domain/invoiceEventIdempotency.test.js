@@ -31,6 +31,23 @@ describe('idempotência de evento de fatura', () => {
     expect(createInvoiceOperationId()).not.toBe(id)
   })
 
+  test('falha fechado sem gerador criptográfico seguro', () => {
+    expect(() => createInvoiceOperationId(null)).toThrow(/identidade segura/)
+    expect(() => createInvoiceOperationId({ getRandomValues: null })).toThrow(/identidade segura/)
+  })
+
+  test('replay idêntico ignora somente metadados persistidos', () => {
+    const event = payment({ amount: 0.01 })
+    expect(
+      sameInvoiceEventIntent(
+        { ...event, id: `op_${operationId}`, createdAt: { seconds: 1 } },
+        event,
+      ),
+    ).toBe(true)
+    expect(sameInvoiceEventIntent({ ...event, amount: 0.02 }, event)).toBe(false)
+    expect(sameInvoiceEventIntent({ ...event, invoiceMonth: '2026-12' }, event)).toBe(false)
+  })
+
   test('identidade é estável por operação, não por valor e data', () => {
     const event = payment()
     const original = structuredClone(event)
@@ -59,6 +76,62 @@ describe('idempotência de evento de fatura', () => {
     expect(() => validateInvoiceEventOperation(payment({ eventDate: '2026-11-31' }))).toThrow()
     expect(() => validateInvoiceEventOperation(payment({ invoiceKey: 'other' }))).toThrow()
     expect(() => validateInvoiceEventOperation(payment({ createdAt: 'forged' }))).toThrow()
+    expect(() => validateInvoiceEventOperation(payment({ unexpected: true }))).toThrow()
+    expect(() => validateInvoiceEventOperation(payment({ amount: 100000000.01 }))).toThrow()
+    expect(() => validateInvoiceEventOperation(payment({ cardId: 'x'.repeat(129) }))).toThrow()
+    expect(() => validateInvoiceEventOperation(payment({ notes: 'x'.repeat(2001) }))).toThrow()
+    expect(() =>
+      validateInvoiceEventOperation(payment({ sourceAccount: 'x'.repeat(121) })),
+    ).toThrow()
+    expect(() => validateInvoiceEventOperation(payment({ signedAmount: 1 }))).toThrow()
+  })
+
+  test('valida calendário real e data de liquidação consistente', () => {
+    const valid = payment({ eventDate: '2028-02-29', paymentDate: '2028-02-29' })
+    expect(validateInvoiceEventOperation(valid).documentId).toBe(`op_${operationId}`)
+    for (const day of ['2027-02-29', '2026-04-31', '2026-13-01']) {
+      const invalid = payment({ eventDate: day, paymentDate: day })
+      expect(() => validateInvoiceEventOperation(invalid)).toThrow()
+    }
+    const mismatch = payment({ eventDate: '2026-12-31', paymentDate: '2027-01-01' })
+    expect(() => validateInvoiceEventOperation(mismatch)).toThrow()
+  })
+
+  test('preserva limites exatos em centavos e contratos de fechamento manual', () => {
+    expect(validateInvoiceEventOperation(payment({ amount: 0.01 })).payload.amount).toBe(0.01)
+    expect(validateInvoiceEventOperation(payment({ amount: 100000000 })).payload.amount).toBe(
+      100000000,
+    )
+    expect(() => validateInvoiceEventOperation(payment({ amount: 100000000.01 }))).toThrow()
+
+    const base = payment()
+    const manualClose = {
+      operationId,
+      type: 'manual_close',
+      cardId: base.cardId,
+      cardName: base.cardName,
+      cardLast4: base.cardLast4,
+      invoiceMonth: base.invoiceMonth,
+      invoiceKey: base.invoiceKey,
+      eventDate: base.eventDate,
+      notes: '',
+    }
+    expect(validateInvoiceEventOperation(manualClose).documentId).toBe(`op_${operationId}`)
+    expect(() => validateInvoiceEventOperation({ ...manualClose, amount: 0.01 })).toThrow()
+    expect(() => validateInvoiceEventOperation({ ...manualClose, sourceAccount: '' })).toThrow()
+
+    const adjustment = {
+      ...manualClose,
+      type: 'adjustment',
+      direction: 'charge',
+      signedAmount: 99999999.99,
+      notes: 'Acréscimo autorizado',
+    }
+    expect(validateInvoiceEventOperation(adjustment).payload.signedAmount).toBe(99999999.99)
+    expect(() =>
+      validateInvoiceEventOperation({ ...adjustment, signedAmount: 100000000 }),
+    ).toThrow()
+    expect(() => validateInvoiceEventOperation({ ...adjustment, signedAmount: 0.001 })).toThrow()
   })
 
   test('permite ajustes e estornos estruturados sem tratar como despesas', () => {
@@ -83,6 +156,22 @@ describe('idempotência de evento de fatura', () => {
     expect(() =>
       validateInvoiceEventOperation({ ...base, amount: 50.25, reversesEventId: '' }),
     ).toThrow()
+    expect(() =>
+      validateInvoiceEventOperation({
+        ...base,
+        amount: 50.25,
+        reversesEventId: 'payment-document-1',
+      }),
+    ).toThrow()
+    expect(() =>
+      validateInvoiceEventOperation({
+        ...base,
+        amount: 50.25,
+        reversesEventId: 'payment-document-1',
+        sourceAccount: 'Conta 1',
+        paymentDate: '2026-11-15',
+      }),
+    ).toThrow()
 
     expect(
       validateInvoiceEventOperation({
@@ -100,6 +189,22 @@ describe('idempotência de evento de fatura', () => {
         signedAmount: 10.25,
         direction: 'credit',
         notes: 'Desconto revisado',
+      }),
+    ).toThrow()
+    expect(() =>
+      validateInvoiceEventOperation({
+        ...base,
+        type: 'adjustment',
+        signedAmount: 100000000,
+        direction: 'charge',
+        notes: 'Limite',
+      }),
+    ).toThrow()
+    expect(() =>
+      validateInvoiceEventOperation({
+        ...base,
+        type: 'manual_close',
+        amount: 1,
       }),
     ).toThrow()
   })

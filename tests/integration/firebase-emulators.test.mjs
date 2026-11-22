@@ -326,7 +326,44 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
         await persistInvoiceEventOperation(database, uid, successfulReversal),
         successfulId,
       )
+      assert.equal(
+        await persistInvoiceEventOperation(secondDatabase, uid, successfulReversal),
+        successfulId,
+      )
       assert.equal((await getDocs(collection(database, 'users', uid, 'invoiceEvents'))).size, 3)
+
+      // O mesmo operationId com VALORES DIFERENTES em duas sessões não pode
+      // criar lançamentos diferentes nem sobrescrever o pagamento vencedor.
+      const conflictOperation = 'integration-conflicting-operation-0003'
+      const conflictSmall = {
+        ...invoicePayment,
+        operationId: conflictOperation,
+        amount: 0.01,
+      }
+      const conflictLarge = {
+        ...invoicePayment,
+        operationId: conflictOperation,
+        amount: 0.02,
+      }
+      const conflictingResults = await Promise.allSettled([
+        persistInvoiceEventOperation(database, uid, conflictSmall),
+        persistInvoiceEventOperation(secondDatabase, uid, conflictLarge),
+      ])
+      assert.equal(conflictingResults.filter((result) => result.status === 'fulfilled').length, 1)
+      assert.equal(conflictingResults.filter((result) => result.status === 'rejected').length, 1)
+      const winningAmount = conflictingResults[0].status === 'fulfilled' ? 0.01 : 0.02
+      const winningEventRef = doc(
+        database,
+        'users',
+        uid,
+        'invoiceEvents',
+        `op_${conflictOperation}`,
+      )
+      const winningEvent = (await getDoc(winningEventRef)).data()
+      assert.equal(winningEvent.amount, winningAmount)
+      assert.equal(winningEvent.operationId, conflictOperation)
+      assert.equal((await getDocs(collection(database, 'users', uid, 'invoiceEvents'))).size, 4)
+      assert.equal((await getDoc(lockRef)).data().reversalEventId, successfulId)
     } finally {
       await deleteApp(secondClient)
     }
@@ -379,17 +416,23 @@ test('integra Auth, Firestore Rules e Functions callable no Emulator Suite', asy
       )
     })
 
-    assert.equal(history.length, 5)
+    assert.equal(history.length, 6)
     assert.equal(history.at(-1).id, 'legacy-undated-close')
     assert.equal(history.at(-2).id, 'legacy-older-payment')
     assert.equal(history.find((item) => item.id === 'legacy-older-payment').eventDate, undefined)
+    const conflictingPayment = history.find(
+      (item) => item.id === 'op_integration-conflicting-operation-0003',
+    )
+    assert.ok(conflictingPayment)
+    assert.ok([0.01, 0.02].includes(conflictingPayment.amount))
     const historyForInvoice = getInvoiceEvents(history, 'card-integration', '2026-11')
     const lifecycle = buildInvoiceLifecycle({
       purchaseTotal: 310,
       events: historyForInvoice,
     })
-    assert.equal(lifecycle.paidAmount, 169.27)
-    assert.equal(lifecycle.remainingAmount, 140.73)
+    const expectedPaidCents = 16927 + Math.round(conflictingPayment.amount * 100)
+    assert.equal(lifecycle.paidAmount, expectedPaidCents / 100)
+    assert.equal(lifecycle.remainingAmount, (31000 - expectedPaidCents) / 100)
     assert.equal(
       (await getDocs(collection(database, 'users', uid, 'transactions'))).size,
       transactionsBeforeHistory,

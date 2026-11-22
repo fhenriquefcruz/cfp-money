@@ -49,9 +49,13 @@ O teste automatizado utiliza exclusivamente o Firestore Emulator:
 
 Resultado validado:
 
-`Backup/recovery: round-trip criptografado aprovado no Firestore Emulator (3/3 docs).`
+`Backup/recovery: round-trip criptografado aprovado no Firestore Emulator (9/9 docs).`
 
-O teste cria dados, gera e criptografa o backup, remove os documentos do ambiente de teste, restaura o conteúdo e compara o estado final com o original.
+O teste usa exclusivamente o Firestore Emulator. Cria perfis de dois UIDs, transações, meta, eventos de pagamento/estorno, trava de reversão e categoria; criptografa o backup, remove os documentos, restaura o conteúdo e compara o estado final com o original. Também preserva referências e bytes do Firestore.
+
+Antes da primeira escrita, o restaurador valida contagem de documentos, caminhos e duplicidades. Três manifests inválidos são testados para assegurar **zero gravações antes do erro**. A suíte passa a ser obrigatória na validação da PR.
+
+**Limite importante:** o restore de múltiplos documentos não é uma única transação global. Uma falha operacional após o início da escrita ainda pode causar recuperação parcial e exige procedimento manual revisado, snapshot prévio e rollback. O teste não comprova uma restauração de produção. A proteção por UID depende das Firestore Rules, verificadas em suíte própria; o backup preserva os caminhos de cada usuário.
 
 ## Proteções contra restore acidental
 

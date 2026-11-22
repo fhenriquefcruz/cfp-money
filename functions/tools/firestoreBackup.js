@@ -122,19 +122,45 @@ async function buildFirestoreBackup(db, projectId) {
 }
 
 async function restoreFirestoreBackup(db, backup) {
-  if (backup?.schemaVersion !== 1 || !Array.isArray(backup.documents)) {
+  if (
+    backup?.schemaVersion !== 1 ||
+    !Array.isArray(backup.documents) ||
+    !Number.isSafeInteger(backup.documentCount) ||
+    backup.documentCount !== backup.documents.length
+  ) {
     throw new Error('Backup Firestore inválido ou incompatível.')
   }
 
-  for (const document of backup.documents) {
-    if (!document?.path || !document?.data) {
-      throw new Error('Documento inválido encontrado no backup.')
+  // Validar o inventário completo ANTES da primeira gravação. Sem isso, um
+  // arquivo truncado ou com caminho duplicado poderia gerar restore parcial.
+  const paths = new Set()
+  const writes = backup.documents.map((document) => {
+    const path = document?.path
+    const segments = typeof path === 'string' ? path.split('/') : []
+    if (
+      segments.length < 2 ||
+      segments.length % 2 !== 0 ||
+      segments.some((part) => !part || part === '.' || part === '..') ||
+      paths.has(path) ||
+      !document?.data ||
+      typeof document.data !== 'object' ||
+      Array.isArray(document.data)
+    ) {
+      throw new Error('Documento inválido ou duplicado encontrado no backup.')
     }
+    paths.add(path)
 
-    await db.doc(document.path).set(decodeValue(document.data, db))
+    // Também antecipa falhas de desserialização e de referência Firestore.
+    return { reference: db.doc(path), data: decodeValue(document.data, db) }
+  })
+
+  // Não há atomicidade global entre coleções; uma falha de rede durante o
+  // restore ainda exige recuperação operacional, nunca sucesso presumido.
+  for (const document of writes) {
+    await document.reference.set(document.data)
   }
 
-  return backup.documents.length
+  return writes.length
 }
 
 module.exports = {

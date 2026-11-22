@@ -1,6 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { summarizeTransactions as summarizeCanonicalTransactions } from '../../../src/domain/finance.js'
+import {
+  summarizeTransactions as summarizeCanonicalTransactions,
+  transactionsForMonth,
+} from '../../../src/domain/finance.js'
+import {
+  savingsPrecisionGoal,
+  savingsPrecisionTransactions,
+  transactions as financialAcceptanceTransactions,
+} from '../../../src/domain/financialHomologationFixture.js'
 import { getGoalEffectiveCurrent } from '../../../src/domain/savings.js'
 import {
   effectiveGoalForNotifications,
@@ -182,6 +190,91 @@ test('Worker usa a mesma atividade e elegibilidade que o aplicativo para compras
   })
   assert.equal(december.expenses, 0)
   assert.deepEqual(transactions, before)
+})
+
+test('MR-001/MR-002: Worker e aplicativo usam o mesmo histórico e mesmo mês de atividade', () => {
+  const before = structuredClone(financialAcceptanceTransactions)
+  const scenarios = [
+    {
+      year: 2026,
+      monthIndex: 6,
+      month: '2026-07',
+      start: '2026-07-01T00:00:00.000Z',
+      end: '2026-07-31T23:59:59.999Z',
+      expected: { income: 500, expenses: 100.03, savings: 0, balance: 399.97, count: 2 },
+      topCategories: [{ name: 'Alimentação', amount: 100.03 }],
+    },
+    {
+      year: 2026,
+      monthIndex: 7,
+      month: '2026-08',
+      start: '2026-08-01T00:00:00.000Z',
+      end: '2026-08-31T23:59:59.999Z',
+      expected: { income: 1000, expenses: 60.04, savings: 25, balance: 939.96, count: 5 },
+      topCategories: [{ name: 'Alimentação', amount: 60.04 }],
+    },
+  ]
+
+  for (const scenario of scenarios) {
+    const appTransactions = transactionsForMonth(
+      financialAcceptanceTransactions,
+      scenario.year,
+      scenario.monthIndex,
+    )
+    const appSummary = summarizeCanonicalTransactions(appTransactions)
+    const workerSummary = summarizeTransactions(financialAcceptanceTransactions, {
+      start: new Date(scenario.start),
+      end: new Date(scenario.end),
+    })
+
+    assert.deepEqual(
+      {
+        income: workerSummary.income,
+        expenses: workerSummary.expenses,
+        savings: workerSummary.savings,
+        balance: workerSummary.balance,
+        count: workerSummary.count,
+      },
+      appSummary,
+      `Divergência entre aplicativo e Worker na atividade ${scenario.month}`,
+    )
+    assert.deepEqual(appSummary, scenario.expected)
+    assert.deepEqual(workerSummary.topCategories, scenario.topCategories)
+  }
+  assert.deepEqual(financialAcceptanceTransactions, before)
+})
+
+test('MR-004: Worker, Reservas e Metas preservam aportes e retiradas em centavos', () => {
+  const original = structuredClone(savingsPrecisionTransactions)
+  const appSummary = summarizeCanonicalTransactions(
+    transactionsForMonth(savingsPrecisionTransactions, 2026, 7),
+  )
+  const workerSummary = summarizeTransactions(savingsPrecisionTransactions, {
+    start: new Date('2026-08-01T00:00:00.000Z'),
+    end: new Date('2026-08-31T23:59:59.999Z'),
+  })
+  const goal = effectiveGoalForNotifications(savingsPrecisionGoal, savingsPrecisionTransactions)
+
+  assert.deepEqual(
+    {
+      income: workerSummary.income,
+      expenses: workerSummary.expenses,
+      savings: workerSummary.savings,
+      balance: workerSummary.balance,
+      count: workerSummary.count,
+    },
+    appSummary,
+  )
+  assert.deepEqual(appSummary, {
+    income: 0,
+    expenses: 0,
+    savings: 0.29,
+    balance: 0,
+    count: 3,
+  })
+  assert.deepEqual(workerSummary.topCategories, [])
+  assert.equal(goal.currentAmount, 3.79)
+  assert.deepEqual(savingsPrecisionTransactions, original)
 })
 
 test('Worker respeita data de atividade, vencimento legado e limite dos períodos', () => {

@@ -46,6 +46,36 @@ describe('MR-003: limite aritmético de estornos', () => {
     expect(() => validateReversalAgainstPayment(payment, reversal, history)).toThrow(/ultrapassa/)
   })
 
+  test('recompõe estornos legados em centavos sem arredondar valores monetários', () => {
+    const history = [
+      { type: 'reversal', reversesEventId: payment.id, amount: 0.01 },
+      { type: 'reversal', reversesEventId: payment.id, amount: 0.02 },
+      { type: 'reversal', reversesEventId: 'other-payment', amount: 999 },
+      { type: 'adjustment', reversesEventId: payment.id, amount: 999 },
+    ]
+    expect(
+      validateReversalAgainstPayment(payment, { ...reversal, amount: 119.99 }, history),
+    ).toEqual({
+      originalCents: 12002,
+      requestedCents: 11999,
+      historicalCents: 3,
+    })
+    expect(() =>
+      validateReversalAgainstPayment(payment, { ...reversal, amount: 120 }, history),
+    ).toThrow(/ultrapassa/)
+  })
+
+  test('não permite origem ou histórico com frações ocultas de centavo', () => {
+    expect(() => validateReversalAgainstPayment({ ...payment, amount: 120.021 }, reversal)).toThrow(
+      /centavos exatos/,
+    )
+    expect(() =>
+      validateReversalAgainstPayment(payment, reversal, [
+        { type: 'reversal', reversesEventId: payment.id, amount: 0.001 },
+      ]),
+    ).toThrow(/centavos exatos/)
+  })
+
   test('rejeita outro cartão, outra competência e origem inexistente', () => {
     expect(() => validateReversalAgainstPayment(null, reversal)).toThrow(/origem/)
     expect(() =>
