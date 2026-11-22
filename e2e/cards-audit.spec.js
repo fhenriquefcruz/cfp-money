@@ -20,7 +20,9 @@ test('abre auditoria somente leitura dos dados já carregados e fecha sem altera
   await expect(audit).toContainText('Nenhuma fatura com movimentação para conferir')
   await expect(audit).toContainText('2 vínculos salvos')
   await expect(audit).toContainText('Compras sem cartão salvo')
-  await expect(audit).toContainText('Nenhum pagamento, estorno ou vínculo será alterado automaticamente.')
+  await expect(audit).toContainText(
+    'Nenhum pagamento, estorno ou vínculo será alterado automaticamente.',
+  )
   await expect(audit).not.toContainText('Compra antiga de homologação')
   await expect(audit).not.toContainText('card-nubank')
   expect(await summary.innerText()).toBe(before)

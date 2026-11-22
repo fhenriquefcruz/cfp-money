@@ -60,7 +60,13 @@ const transactions = [
     installmentOf: 2,
   }),
   { id: 'reserve-deposit', type: 'income', amount: 25, isSavings: true, date: '2026-08-22' },
-  { id: 'internal-transfer', type: 'expense', amount: 200, flowType: 'transfer', date: '2026-08-10' },
+  {
+    id: 'internal-transfer',
+    type: 'expense',
+    amount: 200,
+    flowType: 'transfer',
+    date: '2026-08-10',
+  },
   { id: 'cancelled', type: 'expense', amount: 999, paymentStatus: 'cancelled', date: '2026-08-11' },
 ]
 const invoiceEvents = [
@@ -174,8 +180,10 @@ describe('homologação integrada: atividade de compra e resultado mensal', () =
       now: reference,
     })
     expect(
-      getTransactionPaymentState(transactions.find((item) => item.id === 'july-purchase'), paymentIndex)
-        .status,
+      getTransactionPaymentState(
+        transactions.find((item) => item.id === 'july-purchase'),
+        paymentIndex,
+      ).status,
     ).toBe(PAYMENT_STATUS.PARTIAL)
     expect(canToggleTransactionPayment(transactions[3])).toBe(false)
 
