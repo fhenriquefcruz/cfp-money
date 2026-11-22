@@ -61,6 +61,16 @@ jobs:
       - name: Firebase Emulator integration
         run: npm run test:integration:firebase
 
+      - name: Temporary formatting diagnosis (restores tracked file)
+        shell: bash
+        run: |
+          npx prettier --write src/domain/creditCardFinancialParity.js >/dev/null
+          echo "MR_FORMAT_BEGIN:src/domain/creditCardFinancialParity.js"
+          base64 -w0 src/domain/creditCardFinancialParity.js
+          echo
+          echo "MR_FORMAT_END:src/domain/creditCardFinancialParity.js"
+          git restore -- src/domain/creditCardFinancialParity.js
+
       - name: Formatting
         run: npm run format:check
 
