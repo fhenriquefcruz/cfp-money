@@ -4,8 +4,16 @@ import { auditCreditCardFinancialParity } from './creditCardFinancialParity'
 import { buildCategoryBreakdown } from './dashboard'
 import { calculateBudgetUsage, summarizeTransactions, transactionsForMonth } from './finance'
 import { getMonthlyFinancialData } from './monthlyFinance'
+import { buildSavingsOverview, getGoalEffectiveCurrent } from './savings'
 import { analyzeMoney } from './money'
-import { creditCard, invoiceEvents, reference, transactions } from './financialHomologationFixture'
+import {
+  creditCard,
+  invoiceEvents,
+  reference,
+  savingsPrecisionGoal,
+  savingsPrecisionTransactions,
+  transactions,
+} from './financialHomologationFixture'
 import {
   buildPaymentStatusIndex,
   canToggleTransactionPayment,
@@ -135,4 +143,45 @@ describe('homologação integrada: atividade de compra e resultado mensal', () =
     expect(transactions).toEqual(originalTransactions)
     expect(invoiceEvents).toEqual(originalEvents)
   })
+  test('Relatórios, Money, Reservas e Metas preservam o mesmo resultado com aportes e retiradas', () => {
+    const month = getMonthlyFinancialData(savingsPrecisionTransactions, 1, reference)[0]
+    const monthly = summarizeTransactions(
+      transactionsForMonth(savingsPrecisionTransactions, 2026, 7),
+    )
+    const money = analyzeMoney(
+      savingsPrecisionTransactions,
+      { cycleType: 'calendar_month', comparisonMode: 'full_cycle' },
+      '2026-08-10',
+    )
+    const reserve = buildSavingsOverview(savingsPrecisionTransactions, {
+      start: '2026-08-01',
+      end: '2026-08-31',
+    })
+    const effectiveGoal = getGoalEffectiveCurrent(
+      savingsPrecisionGoal,
+      savingsPrecisionTransactions,
+    )
+
+    expect(monthly).toMatchObject({
+      income: 0,
+      expenses: 0,
+      savings: 0.29,
+      balance: 0,
+      count: 3,
+    })
+    expect(month).toMatchObject({
+      income: monthly.income,
+      expenses: monthly.expenses,
+      savings: monthly.savings,
+      balance: monthly.balance,
+    })
+    expect(money.current).toMatchObject({ income: 0, expenses: 0, balance: 0 })
+    expect(reserve).toMatchObject({
+      totalBalance: monthly.savings,
+      periodNet: monthly.savings,
+    })
+    expect(effectiveGoal).toBe(3.79)
+    expect(savingsPrecisionGoal.currentAmount).toBe('3.50')
+  })
+
 })
