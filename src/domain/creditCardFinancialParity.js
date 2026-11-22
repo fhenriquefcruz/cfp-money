@@ -95,15 +95,56 @@ export function auditCreditCardFinancialParity({
         transactionPaidAmount: fromCents(paidByTransactionCents),
       })
     }
+    // Auditoria somente leitura: um conjunto de estornos jamais pode superar
+    // os centavos do pagamento que originou a reversão. O motor pode limitar
+    // paidAmount a zero, então a divergência precisa ficar explícita.
+    const paymentsById = new Map(
+      invoice.events
+        .filter((event) => event.type === 'payment' && event.id)
+        .map((event) => [event.id, event]),
+    )
+    const reversedByPayment = new Map()
     for (const event of invoice.events) {
       if (event.type !== 'reversal') continue
-      if (
-        !invoice.events.some((item) => item.type === 'payment' && item.id === event.reversesEventId)
-      ) {
+      const original = paymentsById.get(event.reversesEventId)
+      if (!original) {
         add('unmatched_payment_reversal', 'review', {
           cardId: invoice.card.id,
           invoiceMonth: month,
           eventId: event.id || null,
+        })
+        continue
+      }
+
+      const reversalCents = toCents(event.amount)
+      if (!Number.isSafeInteger(reversalCents) || reversalCents <= 0) {
+        add('invalid_reversal_event_amount', 'critical', {
+          cardId: invoice.card.id,
+          invoiceMonth: month,
+          eventId: event.id || null,
+        })
+        continue
+      }
+      reversedByPayment.set(
+        original.id,
+        (reversedByPayment.get(original.id) || 0) + reversalCents,
+      )
+    }
+    for (const [paymentId, reversedCents] of reversedByPayment) {
+      const originalCents = toCents(paymentsById.get(paymentId).amount)
+      if (!Number.isSafeInteger(originalCents) || originalCents <= 0) {
+        add('invalid_payment_event_amount', 'critical', {
+          cardId: invoice.card.id,
+          invoiceMonth: month,
+          paymentId,
+        })
+      } else if (!Number.isSafeInteger(reversedCents) || reversedCents > originalCents) {
+        add('over_reversed_payment', 'critical', {
+          cardId: invoice.card.id,
+          invoiceMonth: month,
+          paymentId,
+          originalAmount: fromCents(originalCents),
+          reversedAmount: fromCents(reversedCents),
         })
       }
     }
