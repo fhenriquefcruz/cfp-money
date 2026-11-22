@@ -214,9 +214,7 @@ function AuditFindingRow({ finding, onSelectCard }) {
           </button>
         )}
       </div>
-      <p className="mt-2 text-[11px] leading-relaxed text-[--text-secondary]">
-        {finding.guidance}
-      </p>
+      <p className="mt-2 text-[11px] leading-relaxed text-[--text-secondary]">{finding.guidance}</p>
       {finding.code === 'over_reversed_payment' && (
         <p className="mt-2 text-[11px] font-semibold tabular-nums text-[--danger-text]">
           Pagamento: {formatCurrency(finding.originalAmount)} · Estornos:{' '}
@@ -593,9 +591,9 @@ function CreditCardsCenterContent() {
                 )}
               </div>
               <p className="mt-3 text-[11px] text-[--text-tertiary]">
-                Conferência somente de leitura sobre dados desta sessão, não conciliação
-                bancária. Nenhum pagamento, estorno ou vínculo será alterado automaticamente.
-                Confirme registros e extratos antes de qualquer correção.
+                Conferência somente de leitura sobre dados desta sessão, não conciliação bancária.
+                Nenhum pagamento, estorno ou vínculo será alterado automaticamente. Confirme
+                registros e extratos antes de qualquer correção.
               </p>
               <button
                 type="button"

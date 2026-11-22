@@ -5,8 +5,19 @@ describe('apresentação da auditoria de cartões', () => {
   test('prioriza inconsistências críticas e identifica fatura sem expor IDs como rótulos', () => {
     const findings = [
       { code: 'historical_card_references', severity: 'info', count: 1 },
-      { code: 'unmatched_payment_reversal', severity: 'review', cardId: 'card-1', invoiceMonth: '2026-11' },
-      { code: 'cross_invoice_payment_reversal', severity: 'critical', cardId: 'card-1', invoiceMonth: '2026-11', paymentId: 'secret-payment' },
+      {
+        code: 'unmatched_payment_reversal',
+        severity: 'review',
+        cardId: 'card-1',
+        invoiceMonth: '2026-11',
+      },
+      {
+        code: 'cross_invoice_payment_reversal',
+        severity: 'critical',
+        cardId: 'card-1',
+        invoiceMonth: '2026-11',
+        paymentId: 'secret-payment',
+      },
     ]
     const original = structuredClone(findings)
     const items = describeCardAuditFindings(findings, [{ id: 'card-1', name: 'Cartão principal' }])
@@ -26,7 +37,12 @@ describe('apresentação da auditoria de cartões', () => {
 
   test('preserva cartões históricos, códigos desconhecidos e resultado vazio sem inventar vínculos', () => {
     const items = describeCardAuditFindings([
-      { code: 'over_reversed_payment', severity: 'critical', cardId: 'deleted-card', invoiceMonth: '2026-10' },
+      {
+        code: 'over_reversed_payment',
+        severity: 'critical',
+        cardId: 'deleted-card',
+        invoiceMonth: '2026-10',
+      },
       { code: 'new_rule', severity: 'review' },
     ])
 

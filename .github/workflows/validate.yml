@@ -61,19 +61,6 @@ jobs:
       - name: Firebase Emulator integration
         run: npm run test:integration:firebase
 
-      - name: Temporary formatting diagnosis (restores tracked files)
-        shell: bash
-        run: |
-          files=(src/components/CreditCardsDashboard.jsx src/domain/creditCardAuditPresentation.test.js)
-          npx prettier --write "${files[@]}" >/dev/null
-          for file in "${files[@]}"; do
-            echo "MR_FORMAT_BEGIN:${file}"
-            base64 -w0 "${file}"
-            echo
-            echo "MR_FORMAT_END:${file}"
-          done
-          git restore -- "${files[@]}"
-
       - name: Formatting
         run: npm run format:check
 
