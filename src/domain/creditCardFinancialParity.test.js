@@ -96,6 +96,72 @@ test('alerta estorno sem pagamento correspondente, mantendo valor do motor como 
   expect(data.status).toBe('review')
 })
 
+test('MR-003: sinaliza estorno acumulado maior que o pagamento sem editar o histórico', () => {
+  const invoiceEvents = [
+    { id: 'pay', type: 'payment', cardId: 'card-a', invoiceMonth: '2026-10', amount: 100.03 },
+    {
+      id: 'reversal-one',
+      type: 'reversal',
+      reversesEventId: 'pay',
+      cardId: 'card-a',
+      invoiceMonth: '2026-10',
+      amount: 70.02,
+    },
+    {
+      id: 'reversal-two',
+      type: 'reversal',
+      reversesEventId: 'pay',
+      cardId: 'card-a',
+      invoiceMonth: '2026-10',
+      amount: 30.02,
+    },
+  ]
+  const original = structuredClone(invoiceEvents)
+  const result = check({ transactions: [purchase('item', 150)], invoiceEvents })
+
+  expect(result.status).toBe('critical')
+  expect(result.findings).toContainEqual({
+    code: 'over_reversed_payment',
+    severity: 'critical',
+    cardId: 'card-a',
+    invoiceMonth: '2026-10',
+    paymentId: 'pay',
+    originalAmount: 100.03,
+    reversedAmount: 100.04,
+  })
+  expect(result.totals).toMatchObject({ invoiceTotal: 150, paidTotal: 0, remainingTotal: 150 })
+  expect(invoiceEvents).toEqual(original)
+})
+
+test('MR-003: dois estornos que recompõem exatamente o pagamento não geram falso alerta', () => {
+  const result = check({
+    transactions: [purchase('item', 150)],
+    invoiceEvents: [
+      { id: 'pay', type: 'payment', cardId: 'card-a', invoiceMonth: '2026-10', amount: 100.03 },
+      {
+        id: 'reversal-one',
+        type: 'reversal',
+        reversesEventId: 'pay',
+        cardId: 'card-a',
+        invoiceMonth: '2026-10',
+        amount: 70.02,
+      },
+      {
+        id: 'reversal-two',
+        type: 'reversal',
+        reversesEventId: 'pay',
+        cardId: 'card-a',
+        invoiceMonth: '2026-10',
+        amount: 30.01,
+      },
+    ],
+  })
+
+  expect(result.status).toBe('ok')
+  expect(result.findings).toEqual([])
+  expect(result.totals).toMatchObject({ invoiceTotal: 150, paidTotal: 0, remainingTotal: 150 })
+})
+
 test('separa sugestões de cartão na memória de vínculos realmente salvos', () => {
   const tx = {
     id: 'old',
