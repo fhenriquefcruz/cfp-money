@@ -1,10 +1,16 @@
 import {
   buildSavingsOverview,
   getGoalEffectiveCurrent,
+  getGoalSavingsAmount,
   getSavingsSignedAmount,
   getUnclassifiedSavingsTransactions,
   UNCLASSIFIED_SAVINGS_DESTINATION,
 } from './savings'
+
+import {
+  savingsPrecisionGoal,
+  savingsPrecisionTransactions,
+} from './financialHomologationFixture'
 
 const transactions = [
   {
@@ -93,4 +99,27 @@ test('lista apenas reservas efetivas sem destino para classificação', () => {
   ])
 
   expect(items.map((item) => item.id)).toEqual(['legacy'])
+})
+
+test('homologação: reservas e metas recompõem centavos sem deriva de ponto flutuante', () => {
+  const original = structuredClone(savingsPrecisionTransactions)
+  const overview = buildSavingsOverview(savingsPrecisionTransactions, {
+    start: '2026-08-01',
+    end: '2026-08-31',
+  })
+
+  expect(overview.totalBalance).toBe(0.29)
+  expect(overview.periodDeposits).toBe(0.3)
+  expect(overview.periodWithdrawals).toBe(0.01)
+  expect(overview.periodNet).toBe(0.29)
+  expect(overview.destinations).toEqual([
+    expect.objectContaining({
+      label: 'Banco de teste · Reserva de homologação',
+      balance: 0.29,
+      goalIds: ['goal-centavos'],
+    }),
+  ])
+  expect(getGoalSavingsAmount(savingsPrecisionTransactions, savingsPrecisionGoal.id)).toBe(0.29)
+  expect(getGoalEffectiveCurrent(savingsPrecisionGoal, savingsPrecisionTransactions)).toBe(3.79)
+  expect(savingsPrecisionTransactions).toEqual(original)
 })
