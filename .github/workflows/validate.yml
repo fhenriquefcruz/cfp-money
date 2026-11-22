@@ -61,6 +61,19 @@ jobs:
       - name: Firebase Emulator integration
         run: npm run test:integration:firebase
 
+      - name: Temporary Prettier capture (no tracked changes retained)
+        shell: bash
+        run: |
+          files=(e2e/cards-audit.spec.js src/domain/financialHomologation.test.js)
+          npx prettier --write "${files[@]}" >/dev/null
+          for file in "${files[@]}"; do
+            echo "MR_FORMAT_BEGIN:${file}"
+            base64 -w0 "${file}"
+            echo
+            echo "MR_FORMAT_END:${file}"
+          done
+          git restore -- "${files[@]}"
+
       - name: Formatting
         run: npm run format:check
 
