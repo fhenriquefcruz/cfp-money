@@ -5,9 +5,20 @@ import {
 } from './creditCardCenter'
 import { auditCreditCardIntegrity } from './creditCardIntegrity'
 import { isCreditExpense } from './cardLinkageSummary'
+import { invoiceReversalCents } from './invoiceReversalGuard'
 
 const toCents = (value) => Math.round(Number(value || 0) * 100)
 const fromCents = (value) => value / 100
+
+// A auditoria aceita valores textuais legados, mas rejeita frações de centavo.
+const exactEventCents = (value) => {
+  const normalized = typeof value === 'string' && value.trim() ? Number(value) : value
+  try {
+    return invoiceReversalCents(normalized)
+  } catch {
+    return null
+  }
+}
 
 // Comparação consultiva: nenhuma escrita, ajuste automático ou inferência persistida.
 export function auditCreditCardFinancialParity({
@@ -28,6 +39,15 @@ export function auditCreditCardFinancialParity({
   const findings = []
   const add = (code, severity, details = {}) => findings.push({ code, severity, ...details })
   const month = center.selectedMonth
+  // Índice global somente de leitura: um estorno pode citar um ID registrado
+  // em outra fatura, embora o seletor local corretamente não o inclua.
+  const paymentOriginsById = new Map()
+  for (const event of invoiceEvents) {
+    if (event?.type !== 'payment' || !event.id) continue
+    const origins = paymentOriginsById.get(event.id) || []
+    origins.push(event)
+    paymentOriginsById.set(event.id, origins)
+  }
   const cardIds = new Set()
   for (const card of creditCards) {
     if (!card?.id) {
@@ -106,18 +126,48 @@ export function auditCreditCardFinancialParity({
     const reversedByPayment = new Map()
     for (const event of invoice.events) {
       if (event.type !== 'reversal') continue
-      const original = paymentsById.get(event.reversesEventId)
-      if (!original) {
-        add('unmatched_payment_reversal', 'review', {
+      const origins = paymentOriginsById.get(event.reversesEventId) || []
+      if (origins.length > 1) {
+        add('ambiguous_payment_reversal_origin', 'critical', {
           cardId: invoice.card.id,
           invoiceMonth: month,
           eventId: event.id || null,
+          paymentId: event.reversesEventId,
+          originCount: origins.length,
         })
         continue
       }
 
-      const reversalCents = toCents(event.amount)
-      if (!Number.isSafeInteger(reversalCents) || reversalCents <= 0) {
+      const original = paymentsById.get(event.reversesEventId)
+      if (!original) {
+        const origin = origins[0]
+        const differentInvoice = Boolean(
+          origin &&
+            ((origin.cardId && origin.cardId !== invoice.card.id) ||
+              (origin.invoiceMonth && origin.invoiceMonth !== month) ||
+              (origin.invoiceKey && origin.invoiceKey !== `${invoice.card.id}:${month}`)),
+        )
+        add(
+          differentInvoice ? 'cross_invoice_payment_reversal' : 'unmatched_payment_reversal',
+          differentInvoice ? 'critical' : 'review',
+          {
+            cardId: invoice.card.id,
+            invoiceMonth: month,
+            eventId: event.id || null,
+            ...(differentInvoice
+              ? {
+                  paymentId: event.reversesEventId,
+                  paymentCardId: origin.cardId || null,
+                  paymentInvoiceMonth: origin.invoiceMonth || null,
+                }
+              : {}),
+          },
+        )
+        continue
+      }
+
+      const reversalCents = exactEventCents(event.amount)
+      if (reversalCents === null) {
         add('invalid_reversal_event_amount', 'critical', {
           cardId: invoice.card.id,
           invoiceMonth: month,
@@ -129,8 +179,8 @@ export function auditCreditCardFinancialParity({
       reversedByPayment.set(original.id, priorReversedCents + reversalCents)
     }
     for (const [paymentId, reversedCents] of reversedByPayment) {
-      const originalCents = toCents(paymentsById.get(paymentId).amount)
-      if (!Number.isSafeInteger(originalCents) || originalCents <= 0) {
+      const originalCents = exactEventCents(paymentsById.get(paymentId).amount)
+      if (originalCents === null) {
         add('invalid_payment_event_amount', 'critical', {
           cardId: invoice.card.id,
           invoiceMonth: month,
