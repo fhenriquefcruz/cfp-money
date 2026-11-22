@@ -84,3 +84,63 @@ export const invoiceEvents = [
 ]
 export const reference = new Date(2026, 7, 10)
 
+
+export const savingsPrecisionGoal = {
+  id: 'goal-centavos',
+  currentAmount: '3.50',
+  targetAmount: 10,
+}
+
+export const savingsPrecisionTransactions = [
+  {
+    id: 'savings-10-centavos',
+    type: 'income',
+    isSavings: true,
+    goalId: 'goal-centavos',
+    amount: '0.10',
+    savingsMovement: 'deposit',
+    savingsDestination: 'Reserva de homologação',
+    savingsInstitution: 'Banco de teste',
+    date: '2026-08-05',
+  },
+  {
+    id: 'savings-20-centavos',
+    type: 'income',
+    isSavings: true,
+    goalId: 'goal-centavos',
+    amount: '0.20',
+    savingsMovement: 'deposit',
+    savingsDestination: 'Reserva de homologação',
+    savingsInstitution: 'Banco de teste',
+    date: '2026-08-07',
+  },
+  {
+    id: 'savings-withdrawal-1-centavo',
+    type: 'income',
+    isSavings: true,
+    goalId: 'goal-centavos',
+    amount: '0.01',
+    savingsMovement: 'withdrawal',
+    savingsDestination: 'Reserva de homologação',
+    savingsInstitution: 'Banco de teste',
+    date: '2026-08-09',
+  },
+  {
+    id: 'savings-cancelled',
+    type: 'income',
+    isSavings: true,
+    goalId: 'goal-centavos',
+    amount: 99,
+    paymentStatus: 'cancelled',
+    date: '2026-08-10',
+  },
+  {
+    id: 'savings-transfer',
+    type: 'expense',
+    isSavings: true,
+    goalId: 'goal-centavos',
+    amount: 999,
+    flowType: 'transfer',
+    date: '2026-08-11',
+  },
+]
