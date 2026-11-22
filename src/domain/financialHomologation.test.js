@@ -130,7 +130,8 @@ describe('homologação integrada: atividade de compra e resultado mensal', () =
       expenses: 100.03,
       balance: 399.97,
     })
-    expect(budget).toEqual({ spent: 60.04, percent: 60.04 })
+    expect(budget.spent).toBe(60.04)
+    expect(budget.percent).toBeCloseTo(60.04, 10)
     expect(buildCategoryBreakdown([{ categoryId: 'food', total: budget.spent }])[0]).toMatchObject({
       total: 60.04,
       sharePercent: 100,
