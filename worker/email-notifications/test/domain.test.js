@@ -4,7 +4,11 @@ import {
   summarizeTransactions as summarizeCanonicalTransactions,
   transactionsForMonth,
 } from '../../../src/domain/finance.js'
-import { transactions as financialAcceptanceTransactions } from '../../../src/domain/financialHomologationFixture.js'
+import {
+  savingsPrecisionGoal,
+  savingsPrecisionTransactions,
+  transactions as financialAcceptanceTransactions,
+} from '../../../src/domain/financialHomologationFixture.js'
 import { getGoalEffectiveCurrent } from '../../../src/domain/savings.js'
 import {
   effectiveGoalForNotifications,
@@ -238,6 +242,39 @@ test('MR-001/MR-002: Worker e aplicativo usam o mesmo histórico e mesmo mês de
     assert.deepEqual(workerSummary.topCategories, scenario.topCategories)
   }
   assert.deepEqual(financialAcceptanceTransactions, before)
+})
+
+test('MR-004: Worker, Reservas e Metas preservam aportes e retiradas em centavos', () => {
+  const original = structuredClone(savingsPrecisionTransactions)
+  const appSummary = summarizeCanonicalTransactions(
+    transactionsForMonth(savingsPrecisionTransactions, 2026, 7),
+  )
+  const workerSummary = summarizeTransactions(savingsPrecisionTransactions, {
+    start: new Date('2026-08-01T00:00:00.000Z'),
+    end: new Date('2026-08-31T23:59:59.999Z'),
+  })
+  const goal = effectiveGoalForNotifications(savingsPrecisionGoal, savingsPrecisionTransactions)
+
+  assert.deepEqual(
+    {
+      income: workerSummary.income,
+      expenses: workerSummary.expenses,
+      savings: workerSummary.savings,
+      balance: workerSummary.balance,
+      count: workerSummary.count,
+    },
+    appSummary,
+  )
+  assert.deepEqual(appSummary, {
+    income: 0,
+    expenses: 0,
+    savings: 0.29,
+    balance: 0,
+    count: 3,
+  })
+  assert.deepEqual(workerSummary.topCategories, [])
+  assert.equal(goal.currentAmount, 3.79)
+  assert.deepEqual(savingsPrecisionTransactions, original)
 })
 
 test('Worker respeita data de atividade, vencimento legado e limite dos períodos', () => {
