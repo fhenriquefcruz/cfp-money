@@ -1,5 +1,3 @@
-let isRefreshing = false
-
 const notifyUpdate = (registration) => {
   window.dispatchEvent(
     new CustomEvent('meu-real:pwa-update', {
@@ -34,18 +32,17 @@ export function registerServiceWorker() {
       registration.addEventListener('updatefound', () => {
         observeInstallingWorker(registration)
       })
-
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (isRefreshing) return
-        isRefreshing = true
-        window.location.reload()
-      })
+      // Monitoramento e consentimento carregados somente após registrar o PWA.
+      void import('./monitorPwaUpdates')
+        .then(({ monitorPwaUpdates }) =>
+          monitorPwaUpdates(registration, { onWaiting: notifyUpdate }),
+        )
+        .catch(() => {})
+      void import('./pwaControllerChange')
+        .then(({ observePwaControllerChanges }) => observePwaControllerChanges())
+        .catch(() => {})
     } catch (error) {
       console.warn('Não foi possível ativar os recursos offline.', error)
     }
   })
-}
-
-export function activatePwaUpdate(registration) {
-  registration?.waiting?.postMessage({ type: 'SKIP_WAITING' })
 }

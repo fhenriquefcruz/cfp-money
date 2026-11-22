@@ -1,6 +1,7 @@
 // src/utils/index.jsx
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { toTransactionCents } from '../domain/finance'
 
 // ── CAPITALIZE ──
 export const capitalize = (str) => {
@@ -74,6 +75,14 @@ export const PAYMENT_METHODS = [
 export const getPaymentLabel = (id) => PAYMENT_METHODS.find((m) => m.id === id)?.label || id
 
 // ── CSV EXPORT ──
+export const formatCsvAmount = (amount) =>
+  (toTransactionCents(amount) / 100).toFixed(2).replace('.', ',')
+
+export const escapeCsvText = (value) => {
+  const text = String(value ?? '')
+  return /^\s*[=+@-]/.test(text) ? `'${text}` : text
+}
+
 export const exportToCSV = (transactions) => {
   const headers = [
     'Data',
@@ -109,11 +118,11 @@ export const exportToCSV = (transactions) => {
       formatDate(t.date),
       t.dueDate ? formatDate(t.dueDate) : '',
       t.isSavings ? 'Poupança' : t.type === 'income' ? 'Receita' : 'Despesa',
-      t.description || '',
-      t.categoryName || '',
-      t.amount.toFixed(2).replace('.', ','),
-      getPaymentLabel(t.paymentMethod),
-      t.type === 'expense' && !t.isSavings ? paymentStatus : '',
+      escapeCsvText(t.description),
+      escapeCsvText(t.categoryName),
+      formatCsvAmount(t.amount),
+      escapeCsvText(getPaymentLabel(t.paymentMethod)),
+      t.type === 'expense' && !t.isSavings ? escapeCsvText(paymentStatus) : '',
       paidAtIso(t.paidAt),
       t.isSavings ? 'Sim' : 'Não',
     ]

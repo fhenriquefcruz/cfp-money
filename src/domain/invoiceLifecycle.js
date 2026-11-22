@@ -23,26 +23,35 @@ export function buildInvoiceKey(cardId, invoiceMonth) {
   return `${String(cardId || '').trim()}:${String(invoiceMonth || '').trim()}`
 }
 
+// Chave de apresentação apenas: não preenche datas ou corrige eventos financeiros.
+function invoiceEventSortDate(event) {
+  for (const value of [event?.eventDate, event?.paymentDate]) {
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value
+  }
+  const timestamp = event?.createdAt
+  const date = timestamp instanceof Date ? timestamp : timestamp?.toDate?.()
+  if (date instanceof Date && Number.isFinite(date.getTime())) return date.toISOString()
+  return typeof timestamp === 'string' ? timestamp : ''
+}
+
+export function sortInvoiceEvents(events = []) {
+  return [...events].sort((first, second) => {
+    const chronological = invoiceEventSortDate(second).localeCompare(invoiceEventSortDate(first))
+    return chronological || String(first?.id || '').localeCompare(String(second?.id || ''))
+  })
+}
+
 export function getInvoiceEvents(events = [], cardId, invoiceMonth) {
   const invoiceKey = buildInvoiceKey(cardId, invoiceMonth)
-
-  return events
-    .filter(
+  return sortInvoiceEvents(
+    events.filter(
       (event) =>
-        event.invoiceKey === invoiceKey ||
-        (event.cardId === cardId && event.invoiceMonth === invoiceMonth),
-    )
-    .sort((first, second) => {
-      const firstDate =
-        first.eventDate || first.paymentDate || first.createdAt?.toDate?.()?.toISOString?.() || ''
-      const secondDate =
-        second.eventDate ||
-        second.paymentDate ||
-        second.createdAt?.toDate?.()?.toISOString?.() ||
-        ''
-
-      return String(secondDate).localeCompare(String(firstDate))
-    })
+        (event.invoiceKey === invoiceKey &&
+          (!event.cardId || event.cardId === cardId) &&
+          (!event.invoiceMonth || event.invoiceMonth === invoiceMonth)) ||
+        (!event.invoiceKey && event.cardId === cardId && event.invoiceMonth === invoiceMonth),
+    ),
+  )
 }
 
 export function getPaymentReversibleAmount(payment, invoiceEvents = []) {

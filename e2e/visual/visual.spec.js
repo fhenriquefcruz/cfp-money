@@ -91,6 +91,8 @@ async function expectDashboardPremiumVisualization(page, projectName) {
 
 async function prepareVisualPage(page, route, selector) {
   await page.clock.install({ time: FIXED_TIME })
+  // Fixar a preferência antes do mount evita animações dependentes do timing do CI.
+  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'light' })
   await prepareE2EPage(page, route)
   await expect(page.locator(selector)).toBeVisible()
 
@@ -98,9 +100,12 @@ async function prepareVisualPage(page, route, selector) {
     await expect(
       page.locator('.goals-card-grid').getByText('Entrada do carro', { exact: true }),
     ).toBeVisible()
+
+    // O motion.div inicia com opacity: 0. Visibilidade DOM não garante opacidade final.
+    // Aguarde a pintura efetiva; não altere o baseline ou a tolerância de pixels.
+    await expect(page.locator('.goals-card-grid > div').first()).toHaveCSS('opacity', '1')
   }
 
-  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'light' })
   await page.evaluate(() => document.fonts.ready)
   await page.waitForTimeout(250)
 }

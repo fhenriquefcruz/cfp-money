@@ -1,6 +1,17 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  summarizeTransactions as summarizeCanonicalTransactions,
+  transactionsForMonth,
+} from '../../../src/domain/finance.js'
+import {
+  savingsPrecisionGoal,
+  savingsPrecisionTransactions,
+  transactions as financialAcceptanceTransactions,
+} from '../../../src/domain/financialHomologationFixture.js'
+import { getGoalEffectiveCurrent } from '../../../src/domain/savings.js'
+import {
+  effectiveGoalForNotifications,
   goalAlertCandidates,
   highestBudgetAlert,
   isPremiumUser,
@@ -112,4 +123,255 @@ test('resume lançamentos do período', () => {
   assert.equal(summary.expenses, 250)
   assert.equal(summary.balance, 750)
   assert.equal(summary.topCategories[0].name, 'Alimentação')
+})
+
+test('Worker usa a mesma atividade e elegibilidade que o aplicativo para compras parceladas', () => {
+  const transactions = [
+    ...['2026-12-10', '2027-01-10', '2027-02-10', '2027-03-10'].map((date) => ({
+      type: 'expense',
+      amount: '300.00',
+      date,
+      purchaseDate: '2026-10-21',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      categoryName: 'Compras',
+    })),
+    { type: 'income', amount: '500.00', date: '2026-10-05' },
+    { type: 'expense', amount: '900.00', date: '2026-10-06', paymentStatus: 'cancelled' },
+    { type: 'expense', amount: 800, date: '2026-10-07', flowType: 'transfer' },
+    { type: 'income', amount: 700, date: '2026-10-08', kind: 'transfer' },
+    { type: 'expense', amount: '300.00', date: '2026-10-09', isSavings: true },
+    {
+      type: 'income',
+      amount: '100.00',
+      date: '2026-10-10',
+      isSavings: true,
+      savingsMovement: 'withdrawal',
+    },
+    { type: 'expense', amount: 700, createdAt: '2026-10-11T10:00:00Z' },
+  ]
+  const before = structuredClone(transactions)
+  const range = {
+    start: new Date('2026-10-01T00:00:00.000Z'),
+    end: new Date('2026-10-31T23:59:59.999Z'),
+  }
+  const report = summarizeTransactions(transactions, range)
+  const expected = summarizeCanonicalTransactions([
+    ...transactions.slice(0, 4),
+    transactions[4],
+    transactions[8],
+    transactions[9],
+  ])
+
+  assert.deepEqual(
+    {
+      income: report.income,
+      expenses: report.expenses,
+      balance: report.balance,
+      savings: report.savings,
+      count: report.count,
+    },
+    expected,
+  )
+  assert.deepEqual(report.topCategories, [{ name: 'Compras', amount: 1200 }])
+  assert.deepEqual(
+    {
+      income: report.income,
+      expenses: report.expenses,
+      balance: report.balance,
+      savings: report.savings,
+      count: report.count,
+    },
+    { income: 500, expenses: 1200, balance: -700, savings: 200, count: 7 },
+  )
+  const december = summarizeTransactions(transactions, {
+    start: new Date('2026-12-01T00:00:00Z'),
+    end: new Date('2026-12-31T23:59:59.999Z'),
+  })
+  assert.equal(december.expenses, 0)
+  assert.deepEqual(transactions, before)
+})
+
+test('MR-001/MR-002: Worker e aplicativo usam o mesmo histórico e mesmo mês de atividade', () => {
+  const before = structuredClone(financialAcceptanceTransactions)
+  const scenarios = [
+    {
+      year: 2026,
+      monthIndex: 6,
+      month: '2026-07',
+      start: '2026-07-01T00:00:00.000Z',
+      end: '2026-07-31T23:59:59.999Z',
+      expected: { income: 500, expenses: 100.03, savings: 0, balance: 399.97, count: 2 },
+      topCategories: [{ name: 'Alimentação', amount: 100.03 }],
+    },
+    {
+      year: 2026,
+      monthIndex: 7,
+      month: '2026-08',
+      start: '2026-08-01T00:00:00.000Z',
+      end: '2026-08-31T23:59:59.999Z',
+      expected: { income: 1000, expenses: 60.04, savings: 25, balance: 939.96, count: 5 },
+      topCategories: [{ name: 'Alimentação', amount: 60.04 }],
+    },
+  ]
+
+  for (const scenario of scenarios) {
+    const appTransactions = transactionsForMonth(
+      financialAcceptanceTransactions,
+      scenario.year,
+      scenario.monthIndex,
+    )
+    const appSummary = summarizeCanonicalTransactions(appTransactions)
+    const workerSummary = summarizeTransactions(financialAcceptanceTransactions, {
+      start: new Date(scenario.start),
+      end: new Date(scenario.end),
+    })
+
+    assert.deepEqual(
+      {
+        income: workerSummary.income,
+        expenses: workerSummary.expenses,
+        savings: workerSummary.savings,
+        balance: workerSummary.balance,
+        count: workerSummary.count,
+      },
+      appSummary,
+      `Divergência entre aplicativo e Worker na atividade ${scenario.month}`,
+    )
+    assert.deepEqual(appSummary, scenario.expected)
+    assert.deepEqual(workerSummary.topCategories, scenario.topCategories)
+  }
+  assert.deepEqual(financialAcceptanceTransactions, before)
+})
+
+test('MR-004: Worker, Reservas e Metas preservam aportes e retiradas em centavos', () => {
+  const original = structuredClone(savingsPrecisionTransactions)
+  const appSummary = summarizeCanonicalTransactions(
+    transactionsForMonth(savingsPrecisionTransactions, 2026, 7),
+  )
+  const workerSummary = summarizeTransactions(savingsPrecisionTransactions, {
+    start: new Date('2026-08-01T00:00:00.000Z'),
+    end: new Date('2026-08-31T23:59:59.999Z'),
+  })
+  const goal = effectiveGoalForNotifications(savingsPrecisionGoal, savingsPrecisionTransactions)
+
+  assert.deepEqual(
+    {
+      income: workerSummary.income,
+      expenses: workerSummary.expenses,
+      savings: workerSummary.savings,
+      balance: workerSummary.balance,
+      count: workerSummary.count,
+    },
+    appSummary,
+  )
+  assert.deepEqual(appSummary, {
+    income: 0,
+    expenses: 0,
+    savings: 0.29,
+    balance: 0,
+    count: 3,
+  })
+  assert.deepEqual(workerSummary.topCategories, [])
+  assert.equal(goal.currentAmount, 3.79)
+  assert.deepEqual(savingsPrecisionTransactions, original)
+})
+
+test('Worker respeita data de atividade, vencimento legado e limite dos períodos', () => {
+  const data = [
+    {
+      type: 'expense',
+      amount: '1.01',
+      date: '2026-12-01',
+      purchaseDate: '2026-11-30',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      categoryName: 'Alimentação',
+    },
+    {
+      type: 'expense',
+      amount: '1.02',
+      date: '2026-11-30',
+      categoryName: 'Alimentação',
+    },
+    { type: 'income', amount: '2.03', dueDate: '2026-11-01' },
+    { type: 'expense', amount: 999, date: '2026-11-31' },
+    { type: 'expense', amount: 888, createdAt: '2026-11-20T12:00:00Z' },
+  ]
+  const report = summarizeTransactions(data, {
+    start: new Date('2026-11-01T00:00:00.000Z'),
+    end: new Date('2026-11-30T23:59:59.999Z'),
+  })
+  assert.equal(report.income, 2.03)
+  assert.equal(report.expenses, 2.03)
+  assert.equal(report.balance, 0)
+  assert.equal(report.count, 3)
+  assert.deepEqual(report.topCategories, [{ name: 'Alimentação', amount: 2.03 }])
+})
+
+test('alertas de metas utilizam saldo inicial e aportes menos retiradas vinculadas', () => {
+  const goal = {
+    id: 'goal-emergency',
+    name: 'Reserva de emergência',
+    targetAmount: 3000,
+    currentAmount: 2000,
+    deadline: '2026-11-30',
+  }
+  const transactions = [
+    {
+      id: 'deposit',
+      goalId: goal.id,
+      isSavings: true,
+      amount: '650.20',
+      savingsMovement: 'deposit',
+    },
+    {
+      id: 'withdrawal',
+      goalId: goal.id,
+      isSavings: true,
+      amount: '150.10',
+      savingsMovement: 'withdrawal',
+    },
+    { id: 'cancelled', goalId: goal.id, isSavings: true, amount: 800, paymentStatus: 'cancelled' },
+    { id: 'transfer', goalId: goal.id, isSavings: true, amount: 500, flowType: 'transfer' },
+    { id: 'other-goal', goalId: 'another-goal', isSavings: true, amount: 700 },
+    { id: 'wrong-kind', goalId: goal.id, type: 'expense', amount: 100, isSavings: false },
+  ]
+  const original = structuredClone(goal)
+  const effective = effectiveGoalForNotifications(goal, transactions)
+  assert.equal(effective.currentAmount, getGoalEffectiveCurrent(goal, transactions))
+  assert.equal(Math.round(effective.currentAmount * 100), 250010)
+  assert.equal(Math.round((goal.targetAmount - effective.currentAmount) * 100), 49990)
+  assert.deepEqual(goalAlertCandidates(effective, new Date('2026-11-15T12:00:00Z')), [
+    'progress-80',
+    'deadline-30',
+  ])
+  assert.deepEqual(goal, original)
+})
+
+test('retiradas válidas impedem falso alerta de meta concluída', () => {
+  const goal = { id: 'goal-travel', currentAmount: 900, targetAmount: 1000, deadline: '2026-11-17' }
+  const transactions = [
+    { goalId: goal.id, isSavings: true, amount: 200, savingsMovement: 'deposit' },
+    { goalId: goal.id, isSavings: true, amount: 250, savingsMovement: 'withdrawal' },
+  ]
+  const effective = effectiveGoalForNotifications(goal, transactions)
+  assert.equal(effective.currentAmount, 850)
+  assert.deepEqual(goalAlertCandidates(effective, new Date('2026-11-15T12:00:00Z')), [
+    'progress-80',
+    'deadline-7',
+  ])
+  assert.equal(
+    goalAlertCandidates(effective, new Date('2026-11-18T12:00:00Z')).includes('progress-100'),
+    false,
+  )
+})
+
+test('saldo legado não é somado duas vezes sem movimentação vinculada', () => {
+  const goal = { id: 'goal-legacy', targetAmount: 5000, currentAmount: 3000 }
+  assert.equal(effectiveGoalForNotifications(goal, []).currentAmount, 3000)
+  assert.deepEqual(
+    goalAlertCandidates(effectiveGoalForNotifications(goal, []), new Date('2026-11-15T12:00:00Z')),
+    [],
+  )
 })

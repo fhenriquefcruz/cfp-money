@@ -1,7 +1,6 @@
 // src/components/ui.jsx
 import React from 'react'
 import { createPortal } from 'react-dom'
-import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
 import { Loader2 } from 'lucide-react'
 const CalendarDateField = React.lazy(() => import('./CalendarDateField'))
@@ -280,7 +279,7 @@ export const Modal = ({
         if (closeOnBackdrop && event.target === event.currentTarget) onClose()
       }}
     >
-      <motion.div
+      <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
@@ -294,11 +293,8 @@ export const Modal = ({
           event.stopPropagation()
           onClose()
         }}
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
         className={clsx(
-          'flex w-full max-h-[calc(100dvh-env(safe-area-inset-top,0px)-0.5rem)] flex-col overflow-hidden rounded-t-[28px] bg-[--bg-surface] shadow-2xl sm:max-h-[90vh] sm:rounded-2xl',
+          'meu-real-modal-enter flex w-full max-h-[calc(100dvh-env(safe-area-inset-top,0px)-0.5rem)] flex-col overflow-hidden rounded-t-[28px] bg-[--bg-surface] shadow-2xl sm:max-h-[90vh] sm:rounded-2xl',
           sizes[size],
         )}
       >
@@ -323,7 +319,7 @@ export const Modal = ({
             {footer}
           </div>
         )}
-      </motion.div>
+      </div>
     </div>,
     document.body,
   )

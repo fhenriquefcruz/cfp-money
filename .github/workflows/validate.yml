@@ -61,6 +61,9 @@ jobs:
       - name: Firebase Emulator integration
         run: npm run test:integration:firebase
 
+      - name: Backup recovery and UID isolation (Firestore Emulator)
+        run: npm run test:backup-recovery
+
       - name: Formatting
         run: npm run format:check
 

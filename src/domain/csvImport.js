@@ -55,13 +55,26 @@ const findValue = (row, aliases) => {
   return ''
 }
 
+const isValidCalendarDate = (iso) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  if (!match) return false
+
+  const [, year, month, day] = match
+  const parsed = new Date(`${iso}T12:00:00Z`)
+  return (
+    !Number.isNaN(parsed.getTime()) &&
+    parsed.getUTCFullYear() === Number(year) &&
+    parsed.getUTCMonth() + 1 === Number(month) &&
+    parsed.getUTCDate() === Number(day)
+  )
+}
+
 const parseDate = (value) => {
   const raw = String(value || '').trim()
   if (!raw) return ''
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-    const date = new Date(`${raw}T00:00:00`)
-    return Number.isNaN(date.getTime()) ? '' : raw
+    return isValidCalendarDate(raw) ? raw : ''
   }
 
   const match = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/)
@@ -69,18 +82,7 @@ const parseDate = (value) => {
 
   const [, day, month, year] = match
   const iso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-  const date = new Date(`${iso}T00:00:00`)
-
-  if (
-    Number.isNaN(date.getTime()) ||
-    date.getFullYear() !== Number(year) ||
-    date.getMonth() + 1 !== Number(month) ||
-    date.getDate() !== Number(day)
-  ) {
-    return ''
-  }
-
-  return iso
+  return isValidCalendarDate(iso) ? iso : ''
 }
 
 const parseAmount = (value) => {
@@ -105,8 +107,11 @@ const parseAmount = (value) => {
     normalized = raw.replace(/\./g, '')
   }
 
+  // Nunca importar frações de centavo ou notação ambígua/sintética sem revisão.
+  if (!/^\+?\d+(?:\.\d{1,2})?$/.test(normalized)) return NaN
+
   const parsed = Number(normalized)
-  return Number.isFinite(parsed) ? parsed : NaN
+  return Number.isFinite(parsed) && Number.isSafeInteger(Math.round(parsed * 100)) ? parsed : NaN
 }
 
 const categoryKey = (value) => normalizeText(value)
@@ -194,6 +199,16 @@ export function buildCsvImportPreview(
   })
 
   const fatalIssues = []
+
+  // Uma linha com colunas desalinhadas pode associar valores ao campo errado.
+  // Falhar fechado é preferível a importar um lançamento monetário corrompido.
+  if (parsed.errors?.length) {
+    fatalIssues.push({
+      code: 'malformed_csv',
+      message:
+        'O CSV possui linhas malformadas ou colunas desalinhadas. Corrija o arquivo antes de importar.',
+    })
+  }
 
   if (missingHeaders.length) {
     fatalIssues.push({

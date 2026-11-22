@@ -15,6 +15,8 @@ import { useCreditCards, useInvoiceEvents, useTransactions } from '../contexts/A
 import { buildCreditCardCenter, monthKeyFromDate, shiftMonthKey } from '../domain/creditCardCenter'
 import { summarizeCardLinks } from '../domain/cardLinkageSummary'
 import { auditLoadedCardInvoices } from '../domain/cardInvoiceReadOnlyAudit'
+import { auditCreditCardFinancialParity } from '../domain/creditCardFinancialParity'
+import { describeCardAuditFindings } from '../domain/creditCardAuditPresentation'
 import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
@@ -35,6 +37,7 @@ const STATUS = {
   past_due: ['Vencimento passado', 'bg-[--bg-hover] text-[--text-secondary]'],
   future: ['Futura', 'bg-[--bg-hover] text-[--text-tertiary]'],
   empty: ['Sem lançamentos', 'bg-[--bg-hover] text-[--text-tertiary]'],
+  unknown: ['Datas a revisar', 'bg-[--warning-bg] text-[--warning-text]'],
 }
 
 function SummaryCard({ icon: Icon, label, value, helper }) {
@@ -59,6 +62,12 @@ function SummaryCard({ icon: Icon, label, value, helper }) {
 function InvoiceCard({ invoice, selected, onSelect }) {
   const [statusLabel, statusClass] = STATUS[invoice.status] || STATUS.empty
   const { card, dates, lifecycle } = invoice
+  const datesLabel =
+    dates.source === 'conflict'
+      ? 'Datas divergentes no histórico — revisão necessária'
+      : dates.source === 'unknown'
+        ? 'Datas históricas não registradas'
+        : `${dates.closingDate ? `Fecha em ${formatDate(dates.closingDate)}` : 'Fechamento sem registro'} · ${dates.dueDate ? `vence em ${formatDate(dates.dueDate)}` : 'vencimento sem registro'}${dates.source === 'partial' ? ' · histórico parcial' : ''}${dates.source === 'estimated' ? ' · previsão pelo cadastro atual' : ''}`
   const cardLimit = Math.max(0, Number(card.limit) || 0)
   const committed = lifecycle.remainingAmount + invoice.futureCommitmentTotal
   const limitUsage = cardLimit ? Math.round((committed / cardLimit) * 100) : 0
@@ -93,9 +102,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
             </span>
           </div>
 
-          <p className="mt-1 text-[10px] text-[--text-tertiary]">
-            Fecha em {formatDate(dates.closingDate)} · vence em {formatDate(dates.dueDate)}
-          </p>
+          <p className="mt-1 text-[10px] text-[--text-tertiary]">{datesLabel}</p>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div>
@@ -168,6 +175,53 @@ function InvoiceCard({ invoice, selected, onSelect }) {
         </div>
       </div>
     </button>
+  )
+}
+
+function AuditFindingRow({ finding, onSelectCard }) {
+  const severityLabel =
+    finding.severity === 'critical'
+      ? 'Crítico'
+      : finding.severity === 'review'
+        ? 'Revisar'
+        : 'Informativo'
+  const severityClass =
+    finding.severity === 'critical'
+      ? 'text-[--danger-text]'
+      : finding.severity === 'review'
+        ? 'text-[--warning-text]'
+        : 'text-[--text-secondary]'
+
+  return (
+    <li className="rounded-xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className={`text-[10px] font-bold uppercase tracking-wide ${severityClass}`}>
+            {severityLabel}
+          </p>
+          <h4 className="mt-1 text-xs font-bold text-[--text-primary]">{finding.title}</h4>
+          {finding.scope && (
+            <p className="mt-1 text-[11px] text-[--text-secondary]">{finding.scope}</p>
+          )}
+        </div>
+        {onSelectCard && (
+          <button
+            type="button"
+            className="min-h-11 rounded-lg border border-[--border-default] px-3 text-xs font-semibold text-[--text-secondary] hover:bg-[--bg-hover] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[--brand-500]"
+            onClick={onSelectCard}
+          >
+            Selecionar cartão
+          </button>
+        )}
+      </div>
+      <p className="mt-2 text-[11px] leading-relaxed text-[--text-secondary]">{finding.guidance}</p>
+      {finding.code === 'over_reversed_payment' && (
+        <p className="mt-2 text-[11px] font-semibold tabular-nums text-[--danger-text]">
+          Pagamento: {formatCurrency(finding.originalAmount)} · Estornos:{' '}
+          {formatCurrency(finding.reversedAmount)}
+        </p>
+      )}
+    </li>
   )
 }
 
@@ -251,6 +305,39 @@ function CreditCardsCenterContent() {
 
   const loadingData = transactionsLoading || creditCardsLoading || invoiceEventsLoading
   const auditResult = auditOpen && !loadingData ? auditLoadedCardInvoices(center.invoices) : null
+  const parityAudit = useMemo(
+    () =>
+      auditOpen && !loadingData
+        ? auditCreditCardFinancialParity({
+            transactions,
+            creditCards,
+            invoiceEvents,
+            selectedMonth,
+            now: new Date(),
+          })
+        : null,
+    [auditOpen, loadingData, transactions, creditCards, invoiceEvents, selectedMonth],
+  )
+  const auditFindings = parityAudit
+    ? describeCardAuditFindings(
+        parityAudit.findings,
+        center.invoices.map((invoice) => invoice.card),
+      )
+    : []
+  const criticalCount = auditFindings.filter((finding) => finding.severity === 'critical').length
+  const reviewCount = auditFindings.filter((finding) => finding.severity === 'review').length
+  const infoCount = auditFindings.filter((finding) => finding.severity === 'info').length
+  const renderAuditFinding = (finding) => (
+    <AuditFindingRow
+      key={finding.key}
+      finding={finding}
+      onSelectCard={
+        finding.cardId && center.invoices.some((invoice) => invoice.card.id === finding.cardId)
+          ? () => setSelectedCardId(finding.cardId)
+          : null
+      }
+    />
+  )
 
   useEffect(() => {
     if (loadingData || userSelectedMonthRef.current) return
@@ -447,15 +534,18 @@ function CreditCardsCenterContent() {
             )}
             <button
               type="button"
-              onClick={() => setAuditOpen(true)}
+              onClick={() => setAuditOpen((current) => !current)}
+              aria-expanded={auditOpen}
+              aria-controls="credit-card-audit-results"
               className="min-h-11 rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary]"
             >
-              Auditar valores
+              {auditOpen ? 'Ocultar auditoria' : 'Auditar valores'}
             </button>
           </div>
 
           {auditOpen && !loadingData && (
             <section
+              id="credit-card-audit-results"
               aria-label="Resultado da auditoria financeira"
               className="rounded-xl border border-[--border-default] bg-[--bg-surface] p-3"
             >
@@ -470,9 +560,40 @@ function CreditCardsCenterContent() {
                 {linkageAudit.unlinked} · Sugestões: {center.reconciledPurchaseCount} · Históricos:{' '}
                 {linkageAudit.historical}
               </p>
-              <p className="mt-2 text-[11px] text-[--text-tertiary]">
-                Cálculo sobre dados carregados nesta sessão, não é conciliação bancária. Nenhum
-                lançamento é corrigido automaticamente; confira seu extrato.
+              <div className="mt-4 border-t border-[--border-subtle] pt-3">
+                <h3 className="text-sm font-bold text-[--text-primary]">
+                  Alertas da conciliação · {selectedMonth}
+                </h3>
+                <p role="status" className="mt-1 text-xs text-[--text-secondary]">
+                  {criticalCount} crítico{criticalCount === 1 ? '' : 's'} · {reviewCount} para
+                  revisar · {infoCount} informativo{infoCount === 1 ? '' : 's'}
+                </p>
+                {auditFindings.length === 0 ? (
+                  <p className="mt-3 text-xs text-[--text-secondary]">
+                    Nenhum alerta adicional identificado nos dados carregados deste período.
+                  </p>
+                ) : (
+                  <>
+                    <ul className="mt-3 space-y-2">
+                      {auditFindings.slice(0, 5).map(renderAuditFinding)}
+                    </ul>
+                    {auditFindings.length > 5 && (
+                      <details className="mt-3 rounded-xl border border-[--border-subtle] p-3">
+                        <summary className="min-h-11 cursor-pointer text-xs font-bold text-[--text-secondary]">
+                          Ver outros {auditFindings.length - 5} registros de auditoria
+                        </summary>
+                        <ul className="mt-2 space-y-2">
+                          {auditFindings.slice(5).map(renderAuditFinding)}
+                        </ul>
+                      </details>
+                    )}
+                  </>
+                )}
+              </div>
+              <p className="mt-3 text-[11px] text-[--text-tertiary]">
+                Conferência somente de leitura sobre dados desta sessão, não conciliação bancária.
+                Nenhum pagamento, estorno ou vínculo será alterado automaticamente. Confirme
+                registros e extratos antes de qualquer correção.
               </p>
               <button
                 type="button"

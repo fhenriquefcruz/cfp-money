@@ -17,7 +17,7 @@ concurrency:
 jobs:
   mobile-e2e:
     name: Playwright mobile matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
       VITE_E2E_MODE: 'true'

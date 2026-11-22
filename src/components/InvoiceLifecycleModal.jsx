@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, History, LockKeyhole, Receipt, RotateCcw, Scale, Wallet } from 'lucide-react'
 import {
   createAdjustmentEvent,
@@ -7,6 +7,10 @@ import {
   createReversalEvent,
   getPaymentReversibleAmount,
 } from '../domain/invoiceLifecycle'
+import {
+  createInvoiceOperationId,
+  invoiceEventIntentSignature,
+} from '../domain/invoiceEventIdempotency'
 import { formatCurrency, formatDate } from '../utils'
 import { Button, Modal } from './ui'
 
@@ -71,7 +75,9 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
           {EVENT_LABELS[event.type] || 'Evento'}
         </p>
         <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
-          {formatDate(event.eventDate || event.paymentDate)}
+          {event.eventDate || event.paymentDate
+            ? formatDate(event.eventDate || event.paymentDate)
+            : 'Data do evento não registrada'}
           {event.sourceAccount ? ` · ${event.sourceAccount}` : ''}
         </p>
         {event.notes && (
@@ -121,6 +127,8 @@ export default function InvoiceLifecycleModal({
   const [direction, setDirection] = useState('credit')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const submittingRef = useRef(false)
+  const pendingIntentRef = useRef(null)
 
   const lifecycle = invoice?.lifecycle
   const events = lifecycle?.events || []
@@ -147,21 +155,37 @@ export default function InvoiceLifecycleModal({
     [lifecycle],
   )
 
+  const showSubmitError = (submitError) =>
+    setError(submitError?.message || 'Não foi possível confirmar o evento.')
+
   const submitEvent = async (event) => {
-    setLoading(true)
-    setError('')
+    if (submittingRef.current) return
+
+    const signature = invoiceEventIntentSignature(event)
+    const pending = pendingIntentRef.current
+    if (pending && pending.signature !== signature) {
+      setError('Operação anterior sem confirmação. Confira o histórico e repita os mesmos dados.')
+      return
+    }
 
     try {
-      await onCreateEvent(event)
+      const operationId = pending?.operationId || createInvoiceOperationId()
+      pendingIntentRef.current = { operationId, signature }
+      submittingRef.current = true
+      setLoading(true)
+      setError('')
+
+      await onCreateEvent({ ...event, operationId })
+      pendingIntentRef.current = null
       setNotes('')
       if (event.type === 'payment') {
         setAmount('')
         setSourceAccount('')
       }
     } catch (submitError) {
-      setError(submitError?.message || 'Não foi possível registrar o evento.')
-      throw submitError
+      showSubmitError(submitError)
     } finally {
+      submittingRef.current = false
       setLoading(false)
     }
   }
@@ -194,8 +218,8 @@ export default function InvoiceLifecycleModal({
           notes,
         }),
       )
-    } catch {
-      // O erro já foi exibido.
+    } catch (submitError) {
+      showSubmitError(submitError)
     }
   }
 
@@ -211,8 +235,8 @@ export default function InvoiceLifecycleModal({
           notes,
         }),
       )
-    } catch {
-      // O erro já foi exibido.
+    } catch (submitError) {
+      showSubmitError(submitError)
     }
   }
 
@@ -228,8 +252,8 @@ export default function InvoiceLifecycleModal({
           notes: `Estorno do pagamento de ${formatCurrency(payment.amount)}.`,
         }),
       )
-    } catch {
-      // O erro já foi exibido.
+    } catch (submitError) {
+      showSubmitError(submitError)
     }
   }
 

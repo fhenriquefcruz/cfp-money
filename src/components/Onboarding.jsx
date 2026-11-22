@@ -1,6 +1,5 @@
 // src/components/Onboarding.jsx — Tour guiado, só no primeiro acesso
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -135,127 +134,105 @@ export default function Onboarding() {
   if (!visible) return null
 
   return (
-    <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        {/* Backdrop: no passo contextual, o próprio spotlight cria o escurecimento. */}
+    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
+      {/* Backdrop: no passo contextual, o próprio spotlight cria o escurecimento. */}
+      <div
+        className={`absolute inset-0 ${
+          highlightRect ? 'bg-transparent' : 'bg-black/70 backdrop-blur-sm'
+        }`}
+        onClick={finish}
+      />
+
+      {highlightRect && (
         <div
-          className={`absolute inset-0 ${
-            highlightRect ? 'bg-transparent' : 'bg-black/70 backdrop-blur-sm'
-          }`}
-          onClick={finish}
+          className="pointer-events-none fixed z-[1] rounded-[22px] border-2 border-white/90 shadow-[0_0_0_9999px_rgba(2,6,23,0.72),0_0_40px_rgba(99,102,241,0.45)] transition-[top,left,width,height] duration-200 motion-reduce:transition-none"
+          style={highlightRect}
         />
+      )}
 
-        {highlightRect && (
-          <motion.div
-            className="pointer-events-none fixed z-[1] rounded-[22px] border-2 border-white/90 shadow-[0_0_0_9999px_rgba(2,6,23,0.72),0_0_40px_rgba(99,102,241,0.45)]"
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: 1,
-              top: highlightRect.top,
-              left: highlightRect.left,
-              width: highlightRect.width,
-              height: highlightRect.height,
-            }}
-            transition={{ duration: 0.22 }}
+      {/* Card do tour - fundo sólido e legível */}
+      <div
+        key={step}
+        className="relative z-10 w-full max-w-sm mx-4 mb-6 sm:mb-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-2xl overflow-hidden"
+      >
+        {/* Barra de progresso */}
+        <div className="h-1 bg-gray-200 dark:bg-gray-700">
+          <div
+            className="h-full bg-[--brand-600] rounded-full transition-[width] duration-300 motion-reduce:transition-none"
+            style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
           />
-        )}
+        </div>
 
-        {/* Card do tour - fundo sólido e legível */}
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, y: 20, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.96 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="relative z-10 w-full max-w-sm mx-4 mb-6 sm:mb-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-2xl overflow-hidden"
-        >
-          {/* Barra de progresso */}
-          <div className="h-1 bg-gray-200 dark:bg-gray-700">
-            <motion.div
-              className="h-full bg-[--brand-600] rounded-full"
-              animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
-              transition={{ duration: 0.3 }}
-            />
+        <div className="p-6">
+          {/* Fechar */}
+          <button
+            onClick={finish}
+            className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          >
+            <X size={16} />
+          </button>
+
+          {/* Ícone */}
+          <div className="w-12 h-12 rounded-2xl bg-[--brand-100] dark:bg-[--brand-900] flex items-center justify-center mb-4">
+            <Sparkles size={20} className="text-[--brand-600] dark:text-[--brand-300]" />
           </div>
 
-          <div className="p-6">
-            {/* Fechar */}
-            <button
-              onClick={finish}
-              className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-            >
-              <X size={16} />
-            </button>
+          {/* Conteúdo - texto com contraste garantido */}
+          <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">{current.title}</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
+            {current.description}
+          </p>
 
-            {/* Ícone */}
-            <div className="w-12 h-12 rounded-2xl bg-[--brand-100] dark:bg-[--brand-900] flex items-center justify-center mb-4">
-              <Sparkles size={20} className="text-[--brand-600] dark:text-[--brand-300]" />
-            </div>
+          {/* Passos indicadores */}
+          <div className="flex items-center justify-center gap-1.5 mb-5">
+            {STEPS.map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === step
+                    ? 'w-6 bg-[--brand-600]'
+                    : i < step
+                      ? 'w-3 bg-[--brand-400]'
+                      : 'w-3 bg-gray-300 dark:bg-gray-600'
+                }`}
+              />
+            ))}
+          </div>
 
-            {/* Conteúdo - texto com contraste garantido */}
-            <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">
-              {current.title}
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
-              {current.description}
-            </p>
-
-            {/* Passos indicadores */}
-            <div className="flex items-center justify-center gap-1.5 mb-5">
-              {STEPS.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === step
-                      ? 'w-6 bg-[--brand-600]'
-                      : i < step
-                        ? 'w-3 bg-[--brand-400]'
-                        : 'w-3 bg-gray-300 dark:bg-gray-600'
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Botões */}
-            <div className="flex gap-2">
-              {!isFirst && (
-                <button
-                  onClick={prev}
-                  className="flex items-center gap-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <ChevronLeft size={15} /> Anterior
-                </button>
-              )}
-              <button
-                onClick={next}
-                className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[--brand-600] text-white text-sm font-bold hover:bg-[--brand-700] transition-colors"
-              >
-                {isLast ? (
-                  '🎉 Começar!'
-                ) : (
-                  <>
-                    Próximo <ChevronRight size={15} />
-                  </>
-                )}
-              </button>
-            </div>
-
+          {/* Botões */}
+          <div className="flex gap-2">
             {!isFirst && (
               <button
-                onClick={finish}
-                className="w-full text-center text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mt-3 transition-colors"
+                onClick={prev}
+                className="flex items-center gap-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                Pular tour
+                <ChevronLeft size={15} /> Anterior
               </button>
             )}
+            <button
+              onClick={next}
+              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[--brand-600] text-white text-sm font-bold hover:bg-[--brand-700] transition-colors"
+            >
+              {isLast ? (
+                '🎉 Começar!'
+              ) : (
+                <>
+                  Próximo <ChevronRight size={15} />
+                </>
+              )}
+            </button>
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+
+          {!isFirst && (
+            <button
+              onClick={finish}
+              className="w-full text-center text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mt-3 transition-colors"
+            >
+              Pular tour
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
