@@ -125,10 +125,8 @@ export function auditCreditCardFinancialParity({
         })
         continue
       }
-      reversedByPayment.set(
-        original.id,
-        (reversedByPayment.get(original.id) || 0) + reversalCents,
-      )
+      const priorReversedCents = reversedByPayment.get(original.id) || 0
+      reversedByPayment.set(original.id, priorReversedCents + reversalCents)
     }
     for (const [paymentId, reversedCents] of reversedByPayment) {
       const originalCents = toCents(paymentsById.get(paymentId).amount)
