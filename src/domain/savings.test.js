@@ -7,10 +7,7 @@ import {
   UNCLASSIFIED_SAVINGS_DESTINATION,
 } from './savings'
 
-import {
-  savingsPrecisionGoal,
-  savingsPrecisionTransactions,
-} from './financialHomologationFixture'
+import { savingsPrecisionGoal, savingsPrecisionTransactions } from './financialHomologationFixture'
 
 const transactions = [
   {

@@ -183,5 +183,4 @@ describe('homologação integrada: atividade de compra e resultado mensal', () =
     expect(effectiveGoal).toBe(3.79)
     expect(savingsPrecisionGoal.currentAmount).toBe('3.50')
   })
-
 })

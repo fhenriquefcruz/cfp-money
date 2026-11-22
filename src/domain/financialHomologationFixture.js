@@ -84,7 +84,6 @@ export const invoiceEvents = [
 ]
 export const reference = new Date(2026, 7, 10)
 
-
 export const savingsPrecisionGoal = {
   id: 'goal-centavos',
   currentAmount: '3.50',

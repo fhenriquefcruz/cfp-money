@@ -40,3 +40,14 @@ Nenhuma base real foi consultada ou conciliada nesta bateria; não há prova de 
 7. Confrontar a release candidate com o checklist jurídico/comercial vigente, sem considerar a PR draft uma aprovação de lançamento.
 
 **Regra de aceite:** CI integralmente verde no SHA final + paridade financeira e isolamento comprovados + revisão humana e rollback aprovados. Até lá, status **não homologado**.
+
+## Extensão de paridade: Worker, Metas e Reservas
+
+As suítes `src/domain/financialHomologation.test.js`, `src/domain/savings.test.js` e `worker/email-notifications/test/domain.test.js` consomem os mesmos fixtures fictícios definidos em `src/domain/financialHomologationFixture.js`.
+
+- MR-001/MR-002: o Worker e a aplicação verificam receitas, despesas, reservas, saldo e categorias nos mesmos períodos de julho e agosto/2026. Valores de agosto: R$ 1.000,00 de receitas, R$ 60,04 de despesas e R$ 939,96 de resultado.
+- MR-004: aportes de R$ 0,10 e R$ 0,20, menos retirada de R$ 0,01, devem resultar em R$ 0,29 na Reserva. Uma meta com saldo inicial de R$ 3,50 deve mostrar R$ 3,79, sem computar transações canceladas ou transferências.
+- O domínio de Reservas/Metas agora agrega em centavos inteiros, convertendo para reais apenas na saída. Os testes verificam as mesmas quantias no aplicativo, no Worker e em Relatórios/Money, sem mutação dos fixtures.
+- Isto confirma a paridade dos **cenários exercitados pelo CI**, não a implantação efetiva do Worker, a integridade de contas reais nem a correção de todos os registros legados.
+
+A suite ampliada executou **530 testes de aplicação com sucesso** na etapa funcional do CI anterior. A confirmação de todos os workflows permanece condicionada ao HEAD final da PR.
