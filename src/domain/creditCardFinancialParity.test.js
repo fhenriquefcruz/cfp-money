@@ -162,6 +162,176 @@ test('MR-003: dois estornos que recompõem exatamente o pagamento não geram fal
   expect(result.totals).toMatchObject({ invoiceTotal: 150, paidTotal: 0, remainingTotal: 150 })
 })
 
+test('MR-003: estorno de pagamento de outro cartão não passa por origem ausente', () => {
+  const invoiceEvents = [
+    {
+      id: 'payment-other-card',
+      type: 'payment',
+      cardId: 'card-b',
+      invoiceMonth: '2026-10',
+      invoiceKey: 'card-b:2026-10',
+      amount: 50.03,
+    },
+    {
+      id: 'reversal-cross-card',
+      type: 'reversal',
+      cardId: 'card-a',
+      invoiceMonth: '2026-10',
+      invoiceKey: 'card-a:2026-10',
+      reversesEventId: 'payment-other-card',
+      amount: 10.01,
+    },
+  ]
+  const original = structuredClone(invoiceEvents)
+  const result = check({ transactions: [purchase('item', 100)], invoiceEvents })
+
+  expect(result.status).toBe('critical')
+  expect(result.findings).toContainEqual({
+    code: 'cross_invoice_payment_reversal',
+    severity: 'critical',
+    cardId: 'card-a',
+    invoiceMonth: '2026-10',
+    eventId: 'reversal-cross-card',
+    paymentId: 'payment-other-card',
+    paymentCardId: 'card-b',
+    paymentInvoiceMonth: '2026-10',
+  })
+  expect(invoiceEvents).toEqual(original)
+})
+
+test('MR-003: estorno não concilia pagamento de competência diferente', () => {
+  const result = check({
+    transactions: [purchase('item', 100)],
+    invoiceEvents: [
+      {
+        id: 'payment-november',
+        type: 'payment',
+        cardId: 'card-a',
+        invoiceMonth: '2026-11',
+        invoiceKey: 'card-a:2026-11',
+        amount: 50,
+      },
+      {
+        id: 'reversal-october',
+        type: 'reversal',
+        cardId: 'card-a',
+        invoiceMonth: '2026-10',
+        invoiceKey: 'card-a:2026-10',
+        reversesEventId: 'payment-november',
+        amount: 10,
+      },
+    ],
+  })
+
+  expect(result.findings).toContainEqual({
+    code: 'cross_invoice_payment_reversal',
+    severity: 'critical',
+    cardId: 'card-a',
+    invoiceMonth: '2026-10',
+    eventId: 'reversal-october',
+    paymentId: 'payment-november',
+    paymentCardId: 'card-a',
+    paymentInvoiceMonth: '2026-11',
+  })
+})
+
+test('MR-003: pagamento com identificador duplicado torna estorno ambíguo', () => {
+  const result = check({
+    transactions: [purchase('item', 100)],
+    invoiceEvents: [
+      {
+        id: 'payment-shared',
+        type: 'payment',
+        cardId: 'card-a',
+        invoiceMonth: '2026-10',
+        amount: 20,
+      },
+      {
+        id: 'payment-shared',
+        type: 'payment',
+        cardId: 'card-a',
+        invoiceMonth: '2026-11',
+        amount: 30,
+      },
+      {
+        id: 'reversal-shared',
+        type: 'reversal',
+        cardId: 'card-a',
+        invoiceMonth: '2026-10',
+        reversesEventId: 'payment-shared',
+        amount: 5,
+      },
+    ],
+  })
+
+  expect(result.findings).toContainEqual({
+    code: 'ambiguous_payment_reversal_origin',
+    severity: 'critical',
+    cardId: 'card-a',
+    invoiceMonth: '2026-10',
+    eventId: 'reversal-shared',
+    paymentId: 'payment-shared',
+    originCount: 2,
+  })
+})
+
+test('MR-003: eventos legados da mesma fatura mantêm centavos textuais exatos', () => {
+  const result = check({
+    transactions: [purchase('item', 100)],
+    invoiceEvents: [
+      {
+        id: 'legacy-payment',
+        type: 'payment',
+        invoiceKey: 'card-a:2026-10',
+        amount: '20.03',
+      },
+      {
+        id: 'legacy-reversal',
+        type: 'reversal',
+        invoiceKey: 'card-a:2026-10',
+        reversesEventId: 'legacy-payment',
+        amount: '0.02',
+      },
+    ],
+  })
+
+  expect(result.status).toBe('ok')
+  expect(result.findings).toEqual([])
+  expect(result.totals).toMatchObject({ invoiceTotal: 100, paidTotal: 20.01 })
+})
+
+test('MR-003: auditoria rejeita frações de centavo no pagamento e no estorno', () => {
+  const events = [
+    {
+      id: 'payment',
+      type: 'payment',
+      cardId: 'card-a',
+      invoiceMonth: '2026-10',
+      amount: 10.001,
+    },
+    {
+      id: 'reversal',
+      type: 'reversal',
+      cardId: 'card-a',
+      invoiceMonth: '2026-10',
+      reversesEventId: 'payment',
+      amount: 0.001,
+    },
+  ]
+  const result = check({ transactions: [purchase('item', 100)], invoiceEvents: events })
+  expect(result.findings.some((finding) => finding.code === 'invalid_reversal_event_amount')).toBe(
+    true,
+  )
+
+  const paymentOnlyInvalid = check({
+    transactions: [purchase('item', 100)],
+    invoiceEvents: [{ ...events[0] }, { ...events[1], amount: 0.01 }],
+  })
+  expect(
+    paymentOnlyInvalid.findings.some((finding) => finding.code === 'invalid_payment_event_amount'),
+  ).toBe(true)
+})
+
 test('separa sugestões de cartão na memória de vínculos realmente salvos', () => {
   const tx = {
     id: 'old',
