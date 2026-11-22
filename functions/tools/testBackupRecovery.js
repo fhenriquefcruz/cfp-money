@@ -154,9 +154,7 @@ async function main() {
   assert.equal(bobTransaction.amount, 15.75)
   assert.equal(bobTransaction.ownerReference.path, 'users/bob')
   assert.equal(bobTransaction.proofBytes.toString('utf8'), 'comprovante')
-  const payment = (
-    await db.doc('users/alice/invoiceEvents/op_payment-backup-0000001').get()
-  ).data()
+  const payment = (await db.doc('users/alice/invoiceEvents/op_payment-backup-0000001').get()).data()
   const reversal = (
     await db.doc('users/alice/invoiceEvents/op_reversal-backup-0000001').get()
   ).data()

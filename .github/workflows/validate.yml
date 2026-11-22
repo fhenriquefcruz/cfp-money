@@ -64,16 +64,6 @@ jobs:
       - name: Backup recovery and UID isolation (Firestore Emulator)
         run: npm run test:backup-recovery
 
-      - name: Temporary Prettier capture for backup recovery test
-        shell: bash
-        run: |
-          npx prettier --write functions/tools/testBackupRecovery.js >/dev/null
-          echo "MR_FORMAT_BEGIN:functions/tools/testBackupRecovery.js"
-          base64 -w0 functions/tools/testBackupRecovery.js
-          echo
-          echo "MR_FORMAT_END:functions/tools/testBackupRecovery.js"
-          git restore -- functions/tools/testBackupRecovery.js
-
       - name: Formatting
         run: npm run format:check
 

@@ -51,3 +51,11 @@ As suítes `src/domain/financialHomologation.test.js`, `src/domain/savings.test.
 - Isto confirma a paridade dos **cenários exercitados pelo CI**, não a implantação efetiva do Worker, a integridade de contas reais nem a correção de todos os registros legados.
 
 A suite ampliada executou **530 testes de aplicação com sucesso** na etapa funcional do CI anterior. A confirmação de todos os workflows permanece condicionada ao HEAD final da PR.
+
+## Ampliação do gate de recuperação e preservação de UIDs
+
+- `functions/tools/firestoreBackup.js`: inventário é validado integralmente antes de gravar; contagem, caminhos inválidos e duplicados são rejeitados sem escrita.
+- `functions/tools/testBackupRecovery.js`: round-trip AES-256-GCM no Emulator de 9 documentos, com dois UIDs, fatura, estorno, trava, meta, referências e bytes; manifests inválidos deixam o banco inalterado.
+- `.github/workflows/validate.yml`: `npm run test:backup-recovery` passou a ser gate obrigatório após a integração Firebase.
+- Evidência de execução no CI de diagnóstico: **9/9 documentos restaurados no Emulator**, enquanto a formatação foi corrigida em commit posterior. Confirmar novamente no HEAD final.
+- **Limite:** restore não é atômico globalmente; um erro de rede após gravar documentos pode deixar estado parcialmente restaurado. Rules e autorização por UID são verificadas independentemente, e dados reais/produção não foram tocados.
