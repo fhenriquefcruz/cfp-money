@@ -374,7 +374,10 @@ function TxRow({
             Detalhes
           </summary>
           <div className="transaction-row-details-panel">
-            <span>{structuredCredit ? 'Compra' : 'Movimentação'}: {formatTransactionIsoDate(dateContext.activityDate)}</span>
+            <span>
+              {structuredCredit ? 'Compra' : 'Movimentação'}:{' '}
+              {formatTransactionIsoDate(dateContext.activityDate)}
+            </span>
             {!structuredCredit && tx.dueDate && tx.dueDate !== dateContext.activityDate && (
               <span>Vencimento: {dateContext.accountingLabel}</span>
             )}
