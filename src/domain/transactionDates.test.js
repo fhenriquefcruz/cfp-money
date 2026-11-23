@@ -85,19 +85,34 @@ test('extrato distribui parcelas por fatura e mantém atividade de compra', () =
     dueDate: date,
   }))
   expect(installments.map(getTransactionLedgerDate)).toEqual([
-    '2026-09-01', '2026-10-01', '2026-11-01',
+    '2026-09-01',
+    '2026-10-01',
+    '2026-11-01',
   ])
   expect(installments.map(getTransactionActivityDate)).toEqual([
-    '2026-07-25', '2026-07-25', '2026-07-25',
+    '2026-07-25',
+    '2026-07-25',
+    '2026-07-25',
   ])
 })
 
 test('extrato mantém parcelas manuais por data e usa fallback em crédito legado', () => {
-  expect(getTransactionLedgerDate({
-    type: 'expense', paymentMethod: 'pix', isInstallment: true, date: '2026-12-05',
-  })).toBe('2026-12-05')
-  expect(getTransactionLedgerDate({
-    type: 'expense', paymentMethod: 'credit_card', isCreditPurchase: true,
-    purchaseDate: '2026-07-25', date: '2026-09-01', dueDate: 'data inválida',
-  })).toBe('2026-09-01')
+  expect(
+    getTransactionLedgerDate({
+      type: 'expense',
+      paymentMethod: 'pix',
+      isInstallment: true,
+      date: '2026-12-05',
+    }),
+  ).toBe('2026-12-05')
+  expect(
+    getTransactionLedgerDate({
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      purchaseDate: '2026-07-25',
+      date: '2026-09-01',
+      dueDate: 'data inválida',
+    }),
+  ).toBe('2026-09-01')
 })
