@@ -58,6 +58,7 @@ import { defaultDateRangeEnd, summarizeTransactions } from '../domain/finance'
 import {
   formatTransactionIsoDate,
   getTransactionActivityDate,
+  getTransactionLedgerDate,
   getTransactionDateContext,
 } from '../domain/transactionDates'
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
@@ -140,9 +141,9 @@ function getCurrentMonthRange() {
 function groupByDate(txs) {
   const groups = {}
   txs.forEach((tx) => {
-    const activityDate = getTransactionActivityDate(tx) || tx.date || ''
-    if (!groups[activityDate]) groups[activityDate] = []
-    groups[activityDate].push(tx)
+    const ledgerDate = getTransactionLedgerDate(tx) || tx.date || ''
+    if (!groups[ledgerDate]) groups[ledgerDate] = []
+    groups[ledgerDate].push(tx)
   })
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
 }
@@ -374,7 +375,7 @@ function TxRow({
             Detalhes
           </summary>
           <div className="transaction-row-details-panel">
-            <span>Movimentação: {formatTransactionIsoDate(dateContext.activityDate)}</span>
+            <span>{structuredCredit ? 'Compra' : 'Movimentação'}: {formatTransactionIsoDate(dateContext.activityDate)}</span>
             {!structuredCredit && tx.dueDate && tx.dueDate !== dateContext.activityDate && (
               <span>Vencimento: {dateContext.accountingLabel}</span>
             )}
@@ -568,9 +569,9 @@ export default function TransactionList() {
         }
       }
 
-      const activityDate = getTransactionActivityDate(tx)
-      if (dateRange.from && activityDate < dateRange.from) return false
-      if (dateRange.to && activityDate > dateRange.to) return false
+      const ledgerDate = getTransactionLedgerDate(tx)
+      if (dateRange.from && ledgerDate < dateRange.from) return false
+      if (dateRange.to && ledgerDate > dateRange.to) return false
       if (search) {
         const q = search.toLowerCase()
         if (
@@ -583,8 +584,8 @@ export default function TransactionList() {
       return true
     })
     txs.sort((a, b) => {
-      const firstDate = getTransactionActivityDate(a)
-      const secondDate = getTransactionActivityDate(b)
+      const firstDate = getTransactionLedgerDate(a)
+      const secondDate = getTransactionLedgerDate(b)
       return sortAsc ? firstDate.localeCompare(secondDate) : secondDate.localeCompare(firstDate)
     })
     return txs
@@ -1568,8 +1569,8 @@ export default function TransactionList() {
       )}
 
       <p className="px-1 text-[10px] text-[--text-tertiary]">
-        Lista agrupada pela data da movimentação. Vencimento e pagamento aparecem separadamente
-        quando informados.
+        Compras no cartão são exibidas pelo mês da fatura; demais movimentos, pela data da
+        transação. Dashboard e Orçamentos consideram a data original da compra.
       </p>
 
       {/* Lista agrupada por data */}
