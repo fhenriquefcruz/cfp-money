@@ -91,18 +91,12 @@ export function calculateBudgetUsage(transactions = [], budget, referenceDate = 
   }
 
   const spent = summarizeTransactions(
-    transactions.filter((transaction) => {
-      const activityDate = getFinancialActivityDate(transaction)
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(activityDate || '')) return false
-      const date = new Date(activityDate + 'T00:00:00')
-      return (
+    transactionsForMonth(transactions, referenceDate.getFullYear(), referenceDate.getMonth()).filter(
+      (transaction) =>
         transaction.type === 'expense' &&
         !transaction.isSavings &&
-        transaction.categoryId === budget.categoryId &&
-        date.getFullYear() === referenceDate.getFullYear() &&
-        date.getMonth() === referenceDate.getMonth()
-      )
-    }),
+        transaction.categoryId === budget.categoryId,
+    ),
   ).expenses
 
   return {
