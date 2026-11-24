@@ -1,8 +1,4 @@
-import {
-  isFinanciallyEffectiveTransaction,
-  moneyToCents,
-  summarizeTransactions,
-} from './finance'
+import { isFinanciallyEffectiveTransaction, moneyToCents, summarizeTransactions } from './finance'
 import { getTransactionLedgerDate } from './transactionDates'
 
 const MONTHS = [
@@ -111,7 +107,6 @@ function getCurrentCycleLabel(periods) {
   }
   return `${formatDate(periods.current.start)} a ${formatDate(periods.current.end)}`
 }
-
 
 function findCategory(normalizedMessage, categories = [], transactions = []) {
   const candidates = new Map()
@@ -259,7 +254,8 @@ export function buildMoneyAssistantResponse({
     return {
       type: 'help',
       title: intent.type === 'unknown' ? 'Ainda não entendi esse pedido' : 'Como posso ajudar',
-      text: 'Consulte seu histórico sem alterar lançamentos. Peça relatório mensal, análise do período ou gastos por categoria.',
+      text:
+        'Consulte seu histórico sem alterar lançamentos. Peça relatório mensal, análise do período ou gastos por categoria.',
     }
   }
 
