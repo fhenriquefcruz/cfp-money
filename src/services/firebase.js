@@ -231,12 +231,8 @@ export const onInvoiceEventsChange = (uid, callback) => {
 }
 
 export const addInvoiceEvent = async (uid, data) => {
-  const ref = await addDoc(userCol(uid, 'invoiceEvents'), {
-    ...data,
-    createdAt: serverTimestamp(),
-  })
-
-  return ref.id
+  const { persistInvoiceEventOnce } = await import('./invoiceEventsRepository')
+  return persistInvoiceEventOnce(db, uid, data)
 }
 
 // ── CREDIT CARDS ──
