@@ -3,12 +3,12 @@ import { getTransactionLedgerDate } from './transactionDates.js'
 // Normaliza entradas históricas; os cálculos acumulam apenas centavos inteiros.
 export function moneyToCents(value) {
   const numeric = typeof value === 'number'
-  const text = String(value ?? '').replace(/R\$|\s/gi, '')
+  const text = String(value).replace(/R\$|\s/g, '')
   const match = numeric
     ? text.match(/^([+-]?)(\d+)(?:\.(\d+))?$/)
     : text.match(/^([+-]?)(\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,](\d{1,2}))?$/)
   if (!match) return 0
-  const fraction = (match[3] || '').padEnd(3, '0')
+  const fraction = (match[3] || '') + '000'
   const cents =
     Number(match[2].replace(/[.,]/g, '')) * 100 +
     Number(fraction.slice(0, 2)) +
@@ -36,7 +36,7 @@ export function summarizeTransactions(transactions = []) {
     const cents = moneyToCents(transaction.amount)
     if (transaction.isSavings) {
       savingsCents +=
-        transaction.savingsMovement === 'withdrawal' ? -Math.abs(cents) : Math.abs(cents)
+        (transaction.savingsMovement === 'withdrawal' ? -1 : 1) * Math.abs(cents)
     } else if (transaction.type === 'income') {
       incomeCents += cents
     } else if (transaction.type === 'expense') {
