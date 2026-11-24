@@ -195,9 +195,10 @@ test('normaliza montantes históricos e soma em centavos inteiros', () => {
 })
 
 test('não amplia em mil vezes decimais legados em string com ponto', () => {
-  expect(summarizeTransactions([
+  const summary = summarizeTransactions([
     { type: 'expense', amount: '1.234', date: '2026-11-01' },
     { type: 'expense', amount: '1.235', date: '2026-11-02' },
     { type: 'expense', amount: 'R$ 1.234,56', date: '2026-11-03' },
-  ]).expenses).toBe(1237.03)
+  ])
+  expect(summary.expenses).toBe(1237.03)
 })
