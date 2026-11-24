@@ -3,6 +3,8 @@ import { buildInstallmentTransactions } from './creditCards'
 import { summarizeTransactions, transactionsForMonth } from './finance'
 import { getBudgetSpent } from './budgetPeriods'
 import { getMonthlyFinancialData } from './monthlyFinance'
+import { buildMoneyAssistantResponse } from './moneyAssistant'
+import { summarizeTransactions as summarizeWorkerTransactions } from '../../worker/email-notifications/src/domain.js'
 
 test('Transações, Início, Orçamentos e Relatórios recebem a mesma parcela mensal', () => {
   const installments = buildInstallmentTransactions({
@@ -36,5 +38,59 @@ test('Transações, Início, Orçamentos e Relatórios recebem a mesma parcela m
     expect(reportsTotal.expenses).toBe(transactionsTotal.expenses)
     expect(reportsTotal.balance).toBe(transactionsTotal.balance)
     expect(budgetTotal).toBe(transactionsTotal.expenses)
+  }
+})
+
+test('Money e Worker compartilham competência, cancelamentos, reservas e centavos', () => {
+  const rows = [
+    ...buildInstallmentTransactions({
+      baseData: { description: 'Bike', categoryId: 'transport', categoryName: 'Transporte' },
+      totalAmount: 1200.01,
+      installments: 3,
+      purchaseDate: '2026-12-01',
+      card: { id: 'card', name: 'Cartão', closingDay: 2, dueDay: 5 },
+      groupId: 'parity-p1',
+    }),
+    { type: 'expense', amount: '100,50', date: '2026-12-02', categoryName: 'Transporte' },
+    { type: 'expense', amount: 900, date: '2026-12-03', paymentStatus: 'cancelled' },
+    { type: 'expense', amount: 200, date: '2026-12-03', kind: 'transfer' },
+    { type: 'income', isSavings: true, amount: 250, date: '2026-12-03' },
+  ]
+
+  for (const [year, month, label] of [
+    [2026, 11, 'dezembro'],
+    [2027, 0, 'janeiro'],
+    [2027, 1, 'fevereiro'],
+  ]) {
+    const period = new Date(year, month, 15)
+    const range = {
+      start: new Date(Date.UTC(year, month, 1, 0, 0, 0)),
+      end: new Date(Date.UTC(year, month + 1, 0, 23, 59, 59)),
+    }
+    const ledger = summarizeTransactions(transactionsForMonth(rows, year, month))
+    const reports = getMonthlyFinancialData(rows, 1, period)[0]
+    const worker = summarizeWorkerTransactions(rows, range)
+    const money = buildMoneyAssistantResponse({
+      message: `Relatório de ${label} de ${year}`,
+      transactions: rows,
+      now: period,
+      settings: { excludeSavings: true },
+    })
+
+    expect(worker).toMatchObject({
+      income: ledger.income,
+      expenses: ledger.expenses,
+      savings: ledger.savings,
+      balance: ledger.balance,
+      count: ledger.count,
+    })
+    expect(reports).toMatchObject({
+      income: ledger.income,
+      expenses: ledger.expenses,
+      savings: ledger.savings,
+      balance: ledger.balance,
+    })
+    expect(money.type).toBe('monthly_report')
+    expect(money.metrics.find((item) => item.label === 'Despesas')?.value).toBe(ledger.expenses)
   }
 })
