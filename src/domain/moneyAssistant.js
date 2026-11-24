@@ -300,8 +300,8 @@ export function buildMoneyAssistantResponse({
       type: 'personalization_profile',
       title: 'O que aprendi com seu histórico',
       text: evidence.length
-        ? `Com base no seu próprio histórico, ${evidence.join('; ')}.`
-        : 'O histórico já permite personalização, mas ainda não existe um padrão dominante confiável.',
+        ? `Pelos seus lançamentos, ${evidence.join('; ')}.`
+        : 'Ainda não há um padrão dominante confiável.',
       secondaryText:
         'Perfil calculado no navegador. A conversa não é salva no Firestore.',
       metrics: [
@@ -334,7 +334,7 @@ export function buildMoneyAssistantResponse({
       return {
         type: 'cycle_summary',
         title: 'Ainda não há histórico suficiente',
-        text: 'Registre receitas e despesas para o Money começar a comparar seu ciclo financeiro.',
+        text: 'Registre receitas e despesas para comparar seu ciclo financeiro.',
       }
     }
 
@@ -343,7 +343,7 @@ export function buildMoneyAssistantResponse({
       title: 'Análise do período atual',
       text: variation
         ? `Suas despesas estão ${variation} do período equivalente anterior.`
-        : 'Ainda não existe um período anterior com despesas para calcular a variação percentual.',
+        : 'Sem despesas no período anterior para calcular a variação.',
       secondaryText:
         analysis.insights.find((item) => item.type === 'category_increase')?.message || null,
       metrics: [
