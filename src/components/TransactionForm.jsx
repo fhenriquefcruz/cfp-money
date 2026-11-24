@@ -757,7 +757,11 @@ export default function TransactionForm({
                 <p className="mt-1 text-[10px] leading-relaxed text-[--warning-text]">
                   {categoryReview.reason}
                 </p>
-                {categoryReview.suggestedCategoryId ? (
+                {categoryReview.kind === 'missing_category' ? (
+                  <p className="mt-2 text-xs font-semibold text-[--warning-text]">
+                    Escolha uma categoria abaixo para concluir a revisão.
+                  </p>
+                ) : categoryReview.suggestedCategoryId ? (
                   <button
                     type="button"
                     onClick={() => update('categoryId')(categoryReview.suggestedCategoryId)}

@@ -57,7 +57,7 @@ export function calculatePlanStatus(data, { now = new Date(), isAdmin = false } 
 export function getPlanPresentation(data, options) {
   const status = calculatePlanStatus(data, options)
 
-  if (status.isAdminBypass) return { key: 'admin', label: 'Administrador', sub: '' }
+  if (status.isAdminBypass) return { key: 'admin', label: 'Administrador', sub: 'Acesso Premium' }
   if (status.blocked) return { key: 'blocked', label: 'Bloqueado', sub: '' }
   if (status.isPremium && status.isTrial) {
     return { key: 'trial_active', label: 'Trial', sub: `${status.daysLeft}d restantes` }

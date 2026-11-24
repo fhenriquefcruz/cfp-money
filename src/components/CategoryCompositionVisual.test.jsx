@@ -90,7 +90,7 @@ describe('Visualização categórica compartilhada', () => {
     )
     expect(screen.getByText('Categoria que mais consome')).toBeInTheDocument()
     expect(screen.getByText('Ranking das categorias · Top 5')).toBeInTheDocument()
-    expect(screen.getByText(/60% do total/)).toBeInTheDocument()
+    expect(screen.getByText(/60,0% do total/)).toBeInTheDocument()
     expect(screen.queryByText('Outros')).not.toBeInTheDocument()
   })
 
@@ -109,6 +109,6 @@ describe('Visualização categórica compartilhada', () => {
     expect(button).toHaveAttribute('aria-pressed', 'true')
     fireEvent.click(button)
     expect(select).toHaveBeenCalledWith('food')
-    expect(screen.getByText(/60% dos gastos/)).toBeInTheDocument()
+    expect(screen.getByText(/60,0% dos gastos/)).toBeInTheDocument()
   })
 })

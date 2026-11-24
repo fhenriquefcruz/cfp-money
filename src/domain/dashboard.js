@@ -1,5 +1,5 @@
 import { endOfMonth, format, startOfMonth } from 'date-fns'
-import { getTransactionActivityDate } from './transactionDates'
+import { getTransactionLedgerDate } from './transactionDates'
 
 export function getCalendarMonthBounds(referenceDate = new Date()) {
   const date = referenceDate instanceof Date ? referenceDate : new Date(referenceDate)
@@ -19,19 +19,18 @@ export function getRecentDashboardTransactions(transactions = [], bounds, limit 
 
   return transactions
     .filter((transaction) => {
-      const activityDate = getTransactionActivityDate(transaction)
+      const activityDate = getTransactionLedgerDate(transaction)
       return (
         transaction?.paymentStatus !== 'cancelled' &&
         transaction?.flowType !== 'transfer' &&
         transaction?.kind !== 'transfer' &&
-        !transaction?.isSavings &&
         activityDate >= bounds.start &&
         activityDate <= bounds.end
       )
     })
     .sort((a, b) => {
-      const activityDifference = getTransactionActivityDate(b).localeCompare(
-        getTransactionActivityDate(a),
+      const activityDifference = getTransactionLedgerDate(b).localeCompare(
+        getTransactionLedgerDate(a),
       )
 
       if (activityDifference !== 0) return activityDifference
@@ -221,8 +220,8 @@ export function buildDashboardActionInsights({
       amount: Number(category.total),
       detail:
         change == null
-          ? `${share.toFixed(0)}% das despesas categorizadas.`
-          : `${share.toFixed(0)}% das despesas · ${Number(change) >= 0 ? '+' : ''}${Number(change).toFixed(0)}% vs. mês anterior.`,
+          ? `${share.toFixed(1).replace('.', ',')}% das despesas categorizadas.`
+          : `${share.toFixed(1).replace('.', ',')}% das despesas · ${Number(change) >= 0 ? '+' : ''}${Number(change).toFixed(1).replace('.', ',')}% vs. mês anterior.`,
       to: `/transactions?category=${encodeURIComponent(category.categoryId || '')}`,
     })
   }

@@ -57,10 +57,10 @@ import { ptBR } from 'date-fns/locale'
 import { defaultDateRangeEnd, summarizeTransactions } from '../domain/finance'
 import {
   formatTransactionIsoDate,
-  getTransactionActivityDate,
+  getTransactionLedgerDate,
   getTransactionDateContext,
 } from '../domain/transactionDates'
-import { buildCategoryReviewQueue } from '../domain/categoryReview'
+import { buildCategoryReviewQueue, summarizeCategoryReviews } from '../domain/categoryReview'
 import { getSavingsDestinationLabel } from '../domain/savings'
 import { isTransactionSeries } from '../domain/transactionSeries'
 import {
@@ -140,9 +140,9 @@ function getCurrentMonthRange() {
 function groupByDate(txs) {
   const groups = {}
   txs.forEach((tx) => {
-    const activityDate = getTransactionActivityDate(tx) || tx.date || ''
-    if (!groups[activityDate]) groups[activityDate] = []
-    groups[activityDate].push(tx)
+    const ledgerDate = getTransactionLedgerDate(tx) || tx.date || ''
+    if (!groups[ledgerDate]) groups[ledgerDate] = []
+    groups[ledgerDate].push(tx)
   })
   return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))
 }
@@ -374,7 +374,10 @@ function TxRow({
             Detalhes
           </summary>
           <div className="transaction-row-details-panel">
-            <span>Movimentação: {formatTransactionIsoDate(dateContext.activityDate)}</span>
+            <span>
+              {structuredCredit ? 'Compra' : 'Movimentação'}:{' '}
+              {formatTransactionIsoDate(dateContext.activityDate)}
+            </span>
             {!structuredCredit && tx.dueDate && tx.dueDate !== dateContext.activityDate && (
               <span>Vencimento: {dateContext.accountingLabel}</span>
             )}
@@ -538,6 +541,10 @@ export default function TransactionList() {
     () => buildCategoryReviewQueue(transactions, categories),
     [transactions, categories],
   )
+  const categoryReviewSummary = useMemo(
+    () => summarizeCategoryReviews(categoryReviewQueue),
+    [categoryReviewQueue],
+  )
   const categoryReviewIndex = useMemo(
     () => new Map(categoryReviewQueue.map((item) => [item.transactionId, item])),
     [categoryReviewQueue],
@@ -568,9 +575,9 @@ export default function TransactionList() {
         }
       }
 
-      const activityDate = getTransactionActivityDate(tx)
-      if (dateRange.from && activityDate < dateRange.from) return false
-      if (dateRange.to && activityDate > dateRange.to) return false
+      const ledgerDate = getTransactionLedgerDate(tx)
+      if (dateRange.from && ledgerDate < dateRange.from) return false
+      if (dateRange.to && ledgerDate > dateRange.to) return false
       if (search) {
         const q = search.toLowerCase()
         if (
@@ -583,8 +590,8 @@ export default function TransactionList() {
       return true
     })
     txs.sort((a, b) => {
-      const firstDate = getTransactionActivityDate(a)
-      const secondDate = getTransactionActivityDate(b)
+      const firstDate = getTransactionLedgerDate(a)
+      const secondDate = getTransactionLedgerDate(b)
       return sortAsc ? firstDate.localeCompare(secondDate) : secondDate.localeCompare(firstDate)
     })
     return txs
@@ -1025,8 +1032,8 @@ export default function TransactionList() {
                 {monthTitle(visibleMonthKey)}
               </p>
               <p className="mt-0.5 text-xs text-[--text-tertiary]">
-                {filtered.length} {filtered.length === 1 ? 'lançamento' : 'lançamentos'} neste
-                recorte
+                {summary.count} {summary.count === 1 ? 'lançamento' : 'lançamentos'} nos totais
+                deste recorte
               </p>
               {visibleMonthKey !== currentMonthKey && (
                 <button
@@ -1107,13 +1114,13 @@ export default function TransactionList() {
             icon: <TrendingDown size={13} />,
           },
           {
-            label: 'Saldo',
+            label: 'Resultado',
             value: summary.balance,
             color: summary.balance >= 0 ? 'var(--brand-600)' : 'var(--danger-icon)',
             icon: <ArrowLeftRight size={13} />,
           },
           {
-            label: 'Poupança no período',
+            label: 'Poupado no período',
             value: summary.savings,
             color: 'var(--brand-600)',
             icon: <PiggyBank size={13} />,
@@ -1188,10 +1195,8 @@ export default function TransactionList() {
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--warning-border] bg-[--warning-bg] px-3 py-2.5">
           <div>
             <p className="text-xs font-bold text-[--warning-text]">
-              {categoryReviewQueue.length}{' '}
-              {categoryReviewQueue.length === 1
-                ? 'classificação pode precisar de revisão'
-                : 'classificações podem precisar de revisão'}
+              {categoryReviewSummary.missingCategory} sem categoria ·{' '}
+              {categoryReviewSummary.suspectedCategory} classificações suspeitas
             </p>
             <p className="mt-0.5 text-[10px] text-[--warning-text]">
               Nenhuma categoria será alterada automaticamente.
@@ -1568,8 +1573,8 @@ export default function TransactionList() {
       )}
 
       <p className="px-1 text-[10px] text-[--text-tertiary]">
-        Lista agrupada pela data da movimentação. Vencimento e pagamento aparecem separadamente
-        quando informados.
+        Parcelas são exibidas pelo mês do vencimento; demais movimentos, pela data da transação. O
+        mesmo período é usado nos indicadores e orçamentos.
       </p>
 
       {/* Lista agrupada por data */}

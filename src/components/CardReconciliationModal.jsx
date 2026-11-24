@@ -6,7 +6,8 @@ import { formatCurrency, formatDate } from '../utils'
 import { Button, Modal } from './ui'
 
 export default function CardReconciliationModal({ isOpen, onClose }) {
-  const { transactions, reconcileLegacyCard, undoLegacyCard } = useTransactions()
+  const { transactions, reconcileLegacyCard, reconcileLegacyCardBatch, undoLegacyCard } =
+    useTransactions()
   const { creditCards } = useCreditCards()
   const [filter, setFilter] = useState('')
   const [transactionId, setTransactionId] = useState('')
@@ -15,6 +16,8 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
   const [undoId, setUndoId] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const [bulkConfirmed, setBulkConfirmed] = useState(false)
 
   const pending = useMemo(
     () =>
@@ -50,6 +53,21 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
 
   const transaction = pending.find((item) => item.id === transactionId)
   const card = creditCards.find((item) => item.id === cardId)
+  const selectedPurchases = pending.filter((item) => selectedIds.has(item.id))
+  let bulkSelections = []
+  let bulkPreviewError = ''
+  if (card && selectedPurchases.length) {
+    try {
+      bulkSelections = selectedPurchases.map((item) => ({
+        txId: item.id,
+        description: item.description || 'Despesa no crédito',
+        amount: Number(item.amount) || 0,
+        invoiceMonth: previewCardReconciliation(item, card).invoiceMonth,
+      }))
+    } catch (issue) {
+      bulkPreviewError = issue.message
+    }
+  }
   let preview = null
   let previewError = ''
   if (transaction && card) {
@@ -68,7 +86,37 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
   const chooseCard = (id) => {
     setCardId(id)
     setConfirmed(false)
+    setBulkConfirmed(false)
     setError('')
+  }
+  const toggleSelected = (id) => {
+    setSelectedIds((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else if (next.size < 30) next.add(id)
+      return next
+    })
+    setBulkConfirmed(false)
+  }
+  const confirmBatch = async () => {
+    if (!card || !bulkSelections.length || bulkPreviewError || saving) return
+    if (!bulkConfirmed) {
+      setBulkConfirmed(true)
+      return
+    }
+    setSaving(true)
+    setError('')
+    try {
+      await reconcileLegacyCardBatch(bulkSelections, card)
+      setSelectedIds(new Set())
+      setBulkConfirmed(false)
+      setCardId('')
+    } catch (issue) {
+      setBulkConfirmed(false)
+      setError(issue.message || 'Falha ao vincular o lote.')
+    } finally {
+      setSaving(false)
+    }
   }
   const confirmLink = async () => {
     if (!transaction || !card || !preview || saving) return
@@ -116,8 +164,8 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
     >
       <div className="space-y-5">
         <p className="text-xs leading-relaxed text-[--text-secondary]">
-          Escolha a compra e o cartão correto. A associação não cria outra despesa, não muda o valor
-          ou a data contábil e pode ser desfeita. Nada é salvo antes da sua confirmação.
+          Vincule compras antigas ao cartão correto. Valores e datas são preservados; os vínculos
+          podem ser desfeitos após a confirmação.
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -149,32 +197,40 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
               className="max-h-48 space-y-2 overflow-y-auto"
             >
               {visible.slice(0, 30).map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  aria-pressed={item.id === transactionId}
-                  onClick={() => chooseTransaction(item.id)}
-                  className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left text-xs transition-colors ${
-                    item.id === transactionId
-                      ? 'border-[--brand-500] bg-[--brand-50]'
-                      : 'border-[--border-subtle] bg-[--bg-subtle] hover:border-[--brand-300]'
-                  }`}
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-bold text-[--text-primary]">
-                      {item.description || 'Despesa no crédito'}
+                <div key={item.id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    aria-label={`Selecionar ${item.description || 'compra'} para o lote`}
+                    checked={selectedIds.has(item.id)}
+                    onChange={() => toggleSelected(item.id)}
+                    disabled={saving || (!selectedIds.has(item.id) && selectedIds.size >= 30)}
+                  />
+                  <button
+                    type="button"
+                    aria-pressed={item.id === transactionId}
+                    onClick={() => chooseTransaction(item.id)}
+                    className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left text-xs transition-colors ${
+                      item.id === transactionId
+                        ? 'border-[--brand-500] bg-[--brand-50]'
+                        : 'border-[--border-subtle] bg-[--bg-subtle] hover:border-[--brand-300]'
+                    }`}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-bold text-[--text-primary]">
+                        {item.description || 'Despesa no crédito'}
+                      </span>
+                      <span className="mt-1 block text-[--text-tertiary]">
+                        {formatDate(item.date)} · {item.categoryName || 'Sem categoria'}
+                        {item.isInstallment
+                          ? ` · parcela ${item.installmentNum || '?'} / ${item.installmentOf || '?'}`
+                          : ''}
+                      </span>
                     </span>
-                    <span className="mt-1 block text-[--text-tertiary]">
-                      {formatDate(item.date)} · {item.categoryName || 'Sem categoria'}
-                      {item.isInstallment
-                        ? ` · parcela ${item.installmentNum || '?'} / ${item.installmentOf || '?'}`
-                        : ''}
+                    <span className="flex-shrink-0 font-black tabular-nums text-[--text-primary]">
+                      {formatCurrency(item.amount)}
                     </span>
-                  </span>
-                  <span className="flex-shrink-0 font-black tabular-nums text-[--text-primary]">
-                    {formatCurrency(item.amount)}
-                  </span>
-                </button>
+                  </button>
+                </div>
               ))}
               {!visible.length && (
                 <p className="py-4 text-center text-xs text-[--text-tertiary]">
@@ -183,7 +239,7 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
               )}
               {visible.length > 30 && (
                 <p className="text-xs text-[--text-tertiary]">
-                  Mostrando 30 de {visible.length} compras. Utilize a busca para localizar outras.
+                  Mostrando 30 de {visible.length}. Use a busca para ver outras.
                 </p>
               )}
             </div>
@@ -245,8 +301,8 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
                     </div>
                     <p className="leading-relaxed text-[--text-tertiary]">
                       {transaction.purchaseDate || transaction.originalPurchaseDate
-                        ? 'Competência calculada a partir da data original da compra e do ciclo cadastrado.'
-                        : 'Sem data original de compra: a competência existente foi preservada. Confira se esta fatura está correta antes de confirmar.'}
+                        ? 'Fatura calculada pelo ciclo do cartão e data da compra.'
+                        : 'Sem data original da compra: confira a fatura preservada.'}
                     </p>
                   </div>
                 )}
@@ -262,7 +318,54 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
                 </Button>
                 {confirmed && (
                   <p className="text-xs text-[--warning-text]">
-                    Confira o cartão e a competência acima. A segunda confirmação salvará o vínculo.
+                    Confira cartão e fatura. O próximo clique salvará o vínculo.
+                  </p>
+                )}
+              </section>
+            )}
+            {selectedPurchases.length > 0 && (
+              <section
+                className="space-y-3 rounded-2xl border border-[--border-default] p-4"
+                aria-label="Prévia do lote"
+              >
+                <h4 className="text-sm font-bold text-[--text-primary]">
+                  Lote de {selectedPurchases.length} compras ·{' '}
+                  {formatCurrency(
+                    selectedPurchases.reduce((sum, item) => sum + (Number(item.amount) || 0), 0),
+                  )}
+                </h4>
+                <p className="text-xs text-[--text-secondary]">
+                  O cartão escolhido vale para todo o lote. Confira cada fatura.
+                </p>
+                {bulkSelections.length > 0 && (
+                  <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-[--text-secondary]">
+                    {bulkSelections.map((item) => (
+                      <li key={item.txId} className="flex justify-between gap-2">
+                        <span className="truncate">
+                          {item.description} · {formatCurrency(item.amount)}
+                        </span>
+                        <strong className="shrink-0">{labelForMonth(item.invoiceMonth)}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {bulkPreviewError && (
+                  <p className="text-xs text-[--danger-text]">{bulkPreviewError}</p>
+                )}
+                <Button
+                  type="button"
+                  fullWidth
+                  loading={saving}
+                  disabled={!bulkSelections.length || Boolean(bulkPreviewError)}
+                  onClick={confirmBatch}
+                >
+                  {bulkConfirmed
+                    ? `Confirmar ${bulkSelections.length} vínculos`
+                    : 'Revisar lote e vincular'}
+                </Button>
+                {bulkConfirmed && (
+                  <p className="text-xs text-[--warning-text]">
+                    O próximo clique salvará todo o lote.
                   </p>
                 )}
               </section>

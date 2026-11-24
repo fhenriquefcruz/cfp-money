@@ -4,7 +4,10 @@ import { formatCurrency } from '../utils'
 import { UNCATEGORIZED_COLOR } from '../domain/categoryComposition'
 
 const formatPercent = (value) =>
-  Number(value || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
+  Number(value || 0).toLocaleString('pt-BR', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  })
 
 // A mesma legenda e a mesma escala são usadas no Dashboard e nas Transações.
 export default function CategoryCompositionVisual({

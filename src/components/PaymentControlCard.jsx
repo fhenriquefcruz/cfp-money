@@ -41,7 +41,7 @@ export default function PaymentControlCard({ summary, loading = false }) {
 
           <p className="mt-1 text-xs text-[--text-tertiary]">
             {summary.totalCount > 0
-              ? `${summary.paidCount} de ${summary.totalCount} obrigações pagas`
+              ? `${summary.paidCount} de ${summary.totalCount} obrigações pagas (por quantidade)`
               : 'Nenhuma obrigação cadastrada neste mês'}
           </p>
 
@@ -138,7 +138,7 @@ export default function PaymentControlCard({ summary, loading = false }) {
             <ProgressBar value={paidAmount} max={committedAmount} animated />
 
             <div className="mt-1 flex flex-wrap justify-between gap-1 text-[10px] text-[--text-tertiary]">
-              <span>{(summary.progress ?? 0).toFixed(0)}% pago</span>
+              <span>{(summary.progress ?? 0).toFixed(0)}% pago por valor</span>
               <span>{toPayCount} a pagar</span>
             </div>
           </div>

@@ -21,8 +21,8 @@ import { formatRelativeActivity, getUserActivityState } from '../domain/userActi
 import CommercialOverviewRouter from './CommercialOverviewRouter'
 import SupportAdminCard from './SupportAdminCard'
 
-function StatusBadge({ u }) {
-  const info = getPlanPresentation(u)
+function StatusBadge({ u, currentAdmin = false }) {
+  const info = getPlanPresentation(u, { isAdmin: currentAdmin })
   return (
     <span className="admin-status-badge admin-tone" data-tone={info.key}>
       <span className="admin-status-dot" />
@@ -32,11 +32,12 @@ function StatusBadge({ u }) {
   )
 }
 
-function UserRow({ u, onAccess }) {
+function UserRow({ u, onAccess, currentAdmin = false }) {
   const [expanded, setExpanded] = useState(false)
   const [months, setMonths] = useState(1)
   const isPremiumActive = getPlanPresentation(u).key === 'premium'
   const activity = getUserActivityState(u)
+  const testName = /^(test|teste)$/i.test(String(u.displayName || '').trim())
 
   return (
     <>
@@ -52,7 +53,14 @@ function UserRow({ u, onAccess }) {
             {(u.displayName || u.email || 'U')[0].toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="admin-user-name">{u.displayName || '—'}</p>
+            <p className="admin-user-name">
+              {u.displayName || '—'}
+              {testName && (
+                <span className="ml-2 text-[10px] font-semibold text-[--warning-text]">
+                  Nome de teste
+                </span>
+              )}
+            </p>
             <p className="admin-user-email">{u.email}</p>
           </div>
           <ChevronDown size={12} className="admin-user-chevron" data-expanded={expanded} />
@@ -60,7 +68,7 @@ function UserRow({ u, onAccess }) {
 
         {/* Coluna 2: badge de status (oculto em mobile muito pequeno) */}
         <div className="admin-desktop-cell">
-          <StatusBadge u={u} />
+          <StatusBadge u={u} currentAdmin={currentAdmin} />
         </div>
 
         {/* Coluna 3: atividade recente */}
@@ -136,7 +144,7 @@ function UserRow({ u, onAccess }) {
       {expanded && (
         <div className="admin-user-expanded">
           <div className="admin-mobile-badges">
-            <StatusBadge u={u} />
+            <StatusBadge u={u} currentAdmin={currentAdmin} />
           </div>
           <div className="admin-user-details">
             {[
@@ -160,7 +168,7 @@ function UserRow({ u, onAccess }) {
 }
 
 export default function Admin() {
-  const { isAdmin } = useAuth()
+  const { user, isAdmin } = useAuth()
   const [users, setUsers] = useState([])
   const [search, setSearch] = useState('')
   const [activityFilter, setActivityFilter] = useState('all')
@@ -256,10 +264,16 @@ export default function Admin() {
   const stats = [
     ['Total', users.length, <Users size={15} />, 'free'],
     [
-      'Premium',
+      'Premium ativo',
       users.filter((u) => getPlanPresentation(u).key === 'premium').length,
       <Star size={15} />,
       'premium',
+    ],
+    [
+      'Premium expirado',
+      users.filter((u) => getPlanPresentation(u).key === 'premium_expired').length,
+      <Star size={15} />,
+      'blocked',
     ],
     ['Bloqueados', users.filter((u) => u.blocked).length, <Lock size={15} />, 'blocked'],
     ['Online agora', users.filter((u) => state(u).online).length, <Users size={15} />, 'premium'],
@@ -370,7 +384,14 @@ export default function Admin() {
             </p>
           </div>
         ) : (
-          filtered.map((u) => <UserRow key={u.uid} u={u} onAccess={handleAccess} />)
+          filtered.map((u) => (
+            <UserRow
+              key={u.uid}
+              u={u}
+              onAccess={handleAccess}
+              currentAdmin={isAdmin && u.uid === user?.uid}
+            />
+          ))
         )}
       </Card>
     </div>

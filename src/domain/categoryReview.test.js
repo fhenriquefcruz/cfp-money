@@ -1,4 +1,8 @@
-import { buildCategoryReviewQueue, reviewTransactionCategory } from './categoryReview'
+import {
+  buildCategoryReviewQueue,
+  reviewTransactionCategory,
+  summarizeCategoryReviews,
+} from './categoryReview'
 
 const categories = [
   { id: 'fuel', name: 'Combustível', type: 'expense' },
@@ -77,4 +81,15 @@ test('ignora cancelamentos e monta uma fila de revisão', () => {
 
   expect(queue).toHaveLength(1)
   expect(queue[0].transactionId).toBe('review')
+})
+
+test('conta separadamente lançamentos sem categoria e classificações suspeitas', () => {
+  const queue = buildCategoryReviewQueue(
+    [
+      { id: 'missing', type: 'expense', description: 'Compra sem categoria' },
+      { id: 'suspected', type: 'expense', description: 'Uber', categoryId: 'fuel' },
+    ],
+    categories,
+  )
+  expect(summarizeCategoryReviews(queue)).toEqual({ missingCategory: 1, suspectedCategory: 1 })
 })

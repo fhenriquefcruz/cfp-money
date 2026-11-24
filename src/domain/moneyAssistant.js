@@ -353,8 +353,8 @@ export function buildMoneyAssistantResponse({
       metrics: [
         { label: 'Receitas', value: analysis.current.income },
         { label: 'Despesas', value: analysis.current.expenses },
-        { label: 'Saldo', value: analysis.current.balance },
-        { label: 'Projeção', value: analysis.projection.expenses },
+        { label: 'Resultado', value: analysis.current.balance },
+        { label: 'Despesas projetadas', value: analysis.projection.expenses },
       ],
       periodLabel: getCurrentCycleLabel(analysis.periods),
     }

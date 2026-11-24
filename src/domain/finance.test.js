@@ -5,6 +5,7 @@ import {
   summarizeTransactions,
   transactionsForMonth,
 } from './finance'
+import { buildInstallmentTransactions } from './creditCards'
 
 const transactions = [
   {
@@ -137,4 +138,34 @@ test('retirada da poupança reduz o reservado sem virar despesa', () => {
   expect(result.income).toBe(1000)
   expect(result.expenses).toBe(250)
   expect(result.balance).toBe(750)
+})
+
+test('compra em dezembro com vencimentos em 5/12, 5/1 e 5/2 entra mês a mês', () => {
+  const installments = buildInstallmentTransactions({
+    baseData: { description: 'Bike', categoryId: 'transport' },
+    totalAmount: 1200,
+    installments: 3,
+    purchaseDate: '2026-12-01',
+    card: { id: 'card', name: 'Cartão', closingDay: 2, dueDay: 5 },
+    groupId: 'bike',
+  })
+  expect(installments.map((item) => item.dueDate)).toEqual([
+    '2026-12-05',
+    '2027-01-05',
+    '2027-02-05',
+  ])
+  expect(installments.map((item) => item.amount)).toEqual([400, 400, 400])
+  expect(
+    [2026, 2027, 2027].map(
+      (year, index) =>
+        summarizeTransactions(transactionsForMonth(installments, year, [11, 0, 1][index])).expenses,
+    ),
+  ).toEqual([400, 400, 400])
+  expect(
+    calculateBudgetUsage(
+      installments,
+      { categoryId: 'transport', amount: 500 },
+      new Date(2027, 0, 15),
+    ).spent,
+  ).toBe(400)
 })

@@ -36,6 +36,23 @@ export function getTransactionActivityDate(transaction = {}) {
     : getTransactionAccountingDate(transaction)
 }
 
+// Competência financeira: parcelas entram no mês do vencimento informado.
+// A data da compra permanece disponível para o detalhe e a auditoria.
+export function getTransactionLedgerDate(transaction = {}) {
+  if (
+    transaction.type === 'expense' &&
+    (isStructuredCreditPurchase(transaction) || transaction.isInstallment)
+  ) {
+    return (
+      getTransactionAccountingDate(transaction) ||
+      (validIsoDate(transaction.date) ? transaction.date : '') ||
+      getTransactionActivityDate(transaction)
+    )
+  }
+
+  return getTransactionActivityDate(transaction)
+}
+
 export function getTransactionDateContext(transaction = {}) {
   const purchaseDate = getTransactionPurchaseDate(transaction)
   const transactionDate = validIsoDate(transaction.date) ? transaction.date : ''

@@ -3,6 +3,7 @@ import {
   getTransactionAccountingDate,
   getTransactionActivityDate,
   getTransactionDateContext,
+  getTransactionLedgerDate,
   getTransactionPurchaseDate,
   isProtectedTransactionGroup,
   isStructuredCreditPurchase,
@@ -74,4 +75,60 @@ test('identifica série que não deve ser alterada isoladamente', () => {
       date: '2026-07-10',
     }),
   ).toBe(false)
+})
+
+test('extrato distribui parcelas por fatura e mantém atividade de compra', () => {
+  const installments = ['2026-09-01', '2026-10-01', '2026-11-01'].map((date, index) => ({
+    ...creditPurchase,
+    installmentNum: index + 1,
+    date,
+    dueDate: date,
+  }))
+  expect(installments.map(getTransactionLedgerDate)).toEqual([
+    '2026-09-01',
+    '2026-10-01',
+    '2026-11-01',
+  ])
+  expect(installments.map(getTransactionActivityDate)).toEqual([
+    '2026-07-25',
+    '2026-07-25',
+    '2026-07-25',
+  ])
+})
+
+test('extrato mantém parcelas manuais por data e usa fallback em crédito legado', () => {
+  expect(
+    getTransactionLedgerDate({
+      type: 'expense',
+      paymentMethod: 'pix',
+      isInstallment: true,
+      date: '2026-12-05',
+    }),
+  ).toBe('2026-12-05')
+  expect(
+    getTransactionLedgerDate({
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      purchaseDate: '2026-07-25',
+      date: '2026-09-01',
+      dueDate: 'data inválida',
+    }),
+  ).toBe('2026-09-01')
+})
+
+test('parcela manual usa o vencimento informado inclusive na virada do ano', () => {
+  const installments = ['2026-12-05', '2027-01-05', '2027-02-05'].map((dueDate, index) => ({
+    type: 'expense',
+    paymentMethod: 'pix',
+    isInstallment: true,
+    installmentNum: index + 1,
+    date: ['2026-12-01', '2027-01-01', '2027-02-01'][index],
+    dueDate,
+  }))
+  expect(installments.map(getTransactionLedgerDate)).toEqual([
+    '2026-12-05',
+    '2027-01-05',
+    '2027-02-05',
+  ])
 })

@@ -164,7 +164,7 @@ export default function Profile() {
   const planLabel = isLoading
     ? 'Carregando'
     : status.isAdminBypass
-      ? 'Administrador'
+      ? 'Administrador · acesso Premium'
       : status.isPremium
         ? status.isTrial
           ? 'Trial Premium'

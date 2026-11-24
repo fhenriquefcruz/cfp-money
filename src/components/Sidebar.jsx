@@ -95,7 +95,7 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
           )}
         >
           <Crown size={9} />
-          Pro
+          Premium
         </span>
       )}
 
@@ -263,7 +263,7 @@ export default function Sidebar() {
               >
                 <p className="text-base font-black text-[--text-primary]">Meu Real</p>
                 <p className="text-[9px] text-[--text-tertiary]">
-                  {status.isPremium ? 'Experiência Premium' : 'Plano básico'}
+                  {status.isPremium ? 'Premium' : 'Plano básico'}
                 </p>
               </motion.div>
             )}
@@ -484,7 +484,7 @@ export default function Sidebar() {
                 <div>
                   <p className="text-lg font-black text-[--text-primary]">Meu Real</p>
                   <p className="text-[10px] text-[--text-tertiary]">
-                    {status.isPremium ? 'Experiência Premium' : 'Plano básico'}
+                    {status.isPremium ? 'Premium' : 'Plano básico'}
                   </p>
                 </div>
               </div>

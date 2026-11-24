@@ -49,8 +49,8 @@ import {
   getCalendarMonthBounds,
   getRecentDashboardTransactions,
 } from '../domain/dashboard'
-import { getTransactionActivityDate, getTransactionDateContext } from '../domain/transactionDates'
-import { buildCategoryReviewQueue } from '../domain/categoryReview'
+import { getTransactionLedgerDate, getTransactionDateContext } from '../domain/transactionDates'
+import { buildCategoryReviewQueue, summarizeCategoryReviews } from '../domain/categoryReview'
 import { buildPaymentControlOverview } from '../domain/paymentControl'
 import { buildFinancialHealth } from '../domain/financialHealth'
 import { budgetMonthKey, buildMonthlyBudgetOverview } from '../domain/budgetPeriods'
@@ -113,8 +113,8 @@ const TxItem = ({ tx, categories }) => {
           )}
         </div>
         <p className="text-xs text-[--text-tertiary]">
-          {formatRelativeDate(dateContext.activityDate)}
-          {dateContext.hasSeparateAccountingDate ? ` · fatura ${dateContext.accountingLabel}` : ''}
+          {formatRelativeDate(getTransactionLedgerDate(tx))}
+          {dateContext.hasSeparateAccountingDate ? ` · compra ${dateContext.purchaseLabel}` : ''}
           {cat && !tx.isSavings ? ` · ${cat.name}` : ''}
           {tx.isSavings ? ` · ${getSavingsDestinationLabel(tx)}` : ''}
         </p>
@@ -235,7 +235,7 @@ export default function Dashboard() {
     () =>
       new Set(
         transactions
-          .map((transaction) => getTransactionActivityDate(transaction)?.slice(0, 7))
+          .map((transaction) => getTransactionLedgerDate(transaction)?.slice(0, 7))
           .filter(Boolean),
       ).size,
     [transactions],
@@ -260,16 +260,21 @@ export default function Dashboard() {
     [transactions, creditCards, invoiceEvents, monthBounds],
   )
 
-  const categoryReviewCount = useMemo(
+  const categoryReviews = useMemo(
     () =>
       buildCategoryReviewQueue(
         transactions.filter((transaction) => {
-          const activityDate = getTransactionActivityDate(transaction)
+          const activityDate = getTransactionLedgerDate(transaction)
           return activityDate >= monthBounds.start && activityDate <= monthBounds.end
         }),
         categories,
-      ).length,
+      ),
     [transactions, categories, monthBounds],
+  )
+  const categoryReviewCount = categoryReviews.length
+  const categoryReviewSummary = useMemo(
+    () => summarizeCategoryReviews(categoryReviews),
+    [categoryReviews],
   )
 
   const monthTx = useMemo(
@@ -435,7 +440,7 @@ export default function Dashboard() {
               <div className="dashboard-period-hero__amount">
                 <div className="dashboard-period-hero__eyebrow">
                   <span>Resultado do período</span>
-                  <InfoTooltip text="Receitas menos despesas registradas pela data da movimentação no mês visualizado. Não representa saldo bancário nem dinheiro livre em conta." />
+                  <InfoTooltip text="Receitas menos despesas do mês. Compras parceladas entram pelo vencimento de cada parcela. Não representa saldo bancário." />
                 </div>
                 <p className="dashboard-period-hero__value">
                   {isLoading ? '—' : formatCurrency(currentSummary.balance)}
@@ -488,12 +493,19 @@ export default function Dashboard() {
                 ['Receitas', currentSummary.income, 'income'],
                 ['Despesas', currentSummary.expenses, 'expense'],
                 ['Comprometido', paymentSummary.committedAmount || 0, 'commitment'],
-                ['Reservado total', savingsOverview.totalBalance, 'reserve'],
+                [
+                  'Não alocado',
+                  Math.max(0, currentSummary.balance - Math.max(0, currentSummary.savings)),
+                  'reserve',
+                ],
               ].map(([label, value, kind]) => (
                 <div key={label} className="dashboard-period-metric" data-kind={kind}>
                   <p className="dashboard-period-metric__label">
                     <span aria-hidden="true" />
                     {label}
+                    {label === 'Não alocado' && (
+                      <InfoTooltip text="Parte positiva do resultado ainda não destinada a reservas. Não representa saldo disponível no banco." />
+                    )}
                   </p>
                   <p className="dashboard-period-metric__value">{formatCurrency(value)}</p>
                 </div>
@@ -666,7 +678,7 @@ export default function Dashboard() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-[--text-primary]">Evolução financeira</h3>
-                    <InfoTooltip text="Valores agrupados pela data da movimentação. Use o seletor de meses para detalhar um período." />
+                    <InfoTooltip text="Valores agrupados por mês de competência. Parcelas entram pelo vencimento informado." />
                   </div>
                   <p className="mt-1 text-xs text-[--text-tertiary]">
                     Receitas e despesas em uma linha do tempo; toque nos meses para examinar o
@@ -881,7 +893,7 @@ export default function Dashboard() {
             <div className="mb-3">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold text-[--text-primary]">Quem lidera os gastos</h3>
-                <InfoTooltip text="Despesas do mês pela data da movimentação, ordenadas do maior para o menor gasto." />
+                <InfoTooltip text="Despesas do mês por competência; parcelas entram pelo vencimento. Categorias ordenadas do maior para o menor gasto." />
               </div>
               <p className="mt-1 text-xs text-[--text-tertiary]">
                 Mesmas categorias e cores em todos os lançamentos e gráficos.
@@ -894,10 +906,8 @@ export default function Dashboard() {
                 className="mb-3 flex min-h-10 items-center justify-between gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-[10px] font-bold text-[--warning-text]"
               >
                 <span>
-                  {categoryReviewCount}{' '}
-                  {categoryReviewCount === 1
-                    ? 'classificação para revisar'
-                    : 'classificações para revisar'}
+                  {categoryReviewSummary.missingCategory} sem categoria ·{' '}
+                  {categoryReviewSummary.suspectedCategory} classificações suspeitas
                 </span>
                 <ArrowRight size={12} />
               </Link>
@@ -1040,8 +1050,8 @@ export default function Dashboard() {
               </Link>
             </div>
             <p className="mb-3 text-[11px] text-[--text-tertiary]">
-              {monthTx.length} {monthTx.length === 1 ? 'lançamento' : 'lançamentos'} neste período ·
-              role para percorrer
+              {currentSummary.count} {currentSummary.count === 1 ? 'lançamento' : 'lançamentos'}{' '}
+              neste período · role para percorrer
             </p>
             {monthTx.length === 0 ? (
               <EmptyState

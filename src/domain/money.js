@@ -1,4 +1,4 @@
-import { getTransactionActivityDate } from './transactionDates'
+import { getTransactionLedgerDate } from './transactionDates'
 import { buildCategoryReviewQueue } from './categoryReview'
 
 const DEFAULT_SETTINGS = Object.freeze({
@@ -187,7 +187,7 @@ export function filterTransactionsForPeriod(transactions = [], period, settings 
 
   return transactions.filter((transaction) => {
     if (!isEffective(transaction)) return false
-    const activityDate = getTransactionActivityDate(transaction)
+    const activityDate = getTransactionLedgerDate(transaction)
     if (!activityDate || !isWithin(activityDate, period.start, period.end)) return false
     if (normalized.excludeSavings && transaction.isSavings) return false
     return true

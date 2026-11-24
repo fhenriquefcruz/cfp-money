@@ -1,6 +1,7 @@
 // src/utils/index.jsx
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { getTransactionLedgerDate } from '../domain/transactionDates'
 
 // ── CAPITALIZE ──
 export const capitalize = (str) => {
@@ -106,7 +107,7 @@ export const exportToCSV = (transactions) => {
       t.paymentStatus || (t.isPaid === true ? 'paid' : t.isPaid === false ? 'pending' : 'unknown')
 
     return [
-      formatDate(t.date),
+      formatDate(getTransactionLedgerDate(t)),
       t.dueDate ? formatDate(t.dueDate) : '',
       t.isSavings ? 'Poupança' : t.type === 'income' ? 'Receita' : 'Despesa',
       t.description || '',
@@ -150,6 +151,18 @@ export const resolveExportSummary = (summaryOrCategories = {}, legacySummary) =>
   return {}
 }
 
+export const buildPdfTransactionRows = (transactions = []) =>
+  transactions.map((t) => [
+    formatDate(getTransactionLedgerDate(t)),
+    t.isSavings ? 'Poupança' : t.type === 'income' ? 'Receita' : 'Despesa',
+    t.isInstallment && t.installmentNum && t.installmentOf
+      ? `${t.description || 'Parcela'} (${t.installmentNum}/${t.installmentOf})`
+      : t.description || (t.isSavings ? 'Depósito em Poupança' : '-'),
+    t.categoryName || '-',
+    formatCurrency(t.amount),
+    getPaymentLabel(t.paymentMethod) || '-',
+  ])
+
 export const exportToPDF = async (transactions, summaryOrCategories = {}, legacySummary) => {
   const summary = resolveExportSummary(summaryOrCategories, legacySummary)
   const { jsPDF } = await import('jspdf')
@@ -188,7 +201,7 @@ export const exportToPDF = async (transactions, summaryOrCategories = {}, legacy
     { label: 'Receitas', value: summary.income || 0, r: 16, g: 185, b: 129 }, // green
     { label: 'Despesas', value: summary.expenses || 0, r: 239, g: 68, b: 68 }, // red
     {
-      label: 'Saldo',
+      label: 'Resultado',
       value: summary.balance || 0,
       r: (summary.balance || 0) >= 0 ? 79 : 239,
       g: (summary.balance || 0) >= 0 ? 70 : 68,
@@ -239,19 +252,16 @@ export const exportToPDF = async (transactions, summaryOrCategories = {}, legacy
   )
 
   // ── Tabela de transações ──
-  const rows = transactions
-    .slice(0, 300)
-    .map((t) => [
-      formatDate(t.date),
-      t.isSavings ? 'Poupança' : t.type === 'income' ? 'Receita' : 'Despesa',
-      t.description || (t.isSavings ? 'Depósito em Poupança' : '-'),
-      t.categoryName || '-',
-      formatCurrency(t.amount),
-      getPaymentLabel(t.paymentMethod) || '-',
-    ])
+  // Nenhum corte silencioso: tabela e totais consideram os mesmos lançamentos.
+  const rows = buildPdfTransactionRows(transactions)
+
+  doc.setFontSize(7)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(80, 80, 100)
+  doc.text('Cartão de crédito: mês da fatura. Demais lançamentos: data do movimento.', 14, 81)
 
   autoTable(doc, {
-    startY: 82,
+    startY: 87,
     head: [['Data', 'Tipo', 'Descrição', 'Categoria', 'Valor', 'Pagamento']],
     body: rows,
     theme: 'grid',

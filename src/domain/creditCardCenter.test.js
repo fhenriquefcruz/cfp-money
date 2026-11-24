@@ -124,6 +124,33 @@ test('calcula parcelas futuras e previsão mensal', () => {
   expect(center.forecast.map((item) => item.total)).toEqual([300, 100, 0])
 })
 
+test('consolida compromissos futuros dos cartões, incluindo compras sem parcelas', () => {
+  const center = buildCreditCardCenter({
+    transactions: [
+      ...transactions,
+      {
+        id: 'future-single',
+        type: 'expense',
+        paymentMethod: 'credit_card',
+        cardId: 'nubank',
+        amount: 75,
+        invoiceMonth: '2026-10',
+        date: '2026-10-01',
+      },
+    ],
+    creditCards: cards,
+    selectedMonth: '2026-08',
+    now: new Date(2026, 6, 20),
+  })
+
+  expect(center.futureInstallmentTotal).toBe(100)
+  expect(center.futureCommitmentCount).toBe(2)
+  expect(center.futureCommitmentTotal).toBe(175)
+  expect(center.invoices.reduce((total, invoice) => total + invoice.futureCommitmentTotal, 0)).toBe(
+    175,
+  )
+})
+
 test('preserva cartão removido a partir do retrato salvo na transação', () => {
   const center = buildCreditCardCenter({
     transactions: [

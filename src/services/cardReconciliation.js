@@ -13,6 +13,25 @@ const fields = [
 ]
 const ownedDoc = (uid, collection, id) => doc(db, 'users', uid, collection, id)
 
+function prepareReconciliation(original, card, cardId, expectedMonth) {
+  if (original.cardReconciliation) throw new Error('Conciliação anterior ainda registrada.')
+  const changes = previewCardReconciliation(original, card)
+  if (expectedMonth && expectedMonth !== changes.invoiceMonth) {
+    throw new Error('Competência alterada. Revise a prévia antes de confirmar.')
+  }
+  const previous = {}
+  const absent = []
+  for (const key of fields) {
+    if (Object.hasOwn(original, key)) previous[key] = original[key]
+    else absent.push(key)
+  }
+  return {
+    ...changes,
+    cardReconciliation: { version: 1, cardId, previous, absent, applied: changes },
+    updatedAt: serverTimestamp(),
+  }
+}
+
 export async function confirmCardReconciliation(uid, txId, cardId, expectedMonth) {
   if (!uid || !txId || !cardId) throw new Error('Identificação incompleta.')
 
@@ -27,29 +46,51 @@ export async function confirmCardReconciliation(uid, txId, cardId, expectedMonth
       throw new Error('Compra ou cartão não encontrado.')
     }
 
-    const original = transactionSnapshot.data()
-    if (original.cardReconciliation) throw new Error('Conciliação anterior ainda registrada.')
-    const changes = previewCardReconciliation(original, {
+    const card = {
       ...cardSnapshot.data(),
       id: cardSnapshot.id,
-    })
-    if (expectedMonth && expectedMonth !== changes.invoiceMonth) {
-      throw new Error('Competência alterada. Revise a prévia antes de confirmar.')
     }
-    const previous = {}
-    const absent = []
-    for (const key of fields) {
-      if (Object.hasOwn(original, key)) previous[key] = original[key]
-      else absent.push(key)
-    }
-
-    operation.update(transactionRef, {
-      ...changes,
-      cardReconciliation: { version: 1, cardId, previous, absent, applied: changes },
-      updatedAt: serverTimestamp(),
-    })
+    const changes = prepareReconciliation(transactionSnapshot.data(), card, cardId, expectedMonth)
+    operation.update(transactionRef, changes)
 
     return { txId, cardId, invoiceMonth: changes.invoiceMonth }
+  })
+}
+
+export async function confirmCardReconciliationBatch(uid, selections, cardId) {
+  if (
+    !uid ||
+    !cardId ||
+    !Array.isArray(selections) ||
+    !selections.length ||
+    selections.length > 30
+  ) {
+    throw new Error('Selecione de 1 a 30 compras e um cartão.')
+  }
+  const ids = selections.map((item) => item.txId)
+  if (ids.some((id) => !id) || new Set(ids).size !== ids.length) {
+    throw new Error('A seleção contém compras repetidas ou sem identificação.')
+  }
+  if (selections.some((item) => !/^\d{4}-(0[1-9]|1[0-2])$/.test(item.invoiceMonth || ''))) {
+    throw new Error('Revise a fatura de cada compra antes de confirmar o lote.')
+  }
+
+  return runTransaction(db, async (operation) => {
+    const cardRef = ownedDoc(uid, 'creditCards', cardId)
+    const transactionRefs = ids.map((id) => ownedDoc(uid, 'transactions', id))
+    const [cardSnapshot, ...transactionSnapshots] = await Promise.all([
+      operation.get(cardRef),
+      ...transactionRefs.map((reference) => operation.get(reference)),
+    ])
+    if (!cardSnapshot.exists() || transactionSnapshots.some((snapshot) => !snapshot.exists())) {
+      throw new Error('Compra ou cartão não encontrado.')
+    }
+    const card = { ...cardSnapshot.data(), id: cardSnapshot.id }
+    const updates = transactionSnapshots.map((snapshot, index) =>
+      prepareReconciliation(snapshot.data(), card, cardId, selections[index].invoiceMonth),
+    )
+    updates.forEach((changes, index) => operation.update(transactionRefs[index], changes))
+    return { count: updates.length, cardId }
   })
 }
 

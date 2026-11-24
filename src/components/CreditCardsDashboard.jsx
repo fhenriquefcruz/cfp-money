@@ -123,7 +123,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
 
           {invoice.futureCommitmentTotal > 0 && (
             <p className="mt-2 text-[10px] text-[--text-tertiary]">
-              Compromissos futuros: {formatCurrency(invoice.futureCommitmentTotal)}
+              Compromissos futuros após esta fatura: {formatCurrency(invoice.futureCommitmentTotal)}
             </p>
           )}
 
@@ -425,9 +425,9 @@ function CreditCardsCenterContent() {
               ],
               [
                 CalendarDays,
-                'Parcelas futuras',
-                center.futureInstallmentTotal,
-                `${center.futureInstallmentCount} parcela${center.futureInstallmentCount === 1 ? '' : 's'} após este mês`,
+                'Compromissos futuros',
+                center.futureCommitmentTotal,
+                `${center.futureCommitmentCount} lançamento${center.futureCommitmentCount === 1 ? '' : 's'} vinculado${center.futureCommitmentCount === 1 ? '' : 's'} após este mês, incluindo parcelas`,
               ],
             ].map(([icon, label, amount, helper]) => (
               <SummaryCard
