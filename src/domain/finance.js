@@ -94,7 +94,8 @@ export function calculateBudgetUsage(transactions = [], budget, referenceDate = 
     referenceDate.getMonth(),
   )
   const spent = summarizeTransactions(
-    monthItems.filter((transaction) =>
+    monthItems.filter(
+      (transaction) =>
         transaction.type === 'expense' &&
         !transaction.isSavings &&
         transaction.categoryId === budget.categoryId,
