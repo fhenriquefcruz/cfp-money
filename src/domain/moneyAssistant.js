@@ -389,9 +389,7 @@ export function buildMoneyAssistantResponse({
       return normalizeText(transaction.categoryName) === normalizeText(intent.category.name)
     })
 
-    const total = centsToMoney(
-      periodTransactions.reduce((sum, transaction) => sum + moneyToCents(transaction.amount), 0),
-    )
+    const total = summarizeTransactions(periodTransactions).expenses
 
     return {
       type: 'category_report',
