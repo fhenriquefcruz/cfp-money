@@ -254,8 +254,7 @@ export function buildMoneyAssistantResponse({
     return {
       type: 'help',
       title: intent.type === 'unknown' ? 'Ainda não entendi esse pedido' : 'Como posso ajudar',
-      text:
-        'Consulte seu histórico sem alterar lançamentos. Peça relatório mensal, análise do período ou gastos por categoria.',
+      text: 'Consulte seu histórico sem alterar lançamentos. Peça relatório mensal, análise do período ou gastos por categoria.',
     }
   }
 
@@ -264,8 +263,7 @@ export function buildMoneyAssistantResponse({
       return {
         type: 'personalization_profile',
         title: 'Personalização desativada',
-        text:
-          'Ative a personalização nas Preferências do Money para consultar padrões do seu histórico.',
+        text: 'Ative a personalização nas Preferências do Money para consultar padrões do seu histórico.',
       }
     }
 
@@ -298,8 +296,7 @@ export function buildMoneyAssistantResponse({
       text: evidence.length
         ? `Pelos seus lançamentos, ${evidence.join('; ')}.`
         : 'Ainda não há um padrão dominante confiável.',
-      secondaryText:
-        'Perfil calculado no navegador. A conversa não é salva no Firestore.',
+      secondaryText: 'Perfil calculado no navegador. A conversa não é salva no Firestore.',
       metrics: [
         { label: 'Amostra', rawValue: `${sampleSize} despesas` },
         ...(topCategory
