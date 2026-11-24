@@ -3,8 +3,14 @@ const validId = (value) =>
   typeof value === 'string' && value.trim() && !['null', 'undefined'].includes(value.trim())
 
 const cents = (value) => {
-  if (value === null || value === '' || !Number.isFinite(Number(value))) return null
-  return Math.round(Number(value) * 100)
+  if (
+    (typeof value !== 'string' && typeof value !== 'number') ||
+    (typeof value === 'string' && !value.trim())
+  ) {
+    return null
+  }
+  const amount = Math.round(Number(value) * 100)
+  return Number.isSafeInteger(amount) ? amount : null
 }
 
 const asCreditExpense = (tx) =>

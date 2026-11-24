@@ -3,6 +3,7 @@
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { createServer } from 'vite'
+import { assessCardSnapshotEvidence } from './card-snapshot-evidence.mjs'
 import {
   compareCardSnapshots,
   readSnapshotRecords,
@@ -86,6 +87,7 @@ async function main() {
       totals: audit.totals,
       findingCounts,
       identity: summarizeSnapshotIdentity(input),
+      evidence: assessCardSnapshotEvidence(input, { comparison }),
       ...(comparison ? { comparison } : {}),
     }
   } finally {

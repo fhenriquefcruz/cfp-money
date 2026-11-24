@@ -46,6 +46,12 @@ test('comando local audita backup JSON sem expor descrições ou IDs no relatór
       status: 'ok',
       totals: { invoiceTotal: 42.15, paidTotal: 0, remainingTotal: 42.15 },
       findingCounts: {},
+      evidence: {
+        scope: 'full_export',
+        bankReconciliation: false,
+        exportTimestampVerified: true,
+        collections: { creditCards: 1, transactions: 1, invoiceEventsIncluded: true },
+      },
     })
     expect(result.stdout).not.toContain(secretDescription)
     expect(result.stdout).not.toContain('secret-card-id')
@@ -84,6 +90,14 @@ test('comando offline lê exportação backend versionada e contabiliza IDs ause
       readOnly: true,
       status: 'critical',
       findingCounts: { missing_card_registration_id: 1 },
+      evidence: {
+        level: 'insufficient',
+        bankReconciliation: false,
+        warnings: expect.arrayContaining([
+          'ambiguous_card_identifiers',
+          'no_credit_activity_in_export',
+        ]),
+      },
     })
     expect(result.stdout).not.toContain('Cartão legado')
   } finally {
