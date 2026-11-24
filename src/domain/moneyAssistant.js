@@ -1,5 +1,4 @@
 import {
-  centsToMoney,
   isFinanciallyEffectiveTransaction,
   moneyToCents,
   summarizeTransactions,
@@ -289,10 +288,10 @@ export function buildMoneyAssistantResponse({
     const payment = personalizationProfile?.preferredPaymentMethod
     const evidence = [
       topCategory
-        ? `${topCategory.name} representa ${Math.round((topCategory.share || 0) * 100)}% das despesas analisadas`
+        ? `${topCategory.name}: ${Math.round((topCategory.share || 0) * 100)}% das despesas`
         : '',
       payment
-        ? `${payment.label || payment.id} aparece em ${payment.count} lançamento${payment.count === 1 ? '' : 's'}`
+        ? `${payment.label || payment.id}: ${payment.count} lançamento${payment.count === 1 ? '' : 's'}`
         : '',
     ].filter(Boolean)
 
@@ -376,7 +375,7 @@ export function buildMoneyAssistantResponse({
         expenses
           .map(
             (transaction) =>
-              `${transaction.description || transaction.categoryName}: ${currencyFormatter.format(centsToMoney(moneyToCents(transaction.amount)))}`,
+              `${transaction.description || transaction.categoryName}: ${currencyFormatter.format(moneyToCents(transaction.amount) / 100)}`,
           )
           .join(' · ') || 'Nenhuma.',
     }
@@ -396,7 +395,7 @@ export function buildMoneyAssistantResponse({
       title: `${intent.category.name} em ${period.label}`,
       text:
         periodTransactions.length > 0
-          ? `Você gastou ${currencyFormatter.format(total)} em ${intent.category.name}, distribuídos em ${periodTransactions.length} lançamento${periodTransactions.length === 1 ? '' : 's'}.`
+          ? `Gasto de ${currencyFormatter.format(total)} em ${intent.category.name} (${periodTransactions.length} lançamento${periodTransactions.length === 1 ? '' : 's'}).`
           : `Não encontrei despesas de ${intent.category.name} em ${period.label}.`,
       metrics:
         periodTransactions.length > 0
@@ -417,7 +416,7 @@ export function buildMoneyAssistantResponse({
     title: `Relatório de ${period.label}`,
     text:
       summary.count > 0
-        ? `Encontrei ${summary.count} lançamento${summary.count === 1 ? '' : 's'} no período. O resultado foi ${summary.balance >= 0 ? 'positivo' : 'negativo'} em ${currencyFormatter.format(Math.abs(summary.balance))}.`
+        ? `${summary.count} lançamento${summary.count === 1 ? '' : 's'} no período. Resultado ${summary.balance >= 0 ? 'positivo' : 'negativo'}: ${currencyFormatter.format(Math.abs(summary.balance))}.`
         : `Não encontrei lançamentos em ${period.label}.`,
     metrics:
       summary.count > 0
