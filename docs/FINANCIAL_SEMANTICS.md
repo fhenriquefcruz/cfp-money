@@ -6,22 +6,21 @@ Este documento define as fórmulas e as datas usadas pelos cálculos financeiros
 
 ## Datas
 
-### Data da movimentação
+### Data da compra ou movimentação original
 
-É a data usada para análise de comportamento financeiro, categorias, orçamento e evolução.
+Preserva quando a compra foi feita. Serve para o detalhe e para análises de comportamento de compra.
 
 - compra estruturada no cartão: `purchaseDate`;
 - demais transações: `date`;
 - fallback legado: `dueDate` somente quando `date` não estiver disponível.
 
-Usos:
+### Competência financeira do período
 
-- resumo mensal de receitas e despesas;
-- gastos por categoria;
-- orçamento;
-- Money;
-- lista e agrupamento de Transações;
-- transações recentes do Dashboard.
+- compra parcelada: vencimento de cada parcela (`dueDate`); se ausente, `date`;
+- compra estruturada no cartão: vencimento da fatura (`dueDate`); se ausente, `date`;
+- demais transações: `date`, com `dueDate` apenas como fallback legado.
+
+Receitas, despesas, resultado, gastos por categoria, orçamentos, Money, relatórios e a lista de Transações usam a mesma competência. Uma compra de R$ 1.200 em três parcelas com vencimentos em 05/12, 05/01 e 05/02 entra como R$ 400 em cada mês. A data original continua visível no detalhe.
 
 ### Data de vencimento / compromisso
 
@@ -67,7 +66,7 @@ Soma de transações efetivas com:
 
 - `type='income'`;
 - `isSavings !== true`;
-- data da movimentação dentro do período.
+- competência financeira dentro do período.
 
 ### Despesas do período
 
@@ -75,35 +74,39 @@ Soma de transações efetivas com:
 
 - `type='expense'`;
 - `isSavings !== true`;
-- data da movimentação dentro do período.
+- competência financeira dentro do período.
 
-### Saldo do período
+### Resultado do período
 
 ```
-saldo = receitas - despesas
+resultado = receitas - despesas
 ```
 
-Não representa saldo bancário. É o resultado das movimentações registradas no período.
+Não representa saldo bancário.
 
-### Poupança total
+### Total reservado
 
-Soma de todas as transações marcadas com `isSavings=true` que sejam efetivas.
+Depósitos menos retiradas de todas as transações efetivas marcadas com `isSavings=true`.
 
-### Poupança no período
+### Poupado no período
 
-Soma das transações `isSavings=true` cuja data da movimentação esteja dentro do período selecionado.
+Depósitos menos retiradas das transações `isSavings=true` dentro do período selecionado.
+
+### Não alocado
+
+Parte positiva do resultado ainda não destinada a reservas: `max(0, resultado - max(0, poupado))`. É uma classificação do resultado registrado, não saldo bancário nem movimentação automática.
 
 ### Orçamento
 
 Para cada categoria e mês:
 
 ```
-gasto_orcamento = soma das despesas efetivas da categoria no mês da movimentação
+gasto_orcamento = soma das despesas efetivas da categoria no mês de competência financeira
 percentual = gasto_orcamento / limite * 100
 excedente = max(0, gasto_orcamento - limite)
 ```
 
-Compras estruturadas no cartão entram no orçamento pelo mês da compra, não pelo vencimento da fatura.
+Compras parceladas entram no orçamento pelo vencimento de cada parcela.
 
 O resumo de Orçamentos distingue:
 

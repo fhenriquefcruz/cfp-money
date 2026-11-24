@@ -65,7 +65,7 @@ test('encerramento de orçamento vale dali em diante sem apagar o histórico', (
   expect(getBudgetForMonth(budgets, 'food', '2027-01', '2026-10')).toBeNull()
 })
 
-test('calcula consumo pelo mês da compra e não pelo vencimento da fatura', () => {
+test('calcula consumo de cartão pelo mês do vencimento da parcela', () => {
   const transactions = [
     {
       type: 'expense',
@@ -85,8 +85,8 @@ test('calcula consumo pelo mês da compra e não pelo vencimento da fatura', () 
     },
   ]
 
-  expect(getBudgetSpent(transactions, 'food', '2026-08')).toBe(300)
-  expect(getBudgetSpent(transactions, 'food', '2026-09')).toBe(120)
+  expect(getBudgetSpent(transactions, 'food', '2026-08')).toBe(0)
+  expect(getBudgetSpent(transactions, 'food', '2026-09')).toBe(420)
 })
 
 test('ignora despesas canceladas no consumo do orçamento', () => {

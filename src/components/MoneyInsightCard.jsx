@@ -18,7 +18,7 @@ import {
   getMoneyInsightHeadline,
   getMoneyInsightTone,
 } from '../domain/moneyPresentation'
-import { formatCurrency } from '../utils'
+import { formatCurrency, formatDate } from '../utils'
 import { Card } from './ui'
 import PremiumGate from './PremiumGate'
 import SpendingLeakDiagnostic from './SpendingLeakDiagnostic'
@@ -204,7 +204,7 @@ function MoneyInsightContent({ referenceDate, compact = false }) {
                 />
               )}
               <MoneyMetric
-                label="Projeção"
+                label={`Despesas projetadas até ${formatDate(analysis.periods.current.cycleEnd)}`}
                 value={
                   analysis.projection.isAvailable
                     ? formatCurrency(analysis.projection.expenses)

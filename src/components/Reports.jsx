@@ -32,7 +32,7 @@ import PremiumGate from './PremiumGate'
 import InfoTooltip from './InfoTooltip'
 import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { getTransactionActivityDate } from '../domain/transactionDates'
+import { getTransactionLedgerDate } from '../domain/transactionDates'
 import { buildSavingsOverview, getSavingsSignedAmount } from '../domain/savings'
 
 const isEffective = (transaction) =>
@@ -88,7 +88,7 @@ function KPI({ label, value, sub, color, icon, tooltip }) {
   )
 }
 
-function SavingRateBadge({ rate }) {
+function SavingRateBadge({ rate, period }) {
   const color = rate >= 20 ? '#10b981' : rate >= 10 ? '#f59e0b' : '#ef4444'
   const label = rate >= 20 ? '🎉 Ótimo' : rate >= 10 ? '⚠️ Razoável' : '🚨 Atenção'
   return (
@@ -97,15 +97,12 @@ function SavingRateBadge({ rate }) {
       style={{ background: color + '10', borderColor: color + '30' }}
     >
       <div className="flex-1">
+        <p className="text-xs font-bold text-[--text-primary]">Taxa de poupança · {period} meses</p>
         <p className="text-xs font-bold" style={{ color }}>
           {label}
         </p>
         <p className="text-[10px] text-[--text-tertiary]">
-          {rate >= 20
-            ? 'Você está poupando acima de 20% — excelente!'
-            : rate >= 10
-              ? 'Poupança entre 10–20%. Tente aumentar.'
-              : 'Abaixo de 10%. Revise seus gastos fixos.'}
+          Poupado líquido (aportes menos retiradas) dividido pelas receitas do período.
         </p>
       </div>
       <p className="text-2xl font-black" style={{ color }}>
@@ -137,7 +134,7 @@ function ReportsContent() {
     () =>
       transactions.filter((transaction) => {
         if (!isEffective(transaction)) return false
-        const activityDate = getTransactionActivityDate(transaction)
+        const activityDate = getTransactionLedgerDate(transaction)
         return activityDate >= periodStart && activityDate <= periodEnd
       }),
     [transactions, periodStart, periodEnd],
@@ -195,7 +192,7 @@ function ReportsContent() {
       const value = transactions
         .filter((t) => {
           if (!t.isSavings || !isEffective(t)) return false
-          const activityDate = getTransactionActivityDate(t)
+          const activityDate = getTransactionLedgerDate(t)
           return activityDate >= from && activityDate <= to
         })
         .reduce((s, t) => s + getSavingsSignedAmount(t), 0)
@@ -342,14 +339,14 @@ function ReportsContent() {
               tooltip="Total de saídas no período."
             />
             <KPI
-              label="Saldo"
+              label="Resultado"
               value={formatCurrency(periodTotals.balance)}
               color={periodTotals.balance >= 0 ? '#c49d6b' : '#ef4444'}
               icon={<ArrowLeftRight size={16} />}
               tooltip="Receitas menos despesas."
             />
             <KPI
-              label="Poupança líquida"
+              label="Poupado no período"
               value={formatCurrency(periodTotals.savings)}
               color="#c49d6b"
               icon={<PiggyBank size={16} />}
@@ -358,7 +355,9 @@ function ReportsContent() {
           </div>
 
           {/* Taxa de poupança */}
-          {periodTotals.income > 0 && <SavingRateBadge rate={periodTotals.savingRate} />}
+          {periodTotals.income > 0 && (
+            <SavingRateBadge rate={periodTotals.savingRate} period={period} />
+          )}
 
           {/* Tabs */}
           <div className="reports-premium__tabs scrollbar-none flex min-w-0 snap-x gap-1 overflow-x-auto rounded-2xl bg-[--bg-hover] p-1">
@@ -415,7 +414,7 @@ function ReportsContent() {
 
               <Card>
                 <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-sm font-bold text-[--text-primary]">Saldo mês a mês</h3>
+                  <h3 className="text-sm font-bold text-[--text-primary]">Resultado mês a mês</h3>
                   <InfoTooltip text="Linha abaixo de zero = despesas superaram receitas naquele mês." />
                 </div>
                 <ResponsiveContainer width="100%" height={160}>
@@ -447,7 +446,7 @@ function ReportsContent() {
                     <Area
                       type="monotone"
                       dataKey="balance"
-                      name="Saldo"
+                      name="Resultado"
                       stroke="#c49d6b"
                       strokeWidth={2.5}
                       fill="url(#balG)"

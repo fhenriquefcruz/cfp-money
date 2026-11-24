@@ -36,10 +36,13 @@ export function getTransactionActivityDate(transaction = {}) {
     : getTransactionAccountingDate(transaction)
 }
 
-// Competência exibida no extrato: obrigações de crédito usam a fatura;
-// as análises econômicas continuam usando a data original da compra.
+// Competência financeira: parcelas entram no mês do vencimento informado.
+// A data da compra permanece disponível para o detalhe e a auditoria.
 export function getTransactionLedgerDate(transaction = {}) {
-  if (isStructuredCreditPurchase(transaction)) {
+  if (
+    transaction.type === 'expense' &&
+    (isStructuredCreditPurchase(transaction) || transaction.isInstallment)
+  ) {
     return (
       getTransactionAccountingDate(transaction) ||
       (validIsoDate(transaction.date) ? transaction.date : '') ||

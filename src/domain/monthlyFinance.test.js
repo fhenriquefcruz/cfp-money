@@ -37,7 +37,7 @@ test('usa data da movimentação e ignora cancelamentos', () => {
   })
 })
 
-test('usa purchaseDate para compra estruturada no cartão', () => {
+test('usa vencimento para compra estruturada no cartão', () => {
   const data = getMonthlyFinancialData(
     [
       {
@@ -52,7 +52,7 @@ test('usa purchaseDate para compra estruturada no cartão', () => {
       },
     ],
     1,
-    new Date(2026, 6, 15),
+    new Date(2026, 7, 15),
   )
 
   expect(data[0].expenses).toBe(300)

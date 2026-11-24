@@ -7,6 +7,7 @@ const mockState = vi.hoisted(() => ({
   transactions: [],
   creditCards: [],
   reconcileLegacyCard: vi.fn(),
+  reconcileLegacyCardBatch: vi.fn(),
   undoLegacyCard: vi.fn(),
 }))
 
@@ -14,6 +15,7 @@ vi.mock('../contexts/AppContext', () => ({
   useTransactions: () => ({
     transactions: mockState.transactions,
     reconcileLegacyCard: mockState.reconcileLegacyCard,
+    reconcileLegacyCardBatch: mockState.reconcileLegacyCardBatch,
     undoLegacyCard: mockState.undoLegacyCard,
   }),
   useCreditCards: () => ({ creditCards: mockState.creditCards }),
@@ -36,8 +38,10 @@ beforeEach(() => {
     { id: 'card-2', name: 'Cartão reserva', last4: '4321', closingDay: 10, dueDay: 20 },
   ]
   mockState.reconcileLegacyCard.mockReset()
+  mockState.reconcileLegacyCardBatch.mockReset()
   mockState.undoLegacyCard.mockReset()
   mockState.reconcileLegacyCard.mockResolvedValue({})
+  mockState.reconcileLegacyCardBatch.mockResolvedValue({ count: 2 })
   mockState.undoLegacyCard.mockResolvedValue({})
 })
 
@@ -68,6 +72,38 @@ test('não escolhe automaticamente cartão por semelhança de nome', () => {
   render(<CardReconciliationModal isOpen onClose={vi.fn()} />)
   expect(screen.getByLabelText('Cartão ao qual esta compra pertence')).toHaveValue('')
   expect(mockState.reconcileLegacyCard).not.toHaveBeenCalled()
+})
+
+test('prévia e confirmação dupla para vincular compras em lote', async () => {
+  mockState.transactions.push({
+    ...mockState.transactions[0],
+    id: 'legacy-tx-2',
+    amount: 31.3,
+    description: 'Outra compra',
+  })
+  render(<CardReconciliationModal isOpen onClose={vi.fn()} />)
+  fireEvent.click(
+    screen.getByRole('checkbox', { name: 'Selecionar Compra antiga para conciliação em lote' }),
+  )
+  fireEvent.click(
+    screen.getByRole('checkbox', { name: 'Selecionar Outra compra para conciliação em lote' }),
+  )
+  fireEvent.change(screen.getByLabelText('Cartão ao qual esta compra pertence'), {
+    target: { value: 'card-1' },
+  })
+  expect(screen.getByText('Lote de 2 compras · R$ 100,00')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar lote e vincular' }))
+  expect(mockState.reconcileLegacyCardBatch).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmar 2 vínculos' }))
+  await waitFor(() =>
+    expect(mockState.reconcileLegacyCardBatch).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({ txId: 'legacy-tx', invoiceMonth: '2026-08' }),
+        expect.objectContaining({ txId: 'legacy-tx-2', invoiceMonth: '2026-08' }),
+      ],
+      mockState.creditCards[0],
+    ),
+  )
 })
 
 test('desfazer vínculo registrado também exige confirmação dupla', async () => {

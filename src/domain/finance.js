@@ -1,13 +1,9 @@
 import { getSavingsSignedAmount } from './savings'
+import { getTransactionLedgerDate } from './transactionDates'
 
 const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
 
-export const getFinancialActivityDate = (transaction = {}) =>
-  transaction.type === 'expense' &&
-  transaction.paymentMethod === 'credit_card' &&
-  transaction.isCreditPurchase
-    ? transaction.purchaseDate || transaction.originalPurchaseDate || transaction.date || ''
-    : transaction.date || transaction.dueDate || ''
+export const getFinancialActivityDate = getTransactionLedgerDate
 
 export const isFinanciallyEffectiveTransaction = (transaction = {}) =>
   transaction.paymentStatus !== 'cancelled' &&

@@ -60,7 +60,7 @@ import {
   getTransactionLedgerDate,
   getTransactionDateContext,
 } from '../domain/transactionDates'
-import { buildCategoryReviewQueue } from '../domain/categoryReview'
+import { buildCategoryReviewQueue, summarizeCategoryReviews } from '../domain/categoryReview'
 import { getSavingsDestinationLabel } from '../domain/savings'
 import { isTransactionSeries } from '../domain/transactionSeries'
 import {
@@ -540,6 +540,10 @@ export default function TransactionList() {
   const categoryReviewQueue = useMemo(
     () => buildCategoryReviewQueue(transactions, categories),
     [transactions, categories],
+  )
+  const categoryReviewSummary = useMemo(
+    () => summarizeCategoryReviews(categoryReviewQueue),
+    [categoryReviewQueue],
   )
   const categoryReviewIndex = useMemo(
     () => new Map(categoryReviewQueue.map((item) => [item.transactionId, item])),
@@ -1028,8 +1032,8 @@ export default function TransactionList() {
                 {monthTitle(visibleMonthKey)}
               </p>
               <p className="mt-0.5 text-xs text-[--text-tertiary]">
-                {filtered.length} {filtered.length === 1 ? 'lançamento' : 'lançamentos'} neste
-                recorte
+                {summary.count} {summary.count === 1 ? 'lançamento' : 'lançamentos'} nos totais
+                deste recorte
               </p>
               {visibleMonthKey !== currentMonthKey && (
                 <button
@@ -1110,13 +1114,13 @@ export default function TransactionList() {
             icon: <TrendingDown size={13} />,
           },
           {
-            label: 'Saldo',
+            label: 'Resultado',
             value: summary.balance,
             color: summary.balance >= 0 ? 'var(--brand-600)' : 'var(--danger-icon)',
             icon: <ArrowLeftRight size={13} />,
           },
           {
-            label: 'Poupança no período',
+            label: 'Poupado no período',
             value: summary.savings,
             color: 'var(--brand-600)',
             icon: <PiggyBank size={13} />,
@@ -1191,10 +1195,8 @@ export default function TransactionList() {
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--warning-border] bg-[--warning-bg] px-3 py-2.5">
           <div>
             <p className="text-xs font-bold text-[--warning-text]">
-              {categoryReviewQueue.length}{' '}
-              {categoryReviewQueue.length === 1
-                ? 'classificação pode precisar de revisão'
-                : 'classificações podem precisar de revisão'}
+              {categoryReviewSummary.missingCategory} sem categoria ·{' '}
+              {categoryReviewSummary.suspectedCategory} classificações suspeitas
             </p>
             <p className="mt-0.5 text-[10px] text-[--warning-text]">
               Nenhuma categoria será alterada automaticamente.
@@ -1571,8 +1573,8 @@ export default function TransactionList() {
       )}
 
       <p className="px-1 text-[10px] text-[--text-tertiary]">
-        Compras no cartão são exibidas pelo mês da fatura; demais movimentos, pela data da
-        transação. Dashboard e Orçamentos consideram a data original da compra.
+        Parcelas são exibidas pelo mês do vencimento; demais movimentos, pela data da transação. O
+        mesmo período é usado nos indicadores e orçamentos.
       </p>
 
       {/* Lista agrupada por data */}

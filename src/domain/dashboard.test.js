@@ -15,7 +15,7 @@ test('gera limites mensais em data local sem converter para UTC', () => {
   })
 })
 
-test('exclui o mês seguinte e ordena as transações recentes por atividade', () => {
+test('exclui o mês seguinte e ordena as transações recentes por competência', () => {
   const transactions = [
     { id: 'older', date: '2026-08-03', type: 'expense', amount: 20 },
     { id: 'next-month', date: '2026-09-01', type: 'expense', amount: 30 },
@@ -45,7 +45,7 @@ test('exclui o mês seguinte e ordena as transações recentes por atividade', (
       start: '2026-08-01',
       end: '2026-08-31',
     }).map((transaction) => transaction.id),
-  ).toEqual(['manual-different-due', 'newer', 'credit-purchase', 'older'])
+  ).toEqual(['credit-purchase', 'savings', 'manual-different-due', 'newer', 'older'])
 })
 
 test('prioriza atrasos, vencimentos e orçamento antes do saldo negativo', () => {

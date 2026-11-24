@@ -37,7 +37,11 @@ vi.mock('firebase/firestore', () => ({
   },
 }))
 
-import { confirmCardReconciliation, undoCardReconciliation } from './cardReconciliation'
+import {
+  confirmCardReconciliation,
+  confirmCardReconciliationBatch,
+  undoCardReconciliation,
+} from './cardReconciliation'
 
 beforeEach(() => {
   state.cards = new Map([
@@ -138,5 +142,39 @@ test('exige nova confirmação se os dados de vencimento mudaram após a prévia
   await expect(confirmCardReconciliation('user-1', 'legacy', 'real-id', '2026-10')).rejects.toThrow(
     'Competência alterada',
   )
+  expect(state.writes).toHaveLength(0)
+})
+
+test('concilia duas compras no mesmo lote preservando valor e data', async () => {
+  state.transactions.set('legacy-2', { ...state.transactions.get('legacy'), amount: 100 })
+  const result = await confirmCardReconciliationBatch(
+    'user-1',
+    [
+      { txId: 'legacy', invoiceMonth: '2026-08' },
+      { txId: 'legacy-2', invoiceMonth: '2026-08' },
+    ],
+    'real-id',
+  )
+  expect(result).toEqual({ count: 2, cardId: 'real-id' })
+  expect(state.writes).toHaveLength(2)
+  expect(state.transactions.get('legacy-2')).toMatchObject({
+    amount: 100,
+    date: '2026-08-15',
+    cardId: 'real-id',
+  })
+})
+
+test('lote não grava nada se uma competência mudou', async () => {
+  state.transactions.set('legacy-2', { ...state.transactions.get('legacy'), amount: 100 })
+  await expect(
+    confirmCardReconciliationBatch(
+      'user-1',
+      [
+        { txId: 'legacy', invoiceMonth: '2026-08' },
+        { txId: 'legacy-2', invoiceMonth: '2026-09' },
+      ],
+      'real-id',
+    ),
+  ).rejects.toThrow('Competência alterada')
   expect(state.writes).toHaveLength(0)
 })

@@ -116,3 +116,19 @@ test('extrato mantém parcelas manuais por data e usa fallback em crédito legad
     }),
   ).toBe('2026-09-01')
 })
+
+test('parcela manual usa o vencimento informado inclusive na virada do ano', () => {
+  const installments = ['2026-12-05', '2027-01-05', '2027-02-05'].map((dueDate, index) => ({
+    type: 'expense',
+    paymentMethod: 'pix',
+    isInstallment: true,
+    installmentNum: index + 1,
+    date: ['2026-12-01', '2027-01-01', '2027-02-01'][index],
+    dueDate,
+  }))
+  expect(installments.map(getTransactionLedgerDate)).toEqual([
+    '2026-12-05',
+    '2027-01-05',
+    '2027-02-05',
+  ])
+})

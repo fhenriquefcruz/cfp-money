@@ -1,4 +1,4 @@
-import { getTransactionActivityDate } from './transactionDates'
+import { getTransactionLedgerDate } from './transactionDates'
 
 const MONTH = /^\d{4}-\d{2}/
 
@@ -49,7 +49,7 @@ export function getBudgetTransactions(transactions = [], categoryId, monthKey) {
       transaction.flowType !== 'transfer' &&
       transaction.kind !== 'transfer' &&
       (!categoryId || transaction.categoryId === categoryId) &&
-      getTransactionActivityDate(transaction)?.slice(0, 7) === monthKey,
+      getTransactionLedgerDate(transaction)?.slice(0, 7) === monthKey,
   )
 }
 

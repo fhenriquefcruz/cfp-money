@@ -889,6 +889,25 @@ export const TransactionsProvider = ({ children }) => {
     [showNotification, user?.uid],
   )
 
+  const reconcileLegacyCardBatch = useCallback(
+    async (selections, card) => {
+      if (!user?.uid || !card?.id || !Array.isArray(selections) || !selections.length) {
+        throw new Error('Selecione as compras e o cartão antes de confirmar.')
+      }
+      if (E2E_MODE) {
+        for (const selection of selections) {
+          await reconcileLegacyCard(selection.txId, card, selection.invoiceMonth)
+        }
+        return { count: selections.length }
+      }
+      const { confirmCardReconciliationBatch } = await import('../services/cardReconciliation')
+      const result = await confirmCardReconciliationBatch(user.uid, selections, card.id)
+      showNotification(`${result.count} compras vinculadas ao cartão.`)
+      return result
+    },
+    [reconcileLegacyCard, showNotification, user?.uid],
+  )
+
   const undoLegacyCard = useCallback(
     async (txId) => {
       if (!user?.uid) throw new Error('Usuário não autenticado.')
@@ -938,7 +957,7 @@ export const TransactionsProvider = ({ children }) => {
     (year, month) => {
       const totals = {}
       getMonthTransactions(year, month)
-        .filter((t) => t.type === 'expense')
+        .filter((t) => t.type === 'expense' && !t.isSavings)
         .forEach((t) => {
           if (!totals[t.categoryId])
             totals[t.categoryId] = {
@@ -997,6 +1016,7 @@ export const TransactionsProvider = ({ children }) => {
         createTransaction,
         editTransaction,
         reconcileLegacyCard,
+        reconcileLegacyCardBatch,
         undoLegacyCard,
         setTransactionPaymentStatus,
         commitPaymentStatusOperation,
