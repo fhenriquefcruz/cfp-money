@@ -3,7 +3,6 @@ import { getTransactionLedgerDate } from './transactionDates.js'
 // Normaliza entradas históricas; os cálculos acumulam apenas centavos inteiros.
 export function moneyToCents(value) {
   const numeric = typeof value === 'number'
-  if (numeric && !Number.isFinite(value)) return 0
   const text = String(value ?? '').replace(/R\$|\s/gi, '')
   const match = numeric
     ? text.match(/^([+-]?)(\d+)(?:\.(\d+))?$/)
