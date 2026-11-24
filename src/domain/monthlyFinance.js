@@ -1,18 +1,17 @@
 import { format, subMonths } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { getTransactionLedgerDate } from './transactionDates'
-import { summarizeTransactions, transactionsForMonth } from './finance'
+import {
+  isFinanciallyEffectiveTransaction,
+  summarizeTransactions,
+  transactionsForMonth,
+} from './finance'
 
 const capitalizeMonth = (value) => (value ? value.charAt(0).toUpperCase() + value.slice(1) : '')
-const isEffective = (transaction) =>
-  transaction.paymentStatus !== 'cancelled' &&
-  transaction.flowType !== 'transfer' &&
-  transaction.kind !== 'transfer'
-
 export function groupTransactionsByActivityMonth(transactions = []) {
   const groups = {}
 
-  transactions.filter(isEffective).forEach((transaction) => {
+  transactions.filter(isFinanciallyEffectiveTransaction).forEach((transaction) => {
     const activityDate = getTransactionLedgerDate(transaction)
     if (!activityDate) return
     const key = activityDate.slice(0, 7)
