@@ -264,7 +264,8 @@ export function buildMoneyAssistantResponse({
       return {
         type: 'personalization_profile',
         title: 'Personalização desativada',
-        text: 'Ative a personalização nas Preferências do Money para consultar padrões do seu histórico.',
+        text:
+          'Ative a personalização nas Preferências do Money para consultar padrões do seu histórico.',
       }
     }
 
