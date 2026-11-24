@@ -1,27 +1,20 @@
-import { getTransactionLedgerDate } from './transactionDates'
+import { getTransactionLedgerDate } from './transactionDates.js'
 
 // Normaliza entradas históricas; os cálculos acumulam apenas centavos inteiros.
 export function moneyToCents(value) {
-  if (value == null || value === '') return 0
   const numeric = typeof value === 'number'
   if (numeric && !Number.isFinite(value)) return 0
-
-  const text = String(value)
-    .trim()
-    .replace(/^R\$\s*/i, '')
-    .replace(/\s/g, '')
-  const negative = text.startsWith('-')
-  const unsigned = text.replace(/^[+-]/, '')
+  const text = String(value ?? '').replace(/R\$|\s/gi, '')
   const match = numeric
-    ? unsigned.match(/^(\d+)(?:\.(\d+))?$/)
-    : unsigned.match(/^(\d{1,3}(?:\.\d{3})+|\d{1,3}(?:,\d{3})+|\d+)(?:[.,](\d{1,2}))?$/)
+    ? text.match(/^([+-]?)(\d+)(?:\.(\d+))?$/)
+    : text.match(/^([+-]?)(\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,](\d{1,2}))?$/)
   if (!match) return 0
-  const fraction = (match[2] || '').padEnd(3, '0')
+  const fraction = (match[3] || '').padEnd(3, '0')
   const cents =
-    Number(match[1].replace(/[.,]/g, '')) * 100 +
+    Number(match[2].replace(/[.,]/g, '')) * 100 +
     Number(fraction.slice(0, 2)) +
     (numeric && fraction[2] >= '5' ? 1 : 0)
-  return Number.isSafeInteger(cents) ? (negative ? -cents : cents) : 0
+  return Number.isSafeInteger(cents) ? (match[1] === '-' ? -cents : cents) : 0
 }
 
 export const centsToMoney = (cents) => cents / 100
