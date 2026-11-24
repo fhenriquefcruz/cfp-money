@@ -308,11 +308,10 @@ export function buildCreditCardCenter({
 
     // Compromissos futuros derivam dos lançamentos conciliados, sem somar
     // novamente compras já incluídas na fatura selecionada.
-    const futureCommitmentTotal = sum(
-      cardPurchases.filter(
-        (transaction) => resolveCreditTransactionInvoiceMonth(transaction, card) > selectedMonth,
-      ),
+    const futureCommitments = cardPurchases.filter(
+      (transaction) => resolveCreditTransactionInvoiceMonth(transaction, card) > selectedMonth,
     )
+    const futureCommitmentTotal = sum(futureCommitments)
 
     return {
       card,
@@ -322,6 +321,7 @@ export function buildCreditCardCenter({
       purchaseTotal,
       itemCount: items.length,
       installmentCount: items.filter((item) => item.isInstallment).length,
+      futureCommitmentCount: futureCommitments.length,
       futureCommitmentTotal,
       dates,
       events,
@@ -388,6 +388,11 @@ export function buildCreditCardCenter({
     ).length,
     futureInstallmentCount: futureInstallments.length,
     futureInstallmentTotal: sum(futureInstallments),
+    futureCommitmentCount: invoices.reduce(
+      (total, invoice) => total + invoice.futureCommitmentCount,
+      0,
+    ),
+    futureCommitmentTotal: sum(invoices, (invoice) => invoice.futureCommitmentTotal),
     legacyCount: selectedLegacy.length,
     legacyTotal: sum(selectedLegacy),
     forecast,

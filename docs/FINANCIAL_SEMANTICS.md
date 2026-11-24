@@ -145,6 +145,10 @@ a_pagar = pendente + atrasado
 
 Itens com status legado desconhecido ficam separados e não são tratados automaticamente como dívida pendente.
 
+### Compromissos futuros nos cartões
+
+Soma dos lançamentos vinculados a cada cartão cuja fatura vence depois da fatura selecionada, incluindo parcelas e compras avulsas futuras. O total do resumo de Cartões é a soma dos totais exibidos em cada cartão. Compras sem vínculo salvo ficam fora desse total e aparecem na conciliação.
+
 ## Indicador financeiro v2
 
 O antigo rótulo “Saúde financeira” foi substituído por “Indicador financeiro”.
