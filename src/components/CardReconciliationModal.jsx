@@ -113,7 +113,7 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
       setCardId('')
     } catch (issue) {
       setBulkConfirmed(false)
-      setError(issue.message || 'Não foi possível salvar os vínculos em lote.')
+      setError(issue.message || 'Falha ao vincular o lote.')
     } finally {
       setSaving(false)
     }
@@ -164,8 +164,8 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
     >
       <div className="space-y-5">
         <p className="text-xs leading-relaxed text-[--text-secondary]">
-          Escolha a compra e o cartão correto. A associação não cria outra despesa, não muda o valor
-          ou a data contábil e pode ser desfeita. Nada é salvo antes da sua confirmação.
+          Vincule compras antigas ao cartão correto. Valores e datas são preservados; os vínculos
+          podem ser desfeitos após a confirmação.
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -200,7 +200,7 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
                 <div key={item.id} className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    aria-label={`Selecionar ${item.description || 'compra'} para conciliação em lote`}
+                    aria-label={`Selecionar ${item.description || 'compra'} para o lote`}
                     checked={selectedIds.has(item.id)}
                     onChange={() => toggleSelected(item.id)}
                     disabled={saving || (!selectedIds.has(item.id) && selectedIds.size >= 30)}
@@ -239,7 +239,7 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
               )}
               {visible.length > 30 && (
                 <p className="text-xs text-[--text-tertiary]">
-                  Mostrando 30 de {visible.length} compras. Utilize a busca para localizar outras.
+                  Mostrando 30 de {visible.length}. Use a busca para ver outras.
                 </p>
               )}
             </div>
@@ -301,8 +301,8 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
                     </div>
                     <p className="leading-relaxed text-[--text-tertiary]">
                       {transaction.purchaseDate || transaction.originalPurchaseDate
-                        ? 'Competência calculada a partir da data original da compra e do ciclo cadastrado.'
-                        : 'Sem data original de compra: a competência existente foi preservada. Confira se esta fatura está correta antes de confirmar.'}
+                        ? 'Fatura calculada pelo ciclo do cartão e data da compra.'
+                        : 'Sem data original da compra: confira a fatura preservada.'}
                     </p>
                   </div>
                 )}
@@ -318,7 +318,7 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
                 </Button>
                 {confirmed && (
                   <p className="text-xs text-[--warning-text]">
-                    Confira o cartão e a competência acima. A segunda confirmação salvará o vínculo.
+                    Confira cartão e fatura. O próximo clique salvará o vínculo.
                   </p>
                 )}
               </section>
@@ -335,8 +335,7 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
                   )}
                 </h4>
                 <p className="text-xs text-[--text-secondary]">
-                  O cartão escolhido acima será aplicado a todas as compras selecionadas. Confira
-                  cada fatura antes de confirmar.
+                  O cartão escolhido vale para todo o lote. Confira cada fatura.
                 </p>
                 {bulkSelections.length > 0 && (
                   <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-[--text-secondary]">
@@ -366,7 +365,7 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
                 </Button>
                 {bulkConfirmed && (
                   <p className="text-xs text-[--warning-text]">
-                    A segunda confirmação salvará todos os vínculos de uma vez.
+                    O próximo clique salvará todo o lote.
                   </p>
                 )}
               </section>

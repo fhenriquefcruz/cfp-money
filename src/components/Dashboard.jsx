@@ -51,7 +51,6 @@ import {
 } from '../domain/dashboard'
 import { getTransactionLedgerDate, getTransactionDateContext } from '../domain/transactionDates'
 import { buildCategoryReviewQueue, summarizeCategoryReviews } from '../domain/categoryReview'
-import { auditCreditCardIntegrity } from '../domain/creditCardIntegrity'
 import { buildPaymentControlOverview } from '../domain/paymentControl'
 import { buildFinancialHealth } from '../domain/financialHealth'
 import { budgetMonthKey, buildMonthlyBudgetOverview } from '../domain/budgetPeriods'
@@ -276,10 +275,6 @@ export default function Dashboard() {
   const categoryReviewSummary = useMemo(
     () => summarizeCategoryReviews(categoryReviews),
     [categoryReviews],
-  )
-  const cardIntegrity = useMemo(
-    () => auditCreditCardIntegrity({ transactions, creditCards }),
-    [transactions, creditCards],
   )
 
   const monthTx = useMemo(
@@ -913,18 +908,6 @@ export default function Dashboard() {
                 <span>
                   {categoryReviewSummary.missingCategory} sem categoria ·{' '}
                   {categoryReviewSummary.suspectedCategory} classificações suspeitas
-                </span>
-                <ArrowRight size={12} />
-              </Link>
-            )}
-            {(cardIntegrity.unlinkedCount > 0 || cardIntegrity.historicalCount > 0) && (
-              <Link
-                to="/cards"
-                className="mb-3 flex min-h-10 items-center justify-between gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-[10px] font-bold text-[--warning-text]"
-              >
-                <span>
-                  {cardIntegrity.unlinkedCount} compras sem cartão · {cardIntegrity.historicalCount}{' '}
-                  referências a cartões históricos
                 </span>
                 <ArrowRight size={12} />
               </Link>

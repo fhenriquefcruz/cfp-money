@@ -83,10 +83,10 @@ test('prévia e confirmação dupla para vincular compras em lote', async () => 
   })
   render(<CardReconciliationModal isOpen onClose={vi.fn()} />)
   fireEvent.click(
-    screen.getByRole('checkbox', { name: 'Selecionar Compra antiga para conciliação em lote' }),
+    screen.getByRole('checkbox', { name: 'Selecionar Compra antiga para o lote' }),
   )
   fireEvent.click(
-    screen.getByRole('checkbox', { name: 'Selecionar Outra compra para conciliação em lote' }),
+    screen.getByRole('checkbox', { name: 'Selecionar Outra compra para o lote' }),
   )
   fireEvent.change(screen.getByLabelText('Cartão ao qual esta compra pertence'), {
     target: { value: 'card-1' },
