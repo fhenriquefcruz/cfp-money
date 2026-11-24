@@ -169,3 +169,27 @@ test('compra em dezembro com vencimentos em 5/12, 5/1 e 5/2 entra mês a mês', 
     ).spent,
   ).toBe(400)
 })
+
+test('normaliza montantes históricos e soma em centavos inteiros', () => {
+  const result = summarizeTransactions([
+    { type: 'income', amount: 'R$ 1.234,56', date: '2026-11-01' },
+    { type: 'expense', amount: '100,50', date: '2026-11-02' },
+    { type: 'expense', amount: 0.1, date: '2026-11-03' },
+    { type: 'expense', amount: 0.2, date: '2026-11-04' },
+    { type: 'income', isSavings: true, amount: '40,05', date: '2026-11-05' },
+    {
+      type: 'income',
+      isSavings: true,
+      amount: '10,02',
+      savingsMovement: 'withdrawal',
+      date: '2026-11-06',
+    },
+  ])
+  expect(result).toEqual({
+    income: 1234.56,
+    expenses: 100.8,
+    savings: 30.03,
+    balance: 1133.76,
+    count: 6,
+  })
+})
