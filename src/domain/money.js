@@ -1,4 +1,10 @@
 import { getTransactionLedgerDate } from './transactionDates'
+import {
+  centsToMoney,
+  isFinanciallyEffectiveTransaction as isEffective,
+  moneyToCents,
+  summarizeTransactions,
+} from './finance'
 import { buildCategoryReviewQueue } from './categoryReview'
 
 const DEFAULT_SETTINGS = Object.freeze({
@@ -11,11 +17,6 @@ const DEFAULT_SETTINGS = Object.freeze({
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const MIN_PROJECTION_ELAPSED_DAYS = 7
-const isEffective = (transaction) =>
-  transaction.paymentStatus !== 'cancelled' &&
-  transaction.flowType !== 'transfer' &&
-  transaction.kind !== 'transfer'
-
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
 }
@@ -73,26 +74,9 @@ function isWithin(dateValue, startValue, endValue) {
   return date >= asIsoDate(startValue) && date <= asIsoDate(endValue)
 }
 
-function toAmount(value) {
-  const amount = Number(value)
-  return Number.isFinite(amount) ? amount : 0
-}
-
 function safePercentChange(current, previous) {
   if (previous === 0) return current === 0 ? 0 : null
   return ((current - previous) / previous) * 100
-}
-
-function sumExpenses(transactions) {
-  return transactions
-    .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
-    .reduce((total, transaction) => total + toAmount(transaction.amount), 0)
-}
-
-function sumIncome(transactions) {
-  return transactions
-    .filter((transaction) => transaction.type === 'income' && !transaction.isSavings)
-    .reduce((total, transaction) => total + toAmount(transaction.amount), 0)
 }
 
 export function normalizeMoneySettings(settings = {}) {
@@ -207,7 +191,7 @@ export function calculateCategoryChanges(currentTransactions = [], previousTrans
           categoryName: transaction.categoryName || 'Sem categoria',
           total: 0,
         }
-        existing.total += toAmount(transaction.amount)
+        existing.total += moneyToCents(transaction.amount)
         totals.set(key, existing)
       })
 
@@ -222,8 +206,8 @@ export function calculateCategoryChanges(currentTransactions = [], previousTrans
     .map((key) => {
       const currentItem = current.get(key)
       const previousItem = previous.get(key)
-      const currentTotal = currentItem?.total || 0
-      const previousTotal = previousItem?.total || 0
+      const currentTotal = centsToMoney(currentItem?.total || 0)
+      const previousTotal = centsToMoney(previousItem?.total || 0)
 
       return {
         categoryId: currentItem?.categoryId || previousItem?.categoryId || null,
@@ -250,10 +234,12 @@ export function analyzeMoney(transactions = [], settings = {}, referenceDate = n
     periods.settings,
   )
 
-  const currentExpenses = sumExpenses(currentTransactions)
-  const previousExpenses = sumExpenses(previousTransactions)
-  const currentIncome = sumIncome(currentTransactions)
-  const previousIncome = sumIncome(previousTransactions)
+  const currentSummary = summarizeTransactions(currentTransactions)
+  const previousSummary = summarizeTransactions(previousTransactions)
+  const currentExpenses = currentSummary.expenses
+  const previousExpenses = previousSummary.expenses
+  const currentIncome = currentSummary.income
+  const previousIncome = previousSummary.income
   const expenseChangePercent = safePercentChange(currentExpenses, previousExpenses)
   const incomeChangePercent = safePercentChange(currentIncome, previousIncome)
 
