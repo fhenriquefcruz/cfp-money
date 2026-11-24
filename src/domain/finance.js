@@ -1,7 +1,22 @@
-import { getSavingsSignedAmount } from './savings'
-import { getTransactionLedgerDate } from './transactionDates'
+import { getTransactionLedgerDate } from './transactionDates.js'
 
-const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
+// Normaliza entradas históricas; os cálculos acumulam apenas centavos inteiros.
+export function moneyToCents(value) {
+  const numeric = typeof value === 'number' || /^[+-]?\d+\.\d{3}$/.test(String(value))
+  const text = String(value).replace(/R\$|\s/g, '')
+  const match = numeric
+    ? text.match(/^([+-]?)(\d+)(?:\.(\d+))?$/)
+    : text.match(/^([+-]?)(\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,](\d{1,2}))?$/)
+  if (!match) return 0
+  const fraction = (match[3] || '') + '000'
+  const cents =
+    Number(match[2].replace(/[.,]/g, '')) * 100 +
+    Number(fraction.slice(0, 2)) +
+    (numeric && fraction[2] >= '5' ? 1 : 0)
+  return Number.isSafeInteger(cents) ? (match[1] === '-' ? -cents : cents) : 0
+}
+
+export const centsToMoney = (cents) => cents / 100
 
 export const getFinancialActivityDate = getTransactionLedgerDate
 
@@ -11,31 +26,31 @@ export const isFinanciallyEffectiveTransaction = (transaction = {}) =>
   transaction.kind !== 'transfer'
 
 export function summarizeTransactions(transactions = []) {
-  return transactions.reduce(
-    (summary, transaction) => {
-      if (!isFinanciallyEffectiveTransaction(transaction)) return summary
-      const amount = asAmount(transaction.amount)
+  let incomeCents = 0
+  let expenseCents = 0
+  let savingsCents = 0
+  let count = 0
 
-      if (transaction.isSavings) {
-        summary.savings += getSavingsSignedAmount(transaction)
-      } else if (transaction.type === 'income') {
-        summary.income += amount
-      } else if (transaction.type === 'expense') {
-        summary.expenses += amount
-      }
+  for (const transaction of transactions) {
+    if (!isFinanciallyEffectiveTransaction(transaction)) continue
+    const cents = moneyToCents(transaction.amount)
+    if (transaction.isSavings) {
+      savingsCents += (transaction.savingsMovement === 'withdrawal' ? -1 : 1) * Math.abs(cents)
+    } else if (transaction.type === 'income') {
+      incomeCents += cents
+    } else if (transaction.type === 'expense') {
+      expenseCents += cents
+    }
+    count += 1
+  }
 
-      summary.balance = summary.income - summary.expenses
-      summary.count += 1
-      return summary
-    },
-    {
-      income: 0,
-      expenses: 0,
-      savings: 0,
-      balance: 0,
-      count: 0,
-    },
-  )
+  return {
+    income: centsToMoney(incomeCents),
+    expenses: centsToMoney(expenseCents),
+    savings: centsToMoney(savingsCents),
+    balance: centsToMoney(incomeCents - expenseCents),
+    count,
+  }
 }
 
 export function calculateCurrentBalance(transactions = []) {
@@ -68,29 +83,27 @@ export function defaultDateRangeEnd(startDate, days = 30) {
 }
 
 export function calculateBudgetUsage(transactions = [], budget, referenceDate = new Date()) {
-  if (!budget || asAmount(budget.amount) <= 0) {
+  const limitCents = budget ? moneyToCents(budget.amount) : 0
+  if (limitCents <= 0) {
     return { spent: 0, percent: 0 }
   }
 
-  const spent = transactions
-    .filter((transaction) => {
-      const activityDate = getFinancialActivityDate(transaction)
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(activityDate || '')) return false
-      const date = new Date(activityDate + 'T00:00:00')
-
-      return (
-        isFinanciallyEffectiveTransaction(transaction) &&
+  const monthItems = transactionsForMonth(
+    transactions,
+    referenceDate.getFullYear(),
+    referenceDate.getMonth(),
+  )
+  const spent = summarizeTransactions(
+    monthItems.filter(
+      (transaction) =>
         transaction.type === 'expense' &&
         !transaction.isSavings &&
-        transaction.categoryId === budget.categoryId &&
-        date.getFullYear() === referenceDate.getFullYear() &&
-        date.getMonth() === referenceDate.getMonth()
-      )
-    })
-    .reduce((total, transaction) => total + asAmount(transaction.amount), 0)
+        transaction.categoryId === budget.categoryId,
+    ),
+  ).expenses
 
   return {
     spent,
-    percent: (spent / asAmount(budget.amount)) * 100,
+    percent: (spent * 10000) / limitCents,
   }
 }

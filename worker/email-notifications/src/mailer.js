@@ -77,7 +77,7 @@ export function reportEmail({ name, summary, periodLabel, appUrl, test = false }
 </tr>
 </table>
 <div style="margin-top:12px;padding:16px;background:#eff4ff;border-radius:12px">
-<div style="font-size:12px;color:#3538cd">Saldo do período</div>
+<div style="font-size:12px;color:#3538cd">Resultado do período</div>
 <div style="margin-top:4px;font-size:24px;font-weight:800">${currency(summary.balance)}</div>
 </div>
 <h2 style="margin:24px 0 8px;font-size:16px">Principais categorias</h2>

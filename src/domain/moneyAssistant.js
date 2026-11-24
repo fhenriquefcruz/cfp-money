@@ -1,3 +1,6 @@
+import { isFinanciallyEffectiveTransaction, moneyToCents, summarizeTransactions } from './finance'
+import { getTransactionLedgerDate } from './transactionDates'
+
 const MONTHS = [
   ['janeiro', 'jan'],
   ['fevereiro', 'fev'],
@@ -105,20 +108,6 @@ function getCurrentCycleLabel(periods) {
   return `${formatDate(periods.current.start)} a ${formatDate(periods.current.end)}`
 }
 
-function summarize(transactions) {
-  return transactions.reduce(
-    (summary, transaction) => {
-      const amount = Number(transaction.amount) || 0
-      if (transaction.type === 'income') summary.income += amount
-      if (transaction.type === 'expense') summary.expenses += amount
-      summary.balance = summary.income - summary.expenses
-      summary.count += 1
-      return summary
-    },
-    { income: 0, expenses: 0, balance: 0, count: 0 },
-  )
-}
-
 function findCategory(normalizedMessage, categories = [], transactions = []) {
   const candidates = new Map()
 
@@ -151,8 +140,9 @@ function findCategory(normalizedMessage, categories = [], transactions = []) {
 
 function filterMonthTransactions(transactions, period, excludeSavings = true) {
   return transactions.filter((transaction) => {
-    if (!transaction?.date) return false
-    if (transaction.date < period.start || transaction.date > period.end) return false
+    if (!isFinanciallyEffectiveTransaction(transaction)) return false
+    const date = getTransactionLedgerDate(transaction)
+    if (!date || date < period.start || date > period.end) return false
     if (excludeSavings && transaction.isSavings) return false
     return true
   })
@@ -264,7 +254,7 @@ export function buildMoneyAssistantResponse({
     return {
       type: 'help',
       title: intent.type === 'unknown' ? 'Ainda não entendi esse pedido' : 'Como posso ajudar',
-      text: 'Nesta fase, posso consultar seus dados sem alterar nenhum lançamento. Peça um relatório mensal, uma análise do período atual ou o total gasto em uma categoria.',
+      text: 'Consulte relatórios e categorias sem alterar lançamentos.',
     }
   }
 
@@ -273,7 +263,7 @@ export function buildMoneyAssistantResponse({
       return {
         type: 'personalization_profile',
         title: 'Personalização desativada',
-        text: 'Ative “Personalizar o Money com meu histórico” nas Preferências do Money para eu identificar padrões agregados dos seus próprios lançamentos.',
+        text: 'Ative a personalização nas Preferências do Money.',
       }
     }
 
@@ -282,9 +272,9 @@ export function buildMoneyAssistantResponse({
       return {
         type: 'personalization_profile',
         title: 'Ainda estou formando seu perfil',
-        text: 'Ainda não há histórico suficiente para formar um perfil individual de gastos.',
+        text: 'Histórico insuficiente para identificar padrões de gastos.',
         secondaryText:
-          'O Money precisa de pelo menos quatro despesas recentes para começar e aumenta a confiança conforme o histórico cresce.',
+          'Quatro despesas recentes são necessárias; mais histórico melhora a análise.',
         metrics: [{ label: 'Amostra', rawValue: `${sampleSize} despesas` }],
       }
     }
@@ -293,10 +283,10 @@ export function buildMoneyAssistantResponse({
     const payment = personalizationProfile?.preferredPaymentMethod
     const evidence = [
       topCategory
-        ? `${topCategory.name} representa ${Math.round((topCategory.share || 0) * 100)}% das despesas analisadas`
+        ? `${topCategory.name}: ${Math.round((topCategory.share || 0) * 100)}% das despesas`
         : '',
       payment
-        ? `${payment.label || payment.id} aparece em ${payment.count} lançamento${payment.count === 1 ? '' : 's'}`
+        ? `${payment.label || payment.id}: ${payment.count} lançamento${payment.count === 1 ? '' : 's'}`
         : '',
     ].filter(Boolean)
 
@@ -304,10 +294,9 @@ export function buildMoneyAssistantResponse({
       type: 'personalization_profile',
       title: 'O que aprendi com seu histórico',
       text: evidence.length
-        ? `Com base no seu próprio histórico, ${evidence.join('; ')}.`
-        : 'O histórico já permite personalização, mas ainda não existe um padrão dominante confiável.',
-      secondaryText:
-        'Esse perfil é recalculado no seu navegador a partir dos seus próprios lançamentos recentes. A conversa não é armazenada no Firestore.',
+        ? `Pelos seus lançamentos, ${evidence.join('; ')}.`
+        : 'Ainda não há um padrão dominante confiável.',
+      secondaryText: 'Perfil calculado no navegador. A conversa não é salva no Firestore.',
       metrics: [
         { label: 'Amostra', rawValue: `${sampleSize} despesas` },
         ...(topCategory
@@ -338,7 +327,7 @@ export function buildMoneyAssistantResponse({
       return {
         type: 'cycle_summary',
         title: 'Ainda não há histórico suficiente',
-        text: 'Registre receitas e despesas para o Money começar a comparar seu ciclo financeiro.',
+        text: 'Registre receitas e despesas para comparar períodos.',
       }
     }
 
@@ -347,7 +336,7 @@ export function buildMoneyAssistantResponse({
       title: 'Análise do período atual',
       text: variation
         ? `Suas despesas estão ${variation} do período equivalente anterior.`
-        : 'Ainda não existe um período anterior com despesas para calcular a variação percentual.',
+        : 'Sem despesas no período anterior para calcular a variação.',
       secondaryText:
         analysis.insights.find((item) => item.type === 'category_increase')?.message || null,
       metrics: [
@@ -370,7 +359,7 @@ export function buildMoneyAssistantResponse({
   if (intent.type === 'top') {
     const expenses = periodTransactions
       .filter((transaction) => transaction.type === 'expense')
-      .sort((a, b) => b.amount - a.amount)
+      .sort((a, b) => moneyToCents(b.amount) - moneyToCents(a.amount))
       .slice(0, 5)
 
     return {
@@ -380,7 +369,7 @@ export function buildMoneyAssistantResponse({
         expenses
           .map(
             (transaction) =>
-              `${transaction.description || transaction.categoryName}: ${currencyFormatter.format(transaction.amount)}`,
+              `${transaction.description || transaction.categoryName}: ${currencyFormatter.format(moneyToCents(transaction.amount) / 100)}`,
           )
           .join(' · ') || 'Nenhuma.',
     }
@@ -393,17 +382,14 @@ export function buildMoneyAssistantResponse({
       return normalizeText(transaction.categoryName) === normalizeText(intent.category.name)
     })
 
-    const total = periodTransactions.reduce(
-      (sum, transaction) => sum + (Number(transaction.amount) || 0),
-      0,
-    )
+    const total = summarizeTransactions(periodTransactions).expenses
 
     return {
       type: 'category_report',
       title: `${intent.category.name} em ${period.label}`,
       text:
         periodTransactions.length > 0
-          ? `Você gastou ${currencyFormatter.format(total)} em ${intent.category.name}, distribuídos em ${periodTransactions.length} lançamento${periodTransactions.length === 1 ? '' : 's'}.`
+          ? `Gasto de ${currencyFormatter.format(total)} em ${intent.category.name} (${periodTransactions.length} lançamento${periodTransactions.length === 1 ? '' : 's'}).`
           : `Não encontrei despesas de ${intent.category.name} em ${period.label}.`,
       metrics:
         periodTransactions.length > 0
@@ -417,14 +403,14 @@ export function buildMoneyAssistantResponse({
     }
   }
 
-  const summary = summarize(periodTransactions)
+  const summary = summarizeTransactions(periodTransactions)
 
   return {
     type: 'monthly_report',
     title: `Relatório de ${period.label}`,
     text:
       summary.count > 0
-        ? `Encontrei ${summary.count} lançamento${summary.count === 1 ? '' : 's'} no período. O resultado foi ${summary.balance >= 0 ? 'positivo' : 'negativo'} em ${currencyFormatter.format(Math.abs(summary.balance))}.`
+        ? `${summary.count} lançamento${summary.count === 1 ? '' : 's'} no período. Resultado ${summary.balance >= 0 ? 'positivo' : 'negativo'}: ${currencyFormatter.format(Math.abs(summary.balance))}.`
         : `Não encontrei lançamentos em ${period.label}.`,
     metrics:
       summary.count > 0

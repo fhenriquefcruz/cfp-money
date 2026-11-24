@@ -274,3 +274,49 @@ test('não afirma padrão quando a amostra ainda é insuficiente', () => {
   })
   expect(response.metrics).toEqual([{ label: 'Amostra', rawValue: '3 despesas' }])
 })
+
+test('Money exclui transferências e cancelamentos e vê a parcela na fatura correta', () => {
+  const rows = [
+    {
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      isInstallment: true,
+      amount: 60.01,
+      purchaseDate: '2026-11-25',
+      date: '2026-12-05',
+      dueDate: '2026-12-05',
+      description: 'Notebook',
+      categoryName: 'Tecnologia',
+      categoryId: 'tech',
+    },
+    {
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      isInstallment: true,
+      amount: 60,
+      purchaseDate: '2026-11-25',
+      date: '2027-01-05',
+      dueDate: '2027-01-05',
+      categoryName: 'Tecnologia',
+      categoryId: 'tech',
+    },
+    { type: 'income', date: '2026-12-02', amount: '1.000,00' },
+    { type: 'expense', date: '2026-12-02', amount: 300, paymentStatus: 'cancelled' },
+    { type: 'expense', date: '2026-12-03', amount: 200, flowType: 'transfer' },
+    { type: 'income', date: '2026-12-03', amount: 75, isSavings: true },
+  ]
+  const response = buildMoneyAssistantResponse({
+    message: 'Relatório de dezembro de 2026',
+    now: new Date(2026, 11, 15),
+    transactions: rows,
+    settings: { excludeSavings: true },
+  })
+  expect(response.reportMonth).toBe('2026-12')
+  expect(response.metrics).toEqual([
+    { label: 'Receitas', value: 1000 },
+    { label: 'Despesas', value: 60.01 },
+    { label: 'Resultado', value: 939.99 },
+  ])
+})

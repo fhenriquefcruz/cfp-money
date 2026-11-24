@@ -113,3 +113,42 @@ test('resume lançamentos do período', () => {
   assert.equal(summary.balance, 750)
   assert.equal(summary.topCategories[0].name, 'Alimentação')
 })
+
+test('Worker resume parcelas por vencimento e normaliza valores monetários legados', () => {
+  const rows = [
+    {
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      purchaseDate: '2026-11-25',
+      date: '2026-12-05',
+      dueDate: '2026-12-05',
+      amount: '100,50',
+      categoryName: 'Presente',
+    },
+    {
+      type: 'expense',
+      paymentMethod: 'credit_card',
+      isCreditPurchase: true,
+      purchaseDate: '2026-11-25',
+      date: '2027-01-05',
+      dueDate: '2027-01-05',
+      amount: '100,50',
+      categoryName: 'Presente',
+    },
+    { type: 'income', date: '2026-12-10', amount: 'R$ 2.000,00' },
+    { type: 'expense', date: '2026-12-15', amount: 12, paymentStatus: 'cancelled' },
+    { type: 'expense', date: '2026-12-20', amount: 50, flowType: 'transfer' },
+    { type: 'income', date: '2026-12-21', isSavings: true, amount: '1,20' },
+  ]
+  const summary = summarizeTransactions(rows, {
+    start: new Date('2026-12-01T00:00:00Z'),
+    end: new Date('2026-12-31T23:59:59Z'),
+  })
+  assert.equal(summary.income, 2000)
+  assert.equal(summary.expenses, 100.5)
+  assert.equal(summary.savings, 1.2)
+  assert.equal(summary.balance, 1899.5)
+  assert.equal(summary.count, 3)
+  assert.deepEqual(summary.topCategories, [{ name: 'Presente', amount: 100.5 }])
+})
