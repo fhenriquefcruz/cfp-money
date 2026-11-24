@@ -273,3 +273,23 @@ test('Money sinaliza revisão de categoria antes de interpretar destaques', () =
     count: 1,
   })
 })
+
+test('Money mantém centavos de montantes legados no resumo e nas categorias', () => {
+  const transactions = [
+    { type: 'income', amount: 'R$ 2.000,00', date: '2026-11-02' },
+    { type: 'expense', amount: '100,50', date: '2026-11-02', categoryName: 'Mercado' },
+    { type: 'expense', amount: 0.1, date: '2026-11-03', categoryName: 'Mercado' },
+    { type: 'expense', amount: 0.2, date: '2026-11-03', categoryName: 'Mercado' },
+    { type: 'expense', amount: 50, date: '2026-11-04', paymentStatus: 'cancelled' },
+    { type: 'expense', amount: 100, date: '2026-11-05', flowType: 'transfer' },
+  ]
+  const result = analyzeMoney(transactions, {}, new Date(2026, 10, 20))
+
+  expect(result.current.income).toBe(2000)
+  expect(result.current.expenses).toBe(100.8)
+  expect(result.current.balance).toBe(1899.2)
+  expect(result.categories.changes.find((item) => item.categoryName === 'Mercado')).toMatchObject({
+    currentTotal: 100.8,
+    difference: 100.8,
+  })
+})
