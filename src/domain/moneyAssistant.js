@@ -254,7 +254,7 @@ export function buildMoneyAssistantResponse({
     return {
       type: 'help',
       title: intent.type === 'unknown' ? 'Ainda não entendi esse pedido' : 'Como posso ajudar',
-      text: 'Consulte seu histórico sem alterar lançamentos. Peça relatório mensal, análise do período ou gastos por categoria.',
+      text: 'Consulte relatórios e categorias sem alterar lançamentos.',
     }
   }
 
@@ -263,7 +263,7 @@ export function buildMoneyAssistantResponse({
       return {
         type: 'personalization_profile',
         title: 'Personalização desativada',
-        text: 'Ative a personalização nas Preferências do Money para consultar padrões do seu histórico.',
+        text: 'Ative a personalização nas Preferências do Money.',
       }
     }
 
@@ -274,7 +274,7 @@ export function buildMoneyAssistantResponse({
         title: 'Ainda estou formando seu perfil',
         text: 'Histórico insuficiente para identificar padrões de gastos.',
         secondaryText:
-          'O Money precisa de quatro despesas recentes. A confiança aumenta com o histórico.',
+          'Quatro despesas recentes são necessárias; mais histórico melhora a análise.',
         metrics: [{ label: 'Amostra', rawValue: `${sampleSize} despesas` }],
       }
     }
@@ -327,7 +327,7 @@ export function buildMoneyAssistantResponse({
       return {
         type: 'cycle_summary',
         title: 'Ainda não há histórico suficiente',
-        text: 'Registre receitas e despesas para comparar seu ciclo financeiro.',
+        text: 'Registre receitas e despesas para comparar períodos.',
       }
     }
 
