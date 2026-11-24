@@ -1,7 +1,30 @@
-import { getSavingsSignedAmount } from './savings'
 import { getTransactionLedgerDate } from './transactionDates'
 
-const asAmount = (value) => (Number.isFinite(Number(value)) ? Number(value) : 0)
+// Normaliza entradas históricas; os cálculos acumulam apenas centavos inteiros.
+export function moneyToCents(value) {
+  if (value == null || value === '') return 0
+  const numeric = typeof value === 'number'
+  if (numeric && !Number.isFinite(value)) return 0
+
+  const text = String(value)
+    .trim()
+    .replace(/^R\$\s*/i, '')
+    .replace(/\s/g, '')
+  const negative = text.startsWith('-')
+  const unsigned = text.replace(/^[+-]/, '')
+  const match = numeric
+    ? unsigned.match(/^(\d+)(?:\.(\d+))?$/)
+    : unsigned.match(/^(\d{1,3}(?:\.\d{3})+|\d{1,3}(?:,\d{3})+|\d+)(?:[.,](\d{1,2}))?$/)
+  if (!match) return 0
+  const fraction = (match[2] || '').padEnd(3, '0')
+  const cents =
+    Number(match[1].replace(/[.,]/g, '')) * 100 +
+    Number(fraction.slice(0, 2)) +
+    (numeric && fraction[2] >= '5' ? 1 : 0)
+  return Number.isSafeInteger(cents) ? (negative ? -cents : cents) : 0
+}
+
+export const centsToMoney = (cents) => cents / 100
 
 export const getFinancialActivityDate = getTransactionLedgerDate
 
@@ -11,31 +34,32 @@ export const isFinanciallyEffectiveTransaction = (transaction = {}) =>
   transaction.kind !== 'transfer'
 
 export function summarizeTransactions(transactions = []) {
-  return transactions.reduce(
-    (summary, transaction) => {
-      if (!isFinanciallyEffectiveTransaction(transaction)) return summary
-      const amount = asAmount(transaction.amount)
+  let incomeCents = 0
+  let expenseCents = 0
+  let savingsCents = 0
+  let count = 0
 
-      if (transaction.isSavings) {
-        summary.savings += getSavingsSignedAmount(transaction)
-      } else if (transaction.type === 'income') {
-        summary.income += amount
-      } else if (transaction.type === 'expense') {
-        summary.expenses += amount
-      }
+  for (const transaction of transactions) {
+    if (!isFinanciallyEffectiveTransaction(transaction)) continue
+    const cents = moneyToCents(transaction.amount)
+    if (transaction.isSavings) {
+      savingsCents +=
+        transaction.savingsMovement === 'withdrawal' ? -Math.abs(cents) : Math.abs(cents)
+    } else if (transaction.type === 'income') {
+      incomeCents += cents
+    } else if (transaction.type === 'expense') {
+      expenseCents += cents
+    }
+    count += 1
+  }
 
-      summary.balance = summary.income - summary.expenses
-      summary.count += 1
-      return summary
-    },
-    {
-      income: 0,
-      expenses: 0,
-      savings: 0,
-      balance: 0,
-      count: 0,
-    },
-  )
+  return {
+    income: centsToMoney(incomeCents),
+    expenses: centsToMoney(expenseCents),
+    savings: centsToMoney(savingsCents),
+    balance: centsToMoney(incomeCents - expenseCents),
+    count,
+  }
 }
 
 export function calculateCurrentBalance(transactions = []) {
@@ -68,7 +92,8 @@ export function defaultDateRangeEnd(startDate, days = 30) {
 }
 
 export function calculateBudgetUsage(transactions = [], budget, referenceDate = new Date()) {
-  if (!budget || asAmount(budget.amount) <= 0) {
+  const limitCents = budget ? moneyToCents(budget.amount) : 0
+  if (limitCents <= 0) {
     return { spent: 0, percent: 0 }
   }
 
@@ -87,10 +112,10 @@ export function calculateBudgetUsage(transactions = [], budget, referenceDate = 
         date.getMonth() === referenceDate.getMonth()
       )
     })
-    .reduce((total, transaction) => total + asAmount(transaction.amount), 0)
+    .reduce((total, transaction) => total + moneyToCents(transaction.amount), 0)
 
   return {
-    spent,
-    percent: (spent / asAmount(budget.amount)) * 100,
+    spent: centsToMoney(spent),
+    percent: (spent / limitCents) * 100,
   }
 }
