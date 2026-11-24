@@ -35,8 +35,7 @@ export function summarizeTransactions(transactions = []) {
     if (!isFinanciallyEffectiveTransaction(transaction)) continue
     const cents = moneyToCents(transaction.amount)
     if (transaction.isSavings) {
-      savingsCents +=
-        (transaction.savingsMovement === 'withdrawal' ? -1 : 1) * Math.abs(cents)
+      savingsCents += (transaction.savingsMovement === 'withdrawal' ? -1 : 1) * Math.abs(cents)
     } else if (transaction.type === 'income') {
       incomeCents += cents
     } else if (transaction.type === 'expense') {
