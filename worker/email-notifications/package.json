@@ -10,7 +10,7 @@
     "test": "node --test test/*.test.js",
     "check": "node --check src/index.js && node --check src/domain.js && node --check src/googleAuth.js && node --check src/firestore.js && node --check src/mailer.js",
     "validate": "npm run check && npm run bundle:check && npm run test && npm run audit:high",
-    "bundle:check": "wrangler deploy --dry-run --outdir .wrangler-bundle-check",
+    "bundle:check": "wrangler deploy --dry-run --outdir node_modules/.cache/meu-real-worker-check",
     "dev": "wrangler dev --test-scheduled",
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",
