@@ -1,3 +1,10 @@
+import {
+  isFinanciallyEffectiveTransaction,
+  moneyToCents,
+  summarizeTransactions as summarizeFinancialTransactions,
+} from '../../../src/domain/finance.js'
+import { getTransactionLedgerDate } from '../../../src/domain/transactionDates.js'
+
 export const TRIAL_DAYS = 7
 const DAY_MS = 86_400_000
 
@@ -142,39 +149,26 @@ export function reportRange(frequency, now = new Date()) {
 }
 
 export function summarizeTransactions(transactions, range) {
+  const start = range.start.toISOString().slice(0, 10)
+  const end = range.end.toISOString().slice(0, 10)
   const included = transactions.filter((item) => {
-    const date = toDate(item.date ? `${item.date}T12:00:00.000Z` : item.createdAt)
-    return date && date >= range.start && date <= range.end
+    if (!isFinanciallyEffectiveTransaction(item)) return false
+    const date = getTransactionLedgerDate(item)
+    return Boolean(date && date >= start && date <= end)
   })
-
-  let income = 0
-  let expenses = 0
+  const summary = summarizeFinancialTransactions(included)
   const categories = new Map()
 
   for (const item of included) {
-    const amount = Number(item.amount || 0)
-    if (item.type === 'income' && !item.isSavings) {
-      income += amount
-      continue
-    }
-
-    if (item.type === 'expense') {
-      expenses += amount
-      const name = item.categoryName || item.category || 'Outros'
-      categories.set(name, (categories.get(name) || 0) + amount)
-    }
+    if (item.type !== 'expense' || item.isSavings) continue
+    const name = item.categoryName || item.category || 'Outros'
+    categories.set(name, (categories.get(name) || 0) + moneyToCents(item.amount))
   }
 
   return {
-    income,
-    expenses,
-    balance: income - expenses,
-    count: included.length,
+    ...summary,
     topCategories: [...categories.entries()]
-      .map(([name, amount]) => ({
-        name,
-        amount,
-      }))
+      .map(([name, cents]) => ({ name, amount: cents / 100 }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 5),
   }
