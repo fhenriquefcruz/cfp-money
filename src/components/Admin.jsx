@@ -364,7 +364,10 @@ export default function Admin() {
         </div>
       )}
       {actionError && (
-        <p role="alert" className="rounded-xl border border-[--danger-border] bg-[--danger-bg] p-3 text-sm text-[--danger-text]">
+        <p
+          role="alert"
+          className="rounded-xl border border-[--danger-border] bg-[--danger-bg] p-3 text-sm text-[--danger-text]"
+        >
           {actionError}
         </p>
       )}
