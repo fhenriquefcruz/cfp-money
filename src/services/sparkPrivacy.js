@@ -134,6 +134,9 @@ export async function exportSparkData(uid) {
 }
 
 export async function requestSparkAccountDeletion(uid, confirmation) {
+  if (!auth.currentUser?.uid || auth.currentUser.uid !== uid) {
+    throw new Error('Usuário não autenticado ou diferente do titular.')
+  }
   if (confirmation !== 'EXCLUIR MINHA CONTA') {
     throw new Error('Digite exatamente EXCLUIR MINHA CONTA.')
   }
@@ -157,10 +160,21 @@ export async function requestSparkAccountDeletion(uid, confirmation) {
 }
 
 export async function cancelSparkAccountDeletion(uid) {
+  if (!auth.currentUser?.uid || auth.currentUser.uid !== uid) {
+    throw new Error('Usuário não autenticado ou diferente do titular.')
+  }
+  const deletion = await getDoc(deletionRef(uid))
+  if (!deletion.exists() || deletion.data()?.status !== 'pending-manual') {
+    throw new Error('Não há pedido de exclusão pendente para cancelar.')
+  }
+  const originalProtocol = String(deletion.data()?.supportProtocol || '')
+  const reference = originalProtocol
+    ? ` Referência do pedido original: MR-${originalProtocol.slice(0, 10).toUpperCase()}.`
+    : ''
   const request = supportRequest(
     uid,
     'Cancelamento do pedido de exclusão',
-    'Cancelo a solicitação anterior de exclusão da minha conta. Por favor, desconsidere o pedido de exclusão em aberto.',
+    `Cancelo a solicitação anterior de exclusão da minha conta. Por favor, desconsidere o pedido de exclusão em aberto.${reference}`,
   )
   const batch = writeBatch(db)
   batch.delete(deletionRef(uid))
