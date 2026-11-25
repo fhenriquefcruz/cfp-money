@@ -11,6 +11,8 @@ export const CATEGORY_PALETTE = Object.freeze([
 
 export const UNCATEGORIZED_COLOR = '#94A3B8'
 
+const VALID_HEX = /^#(?:[\da-f]{3}|[\da-f]{6})$/i
+
 // Os registros de categorias globais antigas usam cores saturadas do seed.
 // Eles não podem ser personalizados pela interface; harmonizar apenas a
 // apresentação evita uma migração desnecessária e preserva cores individuais.
@@ -45,11 +47,13 @@ function stableHash(value) {
 
 // A paleta visual é independente das cores históricas salvas. Os dados não são alterados.
 export function getCategoryColor(category = {}, fallbackKey = '') {
-  const curated = DEFAULT_CATEGORY_COLORS[categorySlug(category?.name)]
-  if (curated) return curated
-  if (CATEGORY_PALETTE.includes(String(category?.color || '').toUpperCase())) {
+  // A escolha explícita do usuário prevalece. Apenas categorias globais
+  // recebem a cor curada automaticamente; não migramos documentos existentes.
+  if (!category?.isDefault && VALID_HEX.test(category?.color || '')) {
     return String(category.color).toUpperCase()
   }
+  const curated = DEFAULT_CATEGORY_COLORS[categorySlug(category?.name)]
+  if (curated) return curated
   const key = category?.id || category?.name || fallbackKey
   if (!key) return UNCATEGORIZED_COLOR
   return CATEGORY_PALETTE[stableHash(key) % CATEGORY_PALETTE.length]
