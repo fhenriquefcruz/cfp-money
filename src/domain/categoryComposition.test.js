@@ -131,7 +131,7 @@ describe('Identidade cromática por categoria', () => {
       icon: '🥗',
     })
     expect(source[0].color).toBeUndefined()
-    expect(CATEGORY_PALETTE).toContain(decorateCategoryBreakdown(source, [])[0].color)
+    expect(decorateCategoryBreakdown(source, [])[0].color).toBe('#AC7B4E')
   })
 
   it('mantém identificáveis lançamentos legados sem categoria cadastrada', () => {
@@ -143,6 +143,6 @@ describe('Identidade cromática por categoria', () => {
       total: 40,
       sharePercent: 100,
     })
-    expect(CATEGORY_PALETTE).toContain(rows[0].color)
+    expect(rows[0].color).toBe('#786C8D')
   })
 })
