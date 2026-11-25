@@ -35,6 +35,7 @@ function StatusBadge({ u, currentAdmin = false }) {
 function UserRow({ u, onAccess, currentAdmin = false }) {
   const [expanded, setExpanded] = useState(false)
   const [confirmAccess, setConfirmAccess] = useState(false)
+  const [savingAccess, setSavingAccess] = useState(false)
   const [months, setMonths] = useState(1)
   const isPremiumActive = getPlanPresentation(u).key === 'premium'
   const activity = getUserActivityState(u)
@@ -158,7 +159,9 @@ function UserRow({ u, onAccess, currentAdmin = false }) {
 
       <Modal
         isOpen={confirmAccess}
-        onClose={() => setConfirmAccess(false)}
+        onClose={() => {
+          if (!savingAccess) setConfirmAccess(false)
+        }}
         title="Liberar acesso Premium"
       >
         <div className="space-y-4">
@@ -173,14 +176,25 @@ function UserRow({ u, onAccess, currentAdmin = false }) {
             da data final atual.
           </p>
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setConfirmAccess(false)}>
+            <Button
+              variant="ghost"
+              disabled={savingAccess}
+              onClick={() => setConfirmAccess(false)}
+            >
               Cancelar
             </Button>
             <Button
               variant="primary"
+              loading={savingAccess}
+              disabled={savingAccess}
               onClick={async () => {
-                await onAccess(u.uid, 'activate', months)
-                setConfirmAccess(false)
+                setSavingAccess(true)
+                try {
+                  const succeeded = await onAccess(u.uid, 'activate', months)
+                  if (succeeded) setConfirmAccess(false)
+                } finally {
+                  setSavingAccess(false)
+                }
               }}
             >
               Liberar acesso
@@ -252,8 +266,10 @@ export default function Admin() {
       await adminSetUserAccess(command)
       setUsers(await adminListUsers())
       showToast(successMessage)
+      return true
     } catch (actionError) {
       setError(actionError?.message || 'Não foi possível concluir a ação administrativa.')
+      return false
     }
   }
 
