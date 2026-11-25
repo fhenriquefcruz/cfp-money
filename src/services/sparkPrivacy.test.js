@@ -25,12 +25,19 @@ const state = vi.hoisted(() => ({
       { id: 'support-canonical', stored: { id: 'stale-support', subject: 'Atendimento' } },
     ],
   },
+  writes: [],
 }))
 
-vi.mock('./firebase', () => ({ db: {} }))
+vi.mock('./firebase', () => ({
+  db: {},
+  auth: { currentUser: { uid: 'owner', email: 'owner@example.com' } },
+}))
 vi.mock('firebase/firestore', () => ({
   collection: (_db, ...path) => ({ path: path.join('/') }),
-  doc: (_db, ...path) => ({ path: path.join('/') }),
+  doc: (parent, ...path) =>
+    path.length
+      ? { path: path.join('/'), id: path.at(-1) }
+      : { path: `${parent.path}/new-request`, id: 'new-request' },
   query: (reference) => reference,
   where: () => ({}),
   getDocs: async (reference) => ({
@@ -43,9 +50,14 @@ vi.mock('firebase/firestore', () => ({
   deleteDoc: vi.fn(),
   setDoc: vi.fn(),
   serverTimestamp: vi.fn(),
+  writeBatch: () => ({
+    set: (reference, data) => state.writes.push({ action: 'set', path: reference.path, data }),
+    delete: (reference) => state.writes.push({ action: 'delete', path: reference.path }),
+    commit: vi.fn().mockResolvedValue(undefined),
+  }),
 }))
 
-import { exportSparkData } from './sparkPrivacy'
+import { exportSparkData, requestSparkAccountDeletion } from './sparkPrivacy'
 
 test('exporta IDs reais dos documentos, nunca nulos nem obsoletos', async () => {
   const result = await exportSparkData('owner')
@@ -73,4 +85,24 @@ test('preserva o ID do documento sem criar vínculos artificiais', async () => {
   expect(result.collections.creditCards).toHaveLength(1)
   expect(result.collections.transactions[0].amount).toBe(125.39)
   expect(result.collections.transactions[0].date).toBe('2026-10-12')
+})
+
+test('pedido de exclusão chega à fila de atendimento no mesmo lote', async () => {
+  state.writes.length = 0
+  const result = await requestSparkAccountDeletion('owner', 'EXCLUIR MINHA CONTA')
+
+  expect(result.protocol).toBe('new-request')
+  expect(state.writes).toEqual([
+    expect.objectContaining({ action: 'set', path: 'users/owner/privacyRequests/accountDeletion' }),
+    expect.objectContaining({
+      action: 'set',
+      path: 'supportRequests/new-request',
+      data: expect.objectContaining({
+        uid: 'owner',
+        category: 'privacy',
+        status: 'open',
+        protocol: 'new-request',
+      }),
+    }),
+  ])
 })

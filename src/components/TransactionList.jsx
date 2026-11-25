@@ -41,6 +41,8 @@ import TransactionSeriesModal from './TransactionSeriesModal'
 import TransactionCsvImportModal from './TransactionCsvImportModal'
 import TransactionSavedViews from './TransactionSavedViews'
 import CategoryCompositionVisual from './CategoryCompositionVisual'
+import CategoryReviewNotice from './CategoryReviewNotice'
+import CategoryIcon from './CategoryIcon'
 import {
   categoryAccentStyle,
   categoryCompositionFromTransactions,
@@ -282,8 +284,8 @@ function TxRow({
       style={categoryVisual}
     >
       <div className="transaction-kind-icon" data-kind={kind} aria-hidden="true">
-        {categoryVisual && resolvedCategory?.icon ? (
-          <span className="text-lg">{resolvedCategory.icon}</span>
+        {categoryVisual && resolvedCategory ? (
+          <CategoryIcon category={resolvedCategory} size={18} />
         ) : (
           <KindIcon size={17} />
         )}
@@ -294,7 +296,7 @@ function TxRow({
           <p className="transaction-row-title">{tx.description || cat?.name || kindLabel}</p>
           {tx.attachments?.length > 0 && (
             <span
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[--border-default] bg-[--bg-subtle] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[--text-brand]"
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[--border-default] bg-[--bg-subtle] px-1.5 py-0.5 text-xs font-bold tabular-nums text-[--text-brand]"
               title={`${tx.attachments.length} comprovante(s) anexado(s)`}
               aria-label={`${tx.attachments.length} comprovante(s) anexado(s)`}
             >
@@ -319,7 +321,7 @@ function TxRow({
 
           {resolvedCategory && !isSavings && !isTransfer && (
             <span className="transaction-category-badge">
-              {resolvedCategory.icon ? `${resolvedCategory.icon} ` : ''}
+              <CategoryIcon category={resolvedCategory} size={14} />
               {resolvedCategory.name}
             </span>
           )}
@@ -441,9 +443,7 @@ function TxRow({
               {tx.attachments?.length ? (
                 <>
                   <Paperclip size={15} className="text-[--text-brand]" aria-hidden="true" />
-                  <span className="text-[10px] font-bold tabular-nums">
-                    {tx.attachments.length}
-                  </span>
+                  <span className="text-xs font-bold tabular-nums">{tx.attachments.length}</span>
                 </>
               ) : (
                 <FilePlus2 size={15} aria-hidden="true" />
@@ -1024,7 +1024,7 @@ export default function TransactionList() {
             </button>
 
             <div className="min-w-0 flex-1 text-center">
-              <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-[--text-tertiary]">
+              <div className="flex items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[--text-tertiary]">
                 <CalendarDays size={13} />
                 Mês em foco
               </div>
@@ -1042,7 +1042,7 @@ export default function TransactionList() {
                     setDateRange(getCurrentMonthRange())
                     setPage(1)
                   }}
-                  className="mt-1 text-[10px] font-bold text-[--text-brand] hover:underline"
+                  className="mt-1 text-xs font-bold text-[--text-brand] hover:underline"
                 >
                   Voltar ao mês atual
                 </button>
@@ -1061,7 +1061,7 @@ export default function TransactionList() {
         ) : (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[--text-tertiary]">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[--text-tertiary]">
                 Período filtrado
               </p>
               <p className="mt-1 text-base font-black text-[--text-primary]">
@@ -1137,7 +1137,7 @@ export default function TransactionList() {
               {s.icon}
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] text-[--text-tertiary] leading-none mb-0.5">{s.label}</p>
+              <p className="text-xs text-[--text-tertiary] leading-none mb-0.5">{s.label}</p>
               <p
                 className="break-words text-xs font-black tabular-nums [overflow-wrap:anywhere] min-[390px]:text-sm"
                 style={{ color: s.color }}
@@ -1156,7 +1156,7 @@ export default function TransactionList() {
         >
           <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-[--text-brand]">
+              <p className="text-xs font-black uppercase tracking-wider text-[--text-brand]">
                 Leitura do período
               </p>
               <h2 className="mt-1 text-base font-black text-[--text-primary]">
@@ -1192,28 +1192,14 @@ export default function TransactionList() {
       )}
 
       {categoryReviewQueue.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[--warning-border] bg-[--warning-bg] px-3 py-2.5">
-          <div>
-            <p className="text-xs font-bold text-[--warning-text]">
-              {categoryReviewSummary.missingCategory} sem categoria ·{' '}
-              {categoryReviewSummary.suspectedCategory} classificações suspeitas
-            </p>
-            <p className="mt-0.5 text-[10px] text-[--warning-text]">
-              Nenhuma categoria será alterada automaticamente.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setCategoryReviewOnly((value) => !value)
-              setPage(1)
-            }}
-            aria-pressed={categoryReviewOnly}
-            className="min-h-10 rounded-xl border border-[--warning-border] px-3 text-xs font-bold text-[--warning-text] hover:bg-[--bg-hover]"
-          >
-            {categoryReviewOnly ? 'Mostrar todas' : 'Revisar agora'}
-          </button>
-        </div>
+        <CategoryReviewNotice
+          summary={categoryReviewSummary}
+          reviewActive={categoryReviewOnly}
+          onReview={() => {
+            setCategoryReviewOnly((value) => !value)
+            setPage(1)
+          }}
+        />
       )}
 
       {/* Busca + filtros */}
@@ -1259,7 +1245,7 @@ export default function TransactionList() {
             className={`flex items-center gap-1.5 px-3 py-2.5 rounded-2xl border text-sm font-medium transition-all
               ${
                 showFilters || activeFilters > 0
-                  ? 'bg-[--brand-600] text-white border-[--brand-600]'
+                  ? 'bg-[--brand-600] text-[--on-primary] border-[--brand-600]'
                   : 'bg-[--bg-surface] border-[--border-default] text-[--text-secondary] hover:border-[--brand-500]'
               }`}
             aria-expanded={showFilters}
@@ -1269,7 +1255,7 @@ export default function TransactionList() {
             <Filter size={14} />
             <span className="hidden sm:inline">Filtros</span>
             {activeFilters > 0 && (
-              <span className="w-4 h-4 rounded-full bg-white/30 text-white text-[10px] font-black flex items-center justify-center">
+              <span className="w-4 h-4 rounded-full bg-white/30 text-white text-xs font-black flex items-center justify-center">
                 {activeFilters}
               </span>
             )}
@@ -1326,7 +1312,7 @@ export default function TransactionList() {
                 <div>
                   <label
                     htmlFor="transaction-type-filter"
-                    className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
+                    className="text-xs font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
                   >
                     Tipo
                   </label>
@@ -1350,7 +1336,7 @@ export default function TransactionList() {
                 <div>
                   <label
                     htmlFor="transaction-category-filter"
-                    className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
+                    className="text-xs font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
                   >
                     Categoria
                   </label>
@@ -1366,7 +1352,7 @@ export default function TransactionList() {
                     <option value="all">Todas</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.icon} {c.name}
+                        {c.name}
                       </option>
                     ))}
                   </select>
@@ -1375,7 +1361,7 @@ export default function TransactionList() {
                 <div>
                   <label
                     htmlFor="transaction-payment-filter"
-                    className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
+                    className="text-xs font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
                   >
                     Forma de pagamento
                   </label>
@@ -1400,7 +1386,7 @@ export default function TransactionList() {
                 <div>
                   <label
                     htmlFor="transaction-payment-status-filter"
-                    className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
+                    className="text-xs font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
                   >
                     Status
                   </label>
@@ -1427,7 +1413,7 @@ export default function TransactionList() {
                 <div>
                   <label
                     htmlFor="transaction-range-filter"
-                    className="text-[10px] font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
+                    className="text-xs font-semibold text-[--text-tertiary] uppercase tracking-wider block mb-1"
                   >
                     Período
                   </label>
@@ -1491,7 +1477,7 @@ export default function TransactionList() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="text-xs font-bold text-[--text-primary]">Ações de pagamento em massa</p>
-              <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+              <p className="mt-0.5 text-xs text-[--text-tertiary]">
                 Selecione despesas manuais. Compras vinculadas a cartões continuam sendo controladas
                 pela fatura.
               </p>
@@ -1523,7 +1509,7 @@ export default function TransactionList() {
           </div>
 
           {paymentStatusFilter === PAYMENT_STATUS.UNKNOWN && bulkPaymentCandidates.length > 0 && (
-            <p className="mt-2 rounded-xl bg-[--warning-bg] px-3 py-2 text-[10px] text-[--warning-text]">
+            <p className="mt-2 rounded-xl bg-[--warning-bg] px-3 py-2 text-xs text-[--warning-text]">
               Revisão de legado: nada é convertido automaticamente. Selecione somente os itens que
               você confirmou.
             </p>
@@ -1565,14 +1551,14 @@ export default function TransactionList() {
             </div>
           )}
 
-          <p className="mt-2 text-[10px] text-[--text-tertiary]">
+          <p className="mt-2 text-xs text-[--text-tertiary]">
             Ações em massa ficam registradas no histórico da transação. A última ação pode ser
             desfeita nesta tela.
           </p>
         </div>
       )}
 
-      <p className="px-1 text-[10px] text-[--text-tertiary]">
+      <p className="px-1 text-xs text-[--text-tertiary]">
         Parcelas são exibidas pelo mês do vencimento; demais movimentos, pela data da transação. O
         mesmo período é usado nos indicadores e orçamentos.
       </p>
@@ -1610,7 +1596,7 @@ export default function TransactionList() {
                               <span className="text-base font-black leading-none text-[--text-primary]">
                                 {meta.day}
                               </span>
-                              <span className="mt-0.5 text-[9px] font-black uppercase tracking-wider text-[--text-tertiary]">
+                              <span className="mt-0.5 text-xs font-black uppercase tracking-wider text-[--text-tertiary]">
                                 {meta.month}
                               </span>
                             </div>
@@ -1618,7 +1604,7 @@ export default function TransactionList() {
                               <p className="text-xs font-black text-[--text-primary]">
                                 {meta.relative}
                               </p>
-                              <p className="truncate text-[10px] text-[--text-tertiary]">
+                              <p className="truncate text-xs text-[--text-tertiary]">
                                 {meta.full} · {txs.length}{' '}
                                 {txs.length === 1 ? 'movimento' : 'movimentos'}
                               </p>
@@ -1626,12 +1612,12 @@ export default function TransactionList() {
                           </div>
                           <div className="flex flex-wrap items-center gap-1.5">
                             {daily.income > 0 && (
-                              <span className="rounded-full bg-[--success-bg] px-2 py-1 text-[10px] font-black text-[--success-text]">
+                              <span className="rounded-full bg-[--success-bg] px-2 py-1 text-xs font-black text-[--success-text]">
                                 +{formatCurrency(daily.income)}
                               </span>
                             )}
                             {daily.expenses > 0 && (
-                              <span className="rounded-full bg-[--danger-bg] px-2 py-1 text-[10px] font-black text-[--danger-text]">
+                              <span className="rounded-full bg-[--danger-bg] px-2 py-1 text-xs font-black text-[--danger-text]">
                                 −{formatCurrency(daily.expenses)}
                               </span>
                             )}
@@ -1686,7 +1672,7 @@ export default function TransactionList() {
       <button
         onClick={handleNew}
         className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom,0px))] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[--brand-600] lg:hidden
-          text-white shadow-lg flex items-center justify-center hover:bg-[--brand-700]
+          text-[--on-primary] shadow-lg flex items-center justify-center hover:bg-[--brand-700]
           active:scale-95 transition-all"
         aria-label="Adicionar nova transação"
       >

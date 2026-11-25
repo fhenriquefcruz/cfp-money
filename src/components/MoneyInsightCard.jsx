@@ -60,11 +60,9 @@ function resolveAnalysisDate(referenceDate) {
 function MoneyMetric({ label, value, detail }) {
   return (
     <div className="money-insight-metric min-w-0 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3.5">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
-        {label}
-      </p>
+      <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">{label}</p>
       <p className="mt-1 text-base font-black tabular-nums text-[--text-primary]">{value}</p>
-      {detail && <p className="mt-0.5 text-[10px] text-[--text-tertiary]">{detail}</p>}
+      {detail && <p className="mt-0.5 text-xs text-[--text-tertiary]">{detail}</p>}
     </div>
   )
 }
@@ -101,7 +99,7 @@ function MoneyInsightContent({ referenceDate, compact = false }) {
       <div className="money-insight-card__header border-b border-[--border-subtle] bg-gradient-to-r from-[--brand-50] via-[--bg-surface] to-[--bg-surface] p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
-            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-white shadow-sm">
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-[--on-primary] shadow-sm">
               <Bot size={19} />
             </div>
             <div className="min-w-0">
@@ -109,7 +107,7 @@ function MoneyInsightContent({ referenceDate, compact = false }) {
                 <p className="text-xs font-bold uppercase tracking-wider text-[--brand-600]">
                   Money
                 </p>
-                <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-yellow-800">
+                <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-yellow-800">
                   Premium
                 </span>
               </div>
@@ -143,7 +141,7 @@ function MoneyInsightContent({ referenceDate, compact = false }) {
             <Info size={16} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
             <div>
               <p className="text-xs font-bold text-[--text-primary]">O que este painel mostra?</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-[--text-tertiary]">
+              <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
                 O Money compara o período visualizado com a referência definida no seu ciclo
                 financeiro. Os valores são apenas analíticos e não alteram nenhum lançamento.
               </p>
@@ -231,7 +229,7 @@ function MoneyInsightContent({ referenceDate, compact = false }) {
 
             {!compact && categoryInsight && (
               <div className="money-insight-card__movement mt-auto border-t border-[--border-subtle] pt-4">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                   Movimento de destaque
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">

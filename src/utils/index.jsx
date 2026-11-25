@@ -14,8 +14,12 @@ export const formatCurrency = (value, options = {}) => {
   const { compact = false } = options
   if (compact && Math.abs(value) >= 1000) {
     const sign = value < 0 ? '-' : ''
-    if (Math.abs(value) >= 1000000) return `${sign}R$ ${(Math.abs(value) / 1000000).toFixed(1)}M`
-    return `${sign}R$ ${(Math.abs(value) / 1000).toFixed(1)}k`
+    const divisor = Math.abs(value) >= 1000000 ? 1000000 : 1000
+    const unit = divisor === 1000000 ? 'mi' : 'mil'
+    const amount = new Intl.NumberFormat('pt-BR', {
+      maximumFractionDigits: 1,
+    }).format(Math.abs(value) / divisor)
+    return `${sign}R$ ${amount} ${unit}`
   }
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',

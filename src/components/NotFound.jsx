@@ -11,7 +11,7 @@ export default function NotFound() {
           O endereço informado não existe ou não está disponível para sua conta.
         </p>
         <Link
-          className="inline-flex min-h-11 items-center rounded-xl bg-[--brand-600] px-5 text-white font-semibold no-underline"
+          className="inline-flex min-h-11 items-center rounded-xl bg-[--brand-600] px-5 text-[--on-primary] font-semibold no-underline"
           to="/dashboard"
         >
           Voltar ao dashboard

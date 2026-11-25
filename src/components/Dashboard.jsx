@@ -35,8 +35,11 @@ import {
 } from '../contexts/AppContext'
 import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
+import MoneyValue from './MoneyValue'
 import MoneyInsightCard from './MoneyInsightCard'
 import CategoryCompositionVisual from './CategoryCompositionVisual'
+import CategoryReviewNotice from './CategoryReviewNotice'
+import CategoryIcon from './CategoryIcon'
 import { categoryAccentStyle, decorateCategoryBreakdown } from '../domain/categoryComposition'
 import PaymentControlCard from './PaymentControlCard'
 import FinancialHealthScore from './FinancialHealthScore'
@@ -78,7 +81,13 @@ const ChartTooltip = ({ active, payload, label }) => {
         <div key={i} className="flex items-center gap-2 text-sm">
           <div className="w-2 h-2 rounded-full" style={{ background: e.color }} />
           <span className="text-[--text-secondary]">{e.name}:</span>
-          <span className="font-bold text-[--text-primary]">{formatCurrency(e.value)}</span>
+          <MoneyValue
+            value={e.value}
+            kind={
+              /receita/i.test(e.name) ? 'income' : /despesa/i.test(e.name) ? 'expense' : 'neutral'
+            }
+            className="font-bold"
+          />
         </div>
       ))}
     </div>
@@ -95,7 +104,15 @@ const TxItem = ({ tx, categories }) => {
         className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${cat && !tx.isSavings ? 'category-colored-avatar' : 'bg-[--brand-50]'}`}
         style={cat && !tx.isSavings ? categoryAccentStyle(cat) : undefined}
       >
-        {tx.isSavings ? '🐷' : cat?.icon || (isIncome ? '💰' : '💸')}
+        {tx.isSavings ? (
+          <PiggyBank size={18} aria-hidden="true" />
+        ) : cat ? (
+          <CategoryIcon category={cat} size={18} />
+        ) : isIncome ? (
+          <Wallet size={18} aria-hidden="true" />
+        ) : (
+          <CategoryIcon name="Sem categoria" size={18} />
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
@@ -543,7 +560,7 @@ export default function Dashboard() {
                       </h2>
                       <InfoTooltip text="Total reservado considera depósitos menos retiradas. O valor poupado no mês usa apenas o período visualizado." />
                     </div>
-                    <p className="text-[10px] text-[--text-tertiary]">
+                    <p className="text-xs text-[--text-tertiary]">
                       Quanto você tem guardado e onde esse dinheiro está.
                     </p>
                   </div>
@@ -572,7 +589,7 @@ export default function Dashboard() {
 
               <div className="min-w-0 flex-1">
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                     Onde está
                   </p>
                   <Link
@@ -598,7 +615,7 @@ export default function Dashboard() {
                           <p className="truncate text-xs font-bold text-[--text-primary]">
                             {destination.destination}
                           </p>
-                          <p className="truncate text-[10px] text-[--text-tertiary]">
+                          <p className="truncate text-xs text-[--text-tertiary]">
                             {destination.institution || 'Instituição não informada'}
                           </p>
                         </div>
@@ -640,7 +657,7 @@ export default function Dashboard() {
                   {formatCurrency(forecast)}
                 </p>
               )}
-              <p className="dashboard-forecast-helper mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
+              <p className="dashboard-forecast-helper mt-1 text-xs leading-relaxed text-[--text-tertiary]">
                 Média dos últimos 3 meses para orientar o planejamento.
               </p>
             </div>
@@ -739,7 +756,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="dashboard-evolution-legend mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-semibold text-[--text-secondary]">
+            <div className="dashboard-evolution-legend mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-[--text-secondary]">
               {trendView === 'flow' ? (
                 <>
                   <span className="inline-flex items-center gap-1.5">
@@ -845,7 +862,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setSelectedMonthKey(item.monthKey)}
                   aria-pressed={selectedTrend?.monthKey === item.monthKey}
-                  className={`min-h-9 flex-shrink-0 rounded-full border px-3 text-[10px] font-bold transition-colors ${
+                  className={`min-h-9 flex-shrink-0 rounded-full border px-3 text-xs font-bold transition-colors ${
                     selectedTrend?.monthKey === item.monthKey
                       ? 'border-[--brand-300] bg-[--brand-50] text-[--text-primary]'
                       : 'border-[--border-subtle] bg-[--bg-subtle] text-[--text-tertiary] hover:bg-[--bg-hover]'
@@ -862,7 +879,7 @@ export default function Dashboard() {
                   <p className="text-xs font-black text-[--text-primary]">
                     {selectedTrend.fullMonth}
                   </p>
-                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[--text-tertiary]">
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[--text-tertiary]">
                     <span>Receitas {formatCurrency(selectedTrend.income)}</span>
                     <span>Despesas {formatCurrency(selectedTrend.expenses)}</span>
                     <strong
@@ -901,16 +918,7 @@ export default function Dashboard() {
             </div>
 
             {categoryReviewCount > 0 && (
-              <Link
-                to="/transactions?review=categories&scope=all"
-                className="mb-3 flex min-h-10 items-center justify-between gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 text-[10px] font-bold text-[--warning-text]"
-              >
-                <span>
-                  {categoryReviewSummary.missingCategory} sem categoria ·{' '}
-                  {categoryReviewSummary.suspectedCategory} classificações suspeitas
-                </span>
-                <ArrowRight size={12} />
-              </Link>
+              <CategoryReviewNotice summary={categoryReviewSummary} compact />
             )}
 
             {categoryBreakdown.length === 0 ? (
@@ -948,9 +956,9 @@ export default function Dashboard() {
                   <div key={budget.id} className="flex items-center gap-3">
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0"
-                      style={{ background: (cat?.color || '#ef4444') + '20' }}
+                      style={cat ? categoryAccentStyle(cat) : undefined}
                     >
-                      {cat?.icon || '📦'}
+                      <CategoryIcon category={cat} size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between text-xs mb-1">
@@ -1049,7 +1057,7 @@ export default function Dashboard() {
                 Ver todas <ArrowRight size={12} />
               </Link>
             </div>
-            <p className="mb-3 text-[11px] text-[--text-tertiary]">
+            <p className="mb-3 text-xs text-[--text-tertiary]">
               {currentSummary.count} {currentSummary.count === 1 ? 'lançamento' : 'lançamentos'}{' '}
               neste período · role para percorrer
             </p>

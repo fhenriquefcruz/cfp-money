@@ -305,7 +305,7 @@ export default function Profile() {
         {/* Avatar */}
         <div className="flex items-center gap-4 mb-6">
           <div className="relative flex-shrink-0">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[--brand-400] to-[--brand-600] flex items-center justify-center text-2xl font-black text-white overflow-hidden">
+            <div className="w-16 h-16 rounded-2xl bg-[--brand-600] flex items-center justify-center text-2xl font-black text-[--on-primary] overflow-hidden">
               {avatarSrc ? (
                 <img src={avatarSrc} className="w-full h-full object-cover" alt="Foto de perfil" />
               ) : (
@@ -315,7 +315,7 @@ export default function Profile() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="absolute -bottom-1 -right-1 w-7 h-7 bg-[--brand-600] rounded-full flex items-center justify-center text-white shadow-md hover:bg-[--brand-700] transition-colors"
+              className="absolute -bottom-1 -right-1 w-7 h-7 bg-[--brand-600] rounded-full flex items-center justify-center text-[--on-primary] shadow-md hover:bg-[--brand-700] transition-colors"
               title="Alterar foto"
             >
               <Camera size={13} />

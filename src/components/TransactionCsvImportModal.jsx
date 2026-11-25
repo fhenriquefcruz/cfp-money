@@ -172,7 +172,7 @@ export default function TransactionCsvImportModal({
                 <p className="text-xs font-bold text-[--brand-800]">
                   Nada será gravado nesta etapa
                 </p>
-                <p className="mt-1 text-[11px] leading-relaxed text-[--brand-700]">
+                <p className="mt-1 text-xs leading-relaxed text-[--brand-700]">
                   Primeiro o Meu Real valida cada linha e mostra uma prévia. A importação só
                   acontece depois da sua confirmação.
                 </p>
@@ -217,7 +217,7 @@ export default function TransactionCsvImportModal({
             />
           </div>
 
-          <p className="text-[10px] leading-relaxed text-[--text-tertiary]">
+          <p className="text-xs leading-relaxed text-[--text-tertiary]">
             Colunas mínimas: Data, Tipo e Valor. Para despesas, informe também a Categoria. O
             formato atual de exportação do Meu Real continua compatível.
           </p>
@@ -244,7 +244,7 @@ export default function TransactionCsvImportModal({
                 key={label}
                 className="rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3"
               >
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[--text-tertiary]">
+                <p className="text-xs font-bold uppercase tracking-wide text-[--text-tertiary]">
                   {label}
                 </p>
                 <p className="mt-1 text-lg font-black tabular-nums text-[--text-primary]">
@@ -259,7 +259,7 @@ export default function TransactionCsvImportModal({
               <p className="text-xs font-bold text-[--warning-text]">
                 {summary.duplicates} possível(is) duplicidade(s)
               </p>
-              <p className="mt-1 text-[10px] text-[--warning-text]">
+              <p className="mt-1 text-xs text-[--warning-text]">
                 Elas ficam desmarcadas por padrão. Você ainda pode incluí-las manualmente após
                 revisar.
               </p>
@@ -306,7 +306,7 @@ export default function TransactionCsvImportModal({
                           <p className="truncate text-xs font-black text-[--text-primary]">
                             {tx.description || tx.categoryName || `Linha ${row.rowNumber}`}
                           </p>
-                          <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+                          <p className="mt-0.5 text-xs text-[--text-tertiary]">
                             Linha {row.rowNumber} · {tx.date || 'data inválida'} ·{' '}
                             {tx.isSavings
                               ? 'Poupança'
@@ -320,7 +320,7 @@ export default function TransactionCsvImportModal({
                             {formatCurrency(tx.amount || 0)}
                           </span>
                           <span
-                            className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold ${config.className}`}
+                            className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-bold ${config.className}`}
                           >
                             <StatusIcon size={11} />
                             {config.label}
@@ -333,7 +333,7 @@ export default function TransactionCsvImportModal({
                           {row.issues.map((issue) => (
                             <p
                               key={issue.code}
-                              className={`text-[10px] leading-relaxed ${
+                              className={`text-xs leading-relaxed ${
                                 issue.severity === 'error'
                                   ? 'text-[--danger-text]'
                                   : 'text-[--warning-text]'

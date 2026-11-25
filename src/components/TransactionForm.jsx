@@ -23,6 +23,7 @@ import {
   useTransactions,
 } from '../contexts/AppContext'
 import { Modal, Button, Input } from './ui'
+import CategoryIcon from './CategoryIcon'
 import { useAuth } from '../contexts/AuthContext'
 import {
   ATTACHMENT_ACCEPT,
@@ -572,7 +573,7 @@ export default function TransactionForm({
             <Paperclip size={15} className="text-[--text-brand]" aria-hidden="true" />
             Comprovantes (opcional)
           </p>
-          <p className="mt-1 text-[11px] text-[--text-tertiary]">
+          <p className="mt-1 text-xs text-[--text-tertiary]">
             PDF, foto, planilha ou documento. Até 2 MB por arquivo e seis por transação.
             {!isEditing && (form.isInstallment || form.isRecurring)
               ? ' Em séries, os arquivos ficam vinculados à primeira parcela ou ocorrência.'
@@ -595,7 +596,7 @@ export default function TransactionForm({
               {attachmentFiles.map((file, index) => (
                 <li
                   key={`${file.name}-${index}`}
-                  className="flex min-w-0 items-center gap-2 text-[11px] text-[--text-secondary]"
+                  className="flex min-w-0 items-center gap-2 text-xs text-[--text-secondary]"
                 >
                   <Paperclip size={12} aria-hidden="true" />
                   <span className="min-w-0 flex-1 truncate">{file.name}</span>
@@ -619,7 +620,7 @@ export default function TransactionForm({
           {isEditing &&
             Array.isArray(transaction.attachments) &&
             transaction.attachments.length > 0 && (
-              <p className="mt-2 text-[11px] font-medium text-[--text-brand]">
+              <p className="mt-2 text-xs font-medium text-[--text-brand]">
                 {transaction.attachments.length} arquivo(s) já vinculado(s). Consulte ou remova pelo
                 clipe na lista.
               </p>
@@ -667,7 +668,7 @@ export default function TransactionForm({
               <PiggyBank size={14} className="text-[--brand-600]" />
               <div>
                 <p className="text-xs font-bold text-[--brand-700]">Poupança e Reservas</p>
-                <p className="mt-0.5 text-[10px] leading-relaxed text-[--brand-600]">
+                <p className="mt-0.5 text-xs leading-relaxed text-[--brand-600]">
                   Registre o movimento e identifique onde o dinheiro está. Poupança continua
                   separada de receitas e despesas.
                 </p>
@@ -754,7 +755,7 @@ export default function TransactionForm({
                 <p className="text-xs font-bold text-[--warning-text]">
                   Classificação para revisar
                 </p>
-                <p className="mt-1 text-[10px] leading-relaxed text-[--warning-text]">
+                <p className="mt-1 text-xs leading-relaxed text-[--warning-text]">
                   {categoryReview.reason}
                 </p>
                 {categoryReview.kind === 'missing_category' ? (
@@ -765,14 +766,14 @@ export default function TransactionForm({
                   <button
                     type="button"
                     onClick={() => update('categoryId')(categoryReview.suggestedCategoryId)}
-                    className="mt-2 min-h-9 rounded-lg border border-[--warning-border] px-2.5 text-[10px] font-bold text-[--warning-text]"
+                    className="mt-2 min-h-9 rounded-lg border border-[--warning-border] px-2.5 text-xs font-bold text-[--warning-text]"
                   >
                     Aplicar sugestão: {categoryReview.suggestedCategoryName}
                   </button>
                 ) : (
                   <Link
                     to="/categories"
-                    className="mt-2 inline-flex min-h-9 items-center rounded-lg border border-[--warning-border] px-2.5 text-[10px] font-bold text-[--warning-text]"
+                    className="mt-2 inline-flex min-h-9 items-center rounded-lg border border-[--warning-border] px-2.5 text-xs font-bold text-[--warning-text]"
                   >
                     Criar categoria: {categoryReview.suggestedCategoryName}
                   </Link>
@@ -802,8 +803,8 @@ export default function TransactionForm({
                         : 'border-[--border-default] hover:border-[--border-strong] hover:bg-[--bg-hover]'
                     }`}
                 >
-                  <span className="text-xl">{cat.icon}</span>
-                  <span className="text-[10px] font-medium text-[--text-secondary] leading-tight">
+                  <CategoryIcon category={cat} size={20} />
+                  <span className="text-xs font-medium text-[--text-secondary] leading-tight">
                     {cat.name}
                   </span>
                 </button>
@@ -840,7 +841,7 @@ export default function TransactionForm({
               >
                 {PAYMENT_METHODS.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.icon} {m.label}
+                    {m.label}
                   </option>
                 ))}
               </select>
@@ -945,7 +946,7 @@ export default function TransactionForm({
                           <strong>
                             {formatInstallmentDistribution(form.amount, form.installments)}
                           </strong>
-                          <p className="mt-1 text-[10px] leading-relaxed text-[--brand-600]">
+                          <p className="mt-1 text-xs leading-relaxed text-[--brand-600]">
                             Os centavos são ajustados entre as primeiras parcelas para preservar o
                             valor total.
                           </p>
@@ -967,7 +968,7 @@ export default function TransactionForm({
         >
           <div className="min-w-0">
             <p className="text-sm font-semibold text-[--text-primary]">Mais opções</p>
-            <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+            <p className="mt-0.5 text-xs text-[--text-tertiary]">
               {isSavings
                 ? 'Observações adicionais'
                 : isExpense

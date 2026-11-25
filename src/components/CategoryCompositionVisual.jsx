@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatCurrency } from '../utils'
 import { UNCATEGORIZED_COLOR } from '../domain/categoryComposition'
+import CategoryIcon from './CategoryIcon'
 
 const formatPercent = (value) =>
   Number(value || 0).toLocaleString('pt-BR', {
@@ -23,11 +24,6 @@ export default function CategoryCompositionVisual({
 
   const total = items.reduce((sum, item) => sum + (Number(item.total) || 0), 0)
   const topThree = items.slice(0, 3).reduce((sum, item) => sum + Number(item.sharePercent || 0), 0)
-  const reviewClassification = items.some(
-    (item) =>
-      /^(outros|sem categoria)$/i.test(String(item.categoryName || '').trim()) &&
-      Number(item.sharePercent) >= 25,
-  )
   const leader = items[0] || null
   const visible = expanded ? items : items.slice(0, maxVisible)
   const hidden = expanded ? [] : items.slice(maxVisible)
@@ -50,14 +46,14 @@ export default function CategoryCompositionVisual({
     <div className="category-composition space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[--text-tertiary]">
+          <p className="text-xs font-bold uppercase tracking-wide text-[--text-tertiary]">
             Distribuição por categoria
           </p>
           <p className="mt-0.5 text-base font-black tabular-nums text-[--text-primary]">
             {formatCurrency(total)}
           </p>
         </div>
-        <p className="text-right text-[11px] text-[--text-secondary]">
+        <p className="text-right text-xs text-[--text-secondary]">
           Top 3 <strong className="text-[--text-primary]">{formatPercent(topThree)}%</strong> dos
           gastos
         </p>
@@ -68,10 +64,10 @@ export default function CategoryCompositionVisual({
           style={{ '--category-accent': leader.color || UNCATEGORIZED_COLOR }}
         >
           <span className="dashboard-category-leader__medal" aria-hidden="true">
-            {leader.icon || '◈'}
+            <CategoryIcon name={leader.categoryName} icon={leader.icon} size={20} />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+            <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
               Categoria que mais consome
             </p>
             <p className="truncate text-sm font-black text-[--text-primary]">
@@ -100,7 +96,7 @@ export default function CategoryCompositionVisual({
           />
         ))}
       </div>
-      <p className="text-[10px] font-black uppercase tracking-wide text-[--text-tertiary]">
+      <p className="text-xs font-black uppercase tracking-wide text-[--text-tertiary]">
         Ranking das categorias · Top {Math.min(maxVisible, items.length)}
       </p>
       <div className="category-composition-list">
@@ -113,7 +109,8 @@ export default function CategoryCompositionVisual({
               </span>
               <span className="category-composition-copy">
                 <span className="category-composition-name">
-                  <span aria-hidden="true">{item.icon || '◈'}</span> {item.categoryName}
+                  <CategoryIcon name={item.categoryName} icon={item.icon} size={16} />{' '}
+                  {item.categoryName}
                 </span>
                 <span className="category-composition-detail">
                   {formatPercent(item.sharePercent)}% dos gastos
@@ -175,13 +172,7 @@ export default function CategoryCompositionVisual({
           Mostrar apenas as principais
         </button>
       )}
-      {reviewClassification && (
-        <p className="rounded-xl border border-[--warning-border] bg-[--warning-bg] px-3 py-2 text-[11px] font-semibold text-[--warning-text]">
-          Classificação em atenção: “Outros” ou “Sem categoria” concentra pelo menos 25% dos gastos.
-          Revise os lançamentos para obter uma leitura mais precisa.
-        </p>
-      )}
-      <p className="text-[10px] leading-relaxed text-[--text-tertiary]">
+      <p className="text-xs leading-relaxed text-[--text-tertiary]">
         Cores identificam categorias; valores e percentuais mostram o peso de cada uma.
       </p>
     </div>

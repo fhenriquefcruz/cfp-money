@@ -114,7 +114,7 @@ export default function MoneyTransactionAction({
         </div>
         <Link
           to={response.transactionRoute || '/transactions'}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[--brand-600] px-3 text-xs font-semibold text-white hover:bg-[--brand-700]"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[--brand-600] px-3 text-xs font-semibold text-[--on-primary] hover:bg-[--brand-700]"
         >
           <FilePenLine size={14} />
           Abrir cadastro de transações
@@ -172,7 +172,7 @@ export default function MoneyTransactionAction({
 
       <div className="flex items-start gap-2 rounded-xl border border-[--brand-200] bg-[--brand-50] p-3">
         <ShieldCheck size={15} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
-        <p className="text-[11px] leading-relaxed text-[--brand-700]">
+        <p className="text-xs leading-relaxed text-[--brand-700]">
           Confira valor, categoria, data e pagamento. Nada foi salvo até este momento.
         </p>
       </div>
@@ -185,9 +185,7 @@ export default function MoneyTransactionAction({
               <p className="text-xs font-bold text-[--brand-700]">
                 Seu histórico sugere {suggestion.categoryName}
               </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-[--brand-600]">
-                {suggestion.reason}
-              </p>
+              <p className="mt-1 text-xs leading-relaxed text-[--brand-600]">{suggestion.reason}</p>
             </div>
           </div>
           <Button
@@ -207,7 +205,7 @@ export default function MoneyTransactionAction({
           className="flex items-start gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] p-3"
         >
           <AlertTriangle size={15} className="mt-0.5 flex-shrink-0 text-[--warning-icon]" />
-          <p className="text-[11px] leading-relaxed text-[--text-secondary]">{warning}</p>
+          <p className="text-xs leading-relaxed text-[--text-secondary]">{warning}</p>
         </div>
       ))}
 
@@ -247,7 +245,6 @@ export default function MoneyTransactionAction({
           <option value="">Selecione</option>
           {eligibleCategories.map((category) => (
             <option key={category.id} value={category.id}>
-              {category.icon ? `${category.icon} ` : ''}
               {category.name}
             </option>
           ))}
@@ -268,14 +265,14 @@ export default function MoneyTransactionAction({
           <option value="">Selecione</option>
           {SUPPORTED_PAYMENT_METHODS.map((method) => (
             <option key={method.id} value={method.id}>
-              {method.icon} {method.label}
+              {method.label}
             </option>
           ))}
         </Select>
       </div>
 
       {selectedCategory && (
-        <p className="text-[10px] text-[--text-tertiary]">
+        <p className="text-xs text-[--text-tertiary]">
           Categoria selecionada: {selectedCategory.name}
         </p>
       )}

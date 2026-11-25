@@ -233,7 +233,7 @@ export default function Onboarding() {
               )}
               <button
                 onClick={next}
-                className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[--brand-600] text-white text-sm font-bold hover:bg-[--brand-700] transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[--brand-600] text-[--on-primary] text-sm font-bold hover:bg-[--brand-700] transition-colors"
               >
                 {isLast ? (
                   '🎉 Começar!'

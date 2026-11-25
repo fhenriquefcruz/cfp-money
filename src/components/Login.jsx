@@ -118,7 +118,7 @@ function BrandMark({ compact = false }) {
           Meu Real
         </p>
         <p
-          className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${
+          className={`text-xs font-semibold uppercase tracking-[0.18em] ${
             compact ? 'text-[--text-tertiary]' : 'text-white/45'
           }`}
         >
@@ -193,14 +193,14 @@ function ProductIntelligencePreview() {
 
       <div className="relative z-10 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#d9bb91]">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#d9bb91]">
             Do registro à decisão
           </p>
           <p className="mt-1 text-xs text-white/50">
             Veja como uma movimentação percorre o Meu Real.
           </p>
         </div>
-        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold text-white/55">
+        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-white/55">
           Demonstração
         </span>
       </div>
@@ -238,7 +238,7 @@ function ProductIntelligencePreview() {
                   <StepIcon size={15} className={active ? 'text-[#e8d4b8]' : 'text-white/55'} />
                 </motion.div>
                 <p
-                  className={`mt-2 truncate text-[9px] font-bold uppercase tracking-[0.08em] ${
+                  className={`mt-2 truncate text-xs font-bold uppercase tracking-[0.08em] ${
                     active ? 'text-[#e8d4b8]' : 'text-white/38'
                   }`}
                 >
@@ -265,12 +265,12 @@ function ProductIntelligencePreview() {
                 <CurrentIcon size={17} />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#c49d6b]">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#c49d6b]">
                   {current.label}
                 </p>
                 <p className="mt-1 text-sm font-black text-white">{current.title}</p>
                 <p className="mt-1 text-xs font-semibold text-white/70">{current.detail}</p>
-                <p className="mt-2 text-[10px] leading-relaxed text-white/42">{current.helper}</p>
+                <p className="mt-2 text-xs leading-relaxed text-white/42">{current.helper}</p>
               </div>
             </div>
           </motion.div>
@@ -287,10 +287,10 @@ function ProductIntelligencePreview() {
             key={label}
             className="rounded-2xl border border-white/[0.07] bg-white/[0.035] p-2.5"
           >
-            <p className="truncate text-[8px] font-semibold uppercase tracking-[0.1em] text-white/32">
+            <p className="truncate text-xs font-semibold uppercase tracking-[0.1em] text-white/32">
               {label}
             </p>
-            <p className="mt-1 truncate text-[11px] font-black text-white/78">{value}</p>
+            <p className="mt-1 truncate text-xs font-black text-white/78">{value}</p>
           </div>
         ))}
       </div>
@@ -450,7 +450,7 @@ export default function Login() {
               initial={{ opacity: 0, x: -14 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 rounded-full border border-[#c49d6b]/25 bg-[#c49d6b]/[0.07] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#e8d4b8]/90 backdrop-blur"
+              className="inline-flex items-center gap-2 rounded-full border border-[#c49d6b]/25 bg-[#c49d6b]/[0.07] px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-[#e8d4b8]/90 backdrop-blur"
             >
               <Orbit size={13} />
               Finanças mais claras, decisões mais conscientes
@@ -495,13 +495,13 @@ export default function Login() {
                     </div>
                     <p className="text-xs font-black text-white">{title}</p>
                   </div>
-                  <p className="mt-2 text-[10px] leading-relaxed text-white/45">{description}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-white/45">{description}</p>
                 </motion.div>
               ))}
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] font-medium text-white/38">
+          <div className="relative z-10 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium text-white/38">
             {TRUST_POINTS.map((point) => (
               <span key={point} className="inline-flex items-center gap-1.5">
                 <Check size={11} className="text-[#d9bb91]/80" />
@@ -517,7 +517,7 @@ export default function Login() {
               <BrandMark compact />
               <div className="mt-6 rounded-3xl border border-[--brand-200] bg-gradient-to-br from-[--brand-50] to-[--bg-surface] p-4 shadow-sm">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-white shadow-md">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-[--on-primary] shadow-md">
                     <Sparkles size={17} />
                   </div>
                   <div>
@@ -562,7 +562,7 @@ export default function Login() {
 
                   <div className="flex items-center gap-2">
                     <span className="h-px w-5 bg-[--brand-400]" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[--brand-600]">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-[--brand-600]">
                       {content.eyebrow}
                     </p>
                   </div>
@@ -581,7 +581,7 @@ export default function Login() {
                 {mode === 'register' && (
                   <div className="mt-5 overflow-hidden rounded-2xl border border-[--brand-200] bg-[--brand-50]">
                     <div className="flex items-start gap-3 p-3.5">
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[--brand-700] to-[--brand-500] text-white shadow-sm">
+                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-600] text-[--on-primary] shadow-sm">
                         <Zap size={15} />
                       </div>
                       <div>
@@ -589,11 +589,11 @@ export default function Login() {
                           <p className="text-xs font-black text-[--brand-700]">
                             Premium por 7 dias
                           </p>
-                          <span className="rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[--brand-700]">
+                          <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs font-black uppercase tracking-wide text-[--brand-700]">
                             sem cartão
                           </span>
                         </div>
-                        <p className="mt-1 text-[11px] leading-relaxed text-[--brand-600]">
+                        <p className="mt-1 text-xs leading-relaxed text-[--brand-600]">
                           Teste Money, projeções, cartões, parcelamentos e relatórios completos.
                         </p>
                       </div>
@@ -644,7 +644,7 @@ export default function Login() {
 
                     <div className="my-4 flex items-center gap-3" aria-hidden="true">
                       <span className="h-px flex-1 bg-[--border-subtle]" />
-                      <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[--text-tertiary]">
+                      <span className="text-xs font-bold uppercase tracking-[0.14em] text-[--text-tertiary]">
                         ou use seu e-mail
                       </span>
                       <span className="h-px flex-1 bg-[--border-subtle]" />
@@ -710,7 +710,7 @@ export default function Login() {
                       />
 
                       <div className="mt-1.5 flex items-center justify-between gap-3 px-1">
-                        <p className="inline-flex items-center gap-1.5 text-[10px] text-[--text-tertiary]">
+                        <p className="inline-flex items-center gap-1.5 text-xs text-[--text-tertiary]">
                           <Fingerprint size={11} />
                           Autenticação protegida
                         </p>
@@ -718,7 +718,7 @@ export default function Login() {
                           <button
                             type="button"
                             onClick={() => switchMode('forgot')}
-                            className="min-h-10 text-[11px] font-bold text-[--text-brand] hover:underline"
+                            className="min-h-10 text-xs font-bold text-[--text-brand] hover:underline"
                           >
                             Esqueci a senha
                           </button>
@@ -743,7 +743,7 @@ export default function Login() {
 
                 <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
                   <ShieldCheck size={15} className="mt-0.5 flex-shrink-0 text-[--success-icon]" />
-                  <p className="text-[10px] leading-relaxed text-[--text-tertiary]">
+                  <p className="text-xs leading-relaxed text-[--text-tertiary]">
                     O Meu Real não movimenta dinheiro nem solicita senha bancária. Você registra,
                     revisa e controla as próprias informações.
                   </p>
@@ -757,7 +757,7 @@ export default function Login() {
               </motion.div>
             </motion.section>
 
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[10px] text-[--text-tertiary] lg:hidden">
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-[--text-tertiary] lg:hidden">
               {TRUST_POINTS.map((point) => (
                 <span key={point} className="inline-flex items-center gap-1">
                   <Check size={10} className="text-[--success-icon]" />

@@ -49,7 +49,7 @@ export default function SpendingLeakDiagnostic({ report }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                 Diagnóstico
               </p>
               <h3
@@ -60,12 +60,12 @@ export default function SpendingLeakDiagnostic({ report }) {
               </h3>
             </div>
             {status === 'attention' && (
-              <span className="rounded-full border border-[--warning-border] bg-[--warning-bg] px-2 py-1 text-[10px] font-bold text-[--warning-text]">
+              <span className="rounded-full border border-[--warning-border] bg-[--warning-bg] px-2 py-1 text-xs font-bold text-[--warning-text]">
                 {report.findings.length} {report.findings.length === 1 ? 'sinal' : 'sinais'}
               </span>
             )}
           </div>
-          <p className="mt-1 text-[11px] leading-relaxed text-[--text-tertiary]">{summary}</p>
+          <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">{summary}</p>
         </div>
       </div>
 
@@ -77,12 +77,12 @@ export default function SpendingLeakDiagnostic({ report }) {
               className="rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3"
             >
               <p className="text-xs font-black text-[--text-primary]">{finding.title}</p>
-              <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
+              <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
                 {finding.detail}
               </p>
               <Link
                 to={finding.to}
-                className="mt-2 inline-flex min-h-8 items-center gap-1 text-[10px] font-bold text-[--text-brand] hover:underline"
+                className="mt-2 inline-flex min-h-8 items-center gap-1 text-xs font-bold text-[--text-brand] hover:underline"
               >
                 {finding.actionLabel}
                 <ArrowRight size={11} aria-hidden="true" />

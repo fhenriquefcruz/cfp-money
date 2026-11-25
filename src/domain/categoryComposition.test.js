@@ -8,17 +8,21 @@ import {
 } from './categoryComposition'
 
 describe('Identidade cromática por categoria', () => {
-  it('mantém a cor personalizada e oferece fallback estável quando ausente', () => {
-    expect(getCategoryColor({ id: 'food', color: '#8A6251' })).toBe('#8A6251')
+  it('usa uma paleta visual estável sem alterar as cores salvas', () => {
+    expect(getCategoryColor({ id: 'food', color: '#8A6251' })).toBe(
+      getCategoryColor({ id: 'food' }),
+    )
     expect(getCategoryColor({ id: 'food' })).toBe(getCategoryColor({ id: 'food' }))
     expect(CATEGORY_PALETTE).toContain(getCategoryColor({ id: 'food' }))
     expect(getCategoryColor({ id: 'food', color: 'red; background: url(http://x)' })).toBe(
       getCategoryColor({ id: 'food' }),
     )
-    expect(categoryAccentStyle({ color: '#abc' })).toEqual({ '--category-accent': '#abc' })
+    expect(categoryAccentStyle({ id: 'food', color: '#abc' })).toEqual({
+      '--category-accent': getCategoryColor({ id: 'food' }),
+    })
   })
 
-  it('harmoniza categorias globais legadas sem sobrescrever personalizações individuais', () => {
+  it('harmoniza categorias globais e personalizadas sem usar cores financeiras', () => {
     expect(
       getCategoryColor({
         id: 'food',
@@ -54,7 +58,7 @@ describe('Identidade cromática por categoria', () => {
         type: 'expense',
         isDefault: false,
       }),
-    ).toBe('#10b981')
+    ).toBe(CATEGORY_PALETTE[3])
     expect(
       getCategoryColor({
         id: 'salary',
@@ -63,7 +67,7 @@ describe('Identidade cromática por categoria', () => {
         type: 'income',
         isDefault: true,
       }),
-    ).toBe('#22c55e')
+    ).toBe(getCategoryColor({ id: 'salary' }))
   })
 
   it('agrega somente despesas efetivas e preserva uma cor por categoria', () => {
@@ -84,8 +88,16 @@ describe('Identidade cromática por categoria', () => {
     const result = categoryCompositionFromTransactions(transactions, categories)
     expect(result).toHaveLength(2)
     expect(result.map((x) => x.total)).toEqual([300, 150])
-    expect(result[0]).toMatchObject({ categoryName: 'Alimentação', color: '#B47750', count: 2 })
-    expect(result[1]).toMatchObject({ categoryName: 'Transporte', color: '#4C8192', count: 1 })
+    expect(result[0]).toMatchObject({
+      categoryName: 'Alimentação',
+      color: CATEGORY_PALETTE[0],
+      count: 2,
+    })
+    expect(result[1]).toMatchObject({
+      categoryName: 'Transporte',
+      color: CATEGORY_PALETTE[1],
+      count: 1,
+    })
     expect(result.reduce((sum, x) => sum + x.sharePercent, 0)).toBeCloseTo(100)
   })
 
@@ -107,20 +119,23 @@ describe('Identidade cromática por categoria', () => {
       total: 800,
       sharePercent: 80,
       changePercent: -10,
-      color: '#4976A0',
+      color: CATEGORY_PALETTE[0],
       categoryName: 'Alimentação',
       icon: '🥗',
     })
     expect(source[0].color).toBeUndefined()
-    expect(decorateCategoryBreakdown(source, [])[0].color).toBe('#AC7B4E')
+    expect(CATEGORY_PALETTE).toContain(decorateCategoryBreakdown(source, [])[0].color)
   })
 
   it('mantém identificáveis lançamentos legados sem categoria cadastrada', () => {
     const rows = categoryCompositionFromTransactions([
       { type: 'expense', categoryName: 'Serviços antigos', amount: 40, categoryColor: '#786C8D' },
     ])
-    expect(rows).toMatchObject([
-      { categoryName: 'Serviços antigos', total: 40, color: '#786C8D', sharePercent: 100 },
-    ])
+    expect(rows[0]).toMatchObject({
+      categoryName: 'Serviços antigos',
+      total: 40,
+      sharePercent: 100,
+    })
+    expect(CATEGORY_PALETTE).toContain(rows[0].color)
   })
 })

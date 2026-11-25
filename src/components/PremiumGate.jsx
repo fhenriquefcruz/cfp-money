@@ -43,7 +43,7 @@ function CompactPremiumGate({ feature, description, benefits }) {
               <Crown size={19} />
             </div>
             <div className="min-w-0">
-              <div className="mb-1 inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-yellow-800">
+              <div className="mb-1 inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-yellow-800">
                 <Star size={10} className="fill-current" />
                 Premium
               </div>
@@ -61,18 +61,18 @@ function CompactPremiumGate({ feature, description, benefits }) {
           {(benefits || DEFAULT_BENEFITS).slice(0, 4).map((benefit) => (
             <div key={benefit} className="flex items-start gap-2">
               <CheckCircle size={13} className="mt-0.5 flex-shrink-0 text-[--success-icon]" />
-              <span className="text-[11px] leading-relaxed text-[--text-secondary]">{benefit}</span>
+              <span className="text-xs leading-relaxed text-[--text-secondary]">{benefit}</span>
             </div>
           ))}
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-yellow-200/70 pt-4">
-          <p className="text-[11px] text-[--text-tertiary]">
+          <p className="text-xs text-[--text-tertiary]">
             Seus dados e preferências permanecem preservados.
           </p>
           <Link
             to="/profile"
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[--brand-600] px-3 text-xs font-semibold text-white transition-colors hover:bg-[--brand-700]"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[--brand-600] px-3 text-xs font-semibold text-[--on-primary] transition-colors hover:bg-[--brand-700]"
           >
             Ver Premium
             <ArrowRight size={12} />
@@ -157,7 +157,7 @@ export default function PremiumGate({
                 <code className="mt-2 block break-all rounded-lg bg-[--brand-100] px-2 py-1.5 font-mono text-xs text-[--brand-700]">
                   {PIX_KEY}
                 </code>
-                <p className="mt-2 text-[11px] leading-relaxed text-[--brand-600]">
+                <p className="mt-2 text-xs leading-relaxed text-[--brand-600]">
                   Envie o comprovante para ativação. O acesso vigora por 30 dias após a confirmação.
                 </p>
               </div>
@@ -168,7 +168,7 @@ export default function PremiumGate({
             <p className="text-xs font-semibold text-[--text-primary]">
               Seus dados continuam seguros
             </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-[--text-tertiary]">
+            <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
               O bloqueio Premium limita apenas o acesso ao benefício. Nenhuma transação, categoria,
               meta, orçamento ou preferência já salva é removida.
             </p>

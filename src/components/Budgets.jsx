@@ -13,6 +13,8 @@ import {
   shiftBudgetMonth,
 } from '../domain/budgetPeriods'
 import { buildCategoryReviewQueue } from '../domain/categoryReview'
+import { getCategoryColor } from '../domain/categoryComposition'
+import CategoryIcon from './CategoryIcon'
 
 const monthLabel = (monthKey) => `${monthKey.slice(5, 7)}/${monthKey.slice(0, 4)}`
 function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
@@ -28,9 +30,11 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
         <div className="flex min-w-0 items-center gap-2.5">
           <div
             className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-xl"
-            style={{ background: `${category.color}22` }}
+            style={{
+              background: `color-mix(in srgb, ${getCategoryColor(category)} 15%, transparent)`,
+            }}
           >
-            {category.icon}
+            <CategoryIcon category={category} size={20} />
           </div>
           <div className="min-w-0">
             <p className="truncate font-semibold text-[--text-primary]">{category.name}</p>
@@ -58,7 +62,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
         <>
           <div className="mt-4 flex flex-wrap items-end justify-between gap-2">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                 Gasto no mês
               </p>
               <p className="budget-spent-value" data-tone={tone}>
@@ -66,7 +70,7 @@ function BudgetCard({ category, budget, spent, monthKey, onEdit, onRemove }) {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                 {isOver ? 'Excedido' : 'Disponível'}
               </p>
               <p
@@ -208,7 +212,7 @@ export default function Budgets() {
       <Card className="shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[--text-tertiary]">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[--text-tertiary]">
               Competência
             </p>
             <p className="mt-1 text-lg font-black text-[--text-primary]">{selectedLabel}</p>
@@ -345,7 +349,7 @@ export default function Budgets() {
               <option value="">Selecione uma categoria</option>
               {expenseCategories.map((category) => (
                 <option key={category.id} value={category.id}>
-                  {category.icon} {category.name}
+                  {category.name}
                 </option>
               ))}
             </select>

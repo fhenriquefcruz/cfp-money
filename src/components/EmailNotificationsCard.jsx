@@ -40,7 +40,7 @@ const WEEKDAYS = [
 
 const FREQUENCIES = [
   ['weekly', 'Semanal'],
-  ['fortnightly', 'Quinzenal'],
+  ['fortnightly', 'Dias 1 e 15'],
   ['monthly', 'Mensal'],
 ]
 
@@ -57,7 +57,7 @@ function CheckboxRow({ checked, disabled, label, helper, onChange }) {
       <span>
         <span className="block text-xs font-black text-[--text-primary]">{label}</span>
         {helper && (
-          <span className="mt-1 block text-[10px] leading-relaxed text-[--text-tertiary]">
+          <span className="mt-1 block text-xs leading-relaxed text-[--text-tertiary]">
             {helper}
           </span>
         )}
@@ -217,7 +217,7 @@ function EmailNotificationsContent() {
     <Card className="overflow-hidden" padding={false}>
       <div className="border-b border-[--border-subtle] bg-[--bg-subtle] p-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-white shadow-sm">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-[--on-primary] shadow-sm">
             <Mail size={19} />
           </div>
           <div>
@@ -225,7 +225,7 @@ function EmailNotificationsContent() {
               <h2 className="text-sm font-black text-[--text-primary]">
                 Relatórios e alertas por e-mail
               </h2>
-              <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-yellow-800">
+              <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-black uppercase tracking-wide text-yellow-800">
                 Premium
               </span>
             </div>
@@ -248,10 +248,10 @@ function EmailNotificationsContent() {
                 <ShieldCheck size={15} className="text-[--brand-600]" />
                 <p className="text-xs font-black text-[--text-primary]">Destinatário protegido</p>
               </div>
-              <p className="mt-1 break-all text-[11px] text-[--text-secondary]">
+              <p className="mt-1 break-all text-xs text-[--text-secondary]">
                 {user?.email || 'E-mail não disponível'}
               </p>
-              <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
+              <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
                 Os envios usam somente o e-mail autenticado. O assunto não exibe valores
                 financeiros.
               </p>
@@ -331,7 +331,7 @@ function EmailNotificationsContent() {
 
             {settings.frequency === 'fortnightly' && (
               <p className="rounded-xl border border-[--border-default] bg-[--bg-subtle] p-3 text-xs text-[--text-secondary]">
-                O resumo quinzenal será enviado nos dias 1 e 15 de cada mês.
+                O resumo será enviado nos dias 1 e 15 de cada mês.
               </p>
             )}
 
@@ -418,7 +418,7 @@ function EmailNotificationsContent() {
                 onChange={(event) => setConsent(event.target.checked)}
                 className="mt-1 h-4 w-4 accent-[--brand-600]"
               />
-              <span className="text-[11px] leading-relaxed text-[--brand-700]">
+              <span className="text-xs leading-relaxed text-[--brand-700]">
                 Autorizo o Meu Real a enviar relatórios financeiros e alertas transacionais ao
                 e-mail da minha conta. Posso cancelar os envios a qualquer momento.
               </span>

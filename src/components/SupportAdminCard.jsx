@@ -98,15 +98,15 @@ export default function SupportAdminCard() {
                 }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[10px] font-black text-[--text-brand]">
+                  <span className="text-xs font-black text-[--text-brand]">
                     {protocolLabel(item.protocol || item.id)}
                   </span>
-                  <span className="text-[10px] text-[--text-tertiary]">{item.status}</span>
+                  <span className="text-xs text-[--text-tertiary]">{item.status}</span>
                 </div>
                 <p className="mt-1 truncate text-xs font-bold text-[--text-primary]">
                   {item.subject}
                 </p>
-                <p className="mt-1 truncate text-[10px] text-[--text-tertiary]">{item.email}</p>
+                <p className="mt-1 truncate text-xs text-[--text-tertiary]">{item.email}</p>
               </button>
             ))
           )}
@@ -121,7 +121,7 @@ export default function SupportAdminCard() {
             <div className="space-y-3">
               <div className="rounded-xl border border-[--border-default] p-3">
                 <p className="text-xs font-black text-[--text-primary]">{selected.subject}</p>
-                <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                <p className="mt-1 text-xs text-[--text-tertiary]">
                   {selected.email} · {selected.category}
                 </p>
                 <p className="mt-3 whitespace-pre-wrap text-xs leading-relaxed text-[--text-secondary]">

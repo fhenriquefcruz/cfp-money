@@ -16,12 +16,10 @@ function Metric({ icon: Icon, label, value, detail }) {
     <div className="rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
       <div className="flex items-center gap-2">
         <Icon size={14} className="text-[--brand-600]" />
-        <p className="text-[10px] font-bold uppercase tracking-wide text-[--text-tertiary]">
-          {label}
-        </p>
+        <p className="text-xs font-bold uppercase tracking-wide text-[--text-tertiary]">{label}</p>
       </div>
       <p className="mt-2 text-2xl font-black tabular-nums text-[--text-primary]">{value}</p>
-      <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">{detail}</p>
+      <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">{detail}</p>
     </div>
   )
 }
@@ -31,7 +29,7 @@ function CheckRow({ label, ok }) {
     <div className="flex items-center justify-between gap-3 rounded-xl border border-[--border-subtle] px-3 py-2">
       <span className="text-xs text-[--text-secondary]">{label}</span>
       <span
-        className={`inline-flex items-center gap-1 text-[10px] font-black ${
+        className={`inline-flex items-center gap-1 text-xs font-black ${
           ok ? 'text-[--success-text]' : 'text-[--warning-text]'
         }`}
       >
@@ -130,7 +128,7 @@ export default function CommercialOverviewCard() {
 
             <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
               <div className="space-y-2">
-                <CheckRow label="Backend privilegiado" ok={metrics.readiness.checks.backend} />
+                <CheckRow label="Acesso administrativo" ok={metrics.readiness.checks.backend} />
                 <CheckRow
                   label="Privacidade e portabilidade"
                   ok={metrics.readiness.checks.privacy}
@@ -147,11 +145,11 @@ export default function CommercialOverviewCard() {
                 <p className="mt-2 text-4xl font-black tabular-nums text-[--brand-600]">
                   {metrics.readiness.percentage}%
                 </p>
-                <p className="mt-2 text-[10px] leading-relaxed text-[--text-tertiary]">
+                <p className="mt-2 text-xs leading-relaxed text-[--text-tertiary]">
                   {metrics.readiness.completed} de {metrics.readiness.total} controles técnicos
                   monitorados.
                 </p>
-                <p className="mt-3 text-[10px] text-[--text-tertiary]">
+                <p className="mt-3 text-xs text-[--text-tertiary]">
                   Atualizado em {new Date(metrics.generatedAt).toLocaleString('pt-BR')}
                 </p>
               </div>

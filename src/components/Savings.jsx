@@ -104,8 +104,8 @@ export default function Savings() {
             Seu dinheiro guardado, em um só lugar
           </h1>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[--text-tertiary]">
-            Acompanhe quanto está reservado, onde o dinheiro está e quais metas cada reserva ajuda a
-            financiar.
+            Acompanhe quanto está reservado e onde o dinheiro está. Ao registrar um aporte, você
+            pode associá-lo a uma meta.
           </p>
         </div>
 
@@ -167,7 +167,7 @@ export default function Savings() {
             <p className="mt-2 text-xl font-black tabular-nums text-[--text-primary] sm:text-2xl">
               {formatCurrency(value)}
             </p>
-            <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">{helper}</p>
+            <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">{helper}</p>
           </Card>
         ))}
       </section>
@@ -197,7 +197,7 @@ export default function Savings() {
                       style={{ height: `${Math.max(6, (point.balance / historyMax) * 100)}%` }}
                     />
                   </div>
-                  <span className="text-[9px] text-[--text-tertiary]">{point.label}</span>
+                  <span className="text-xs text-[--text-tertiary]">{point.label}</span>
                 </div>
               ))}
             </div>
@@ -206,7 +206,7 @@ export default function Savings() {
               Os primeiros aportes formarão esta evolução.
             </p>
           )}
-          <p className="mt-3 text-[10px] text-[--text-tertiary]">
+          <p className="mt-3 text-xs text-[--text-tertiary]">
             Ritmo de poupança do mês:{' '}
             {savingsRate.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
           </p>
@@ -257,7 +257,7 @@ export default function Savings() {
                 <span className="truncate text-xs font-bold text-[--text-primary]">
                   {projection.emoji} {projection.name}
                 </span>
-                <span className="text-[10px] text-[--text-tertiary] sm:text-right">
+                <span className="text-xs text-[--text-tertiary] sm:text-right">
                   {projection.monthlyPace > 0
                     ? `${formatCurrency(projection.monthlyPace)}/mês · ~${projection.projectedMonths} meses`
                     : 'Sem ritmo recente'}
@@ -377,11 +377,11 @@ export default function Savings() {
                       <p className="truncate text-xs font-bold text-[--text-primary]">
                         {getSavingsDestinationLabel(movement)}
                       </p>
-                      <p className="mt-0.5 truncate text-[10px] text-[--text-tertiary]">
+                      <p className="mt-0.5 truncate text-xs text-[--text-tertiary]">
                         {movement.description || (signedAmount >= 0 ? 'Aporte' : 'Retirada')}
                         {linkedGoal ? ` · ${linkedGoal.emoji || '🎯'} ${linkedGoal.name}` : ''}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+                      <p className="mt-0.5 text-xs text-[--text-tertiary]">
                         {formatDate(transactionDate(movement))}
                       </p>
                     </div>
@@ -397,7 +397,7 @@ export default function Savings() {
                       <button
                         type="button"
                         onClick={() => setEditingMovement(movement)}
-                        className="min-h-9 rounded-xl px-2 text-[10px] font-bold text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
+                        className="min-h-9 rounded-xl px-2 text-xs font-bold text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
                         aria-label={`Editar movimento ${
                           movement.description || getSavingsDestinationLabel(movement)
                         }`}

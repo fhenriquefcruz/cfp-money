@@ -109,7 +109,7 @@ function GoalCard({ goal, transactions, onEdit, onDelete, onContribute }) {
         {!plan.completed && (
           <div className="mt-4 grid grid-cols-2 gap-2">
             <div className="rounded-xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                 Falta alcançar
               </p>
               <p className="mt-1 text-sm font-black text-[--text-primary]">
@@ -117,7 +117,7 @@ function GoalCard({ goal, transactions, onEdit, onDelete, onContribute }) {
               </p>
             </div>
             <div className="rounded-xl border border-[--border-subtle] bg-[--bg-subtle] p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                 {plan.suggestedMonthlyContribution ? 'Ritmo sugerido' : 'Prazo'}
               </p>
               <p className="mt-1 text-sm font-black text-[--text-primary]">
@@ -134,7 +134,7 @@ function GoalCard({ goal, transactions, onEdit, onDelete, onContribute }) {
         )}
 
         {plan.suggestedMonthlyContribution && !plan.completed && (
-          <p className="mt-2 text-[10px] leading-relaxed text-[--text-tertiary]">
+          <p className="mt-2 text-xs leading-relaxed text-[--text-tertiary]">
             Para chegar ao valor alvo até o prazo, seria necessário aportar aproximadamente{' '}
             <strong className="text-[--text-secondary]">
               {formatCurrency(plan.suggestedMonthlyContribution)} por mês
@@ -337,7 +337,9 @@ function GoalsContent() {
             <h1 className="text-2xl font-black text-[--text-primary]">Metas</h1>
             <InfoTooltip text="Defina objetivos financeiros e acompanhe seu progresso. Aportes podem ser feitos a qualquer momento." />
           </div>
-          <p className="text-sm text-[--text-tertiary]">{goals.length} metas definidas</p>
+          <p className="text-sm text-[--text-tertiary]">
+            {goals.length} {goals.length === 1 ? 'meta definida' : 'metas definidas'}
+          </p>
         </div>
         <Button
           variant="primary"
@@ -374,11 +376,11 @@ function GoalsContent() {
             },
           ].map((item) => (
             <Card key={item.label} className="py-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                 {item.label}
               </p>
               <p className="mt-1 text-lg font-black text-[--text-primary]">{item.value}</p>
-              <p className="mt-1 text-[10px] text-[--text-tertiary]">{item.helper}</p>
+              <p className="mt-1 text-xs text-[--text-tertiary]">{item.helper}</p>
             </Card>
           ))}
         </div>
@@ -445,7 +447,7 @@ function GoalsContent() {
               onChange={(e) => setForm((f) => ({ ...f, currentAmount: e.target.value }))}
             />
           </div>
-          <p className="-mt-2 text-[10px] leading-relaxed text-[--text-tertiary]">
+          <p className="-mt-2 text-xs leading-relaxed text-[--text-tertiary]">
             O saldo inicial preserva valores existentes da meta. Novos aportes devem ser registrados
             pelo botão “Registrar aporte”, para também aparecerem em Poupança e Reservas.
           </p>
@@ -512,7 +514,7 @@ function GoalsContent() {
               <p className="text-xs text-[--text-tertiary]">Situação atual</p>
               <div className="mt-2 grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                     Acumulado
                   </p>
                   <p className="mt-1 text-sm font-black text-[--text-primary]">
@@ -520,7 +522,7 @@ function GoalsContent() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                  <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                     Falta
                   </p>
                   <p className="mt-1 text-sm font-black text-[--text-primary]">
@@ -559,7 +561,7 @@ function GoalsContent() {
               onChange={(event) => setContributionInstitution(event.target.value)}
             />
 
-            <p className="text-[10px] leading-relaxed text-[--text-tertiary]">
+            <p className="text-xs leading-relaxed text-[--text-tertiary]">
               Este aporte será registrado como poupança e ficará vinculado à meta. O progresso passa
               a ser calculado pelo saldo inicial mais os movimentos vinculados.
             </p>

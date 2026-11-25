@@ -92,7 +92,7 @@ const MONEY_CAPABILITIES = [
 function Metric({ metric }) {
   return (
     <div className="rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3.5">
-      <p className="text-[10px] font-bold uppercase tracking-wide text-[--text-tertiary]">
+      <p className="text-xs font-bold uppercase tracking-wide text-[--text-tertiary]">
         {metric.label}
       </p>
       <p className="mt-1 text-sm font-black tabular-nums text-[--text-primary]">
@@ -162,13 +162,13 @@ function AssistantResponse({
       )}
 
       {response.periodLabel && (
-        <p className="text-[11px] text-[--text-tertiary]">Período: {response.periodLabel}</p>
+        <p className="text-xs text-[--text-tertiary]">Período: {response.periodLabel}</p>
       )}
 
       {response.reportMonth && (
         <Link
           to={`/reports?month=${response.reportMonth}`}
-          className="inline-flex min-h-11 max-w-full flex-wrap items-center justify-center gap-2 break-words rounded-xl bg-[--brand-600] px-3 text-center text-xs font-semibold text-white transition-colors hover:bg-[--brand-700]"
+          className="inline-flex min-h-11 max-w-full flex-wrap items-center justify-center gap-2 break-words rounded-xl bg-[--brand-600] px-3 text-center text-xs font-semibold text-[--on-primary] transition-colors hover:bg-[--brand-700]"
         >
           <FileText size={14} />
           Abrir relatório completo
@@ -520,7 +520,7 @@ function MoneyContent() {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-black sm:text-3xl">Money</h1>
-                <span className="inline-flex items-center gap-1 rounded-full bg-yellow-300 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-yellow-900">
+                <span className="inline-flex items-center gap-1 rounded-full bg-yellow-300 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-yellow-900">
                   <Crown size={11} />
                   Premium
                 </span>
@@ -566,10 +566,10 @@ function MoneyContent() {
                 lançamento simples. Antes de salvar, ele apresenta todos os campos para revisão.
               </p>
               <div className="rounded-2xl border border-[--brand-200] bg-[--brand-50] p-3">
-                <p className="text-[11px] font-bold text-[--brand-700]">
+                <p className="text-xs font-bold text-[--brand-700]">
                   Seus dados permanecem intactos
                 </p>
-                <p className="mt-1 text-[10px] leading-relaxed text-[--brand-600]">
+                <p className="mt-1 text-xs leading-relaxed text-[--brand-600]">
                   Consultas não alteram registros. Novas receitas e despesas só são gravadas após a
                   confirmação; depois, ainda é possível desfazer o lançamento.
                 </p>
@@ -588,9 +588,7 @@ function MoneyContent() {
           <Card className="h-full overflow-hidden shadow-sm" padding={false}>
             <div className="border-b border-[--border-subtle] p-4">
               <h2 className="text-sm font-black text-[--text-primary]">O que o Money faz</h2>
-              <p className="mt-1 text-[11px] text-[--text-tertiary]">
-                Recursos disponíveis nesta fase
-              </p>
+              <p className="mt-1 text-xs text-[--text-tertiary]">Recursos disponíveis nesta fase</p>
             </div>
             <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-1">
               {MONEY_CAPABILITIES.map(({ icon: Icon, title, description }) => (
@@ -603,7 +601,7 @@ function MoneyContent() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-[--text-primary]">{title}</p>
-                    <p className="mt-0.5 text-[10px] leading-relaxed text-[--text-tertiary]">
+                    <p className="mt-0.5 text-xs leading-relaxed text-[--text-tertiary]">
                       {description}
                     </p>
                   </div>
@@ -625,9 +623,7 @@ function MoneyContent() {
                   {safeDataStatus}
                 </p>
               </div>
-              <p className="text-[10px] text-[--text-tertiary]">
-                Conversa não armazenada no Firestore
-              </p>
+              <p className="text-xs text-[--text-tertiary]">Esta conversa não é salva</p>
             </div>
           </div>
 
@@ -638,7 +634,7 @@ function MoneyContent() {
                 className={`flex min-w-0 items-start gap-2 sm:gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}
               >
                 {message.role === 'assistant' && (
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-600] text-white shadow-sm sm:h-9 sm:w-9 sm:rounded-2xl">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-600] text-[--on-primary] shadow-sm sm:h-9 sm:w-9 sm:rounded-2xl">
                     <Bot size={16} />
                   </div>
                 )}
@@ -646,7 +642,7 @@ function MoneyContent() {
                 <div
                   className={`money-message-bubble min-w-0 max-w-[calc(100%_-_2.25rem)] overflow-hidden rounded-2xl p-2.5 [overflow-wrap:anywhere] sm:max-w-[78%] sm:p-3.5 ${
                     message.role === 'user'
-                      ? 'bg-[--brand-600] text-white shadow-sm'
+                      ? 'bg-[--brand-600] text-[--on-primary] shadow-sm'
                       : 'border border-[--border-default] bg-[--bg-surface] shadow-sm'
                   }`}
                 >
@@ -717,7 +713,7 @@ function MoneyContent() {
                 <Send size={17} />
               </Button>
             </div>
-            <p className="mt-2 text-[10px] leading-relaxed text-[--text-tertiary]">
+            <p className="mt-2 text-xs leading-relaxed text-[--text-tertiary]">
               Enter envia · Shift + Enter quebra a linha · lançamentos sempre passam por revisão.
             </p>
           </form>

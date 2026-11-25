@@ -42,11 +42,11 @@ function SummaryCard({ icon: Icon, label, value, helper }) {
     <Card className="credit-cards-summary-card shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-wider text-[--text-tertiary]">
+          <p className="text-xs font-black uppercase tracking-wider text-[--text-tertiary]">
             {label}
           </p>
           <p className="mt-2 text-xl font-black tracking-tight text-[--text-primary]">{value}</p>
-          <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">{helper}</p>
+          <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">{helper}</p>
         </div>
         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-100] text-[--brand-600]">
           <Icon size={17} />
@@ -76,7 +76,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
       aria-pressed={selected}
     >
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[--brand-700] to-[--brand-500] text-white shadow-sm">
+        <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-[--on-primary] shadow-sm">
           <CreditCard size={18} />
         </div>
 
@@ -87,19 +87,19 @@ function InvoiceCard({ invoice, selected, onSelect }) {
               {card.last4 ? ` •••• ${card.last4}` : ''}
             </p>
             <span
-              className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${statusClass}`}
+              className={`rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-wide ${statusClass}`}
             >
               {statusLabel}
             </span>
           </div>
 
-          <p className="mt-1 text-[10px] text-[--text-tertiary]">
+          <p className="mt-1 text-xs text-[--text-tertiary]">
             Fecha em {formatDate(dates.closingDate)} · vence em {formatDate(dates.dueDate)}
           </p>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div>
-              <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                 Total
               </p>
               <p className="mt-0.5 text-lg font-black text-[--text-primary]">
@@ -107,7 +107,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                 Pendente
               </p>
               <p className="mt-0.5 text-sm font-black text-[--text-primary]">
@@ -115,21 +115,21 @@ function InvoiceCard({ invoice, selected, onSelect }) {
               </p>
             </div>
           </div>
-          <p className="mt-2 text-[10px] text-[--text-tertiary]">
+          <p className="mt-2 text-xs text-[--text-tertiary]">
             Pago: {formatCurrency(lifecycle.paidAmount)} · Histórico:{' '}
             {formatCurrency(invoice.allTime)} · {invoice.itemCount} lançamento
             {invoice.itemCount === 1 ? '' : 's'}
           </p>
 
           {invoice.futureCommitmentTotal > 0 && (
-            <p className="mt-2 text-[10px] text-[--text-tertiary]">
+            <p className="mt-2 text-xs text-[--text-tertiary]">
               Compromissos futuros após esta fatura: {formatCurrency(invoice.futureCommitmentTotal)}
             </p>
           )}
 
           {cardLimit > 0 && (
             <div className="mt-3">
-              <div className="flex items-center justify-between gap-2 text-[9px]">
+              <div className="flex items-center justify-between gap-2 text-xs">
                 <span className="font-bold text-[--text-tertiary]">
                   Comprometido a partir desta fatura
                 </span>
@@ -147,7 +147,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
                   style={{ width: `${Math.min(100, limitUsage)}%` }}
                 />
               </div>
-              <div className="mt-1.5 flex flex-wrap justify-between gap-2 text-[9px] text-[--text-tertiary]">
+              <div className="mt-1.5 flex flex-wrap justify-between gap-2 text-xs text-[--text-tertiary]">
                 <span>
                   {formatCurrency(committed)} de {formatCurrency(cardLimit)}
                 </span>
@@ -161,7 +161,7 @@ function InvoiceCard({ invoice, selected, onSelect }) {
           )}
 
           {card.historicalOnly && (
-            <p className="mt-2 text-[9px] leading-relaxed text-[--warning-text]">
+            <p className="mt-2 text-xs leading-relaxed text-[--warning-text]">
               Cartão removido; histórico preservado.
             </p>
           )}
@@ -187,12 +187,12 @@ function TransactionRow({ transaction }) {
             {transaction.description || 'Compra no cartão'}
           </p>
           {transaction.isInstallment && (
-            <span className="rounded-full bg-[--brand-100] px-2 py-0.5 text-[9px] font-black text-[--brand-700]">
+            <span className="rounded-full bg-[--brand-100] px-2 py-0.5 text-xs font-black text-[--brand-700]">
               {transaction.installmentNum}/{transaction.installmentOf}
             </span>
           )}
         </div>
-        <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+        <p className="mt-0.5 text-xs text-[--text-tertiary]">
           {transaction.categoryName || 'Sem categoria'} · compra em {formatDate(purchaseDate)}
         </p>
       </div>
@@ -294,7 +294,7 @@ function CreditCardsCenterContent() {
                 <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
                   Cartões e faturas
                 </h1>
-                <span className="rounded-full bg-[#c49d6b]/20 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-[#e8d4b8] ring-1 ring-[#d9bb91]/20">
+                <span className="rounded-full bg-[#c49d6b]/20 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-[#e8d4b8] ring-1 ring-[#d9bb91]/20">
                   Premium
                 </span>
               </div>
@@ -334,7 +334,7 @@ function CreditCardsCenterContent() {
       <Card className="credit-cards-period-card shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[--brand-600]">
+            <p className="text-xs font-black uppercase tracking-wider text-[--brand-600]">
               Período da fatura
             </p>
             <h2 className="mt-1 text-lg font-black text-[--text-primary]">
@@ -389,7 +389,7 @@ function CreditCardsCenterContent() {
               onClick={() => selectMonth(monthKeyFromDate())}
               className="min-h-11 rounded-xl border border-[--brand-200] bg-[--brand-50] px-3 text-xs font-bold text-[--brand-700]"
             >
-              Mês atual
+              Hoje
             </button>
           </div>
         </div>
@@ -470,7 +470,7 @@ function CreditCardsCenterContent() {
                 {linkageAudit.unlinked} · Sugestões: {center.reconciledPurchaseCount} · Históricos:{' '}
                 {linkageAudit.historical}
               </p>
-              <p className="mt-2 text-[11px] text-[--text-tertiary]">
+              <p className="mt-2 text-xs text-[--text-tertiary]">
                 Cálculo sobre dados carregados nesta sessão, não é conciliação bancária. Nenhum
                 lançamento é corrigido automaticamente; confira seu extrato.
               </p>
@@ -506,7 +506,7 @@ function CreditCardsCenterContent() {
             <div className="flex flex-col gap-3 rounded-2xl border border-[--warning-border] bg-[--warning-bg] p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs font-black text-[--text-primary]">Compras a conciliar</p>
-                <p className="mt-1 text-[11px] leading-relaxed text-[--text-secondary]">
+                <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">
                   {unlinkedPurchases.length} compra(s) sem vínculo salvo,{' '}
                   {formatCurrency(unlinkedTotal)} no histórico. Escolha o cartão de cada compra e
                   confira a fatura antes de confirmar.
@@ -515,7 +515,7 @@ function CreditCardsCenterContent() {
               <button
                 type="button"
                 onClick={() => setReconciliationOpen(true)}
-                className="min-h-11 rounded-xl bg-[--brand-600] px-4 text-xs font-bold text-white"
+                className="min-h-11 rounded-xl bg-[--brand-600] px-4 text-xs font-bold text-[--on-primary]"
               >
                 Conciliar compras
               </button>
@@ -545,10 +545,10 @@ function CreditCardsCenterContent() {
                           className="w-5 rounded-t-lg bg-gradient-to-t from-[--brand-600] to-[--brand-300]"
                           style={{ height }}
                         />
-                        <span className="mt-2 truncate text-[9px] font-bold text-[--text-secondary]">
+                        <span className="mt-2 truncate text-xs font-bold text-[--text-secondary]">
                           {item.label.split(' de ')[0]}
                         </span>
-                        <span className="mt-0.5 text-[9px] font-black text-[--text-primary]">
+                        <span className="mt-0.5 text-xs font-black text-[--text-primary]">
                           {formatCurrency(item.total, { compact: true })}
                         </span>
                       </button>
@@ -592,7 +592,7 @@ function CreditCardsCenterContent() {
                     <h2 className="text-sm font-black text-[--text-primary]">
                       Lançamentos da fatura
                     </h2>
-                    <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                    <p className="mt-1 text-xs text-[--text-tertiary]">
                       {selectedCardId === 'all' ? 'Todos os cartões' : selectedInvoice?.card.name}
                     </p>
                   </div>
@@ -602,14 +602,14 @@ function CreditCardsCenterContent() {
                       <button
                         type="button"
                         onClick={() => setManagingCardId(selectedInvoice.card.id)}
-                        className="min-h-10 rounded-xl bg-[--brand-600] px-3 text-[10px] font-black text-white"
+                        className="min-h-10 rounded-xl bg-[--brand-600] px-3 text-xs font-black text-[--on-primary]"
                       >
                         Gerenciar fatura
                       </button>
                       <button
                         type="button"
                         onClick={() => setSelectedCardId('all')}
-                        className="min-h-10 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-[10px] font-bold text-[--text-secondary]"
+                        className="min-h-10 rounded-xl border border-[--border-default] bg-[--bg-surface] px-3 text-xs font-bold text-[--text-secondary]"
                       >
                         Mostrar todos
                       </button>

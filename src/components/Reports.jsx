@@ -4,9 +4,6 @@ import { useSearchParams } from 'react-router-dom'
 import {
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   AreaChart,
   Area,
   XAxis,
@@ -24,8 +21,11 @@ import {
   PiggyBank,
   ArrowLeftRight,
 } from 'lucide-react'
-import { useTransactions } from '../contexts/AppContext'
+import { useCategories, useTransactions } from '../contexts/AppContext'
 import { Card, Button } from './ui'
+import CategoryCompositionVisual from './CategoryCompositionVisual'
+import MoneyValue from './MoneyValue'
+import { categoryCompositionFromTransactions } from '../domain/categoryComposition'
 import { formatCurrency, exportToCSV, exportToPDF } from '../utils'
 import { getMonthlyFinancialData } from '../domain/monthlyFinance'
 import PremiumGate from './PremiumGate'
@@ -40,17 +40,6 @@ const isEffective = (transaction) =>
   transaction.flowType !== 'transfer' &&
   transaction.kind !== 'transfer'
 
-const COLORS = [
-  '#c49d6b',
-  '#4e8066',
-  '#a7804e',
-  '#b64c43',
-  '#786c8d',
-  '#9a6671',
-  '#5f8587',
-  '#b87645',
-]
-
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
@@ -60,7 +49,13 @@ const ChartTooltip = ({ active, payload, label }) => {
         <div key={i} className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ background: e.color }} />
           <span className="text-[--text-secondary]">{e.name}:</span>
-          <span className="font-bold text-[--text-primary]">{formatCurrency(e.value)}</span>
+          <MoneyValue
+            value={e.value}
+            kind={
+              /receita/i.test(e.name) ? 'income' : /despesa/i.test(e.name) ? 'expense' : 'neutral'
+            }
+            className="font-bold"
+          />
         </div>
       ))}
     </div>
@@ -82,7 +77,7 @@ function KPI({ label, value, sub, color, icon, tooltip }) {
           {tooltip && <InfoTooltip text={tooltip} size={11} />}
         </div>
         <p className="report-kpi__value">{value}</p>
-        {sub && <p className="text-[10px] text-[--text-tertiary]">{sub}</p>}
+        {sub && <p className="text-xs text-[--text-tertiary]">{sub}</p>}
       </div>
     </div>
   )
@@ -101,7 +96,7 @@ function SavingRateBadge({ rate, period }) {
         <p className="text-xs font-bold" style={{ color }}>
           {label}
         </p>
-        <p className="text-[10px] text-[--text-tertiary]">
+        <p className="text-xs text-[--text-tertiary]">
           Poupado líquido (aportes menos retiradas) dividido pelas receitas do período.
         </p>
       </div>
@@ -114,6 +109,7 @@ function SavingRateBadge({ rate, period }) {
 
 function ReportsContent() {
   const { transactions, getSummary } = useTransactions()
+  const { categories } = useCategories()
   const [searchParams] = useSearchParams()
   const requestedMonth = searchParams.get('month')
   const initialMonth = /^\d{4}-\d{2}$/.test(requestedMonth || '')
@@ -200,26 +196,10 @@ function ReportsContent() {
     })
   }, [transactions, period, referenceDate])
 
-  const categoryData = useMemo(() => {
-    const totals = {}
-
-    reportTransactions
-      .filter((transaction) => transaction.type === 'expense' && !transaction.isSavings)
-      .forEach((transaction) => {
-        const categoryKey = transaction.categoryId || 'without-category'
-        if (!totals[categoryKey])
-          totals[categoryKey] = {
-            name: transaction.categoryName || 'Sem categoria',
-            value: 0,
-            count: 0,
-            color: transaction.categoryColor || '#c49d6b',
-          }
-        totals[categoryKey].value += transaction.amount
-        totals[categoryKey].count += 1
-      })
-
-    return Object.values(totals).sort((first, second) => second.value - first.value)
-  }, [reportTransactions])
+  const categoryData = useMemo(
+    () => categoryCompositionFromTransactions(reportTransactions, categories),
+    [reportTransactions, categories],
+  )
 
   const hasTx = reportTransactions.length > 0
 
@@ -237,7 +217,7 @@ function ReportsContent() {
   const TABS = [
     { id: 'overview', label: 'Visão Geral' },
     { id: 'categories', label: 'Categorias' },
-    { id: 'savings', label: '🐷 Poupança' },
+    { id: 'savings', label: 'Poupança' },
   ]
 
   return (
@@ -467,7 +447,7 @@ function ReportsContent() {
                   <p className="text-xl font-black text-[--danger-icon]">
                     {formatCurrency(periodTotals.avg)}
                   </p>
-                  <p className="text-[10px] text-[--text-tertiary] mt-0.5">por mês</p>
+                  <p className="text-xs text-[--text-tertiary] mt-0.5">por mês</p>
                 </Card>
                 <Card>
                   <p className="text-xs text-[--text-tertiary] mb-1 flex items-center gap-1">
@@ -480,7 +460,7 @@ function ReportsContent() {
                   <p className="text-xl font-black text-[--brand-500]">
                     {formatCurrency(periodTotals.savings / period)}
                   </p>
-                  <p className="text-[10px] text-[--text-tertiary] mt-0.5">em média</p>
+                  <p className="text-xs text-[--text-tertiary] mt-0.5">em média</p>
                 </Card>
               </div>
             </div>
@@ -497,77 +477,9 @@ function ReportsContent() {
                 </Card>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <Card>
-                      <h3 className="text-sm font-bold text-[--text-primary] mb-4">Distribuição</h3>
-                      <ResponsiveContainer width="100%" height={200}>
-                        <PieChart>
-                          <Pie
-                            data={categoryData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={50}
-                            outerRadius={80}
-                            dataKey="value"
-                            nameKey="name"
-                            paddingAngle={2}
-                          >
-                            {categoryData.map((_, i) => (
-                              <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            formatter={(v) => formatCurrency(v)}
-                            contentStyle={{
-                              background: 'var(--bg-elevated)',
-                              border: '1px solid var(--border-default)',
-                              borderRadius: 12,
-                              fontSize: 11,
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </Card>
-
-                    <Card>
-                      <h3 className="text-sm font-bold text-[--text-primary] mb-4">Ranking</h3>
-                      <div className="space-y-3">
-                        {categoryData.slice(0, 7).map((cat, i) => {
-                          const pct = (cat.value / categoryData[0].value) * 100
-                          return (
-                            <div key={i}>
-                              <div className="flex justify-between items-center text-xs mb-1">
-                                <div className="flex items-center gap-1.5">
-                                  <div
-                                    className="w-2 h-2 rounded-full"
-                                    style={{
-                                      background: COLORS[i % COLORS.length],
-                                    }}
-                                  />
-                                  <span className="font-medium text-[--text-primary] truncate max-w-[130px]">
-                                    {cat.name}
-                                  </span>
-                                  <span className="text-[--text-tertiary]">{cat.count}x</span>
-                                </div>
-                                <span className="font-bold text-[--text-primary]">
-                                  {formatCurrency(cat.value, { compact: true })}
-                                </span>
-                              </div>
-                              <div className="h-1.5 bg-[--bg-subtle] rounded-full overflow-hidden">
-                                <div
-                                  className="h-full rounded-full transition-all duration-700"
-                                  style={{
-                                    width: `${pct}%`,
-                                    background: COLORS[i % COLORS.length],
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </Card>
-                  </div>
+                  <Card>
+                    <CategoryCompositionVisual items={categoryData} maxVisible={5} />
+                  </Card>
                 </>
               )}
             </div>
@@ -582,7 +494,7 @@ function ReportsContent() {
                   <p className="mt-1 text-2xl font-black text-[--text-primary]">
                     {formatCurrency(savingsOverview.totalBalance)}
                   </p>
-                  <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                  <p className="mt-1 text-xs text-[--text-tertiary]">
                     Saldo histórico: depósitos menos retiradas.
                   </p>
                 </Card>
@@ -591,7 +503,7 @@ function ReportsContent() {
                   <p className="mt-1 text-2xl font-black text-[--success-text]">
                     {formatCurrency(periodTotals.savingsDeposits)}
                   </p>
-                  <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                  <p className="mt-1 text-xs text-[--text-tertiary]">
                     Valores direcionados às suas reservas.
                   </p>
                 </Card>
@@ -600,7 +512,7 @@ function ReportsContent() {
                   <p className="mt-1 text-2xl font-black text-[--danger-text]">
                     {formatCurrency(periodTotals.savingsWithdrawals)}
                   </p>
-                  <p className="mt-1 text-[10px] text-[--text-tertiary]">
+                  <p className="mt-1 text-xs text-[--text-tertiary]">
                     Saídas registradas de reservas.
                   </p>
                 </Card>
@@ -634,7 +546,7 @@ function ReportsContent() {
                               <p className="truncate font-bold text-[--text-primary]">
                                 {destination.destination}
                               </p>
-                              <p className="truncate text-[10px] text-[--text-tertiary]">
+                              <p className="truncate text-xs text-[--text-tertiary]">
                                 {destination.institution || 'Instituição não informada'}
                                 {destination.goalIds.length
                                   ? ` · ${destination.goalIds.length} meta${destination.goalIds.length === 1 ? '' : 's'} vinculada${destination.goalIds.length === 1 ? '' : 's'}`
@@ -645,7 +557,7 @@ function ReportsContent() {
                               <p className="font-black text-[--text-primary]">
                                 {formatCurrency(destination.balance)}
                               </p>
-                              <p className="text-[10px] text-[--text-tertiary]">
+                              <p className="text-xs text-[--text-tertiary]">
                                 {share.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%
                               </p>
                             </div>

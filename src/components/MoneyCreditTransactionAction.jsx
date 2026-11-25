@@ -103,7 +103,7 @@ export default function MoneyCreditTransactionAction({
         </div>
         <Link
           to={response.profileRoute || '/profile'}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[--brand-600] px-3 text-xs font-semibold text-white hover:bg-[--brand-700]"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[--brand-600] px-3 text-xs font-semibold text-[--on-primary] hover:bg-[--brand-700]"
         >
           <CreditCard size={14} />
           Cadastrar cartão no Perfil
@@ -221,7 +221,7 @@ export default function MoneyCreditTransactionAction({
 
       <div className="flex items-start gap-2 rounded-xl border border-[--brand-200] bg-[--brand-50] p-3">
         <ShieldCheck size={15} className="mt-0.5 flex-shrink-0 text-[--brand-600]" />
-        <p className="text-[11px] leading-relaxed text-[--brand-700]">
+        <p className="text-xs leading-relaxed text-[--brand-700]">
           A data da compra será preservada. Dashboard e relatórios usarão os vencimentos das
           faturas. Nada foi salvo até este momento.
         </p>
@@ -233,7 +233,7 @@ export default function MoneyCreditTransactionAction({
           className="flex items-start gap-2 rounded-xl border border-[--warning-border] bg-[--warning-bg] p-3"
         >
           <AlertTriangle size={15} className="mt-0.5 flex-shrink-0 text-[--warning-icon]" />
-          <p className="text-[11px] leading-relaxed text-[--text-secondary]">{warning}</p>
+          <p className="text-xs leading-relaxed text-[--text-secondary]">{warning}</p>
         </div>
       ))}
 
@@ -263,7 +263,6 @@ export default function MoneyCreditTransactionAction({
           <option value="">Selecione</option>
           {eligibleCategories.map((category) => (
             <option key={category.id} value={category.id}>
-              {category.icon ? `${category.icon} ` : ''}
               {category.name}
             </option>
           ))}
@@ -310,13 +309,13 @@ export default function MoneyCreditTransactionAction({
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {previewDates.map((date, index) => (
               <div key={`${date}-${index}`} className="rounded-xl bg-white/60 p-2.5">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[--brand-600]">
+                <p className="text-xs font-bold uppercase tracking-wide text-[--brand-600]">
                   {index + 1}/{installmentCount}
                 </p>
                 <p className="mt-0.5 text-xs font-black text-[--brand-700]">
                   {formatCurrency(installmentAmounts[index])}
                 </p>
-                <p className="mt-0.5 text-[10px] text-[--brand-600]">
+                <p className="mt-0.5 text-xs text-[--brand-600]">
                   Vencimento em {formatDate(date)}
                 </p>
               </div>
@@ -324,7 +323,7 @@ export default function MoneyCreditTransactionAction({
           </div>
 
           {installmentCount > 4 && (
-            <p className="mt-2 text-[10px] text-[--brand-600]">
+            <p className="mt-2 text-xs text-[--brand-600]">
               Mais {installmentCount - 4} parcela
               {installmentCount - 4 === 1 ? '' : 's'} seguirá
               {installmentCount - 4 === 1 ? '' : 'ão'} mensalmente.
@@ -334,7 +333,7 @@ export default function MoneyCreditTransactionAction({
       )}
 
       {selectedCard && selectedCategory && (
-        <p className="text-[10px] text-[--text-tertiary]">
+        <p className="text-xs text-[--text-tertiary]">
           {selectedCard.name} · {selectedCategory.name} · compra em {formatDate(draft.purchaseDate)}
         </p>
       )}

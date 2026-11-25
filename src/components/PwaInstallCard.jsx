@@ -51,7 +51,7 @@ export default function PwaInstallCard() {
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-sm font-bold text-[--text-primary]">Aplicativo Meu Real</h2>
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+              className={`rounded-full px-2 py-0.5 text-xs font-bold ${
                 online
                   ? 'bg-[--success-bg] text-[--success-text]'
                   : 'bg-[--warning-bg] text-[--warning-text]'
@@ -103,7 +103,7 @@ export default function PwaInstallCard() {
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         <div className="flex items-center gap-2 text-xs text-[--text-tertiary]">
           <ShieldCheck size={14} className="text-[--brand-500]" />
-          Dados financeiros não ficam no cache
+          Seus dados financeiros não ficam salvos neste aparelho
         </div>
         <div className="flex items-center gap-2 text-xs text-[--text-tertiary]">
           <WifiOff size={14} className="text-[--brand-500]" />

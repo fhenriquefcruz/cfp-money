@@ -50,7 +50,7 @@ export default function FinancialHealthScore({ report }) {
             {report?.summary || 'Revise os fatores do indicador.'}
           </p>
           {report?.nextAction && (
-            <p className="mt-1 text-[10px] font-semibold text-[--text-secondary]">
+            <p className="mt-1 text-xs font-semibold text-[--text-secondary]">
               {scoreAvailable
                 ? `Maior oportunidade: ${report.nextAction.label} (+${report.nextAction.missingPoints} pts)`
                 : `Ação necessária: ${report.nextAction.label}`}
@@ -92,18 +92,16 @@ export default function FinancialHealthScore({ report }) {
             >
               <div className="mb-1.5 flex items-center justify-between gap-3">
                 <p className="text-xs font-bold text-[--text-primary]">{factor.label}</p>
-                <span className="flex-shrink-0 text-[10px] font-black tabular-nums text-[--text-secondary]">
+                <span className="flex-shrink-0 text-xs font-black tabular-nums text-[--text-secondary]">
                   {factor.points}/{factor.maxPoints} pts
                 </span>
               </div>
               <ProgressBar value={factor.points} max={factor.maxPoints} />
-              <p className="mt-2 text-[10px] leading-relaxed text-[--text-tertiary]">
-                {factor.detail}
-              </p>
+              <p className="mt-2 text-xs leading-relaxed text-[--text-tertiary]">{factor.detail}</p>
               {factor.missingPoints > 0 && (
                 <Link
                   to={factor.to}
-                  className="mt-2 inline-flex min-h-8 items-center gap-1 text-[10px] font-bold text-[--text-brand] hover:underline"
+                  className="mt-2 inline-flex min-h-8 items-center gap-1 text-xs font-bold text-[--text-brand] hover:underline"
                 >
                   {factor.actionLabel}
                   <ArrowRight size={11} aria-hidden="true" />

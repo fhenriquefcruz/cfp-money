@@ -42,7 +42,7 @@ export default function PwaUpdateNotice() {
       <button
         type="button"
         onClick={() => activatePwaUpdate(registration)}
-        className="mt-3 flex min-h-11 w-full items-center justify-center rounded-xl bg-[--brand-600] px-4 text-sm font-bold text-white transition-colors hover:bg-[--brand-700]"
+        className="mt-3 flex min-h-11 w-full items-center justify-center rounded-xl bg-[--brand-600] px-4 text-sm font-bold text-[--on-primary] transition-colors hover:bg-[--brand-700]"
       >
         Atualizar agora
       </button>

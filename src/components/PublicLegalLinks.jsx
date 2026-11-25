@@ -11,7 +11,7 @@ export default function PublicLegalLinks() {
 
   return (
     <>
-      <div className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-[11px] leading-relaxed text-[--text-tertiary]">
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs leading-relaxed text-[--text-tertiary]">
         <span>Ao continuar, você concorda com os documentos aplicáveis:</span>
         <button
           type="button"

@@ -391,7 +391,7 @@ export default function CardReconciliationModal({ isOpen, onClose }) {
                   <p className="truncate text-xs font-semibold text-[--text-primary]">
                     {item.description || 'Compra no crédito'}
                   </p>
-                  <p className="text-[10px] text-[--text-tertiary]">
+                  <p className="text-xs text-[--text-tertiary]">
                     {item.cardName} · {formatCurrency(item.amount)}
                   </p>
                 </div>
