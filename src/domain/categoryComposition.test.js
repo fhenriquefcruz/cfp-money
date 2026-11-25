@@ -68,14 +68,13 @@ describe('Identidade cromática por categoria', () => {
     ).toBe(getCategoryColor({ id: 'salary' }))
   })
 
-
   it('mantém cores pessoais nos gráficos sem aceitar CSS arbitrário', () => {
-    expect(getCategoryColor({ id: 'housing', name: 'Moradia', color: '#bc712a', isDefault: false })).toBe(
-      '#BC712A',
-    )
-    expect(getCategoryColor({ id: 'housing', name: 'Moradia', color: 'red;url(x)', isDefault: false })).toBe(
-      CATEGORY_PALETTE[1],
-    )
+    expect(
+      getCategoryColor({ id: 'housing', name: 'Moradia', color: '#bc712a', isDefault: false }),
+    ).toBe('#BC712A')
+    expect(
+      getCategoryColor({ id: 'housing', name: 'Moradia', color: 'red;url(x)', isDefault: false }),
+    ).toBe(CATEGORY_PALETTE[1])
   })
   it('agrega somente despesas efetivas e preserva uma cor por categoria', () => {
     const categories = [
@@ -146,13 +145,16 @@ describe('Identidade cromática por categoria', () => {
     expect(rows[0].color).toBe('#786C8D')
   })
   it('reconcilia despesas legadas pt-BR e decimais em centavos inteiros', () => {
-    const rows = categoryCompositionFromTransactions([
-      { type: 'expense', categoryId: 'food', amount: '100,50' },
-      { type: 'expense', categoryId: 'food', amount: 0.1 },
-      { type: 'expense', categoryId: 'food', amount: 0.2 },
-      { type: 'expense', categoryId: 'food', amount: 'R$ 1.234,56' },
-      { type: 'expense', categoryId: 'food', amount: 'invalido' },
-    ], [{ id: 'food', name: 'Mercado' }])
+    const rows = categoryCompositionFromTransactions(
+      [
+        { type: 'expense', categoryId: 'food', amount: '100,50' },
+        { type: 'expense', categoryId: 'food', amount: 0.1 },
+        { type: 'expense', categoryId: 'food', amount: 0.2 },
+        { type: 'expense', categoryId: 'food', amount: 'R$ 1.234,56' },
+        { type: 'expense', categoryId: 'food', amount: 'invalido' },
+      ],
+      [{ id: 'food', name: 'Mercado' }],
+    )
 
     expect(rows).toHaveLength(1)
     expect(rows[0]).toMatchObject({
@@ -161,5 +163,4 @@ describe('Identidade cromática por categoria', () => {
       sharePercent: 100,
     })
   })
-
 })
