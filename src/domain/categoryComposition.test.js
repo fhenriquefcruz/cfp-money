@@ -145,4 +145,21 @@ describe('Identidade cromática por categoria', () => {
     })
     expect(rows[0].color).toBe('#786C8D')
   })
+  it('reconcilia despesas legadas pt-BR e decimais em centavos inteiros', () => {
+    const rows = categoryCompositionFromTransactions([
+      { type: 'expense', categoryId: 'food', amount: '100,50' },
+      { type: 'expense', categoryId: 'food', amount: 0.1 },
+      { type: 'expense', categoryId: 'food', amount: 0.2 },
+      { type: 'expense', categoryId: 'food', amount: 'R$ 1.234,56' },
+      { type: 'expense', categoryId: 'food', amount: 'invalido' },
+    ], [{ id: 'food', name: 'Mercado' }])
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({
+      total: 1335.36,
+      count: 4,
+      sharePercent: 100,
+    })
+  })
+
 })
