@@ -49,8 +49,7 @@ vi.mock('firebase/firestore', () => ({
   }),
   getDoc: async (reference) => {
     const pending =
-      reference.path === 'users/owner/privacyRequests/accountDeletion' &&
-      state.pendingDeletion
+      reference.path === 'users/owner/privacyRequests/accountDeletion' && state.pendingDeletion
     return { exists: () => Boolean(pending), data: () => pending }
   },
   deleteDoc: vi.fn(),
@@ -144,8 +143,6 @@ test('protege pedidos de privacidade contra UID divergente', async () => {
   await expect(requestSparkAccountDeletion('someone-else', 'EXCLUIR MINHA CONTA')).rejects.toThrow(
     'diferente do titular',
   )
-  await expect(cancelSparkAccountDeletion('someone-else')).rejects.toThrow(
-    'diferente do titular',
-  )
+  await expect(cancelSparkAccountDeletion('someone-else')).rejects.toThrow('diferente do titular')
   expect(state.writes).toHaveLength(0)
 })
