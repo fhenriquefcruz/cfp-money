@@ -176,11 +176,7 @@ function UserRow({ u, onAccess, currentAdmin = false }) {
             da data final atual.
           </p>
           <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              disabled={savingAccess}
-              onClick={() => setConfirmAccess(false)}
-            >
+            <Button variant="ghost" disabled={savingAccess} onClick={() => setConfirmAccess(false)}>
               Cancelar
             </Button>
             <Button
