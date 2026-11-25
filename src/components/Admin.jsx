@@ -363,6 +363,11 @@ export default function Admin() {
           {toast}
         </div>
       )}
+      {actionError && (
+        <p role="alert" className="rounded-xl border border-[--danger-border] bg-[--danger-bg] p-3 text-sm text-[--danger-text]">
+          {actionError}
+        </p>
+      )}
 
       {/* Stats */}
       <div className="operational-summary-grid admin-summary-grid">
