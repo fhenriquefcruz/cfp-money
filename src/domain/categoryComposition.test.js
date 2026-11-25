@@ -9,16 +9,14 @@ import {
 
 describe('Identidade cromática por categoria', () => {
   it('usa uma paleta visual estável sem alterar as cores salvas', () => {
-    expect(getCategoryColor({ id: 'food', color: '#8A6251' })).toBe(
-      getCategoryColor({ id: 'food' }),
-    )
+    expect(getCategoryColor({ id: 'food', color: '#8A6251' })).toBe('#8A6251')
     expect(getCategoryColor({ id: 'food' })).toBe(getCategoryColor({ id: 'food' }))
     expect(CATEGORY_PALETTE).toContain(getCategoryColor({ id: 'food' }))
     expect(getCategoryColor({ id: 'food', color: 'red; background: url(http://x)' })).toBe(
       getCategoryColor({ id: 'food' }),
     )
     expect(categoryAccentStyle({ id: 'food', color: '#abc' })).toEqual({
-      '--category-accent': getCategoryColor({ id: 'food' }),
+      '--category-accent': '#ABC',
     })
   })
 
@@ -58,7 +56,7 @@ describe('Identidade cromática por categoria', () => {
         type: 'expense',
         isDefault: false,
       }),
-    ).toBe(CATEGORY_PALETTE[3])
+    ).toBe('#10B981')
     expect(
       getCategoryColor({
         id: 'salary',
@@ -70,6 +68,15 @@ describe('Identidade cromática por categoria', () => {
     ).toBe(getCategoryColor({ id: 'salary' }))
   })
 
+
+  it('mantém cores pessoais nos gráficos sem aceitar CSS arbitrário', () => {
+    expect(getCategoryColor({ id: 'housing', name: 'Moradia', color: '#bc712a', isDefault: false })).toBe(
+      '#BC712A',
+    )
+    expect(getCategoryColor({ id: 'housing', name: 'Moradia', color: 'red;url(x)', isDefault: false })).toBe(
+      CATEGORY_PALETTE[1],
+    )
+  })
   it('agrega somente despesas efetivas e preserva uma cor por categoria', () => {
     const categories = [
       { id: 'food', name: 'Alimentação', color: '#B47750', icon: '🍽️' },
@@ -90,12 +97,12 @@ describe('Identidade cromática por categoria', () => {
     expect(result.map((x) => x.total)).toEqual([300, 150])
     expect(result[0]).toMatchObject({
       categoryName: 'Alimentação',
-      color: CATEGORY_PALETTE[0],
+      color: '#B47750',
       count: 2,
     })
     expect(result[1]).toMatchObject({
       categoryName: 'Transporte',
-      color: CATEGORY_PALETTE[1],
+      color: '#4C8192',
       count: 1,
     })
     expect(result.reduce((sum, x) => sum + x.sharePercent, 0)).toBeCloseTo(100)
@@ -119,7 +126,7 @@ describe('Identidade cromática por categoria', () => {
       total: 800,
       sharePercent: 80,
       changePercent: -10,
-      color: CATEGORY_PALETTE[0],
+      color: '#4976A0',
       categoryName: 'Alimentação',
       icon: '🥗',
     })
