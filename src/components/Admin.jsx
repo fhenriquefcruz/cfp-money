@@ -237,6 +237,7 @@ export default function Admin() {
   const [activityFilter, setActivityFilter] = useState('all')
   const [toast, setToast] = useState('')
   const [error, setError] = useState('')
+  const [actionError, setActionError] = useState('')
 
   useEffect(() => {
     if (!isAdmin) return undefined
@@ -261,14 +262,14 @@ export default function Admin() {
   }
 
   const runAccessAction = async (command, successMessage) => {
-    setError('')
+    setActionError('')
     try {
       await adminSetUserAccess(command)
       setUsers(await adminListUsers())
       showToast(successMessage)
       return true
-    } catch (actionError) {
-      setError(actionError?.message || 'Não foi possível concluir a ação administrativa.')
+    } catch (actionFailure) {
+      setActionError(actionFailure?.message || 'Não foi possível concluir a ação administrativa.')
       return false
     }
   }
