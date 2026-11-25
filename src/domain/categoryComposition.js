@@ -1,3 +1,5 @@
+import { moneyToCents } from './finance'
+
 // Linguagem cromática do Meu Real. Identidade do produto (bronze/grafite) é
 // independente da cor categórica: cada categoria usa sempre a mesma assinatura.
 // Paleta qualitativa intencional, não sequencial ou vinculada ao risco financeiro.
@@ -77,8 +79,8 @@ export function categoryCompositionFromTransactions(transactions = [], categorie
     )
       continue
 
-    const amount = Number(transaction.amount)
-    if (!Number.isFinite(amount) || amount <= 0) continue
+    const amountCents = moneyToCents(transaction.amount)
+    if (amountCents <= 0) continue
 
     const id = String(transaction.categoryId || '')
     const category = byId.get(id)
@@ -89,17 +91,21 @@ export function categoryCompositionFromTransactions(transactions = [], categorie
       categoryName,
       icon: category?.icon || transaction.categoryIcon || '◈',
       color: getCategoryColor(category || { color: transaction.categoryColor }, id || categoryName),
-      total: 0,
+      totalCents: 0,
       count: 0,
     }
-    bucket.total += amount
+    bucket.totalCents += amountCents
     bucket.count += 1
     buckets.set(bucketKey, bucket)
   }
 
-  const total = [...buckets.values()].reduce((value, row) => value + row.total, 0)
+  const totalCents = [...buckets.values()].reduce((value, row) => value + row.totalCents, 0)
   return [...buckets.values()]
-    .map((row) => ({ ...row, sharePercent: total ? (row.total / total) * 100 : 0 }))
+    .map(({ totalCents: cents, ...row }) => ({
+      ...row,
+      total: cents / 100,
+      sharePercent: totalCents ? (cents / totalCents) * 100 : 0,
+    }))
     .sort(
       (left, right) =>
         right.total - left.total || left.categoryName.localeCompare(right.categoryName, 'pt-BR'),
