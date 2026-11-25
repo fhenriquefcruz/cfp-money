@@ -26,6 +26,7 @@ const state = vi.hoisted(() => ({
     ],
   },
   writes: [],
+  pendingDeletion: null,
 }))
 
 vi.mock('./firebase', () => ({
@@ -46,7 +47,12 @@ vi.mock('firebase/firestore', () => ({
       data: () => ({ ...record.stored }),
     })),
   }),
-  getDoc: async () => ({ exists: () => false }),
+  getDoc: async (reference) => {
+    const pending =
+      reference.path === 'users/owner/privacyRequests/accountDeletion' &&
+      state.pendingDeletion
+    return { exists: () => Boolean(pending), data: () => pending }
+  },
   deleteDoc: vi.fn(),
   setDoc: vi.fn(),
   serverTimestamp: vi.fn(),
@@ -57,7 +63,11 @@ vi.mock('firebase/firestore', () => ({
   }),
 }))
 
-import { exportSparkData, requestSparkAccountDeletion } from './sparkPrivacy'
+import {
+  cancelSparkAccountDeletion,
+  exportSparkData,
+  requestSparkAccountDeletion,
+} from './sparkPrivacy'
 
 test('exporta IDs reais dos documentos, nunca nulos nem obsoletos', async () => {
   const result = await exportSparkData('owner')
@@ -105,4 +115,37 @@ test('pedido de exclusão chega à fila de atendimento no mesmo lote', async () 
       }),
     }),
   ])
+})
+
+test('cancelamento da exclusão referencia o protocolo original na fila administrativa', async () => {
+  state.writes.length = 0
+  state.pendingDeletion = { status: 'pending-manual', supportProtocol: 'original123456' }
+  const result = await cancelSparkAccountDeletion('owner')
+  expect(result.ok).toBe(true)
+  expect(state.writes).toEqual([
+    expect.objectContaining({
+      action: 'delete',
+      path: 'users/owner/privacyRequests/accountDeletion',
+    }),
+    expect.objectContaining({
+      action: 'set',
+      path: 'supportRequests/new-request',
+      data: expect.objectContaining({
+        category: 'privacy',
+        message: expect.stringContaining('MR-ORIGINAL12'),
+      }),
+    }),
+  ])
+  state.pendingDeletion = null
+})
+
+test('protege pedidos de privacidade contra UID divergente', async () => {
+  state.writes.length = 0
+  await expect(requestSparkAccountDeletion('someone-else', 'EXCLUIR MINHA CONTA')).rejects.toThrow(
+    'diferente do titular',
+  )
+  await expect(cancelSparkAccountDeletion('someone-else')).rejects.toThrow(
+    'diferente do titular',
+  )
+  expect(state.writes).toHaveLength(0)
 })
