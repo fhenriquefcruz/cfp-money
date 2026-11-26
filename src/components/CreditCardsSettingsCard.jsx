@@ -232,7 +232,7 @@ function CreditCardsContent() {
                         {card.last4 ? ` •••• ${card.last4}` : ''}
                       </p>
                       {card.active === false && (
-                        <span className="rounded-full bg-[--bg-hover] px-2 py-0.5 text-[10px] font-bold text-[--text-tertiary]">
+                        <span className="rounded-full bg-[--bg-hover] px-2 py-0.5 text-xs font-bold text-[--text-tertiary]">
                           Inativo
                         </span>
                       )}

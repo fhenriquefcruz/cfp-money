@@ -196,7 +196,7 @@ export default function TransactionAttachmentManager({
                   <p className="truncate text-xs font-bold text-[--text-primary]" title={item.name}>
                     {item.name}
                   </p>
-                  <p className="text-[10px] text-[--text-tertiary]">
+                  <p className="text-xs text-[--text-tertiary]">
                     {item.kind === 'payment' ? 'Pagamento' : 'Lançamento'} ·{' '}
                     {readableSize(item.size)}
                   </p>

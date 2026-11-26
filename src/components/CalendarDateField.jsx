@@ -250,7 +250,7 @@ export default function CalendarDateField({
             </div>
             <div className="grid grid-cols-7 gap-0.5 text-center">
               {WEEKDAYS.map((day) => (
-                <span key={day} className="py-1 text-[10px] font-bold text-[--text-tertiary]">
+                <span key={day} className="py-1 text-xs font-bold text-[--text-tertiary]">
                   {day}
                 </span>
               ))}
@@ -270,7 +270,7 @@ export default function CalendarDateField({
                     className={clsx(
                       'flex aspect-square min-h-9 items-center justify-center rounded-xl text-xs font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-[--brand-500]',
                       iso === value
-                        ? 'bg-[--brand-600] text-white'
+                        ? 'bg-[--brand-600] text-[--on-primary]'
                         : iso === today
                           ? 'border border-[--brand-400] text-[--brand-700]'
                           : 'hover:bg-[--brand-100]',

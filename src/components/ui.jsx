@@ -20,7 +20,7 @@ export const Button = ({
   const base =
     'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--brand-500] disabled:opacity-50 disabled:cursor-not-allowed'
   const variants = {
-    primary: 'bg-[--brand-600] text-white hover:bg-[--brand-700] shadow-sm',
+    primary: 'bg-[--brand-600] text-[--on-primary] hover:bg-[--brand-700] shadow-sm',
     secondary:
       'bg-[--bg-surface] border border-[--border-default] text-[--text-primary] hover:bg-[--bg-hover]',
     ghost: 'text-[--text-secondary] hover:bg-[--bg-hover] hover:text-[--text-primary]',
@@ -368,7 +368,7 @@ const TipIcon = ({ text }) => {
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
         onClick={() => setShow((v) => !v)}
-        className="w-3.5 h-3.5 rounded-full bg-[--bg-hover] text-[--text-tertiary] hover:bg-[--brand-100] hover:text-[--brand-600] flex items-center justify-center text-[9px] font-bold transition-colors leading-none"
+        className="w-3.5 h-3.5 rounded-full bg-[--bg-hover] text-[--text-tertiary] hover:bg-[--brand-100] hover:text-[--brand-600] flex items-center justify-center text-xs font-bold transition-colors leading-none"
         aria-label="Informação"
       >
         ?

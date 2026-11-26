@@ -172,7 +172,7 @@ export default function PrivacyDataCard() {
                   <FileText size={15} className="text-[--brand-600]" />
                   <p className="text-xs font-black text-[--text-primary]">Documentos jurídicos</p>
                 </div>
-                <p className="mt-1 text-[10px] text-[--text-tertiary]">{legalSummary}</p>
+                <p className="mt-1 text-xs text-[--text-tertiary]">{legalSummary}</p>
 
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <Button variant="secondary" size="sm" onClick={() => setLegalType('terms')}>
@@ -201,7 +201,7 @@ export default function PrivacyDataCard() {
                   <Download size={15} className="text-[--brand-600]" />
                   <p className="text-xs font-black text-[--text-primary]">Portabilidade</p>
                 </div>
-                <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
+                <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
                   Baixe um arquivo JSON com cadastro, lançamentos, cartões, metas, orçamentos e
                   demais dados vinculados à conta.
                 </p>
@@ -223,7 +223,7 @@ export default function PrivacyDataCard() {
                     <Clock3 size={15} className="text-[--warning-text]" />
                     <p className="text-xs font-black text-[--warning-text]">Exclusão agendada</p>
                   </div>
-                  <p className="mt-1 text-[10px] leading-relaxed text-[--warning-text]">
+                  <p className="mt-1 text-xs leading-relaxed text-[--warning-text]">
                     Processamento previsto para {formatDateTime(status.deletionRequest.scheduledAt)}
                     .
                   </p>
@@ -245,7 +245,7 @@ export default function PrivacyDataCard() {
                     <Trash2 size={15} className="text-[--danger-text]" />
                     <p className="text-xs font-black text-[--danger-text]">Encerrar conta</p>
                   </div>
-                  <p className="mt-1 text-[10px] leading-relaxed text-[--danger-text]">
+                  <p className="mt-1 text-xs leading-relaxed text-[--danger-text]">
                     A exclusão possui prazo de segurança de sete dias e remove os dados abrangidos
                     pelo procedimento.
                   </p>

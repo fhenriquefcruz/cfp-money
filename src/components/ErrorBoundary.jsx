@@ -21,7 +21,7 @@ export default class ErrorBoundary extends React.Component {
             Seus dados não foram alterados. Recarregue a aplicação para tentar novamente.
           </p>
           <button
-            className="min-h-11 rounded-xl bg-[--brand-600] px-5 text-white font-semibold"
+            className="min-h-11 rounded-xl bg-[--brand-600] px-5 text-[--on-primary] font-semibold"
             onClick={() => window.location.reload()}
           >
             Recarregar aplicação

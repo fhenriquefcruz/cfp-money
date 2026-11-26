@@ -3,101 +3,12 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useCategories } from '../contexts/AppContext'
 import { Card, Button, Input, Modal } from './ui'
 import InfoTooltip from './InfoTooltip'
+import CategoryIcon, { CATEGORY_ICON_OPTIONS } from './CategoryIcon'
+import { FolderOpen, Pencil, Trash2, TrendingDown, TrendingUp } from 'lucide-react'
 import { CATEGORY_PALETTE, categoryAccentStyle } from '../domain/categoryComposition'
 
-// Paleta categórica oficial do Meu Real: personalizada apenas nos novos registros.
+// Paleta categórica oficial do Meu Real.
 const DEFAULT_COLORS = CATEGORY_PALETTE
-
-const EMOJI_LIST = [
-  '🍔',
-  '🍕',
-  '🥗',
-  '☕',
-  '🍜',
-  '🥤',
-  '🍰',
-  '🛒',
-  '🚗',
-  '⛽',
-  '✈️',
-  '🚌',
-  '🚕',
-  '🛵',
-  '🚂',
-  '⚓',
-  '🏠',
-  '💡',
-  '🔧',
-  '🛋️',
-  '🏗️',
-  '🪑',
-  '🛏️',
-  '🚿',
-  '📱',
-  '💻',
-  '🖥️',
-  '⌨️',
-  '🖱️',
-  '📷',
-  '🎧',
-  '📺',
-  '📚',
-  '🎓',
-  '✏️',
-  '📝',
-  '🔬',
-  '🏫',
-  '📐',
-  '🗂️',
-  '🎮',
-  '🎬',
-  '🎵',
-  '🎸',
-  '⚽',
-  '🏋️',
-  '🎯',
-  '🎲',
-  '❤️',
-  '💊',
-  '🏥',
-  '🦷',
-  '👓',
-  '🩺',
-  '💉',
-  '🌡️',
-  '👕',
-  '👟',
-  '👔',
-  '👗',
-  '👜',
-  '🧢',
-  '🧣',
-  '🕶️',
-  '🎁',
-  '🎉',
-  '🎊',
-  '🛍️',
-  '💐',
-  '🕯️',
-  '🪴',
-  '🧸',
-  '💰',
-  '💵',
-  '📈',
-  '🏦',
-  '💳',
-  '🪙',
-  '💹',
-  '📊',
-  '✅',
-  '📦',
-  '🔑',
-  '⭐',
-  '🔥',
-  '💎',
-  '🌈',
-  '🐶',
-]
 
 export default function Categories() {
   const { categories, createCategory, editCategory, removeCategory } = useCategories()
@@ -105,25 +16,25 @@ export default function Categories() {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({
     name: '',
-    icon: '📦',
+    icon: 'package',
     color: DEFAULT_COLORS[0],
     type: 'expense',
   })
   const [loading, setLoading] = useState(false)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const emojiPickerRef = useRef(null)
-  const emojiButtonRef = useRef(null)
+  const [showIconPicker, setShowIconPicker] = useState(false)
+  const iconPickerRef = useRef(null)
+  const iconButtonRef = useRef(null)
 
   // Fecha o picker ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        emojiPickerRef.current &&
-        !emojiPickerRef.current.contains(event.target) &&
-        emojiButtonRef.current &&
-        !emojiButtonRef.current.contains(event.target)
+        iconPickerRef.current &&
+        !iconPickerRef.current.contains(event.target) &&
+        iconButtonRef.current &&
+        !iconButtonRef.current.contains(event.target)
       ) {
-        setShowEmojiPicker(false)
+        setShowIconPicker(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -131,20 +42,20 @@ export default function Categories() {
   }, [])
 
   const handleOpen = (cat = null) => {
-    setShowEmojiPicker(false)
+    setShowIconPicker(false)
     if (cat) {
       setEditing(cat)
       setForm({ name: cat.name, icon: cat.icon, color: cat.color, type: cat.type })
     } else {
       setEditing(null)
-      setForm({ name: '', icon: '📦', color: DEFAULT_COLORS[0], type: 'expense' })
+      setForm({ name: '', icon: 'package', color: DEFAULT_COLORS[0], type: 'expense' })
     }
     setModalOpen(true)
   }
 
   const handleClose = () => {
     setModalOpen(false)
-    setShowEmojiPicker(false)
+    setShowIconPicker(false)
     setEditing(null)
   }
 
@@ -171,9 +82,9 @@ export default function Categories() {
     }
   }
 
-  const selectEmoji = (emoji) => {
-    setForm((f) => ({ ...f, icon: emoji }))
-    setShowEmojiPicker(false)
+  const selectIcon = (icon) => {
+    setForm((f) => ({ ...f, icon }))
+    setShowIconPicker(false)
   }
 
   const expenseCategories = categories.filter((c) => c.type === 'expense')
@@ -187,7 +98,7 @@ export default function Categories() {
             className="category-colored-avatar w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
             style={categoryAccentStyle(cat)}
           >
-            {cat.icon}
+            <CategoryIcon category={cat} size={20} />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
@@ -195,7 +106,7 @@ export default function Categories() {
                 {cat.name}
               </p>
               {cat.isDefault && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[--bg-subtle] text-[--text-tertiary] border border-[--border-subtle] flex-shrink-0">
+                <span className="text-xs px-1.5 py-0.5 rounded-full bg-[--bg-subtle] text-[--text-tertiary] border border-[--border-subtle] flex-shrink-0">
                   padrão
                 </span>
               )}
@@ -208,7 +119,7 @@ export default function Categories() {
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
             title={cat.isDefault ? 'Ver detalhes' : 'Editar'}
           >
-            <span aria-hidden="true">✎</span>
+            <Pencil size={16} aria-hidden="true" />
           </button>
           {!cat.isDefault && (
             <button
@@ -216,7 +127,7 @@ export default function Categories() {
               className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
               title="Excluir"
             >
-              <span aria-hidden="true">×</span>
+              <Trash2 size={16} aria-hidden="true" />
             </button>
           )}
         </div>
@@ -276,7 +187,11 @@ export default function Categories() {
 
       {categories.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-4xl mb-3">🗂️</p>
+          <FolderOpen
+            size={36}
+            className="mx-auto mb-3 text-[--text-tertiary]"
+            aria-hidden="true"
+          />
           <p className="font-semibold text-[--text-primary]">Nenhuma categoria</p>
           <p className="text-sm text-[--text-tertiary] mt-1 mb-4">
             Crie categorias para organizar suas finanças.
@@ -305,38 +220,39 @@ export default function Categories() {
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           />
 
-          {/* Emoji picker */}
+          {/* Ícones de categoria */}
           <div>
             <label className="text-sm font-medium text-[--text-secondary] block mb-1.5">
               Ícone
             </label>
             <div className="relative">
               <button
-                ref={emojiButtonRef}
+                ref={iconButtonRef}
                 type="button"
-                onClick={() => setShowEmojiPicker((v) => !v)}
+                onClick={() => setShowIconPicker((v) => !v)}
                 className="w-full bg-[--bg-surface] border border-[--border-default] rounded-xl px-4 py-2.5 flex items-center gap-3 hover:border-[--border-strong] transition-all"
               >
-                <span className="text-2xl">{form.icon}</span>
-                <span className="text-sm text-[--text-secondary]">Selecionar emoji</span>
+                <CategoryIcon category={form} size={22} />
+                <span className="text-sm text-[--text-secondary]">Selecionar ícone</span>
                 <span className="ml-auto text-[--text-tertiary] text-xs">▼</span>
               </button>
 
-              {showEmojiPicker && (
+              {showIconPicker && (
                 <div
-                  ref={emojiPickerRef}
+                  ref={iconPickerRef}
                   className="absolute z-50 mt-1 grid max-h-52 w-full grid-cols-4 gap-1.5 overflow-y-auto rounded-xl border border-[--border-default] bg-[--bg-elevated] p-3 shadow-xl min-[390px]:grid-cols-6 sm:grid-cols-8"
                 >
-                  {EMOJI_LIST.map((emoji) => (
+                  {CATEGORY_ICON_OPTIONS.map(({ id, label, icon: Icon }) => (
                     <button
-                      key={emoji}
+                      key={id}
                       type="button"
-                      onClick={() => selectEmoji(emoji)}
+                      onClick={() => selectIcon(id)}
+                      aria-label={label}
                       className={`flex aspect-square w-full min-w-0 items-center justify-center rounded-lg text-xl transition-colors hover:bg-[--bg-hover] ${
-                        form.icon === emoji ? 'bg-[--brand-100] ring-2 ring-[--brand-500]' : ''
+                        form.icon === id ? 'bg-[--brand-100] ring-2 ring-[--brand-500]' : ''
                       }`}
                     >
-                      {emoji}
+                      <Icon size={20} aria-hidden="true" strokeWidth={1.8} />
                     </button>
                   ))}
                 </div>
@@ -354,12 +270,12 @@ export default function Categories() {
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, color: c }))}
                   aria-label={c}
-                  className={`h-11 w-11 rounded-full border-2 transition-all ${
+                  className={`category-palette-swatch h-11 w-11 rounded-full border-2 transition-all ${
                     form.color === c
                       ? 'border-white ring-2 ring-[--brand-500] scale-110'
                       : 'border-transparent hover:scale-105'
                   }`}
-                  style={{ background: c }}
+                  style={{ '--category-accent': c }}
                 />
               ))}
             </div>
@@ -371,7 +287,7 @@ export default function Categories() {
               className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
               style={{ background: form.color + '20' }}
             >
-              {form.icon}
+              <CategoryIcon category={form} size={20} />
             </div>
             <div>
               <p className="font-semibold text-[--text-primary]">
@@ -400,7 +316,10 @@ export default function Categories() {
                       : 'bg-[--bg-surface] text-[--text-secondary] border-[--border-default] hover:bg-[--bg-hover]'
                   }`}
                 >
-                  {t === 'expense' ? '📉 Despesa' : '📈 Receita'}
+                  <span className="inline-flex items-center gap-2">
+                    {t === 'expense' ? <TrendingDown size={16} /> : <TrendingUp size={16} />}
+                    {t === 'expense' ? 'Despesa' : 'Receita'}
+                  </span>
                 </button>
               ))}
             </div>

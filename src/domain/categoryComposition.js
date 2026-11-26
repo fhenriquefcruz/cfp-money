@@ -1,23 +1,19 @@
+import { moneyToCents } from './finance'
+
 // Linguagem cromática do Meu Real. Identidade do produto (bronze/grafite) é
 // independente da cor categórica: cada categoria usa sempre a mesma assinatura.
 // Paleta qualitativa intencional, não sequencial ou vinculada ao risco financeiro.
 export const CATEGORY_PALETTE = Object.freeze([
-  '#B47750', // argila · alimento
-  '#4C8192', // oceano · mobilidade
-  '#806AA0', // ametista · lazer
-  '#3C897B', // jade · saúde
-  '#A56780', // vinho claro · pessoal
-  '#A08A45', // oliva · moradia
-  '#4976A0', // safira · educação
-  '#995F57', // terracota · compras
-  '#647B58', // musgo · rotina
-  '#846D59', // pedra · compromissos
-  '#4F8A91', // turquesa · serviços
-  '#9B6A9A', // orquídea · outros
+  '#56B4E9', // azul claro
+  '#0072B2', // azul profundo
+  '#A78BFA', // violeta
+  '#E879A9', // rosa
+  '#F0E442', // amarelo
 ])
 
-const VALID_HEX = /^#(?:[\da-f]{6}|[\da-f]{3})$/i
-export const UNCATEGORIZED_COLOR = '#747A80'
+export const UNCATEGORIZED_COLOR = '#94A3B8'
+
+const VALID_HEX = /^#(?:[\da-f]{3}|[\da-f]{6})$/i
 
 // Os registros de categorias globais antigas usam cores saturadas do seed.
 // Eles não podem ser personalizados pela interface; harmonizar apenas a
@@ -25,13 +21,15 @@ export const UNCATEGORIZED_COLOR = '#747A80'
 const DEFAULT_CATEGORY_COLORS = Object.freeze({
   alimentacao: CATEGORY_PALETTE[0],
   transporte: CATEGORY_PALETTE[1],
-  moradia: CATEGORY_PALETTE[5],
+  moradia: CATEGORY_PALETTE[1],
   saude: CATEGORY_PALETTE[3],
-  educacao: CATEGORY_PALETTE[6],
+  educacao: CATEGORY_PALETTE[4],
   lazer: CATEGORY_PALETTE[2],
   roupas: CATEGORY_PALETTE[4],
   vestuario: CATEGORY_PALETTE[4],
-  tecnologia: CATEGORY_PALETTE[10],
+  tecnologia: CATEGORY_PALETTE[0],
+  consorcio: CATEGORY_PALETTE[4],
+  presente: CATEGORY_PALETTE[2],
   outros: UNCATEGORIZED_COLOR,
 })
 
@@ -49,13 +47,15 @@ function stableHash(value) {
   )
 }
 
-// Cores já personalizadas prevalecem; jamais regravamos os dados do usuário.
+// A paleta visual é independente das cores históricas salvas. Os dados não são alterados.
 export function getCategoryColor(category = {}, fallbackKey = '') {
-  if (category?.isDefault && category?.type !== 'income') {
-    const curated = DEFAULT_CATEGORY_COLORS[categorySlug(category.name)]
-    if (curated) return curated
+  // A escolha explícita do usuário prevalece. Apenas categorias globais
+  // recebem a cor curada automaticamente; não migramos documentos existentes.
+  if (!category?.isDefault && VALID_HEX.test(category?.color || '')) {
+    return String(category.color).toUpperCase()
   }
-  if (VALID_HEX.test(category?.color || '')) return category.color
+  const curated = DEFAULT_CATEGORY_COLORS[categorySlug(category?.name)]
+  if (curated) return curated
   const key = category?.id || category?.name || fallbackKey
   if (!key) return UNCATEGORIZED_COLOR
   return CATEGORY_PALETTE[stableHash(key) % CATEGORY_PALETTE.length]
@@ -79,8 +79,8 @@ export function categoryCompositionFromTransactions(transactions = [], categorie
     )
       continue
 
-    const amount = Number(transaction.amount)
-    if (!Number.isFinite(amount) || amount <= 0) continue
+    const amountCents = moneyToCents(transaction.amount)
+    if (amountCents <= 0) continue
 
     const id = String(transaction.categoryId || '')
     const category = byId.get(id)
@@ -91,17 +91,21 @@ export function categoryCompositionFromTransactions(transactions = [], categorie
       categoryName,
       icon: category?.icon || transaction.categoryIcon || '◈',
       color: getCategoryColor(category || { color: transaction.categoryColor }, id || categoryName),
-      total: 0,
+      totalCents: 0,
       count: 0,
     }
-    bucket.total += amount
+    bucket.totalCents += amountCents
     bucket.count += 1
     buckets.set(bucketKey, bucket)
   }
 
-  const total = [...buckets.values()].reduce((value, row) => value + row.total, 0)
+  const totalCents = [...buckets.values()].reduce((value, row) => value + row.totalCents, 0)
   return [...buckets.values()]
-    .map((row) => ({ ...row, sharePercent: total ? (row.total / total) * 100 : 0 }))
+    .map(({ totalCents: cents, ...row }) => ({
+      ...row,
+      total: cents / 100,
+      sharePercent: totalCents ? (cents / totalCents) * 100 : 0,
+    }))
     .sort(
       (left, right) =>
         right.total - left.total || left.categoryName.localeCompare(right.categoryName, 'pt-BR'),

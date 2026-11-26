@@ -20,6 +20,7 @@ import {
   Crown,
   CreditCard,
   PiggyBank,
+  Search,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePlan } from '../contexts/PlanContext'
@@ -30,20 +31,40 @@ import { clsx } from 'clsx'
 
 const GlobalSearchPalette = React.lazy(() => import('./GlobalSearchPalette'))
 
-const NAV_ITEMS = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/money', icon: Bot, label: 'Money', premium: true },
-  { to: '/cards', icon: CreditCard, label: 'Cartões', premium: true },
-  { to: '/transactions', icon: ArrowLeftRight, label: 'Transações' },
-  { to: '/categories', icon: Tags, label: 'Categorias' },
-  { to: '/goals', icon: Target, label: 'Metas' },
-  { to: '/savings', icon: PiggyBank, label: 'Reservas' },
-  { to: '/budgets', icon: PieChart, label: 'Orçamentos' },
-  { to: '/reports', icon: BarChart3, label: 'Relatórios' },
-  { to: '/profile', icon: User, label: 'Perfil' },
+const NAV_GROUPS = [
+  { label: 'Início', items: [{ to: '/dashboard', icon: LayoutDashboard, label: 'Início' }] },
+  {
+    label: 'Movimentações',
+    items: [
+      { to: '/transactions', icon: ArrowLeftRight, label: 'Transações' },
+      { to: '/cards', icon: CreditCard, label: 'Cartões', premium: true },
+      { to: '/savings', icon: PiggyBank, label: 'Reservas' },
+    ],
+  },
+  {
+    label: 'Planejamento',
+    items: [
+      { to: '/budgets', icon: PieChart, label: 'Orçamentos' },
+      { to: '/goals', icon: Target, label: 'Metas' },
+    ],
+  },
+  {
+    label: 'Análise',
+    items: [
+      { to: '/reports', icon: BarChart3, label: 'Relatórios' },
+      { to: '/money', icon: Bot, label: 'Money', premium: true },
+    ],
+  },
+  {
+    label: 'Configurações',
+    items: [
+      { to: '/categories', icon: Tags, label: 'Categorias' },
+      { to: '/profile', icon: User, label: 'Perfil' },
+    ],
+  },
 ]
 
-const MOBILE_PRIMARY_PATHS = ['/dashboard', '/transactions', '/cards', '/money']
+const MOBILE_PRIMARY_PATHS = ['/dashboard', '/transactions', '/cards', '/goals']
 
 const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
   const location = useLocation()
@@ -56,7 +77,7 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
       className={clsx(
         'group relative flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-150',
         isActive
-          ? 'bg-[--brand-600] text-white shadow-sm'
+          ? 'bg-[--brand-600] text-[--on-primary] shadow-sm'
           : 'text-[--text-secondary] hover:bg-[--bg-hover] hover:text-[--text-primary]',
       )}
     >
@@ -67,7 +88,7 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
             size={9}
             className={clsx(
               'absolute -right-1.5 -top-1.5',
-              isActive ? 'text-yellow-300' : 'text-yellow-500',
+              isActive ? 'text-[--on-primary]' : 'text-[--brand-600]',
             )}
           />
         )}
@@ -90,8 +111,8 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
       {premium && !collapsed && (
         <span
           className={clsx(
-            'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide',
-            isActive ? 'bg-white/15 text-yellow-200' : 'bg-yellow-100 text-yellow-800',
+            'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-black uppercase tracking-wide',
+            isActive ? 'bg-black/10 text-[--on-primary]' : 'bg-[--brand-100] text-[--text-brand]',
           )}
         >
           <Crown size={9} />
@@ -101,7 +122,7 @@ const NavItem = ({ to, icon: Icon, label, premium, collapsed, onClick }) => {
 
       {isActive && !collapsed && !premium && (
         <motion.div layoutId="nav-indicator">
-          <ChevronRight size={14} className="text-white/60" />
+          <ChevronRight size={14} className="opacity-60" />
         </motion.div>
       )}
 
@@ -154,9 +175,10 @@ export default function Sidebar() {
 
   const mobileTriggerRef = React.useRef(null)
   const mobileDrawerRef = React.useRef(null)
-  const allItems = isAdmin
-    ? [...NAV_ITEMS, { to: '/admin', icon: Shield, label: 'Admin' }]
-    : NAV_ITEMS
+  const groups = isAdmin
+    ? [...NAV_GROUPS, { label: 'Admin', items: [{ to: '/admin', icon: Shield, label: 'Admin' }] }]
+    : NAV_GROUPS
+  const allItems = groups.flatMap((group) => group.items)
   const mobilePrimaryItems = MOBILE_PRIMARY_PATHS.map((path) =>
     allItems.find((item) => item.to === path),
   ).filter(Boolean)
@@ -250,7 +272,7 @@ export default function Sidebar() {
       >
         <div className="flex items-center gap-2.5">
           <div className="aurora-brand-mark flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-600]">
-            <TrendingUp size={16} className="text-white" />
+            <TrendingUp size={16} className="text-[--on-primary]" />
           </div>
           <AnimatePresence>
             {!collapsed && (
@@ -262,7 +284,7 @@ export default function Sidebar() {
                 className="overflow-hidden whitespace-nowrap"
               >
                 <p className="text-base font-black text-[--text-primary]">Meu Real</p>
-                <p className="text-[9px] text-[--text-tertiary]">
+                <p className="text-xs text-[--text-tertiary]">
                   {status.isPremium ? 'Premium' : 'Plano básico'}
                 </p>
               </motion.div>
@@ -334,16 +356,11 @@ export default function Sidebar() {
           )}
           aria-label="Abrir busca global"
         >
-          <span
-            className="w-[17px] flex-shrink-0 text-center text-lg leading-none"
-            aria-hidden="true"
-          >
-            ⌕
-          </span>
+          <Search size={17} aria-hidden="true" />
           {!collapsed && (
             <>
               <span className="min-w-0 flex-1 text-left text-xs font-semibold">Buscar</span>
-              <kbd className="rounded-md bg-[--bg-hover] px-1.5 py-0.5 text-[9px] font-bold text-[--text-tertiary]">
+              <kbd className="rounded-md bg-[--bg-hover] px-1.5 py-0.5 text-xs font-bold text-[--text-tertiary]">
                 Ctrl K
               </kbd>
             </>
@@ -351,9 +368,20 @@ export default function Sidebar() {
         </button>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3">
-        {allItems.map((item) => (
-          <NavItem key={item.to} {...item} collapsed={collapsed} />
+      <nav className="flex-1 space-y-4 overflow-y-auto px-3 pb-3" aria-label="Navegação principal">
+        {groups.map((group) => (
+          <div key={group.label}>
+            {!collapsed && (
+              <p className="px-3 pb-1 text-xs font-bold uppercase tracking-wide text-[--text-tertiary]">
+                {group.label}
+              </p>
+            )}
+            <div className="space-y-1">
+              {group.items.map((item) => (
+                <NavItem key={item.to} {...item} collapsed={collapsed} />
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 
@@ -438,7 +466,7 @@ export default function Sidebar() {
           <div className="flex h-8 w-8 items-center justify-center rounded-xl">
             <Menu size={18} />
           </div>
-          <span className="text-[10px] font-medium">Mais</span>
+          <span className="text-xs font-medium">Mais</span>
         </button>
       </nav>
 
@@ -479,11 +507,11 @@ export default function Sidebar() {
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-2">
                 <div className="aurora-brand-mark flex h-8 w-8 items-center justify-center rounded-xl bg-[--brand-600]">
-                  <TrendingUp size={16} className="text-white" />
+                  <TrendingUp size={16} className="text-[--on-primary]" />
                 </div>
                 <div>
                   <p className="text-lg font-black text-[--text-primary]">Meu Real</p>
-                  <p className="text-[10px] text-[--text-tertiary]">
+                  <p className="text-xs text-[--text-tertiary]">
                     {status.isPremium ? 'Premium' : 'Plano básico'}
                   </p>
                 </div>
@@ -507,7 +535,7 @@ export default function Sidebar() {
                 }}
                 className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-[--text-secondary] hover:bg-[--bg-hover]"
               >
-                <span aria-hidden="true">⌕</span>
+                <Search size={17} aria-hidden="true" />
                 Buscar no Meu Real
               </button>
             </div>

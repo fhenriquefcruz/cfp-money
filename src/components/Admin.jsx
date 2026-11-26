@@ -14,7 +14,7 @@ import {
   Search,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { Card } from './ui'
+import { Button, Card, Modal } from './ui'
 import { formatPlanExpiration, getPlanPresentation } from '../domain/plan'
 import { adminListUsers, adminSetUserAccess } from '../services/adminGateway'
 import { formatRelativeActivity, getUserActivityState } from '../domain/userActivity'
@@ -34,10 +34,23 @@ function StatusBadge({ u, currentAdmin = false }) {
 
 function UserRow({ u, onAccess, currentAdmin = false }) {
   const [expanded, setExpanded] = useState(false)
+  const [confirmAccess, setConfirmAccess] = useState(false)
+  const [savingAccess, setSavingAccess] = useState(false)
   const [months, setMonths] = useState(1)
   const isPremiumActive = getPlanPresentation(u).key === 'premium'
   const activity = getUserActivityState(u)
   const testName = /^(test|teste)$/i.test(String(u.displayName || '').trim())
+  const currentExpiration = u.premiumUntil?.toDate
+    ? u.premiumUntil.toDate()
+    : u.premiumUntil
+      ? new Date(u.premiumUntil)
+      : null
+  const now = new Date()
+  const baseDate =
+    currentExpiration && !Number.isNaN(currentExpiration.getTime()) && currentExpiration > now
+      ? currentExpiration
+      : now
+  const projectedExpiration = new Date(baseDate.getTime() + months * 30 * 86_400_000)
 
   return (
     <>
@@ -56,7 +69,7 @@ function UserRow({ u, onAccess, currentAdmin = false }) {
             <p className="admin-user-name">
               {u.displayName || '—'}
               {testName && (
-                <span className="ml-2 text-[10px] font-semibold text-[--warning-text]">
+                <span className="ml-2 text-xs font-semibold text-[--warning-text]">
                   Nome de teste
                 </span>
               )}
@@ -81,9 +94,13 @@ function UserRow({ u, onAccess, currentAdmin = false }) {
 
         {/* Coluna 4: ações agrupadas */}
         <div className="admin-access-actions">
-          {/* Select + Ativar colados */}
+          {/* Duração e liberação de acesso */}
           <div className="admin-access-control">
+            <label htmlFor={`access-duration-${u.uid}`} className="text-xs text-[--text-secondary]">
+              Duração
+            </label>
             <select
+              id={`access-duration-${u.uid}`}
               value={months}
               onChange={(e) => setMonths(Number(e.target.value))}
               className="admin-access-select"
@@ -91,16 +108,16 @@ function UserRow({ u, onAccess, currentAdmin = false }) {
             >
               {[1, 2, 3, 6].map((m) => (
                 <option key={m} value={m}>
-                  {m}m
+                  {m} {m === 1 ? 'mês' : 'meses'}
                 </option>
               ))}
             </select>
             <button
-              onClick={() => onAccess(u.uid, 'activate', months)}
+              onClick={() => setConfirmAccess(true)}
               className="admin-activate-button"
-              aria-label={`Ativar ${months} ${months === 1 ? 'mês' : 'meses'} para ${u.displayName || u.email}`}
+              aria-label={`Liberar acesso por ${months} ${months === 1 ? 'mês' : 'meses'} para ${u.displayName || u.email}`}
             >
-              <CheckCircle size={11} /> Ativar
+              <CheckCircle size={14} /> Liberar acesso
             </button>
           </div>
 
@@ -140,6 +157,48 @@ function UserRow({ u, onAccess, currentAdmin = false }) {
         </div>
       </div>
 
+      <Modal
+        isOpen={confirmAccess}
+        onClose={() => {
+          if (!savingAccess) setConfirmAccess(false)
+        }}
+        title="Liberar acesso Premium"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-[--text-secondary]">
+            {u.displayName || u.email} terá acesso por {months} {months === 1 ? 'mês' : 'meses'}.
+          </p>
+          <p className="text-sm font-semibold text-[--text-primary]">
+            Data final prevista: {projectedExpiration.toLocaleDateString('pt-BR')}
+          </p>
+          <p className="text-xs text-[--text-secondary]">
+            Cada mês de acesso corresponde a 30 dias. Um acesso ainda ativo será prorrogado a partir
+            da data final atual.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" disabled={savingAccess} onClick={() => setConfirmAccess(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              loading={savingAccess}
+              disabled={savingAccess}
+              onClick={async () => {
+                setSavingAccess(true)
+                try {
+                  const succeeded = await onAccess(u.uid, 'activate', months)
+                  if (succeeded) setConfirmAccess(false)
+                } finally {
+                  setSavingAccess(false)
+                }
+              }}
+            >
+              Liberar acesso
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Expansão: badge mobile + detalhes */}
       {expanded && (
         <div className="admin-user-expanded">
@@ -174,6 +233,7 @@ export default function Admin() {
   const [activityFilter, setActivityFilter] = useState('all')
   const [toast, setToast] = useState('')
   const [error, setError] = useState('')
+  const [actionError, setActionError] = useState('')
 
   useEffect(() => {
     if (!isAdmin) return undefined
@@ -198,13 +258,15 @@ export default function Admin() {
   }
 
   const runAccessAction = async (command, successMessage) => {
-    setError('')
+    setActionError('')
     try {
       await adminSetUserAccess(command)
       setUsers(await adminListUsers())
       showToast(successMessage)
-    } catch (actionError) {
-      setError(actionError?.message || 'Não foi possível concluir a ação administrativa.')
+      return true
+    } catch (actionFailure) {
+      setActionError(actionFailure?.message || 'Não foi possível concluir a ação administrativa.')
+      return false
     }
   }
 
@@ -297,6 +359,14 @@ export default function Admin() {
           {toast}
         </div>
       )}
+      {actionError && (
+        <p
+          role="alert"
+          className="rounded-xl border border-[--danger-border] bg-[--danger-bg] p-3 text-sm text-[--danger-text]"
+        >
+          {actionError}
+        </p>
+      )}
 
       {/* Stats */}
       <div className="operational-summary-grid admin-summary-grid">
@@ -323,7 +393,7 @@ export default function Admin() {
             <p className="font-semibold text-[--text-primary]">Fluxo Pix</p>
             <p>1. Usuário paga R$ 19,90 e informa o e-mail na descrição.</p>
             <p>
-              2. Localize abaixo e clique <strong>Ativar</strong>.
+              2. Escolha a duração e clique <strong>Liberar acesso</strong>.
             </p>
           </div>
         </div>

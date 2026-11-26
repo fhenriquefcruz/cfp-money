@@ -139,10 +139,10 @@ export default function SupportCard() {
             {recent.map((item) => (
               <div key={item.id} className="rounded-xl border border-[--border-default] p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[10px] font-black text-[--text-brand]">
+                  <span className="text-xs font-black text-[--text-brand]">
                     {protocolLabel(item.protocol || item.id)}
                   </span>
-                  <span className="text-[10px] font-bold text-[--text-tertiary]">
+                  <span className="text-xs font-bold text-[--text-tertiary]">
                     {STATUS_LABELS[item.status] || item.status}
                   </span>
                 </div>

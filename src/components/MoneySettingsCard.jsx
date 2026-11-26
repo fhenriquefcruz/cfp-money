@@ -20,7 +20,7 @@ function FieldGuide({ icon: Icon, title, children }) {
       </div>
       <div>
         <p className="text-xs font-bold text-[--text-primary]">{title}</p>
-        <p className="mt-1 text-[11px] leading-relaxed text-[--text-tertiary]">{children}</p>
+        <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">{children}</p>
       </div>
     </div>
   )
@@ -68,7 +68,7 @@ function MoneySettingsContent() {
     <Card className="overflow-hidden shadow-sm" padding={false}>
       <div className="border-b border-[--border-subtle] bg-gradient-to-r from-[--brand-50] to-[--bg-surface] p-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-white shadow-sm">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[--brand-600] text-[--on-primary] shadow-sm">
             <CalendarRange size={19} />
           </div>
           <div>
@@ -76,7 +76,7 @@ function MoneySettingsContent() {
               <h2 className="text-base font-black text-[--text-primary]">
                 Money · ciclo financeiro
               </h2>
-              <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-yellow-800">
+              <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-yellow-800">
                 Premium
               </span>
             </div>
@@ -94,7 +94,7 @@ function MoneySettingsContent() {
             <p className="text-xs font-bold text-[--brand-700]">
               Essas opções não alteram seus lançamentos
             </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-[--brand-600]">
+            <p className="mt-1 text-xs leading-relaxed text-[--brand-600]">
               O Money usa estas preferências somente para montar comparações, projeções e
               relatórios. Datas, valores e registros já cadastrados permanecem exatamente como foram
               inseridos.
@@ -148,7 +148,7 @@ function MoneySettingsContent() {
                 </div>
               )}
 
-              <p className="mt-3 text-[11px] leading-relaxed text-[--text-tertiary]">
+              <p className="mt-3 text-xs leading-relaxed text-[--text-tertiary]">
                 {cycleDescription}
               </p>
             </section>
@@ -171,7 +171,7 @@ function MoneySettingsContent() {
                 <option value="elapsed_days">Mesmo número de dias decorridos</option>
                 <option value="full_cycle">Ciclo completo anterior</option>
               </Select>
-              <p className="mt-3 text-[11px] leading-relaxed text-[--text-tertiary]">
+              <p className="mt-3 text-xs leading-relaxed text-[--text-tertiary]">
                 {comparisonDescription}
               </p>
             </section>
@@ -194,7 +194,7 @@ function MoneySettingsContent() {
                     <Brain size={15} className="text-[--brand-600]" />
                     Personalizar o Money com meu histórico
                   </span>
-                  <span className="mt-1 block text-[11px] leading-relaxed text-[--text-tertiary]">
+                  <span className="mt-1 block text-xs leading-relaxed text-[--text-tertiary]">
                     Quando ativado, o Money identifica padrões agregados somente dos seus próprios
                     lançamentos recentes. O perfil não é salvo como uma nova base e pode ser
                     desativado a qualquer momento.
@@ -221,7 +221,7 @@ function MoneySettingsContent() {
                     <PiggyBank size={15} className="text-[--brand-600]" />
                     Não tratar poupança como despesa
                   </span>
-                  <span className="mt-1 block text-[11px] leading-relaxed text-[--text-tertiary]">
+                  <span className="mt-1 block text-xs leading-relaxed text-[--text-tertiary]">
                     O aporte continua registrado normalmente, mas deixa de aumentar o total de
                     consumo analisado pelo Money.
                   </span>

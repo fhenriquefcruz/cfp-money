@@ -22,7 +22,7 @@ export default function TransactionSavedViews({ views, canSave, onApply, onSave,
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-xs font-black text-[--text-primary]">Visões salvas</p>
-          <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+          <p className="mt-0.5 text-xs text-[--text-tertiary]">
             Reaplique combinações de filtros sem montar tudo novamente.
           </p>
         </div>
@@ -77,9 +77,7 @@ export default function TransactionSavedViews({ views, canSave, onApply, onSave,
       )}
 
       {views.length === 0 ? (
-        <p className="mt-3 text-[10px] text-[--text-tertiary]">
-          Nenhuma visão salva neste navegador.
-        </p>
+        <p className="mt-3 text-xs text-[--text-tertiary]">Nenhuma visão salva neste navegador.</p>
       ) : (
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {views.map((view) => (

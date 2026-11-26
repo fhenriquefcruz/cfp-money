@@ -6,7 +6,7 @@ import { useTheme } from '../contexts/ThemeContext'
 export default function ThemeToggle({ compact = false, fullWidth = false, className = '' }) {
   const { theme, toggleTheme } = useTheme()
   const isDark = theme === 'dark'
-  const actionLabel = isDark ? 'Ativar tema claro' : 'Ativar tema escuro'
+  const actionLabel = `Modo escuro: ${isDark ? 'ligado' : 'desligado'}`
 
   return (
     <button
@@ -26,7 +26,9 @@ export default function ThemeToggle({ compact = false, fullWidth = false, classN
       <span
         className={clsx(
           'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors',
-          isDark ? 'bg-indigo-500/15 text-indigo-300' : 'bg-amber-100 text-amber-700',
+          isDark
+            ? 'bg-[--brand-100] text-[--text-brand]'
+            : 'bg-[--bg-hover] text-[--text-secondary]',
         )}
         aria-hidden="true"
       >
@@ -35,11 +37,9 @@ export default function ThemeToggle({ compact = false, fullWidth = false, classN
 
       {!compact && (
         <span className="min-w-0 flex-1 text-left">
-          <span className="block text-xs font-bold text-[--text-primary]">
-            {isDark ? 'Tema escuro' : 'Tema claro'}
-          </span>
-          <span className="block text-[10px] text-[--text-tertiary]">
-            {isDark ? 'Reduzir luminosidade' : 'Aumentar contraste claro'}
+          <span className="block text-xs font-bold text-[--text-primary]">Modo escuro</span>
+          <span className="block text-xs text-[--text-tertiary]">
+            {isDark ? 'Ligado' : 'Desligado'}
           </span>
         </span>
       )}

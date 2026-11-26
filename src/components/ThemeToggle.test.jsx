@@ -21,12 +21,12 @@ test('alternância de tema é acessível e persiste a escolha', () => {
     </ThemeProvider>,
   )
 
-  const toggle = screen.getByRole('switch', { name: 'Ativar tema escuro' })
+  const toggle = screen.getByRole('switch', { name: 'Modo escuro: desligado' })
   expect(toggle).toHaveAttribute('aria-checked', 'false')
 
   fireEvent.click(toggle)
 
-  expect(screen.getByRole('switch', { name: 'Ativar tema claro' })).toHaveAttribute(
+  expect(screen.getByRole('switch', { name: 'Modo escuro: ligado' })).toHaveAttribute(
     'aria-checked',
     'true',
   )

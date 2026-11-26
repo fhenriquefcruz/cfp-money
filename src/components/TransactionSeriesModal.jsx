@@ -53,7 +53,7 @@ function ScopeOption({ option, checked, onChange }) {
       />
       <span>
         <span className="block text-xs font-black text-[--text-primary]">{option.label}</span>
-        <span className="mt-1 block text-[10px] leading-relaxed text-[--text-tertiary]">
+        <span className="mt-1 block text-xs leading-relaxed text-[--text-tertiary]">
           {option.helper}
         </span>
       </span>
@@ -283,7 +283,7 @@ export default function TransactionSeriesModal({
               >
                 {filteredCategories.map((category) => (
                   <option key={category.id} value={category.id}>
-                    {category.icon} {category.name}
+                    {category.name}
                   </option>
                 ))}
               </select>
@@ -309,7 +309,7 @@ export default function TransactionSeriesModal({
                   className="min-h-12 w-full rounded-xl border border-[--border-default] bg-[--bg-surface] pl-10 pr-3 text-lg font-black text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
                 />
               </div>
-              <p className="mt-1 text-[10px] leading-relaxed text-[--text-tertiary]">
+              <p className="mt-1 text-xs leading-relaxed text-[--text-tertiary]">
                 {installment
                   ? 'O total informado será distribuído entre as parcelas selecionadas sem perder centavos.'
                   : 'O mesmo valor será aplicado a cada ocorrência selecionada.'}
@@ -360,7 +360,7 @@ export default function TransactionSeriesModal({
 
             <div className="mt-3 grid grid-cols-2 gap-2">
               <div className="rounded-xl bg-[--bg-surface] p-3">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                   Registros afetados
                 </p>
                 <p className="mt-1 text-base font-black text-[--text-primary]">
@@ -369,7 +369,7 @@ export default function TransactionSeriesModal({
               </div>
 
               <div className="rounded-xl bg-[--bg-surface] p-3">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                   {editing ? 'Total do escopo' : 'Valor removido'}
                 </p>
                 <p className="mt-1 text-base font-black text-[--text-primary]">
@@ -380,7 +380,7 @@ export default function TransactionSeriesModal({
               </div>
 
               <div className="col-span-2 rounded-xl bg-[--bg-surface] p-3">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-[--text-tertiary]">
+                <p className="text-xs font-bold uppercase tracking-wider text-[--text-tertiary]">
                   Total da série após a operação
                 </p>
                 <p className="mt-1 text-base font-black text-[--text-primary]">

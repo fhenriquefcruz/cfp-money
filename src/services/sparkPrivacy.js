@@ -1,6 +1,5 @@
 import {
   collection,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -8,13 +7,32 @@ import {
   serverTimestamp,
   setDoc,
   where,
+  writeBatch,
 } from 'firebase/firestore'
-import { db } from './firebase'
+import { auth, db } from './firebase'
 import { LEGAL_VERSIONS } from '../content/legal'
 
 const userRef = (uid) => doc(db, 'users', uid)
 const legalRef = (uid) => doc(db, 'users', uid, 'privacyPreferences', 'legal')
 const deletionRef = (uid) => doc(db, 'users', uid, 'privacyRequests', 'accountDeletion')
+
+function supportRequest(uid, subject, message) {
+  const requestRef = doc(collection(db, 'supportRequests'))
+  return {
+    reference: requestRef,
+    data: {
+      uid,
+      email: auth.currentUser?.email || '',
+      protocol: requestRef.id,
+      category: 'privacy',
+      subject,
+      message,
+      status: 'open',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+  }
+}
 
 const knownCollections = [
   'transactions',
@@ -116,25 +134,51 @@ export async function exportSparkData(uid) {
 }
 
 export async function requestSparkAccountDeletion(uid, confirmation) {
+  if (!auth.currentUser?.uid || auth.currentUser.uid !== uid) {
+    throw new Error('Usuário não autenticado ou diferente do titular.')
+  }
   if (confirmation !== 'EXCLUIR MINHA CONTA') {
     throw new Error('Digite exatamente EXCLUIR MINHA CONTA.')
   }
 
-  await setDoc(
-    deletionRef(uid),
-    {
-      status: 'pending-manual',
-      requestedAt: serverTimestamp(),
-      mode: 'spark',
-      note: 'Solicitação registrada para processamento manual.',
-    },
-    { merge: true },
+  const request = supportRequest(
+    uid,
+    'Exclusão de conta e dados',
+    'Solicito a exclusão da minha conta e dos dados pessoais vinculados, ressalvadas as obrigações legais de retenção.',
   )
+  const batch = writeBatch(db)
+  batch.set(deletionRef(uid), {
+    status: 'pending-manual',
+    requestedAt: serverTimestamp(),
+    supportProtocol: request.reference.id,
+    mode: 'spark',
+  })
+  batch.set(request.reference, request.data)
+  await batch.commit()
 
-  return { ok: true }
+  return { ok: true, protocol: request.reference.id }
 }
 
 export async function cancelSparkAccountDeletion(uid) {
-  await deleteDoc(deletionRef(uid))
-  return { ok: true }
+  if (!auth.currentUser?.uid || auth.currentUser.uid !== uid) {
+    throw new Error('Usuário não autenticado ou diferente do titular.')
+  }
+  const deletion = await getDoc(deletionRef(uid))
+  if (!deletion.exists() || deletion.data()?.status !== 'pending-manual') {
+    throw new Error('Não há pedido de exclusão pendente para cancelar.')
+  }
+  const originalProtocol = String(deletion.data()?.supportProtocol || '')
+  const reference = originalProtocol
+    ? ` Referência do pedido original: MR-${originalProtocol.slice(0, 10).toUpperCase()}.`
+    : ''
+  const request = supportRequest(
+    uid,
+    'Cancelamento do pedido de exclusão',
+    `Cancelo a solicitação anterior de exclusão da minha conta. Por favor, desconsidere o pedido de exclusão em aberto.${reference}`,
+  )
+  const batch = writeBatch(db)
+  batch.delete(deletionRef(uid))
+  batch.set(request.reference, request.data)
+  await batch.commit()
+  return { ok: true, protocol: request.reference.id }
 }

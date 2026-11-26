@@ -70,12 +70,12 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
         <p className="text-xs font-black text-[--text-primary]">
           {EVENT_LABELS[event.type] || 'Evento'}
         </p>
-        <p className="mt-0.5 text-[10px] text-[--text-tertiary]">
+        <p className="mt-0.5 text-xs text-[--text-tertiary]">
           {formatDate(event.eventDate || event.paymentDate)}
           {event.sourceAccount ? ` · ${event.sourceAccount}` : ''}
         </p>
         {event.notes && (
-          <p className="mt-1 text-[10px] leading-relaxed text-[--text-secondary]">{event.notes}</p>
+          <p className="mt-1 text-xs leading-relaxed text-[--text-secondary]">{event.notes}</p>
         )}
       </div>
 
@@ -96,7 +96,7 @@ function EventRow({ event, allEvents, invoice, onReverse, loading }) {
             type="button"
             disabled={loading}
             onClick={() => onReverse(event, invoice)}
-            className="min-h-8 rounded-lg px-2 text-[9px] font-black text-[--danger-text] hover:bg-[--danger-bg] disabled:opacity-50"
+            className="min-h-8 rounded-lg px-2 text-xs font-black text-[--danger-text] hover:bg-[--danger-bg] disabled:opacity-50"
           >
             Estornar
           </button>
@@ -272,7 +272,7 @@ export default function InvoiceLifecycleModal({
               key={label}
               className="rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3"
             >
-              <p className="text-[9px] font-black uppercase tracking-wider text-[--text-tertiary]">
+              <p className="text-xs font-black uppercase tracking-wider text-[--text-tertiary]">
                 {label}
               </p>
               <p className="mt-1 text-sm font-black text-[--text-primary]">
@@ -295,7 +295,7 @@ export default function InvoiceLifecycleModal({
                 setTab(value)
                 setError('')
               }}
-              className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border px-2 text-[10px] font-black ${
+              className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border px-2 text-xs font-black ${
                 tab === value
                   ? 'border-[--brand-500] bg-[--brand-50] text-[--brand-700]'
                   : 'border-[--border-default] bg-[--bg-surface] text-[--text-secondary]'
@@ -440,7 +440,7 @@ export default function InvoiceLifecycleModal({
 
         {tab === 'history' && (
           <div>
-            <div className="flex items-center gap-2 rounded-xl bg-[--brand-50] p-3 text-[10px] leading-relaxed text-[--brand-700]">
+            <div className="flex items-center gap-2 rounded-xl bg-[--brand-50] p-3 text-xs leading-relaxed text-[--brand-700]">
               <Receipt size={14} className="flex-shrink-0" />
               Pagamentos ficam fora de Transações para não duplicar despesas já contabilizadas pelas
               compras.

@@ -79,7 +79,7 @@ export default function SparkPrivacyDataCard() {
             <div>
               <h2 className="text-sm font-black text-[--text-primary]">Privacidade e dados</h2>
               <p className="mt-1 text-xs text-[--text-tertiary]">
-                Operação compatível com o plano gratuito.
+                Consulte, exporte e gerencie seus dados pessoais.
               </p>
             </div>
           </div>
@@ -91,7 +91,7 @@ export default function SparkPrivacyDataCard() {
               <FileText size={15} />
               <p className="text-xs font-black">Documentos jurídicos</p>
             </div>
-            <p className="mt-1 text-[10px] text-[--text-tertiary]">{legalSummary}</p>
+            <p className="mt-1 text-xs text-[--text-tertiary]">{legalSummary}</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <Button size="sm" variant="secondary" onClick={() => setLegalType('terms')}>
                 Termos
@@ -112,7 +112,7 @@ export default function SparkPrivacyDataCard() {
               <Download size={15} />
               <p className="text-xs font-black">Portabilidade</p>
             </div>
-            <p className="mt-1 text-[10px] text-[--text-tertiary]">
+            <p className="mt-1 text-xs text-[--text-tertiary]">
               Gera no navegador um arquivo JSON com os dados acessíveis pela própria conta.
             </p>
             <Button
@@ -133,8 +133,10 @@ export default function SparkPrivacyDataCard() {
                 <Clock3 size={15} />
                 <p className="text-xs font-black">Exclusão solicitada</p>
               </div>
-              <p className="mt-1 text-[10px]">
-                No plano gratuito, a solicitação é processada manualmente pelo responsável.
+              <p className="mt-1 text-xs">
+                Seu pedido foi enviado para atendimento. Você receberá uma resposta em até 15 dias.
+                {status.deletionRequest.supportProtocol &&
+                  ` Protocolo: MR-${status.deletionRequest.supportProtocol.slice(0, 10).toUpperCase()}.`}
               </p>
               <Button
                 size="sm"
@@ -154,9 +156,9 @@ export default function SparkPrivacyDataCard() {
                 <Trash2 size={15} />
                 <p className="text-xs font-black">Encerrar conta</p>
               </div>
-              <p className="mt-1 text-[10px]">
-                Registre uma solicitação para atendimento manual enquanto o backend gratuito estiver
-                ativo.
+              <p className="mt-1 text-xs">
+                Peça a exclusão da conta. Nossa equipe analisará a solicitação e responderá em até
+                15 dias, informando os próximos passos.
               </p>
               <Button
                 size="sm"
@@ -261,7 +263,8 @@ export default function SparkPrivacyDataCard() {
         }
       >
         <p className="text-sm">
-          Digite <strong>{PHRASE}</strong>:
+          Enviaremos seu pedido à equipe de atendimento. A resposta será dada em até 15 dias. Digite{' '}
+          <strong>{PHRASE}</strong> para confirmar:
         </p>
         <input
           value={confirmation}
