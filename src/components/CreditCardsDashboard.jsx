@@ -389,7 +389,7 @@ function CreditCardsCenterContent() {
               onClick={() => selectMonth(monthKeyFromDate())}
               className="min-h-11 rounded-xl border border-[--brand-200] bg-[--brand-50] px-3 text-xs font-bold text-[--brand-700]"
             >
-              Hoje
+              Mês atual
             </button>
           </div>
         </div>
