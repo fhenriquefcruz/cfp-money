@@ -533,14 +533,16 @@ function MoneyContent() {
           </div>
 
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="sm"
               onClick={() => setSettingsOpen(true)}
-              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/95 px-3 text-xs font-black text-[--brand-800] shadow-sm transition-transform hover:-translate-y-0.5 sm:w-auto"
+              className="w-full font-black shadow-md transition-transform hover:-translate-y-0.5 sm:w-auto"
             >
               <Settings2 size={14} />
               Preferências do Money
-            </button>
+            </Button>
             <div className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 text-xs font-semibold text-white/90 backdrop-blur sm:w-auto">
               <ShieldCheck size={14} />
               Modo seguro

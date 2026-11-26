@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { ArrowDownRight, ArrowUpRight, Trash2 } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Trash2, Target, PiggyBank } from 'lucide-react'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { useGoals, useTransactions } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Modal } from './ui'
@@ -172,7 +172,7 @@ export default function Savings() {
         ))}
       </section>
 
-      <section className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2">
+      <section className="grid min-w-0 grid-cols-1 items-start gap-5 xl:grid-cols-2">
         <Card variant="elevated">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -255,7 +255,12 @@ export default function Savings() {
                 className="flex flex-col gap-1 py-2 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"
               >
                 <span className="truncate text-xs font-bold text-[--text-primary]">
-                  {projection.emoji} {projection.name}
+                  <Target
+                    size={14}
+                    className="mr-1 inline-block align-text-bottom text-[--text-brand]"
+                    aria-hidden="true"
+                  />
+                  {projection.name}
                 </span>
                 <span className="text-xs text-[--text-tertiary] sm:text-right">
                   {projection.monthlyPace > 0
@@ -281,7 +286,7 @@ export default function Savings() {
 
           {overview.destinations.length === 0 ? (
             <EmptyState
-              icon="🐷"
+              icon={<PiggyBank size={28} aria-hidden="true" />}
               title="Nenhuma reserva registrada"
               description="Guarde seu primeiro valor e informe onde esse dinheiro ficará."
               action={
@@ -379,7 +384,7 @@ export default function Savings() {
                       </p>
                       <p className="mt-0.5 truncate text-xs text-[--text-tertiary]">
                         {movement.description || (signedAmount >= 0 ? 'Aporte' : 'Retirada')}
-                        {linkedGoal ? ` · ${linkedGoal.emoji || '🎯'} ${linkedGoal.name}` : ''}
+                        {linkedGoal ? ` · Meta: ${linkedGoal.name}` : ''}
                       </p>
                       <p className="mt-0.5 text-xs text-[--text-tertiary]">
                         {formatDate(transactionDate(movement))}

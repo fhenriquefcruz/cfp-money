@@ -25,6 +25,7 @@ import { useCategories, useTransactions } from '../contexts/AppContext'
 import { Card, Button } from './ui'
 import CategoryCompositionVisual from './CategoryCompositionVisual'
 import MoneyValue from './MoneyValue'
+import MonthPicker from './MonthPicker'
 import { categoryCompositionFromTransactions } from '../domain/categoryComposition'
 import { formatCurrency, exportToCSV, exportToPDF } from '../utils'
 import { getMonthlyFinancialData } from '../domain/monthlyFinance'
@@ -232,36 +233,34 @@ function ReportsContent() {
           <p className="text-xs text-[--text-tertiary] mt-0.5">Análise do seu período financeiro</p>
         </div>
         <div className="reports-premium__filters grid w-full min-w-0 grid-cols-1 gap-2 rounded-2xl border border-[--border-subtle] bg-[--bg-subtle] p-3 min-[420px]:grid-cols-2 xl:w-[560px] xl:min-w-[560px] xl:grid-cols-[180px_160px_minmax(0,1fr)]">
-          <label className="grid min-w-0 gap-1 text-xs text-[--text-tertiary]">
-            Mês final
-            <input
-              type="month"
-              onClick={(event) => {
-                try {
-                  event.currentTarget.showPicker?.()
-                } catch {
-                  /* Native fallback */
-                }
-              }}
+          <div className="grid min-w-0 gap-1 text-xs text-[--text-tertiary]">
+            <span>Mês final</span>
+            <MonthPicker
               value={referenceMonth}
-              onChange={(event) => setReferenceMonth(event.target.value)}
-              aria-label="Mês final do relatório"
-              className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 py-2 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
+              onChange={setReferenceMonth}
+              label="Mês final do relatório"
             />
-          </label>
-          <label className="grid min-w-0 gap-1 text-xs text-[--text-tertiary]">
-            Período analisado
-            <select
-              value={period}
-              onChange={(e) => setPeriod(Number(e.target.value))}
+          </div>
+          <div className="grid min-w-0 gap-1 text-xs text-[--text-tertiary]">
+            <span>Período analisado</span>
+            <div
+              className="grid min-h-11 grid-cols-3 gap-1 rounded-xl border border-[--border-default] bg-[--bg-elevated] p-1"
+              role="group"
               aria-label="Período do relatório"
-              className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 py-2 text-sm text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500]"
             >
-              <option value={3}>3 meses</option>
-              <option value={6}>6 meses</option>
-              <option value={12}>12 meses</option>
-            </select>
-          </label>
+              {[3, 6, 12].map((months) => (
+                <button
+                  key={months}
+                  type="button"
+                  onClick={() => setPeriod(months)}
+                  aria-pressed={period === months}
+                  className={`rounded-lg px-1 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[--brand-500] ${period === months ? 'bg-[--brand-600] text-[--on-primary]' : 'text-[--text-secondary] hover:bg-[--bg-hover]'}`}
+                >
+                  {months}m
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-2 min-[420px]:col-span-2 xl:col-span-1 xl:self-end">
             <Button
               variant="secondary"

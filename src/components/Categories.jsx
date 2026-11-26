@@ -21,6 +21,9 @@ export default function Categories() {
     type: 'expense',
   })
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState(null)
+  const [deleteError, setDeleteError] = useState('')
   const [showIconPicker, setShowIconPicker] = useState(false)
   const iconPickerRef = useRef(null)
   const iconButtonRef = useRef(null)
@@ -76,9 +79,17 @@ export default function Categories() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Excluir esta categoria?')) {
-      await removeCategory(id)
+  const handleDelete = async () => {
+    if (!categoryToDelete) return
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await removeCategory(categoryToDelete.id)
+      setCategoryToDelete(null)
+    } catch {
+      setDeleteError('Não foi possível excluir a categoria. Tente novamente.')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -113,19 +124,24 @@ export default function Categories() {
             </div>
           </div>
         </div>
-        <div className="category-card__actions flex flex-shrink-0 gap-1">
+        <div className="category-card__actions flex flex-shrink-0 gap-2 border-l border-[--border-subtle] pl-2">
           <button
             onClick={() => handleOpen(cat)}
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[--border-default] text-[--text-secondary] transition-colors hover:bg-[--bg-hover] hover:text-[--text-primary]"
             title={cat.isDefault ? 'Ver detalhes' : 'Editar'}
+            aria-label={`${cat.isDefault ? 'Ver detalhes de' : 'Editar'} ${cat.name}`}
           >
             <Pencil size={16} aria-hidden="true" />
           </button>
           {!cat.isDefault && (
             <button
-              onClick={() => handleDelete(cat.id)}
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-[--text-tertiary] transition-colors hover:bg-[--danger-bg] hover:text-[--danger-text]"
+              onClick={() => {
+                setDeleteError('')
+                setCategoryToDelete(cat)
+              }}
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[--danger-border] text-[--danger-text] transition-colors hover:bg-[--danger-bg]"
               title="Excluir"
+              aria-label={`Excluir ${cat.name}`}
             >
               <Trash2 size={16} aria-hidden="true" />
             </button>
@@ -328,6 +344,36 @@ export default function Categories() {
           <Button variant="primary" fullWidth onClick={handleSave} loading={loading}>
             {editing ? 'Salvar alterações' : 'Criar categoria'}
           </Button>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={Boolean(categoryToDelete)}
+        onClose={() => setCategoryToDelete(null)}
+        title="Excluir categoria"
+        size="sm"
+        closeOnBackdrop={!deleting}
+        closeOnEscape={!deleting}
+      >
+        <p className="text-sm text-[--text-secondary]">
+          Excluir “{categoryToDelete?.name}”? Esta ação não pode ser desfeita.
+        </p>
+        {deleteError && (
+          <p role="alert" className="mt-3 text-sm text-[--danger-text]">
+            {deleteError}
+          </p>
+        )}
+        <div className="mt-6 flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => setCategoryToDelete(null)} disabled={deleting}>
+            Cancelar
+          </Button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="min-h-11 rounded-xl border border-[--danger-border] bg-[--danger-bg] px-4 text-sm font-bold text-[--danger-text] hover:brightness-110 disabled:opacity-50"
+          >
+            {deleting ? 'Excluindo…' : 'Excluir categoria'}
+          </button>
         </div>
       </Modal>
     </div>

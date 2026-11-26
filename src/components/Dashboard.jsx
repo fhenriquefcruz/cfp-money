@@ -36,7 +36,6 @@ import {
 import { Card, Button, ProgressBar, EmptyState } from './ui'
 import InfoTooltip from './InfoTooltip'
 import MoneyValue from './MoneyValue'
-import MoneyInsightCard from './MoneyInsightCard'
 import CategoryCompositionVisual from './CategoryCompositionVisual'
 import CategoryReviewNotice from './CategoryReviewNotice'
 import CategoryIcon from './CategoryIcon'
@@ -403,7 +402,10 @@ export default function Dashboard() {
         {...fade}
       >
         <div className="min-w-0 flex-1">
-          {/* Mês é o destaque principal */}
+          <h1 className="text-2xl font-black text-[--text-primary]">Início</h1>
+          <p className="dashboard-greeting mt-0.5 text-sm text-[--text-tertiary]">
+            {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'}
+          </p>
           <div className="dashboard-month-nav mb-0.5 flex min-w-0 flex-nowrap items-center gap-1">
             <button
               onClick={() => setViewDate((d) => subMonths(d, 1))}
@@ -412,10 +414,10 @@ export default function Dashboard() {
             >
               <ChevronLeft size={16} />
             </button>
-            <h1 className="min-w-0 truncate text-base font-black text-[--text-primary] min-[390px]:text-lg sm:text-2xl">
+            <span className="min-w-0 truncate text-sm font-bold text-[--text-secondary] sm:text-base">
               <span className="sm:hidden">{compactMonthLabel}</span>
               <span className="hidden sm:inline">{monthLabel}</span>
-            </h1>
+            </span>
             <button
               onClick={() => setViewDate((d) => addMonths(d, 1))}
               className="w-11 h-11 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
@@ -432,22 +434,26 @@ export default function Dashboard() {
               </button>
             )}
           </div>
-          {/* Saudação secundária */}
-          <p className="dashboard-greeting text-xs text-[--text-tertiary]">
-            {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'}
-          </p>
         </div>
-        <Link to="/transactions" className="dashboard-quick-add w-auto flex-shrink-0">
-          <Button
-            variant="primary"
-            icon={<Plus />}
-            size="sm"
-            aria-label="Nova transação"
-            className="dashboard-quick-add__button"
+        <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
+          <Link
+            to="/money"
+            className="inline-flex min-h-11 items-center rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
           >
-            <span className="dashboard-quick-add__label">Nova transação</span>
-          </Button>
-        </Link>
+            Money
+          </Link>
+          <Link to="/transactions" className="dashboard-quick-add w-auto flex-shrink-0">
+            <Button
+              variant="primary"
+              icon={<Plus />}
+              size="sm"
+              aria-label="Nova transação"
+              className="dashboard-quick-add__button"
+            >
+              <span className="dashboard-quick-add__label">Nova transação</span>
+            </Button>
+          </Link>
+        </div>
       </motion.div>
 
       <div className="dashboard-executive-grid">
@@ -632,44 +638,10 @@ export default function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Inteligência executiva: ritmo, saúde e Money em uma faixa coerente */}
-      <motion.div
-        className="dashboard-bento-grid grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-      >
+      {healthReport.score !== null && Number.isFinite(Number(healthReport.score)) && (
         <Card
           variant="elevated"
-          className="dashboard-forecast-card dashboard-module--rhythm col-span-1 h-full shadow-sm xl:col-span-3"
-        >
-          <div className="flex h-full items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="mb-1 flex items-center gap-1.5">
-                <Zap size={14} className="text-[--brand-600]" />
-                <p className="text-xs font-semibold text-[--text-tertiary]">Ritmo de gastos</p>
-                <InfoTooltip text="Média das despesas dos últimos 3 meses. Serve como referência, não como valor definitivo." />
-              </div>
-              {isLoading ? (
-                <div className="h-7 w-28 animate-pulse rounded bg-[--bg-hover]" />
-              ) : (
-                <p className="text-2xl font-black tabular-nums text-[--text-primary]">
-                  {formatCurrency(forecast)}
-                </p>
-              )}
-              <p className="dashboard-forecast-helper mt-1 text-xs leading-relaxed text-[--text-tertiary]">
-                Média dos últimos 3 meses para orientar o planejamento.
-              </p>
-            </div>
-            <div className="rounded-xl bg-[--brand-100] p-2 text-[--brand-700]">
-              <Zap size={16} />
-            </div>
-          </div>
-        </Card>
-
-        <Card
-          variant="elevated"
-          className="dashboard-health-card dashboard-module--health col-span-1 h-full shadow-sm xl:col-span-3"
+          className="dashboard-health-card dashboard-module--health max-w-xl shadow-sm"
         >
           <div className="mb-2 flex items-center justify-between gap-3">
             <div className="flex items-center gap-1.5">
@@ -680,11 +652,7 @@ export default function Dashboard() {
           </div>
           <FinancialHealthScore report={healthReport} />
         </Card>
-
-        <div className="dashboard-money-insight dashboard-module--money col-span-1 min-w-0 md:col-span-2 xl:col-span-6">
-          <MoneyInsightCard referenceDate={viewDate} compact />
-        </div>
-      </motion.div>
+      )}
 
       {/* Análise principal: evolução e composição */}
       <div className="dashboard-chart-grid grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-3">
@@ -700,6 +668,10 @@ export default function Dashboard() {
                   <p className="mt-1 text-xs text-[--text-tertiary]">
                     Receitas e despesas em uma linha do tempo; toque nos meses para examinar o
                     movimento.
+                  </p>
+                  <p className="mt-2 text-xs font-semibold tabular-nums text-[--text-secondary]">
+                    Média de gastos dos últimos 3 meses:{' '}
+                    {isLoading ? '—' : formatCurrency(forecast)}
                   </p>
                 </div>
 

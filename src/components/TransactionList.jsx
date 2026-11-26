@@ -63,7 +63,6 @@ import {
   getTransactionDateContext,
 } from '../domain/transactionDates'
 import { buildCategoryReviewQueue, summarizeCategoryReviews } from '../domain/categoryReview'
-import { getSavingsDestinationLabel } from '../domain/savings'
 import { isTransactionSeries } from '../domain/transactionSeries'
 import {
   PAYMENT_STATUS,
@@ -293,7 +292,14 @@ function TxRow({
 
       <div className="transaction-row-main">
         <div className="transaction-row-heading">
-          <p className="transaction-row-title">{tx.description || cat?.name || kindLabel}</p>
+          <p className="transaction-row-title">
+            {tx.description || cat?.name || kindLabel}
+            {tx.isInstallment && (
+              <span className="ml-1.5 whitespace-nowrap text-[--text-tertiary]">
+                {tx.installmentNum}/{tx.installmentOf}
+              </span>
+            )}
+          </p>
           {tx.attachments?.length > 0 && (
             <span
               className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[--border-default] bg-[--bg-subtle] px-1.5 py-0.5 text-xs font-bold tabular-nums text-[--text-brand]"
@@ -304,34 +310,14 @@ function TxRow({
               {tx.attachments.length}
             </span>
           )}
-          {tx.isInstallment && (
-            <span className="transaction-series-badge transaction-series-badge--installment">
-              {tx.installmentNum}/{tx.installmentOf}x
-            </span>
-          )}
-          {tx.isRecurring && !tx.isInstallment && (
-            <span className="transaction-series-badge">Fixo</span>
-          )}
         </div>
 
         <div className="transaction-row-meta">
-          <span className="transaction-kind-badge" data-kind={kind}>
-            {kindLabel}
-          </span>
-
           {resolvedCategory && !isSavings && !isTransfer && (
             <span className="transaction-category-badge">
               <CategoryIcon category={resolvedCategory} size={14} />
               {resolvedCategory.name}
             </span>
-          )}
-
-          {tx.paymentMethod && !isSavings && !isTransfer && (
-            <span className="transaction-payment-method">{getPaymentLabel(tx.paymentMethod)}</span>
-          )}
-
-          {isSavings && (
-            <span className="transaction-payment-method">{getSavingsDestinationLabel(tx)}</span>
           )}
 
           {categoryReview && (
@@ -376,6 +362,10 @@ function TxRow({
             Detalhes
           </summary>
           <div className="transaction-row-details-panel">
+            <span>Tipo: {kindLabel}</span>
+            {tx.paymentMethod && !isSavings && !isTransfer && (
+              <span>Meio de pagamento: {getPaymentLabel(tx.paymentMethod)}</span>
+            )}
             <span>
               {structuredCredit ? 'Compra' : 'Movimentação'}:{' '}
               {formatTransactionIsoDate(dateContext.activityDate)}
@@ -386,7 +376,7 @@ function TxRow({
             {dateContext.hasSeparateAccountingDate && (
               <span>Fatura: {dateContext.accountingLabel}</span>
             )}
-            {paidAtLabel && <span>Pagamento: {paidAtLabel}</span>}
+            {paidAtLabel && <span>Pago em: {paidAtLabel}</span>}
             {createdAtLabel && <span>Cadastro: {createdAtLabel}</span>}
             {protectedGroup && (
               <span>{tx.isInstallment ? 'Série parcelada' : 'Série recorrente'}</span>

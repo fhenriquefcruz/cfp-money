@@ -1,7 +1,27 @@
 // src/components/Goals.jsx
 import React, { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Pencil, Trash2 } from 'lucide-react'
+import {
+  Pencil,
+  Trash2,
+  Home,
+  Car,
+  Plane,
+  GraduationCap,
+  Briefcase,
+  Landmark,
+  Target,
+  Gem,
+  Palette,
+  Flame,
+  Zap,
+  Star,
+  PartyPopper,
+  Coins,
+  TrendingUp,
+  Clock3,
+  CheckCircle2,
+} from 'lucide-react'
 import { useGoals, useTransactions } from '../contexts/AppContext'
 import { Card, Button, Input, Modal, ProgressBar, EmptyState } from './ui'
 import { formatCurrency, formatDate } from '../utils'
@@ -9,23 +29,28 @@ import InfoTooltip from './InfoTooltip'
 import { buildGoalPlan, buildGoalsOverview } from '../domain/goalPlanning'
 import { getGoalEffectiveCurrent } from '../domain/savings'
 
-const EMOJI_LIST = [
-  '🏠',
-  '🚗',
-  '✈️',
-  '🎓',
-  '💼',
-  '🏦',
-  '🎯',
-  '💎',
-  '🌈',
-  '🔥',
-  '⚡',
-  '🌟',
-  '🎉',
-  '💰',
-  '📈',
+const GOAL_ICONS = [
+  { value: '🏠', label: 'Casa', Icon: Home },
+  { value: '🚗', label: 'Carro', Icon: Car },
+  { value: '✈️', label: 'Viagem', Icon: Plane },
+  { value: '🎓', label: 'Estudos', Icon: GraduationCap },
+  { value: '💼', label: 'Trabalho', Icon: Briefcase },
+  { value: '🏦', label: 'Banco', Icon: Landmark },
+  { value: '🎯', label: 'Alvo', Icon: Target },
+  { value: '💎', label: 'Conquista', Icon: Gem },
+  { value: '🌈', label: 'Sonho', Icon: Palette },
+  { value: '🔥', label: 'Prioridade', Icon: Flame },
+  { value: '⚡', label: 'Energia', Icon: Zap },
+  { value: '🌟', label: 'Destaque', Icon: Star },
+  { value: '🎉', label: 'Celebração', Icon: PartyPopper },
+  { value: '💰', label: 'Dinheiro', Icon: Coins },
+  { value: '📈', label: 'Crescimento', Icon: TrendingUp },
 ]
+
+export function GoalIcon({ value, size = 20 }) {
+  const Icon = GOAL_ICONS.find((item) => item.value === value)?.Icon || Target
+  return <Icon size={size} aria-hidden="true" strokeWidth={1.8} />
+}
 
 function GoalCard({ goal, transactions, onEdit, onDelete, onContribute }) {
   const effectiveCurrent = getGoalEffectiveCurrent(goal, transactions)
@@ -43,8 +68,8 @@ function GoalCard({ goal, transactions, onEdit, onDelete, onContribute }) {
       <Card>
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-100] text-xl">
-              {goal.emoji || '🎯'}
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[--brand-100] text-[--text-brand]">
+              <GoalIcon value={goal.emoji} />
             </div>
             <div className="min-w-0">
               <p className="truncate font-semibold text-[--text-primary]">{goal.name}</p>
@@ -145,8 +170,8 @@ function GoalCard({ goal, transactions, onEdit, onDelete, onContribute }) {
 
         {plan.completed && (
           <div className="mt-3 flex items-center gap-2 rounded-xl border border-[--success-border] bg-[--success-bg] p-2 text-xs text-[--success-text]">
-            <span aria-hidden="true">✓</span>
-            <span>Meta concluída! 🎉</span>
+            <CheckCircle2 size={16} aria-hidden="true" />
+            <span>Meta concluída!</span>
           </div>
         )}
 
@@ -280,7 +305,7 @@ function GoalsContent() {
         categoryId: '_savings',
         categoryName: 'Poupança',
         categoryColor: '#c49d6b',
-        categoryIcon: '🐷',
+        categoryIcon: 'wallet',
         paymentMethod: 'pix',
         date: new Date().toISOString().slice(0, 10),
         dueDate: '',
@@ -402,7 +427,9 @@ function GoalsContent() {
           }
         />
       ) : (
-        <div className="operational-card-grid goals-card-grid grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div
+          className={`operational-card-grid goals-card-grid grid grid-cols-1 gap-4 ${sortedGoals.length > 1 ? 'md:grid-cols-2' : ''}`}
+        >
           <AnimatePresence>
             {sortedGoals.map((goal) => (
               <GoalCard
@@ -457,18 +484,20 @@ function GoalsContent() {
               Ícone
             </label>
             <div className="flex gap-2 flex-wrap">
-              {EMOJI_LIST.map((emoji) => (
+              {GOAL_ICONS.map(({ value, label, Icon }) => (
                 <button
-                  key={emoji}
+                  key={value}
                   type="button"
-                  onClick={() => setForm((f) => ({ ...f, emoji }))}
-                  className={`w-10 h-10 text-xl rounded-xl border transition-all ${
-                    form.emoji === emoji
+                  onClick={() => setForm((f) => ({ ...f, emoji: value }))}
+                  aria-label={label}
+                  aria-pressed={form.emoji === value}
+                  className={`flex h-11 w-11 items-center justify-center rounded-xl border transition-all ${
+                    form.emoji === value
                       ? 'border-[--brand-500] bg-[--brand-50]'
                       : 'border-[--border-default] hover:bg-[--bg-hover]'
                   }`}
                 >
-                  {emoji}
+                  <Icon size={20} aria-hidden="true" strokeWidth={1.8} />
                 </button>
               ))}
             </div>
@@ -483,7 +512,8 @@ function GoalsContent() {
 
           {form.deadline && (
             <div className="p-3 rounded-xl bg-[--brand-50] border border-[--brand-200] text-xs text-[--brand-700]">
-              ⏳ Prazo: {formatDate(form.deadline)} — restam{' '}
+              <Clock3 size={16} className="inline-block align-text-bottom" aria-hidden="true" />{' '}
+              Prazo: {formatDate(form.deadline)} — restam{' '}
               {Math.max(
                 0,
                 Math.ceil((new Date(form.deadline) - new Date()) / (1000 * 60 * 60 * 24)),
