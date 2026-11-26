@@ -36,6 +36,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Clear checked-in baselines in this temporary checkout
+        run: find e2e/visual/visual.spec.js-snapshots -maxdepth 1 -name '*-linux.png' -delete
       - name: Generate candidate snapshots
         run: npm run test:visual:update
       - name: Verify generated candidates

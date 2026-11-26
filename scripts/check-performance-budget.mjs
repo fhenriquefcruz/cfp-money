@@ -45,7 +45,8 @@ const indexPath = join(distRoot, 'index.html')
 const limits = {
   initialJavaScriptGzipBytes: 245 * 1024,
   totalJavaScriptGzipBytes: 741 * 1024,
-  moneyRouteGzipBytes: 18 * 1024,
+  // O controle de preferências acessível acrescenta menos de 0,5 KiB à rota.
+  moneyRouteGzipBytes: 18.5 * 1024,
   largestJavaScriptGzipBytes: 140 * 1024,
   initialCssGzipBytes: 22 * 1024 + 512,
 }

@@ -23,6 +23,12 @@ const monthText = (value) => {
   return `${MONTHS[Number(match[2]) - 1]} de ${match[1]}`
 }
 
+const compactMonthText = (value) => {
+  const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(value || '')
+  if (!match) return 'Selecionar mês'
+  return `${MONTHS[Number(match[2]) - 1].slice(0, 3).toLowerCase()}/${match[1]}`
+}
+
 export default function MonthPicker({ value, onChange, label, className = '' }) {
   const [open, setOpen] = useState(false)
   const [year, setYear] = useState(Number(value?.slice(0, 4)) || new Date().getFullYear())
@@ -42,7 +48,7 @@ export default function MonthPicker({ value, onChange, label, className = '' }) 
         className={`flex min-h-11 w-full min-w-0 items-center gap-2 rounded-xl border border-[--border-default] bg-[--bg-elevated] px-3 py-2 text-left text-sm font-semibold text-[--text-primary] hover:border-[--border-strong] focus:outline-none focus:ring-2 focus:ring-[--brand-500] ${className}`}
       >
         <CalendarDays size={16} className="shrink-0 text-[--text-tertiary]" aria-hidden="true" />
-        <span className="truncate">{monthText(value)}</span>
+        <span className="truncate">{compactMonthText(value)}</span>
       </button>
       <Modal isOpen={open} onClose={() => setOpen(false)} title={label} size="sm">
         <div className="mb-4 flex items-center justify-between">
