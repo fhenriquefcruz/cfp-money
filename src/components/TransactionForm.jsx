@@ -351,7 +351,7 @@ export default function TransactionForm({
       categoryId: isSavings ? '_savings' : form.categoryId,
       categoryName: isSavings ? 'Poupança' : cat?.name || '',
       categoryColor: isSavings ? '#c49d6b' : cat?.color || '',
-      categoryIcon: isSavings ? '🐷' : cat?.icon || '',
+      categoryIcon: isSavings ? 'wallet' : cat?.icon || '',
       paymentMethod: form.paymentMethod,
       notes: form.notes.trim(),
       isRecurring: form.isRecurring,
@@ -727,7 +727,7 @@ export default function TransactionForm({
                 <option value="">Nenhuma meta</option>
                 {goals.map((goal) => (
                   <option key={goal.id} value={goal.id}>
-                    {goal.emoji || '🎯'} {goal.name}
+                    {goal.name}
                   </option>
                 ))}
               </select>

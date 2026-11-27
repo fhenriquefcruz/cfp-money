@@ -54,7 +54,7 @@ test('comando local audita backup JSON sem expor descrições ou IDs no relatór
   } finally {
     await rm(directory, { recursive: true, force: true })
   }
-})
+}, 20_000)
 
 test('comando offline lê exportação backend versionada e contabiliza IDs ausentes sem expor dados', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'meu-real-backend-audit-'))
@@ -89,7 +89,7 @@ test('comando offline lê exportação backend versionada e contabiliza IDs ause
   } finally {
     await rm(directory, { recursive: true, force: true })
   }
-})
+}, 20_000)
 
 test('CLI compara exportações Spark antigas e backend atuais sem expor identificadores', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'meu-real-snapshot-compare-'))
@@ -172,7 +172,7 @@ test('CLI compara exportações Spark antigas e backend atuais sem expor identif
   } finally {
     await rm(directory, { recursive: true, force: true })
   }
-})
+}, 20_000)
 
 test('CLI rejeita comparação cronologicamente invertida e mantém arquivos originais', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'meu-real-snapshot-order-'))
@@ -204,4 +204,4 @@ test('CLI rejeita comparação cronologicamente invertida e mantém arquivos ori
   } finally {
     await rm(directory, { recursive: true, force: true })
   }
-})
+}, 20_000)

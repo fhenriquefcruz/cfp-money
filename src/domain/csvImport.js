@@ -294,7 +294,7 @@ export function buildCsvImportPreview(
       categoryId: isSavings ? '_savings' : resolvedCategory?.id || '',
       categoryName: isSavings ? 'Poupança' : resolvedCategory?.name || categoryName,
       categoryColor: isSavings ? '#c49d6b' : resolvedCategory?.color || '',
-      categoryIcon: isSavings ? '🐷' : resolvedCategory?.icon || '',
+      categoryIcon: isSavings ? 'wallet' : resolvedCategory?.icon || '',
       amount: Number.isFinite(amount) ? amount : 0,
       paymentMethod: paymentMethod || 'pix',
     }

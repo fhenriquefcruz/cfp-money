@@ -20,6 +20,7 @@ import { adminListUsers, adminSetUserAccess } from '../services/adminGateway'
 import { formatRelativeActivity, getUserActivityState } from '../domain/userActivity'
 import CommercialOverviewRouter from './CommercialOverviewRouter'
 import SupportAdminCard from './SupportAdminCard'
+import PageHeader from './PageHeader'
 
 function StatusBadge({ u, currentAdmin = false }) {
   const info = getPlanPresentation(u, { isAdmin: currentAdmin })
@@ -349,10 +350,7 @@ export default function Admin() {
 
   return (
     <div className="operational-page admin-premium mx-auto min-w-0 max-w-[1600px] space-y-5 pb-24 lg:pb-6">
-      <div>
-        <h1 className="text-2xl font-black text-[--text-primary]">Painel Admin</h1>
-        <p className="admin-users-empty-text">Usuários cadastrados e controle de acesso</p>
-      </div>
+      <PageHeader title="Painel Admin" subtitle="Usuários cadastrados e controle de acesso" />
 
       {toast && (
         <div className="p-3 rounded-xl bg-[--success-bg] border border-[--success-border] text-[--success-text] text-sm font-medium">

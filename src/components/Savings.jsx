@@ -4,6 +4,7 @@ import { endOfMonth, format, startOfMonth } from 'date-fns'
 import { useGoals, useTransactions } from '../contexts/AppContext'
 import { Button, Card, EmptyState, Modal } from './ui'
 import TransactionForm from './TransactionForm'
+import PageHeader from './PageHeader'
 import {
   buildSavingsOverview,
   getSavingsDestinationLabel,
@@ -97,35 +98,33 @@ export default function Savings() {
   }
 
   return (
-    <div className="savings-premium mx-auto w-full max-w-7xl space-y-5 pb-24 lg:pb-8">
-      <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-[--text-primary] sm:text-3xl">
-            Seu dinheiro guardado, em um só lugar
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[--text-tertiary]">
-            Acompanhe quanto está reservado e onde o dinheiro está. Ao registrar um aporte, você
-            pode associá-lo a uma meta.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
-          <Button
-            variant="secondary"
-            icon={<ArrowDownRight size={15} />}
-            onClick={() => openMovement('withdrawal')}
-          >
-            Registrar retirada
-          </Button>
-          <Button
-            variant="primary"
-            icon={<ArrowUpRight size={15} />}
-            onClick={() => openMovement('deposit')}
-          >
-            Guardar dinheiro
-          </Button>
-        </div>
-      </header>
+    <div className="operational-page savings-premium mx-auto w-full max-w-7xl space-y-5 pb-24 lg:pb-8">
+      <PageHeader
+        className="flex-col sm:flex-row"
+        title="Reservas"
+        subtitle="Acompanhe o dinheiro guardado e vincule aportes às suas metas."
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<ArrowDownRight size={15} />}
+              onClick={() => openMovement('withdrawal')}
+              aria-label="Registrar retirada"
+            >
+              Retirar
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<ArrowUpRight size={15} />}
+              onClick={() => openMovement('deposit')}
+            >
+              Guardar dinheiro
+            </Button>
+          </>
+        }
+      />
 
       {legacyUnclassifiedCount > 0 && (
         <Card className="border border-[--brand-200] bg-[--brand-50]">

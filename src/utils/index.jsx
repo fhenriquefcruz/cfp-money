@@ -68,12 +68,12 @@ export const hexToRgba = (hex, alpha = 1) => {
 
 // ── PAYMENT METHODS ──
 export const PAYMENT_METHODS = [
-  { id: 'pix', label: 'Pix', icon: '💸' },
-  { id: 'credit_card', label: 'Cartão de Crédito', icon: '💳' },
-  { id: 'debit_card', label: 'Cartão de Débito', icon: '🏧' },
-  { id: 'cash', label: 'Dinheiro', icon: '💵' },
-  { id: 'transfer', label: 'Transferência', icon: '🏦' },
-  { id: 'boleto', label: 'Boleto', icon: '📄' },
+  { id: 'pix', label: 'Pix' },
+  { id: 'credit_card', label: 'Cartão de Crédito' },
+  { id: 'debit_card', label: 'Cartão de Débito' },
+  { id: 'cash', label: 'Dinheiro' },
+  { id: 'transfer', label: 'Transferência' },
+  { id: 'boleto', label: 'Boleto' },
 ]
 
 export const getPaymentLabel = (id) => PAYMENT_METHODS.find((m) => m.id === id)?.label || id

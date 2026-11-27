@@ -413,7 +413,7 @@ export const deleteBudget = async (uid, categoryId, monthKey, budgetId = '') => 
 const DEFAULT_CATEGORIES = [
   {
     name: 'Alimentação',
-    icon: '🍔',
+    icon: 'utensils',
     color: '#f97316',
     type: 'expense',
     isDefault: true,
@@ -421,7 +421,7 @@ const DEFAULT_CATEGORIES = [
   },
   {
     name: 'Transporte',
-    icon: '🚗',
+    icon: 'car',
     color: '#3b82f6',
     type: 'expense',
     isDefault: true,
@@ -429,25 +429,39 @@ const DEFAULT_CATEGORIES = [
   },
   {
     name: 'Moradia',
-    icon: '🏠',
+    icon: 'house',
     color: '#f59e0b',
     type: 'expense',
     isDefault: true,
     ownerUid: null,
   },
-  { name: 'Saúde', icon: '❤️', color: '#10b981', type: 'expense', isDefault: true, ownerUid: null },
+  {
+    name: 'Saúde',
+    icon: 'heart',
+    color: '#10b981',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
   {
     name: 'Educação',
-    icon: '📚',
+    icon: 'book',
     color: '#06b6d4',
     type: 'expense',
     isDefault: true,
     ownerUid: null,
   },
-  { name: 'Lazer', icon: '🎮', color: '#8b5cf6', type: 'expense', isDefault: true, ownerUid: null },
+  {
+    name: 'Lazer',
+    icon: 'clapperboard',
+    color: '#8b5cf6',
+    type: 'expense',
+    isDefault: true,
+    ownerUid: null,
+  },
   {
     name: 'Roupas',
-    icon: '👕',
+    icon: 'shirt',
     color: '#ec4899',
     type: 'expense',
     isDefault: true,
@@ -455,7 +469,7 @@ const DEFAULT_CATEGORIES = [
   },
   {
     name: 'Tecnologia',
-    icon: '💻',
+    icon: 'laptop',
     color: '#6366f1',
     type: 'expense',
     isDefault: true,
@@ -463,7 +477,7 @@ const DEFAULT_CATEGORIES = [
   },
   {
     name: 'Outros',
-    icon: '📦',
+    icon: 'package',
     color: '#6b7280',
     type: 'expense',
     isDefault: true,
@@ -471,7 +485,7 @@ const DEFAULT_CATEGORIES = [
   },
   {
     name: 'Salário',
-    icon: '💰',
+    icon: 'briefcase',
     color: '#22c55e',
     type: 'income',
     isDefault: true,
@@ -479,7 +493,7 @@ const DEFAULT_CATEGORIES = [
   },
   {
     name: 'Freelance',
-    icon: '🖥️',
+    icon: 'laptop',
     color: '#0ea5e9',
     type: 'income',
     isDefault: true,
@@ -487,7 +501,7 @@ const DEFAULT_CATEGORIES = [
   },
   {
     name: 'Investimentos',
-    icon: '📈',
+    icon: 'wallet',
     color: '#a855f7',
     type: 'income',
     isDefault: true,
@@ -495,7 +509,7 @@ const DEFAULT_CATEGORIES = [
   },
   {
     name: 'Outros (receita)',
-    icon: '✅',
+    icon: 'package',
     color: '#14b8a6',
     type: 'income',
     isDefault: true,

@@ -39,6 +39,7 @@ import MoneyValue from './MoneyValue'
 import CategoryCompositionVisual from './CategoryCompositionVisual'
 import CategoryReviewNotice from './CategoryReviewNotice'
 import CategoryIcon from './CategoryIcon'
+import PageHeader from './PageHeader'
 import { categoryAccentStyle, decorateCategoryBreakdown } from '../domain/categoryComposition'
 import PaymentControlCard from './PaymentControlCard'
 import FinancialHealthScore from './FinancialHealthScore'
@@ -396,64 +397,63 @@ export default function Dashboard() {
       data-tour="dashboard"
       className="dashboard-premium dashboard-v58 mx-auto min-w-0 max-w-[1680px] space-y-5 pb-24 sm:space-y-6 lg:pb-6"
     >
-      {/* Header — mês com destaque, saudação secundária */}
-      <motion.div
-        className="dashboard-premium__toolbar flex flex-wrap items-start justify-between gap-3"
-        {...fade}
-      >
-        <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-black text-[--text-primary]">Início</h1>
-          <p className="dashboard-greeting mt-0.5 text-sm text-[--text-tertiary]">
-            {greeting()}, {user?.displayName?.split(' ')[0] || 'usuário'}
-          </p>
-          <div className="dashboard-month-nav mb-0.5 flex min-w-0 flex-nowrap items-center gap-1">
-            <button
-              onClick={() => setViewDate((d) => subMonths(d, 1))}
-              className="w-11 h-11 -ml-3 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
-              aria-label="Visualizar mês anterior"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span className="min-w-0 truncate text-sm font-bold text-[--text-secondary] sm:text-base">
-              <span className="sm:hidden">{compactMonthLabel}</span>
-              <span className="hidden sm:inline">{monthLabel}</span>
-            </span>
-            <button
-              onClick={() => setViewDate((d) => addMonths(d, 1))}
-              className="w-11 h-11 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
-              aria-label="Visualizar próximo mês"
-            >
-              <ChevronRight size={16} />
-            </button>
-            {!isCurrentMonth && (
+      <motion.div {...fade}>
+        <PageHeader
+          className="dashboard-premium__toolbar"
+          title="Início"
+          subtitle={`${greeting()}, ${user?.displayName?.split(' ')[0] || 'usuário'}`}
+          period={
+            <div className="dashboard-month-nav flex min-w-0 flex-nowrap items-center gap-1">
               <button
-                onClick={() => setViewDate(new Date())}
-                className="dashboard-today min-h-11 px-2 text-xs text-[--text-brand] hover:underline"
+                onClick={() => setViewDate((d) => subMonths(d, 1))}
+                className="w-11 h-11 -ml-3 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
+                aria-label="Visualizar mês anterior"
               >
-                Hoje
+                <ChevronLeft size={16} />
               </button>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
-          <Link
-            to="/money"
-            className="inline-flex min-h-11 items-center rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
-          >
-            Money
-          </Link>
-          <Link to="/transactions" className="dashboard-quick-add w-auto flex-shrink-0">
-            <Button
-              variant="primary"
-              icon={<Plus />}
-              size="sm"
-              aria-label="Nova transação"
-              className="dashboard-quick-add__button"
-            >
-              <span className="dashboard-quick-add__label">Nova transação</span>
-            </Button>
-          </Link>
-        </div>
+              <span className="min-w-0 truncate text-sm font-bold text-[--text-secondary] sm:text-base">
+                <span className="sm:hidden">{compactMonthLabel}</span>
+                <span className="hidden sm:inline">{monthLabel}</span>
+              </span>
+              <button
+                onClick={() => setViewDate((d) => addMonths(d, 1))}
+                className="w-11 h-11 inline-flex items-center justify-center rounded-xl hover:bg-[--bg-hover] text-[--text-tertiary] transition-colors"
+                aria-label="Visualizar próximo mês"
+              >
+                <ChevronRight size={16} />
+              </button>
+              {!isCurrentMonth && (
+                <button
+                  onClick={() => setViewDate(new Date())}
+                  className="dashboard-today min-h-11 px-2 text-xs text-[--text-brand] hover:underline"
+                >
+                  Hoje
+                </button>
+              )}
+            </div>
+          }
+          actions={
+            <>
+              <Link
+                to="/money"
+                className="inline-flex min-h-11 items-center rounded-xl border border-[--border-default] px-3 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
+              >
+                Money
+              </Link>
+              <Link to="/transactions" className="dashboard-quick-add w-auto flex-shrink-0">
+                <Button
+                  variant="primary"
+                  icon={<Plus />}
+                  size="sm"
+                  aria-label="Nova transação"
+                  className="dashboard-quick-add__button"
+                >
+                  <span className="dashboard-quick-add__label">Nova transação</span>
+                </Button>
+              </Link>
+            </>
+          }
+        />
       </motion.div>
 
       <div className="dashboard-executive-grid">
