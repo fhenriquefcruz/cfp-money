@@ -20,6 +20,7 @@ import {
   TrendingDown,
   PiggyBank,
   ArrowLeftRight,
+  AlertTriangle,
 } from 'lucide-react'
 import { useCategories, useTransactions } from '../contexts/AppContext'
 import { Card, Button } from './ui'
@@ -86,7 +87,8 @@ function KPI({ label, value, sub, color, icon, tooltip }) {
 
 function SavingRateBadge({ rate, period }) {
   const color = rate >= 20 ? '#10b981' : rate >= 10 ? '#f59e0b' : '#ef4444'
-  const label = rate >= 20 ? '🎉 Ótimo' : rate >= 10 ? '⚠️ Razoável' : '🚨 Atenção'
+  const label = rate >= 20 ? 'Ótimo' : rate >= 10 ? 'Razoável' : 'Atenção'
+  const RateIcon = rate >= 20 ? TrendingUp : AlertTriangle
   return (
     <div
       className="reports-saving-rate flex min-w-0 items-center gap-2 rounded-2xl border p-3 sm:p-4"
@@ -95,6 +97,7 @@ function SavingRateBadge({ rate, period }) {
       <div className="flex-1">
         <p className="text-xs font-bold text-[--text-primary]">Taxa de poupança · {period} meses</p>
         <p className="text-xs font-bold" style={{ color }}>
+          <RateIcon size={14} className="mr-1 inline-block align-text-bottom" aria-hidden="true" />
           {label}
         </p>
         <p className="text-xs text-[--text-tertiary]">
@@ -290,7 +293,11 @@ function ReportsContent() {
       {!hasTx ? (
         <Card>
           <div className="text-center py-16">
-            <p className="text-5xl mb-3">📊</p>
+            <TrendingUp
+              size={36}
+              className="mx-auto mb-3 text-[--text-tertiary]"
+              aria-hidden="true"
+            />
             <p className="text-base font-bold text-[--text-primary] mb-1">
               Nenhuma transação no período
             </p>
@@ -582,7 +589,11 @@ function ReportsContent() {
                 </div>
                 {periodTotals.savingsDeposits === 0 && periodTotals.savingsWithdrawals === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-3xl mb-2">🐷</p>
+                    <PiggyBank
+                      size={30}
+                      className="mx-auto mb-2 text-[--text-tertiary]"
+                      aria-hidden="true"
+                    />
                     <p className="text-sm font-bold text-[--text-primary]">
                       Nenhum movimento de poupança
                     </p>

@@ -14,6 +14,9 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
+  Gift,
+  AlertTriangle,
+  Lock,
 } from 'lucide-react'
 import {
   updateProfile,
@@ -253,7 +256,9 @@ export default function Profile() {
             )}
             {status.isTrial && status.isPremium && (
               <div className="p-3 rounded-xl bg-[--brand-50] border border-[--brand-200]">
-                <p className="text-xs font-bold text-[--brand-700]">🎁 Período de avaliação</p>
+                <p className="flex items-center gap-1 text-xs font-bold text-[--brand-700]">
+                  <Gift size={14} aria-hidden="true" /> Período de avaliação
+                </p>
                 <p className="text-xs text-[--brand-600] mt-0.5">
                   {status.daysLeft} dia{status.daysLeft !== 1 ? 's' : ''} restante
                   {status.daysLeft !== 1 ? 's' : ''} de experiência Premium gratuita.
@@ -262,8 +267,13 @@ export default function Profile() {
             )}
             {!status.isPremium && (
               <div className="p-3 rounded-xl bg-[--warning-bg] border border-[--warning-border]">
-                <p className="text-xs font-bold text-[--warning-text]">
-                  {status.isExpired ? '⚠️ Seu período expirou' : '🔒 Plano Gratuito'}
+                <p className="flex items-center gap-1 text-xs font-bold text-[--warning-text]">
+                  {status.isExpired ? (
+                    <AlertTriangle size={14} aria-hidden="true" />
+                  ) : (
+                    <Lock size={14} aria-hidden="true" />
+                  )}
+                  {status.isExpired ? 'Seu período expirou' : 'Plano Gratuito'}
                 </p>
                 <p className="text-xs text-[--warning-text] mt-0.5">
                   Assine o Premium por {PIX_AMOUNT}/mês e libere todos os recursos.

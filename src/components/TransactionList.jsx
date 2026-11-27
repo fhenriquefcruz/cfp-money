@@ -1367,7 +1367,7 @@ export default function TransactionList() {
                     <option value="all">Todos</option>
                     {PAYMENT_METHODS.map((m) => (
                       <option key={m.id} value={m.id}>
-                        {m.icon} {m.label}
+                        {m.label}
                       </option>
                     ))}
                   </select>

@@ -21,6 +21,7 @@ import InvoiceLifecycleModal from './InvoiceLifecycleModal'
 import CreditCardsSettingsCard from './CreditCardsSettingsCard'
 import PremiumGate from './PremiumGate'
 import MonthPicker from './MonthPicker'
+import CategoryIcon from './CategoryIcon'
 
 const CardReconciliationModal = React.lazy(() => import('./CardReconciliationModal'))
 
@@ -178,8 +179,8 @@ function TransactionRow({ transaction }) {
 
   return (
     <div className="credit-card-transaction flex min-w-0 flex-wrap items-center gap-3 border-b border-[--border-subtle] py-3 last:border-b-0 sm:flex-nowrap">
-      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[--bg-hover] text-base">
-        {transaction.categoryIcon || '💳'}
+      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[--bg-hover] text-[--text-secondary]">
+        <CategoryIcon icon={transaction.categoryIcon} name={transaction.categoryName} size={17} />
       </div>
 
       <div className="min-w-0 flex-1">

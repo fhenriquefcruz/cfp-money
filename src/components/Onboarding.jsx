@@ -9,22 +9,22 @@ const STORAGE_KEY = (uid) => `cfp_onboarding_done_${uid}`
 
 const STEPS = [
   {
-    title: '👋 Bem-vindo ao Meu Real!',
+    title: 'Bem-vindo ao Meu Real!',
     description:
       'Vamos fazer um tour rápido para você conhecer as principais funcionalidades. Leva menos de 1 minuto.',
     highlight: null,
     position: 'center',
   },
   {
-    title: '📊 Dashboard',
+    title: 'Início',
     description:
-      'Aqui você vê um resumo completo das suas finanças: saldo, receitas, despesas e gráficos do mês atual.',
+      'Aqui você vê um resumo das suas finanças: resultado, receitas, despesas e gráficos do mês atual.',
     highlight: '[data-tour="dashboard"]',
     route: '/dashboard',
     position: 'right',
   },
   {
-    title: '💸 Transações',
+    title: 'Transações',
     description:
       'Registre entradas e saídas, filtre por mês, categoria e método de pagamento. Suporta parcelamento e receita fixa recorrente.',
     highlight: '[data-tour="transactions"]',
@@ -32,7 +32,7 @@ const STEPS = [
     position: 'right',
   },
   {
-    title: '🎯 Metas',
+    title: 'Metas',
     description:
       'Defina objetivos financeiros e acompanhe seu progresso. Quanto falta para a viagem, o carro ou a reserva de emergência?',
     highlight: '[data-tour="goals"]',
@@ -40,7 +40,7 @@ const STEPS = [
     position: 'right',
   },
   {
-    title: '📋 Orçamentos',
+    title: 'Orçamentos',
     description:
       'Limite seus gastos por categoria. O sistema avisa quando você está se aproximando ou ultrapassando o limite mensal.',
     highlight: '[data-tour="budgets"]',
@@ -48,7 +48,7 @@ const STEPS = [
     position: 'right',
   },
   {
-    title: '📈 Relatórios',
+    title: 'Relatórios',
     description:
       'Análises detalhadas com gráficos de evolução, distribuição por categoria e exportação CSV. Disponível no plano Premium.',
     highlight: '[data-tour="reports"]',
@@ -56,7 +56,7 @@ const STEPS = [
     position: 'right',
   },
   {
-    title: '✅ Tudo pronto!',
+    title: 'Tudo pronto!',
     description:
       'Você tem 7 dias de experiência Premium gratuita. Explore à vontade e registre sua primeira transação agora!',
     highlight: null,
@@ -236,7 +236,7 @@ export default function Onboarding() {
                 className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[--brand-600] text-[--on-primary] text-sm font-bold hover:bg-[--brand-700] transition-colors"
               >
                 {isLast ? (
-                  '🎉 Começar!'
+                  'Começar!'
                 ) : (
                   <>
                     Próximo <ChevronRight size={15} />

@@ -551,7 +551,7 @@ export const TransactionsProvider = ({ children }) => {
       if (pct > 100) {
         threshold = 'over'
         notificationType = 'error'
-        notificationMessage = `🚨 Orçamento de ${newTx.categoryName} EXCEDIDO! (${pct.toFixed(0)}%)`
+        notificationMessage = `Orçamento de ${newTx.categoryName} excedido (${pct.toFixed(0)}%).`
       } else if (pct >= 100) {
         threshold = 100
         notificationType = 'error'
@@ -562,7 +562,7 @@ export const TransactionsProvider = ({ children }) => {
         notificationMessage = `⚠️ ${pct.toFixed(0)}% do orçamento de ${newTx.categoryName} atingido!`
       } else if (pct >= 70) {
         threshold = 70
-        notificationMessage = `📊 ${pct.toFixed(0)}% do orçamento de ${newTx.categoryName} utilizado.`
+        notificationMessage = `${pct.toFixed(0)}% do orçamento de ${newTx.categoryName} utilizado.`
       }
 
       if (!threshold) return
