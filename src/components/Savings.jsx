@@ -106,13 +106,16 @@ export default function Savings() {
           <>
             <Button
               variant="secondary"
+              size="sm"
               icon={<ArrowDownRight size={15} />}
               onClick={() => openMovement('withdrawal')}
+              aria-label="Registrar retirada"
             >
-              Registrar retirada
+              Retirar
             </Button>
             <Button
               variant="primary"
+              size="sm"
               icon={<ArrowUpRight size={15} />}
               onClick={() => openMovement('deposit')}
             >
