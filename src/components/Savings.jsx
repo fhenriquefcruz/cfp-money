@@ -100,6 +100,7 @@ export default function Savings() {
   return (
     <div className="operational-page savings-premium mx-auto w-full max-w-7xl space-y-5 pb-24 lg:pb-8">
       <PageHeader
+        className="flex-col sm:flex-row"
         title="Reservas"
         subtitle="Acompanhe o dinheiro guardado e vincule aportes às suas metas."
         actions={
