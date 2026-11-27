@@ -193,6 +193,12 @@ export default function Budgets() {
   const isCurrentMonth = selectedMonth === currentMonthKey
   const selectedLabel = monthLabel(selectedMonth)
   const monthSpent = overview.totalSpent + overview.totalUnbudgetedSpent
+  const budgetedCategories = sortedCategories.filter((category) =>
+    getBudgetForMonth(budgets, category.id, selectedMonth, currentMonthKey),
+  )
+  const unbudgetedCategories = sortedCategories.filter(
+    (category) => !getBudgetForMonth(budgets, category.id, selectedMonth, currentMonthKey),
+  )
 
   return (
     <div
@@ -258,11 +264,11 @@ export default function Budgets() {
               ['Orçado', formatCurrency(overview.totalBudgeted), 'text-[--brand-500]'],
               ['Gasto orçado', formatCurrency(overview.totalSpent), 'text-[--text-primary]'],
               [
-                'Gasto sem limite',
+                'Sem orçamento definido',
                 formatCurrency(overview.totalUnbudgetedSpent),
                 'text-[--warning-text]',
               ],
-              ['Excedente total', formatCurrency(overview.totalExceeded), 'text-[--danger-text]'],
+              ['Estouro total', formatCurrency(overview.totalExceeded), 'text-[--danger-text]'],
             ].map(([label, value, color]) => (
               <Card key={label} className="py-3 text-center">
                 <p className={`text-lg font-black tabular-nums ${color}`}>{value}</p>
@@ -298,23 +304,87 @@ export default function Budgets() {
           description="Crie categorias de despesa e defina limites."
         />
       ) : (
-        <div className="operational-card-grid budgets-card-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {sortedCategories.map((category) => {
-            const budget = getBudgetForMonth(budgets, category.id, selectedMonth, currentMonthKey)
-            const spent = getBudgetSpent(transactions, category.id, selectedMonth)
+        <div className="space-y-5">
+          {budgetedCategories.length > 0 && (
+            <div className="operational-card-grid budgets-card-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {budgetedCategories.map((category) => {
+                const budget = getBudgetForMonth(
+                  budgets,
+                  category.id,
+                  selectedMonth,
+                  currentMonthKey,
+                )
+                const spent = getBudgetSpent(transactions, category.id, selectedMonth)
 
-            return (
-              <BudgetCard
-                key={category.id}
-                category={category}
-                budget={budget}
-                spent={spent}
-                monthKey={selectedMonth}
-                onEdit={openEditor}
-                onRemove={removeBudget}
-              />
-            )
-          })}
+                return (
+                  <BudgetCard
+                    key={category.id}
+                    category={category}
+                    budget={budget}
+                    spent={spent}
+                    monthKey={selectedMonth}
+                    onEdit={openEditor}
+                    onRemove={removeBudget}
+                  />
+                )
+              })}
+            </div>
+          )}
+          {unbudgetedCategories.length > 0 && (
+            <Card>
+              <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-base font-bold text-[--text-primary]">
+                  Sem orçamento definido
+                </h2>
+                <span className="text-xs text-[--text-tertiary]">
+                  {unbudgetedCategories.length} categorias
+                </span>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                {unbudgetedCategories.map((category) => {
+                  const spent = getBudgetSpent(transactions, category.id, selectedMonth)
+                  return (
+                    <div
+                      key={category.id}
+                      className="flex min-w-0 items-center gap-2 rounded-xl border border-[--border-subtle] bg-[--bg-subtle] p-2"
+                    >
+                      <span
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                        style={{
+                          background: `color-mix(in srgb, ${getCategoryColor(category)} 15%, transparent)`,
+                        }}
+                      >
+                        <CategoryIcon category={category} size={18} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-[--text-primary]">
+                          {category.name}
+                        </p>
+                        <p className="text-xs tabular-nums text-[--text-tertiary]">
+                          Gasto: {formatCurrency(spent)}
+                        </p>
+                      </div>
+                      <Link
+                        to={`/transactions?category=${category.id}&month=${selectedMonth}`}
+                        aria-label={`Ver lançamentos de ${category.name}`}
+                        className="flex min-h-9 shrink-0 items-center rounded-lg px-2 text-xs font-bold text-[--text-secondary] hover:bg-[--bg-hover]"
+                      >
+                        Ver
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => openEditor({ categoryId: category.id })}
+                        className="min-h-9 shrink-0 rounded-lg px-2 text-xs font-bold text-[--text-brand] hover:bg-[--bg-hover]"
+                        aria-label={`Definir limite para ${category.name}`}
+                      >
+                        Definir
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+          )}
         </div>
       )}
 

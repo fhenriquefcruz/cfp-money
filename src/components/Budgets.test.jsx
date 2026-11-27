@@ -65,8 +65,8 @@ describe('Budgets auditability', () => {
     renderBudgets()
 
     expect(screen.getByText('Gasto orçado')).toBeInTheDocument()
-    expect(screen.getAllByText('Gasto sem limite').length).toBeGreaterThan(0)
-    expect(screen.getByText('Excedente total')).toBeInTheDocument()
+    expect(screen.getAllByText('Sem orçamento definido').length).toBeGreaterThan(0)
+    expect(screen.getByText('Estouro total')).toBeInTheDocument()
     expect(screen.getByText(/Total no mês/i)).toBeInTheDocument()
   })
 

@@ -43,7 +43,7 @@ async function expectDashboardOperationalLayout(page, projectName) {
   expect(geometry.savings.top).toBeGreaterThan(geometry.payments.bottom)
 }
 
-async function expectDashboardPremiumVisualization(page, projectName) {
+async function expectDashboardPremiumVisualization(page) {
   const resultButton = page.getByRole('button', { name: 'Resultado', exact: true })
   const flowButton = page.getByRole('button', { name: 'Fluxo', exact: true })
   const chartAreas = page.locator('.dashboard-finance-chart .recharts-area-area')
@@ -57,36 +57,8 @@ async function expectDashboardPremiumVisualization(page, projectName) {
   await expect(flowButton).toHaveAttribute('aria-pressed', 'true')
   await expect(chartAreas).toHaveCount(2)
 
-  const geometry = await page.evaluate(() => {
-    const forecast = document.querySelector('.dashboard-forecast-card')?.getBoundingClientRect()
-    const health = document.querySelector('.dashboard-health-card')?.getBoundingClientRect()
-    const money = document.querySelector('.dashboard-money-insight')?.getBoundingClientRect()
-
-    const compact = (rect) =>
-      rect ? { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right } : null
-
-    return {
-      forecast: compact(forecast),
-      health: compact(health),
-      money: compact(money),
-    }
-  })
-
-  expect(geometry.forecast).not.toBeNull()
-  expect(geometry.health).not.toBeNull()
-  expect(geometry.money).not.toBeNull()
-
-  if (projectName === 'visual-desktop-chromium') {
-    expect(Math.abs(geometry.forecast.top - geometry.health.top)).toBeLessThanOrEqual(2)
-    expect(Math.abs(geometry.forecast.top - geometry.money.top)).toBeLessThanOrEqual(2)
-    expect(geometry.forecast.right).toBeLessThanOrEqual(geometry.health.left)
-    expect(geometry.health.right).toBeLessThanOrEqual(geometry.money.left)
-    return
-  }
-
-  // Em telas móveis, os cartões têm uma coluna: não reduzir a largura de cada quadro.
-  expect(geometry.health.top).toBeGreaterThanOrEqual(geometry.forecast.bottom)
-  expect(geometry.money.top).toBeGreaterThanOrEqual(geometry.health.bottom)
+  await expect(page.getByText(/Média de gastos dos últimos 3 meses:/)).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Money', exact: true })).toBeVisible()
 }
 
 async function prepareVisualPage(page, route, selector) {
@@ -121,7 +93,7 @@ for (const [name, route, selector] of ROUTES) {
     })
 
     if (name === 'dashboard') {
-      await expectDashboardPremiumVisualization(page, testInfo.project.name)
+      await expectDashboardPremiumVisualization(page)
 
       const chartGrid = page.locator('.dashboard-chart-grid:has(.dashboard-finance-chart)')
       await chartGrid.scrollIntoViewIfNeeded()

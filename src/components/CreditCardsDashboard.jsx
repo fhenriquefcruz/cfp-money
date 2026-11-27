@@ -20,6 +20,7 @@ import { Card } from './ui'
 import InvoiceLifecycleModal from './InvoiceLifecycleModal'
 import CreditCardsSettingsCard from './CreditCardsSettingsCard'
 import PremiumGate from './PremiumGate'
+import MonthPicker from './MonthPicker'
 
 const CardReconciliationModal = React.lazy(() => import('./CardReconciliationModal'))
 
@@ -352,28 +353,14 @@ function CreditCardsCenterContent() {
               <ChevronLeft size={17} />
             </button>
 
-            <label className="relative">
-              <span className="sr-only">Selecionar mês da fatura</span>
-              <CalendarDays
-                size={15}
-                className="pointer-events-none absolute left-3 top-3.5 text-[--text-tertiary]"
-              />
-              <input
-                type="month"
-                onClick={(event) => {
-                  try {
-                    event.currentTarget.showPicker?.()
-                  } catch {
-                    /* Native fallback */
-                  }
-                }}
+            <div className="w-full min-w-0 sm:w-48">
+              <MonthPicker
                 value={selectedMonth}
-                onChange={(event) => {
-                  selectMonth(event.target.value)
-                }}
-                className="min-h-11 w-full min-w-0 rounded-xl border border-[--border-default] bg-[--bg-surface] pl-9 pr-3 text-xs font-semibold text-[--text-primary] focus:outline-none focus:ring-2 focus:ring-[--brand-500] sm:w-auto"
+                onChange={selectMonth}
+                label="Selecionar mês da fatura"
+                className="bg-[--bg-surface]"
               />
-            </label>
+            </div>
 
             <button
               type="button"
@@ -522,7 +509,9 @@ function CreditCardsCenterContent() {
             </div>
           )}
 
-          <div className="credit-cards-premium__grid grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,0.88fr)_minmax(380px,1.12fr)]">
+          <div
+            className={`credit-cards-premium__grid grid min-w-0 items-start gap-4 ${visibleTransactions.length > 2 ? 'xl:grid-cols-[minmax(0,0.88fr)_minmax(380px,1.12fr)]' : 'xl:grid-cols-1'}`}
+          >
             <div className="space-y-4">
               <Card className="shadow-sm">
                 <h2 className="text-sm font-black text-[--text-primary]">Próximos compromissos</h2>
