@@ -29,6 +29,7 @@ import PrivacyDataCardRouter from './PrivacyDataCardRouter'
 import EmailNotificationsCard from './EmailNotificationsCard'
 import PwaInstallCard from './PwaInstallCard'
 import SupportCard from './SupportCard'
+import PageHeader from './PageHeader'
 import { COMMERCIAL_OFFER, PREMIUM_FEATURES } from '../content/commercial'
 
 const PIX_KEY = 'fhenriquefcruz@gmail.com' // sua chave Pix
@@ -182,7 +183,7 @@ export default function Profile() {
 
   return (
     <div className="operational-page profile-premium mx-auto w-full min-w-0 max-w-3xl space-y-5 pb-24 lg:pb-6">
-      <h1 className="text-2xl font-black text-[--text-primary]">Perfil</h1>
+      <PageHeader title="Perfil" subtitle="Seu plano, dados e preferências." />
 
       {successMsg && (
         <div className="p-3 rounded-xl bg-[--success-bg] border border-[--success-border] text-[--success-text] text-sm font-medium">
